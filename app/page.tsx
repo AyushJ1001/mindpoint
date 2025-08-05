@@ -10,8 +10,9 @@ import { Badge } from "../components/ui/badge";
 import { ShoppingCart, Plus } from "lucide-react";
 import Link from "next/link";
 import { showRupees } from "@/lib/utils";
+import { Doc } from "@/convex/_generated/dataModel";
 
-const CourseCard = ({ course }: { course: any }) => {
+const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
 
   const handleAddToCart = () => {
@@ -19,9 +20,9 @@ const CourseCard = ({ course }: { course: any }) => {
       id: course._id,
       name: course.name,
       description: course.description,
-      price: course.price || 100, // Default price if not set
-      image: course.image || "",
-      capacity: course.capacity || 1, // Include capacity information
+      price: course.price || 100,
+      imageUrls: course.imageUrls || [],
+      capacity: course.capacity || 1,
     });
   };
 

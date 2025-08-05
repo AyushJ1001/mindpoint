@@ -78,8 +78,8 @@ export default function Navbar() {
                       <Link href="/toc">
                         <div className="font-medium">Terms and Conditions</div>
                         <div className="text-muted-foreground">
-                          By registering or making a purchase, you acknowledge and
-                          agree to the terms of The Mind Point's Refund and
+                          By registering or making a purchase, you acknowledge
+                          and agree to the terms of The Mind Point's Refund and
                           Payment Policy.
                         </div>
                       </Link>
@@ -162,7 +162,7 @@ export default function Navbar() {
                 )}
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[400px] sm:w-[540px]">
+            <SheetContent side="right" className="w-[400px] sm:w-[540px] p-2">
               <SheetHeader>
                 <SheetTitle>Shopping Cart</SheetTitle>
               </SheetHeader>
@@ -196,11 +196,15 @@ export default function Navbar() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
-                                      const newQuantity = (item.quantity || 1) - 1;
+                                      const newQuantity =
+                                        (item.quantity || 1) - 1;
                                       if (newQuantity <= 0) {
                                         removeItem(item.id);
                                       } else {
-                                        updateItemQuantity(item.id, newQuantity);
+                                        updateItemQuantity(
+                                          item.id,
+                                          newQuantity,
+                                        );
                                       }
                                     }}
                                   >
@@ -213,13 +217,20 @@ export default function Navbar() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => {
-                                      const currentQuantity = item.quantity || 1;
+                                      const currentQuantity =
+                                        item.quantity || 1;
                                       const maxQuantity = item.capacity || 1;
                                       if (currentQuantity < maxQuantity) {
-                                        updateItemQuantity(item.id, currentQuantity + 1);
+                                        updateItemQuantity(
+                                          item.id,
+                                          currentQuantity + 1,
+                                        );
                                       }
                                     }}
-                                    disabled={(item.quantity || 1) >= (item.capacity || 1)}
+                                    disabled={
+                                      (item.quantity || 1) >=
+                                      (item.capacity || 1)
+                                    }
                                   >
                                     <Plus className="h-3 w-3" />
                                   </Button>
@@ -243,10 +254,10 @@ export default function Navbar() {
                         </Card>
                       ))}
                     </div>
-                    <div className="space-y-4 border-t pt-4">
+                    <div className="bg-background sticky bottom-0 space-y-4 border-t p-2">
                       <div className="flex justify-between font-semibold">
                         <span>Total ({totalItems} items)</span>
-                        <span>₹{cartTotal}</span>
+                        <span>{showRupees(cartTotal)}</span>
                       </div>
                       <Button className="w-full" asChild>
                         <Link href="/cart">Proceed to Checkout</Link>

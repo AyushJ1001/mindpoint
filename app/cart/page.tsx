@@ -4,19 +4,23 @@ import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import { useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, ShoppingCart, CreditCard, Plus, Minus } from "lucide-react";
 import { showRupees } from "@/lib/utils";
+import { useUser } from "@clerk/clerk-react";
+
+export const dynamic = 'force-dynamic';
 
 const CartContent = () => {
-  const { items, removeItem, updateItemQuantity, cartTotal, isEmpty } = useCart();
+  const { items, removeItem, updateItemQuantity, cartTotal, isEmpty, emptyCart } = useCart();
   const courses = useQuery(api.courses.listCourses, { count: undefined });
   const [isProcessing, setIsProcessing] = useState(false);
   const { Razorpay, error, isLoading } = useRazorpay();
+  const { user, isLoaded: isUserLoaded } = useUser();
 
   const handlePayment = async () => {
     if (isEmpty) return;
@@ -32,27 +36,26 @@ const CartContent = () => {
       
       const data = await response.json();
       
-      const options = {
+      const options: RazorpayOrderOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
         amount: data.amount,
         currency: data.currency,
         name: "The Mind Point",
         description: `Payment for ${items.length} course(s)`,
         order_id: data.id,
-        handler: function (response: any) {
+        handler: response => {
           console.log("Payment successful", response);
-          // Clear cart after successful payment
-          // You might want to add a clearCart function from react-use-cart
+          emptyCart();
         },
         prefill: {
-          name: "John Doe",
-          email: "john.doe@example.com",
-          contact: "+919876543210",
+          name: user?.fullName || user?.firstName || "Guest User",
+          email: user?.primaryEmailAddress?.emailAddress || "",
+          contact: user?.primaryPhoneNumber?.phoneNumber || "",
         },
         notes: "Course purchase from The Mind Point",
         theme: {
           color: "#F37254",
-        }
+        },
       };
       
       const rzp = new Razorpay(options);
