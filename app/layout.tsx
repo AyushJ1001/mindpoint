@@ -4,6 +4,7 @@ import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ClerkProvider } from "@clerk/nextjs";
 import { ThemeProvider } from "@/components/theme-provider";
+import { CartProvider } from "@/components/CartProvider";
 import Navbar from "./navbar";
 import Footer from "./footer";
 
@@ -43,9 +44,11 @@ export default function RootLayout({
               enableSystem
               disableTransitionOnChange
             >
-              <Navbar />
-              <main className="flex-grow">{children}</main>
-              <Footer />
+              <CartProvider>
+                <Navbar />
+                <main className="flex-grow">{children}</main>
+                <Footer />
+              </CartProvider>
             </ThemeProvider>
           </ConvexClientProvider>
         </ClerkProvider>

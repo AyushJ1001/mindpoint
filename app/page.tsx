@@ -1,102 +1,77 @@
 "use client";
 
-import {
-  Authenticated,
-  Unauthenticated,
-  useMutation,
-  useQuery,
-} from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
+import { useCart } from "react-use-cart";
+import { useState, useEffect } from "react";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { ShoppingCart, Plus } from "lucide-react";
 import Link from "next/link";
-import { SignUpButton } from "@clerk/nextjs";
-import { SignInButton } from "@clerk/nextjs";
-import { useState } from "react";
-import Script from "next/script";
+import { showRupees } from "@/lib/utils";
 
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
+const CourseCard = ({ course }: { course: any }) => {
+  const { addItem, inCart } = useCart();
 
-const PaymentPage = () => {
-  const amount = 100;
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const handlePayment = async () => {
-    setIsProcessing(true);
-
-    try {
-      const response = await fetch("/api/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" }, // you missed this!
-        body: JSON.stringify({ amount })
-      });
-      
-      const data = await response.json();
-      
-      // Razorpay returns { id: "order_xxxx", amount: 10000, currency: "INR", ... }
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: data.amount, // use Razorpay's amount in paise
-        currency: data.currency,
-        name: "The Mind Point",
-        description: "Payment for the course",
-        order_id: data.id, // FIXED: correct property name
-        handler: function (response: any) {
-          console.log("Payment successful", response);
-        },
-        prefill: {
-          name: "John Doe",
-          email: "john.doe@example.com",
-          contact: "+919876543210",
-        },
-        notes: {
-          address: "Razorpay Corporate Office",
-        },
-        theme: {
-          color: "#F37254",
-        }
-      };
-      
-      const rpz1 = new window.Razorpay(options);
-      rpz1.open();
-      
-    } catch (error) {
-      console.error("Error processing payment", error);
-    } finally {
-      setIsProcessing(false);
-    }
+  const handleAddToCart = () => {
+    addItem({
+      id: course._id,
+      name: course.name,
+      description: course.description,
+      price: course.price || 100, // Default price if not set
+      image: course.image || "",
+      capacity: course.capacity || 1, // Include capacity information
+    });
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
-      <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="beforeInteractive" />
-      <h1>The Mind Point</h1>
-      <p>Pay for the course</p>
-      <button onClick={handlePayment} disabled={isProcessing} className="bg-blue-500 text-white px-4 py-2 rounded-md">
-        Pay ₹{amount}
-      </button>
-    </div>
-  )
-}
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle>{course.name}</CardTitle>
+        <CardDescription>{course.description}</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="flex items-center justify-between">
+          <Badge variant="secondary" className="text-lg">
+            {showRupees(course.price || 100)}
+          </Badge>
+          <Button
+            onClick={handleAddToCart}
+            disabled={inCart(course._id)}
+            size="sm"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            {inCart(course._id) ? "Added" : "Add to Cart"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
 
 export default function Home() {
+  const courses = useQuery(api.courses.listCourses, { count: undefined });
+  const { totalItems } = useCart();
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  const courses = useQuery(api.courses.listCourses, {count: undefined});
-
-  console.log(courses);
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
 
   return (
-    <>
-      <h1>The Mind Point</h1>
-      <PaymentPage />
-      {courses?.courses.map((course) => (
-        <div key={course._id}>
-          <h2>{course.name}</h2>
-          <p>{course.description}</p>
-        </div>
-      ))}
-    </>
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between mb-8">
+        <h1 className="text-3xl font-bold">The Mind Point</h1>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {courses?.courses.map((course) => (
+          <CourseCard key={course._id} course={course} />
+        ))}
+      </div>
+    </div>
   );
 }
+
+
