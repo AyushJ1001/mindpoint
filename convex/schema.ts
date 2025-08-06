@@ -27,9 +27,13 @@ export default defineSchema({
   }),
   reviews: defineTable({
     userId: v.string(),
-    createdAt: v.string(),
     rating: v.number(),
     content: v.string(),
     course: v.id("courses"),
+  }),
+  enrollments: defineTable({
+    userId: v.string(),
+    courseId: v.id("courses"),
+    enrollmentNumber: v.string(),
   }),
 });

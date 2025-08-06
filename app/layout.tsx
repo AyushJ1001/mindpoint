@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { CartProvider } from "@/components/CartProvider";
 import Navbar from "./navbar";
 import Footer from "./footer";
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -48,6 +49,7 @@ export default function RootLayout({
                 <Navbar />
                 <main className="flex-grow">{children}</main>
                 <Footer />
+                <Toaster />
               </CartProvider>
             </ThemeProvider>
           </ConvexClientProvider>

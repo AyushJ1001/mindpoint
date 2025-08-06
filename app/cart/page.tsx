@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, ShoppingCart, CreditCard, Plus, Minus } from "lucide-react";
 import { showRupees } from "@/lib/utils";
 import { useUser } from "@clerk/clerk-react";
+import { handlePaymentSuccess } from "../actions/payment";
+import { toast } from "sonner";
 
 export const dynamic = 'force-dynamic';
 
@@ -43,8 +45,37 @@ const CartContent = () => {
         name: "The Mind Point",
         description: `Payment for ${items.length} course(s)`,
         order_id: data.id,
-        handler: response => {
+        handler: async (response) => {
           console.log("Payment successful", response);
+          
+          if (user?.id) {
+            try {
+              // Get course IDs from cart items
+              const courseIds = items.map(item => item.id);
+              
+              // Call server action to handle enrollment
+              const result = await handlePaymentSuccess(user.id, courseIds);
+              
+              if (result.success) {
+                console.log("Enrollment successful:", result.enrollments);
+                // Show success message to user
+                toast.success(`Payment successful! You have been enrolled in ${result.enrollments?.length || 0} course(s).`, {
+                  description: `Enrollment numbers: ${result.enrollments?.map(e => e.enrollmentNumber).join(", ")}`,
+                });
+              } else {
+                console.error("Enrollment failed:", result.error);
+                toast.error("Payment successful but enrollment failed. Please contact support.", {
+                  description: result.error,
+                });
+              }
+            } catch (error) {
+              console.error("Error processing enrollment:", error);
+              toast.error("Payment successful but enrollment failed. Please contact support.", {
+                description: error instanceof Error ? error.message : "Unknown error occurred",
+              });
+            }
+          }
+          
           emptyCart();
         },
         prefill: {
