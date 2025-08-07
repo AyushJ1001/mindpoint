@@ -3,6 +3,7 @@
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useCart } from "react-use-cart";
+import { useRouter } from "next/navigation";
 
 import { Button } from "../components/ui/button";
 import {
@@ -20,8 +21,10 @@ import Link from "next/link";
 
 const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
+  const router = useRouter();
 
-  const handleAddToCart = () => {
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
     addItem({
       id: course._id,
       name: course.name,
@@ -32,17 +35,21 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     });
   };
 
+  const handleCardClick = () => {
+    router.push(`/courses/${course._id}`);
+  };
+
   return (
-    <Card className="card-shadow hover:card-shadow-lg transition-smooth group h-full">
+    <Card
+      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer"
+      onClick={handleCardClick}
+    >
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="group-hover:text-primary transition-smooth text-lg">
               {course.name}
             </CardTitle>
-            <CardDescription className="mt-2 text-sm leading-relaxed">
-              {course.description}
-            </CardDescription>
           </div>
         </div>
       </CardHeader>

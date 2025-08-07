@@ -26,6 +26,8 @@ export default defineSchema({
     type: v.optional(CourseType),
     code: v.string(),
     price: v.number(),
+    // Number of sessions for session-based offerings (e.g., therapy)
+    sessions: v.optional(v.number()),
     capacity: v.number(),
     enrolledUsers: v.array(v.string()),
     startDate: v.string(),
@@ -35,17 +37,21 @@ export default defineSchema({
     daysOfWeek: v.array(v.string()),
     content: v.string(),
     reviews: v.array(v.id("reviews")),
+    duration: v.optional(v.string()),
     imageUrls: v.optional(v.array(v.id("_storage"))),
   }),
   reviews: defineTable({
     userId: v.string(),
+    userName: v.string(),
     rating: v.number(),
     content: v.string(),
     course: v.id("courses"),
-  }),
+  }).index("by_course", ["course"]),
   enrollments: defineTable({
     userId: v.string(),
+    userName: v.optional(v.string()),
     courseId: v.id("courses"),
+    courseName: v.optional(v.string()),
     enrollmentNumber: v.string(),
   }),
 });
