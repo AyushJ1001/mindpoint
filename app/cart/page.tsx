@@ -7,18 +7,31 @@ import { api } from "../../convex/_generated/api";
 import { useState } from "react";
 import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "../../components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Trash2, ShoppingCart, CreditCard, Plus, Minus } from "lucide-react";
 import { showRupees } from "@/lib/utils";
 import { useUser } from "@clerk/clerk-react";
 import { handlePaymentSuccess } from "../actions/payment";
 import { toast } from "sonner";
+import { Id } from "@/convex/_generated/dataModel";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 const CartContent = () => {
-  const { items, removeItem, updateItemQuantity, cartTotal, isEmpty, emptyCart } = useCart();
+  const {
+    items,
+    removeItem,
+    updateItemQuantity,
+    cartTotal,
+    isEmpty,
+    emptyCart,
+  } = useCart();
   const courses = useQuery(api.courses.listCourses, { count: undefined });
   const [isProcessing, setIsProcessing] = useState(false);
   const { Razorpay, error, isLoading } = useRazorpay();
@@ -26,18 +39,18 @@ const CartContent = () => {
 
   const handlePayment = async () => {
     if (isEmpty) return;
-    
+
     setIsProcessing(true);
 
     try {
       const response = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: cartTotal }) // API will convert to paise
+        body: JSON.stringify({ amount: cartTotal }), // API will convert to paise
       });
-      
+
       const data = await response.json();
-      
+
       const options: RazorpayOrderOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
         amount: data.amount,
@@ -47,35 +60,51 @@ const CartContent = () => {
         order_id: data.id,
         handler: async (response) => {
           console.log("Payment successful", response);
-          
+
           if (user?.id) {
             try {
               // Get course IDs from cart items
-              const courseIds = items.map(item => item.id);
-              
+              const courseIds = items.map((item) => item.id as Id<"courses">);
+
               // Call server action to handle enrollment
-              const result = await handlePaymentSuccess(user.id, courseIds);
-              
+              const result = await handlePaymentSuccess(
+                user.id,
+                courseIds as Id<"courses">[],
+                user.primaryEmailAddress?.emailAddress || "",
+              );
+
               if (result.success) {
                 console.log("Enrollment successful:", result.enrollments);
                 // Show success message to user
-                toast.success(`Payment successful! You have been enrolled in ${result.enrollments?.length || 0} course(s).`, {
-                  description: `Enrollment numbers: ${result.enrollments?.map(e => e.enrollmentNumber).join(", ")}`,
-                });
+                toast.success(
+                  `Payment successful! You have been enrolled in ${result.enrollments?.length || 0} course(s).`,
+                  {
+                    description: `Enrollment numbers: ${result.enrollments?.map((e) => e.enrollmentNumber).join(", ")}`,
+                  },
+                );
               } else {
                 console.error("Enrollment failed:", result.error);
-                toast.error("Payment successful but enrollment failed. Please contact support.", {
-                  description: result.error,
-                });
+                toast.error(
+                  "Payment successful but enrollment failed. Please contact support.",
+                  {
+                    description: result.error,
+                  },
+                );
               }
             } catch (error) {
               console.error("Error processing enrollment:", error);
-              toast.error("Payment successful but enrollment failed. Please contact support.", {
-                description: error instanceof Error ? error.message : "Unknown error occurred",
-              });
+              toast.error(
+                "Payment successful but enrollment failed. Please contact support.",
+                {
+                  description:
+                    error instanceof Error
+                      ? error.message
+                      : "Unknown error occurred",
+                },
+              );
             }
           }
-          
+
           emptyCart();
         },
         prefill: {
@@ -88,10 +117,9 @@ const CartContent = () => {
           color: "#F37254",
         },
       };
-      
+
       const rzp = new Razorpay(options);
       rzp.open();
-      
     } catch (error) {
       console.error("Error processing payment", error);
     } finally {
@@ -99,13 +127,11 @@ const CartContent = () => {
     }
   };
 
-
-
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
+          <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
           <p className="mt-4 text-lg">Loading payment gateway...</p>
         </div>
       </div>
@@ -114,9 +140,11 @@ const CartContent = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <p className="text-red-500 text-lg">Error loading payment gateway: {error}</p>
+          <p className="text-lg text-red-500">
+            Error loading payment gateway: {error}
+          </p>
         </div>
       </div>
     );
@@ -124,7 +152,7 @@ const CartContent = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex items-center gap-2 mb-8">
+      <div className="mb-8 flex items-center gap-2">
         <ShoppingCart className="h-8 w-8" />
         <h1 className="text-3xl font-bold">Shopping Cart</h1>
       </div>
@@ -132,28 +160,34 @@ const CartContent = () => {
       {isEmpty ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <ShoppingCart className="h-16 w-16 text-gray-400 mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Your cart is empty</h2>
-            <p className="text-gray-600 mb-4">Add some courses to get started!</p>
+            <ShoppingCart className="mb-4 h-16 w-16 text-gray-400" />
+            <h2 className="mb-2 text-xl font-semibold">Your cart is empty</h2>
+            <p className="mb-4 text-gray-600">
+              Add some courses to get started!
+            </p>
             <Button onClick={() => window.history.back()}>
               Continue Shopping
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="space-y-4 lg:col-span-2">
             {items.map((item) => (
               <Card key={item.id}>
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="text-lg font-semibold mb-2">{item.name}</h3>
-                      <p className="text-gray-600 mb-4">{item.description}</p>
+                      <h3 className="mb-2 text-lg font-semibold">
+                        {item.name}
+                      </h3>
+                      <p className="mb-4 text-gray-600">{item.description}</p>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
-                          <label className="text-sm font-medium">Quantity:</label>
+                          <label className="text-sm font-medium">
+                            Quantity:
+                          </label>
                           <Button
                             variant="outline"
                             size="sm"
@@ -178,10 +212,15 @@ const CartContent = () => {
                               const currentQuantity = item.quantity || 1;
                               const maxQuantity = item.capacity || 1;
                               if (currentQuantity < maxQuantity) {
-                                updateItemQuantity(item.id, currentQuantity + 1);
+                                updateItemQuantity(
+                                  item.id,
+                                  currentQuantity + 1,
+                                );
                               }
                             }}
-                            disabled={(item.quantity || 1) >= (item.capacity || 1)}
+                            disabled={
+                              (item.quantity || 1) >= (item.capacity || 1)
+                            }
                           >
                             <Plus className="h-3 w-3" />
                           </Button>
@@ -221,19 +260,21 @@ const CartContent = () => {
                   <span>{showRupees(0)}</span>
                 </div>
                 <hr />
-                <div className="flex justify-between font-semibold text-lg">
+                <div className="flex justify-between text-lg font-semibold">
                   <span>Total</span>
                   <span>{showRupees(cartTotal)}</span>
                 </div>
-                
-                <Button 
-                  onClick={handlePayment} 
+
+                <Button
+                  onClick={handlePayment}
                   disabled={isProcessing || isEmpty}
                   className="w-full"
                   size="lg"
                 >
-                  <CreditCard className="h-4 w-4 mr-2" />
-                  {isProcessing ? "Processing..." : `Pay ${showRupees(cartTotal)}`}
+                  <CreditCard className="mr-2 h-4 w-4" />
+                  {isProcessing
+                    ? "Processing..."
+                    : `Pay ${showRupees(cartTotal)}`}
                 </Button>
               </CardContent>
             </Card>
@@ -246,17 +287,19 @@ const CartContent = () => {
 
 const CartPage = () => {
   return (
-    <Suspense fallback={
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-lg">Loading...</p>
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="mx-auto h-32 w-32 animate-spin rounded-full border-b-2 border-gray-900"></div>
+            <p className="mt-4 text-lg">Loading...</p>
+          </div>
         </div>
-      </div>
-    }>
+      }
+    >
       <CartContent />
     </Suspense>
   );
 };
 
-export default CartPage; 
+export default CartPage;

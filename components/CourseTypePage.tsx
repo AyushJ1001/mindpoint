@@ -14,6 +14,21 @@ import {
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "../components/ui/carousel";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../components/ui/dialog";
+import {
   Plus,
   BookOpen,
   Award,
@@ -23,12 +38,87 @@ import {
   Heart,
   Eye,
   FileText,
+  Calendar,
+  Clock,
+  MapPin,
 } from "lucide-react";
 import { showRupees } from "@/lib/utils";
 import { Doc } from "@/convex/_generated/dataModel";
+import { Id } from "@/convex/_generated/dataModel";
+import Image from "next/image";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+
+const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
+  const actualImageUrls = imageUrls.map((id) =>
+    useQuery(api.image.getImageUrl, {
+      storageId: id as Id<"_storage">,
+    }),
+  );
+
+  console.log(actualImageUrls);
+
+  if (!actualImageUrls || actualImageUrls.length === 0) {
+    return (
+      <div className="relative flex h-80 items-center justify-center rounded-t-lg bg-gray-100">
+        <BookOpen className="h-12 w-12 text-gray-400" />
+      </div>
+    );
+  }
+
+  if (actualImageUrls.length === 1) {
+    return (
+      <div className="relative flex h-80 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100">
+        <Image
+          src={
+            actualImageUrls[0]?.url ??
+            "https://blocks.astratic.com/img/general-img-landscape.png"
+          }
+          alt="Course image"
+          className="max-h-full max-w-full object-contain"
+          width={400}
+          height={600}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative h-80 overflow-hidden rounded-t-lg bg-gray-100">
+      <Carousel className="h-full w-full">
+        <CarouselContent>
+          {actualImageUrls.map((imageUrl, index) => (
+            <CarouselItem
+              key={index}
+              className="flex h-80 items-center justify-center"
+            >
+              <Image
+                src={imageUrl?.url || ""}
+                alt={`Course image ${index + 1}`}
+                className="max-h-full max-w-full object-contain"
+                width={400}
+                height={600}
+              />
+            </CarouselItem>
+          ))}
+        </CarouselContent>
+        <CarouselPrevious className="absolute top-1/2 left-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
+        <CarouselNext className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
+      </Carousel>
+    </div>
+  );
+};
 
 const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
+  console.log(course.imageUrls);
 
   const handleAddToCart = () => {
     addItem({
@@ -42,7 +132,9 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   };
 
   return (
-    <Card className="card-shadow hover:card-shadow-lg transition-smooth group h-full">
+    <Card className="card-shadow hover:card-shadow-lg transition-smooth group h-full overflow-hidden">
+      <CourseImageCarousel imageUrls={course.imageUrls || []} />
+
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -63,15 +155,17 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           >
             {showRupees(course.price || 100)}
           </Badge>
-          <Button
-            onClick={handleAddToCart}
-            disabled={inCart(course._id)}
-            size="sm"
-            className="transition-smooth"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {inCart(course._id) ? "Added" : "Add to Cart"}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={handleAddToCart}
+              disabled={inCart(course._id)}
+              size="sm"
+              className="transition-smooth"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {inCart(course._id) ? "Added" : "Add to Cart"}
+            </Button>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -120,7 +214,7 @@ export default function CourseTypePage({
         <div className="container text-center">
           <div className="mx-auto max-w-4xl">
             <div className="bg-primary/10 mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full">
-              <Icon className="text-primary h-10 w-10" />
+              {Icon && <Icon className="text-primary h-10 w-10" />}
             </div>
             <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
               {title}

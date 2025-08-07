@@ -6,8 +6,20 @@ const nextConfig: NextConfig = {
     ignoreBuildErrors: true,
   },
   eslint: {
-    ignoreDuringBuilds: true
-  }
+    ignoreDuringBuilds: true,
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "blocks.astratic.com",
+      },
+      {
+        protocol: "https",
+        hostname: "healthy-wolf-897.convex.cloud",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

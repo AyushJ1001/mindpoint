@@ -79,7 +79,7 @@ export default function CoursesLayout({
               </div>
             </div>
           </div>
-          <div className="p-6">{children}</div>
+          <div className="p-6 pb-20">{children}</div>
         </main>
       </div>
     </SidebarProvider>
