@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { z } from "zod";
 import { twMerge } from "tailwind-merge";
+import { Resend } from "resend";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -20,4 +21,3 @@ export const contactFormSchema = z.object({
   email: z.email("Please enter a valid email address"),
   message: z.string().min(10, "Message must be at least 10 characters"),
 });
-

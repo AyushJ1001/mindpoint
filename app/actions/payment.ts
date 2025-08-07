@@ -1,11 +1,12 @@
 "use server";
 
-import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 export async function handlePaymentSuccess(
   userId: string,
-  courseIds: string[]
+  courseIds: Id<"courses">[],
+  userEmail: string,
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -19,16 +20,20 @@ export async function handlePaymentSuccess(
   try {
     // Import the Convex client for server-side usage
     const { ConvexHttpClient } = await import("convex/browser");
-    
+
     // Create a Convex client for server-side operations
     const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-    
+
     // Call the mutation to handle cart checkout
-    const enrollments = await convex.mutation(api.myFunctions.handleCartCheckout, {
-      userId,
-      courseIds: courseIds as any, // Type assertion needed for server-side
-    });
-    
+    const enrollments = await convex.mutation(
+      api.myFunctions.handleCartCheckout,
+      {
+        userId,
+        courseIds: courseIds,
+        userEmail: userEmail,
+      },
+    );
+
     return {
       success: true,
       enrollments,
@@ -44,7 +49,8 @@ export async function handlePaymentSuccess(
 
 export async function handleSingleCourseEnrollment(
   userId: string,
-  courseId: string
+  courseId: Id<"courses">,
+  userEmail: string,
 ): Promise<{
   success: boolean;
   enrollment?: {
@@ -57,16 +63,20 @@ export async function handleSingleCourseEnrollment(
   try {
     // Import the Convex client for server-side usage
     const { ConvexHttpClient } = await import("convex/browser");
-    
+
     // Create a Convex client for server-side operations
     const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-    
+
     // Call the mutation to handle single course enrollment
-    const enrollment = await convex.mutation(api.myFunctions.handleSuccessfulPayment, {
-      userId,
-      courseId: courseId as any, // Type assertion needed for server-side
-    });
-    
+    const enrollment = await convex.mutation(
+      api.myFunctions.handleSuccessfulPayment,
+      {
+        userId,
+        courseId: courseId,
+        userEmail: userEmail,
+      },
+    );
+
     return {
       success: true,
       enrollment,
@@ -78,4 +88,4 @@ export async function handleSingleCourseEnrollment(
       error: error instanceof Error ? error.message : "Unknown error occurred",
     };
   }
-} 
+}

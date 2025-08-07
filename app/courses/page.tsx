@@ -2,6 +2,12 @@
 
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useCart } from "react-use-cart";
+import { BookOpen } from "lucide-react";
+import { Doc } from "@/convex/_generated/dataModel";
+import { Id } from "@/convex/_generated/dataModel";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,129 +16,496 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Plus } from "lucide-react";
+import { showRupees } from "@/lib/utils";
+import CourseTypePage from "@/components/CourseTypePage";
 
-export default function CoursesPage() {
-  const data = useQuery(api.courses.listCourses, {});
+const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
+  const actualImageUrls = imageUrls.map((id) =>
+    useQuery(api.image.getImageUrl, {
+      storageId: id as Id<"_storage">,
+    }),
+  );
 
-  if (!data) {
+  if (!actualImageUrls || actualImageUrls.length === 0) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h2 className="text-3xl font-bold tracking-tight">All Courses</h2>
-          <p className="text-muted-foreground">
-            Explore our complete range of courses and programs
-          </p>
-        </div>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-4 w-3/4" />
-                <Skeleton className="h-3 w-1/2" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="mb-4 h-20 w-full" />
-                <Skeleton className="h-8 w-full" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      <div className="relative flex h-80 items-center justify-center rounded-t-lg bg-gray-100">
+        <BookOpen className="h-12 w-12 text-gray-400" />
       </div>
     );
   }
 
-  const { courses } = data;
+  if (actualImageUrls.length === 1) {
+    return (
+      <div className="relative flex h-80 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100">
+        <Image
+          src={
+            actualImageUrls[0]?.url ??
+            "https://blocks.astratic.com/img/general-img-landscape.png"
+          }
+          alt="Course image"
+          className="max-h-full max-w-full object-contain"
+          width={400}
+          height={600}
+        />
+      </div>
+    );
+  }
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-3xl font-bold tracking-tight">All Courses</h2>
-        <p className="text-muted-foreground">
-          Explore our complete range of courses and programs ({courses.length}{" "}
-          courses available)
-        </p>
-      </div>
-
-      {courses.length === 0 ? (
-        <div className="py-12 text-center">
-          <h3 className="text-lg font-semibold">No courses available</h3>
-          <p className="text-muted-foreground">
-            Check back later for new courses.
-          </p>
-        </div>
-      ) : (
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {courses.map((course) => (
-            <Card key={course._id} className="flex flex-col">
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <CardTitle className="text-xl">{course.name}</CardTitle>
-                    <CardDescription className="text-sm font-medium">
-                      Code: {course.code}
-                    </CardDescription>
-                  </div>
-                  {course.type && (
-                    <Badge variant="secondary" className="capitalize">
-                      {course.type.replace("-", " ")}
-                    </Badge>
-                  )}
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-1 flex-col">
-                {course.description && (
-                  <p className="text-muted-foreground mb-4 line-clamp-3 text-sm">
-                    {course.description}
-                  </p>
-                )}
-
-                <div className="mb-4 space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Price:</span>
-                    <span className="font-semibold">
-                      ₹{course.price.toLocaleString()}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Capacity:</span>
-                    <span>
-                      {course.enrolledUsers.length}/{course.capacity}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Duration:</span>
-                    <span>
-                      {course.startDate} - {course.endDate}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Time:</span>
-                    <span>
-                      {course.startTime} - {course.endTime}
-                    </span>
-                  </div>
-                  {course.daysOfWeek.length > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Days:</span>
-                      <span>{course.daysOfWeek.join(", ")}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="mt-auto">
-                  <Button className="w-full">
-                    {course.enrolledUsers.length >= course.capacity
-                      ? "Full"
-                      : "Enroll Now"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+    <div className="relative h-80 overflow-hidden rounded-t-lg bg-gray-100">
+      <Carousel className="h-full w-full">
+        <CarouselContent>
+          {actualImageUrls.map((imageUrl, index) => (
+            <CarouselItem
+              key={index}
+              className="flex h-80 items-center justify-center"
+            >
+              <Image
+                src={imageUrl?.url || ""}
+                alt={`Course image ${index + 1}`}
+                className="max-h-full max-w-full object-contain"
+                width={400}
+                height={600}
+              />
+            </CarouselItem>
           ))}
+        </CarouselContent>
+        <CarouselPrevious className="absolute top-1/2 left-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
+        <CarouselNext className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
+      </Carousel>
+    </div>
+  );
+};
+
+const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
+  const { addItem, inCart } = useCart();
+
+  const handleAddToCart = () => {
+    addItem({
+      id: course._id,
+      name: course.name,
+      description: course.description,
+      price: course.price || 100,
+      imageUrls: course.imageUrls || [],
+      capacity: course.capacity || 1,
+    });
+  };
+
+  return (
+    <Card className="card-shadow hover:card-shadow-lg transition-smooth group h-full overflow-hidden">
+      <CourseImageCarousel imageUrls={course.imageUrls || []} />
+
+      <CardHeader className="pb-4">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="group-hover:text-primary transition-smooth text-lg">
+              {course.name}
+            </CardTitle>
+            <CardDescription className="mt-2 text-sm leading-relaxed">
+              {course.description}
+            </CardDescription>
+          </div>
         </div>
-      )}
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="flex items-center justify-between">
+          <Badge
+            variant="secondary"
+            className="px-3 py-1 text-base font-semibold"
+          >
+            {showRupees(course.price || 100)}
+          </Badge>
+          <Button
+            onClick={handleAddToCart}
+            disabled={inCart(course._id)}
+            size="sm"
+            className="transition-smooth"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {inCart(course._id) ? "Added" : "Add to Cart"}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default function CoursesPage() {
+  const coursesData = useQuery(api.courses.listCourses, {});
+
+  return (
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
+        <div className="container text-center">
+          <div className="mx-auto max-w-4xl">
+            <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
+              All Courses
+            </h1>
+            <p className="text-muted-foreground mb-8 text-xl leading-relaxed">
+              Explore our complete range of courses and programs designed to
+              help you grow and succeed
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Course Types Grid */}
+      <section className="section-padding">
+        <div className="container">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+              Course Categories
+            </h2>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
+              Choose from our diverse range of course types to find the perfect
+              learning experience
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {/* Certificate Courses */}
+            <div className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg">
+              <div className="bg-primary/10 group-hover:bg-primary/20 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <svg
+                  className="text-primary h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"
+                  />
+                </svg>
+              </div>
+              <h3 className="group-hover:text-primary mb-2 text-lg font-semibold">
+                Certificate Courses
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Professional certification programs to enhance your skills and
+                credentials
+              </p>
+            </div>
+
+            {/* Internship Programs */}
+            <div className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg">
+              <div className="bg-primary/10 group-hover:bg-primary/20 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <svg
+                  className="text-primary h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="group-hover:text-primary mb-2 text-lg font-semibold">
+                Internship Programs
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Hands-on experience through structured internship opportunities
+              </p>
+            </div>
+
+            {/* Diploma Programs */}
+            <div className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg">
+              <div className="bg-primary/10 group-hover:bg-primary/20 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <svg
+                  className="text-primary h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
+                  />
+                </svg>
+              </div>
+              <h3 className="group-hover:text-primary mb-2 text-lg font-semibold">
+                Diploma Programs
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Comprehensive diploma courses for in-depth knowledge and
+                expertise
+              </p>
+            </div>
+
+            {/* Pre-recorded Courses */}
+            <div className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg">
+              <div className="bg-primary/10 group-hover:bg-primary/20 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <svg
+                  className="text-primary h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="group-hover:text-primary mb-2 text-lg font-semibold">
+                Pre-recorded Courses
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Self-paced learning with pre-recorded video content
+              </p>
+            </div>
+
+            {/* Masterclasses */}
+            <div className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg">
+              <div className="bg-primary/10 group-hover:bg-primary/20 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <svg
+                  className="text-primary h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
+                  />
+                </svg>
+              </div>
+              <h3 className="group-hover:text-primary mb-2 text-lg font-semibold">
+                Masterclasses
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Intensive sessions with industry experts and thought leaders
+              </p>
+            </div>
+
+            {/* Therapy Sessions */}
+            <div className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg">
+              <div className="bg-primary/10 group-hover:bg-primary/20 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <svg
+                  className="text-primary h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
+                  />
+                </svg>
+              </div>
+              <h3 className="group-hover:text-primary mb-2 text-lg font-semibold">
+                Therapy Sessions
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Professional therapy and counseling services for mental wellness
+              </p>
+            </div>
+
+            {/* Supervised Programs */}
+            <div className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg">
+              <div className="bg-primary/10 group-hover:bg-primary/20 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <svg
+                  className="text-primary h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  />
+                </svg>
+              </div>
+              <h3 className="group-hover:text-primary mb-2 text-lg font-semibold">
+                Supervised Programs
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Guided learning programs with expert supervision and mentorship
+              </p>
+            </div>
+
+            {/* Resume Studio */}
+            <div className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg">
+              <div className="bg-primary/10 group-hover:bg-primary/20 mb-4 flex h-16 w-16 items-center justify-center rounded-full">
+                <svg
+                  className="text-primary h-8 w-8"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <h3 className="group-hover:text-primary mb-2 text-lg font-semibold">
+                Resume Studio
+              </h3>
+              <p className="text-muted-foreground text-sm">
+                Professional resume building and career development services
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Quick Access Links */}
+      <section className="section-padding bg-muted/30">
+        <div className="container">
+          <div className="mb-8 text-center">
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+              Quick Access
+            </h2>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
+              Jump directly to your preferred course category
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4 lg:grid-cols-8">
+            <a
+              href="/courses/certificate"
+              className="group bg-background hover:border-primary rounded-lg border p-4 text-center transition-all hover:shadow-md"
+            >
+              <div className="mb-2 text-2xl">🎓</div>
+              <div className="group-hover:text-primary text-sm font-medium">
+                Certificate
+              </div>
+            </a>
+            <a
+              href="/courses/internship"
+              className="group bg-background hover:border-primary rounded-lg border p-4 text-center transition-all hover:shadow-md"
+            >
+              <div className="mb-2 text-2xl">💼</div>
+              <div className="group-hover:text-primary text-sm font-medium">
+                Internship
+              </div>
+            </a>
+            <a
+              href="/courses/diploma"
+              className="group bg-background hover:border-primary rounded-lg border p-4 text-center transition-all hover:shadow-md"
+            >
+              <div className="mb-2 text-2xl">📜</div>
+              <div className="group-hover:text-primary text-sm font-medium">
+                Diploma
+              </div>
+            </a>
+            <a
+              href="/courses/pre-recorded"
+              className="group bg-background hover:border-primary rounded-lg border p-4 text-center transition-all hover:shadow-md"
+            >
+              <div className="mb-2 text-2xl">📹</div>
+              <div className="group-hover:text-primary text-sm font-medium">
+                Pre-recorded
+              </div>
+            </a>
+            <a
+              href="/courses/masterclass"
+              className="group bg-background hover:border-primary rounded-lg border p-4 text-center transition-all hover:shadow-md"
+            >
+              <div className="mb-2 text-2xl">⭐</div>
+              <div className="group-hover:text-primary text-sm font-medium">
+                Masterclass
+              </div>
+            </a>
+            <a
+              href="/courses/therapy"
+              className="group bg-background hover:border-primary rounded-lg border p-4 text-center transition-all hover:shadow-md"
+            >
+              <div className="mb-2 text-2xl">💚</div>
+              <div className="group-hover:text-primary text-sm font-medium">
+                Therapy
+              </div>
+            </a>
+            <a
+              href="/courses/supervised"
+              className="group bg-background hover:border-primary rounded-lg border p-4 text-center transition-all hover:shadow-md"
+            >
+              <div className="mb-2 text-2xl">👁️</div>
+              <div className="group-hover:text-primary text-sm font-medium">
+                Supervised
+              </div>
+            </a>
+            <a
+              href="/courses/resume-studio"
+              className="group bg-background hover:border-primary rounded-lg border p-4 text-center transition-all hover:shadow-md"
+            >
+              <div className="mb-2 text-2xl">📄</div>
+              <div className="group-hover:text-primary text-sm font-medium">
+                Resume Studio
+              </div>
+            </a>
+          </div>
+        </div>
+      </section>
+
+      {/* All Courses Section */}
+      <section className="section-padding">
+        <div className="container">
+          <div className="mb-12 text-center">
+            <div className="bg-primary/10 mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full">
+              <BookOpen className="text-primary h-10 w-10" />
+            </div>
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+              All Available Courses
+            </h2>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
+              Browse our complete collection of courses across all categories
+            </p>
+          </div>
+
+          {coursesData?.courses && coursesData.courses.length > 0 ? (
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {coursesData.courses.map((course) => (
+                <CourseCard key={course._id} course={course} />
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center">
+              <BookOpen className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+              <h3 className="mb-2 text-xl font-semibold">
+                No courses available yet
+              </h3>
+              <p className="text-muted-foreground">
+                We're working on adding new courses. Check back soon!
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
     </div>
   );
 }
