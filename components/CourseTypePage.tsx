@@ -13,10 +13,19 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import { Plus, Star, Users, Award, BookOpen } from "lucide-react";
+import {
+  Plus,
+  BookOpen,
+  Award,
+  Users,
+  PlayCircle,
+  Lightbulb,
+  Heart,
+  Eye,
+  FileText,
+} from "lucide-react";
 import { showRupees } from "@/lib/utils";
 import { Doc } from "@/convex/_generated/dataModel";
-import Link from "next/link";
 
 const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
@@ -69,8 +78,40 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   );
 };
 
-export default function Home() {
-  const courses = useQuery(api.courses.listCourses, { count: undefined });
+const iconMap = {
+  Award,
+  Users,
+  BookOpen,
+  PlayCircle,
+  Lightbulb,
+  Heart,
+  Eye,
+  FileText,
+};
+
+interface CourseTypePageProps {
+  courseType:
+    | "certificate"
+    | "internship"
+    | "diploma"
+    | "pre-recorded"
+    | "masterclass"
+    | "therapy"
+    | "supervised"
+    | "resume-studio";
+  title: string;
+  description: string;
+  iconName: keyof typeof iconMap;
+}
+
+export default function CourseTypePage({
+  courseType,
+  title,
+  description,
+  iconName,
+}: CourseTypePageProps) {
+  const Icon = iconMap[iconName];
+  const courses = useQuery(api.courses.listCoursesByType, { type: courseType });
 
   return (
     <div className="min-h-screen">
@@ -78,60 +119,15 @@ export default function Home() {
       <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
         <div className="container text-center">
           <div className="mx-auto max-w-4xl">
-            <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl lg:text-6xl">
-              The Mind Point
+            <div className="bg-primary/10 mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full">
+              <Icon className="text-primary h-10 w-10" />
+            </div>
+            <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
+              {title}
             </h1>
-            <p className="text-muted-foreground mb-8 text-xl leading-relaxed md:text-2xl">
-              Empowering minds through comprehensive mental health education and
-              professional development
+            <p className="text-muted-foreground mb-8 text-xl leading-relaxed">
+              {description}
             </p>
-            <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <Link href="/courses">
-                <Button
-                  size="lg"
-                  className="transition-smooth px-8 py-6 text-lg hover:cursor-pointer"
-                >
-                  <BookOpen className="mr-2 h-5 w-5" />
-                  Explore Courses
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                size="lg"
-                className="transition-smooth px-8 py-6 text-lg"
-              >
-                Learn More
-              </Button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="bg-card py-12">
-        <div className="container">
-          <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
-            <div className="text-center">
-              <div className="bg-primary/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full">
-                <Users className="text-primary h-8 w-8" />
-              </div>
-              <h3 className="mb-2 text-2xl font-bold">1000+</h3>
-              <p className="text-muted-foreground">Students Enrolled</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-primary/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full">
-                <Award className="text-primary h-8 w-8" />
-              </div>
-              <h3 className="mb-2 text-2xl font-bold">50+</h3>
-              <p className="text-muted-foreground">Certified Courses</p>
-            </div>
-            <div className="text-center">
-              <div className="bg-primary/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full">
-                <Star className="text-primary h-8 w-8" />
-              </div>
-              <h3 className="mb-2 text-2xl font-bold">4.9</h3>
-              <p className="text-muted-foreground">Average Rating</p>
-            </div>
           </div>
         </div>
       </section>
@@ -141,11 +137,11 @@ export default function Home() {
         <div className="container">
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              Featured Courses
+              Available Courses
             </h2>
             <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
-              Discover our comprehensive range of mental health and professional
-              development courses
+              Explore our {title.toLowerCase()} and start your learning journey
+              today
             </p>
           </div>
 
@@ -159,10 +155,11 @@ export default function Home() {
             <div className="py-12 text-center">
               <BookOpen className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
               <h3 className="mb-2 text-xl font-semibold">
-                No courses available
+                No courses available yet
               </h3>
               <p className="text-muted-foreground">
-                Check back soon for new courses and programs
+                We're working on adding new {title.toLowerCase()} courses. Check
+                back soon!
               </p>
             </div>
           )}

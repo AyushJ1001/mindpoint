@@ -1,128 +1,219 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bird, GlobeIcon } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import {
+  Globe,
+  Users,
+  BookOpen,
+  Award,
+  Heart,
+  Target,
+  Lightbulb,
+  CheckCircle,
+} from "lucide-react";
 import Image from "next/image";
 
 export default function About() {
   return (
-    <article className="prose prose-lg container mx-auto my-8">
-      <p>
-        At <b>The Mind Point</b>, we're more than just an organization — we're a
-        compassionate, curious, and creative communitycommitted to transforming
-        the way mental health education is experienced. We specialize in online
-        psychological education, offering a rich blend of certificate courses,
-        diploma programs, workshops, internships, and training experiences that
-        are rooted in both scientific rigor and human warmth. Our platform is
-        designed to be inclusive, accessible, and deeply engaging — where
-        learning feels like a meaningful conversation over a cup of tea.
-      </p>
-
-      <h2 className="mt-8 text-2xl font-bold">What We Do:</h2>
-      <ul className="my-6 ml-6 list-disc [&>li]:mt-2">
-        <li>
-          Certificate & Diploma Programs in counselling, therapy, and
-          psychology-related disciplines
-        </li>
-        <li>Live Online Classes led by trained mental health professionals</li>
-        <li>
-          Pre-recorded Self-Paced Courses for flexible, independent learning
-        </li>
-        <li>
-          Supervised Internshi ps & Observerships to help students apply theory
-          to practice
-        </li>
-        <li>
-          Workshops, Webinars, and Masterclasses that explore therapeutic tools,
-          trends, and innovations
-        </li>
-      </ul>
-      <h2 className="mt-8 text-2xl font-bold">Our Learners:</h2>
-      <p>
-        Our learners range from psychology students to practicing professionals,
-        as well as individuals curious about mental health, healing, and
-        personal growth. Every course we offer is designed to be practical,
-        experiential, and deeply relevant — with real-world skills that empower
-        people to grow both personally and professionally.
-      </p>
-
-      <h2 className="mt-8 text-2xl font-bold">Our Core Beliefs:</h2>
-      <ul className="my-6 ml-6 list-disc [&>li]:mt-2">
-        <li>Mental health education should be accessible and joyful</li>
-        <li>Learning should feel safe, engaging, and inspiring</li>
-        <li>
-          Psychology isn't just something to study — it's something to live,
-          explore, and celebrate
-        </li>
-      </ul>
-      <p>
-        With a sprinkle of humor, a dash of creativity, and a whole lot of
-        heart, The Mind Point is here to guide you on a journey of
-        transformation — one mindful step at a time.
-      </p>
-
-      <h2 className="mt-8 text-center text-5xl font-bold text-shadow-blue-300">
-        Our Accreditations
-      </h2>
-      <div className="mt-8 flex items-center justify-center gap-6">
-        <Card className="h-64">
-          <CardHeader>
-            <CardTitle className="text-center">MSME</CardTitle>
-          </CardHeader>
-          <CardContent className="flex h-full items-center justify-center">
-            <Image
-              src="/accreditions/msme.avif"
-              alt="MSME Logo"
-              width={200}
-              height={100}
-              className="object-contain"
-            />
-          </CardContent>
-        </Card>
-        <Card className="h-64">
-          <CardHeader>
-            <CardTitle className="text-center">IAOTH</CardTitle>
-          </CardHeader>
-          <CardContent className="flex h-full items-center justify-center">
-            <Image
-              src="/accreditions/iaoth.avif"
-              alt="IAOTH Logo"
-              width={200}
-              height={100}
-              className="object-contain"
-            />
-          </CardContent>
-        </Card>
-        <Card className="h-64">
-          <CardHeader>
-            <CardTitle className="text-center">ISO 9001:2015</CardTitle>
-          </CardHeader>
-          <CardContent className="flex h-full items-center justify-center">
-            <Image
-              src="/accreditions/iso.avif"
-              alt="ISO Logo"
-              width={200}
-              height={100}
-              className="object-contain"
-            />
-          </CardContent>
-        </Card>
-      </div>
-
-      <h2 className="mt-8 text-center text-5xl font-bold text-shadow-blue-300">
-        Why Choose The Mind Point?
-      </h2>
-      <div className="mt-8 grid grid-cols-4 gap-6 rounded-lg bg-gradient-to-tl from-blue-100 to-blue-300 p-6 shadow-lg">
-        <div>
-          <GlobeIcon />
-          Certificates accepted globally
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
+        <div className="container">
+          <div className="mx-auto max-w-4xl text-center">
+            <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
+              About The Mind Point
+            </h1>
+            <p className="text-muted-foreground text-xl leading-relaxed">
+              We&apos;re more than just an organization — we&apos;re a
+              compassionate, curious, and creative community committed to
+              transforming the way mental health education is experienced.
+            </p>
+          </div>
         </div>
-        <div>Practical Application along with Theory</div>
-        <div>Personal Attention</div>
-        <div>Job Opportunities</div>
-        <div>Affordable Prices & Discount Offers</div>
-        <div>Case Studies</div>
-        <div>Detailed Study Material</div>
-        <div>Recording for the Lectures</div>
-      </div>
-    </article>
+      </section>
+
+      {/* Main Content */}
+      <section className="section-padding">
+        <div className="container max-w-6xl">
+          <div className="mb-16 grid items-center gap-12 lg:grid-cols-2">
+            <div>
+              <h2 className="mb-6 text-3xl font-bold">Our Mission</h2>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                We specialize in online psychological education, offering a rich
+                blend of certificate courses, diploma programs, workshops,
+                internships, and training experiences that are rooted in both
+                scientific rigor and human warmth.
+              </p>
+              <p className="text-muted-foreground leading-relaxed">
+                Our platform is designed to be inclusive, accessible, and deeply
+                engaging — where learning feels like a meaningful conversation
+                over a cup of tea.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="bg-card card-shadow rounded-lg p-6 text-center">
+                <Users className="text-primary mx-auto mb-4 h-12 w-12" />
+                <h3 className="mb-2 font-semibold">1000+</h3>
+                <p className="text-muted-foreground text-sm">
+                  Students Enrolled
+                </p>
+              </div>
+              <div className="bg-card card-shadow rounded-lg p-6 text-center">
+                <BookOpen className="text-primary mx-auto mb-4 h-12 w-12" />
+                <h3 className="mb-2 font-semibold">50+</h3>
+                <p className="text-muted-foreground text-sm">
+                  Courses Available
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <Separator className="my-16" />
+
+          {/* What We Do */}
+          <div className="mb-16">
+            <h2 className="mb-12 text-center text-3xl font-bold">What We Do</h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[
+                {
+                  icon: Award,
+                  title: "Certificate & Diploma Programs",
+                  description:
+                    "Comprehensive programs in counselling, therapy, and psychology-related disciplines",
+                },
+                {
+                  icon: Users,
+                  title: "Live Online Classes",
+                  description:
+                    "Interactive sessions led by trained mental health professionals",
+                },
+                {
+                  icon: BookOpen,
+                  title: "Self-Paced Courses",
+                  description:
+                    "Pre-recorded courses for flexible, independent learning",
+                },
+                {
+                  icon: Target,
+                  title: "Supervised Internships",
+                  description:
+                    "Practical experience to help students apply theory to practice",
+                },
+                {
+                  icon: Lightbulb,
+                  title: "Workshops & Masterclasses",
+                  description:
+                    "Explore therapeutic tools, trends, and innovations",
+                },
+                {
+                  icon: Heart,
+                  title: "Personal Growth",
+                  description:
+                    "Programs focused on healing and personal development",
+                },
+              ].map((service, index) => (
+                <Card
+                  key={index}
+                  className="card-shadow hover:card-shadow-lg transition-smooth"
+                >
+                  <CardContent className="p-6">
+                    <service.icon className="text-primary mb-4 h-12 w-12" />
+                    <h3 className="mb-2 font-semibold">{service.title}</h3>
+                    <p className="text-muted-foreground text-sm">
+                      {service.description}
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <Separator className="my-16" />
+
+          {/* Core Beliefs */}
+          <div className="mb-16">
+            <h2 className="mb-12 text-center text-3xl font-bold">
+              Our Core Beliefs
+            </h2>
+            <div className="mx-auto max-w-3xl space-y-6">
+              {[
+                "Mental health education should be accessible and joyful",
+                "Learning should feel safe, engaging, and inspiring",
+                "Psychology isn't just something to study — it's something to live, explore, and celebrate",
+              ].map((belief, index) => (
+                <div key={index} className="flex items-start gap-4">
+                  <CheckCircle className="text-primary mt-1 h-6 w-6 flex-shrink-0" />
+                  <p className="text-muted-foreground">{belief}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <Separator className="my-16" />
+
+          {/* Accreditations */}
+          <div className="mb-16">
+            <h2 className="mb-12 text-center text-3xl font-bold">
+              Our Accreditations
+            </h2>
+            <div className="grid gap-8 md:grid-cols-3">
+              {[
+                { name: "MSME", image: "/accreditions/msme.avif" },
+                { name: "IAOTH", image: "/accreditions/iaoth.avif" },
+                { name: "ISO 9001:2015", image: "/accreditions/iso.avif" },
+              ].map((accreditation, index) => (
+                <Card
+                  key={index}
+                  className="card-shadow hover:card-shadow-lg transition-smooth"
+                >
+                  <CardHeader>
+                    <CardTitle className="text-center">
+                      {accreditation.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="flex items-center justify-center p-8">
+                    <Image
+                      src={accreditation.image}
+                      alt={`${accreditation.name} Logo`}
+                      width={200}
+                      height={100}
+                      className="object-contain"
+                    />
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          {/* Why Choose Us */}
+          <div className="from-primary/5 to-accent/5 rounded-2xl bg-gradient-to-br p-8 md:p-12">
+            <h2 className="mb-12 text-center text-3xl font-bold">
+              Why Choose The Mind Point?
+            </h2>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+              {[
+                { icon: Globe, text: "Certificates accepted globally" },
+                {
+                  icon: BookOpen,
+                  text: "Practical Application along with Theory",
+                },
+                { icon: Users, text: "Personal Attention" },
+                { icon: Target, text: "Job Opportunities" },
+                { icon: Award, text: "Affordable Prices & Discount Offers" },
+                { icon: Heart, text: "Case Studies" },
+                { icon: Lightbulb, text: "Detailed Study Material" },
+                { icon: CheckCircle, text: "Recording for the Lectures" },
+              ].map((feature, index) => (
+                <div key={index} className="text-center">
+                  <div className="bg-primary/10 mb-4 inline-flex h-16 w-16 items-center justify-center rounded-full">
+                    <feature.icon className="text-primary h-8 w-8" />
+                  </div>
+                  <p className="font-medium">{feature.text}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
