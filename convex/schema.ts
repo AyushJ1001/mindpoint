@@ -1,6 +1,17 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
+export const CourseType = v.union(
+  v.literal("certificate"),
+  v.literal("internship"),
+  v.literal("diploma"),
+  v.literal("pre-recorded"),
+  v.literal("masterclass"),
+  v.literal("therapy"),
+  v.literal("supervised"),
+  v.literal("resume-studio"),
+);
+
 // The schema is entirely optional.
 // You can delete this file (schema.ts) and the
 // app will continue to work.
@@ -12,6 +23,7 @@ export default defineSchema({
   courses: defineTable({
     name: v.string(),
     description: v.optional(v.string()),
+    type: v.optional(CourseType),
     code: v.string(),
     price: v.number(),
     capacity: v.number(),
@@ -23,7 +35,7 @@ export default defineSchema({
     daysOfWeek: v.array(v.string()),
     content: v.string(),
     reviews: v.array(v.id("reviews")),
-    imageUrls: v.optional(v.array(v.string())),
+    imageUrls: v.optional(v.array(v.id("_storage"))),
   }),
   reviews: defineTable({
     userId: v.string(),
