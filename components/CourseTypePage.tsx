@@ -1,5 +1,7 @@
 "use client";
 
+import React from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useCart } from "react-use-cart";
@@ -67,7 +69,7 @@ const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
 
   if (!actualImageUrls || actualImageUrls.length === 0) {
     return (
-      <div className="relative flex h-80 items-center justify-center rounded-t-lg bg-gray-100">
+      <div className="relative flex h-72 items-center justify-center rounded-t-lg bg-gray-100">
         <BookOpen className="h-12 w-12 text-gray-400" />
       </div>
     );
@@ -75,7 +77,7 @@ const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
 
   if (actualImageUrls.length === 1) {
     return (
-      <div className="relative flex h-80 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100">
+      <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100">
         <Image
           src={
             actualImageUrls[0]?.url ??
@@ -91,13 +93,13 @@ const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   }
 
   return (
-    <div className="relative h-80 overflow-hidden rounded-t-lg bg-gray-100">
+    <div className="relative h-72 overflow-hidden rounded-t-lg bg-gray-100">
       <Carousel className="h-full w-full">
         <CarouselContent>
           {actualImageUrls.map((imageUrl, index) => (
             <CarouselItem
               key={index}
-              className="flex h-80 items-center justify-center"
+              className="flex h-72 items-center justify-center"
             >
               <Image
                 src={imageUrl?.url || ""}
@@ -116,8 +118,222 @@ const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   );
 };
 
+// Prefer explicit fields: `sessions` (number) or fallback to `duration` (string)
+const extractVariantLabel = (course: Doc<"courses">): string | null => {
+  if (typeof (course as any).sessions === "number") {
+    const count = (course as any).sessions as number;
+    return `${count} ${count === 1 ? "session" : "sessions"}`;
+  }
+  const duration = (course as any).duration as string | undefined;
+  if (typeof duration === "string" && duration.trim().length > 0) {
+    return duration.trim();
+  }
+  // Last resort: try to extract sessions from text
+  const candidates = [course.name, course.description ?? "", course.content];
+  for (const text of candidates) {
+    if (!text) continue;
+    const match = text.match(/(\d+)\s*(session|sessions)\b/i);
+    if (match) {
+      const count = Number(match[1]);
+      return `${count} ${count === 1 ? "session" : "sessions"}`;
+    }
+  }
+  return null;
+};
+
+const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
+  const { addItem, inCart } = useCart();
+  const router = useRouter();
+  const sorted = [...courses].sort((a, b) => a.price - b.price);
+  // Use sessions-based selection when all variants have a numeric `sessions` field
+  const useSessionsMode = sorted.every(
+    (c) => typeof (c as any).sessions === "number",
+  );
+  // Otherwise, if all have a non-empty `duration` string, use duration-based select
+  const useDurationMode =
+    !useSessionsMode &&
+    sorted.every(
+      (c) => typeof (c as any).duration === "string" && !!(c as any).duration,
+    );
+  const [selectedId, setSelectedId] = React.useState(sorted[0]._id);
+  const [selectedSessions, setSelectedSessions] = React.useState<number>(
+    useSessionsMode ? ((sorted[0] as any).sessions as number) : 0,
+  );
+  const [selectedDuration, setSelectedDuration] = React.useState<string>(
+    useDurationMode ? (((sorted[0] as any).duration as string) ?? "") : "",
+  );
+  const selectedCourse = useSessionsMode
+    ? (sorted.find((c) => (c as any).sessions === selectedSessions) ??
+      sorted[0])
+    : useDurationMode
+      ? (sorted.find((c) => (c as any).duration === selectedDuration) ??
+        sorted[0])
+      : (sorted.find((c) => c._id === selectedId) ?? sorted[0]);
+
+  const handleAddToCart = () => {
+    const label = extractVariantLabel(selectedCourse);
+    addItem({
+      id: selectedCourse._id,
+      name: label ? `${selectedCourse.name} (${label})` : selectedCourse.name,
+      description: selectedCourse.description,
+      price: selectedCourse.price || 100,
+      imageUrls: selectedCourse.imageUrls || [],
+      capacity: selectedCourse.capacity || 1,
+    });
+  };
+
+  const handleBuyNow = () => {
+    if (!inCart(selectedCourse._id)) {
+      handleAddToCart();
+    }
+    router.push("/cart");
+  };
+
+  const handleCardClick = () => {
+    router.push(`/courses/${selectedCourse._id}`);
+  };
+
+  return (
+    <Card
+      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
+      onClick={handleCardClick}
+    >
+      <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
+
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between">
+          <div className="flex-1">
+            <CardTitle className="group-hover:text-primary transition-smooth text-lg">
+              {sorted[0].name}
+            </CardTitle>
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <div className="mb-3">
+          {useSessionsMode ? (
+            <Select
+              value={String(selectedSessions)}
+              onValueChange={(val) => setSelectedSessions(parseInt(val, 10))}
+            >
+              <SelectTrigger
+                className="w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <SelectValue placeholder="Select sessions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Sessions</SelectLabel>
+                  {sorted.map((variant) => {
+                    const sessions = (variant as any).sessions as number;
+                    const label = `${sessions} ${sessions === 1 ? "session" : "sessions"}`;
+                    return (
+                      <SelectItem key={variant._id} value={String(sessions)}>
+                        {label} — {showRupees(variant.price)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          ) : useDurationMode ? (
+            <Select
+              value={selectedDuration}
+              onValueChange={(val) => setSelectedDuration(val)}
+            >
+              <SelectTrigger
+                className="w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <SelectValue placeholder="Select duration" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Duration</SelectLabel>
+                  {sorted.map((variant) => {
+                    const duration = (variant as any).duration as string;
+                    const label = duration?.trim() ?? "Duration";
+                    return (
+                      <SelectItem key={variant._id} value={duration}>
+                        {label} — {showRupees(variant.price)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          ) : (
+            <Select
+              value={selectedId as unknown as string}
+              onValueChange={(val) =>
+                setSelectedId(val as unknown as Id<"courses">)
+              }
+            >
+              <SelectTrigger
+                className="w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <SelectValue placeholder="Select an option" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectLabel>Options</SelectLabel>
+                  {sorted.map((variant, idx) => {
+                    const extracted = extractVariantLabel(variant);
+                    let label = extracted ?? `Option ${idx + 1}`;
+                    // For therapy groups with exactly 3 variants, map to 3, 6, 8 sessions
+                    const isTherapy =
+                      (variant.type as string | undefined) === "therapy";
+                    if (!extracted && isTherapy && sorted.length === 3) {
+                      const mapped = [3, 6, 8][idx];
+                      label = `${mapped} ${mapped === 1 ? "session" : "sessions"}`;
+                    }
+                    return (
+                      <SelectItem
+                        key={variant._id}
+                        value={variant._id as unknown as string}
+                      >
+                        {label} — {showRupees(variant.price)}
+                      </SelectItem>
+                    );
+                  })}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          )}
+        </div>
+
+        <div className="flex items-center justify-between">
+          <Badge
+            variant="secondary"
+            className="px-3 py-1 text-base font-semibold"
+          >
+            {showRupees(selectedCourse.price || 100)}
+          </Badge>
+          <div className="flex gap-2">
+            <Button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart();
+              }}
+              disabled={inCart(selectedCourse._id)}
+              size="sm"
+              className="transition-smooth"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {inCart(selectedCourse._id) ? "Added" : "Add to Cart"}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
+  const router = useRouter();
   console.log(course.imageUrls);
 
   const handleAddToCart = () => {
@@ -131,17 +347,31 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     });
   };
 
+  const handleBuyNow = () => {
+    if (!inCart(course._id)) {
+      handleAddToCart();
+    }
+    router.push("/cart");
+  };
+
+  const handleCardClick = () => {
+    router.push(`/courses/${course._id}`);
+  };
+
   return (
-    <Card className="card-shadow hover:card-shadow-lg transition-smooth group h-full overflow-hidden">
+    <Card
+      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
+      onClick={handleCardClick}
+    >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <CardTitle className="group-hover:text-primary transition-smooth text-lg">
               {course.name}
             </CardTitle>
-            <CardDescription className="mt-2 text-sm leading-relaxed">
+            <CardDescription className="mt-1.5 text-sm leading-relaxed">
               {course.description}
             </CardDescription>
           </div>
@@ -157,7 +387,10 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           </Badge>
           <div className="flex gap-2">
             <Button
-              onClick={handleAddToCart}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAddToCart();
+              }}
               disabled={inCart(course._id)}
               size="sm"
               className="transition-smooth"
@@ -241,9 +474,23 @@ export default function CourseTypePage({
 
           {courses?.courses && courses.courses.length > 0 ? (
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {courses.courses.map((course) => (
-                <CourseCard key={course._id} course={course} />
-              ))}
+              {(() => {
+                // Group courses by name; if multiple with same name, render a grouped card with select
+                const nameToCourses = new Map<string, Array<Doc<"courses">>>();
+                for (const course of courses.courses) {
+                  const list = nameToCourses.get(course.name) ?? [];
+                  list.push(course);
+                  nameToCourses.set(course.name, list);
+                }
+                const groups = Array.from(nameToCourses.values());
+                return groups.map((group) =>
+                  group.length > 1 ? (
+                    <CourseGroupCard key={group[0]._id} courses={group} />
+                  ) : (
+                    <CourseCard key={group[0]._id} course={group[0]} />
+                  ),
+                );
+              })()}
             </div>
           ) : (
             <div className="py-12 text-center">

@@ -90,7 +90,9 @@ export const handleSuccessfulPayment = mutation({
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
       userId: args.userId,
+      userName: args.userEmail,
       courseId: args.courseId,
+      courseName: course.name,
       enrollmentNumber: enrollmentNumber,
     });
 
@@ -107,6 +109,10 @@ export const handleSuccessfulPayment = mutation({
         userEmail: args.userEmail,
         courseName: course.name,
         enrollmentNumber: enrollmentNumber,
+        startDate: course.startDate,
+        endDate: course.endDate,
+        startTime: course.startTime,
+        endTime: course.endTime,
       },
     );
 
@@ -154,6 +160,8 @@ export const handleCartCheckout = mutation({
       const enrollmentId = await ctx.db.insert("enrollments", {
         userId: args.userId,
         courseId: courseId,
+        courseName: course.name,
+        userName: args.userEmail,
         enrollmentNumber: enrollmentNumber,
       });
 
@@ -167,6 +175,10 @@ export const handleCartCheckout = mutation({
         enrollmentNumber,
         courseName: course.name,
         courseId: courseId,
+        startDate: course.startDate,
+        endDate: course.endDate,
+        startTime: course.startTime,
+        endTime: course.endTime,
       });
     }
 
