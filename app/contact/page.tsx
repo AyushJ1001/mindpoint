@@ -17,12 +17,7 @@ import {
 import { Phone, Mail, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
-
-const contactFormSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.email("Please enter a valid email address"),
-  message: z.string().min(10, "Message must be at least 10 characters"),
-});
+import { contactFormSchema } from "@/lib/utils";
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 

@@ -1,4 +1,4 @@
-import { contactFormSchema } from "@/app/contact/page";
+import { contactFormSchema } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 
