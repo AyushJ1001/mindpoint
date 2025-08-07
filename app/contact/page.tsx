@@ -14,10 +14,11 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Facebook, Instagram, Linkedin } from "lucide-react";
+import { Phone, Mail, Clock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from "next/link";
 
-export const contactFormSchema = z.object({
+const contactFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.email("Please enter a valid email address"),
   message: z.string().min(10, "Message must be at least 10 characters"),
@@ -62,104 +63,225 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="mx-auto mt-8 max-w-3/4 space-y-6">
-      <div className="text-center">
-        <h1 className="mb-4 text-2xl font-bold">Contact Us</h1>
-        <div className="text-muted-foreground grid grid-cols-3 grid-rows-2 gap-4">
-          <div className="text-center">Phone</div>
-          <div className="text-center">Email</div>
-          <div className="text-center">Social Media</div>
-          <div className="text-center text-sm">+91 70576 28124</div>
-          <div className="text-center text-sm break-words">
-            admin@themindpoint.org
-          </div>
-          <div className="flex items-center justify-center gap-2">
-            <Link href="https://www.facebook.com/themindpoint" target="_blank">
-              <Facebook size={16} />
-            </Link>
-            <Link
-              href="https://www.linkedin.com/company/themindpoint"
-              target="_blank"
-            >
-              <Linkedin size={16} />
-            </Link>
-            <Link
-              href="https://www.instagram.com/themindpoint/"
-              target="_blank"
-            >
-              <Instagram size={16} />
-            </Link>
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
+        <div className="container">
+          <div className="mx-auto max-w-4xl text-center">
+            <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
+              Contact Us
+            </h1>
+            <p className="text-muted-foreground text-xl leading-relaxed">
+              Get in touch with us for any questions, support, or to learn more
+              about our programs
+            </p>
           </div>
         </div>
-      </div>
+      </section>
 
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <FormField
-            control={form.control}
-            name="name"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input placeholder="Your Name" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+      {/* Contact Content */}
+      <section className="section-padding">
+        <div className="container max-w-6xl">
+          <div className="grid gap-12 lg:grid-cols-2">
+            {/* Contact Information */}
+            <div className="space-y-8">
+              <div>
+                <h2 className="mb-6 text-3xl font-bold">Get In Touch</h2>
+                <p className="text-muted-foreground mb-8 leading-relaxed">
+                  We&apos;d love to hear from you. Send us a message and
+                  we&apos;ll respond as soon as possible.
+                </p>
+              </div>
 
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input placeholder="your.email@example.com" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              <div className="grid gap-6">
+                <Card className="card-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="bg-primary/10 inline-flex h-12 w-12 items-center justify-center rounded-full">
+                        <Phone className="text-primary h-6 w-6" />
+                      </div>
+                      <div>
+                        <h3 className="mb-2 font-semibold">Phone</h3>
+                        <p className="text-muted-foreground">+91 70576 28124</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-          <FormField
-            control={form.control}
-            name="message"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Message</FormLabel>
-                <FormControl>
-                  <Textarea
-                    placeholder="Your message here..."
-                    className="min-h-[120px]"
-                    {...field}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+                <Card className="card-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="bg-primary/10 inline-flex h-12 w-12 items-center justify-center rounded-full">
+                        <Mail className="text-primary h-6 w-6" />
+                      </div>
+                      <div>
+                        <h3 className="mb-2 font-semibold">Email</h3>
+                        <p className="text-muted-foreground">
+                          admin@themindpoint.org
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
 
-          <Button
-            type="submit"
-            className="mb-8 w-full"
-            disabled={form.formState.isSubmitting}
-          >
-            {form.formState.isSubmitting ? "Sending..." : "Send Message"}
-          </Button>
+                <Card className="card-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start gap-4">
+                      <div className="bg-primary/10 inline-flex h-12 w-12 items-center justify-center rounded-full">
+                        <Clock className="text-primary h-6 w-6" />
+                      </div>
+                      <div>
+                        <h3 className="mb-2 font-semibold">Business Hours</h3>
+                        <p className="text-muted-foreground">
+                          Monday - Friday: 9:00 AM - 6:00 PM
+                        </p>
+                        <p className="text-muted-foreground">
+                          Saturday: 10:00 AM - 4:00 PM
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
 
-          {status && (
-            <p
-              className={`text-center text-sm ${
-                status.includes("Error") ? "text-destructive" : "text-green-600"
-              }`}
-            >
-              {status}
-            </p>
-          )}
-        </form>
-      </Form>
+              {/* Social Media */}
+              <div>
+                <h3 className="mb-4 font-semibold">Follow Us</h3>
+                <div className="flex gap-4">
+                  <Link
+                    href="https://www.facebook.com/themindpoint"
+                    target="_blank"
+                    className="bg-primary/10 hover:bg-primary/20 transition-smooth inline-flex h-12 w-12 items-center justify-center rounded-full"
+                    aria-label="Follow us on Facebook"
+                  >
+                    <svg
+                      className="text-primary h-6 w-6"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                    </svg>
+                  </Link>
+                  <Link
+                    href="https://www.linkedin.com/company/themindpoint"
+                    target="_blank"
+                    className="bg-primary/10 hover:bg-primary/20 transition-smooth inline-flex h-12 w-12 items-center justify-center rounded-full"
+                    aria-label="Follow us on LinkedIn"
+                  >
+                    <svg
+                      className="text-primary h-6 w-6"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                    </svg>
+                  </Link>
+                  <Link
+                    href="https://www.instagram.com/themindpoint/"
+                    target="_blank"
+                    className="bg-primary/10 hover:bg-primary/20 transition-smooth inline-flex h-12 w-12 items-center justify-center rounded-full"
+                    aria-label="Follow us on Instagram"
+                  >
+                    <svg
+                      className="text-primary h-6 w-6"
+                      fill="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+                    </svg>
+                  </Link>
+                </div>
+              </div>
+            </div>
+
+            {/* Contact Form */}
+            <Card className="card-shadow">
+              <CardHeader>
+                <CardTitle>Send us a message</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <form
+                    onSubmit={form.handleSubmit(onSubmit)}
+                    className="space-y-6"
+                  >
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your Name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="your.email@example.com"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="message"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Message</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Your message here..."
+                              className="min-h-[120px]"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <Button
+                      type="submit"
+                      className="transition-smooth w-full"
+                      disabled={form.formState.isSubmitting}
+                    >
+                      {form.formState.isSubmitting
+                        ? "Sending..."
+                        : "Send Message"}
+                    </Button>
+
+                    {status && (
+                      <p
+                        className={`text-center text-sm ${
+                          status.includes("Error")
+                            ? "text-destructive"
+                            : "text-green-600"
+                        }`}
+                      >
+                        {status}
+                      </p>
+                    )}
+                  </form>
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
