@@ -183,6 +183,33 @@
   }
 }
 
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skip link styles */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-md);
+  z-index: 100;
+}
+.skip-link:focus {
+  top: 0.5rem;
+  left: 0.5rem;
+  outline: 3px solid var(--ring);
+}
+
 @font-face {
   font-family: "KC Obra Letra";
   src: url("/fonts/KCObraLetraRegular.ttf") format("truetype"); /* use .woff2 if you have it */

@@ -37,6 +37,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
       >
+        {/* Skip link for keyboard users */}
+        <a href="#main-content" className="skip-link">
+          Skip to main content
+        </a>
         <ClerkProvider dynamic>
           <ConvexClientProvider>
             <ThemeProvider
@@ -47,7 +51,14 @@ export default function RootLayout({
             >
               <CartProvider>
                 <Navbar />
-                <main className="flex-grow">{children}</main>
+                <main
+                  id="main-content"
+                  className="flex-grow"
+                  role="main"
+                  tabIndex={-1}
+                >
+                  {children}
+                </main>
                 <Footer />
                 <Toaster />
               </CartProvider>

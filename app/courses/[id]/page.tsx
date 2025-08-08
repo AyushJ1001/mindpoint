@@ -842,13 +842,13 @@ export default function CoursePage({ params }: { params: { id: string } }) {
               <div className="pointer-events-none absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-none border-2 border-blue-800 bg-blue-300" />
               {/* Foreground outlined card */}
               <Card className="card-shadow hover:card-shadow-lg transition-smooth rounded-none border-[3px] border-blue-900 bg-blue-50 hover:-translate-y-0.5">
-                <CardHeader className="items-center p-8 text-center md:p-12">
-                  <CardTitle className="text-4xl font-semibold text-blue-950 md:text-5xl">
-                    Overview
+                <CardHeader className="items-center text-center">
+                  <CardTitle className="font-serif text-4xl font-semibold text-blue-950 md:text-5xl">
+                    Course Overview
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="prose prose-neutral dark:prose-invert mx-auto text-center">
+                  <div className="prose prose-neutral dark:prose-invert mx-auto text-center font-serif">
                     <StructuredContent
                       text={course.description ?? "Details coming soon."}
                     />
