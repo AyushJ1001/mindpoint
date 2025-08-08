@@ -47,7 +47,7 @@ export default function Navbar() {
   }, []);
 
   return (
-    <nav className="bg-background/95 border-border sticky top-0 z-50 border-b shadow-sm backdrop-blur-sm">
+    <nav className="bg-background/95 border-border sticky top-0 z-50 border-b bg-gradient-to-br from-10% via-blue-100 to-blue-300 shadow-sm backdrop-blur-sm">
       <div className="container">
         <div className="flex items-center justify-between py-4">
           {/* Logo */}
@@ -59,7 +59,7 @@ export default function Navbar() {
               height={40}
               className="transition-smooth hover:scale-105"
             />
-            <span className="text-primary hidden text-xl font-bold sm:block">
+            <span className="hidden text-xl font-bold text-blue-950 text-shadow-black sm:block">
               The Mind Point
             </span>
           </Link>

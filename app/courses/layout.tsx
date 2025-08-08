@@ -75,7 +75,9 @@ export default function CoursesLayout({
             <div className="flex h-16 items-center px-4">
               <SidebarTrigger />
               <div className="ml-4">
-                <h1 className="text-2xl font-semibold">Courses</h1>
+                <Link href="/courses">
+                  <h1 className="text-2xl font-semibold">Courses</h1>
+                </Link>
               </div>
             </div>
           </div>

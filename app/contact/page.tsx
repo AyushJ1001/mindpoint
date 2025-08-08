@@ -97,7 +97,7 @@ export default function ContactPage() {
                       </div>
                       <div>
                         <h3 className="mb-2 font-semibold">Phone</h3>
-                        <p className="text-muted-foreground">+91 70576 28124</p>
+                        <p className="text-muted-foreground">+91 97707 80086</p>
                       </div>
                     </div>
                   </CardContent>
@@ -128,10 +128,7 @@ export default function ContactPage() {
                       <div>
                         <h3 className="mb-2 font-semibold">Business Hours</h3>
                         <p className="text-muted-foreground">
-                          Monday - Friday: 9:00 AM - 6:00 PM
-                        </p>
-                        <p className="text-muted-foreground">
-                          Saturday: 10:00 AM - 4:00 PM
+                          Monday - Friday: 5:00 PM - 9:00 PM IST
                         </p>
                       </div>
                     </div>

@@ -58,14 +58,12 @@ import {
   SelectValue,
 } from "./ui/select";
 
-const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
+export const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   const actualImageUrls = imageUrls.map((id) =>
     useQuery(api.image.getImageUrl, {
       storageId: id as Id<"_storage">,
     }),
   );
-
-  console.log(actualImageUrls);
 
   if (!actualImageUrls || actualImageUrls.length === 0) {
     return (
@@ -443,35 +441,28 @@ export default function CourseTypePage({
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
+      <section className="section-padding from-primary/5 bg-gradient-to-br via-blue-100 to-blue-300">
+        <div className="bg-[url('data:image/svg+xml;utf8,<svg ...>')] pointer-events-none absolute inset-0 bg-repeat opacity-20"></div>
         <div className="container text-center">
           <div className="mx-auto max-w-4xl">
             <div className="bg-primary/10 mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full">
               {Icon && <Icon className="text-primary h-10 w-10" />}
             </div>
-            <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-              {title}
-            </h1>
-            <p className="text-muted-foreground mb-8 text-xl leading-relaxed">
-              {description}
-            </p>
+            <div>
+              <h1 className="from-primary to-primary/70 text-blue800 md:text-5x mb-6 bg-gradient-to-r bg-clip-text font-serif text-4xl font-bold text-blue-950 uppercase">
+                {title}
+              </h1>
+              <p className="text-muted-foreground mb-8 font-serif text-lg leading-relaxed">
+                {description}
+              </p>
+            </div>
           </div>
         </div>
       </section>
 
       {/* Courses Section */}
-      <section className="section-padding">
+      <section>
         <div className="container">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              Available Courses
-            </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-xl">
-              Explore our {title.toLowerCase()} and start your learning journey
-              today
-            </p>
-          </div>
-
           {courses?.courses && courses.courses.length > 0 ? (
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
               {(() => {

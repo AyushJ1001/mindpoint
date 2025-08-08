@@ -18,6 +18,7 @@ import { Plus, Star, Users, Award, BookOpen } from "lucide-react";
 import { showRupees } from "@/lib/utils";
 import { Doc } from "@/convex/_generated/dataModel";
 import Link from "next/link";
+import { CourseImageCarousel } from "@/components/CourseTypePage";
 
 const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
@@ -41,9 +42,12 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
 
   return (
     <Card
-      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer"
+      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
       onClick={handleCardClick}
     >
+      {/* Course Image */}
+      <CourseImageCarousel imageUrls={course.imageUrls || []} />
+
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">

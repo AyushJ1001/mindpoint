@@ -5,7 +5,7 @@ export default function PreRecordedCoursesPage() {
     <CourseTypePage
       courseType="pre-recorded"
       title="Pre-recorded Courses"
-      description="Learn at your own pace with our comprehensive library of pre-recorded courses covering various aspects of mental health and psychology."
+      description="Learn psychology anytime, anywhere with our pre-recorded courses. Perfect for busy schedules, these self-paced courses deliver high-quality content through engaging video lectures, downloadable resources, and interactive quizzes. Explore diverse topics like Child Psychology, Neuropsychology, and Relationship Therapy, taught by our expert faculty. Each course is designed for clarity and retention, with bite-sized lessons (5–15 minutes) and practical tools you can apply immediately. Take control of your learning and unlock your potential with The Mind Point!"
       iconName="PlayCircle"
     />
   );
