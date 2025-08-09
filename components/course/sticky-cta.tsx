@@ -34,7 +34,11 @@ export default function StickyCTA({
               disabled={disabled}
               className="w-full sm:w-auto"
             >
-              {inCart ? (quantity && quantity > 1 ? `In cart (${quantity})` : "Added to cart") : "Add to cart"}
+              {inCart
+                ? quantity && quantity > 1
+                  ? `In cart (${quantity})`
+                  : "Added to cart"
+                : "Add to cart"}
             </Button>
             <Button variant="outline" className="w-full sm:w-auto">
               <ShoppingCart className="mr-2 h-4 w-4" /> Buy now

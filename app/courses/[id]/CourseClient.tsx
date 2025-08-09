@@ -248,7 +248,7 @@ export default function CourseClient({
 
   // Helper function to get current quantity of a course in cart
   const getCurrentQuantity = (courseId: string) => {
-    const cartItem = items.find(item => item.id === courseId);
+    const cartItem = items.find((item) => item.id === courseId);
     return cartItem?.quantity || 0;
   };
 
@@ -256,7 +256,7 @@ export default function CourseClient({
   const handleIncreaseQuantity = (course: Doc<"courses">) => {
     const currentQuantity = getCurrentQuantity(course._id);
     const maxQuantity = course.capacity || 1;
-    
+
     if (currentQuantity === 0) {
       // Add to cart if not already there
       addItem({
@@ -276,7 +276,7 @@ export default function CourseClient({
   // Helper function to handle quantity decrease
   const handleDecreaseQuantity = (course: Doc<"courses">) => {
     const currentQuantity = getCurrentQuantity(course._id);
-    
+
     if (currentQuantity > 1) {
       updateItemQuantity(course._id, currentQuantity - 1);
     } else if (currentQuantity === 1) {
@@ -519,24 +519,40 @@ export default function CourseClient({
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
                     {inCart(displayCourse._id) ? (
-                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                      <div className="flex w-full items-center gap-2 sm:w-auto">
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleDecreaseQuantity(displayCourse)}
                           className="h-10 w-10 p-0"
+                          title="Decrease quantity"
                         >
                           <Minus className="h-4 w-4" />
                         </Button>
                         <span className="min-w-[3rem] text-center font-medium">
                           {getCurrentQuantity(displayCourse._id)}
+                          {displayCourse.capacity &&
+                            displayCourse.capacity > 1 && (
+                              <span className="text-muted-foreground block text-xs">
+                                /{displayCourse.capacity}
+                              </span>
+                            )}
                         </span>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => handleIncreaseQuantity(displayCourse)}
-                          disabled={getCurrentQuantity(displayCourse._id) >= (displayCourse.capacity || 1)}
+                          disabled={
+                            getCurrentQuantity(displayCourse._id) >=
+                            (displayCourse.capacity || 1)
+                          }
                           className="h-10 w-10 p-0"
+                          title={
+                            getCurrentQuantity(displayCourse._id) >=
+                            (displayCourse.capacity || 1)
+                              ? "Maximum capacity reached"
+                              : "Increase quantity"
+                          }
                         >
                           <Plus className="h-4 w-4" />
                         </Button>
@@ -544,7 +560,8 @@ export default function CourseClient({
                           variant="outline"
                           size="sm"
                           onClick={() => removeItem(displayCourse._id)}
-                          className="h-10 px-3 text-red-600 hover:text-red-700 hover:bg-red-50"
+                          className="h-10 px-3 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          title="Remove from cart"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -918,7 +935,10 @@ export default function CourseClient({
       <StickyCTA
         price={course.price}
         onPrimary={() => handleIncreaseQuantity(course)}
-        disabled={inCart(course._id) && getCurrentQuantity(course._id) >= (course.capacity || 1)}
+        disabled={
+          inCart(course._id) &&
+          getCurrentQuantity(course._id) >= (course.capacity || 1)
+        }
         inCart={inCart(course._id)}
         quantity={getCurrentQuantity(course._id)}
       />
