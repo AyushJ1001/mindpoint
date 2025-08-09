@@ -18,6 +18,22 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "healthy-wolf-897.convex.cloud",
       },
+      {
+        protocol: "https",
+        hostname: "uploadthing.com",
+      },
+      {
+        protocol: "https",
+        hostname: "utfs.io",
+      },
+      {
+        protocol: "https",
+        hostname: "files.uploadthing.com",
+      },
+      {
+        protocol: "https",
+        hostname: "pw6ih6yl8k.ufs.sh",
+      },
     ],
   },
 };

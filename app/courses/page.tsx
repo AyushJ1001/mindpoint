@@ -37,13 +37,7 @@ import {
 } from "@/components/ui/select";
 
 const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
-  const actualImageUrls = imageUrls.map((id) =>
-    useQuery(api.image.getImageUrl, {
-      storageId: id as Id<"_storage">,
-    }),
-  );
-
-  if (!actualImageUrls || actualImageUrls.length === 0) {
+  if (!imageUrls || imageUrls.length === 0) {
     return (
       <div className="relative flex h-80 items-center justify-center rounded-t-lg bg-gray-100">
         <BookOpen className="h-12 w-12 text-gray-400" />
@@ -51,12 +45,12 @@ const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
     );
   }
 
-  if (actualImageUrls.length === 1) {
+  if (imageUrls.length === 1) {
     return (
       <div className="relative flex h-80 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100">
         <Image
           src={
-            actualImageUrls[0]?.url ??
+            imageUrls[0] ??
             "https://blocks.astratic.com/img/general-img-landscape.png"
           }
           alt="Course image"
@@ -72,13 +66,13 @@ const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
     <div className="relative h-80 overflow-hidden rounded-t-lg bg-gray-100">
       <Carousel className="h-full w-full">
         <CarouselContent>
-          {actualImageUrls.map((imageUrl, index) => (
+          {imageUrls.map((imageUrl, index) => (
             <CarouselItem
               key={index}
               className="flex h-80 items-center justify-center"
             >
               <Image
-                src={imageUrl?.url || ""}
+                src={imageUrl || ""}
                 alt={`Course image ${index + 1}`}
                 className="max-h-full max-w-full object-contain"
                 width={400}

@@ -59,6 +59,28 @@ export const getCourseById = query({
   },
 });
 
+// Fetch related variants for a given course: same name & type (e.g., sessions/duration variants)
+export const getRelatedVariants = query({
+  args: { id: v.id("courses") },
+  handler: async (ctx, args) => {
+    const base = await ctx.db.get(args.id);
+    if (!base) return [];
+    const name = base.name;
+    const type = base.type;
+    // Use index to efficiently fetch variants by same name and type
+    const variants = await ctx.db
+      .query("courses")
+      .withIndex("by_name_and_type", (q) => q.eq("name", name).eq("type", type))
+      .collect();
+    // Ensure stable order by price ascending, then _creationTime
+    variants.sort(
+      (a, b) =>
+        (a.price ?? 0) - (b.price ?? 0) || a._creationTime - b._creationTime,
+    );
+    return variants;
+  },
+});
+
 // List reviews for a given course
 export const listReviewsForCourse = query({
   args: { courseId: v.id("courses"), count: v.optional(v.number()) },

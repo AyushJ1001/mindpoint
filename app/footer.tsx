@@ -83,6 +83,15 @@ export default function Footer() {
                   Terms & Conditions
                 </Link>
               </li>
+              <li>
+                <Link
+                  href="https://chat.whatsapp.com/LYKNhlQbmV84YiBioVo83Y?mode=ac_t"
+                  className="rounded-lg bg-white px-4 py-2 text-purple-600 transition hover:bg-gray-100"
+                  aria-label="Join WhatsApp community"
+                >
+                  Join Now
+                </Link>
+              </li>
             </ul>
           </div>
 

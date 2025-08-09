@@ -38,8 +38,25 @@ export default defineSchema({
     content: v.string(),
     reviews: v.array(v.id("reviews")),
     duration: v.optional(v.string()),
-    imageUrls: v.optional(v.array(v.id("_storage"))),
-  }),
+    imageUrls: v.optional(v.array(v.string())),
+    modules: v.optional(
+      v.array(
+        v.object({
+          title: v.string(),
+          description: v.string(),
+        }),
+      ),
+    ),
+    learningOutcomes: v.optional(
+      v.array(
+        v.object({
+          icon: v.string(),
+          title: v.string(),
+        }),
+      ),
+    ),
+  }).index("by_name_and_type", ["name", "type"]),
+
   reviews: defineTable({
     userId: v.string(),
     userName: v.string(),
