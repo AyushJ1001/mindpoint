@@ -47,6 +47,90 @@ export async function handlePaymentSuccess(
   }
 }
 
+export async function handleGuestUserPaymentSuccess(
+  userEmail: string,
+  courseIds: Id<"courses">[],
+): Promise<{
+  success: boolean;
+  enrollments?: Array<{
+    enrollmentId: string;
+    enrollmentNumber: string;
+    courseName: string;
+    courseId: string;
+  }>;
+  error?: string;
+}> {
+  try {
+    // Import the Convex client for server-side usage
+    const { ConvexHttpClient } = await import("convex/browser");
+
+    // Create a Convex client for server-side operations
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+    // Call the mutation to handle guest user cart checkout
+    const enrollments = await convex.mutation(
+      api.myFunctions.handleGuestUserCartCheckoutByEmail,
+      {
+        userEmail,
+        courseIds: courseIds,
+      },
+    );
+
+    return {
+      success: true,
+      enrollments,
+    };
+  } catch (error) {
+    console.error("Error handling guest user payment success:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+export async function handleGuestUserPaymentSuccessWithData(
+  userData: { name: string; email: string; phone: string },
+  courseIds: Id<"courses">[],
+): Promise<{
+  success: boolean;
+  enrollments?: Array<{
+    enrollmentId: string;
+    enrollmentNumber: string;
+    courseName: string;
+    courseId: string;
+  }>;
+  error?: string;
+}> {
+  try {
+    // Import the Convex client for server-side usage
+    const { ConvexHttpClient } = await import("convex/browser");
+
+    // Create a Convex client for server-side operations
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+    // Call the mutation to handle guest user cart checkout with complete data
+    const enrollments = await convex.mutation(
+      api.myFunctions.handleGuestUserCartCheckoutWithData,
+      {
+        userData,
+        courseIds: courseIds,
+      },
+    );
+
+    return {
+      success: true,
+      enrollments,
+    };
+  } catch (error) {
+    console.error("Error handling guest user payment success:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
 export async function handleSingleCourseEnrollment(
   userId: string,
   courseId: Id<"courses">,
@@ -83,6 +167,47 @@ export async function handleSingleCourseEnrollment(
     };
   } catch (error) {
     console.error("Error handling single course enrollment:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+export async function handleGuestUserSingleEnrollment(
+  userEmail: string,
+  courseId: Id<"courses">,
+): Promise<{
+  success: boolean;
+  enrollment?: {
+    enrollmentId: string;
+    enrollmentNumber: string;
+    courseName: string;
+  };
+  error?: string;
+}> {
+  try {
+    // Import the Convex client for server-side usage
+    const { ConvexHttpClient } = await import("convex/browser");
+
+    // Create a Convex client for server-side operations
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+    // Call the mutation to handle guest user single course enrollment
+    const enrollment = await convex.mutation(
+      api.myFunctions.handleGuestUserSingleEnrollmentByEmail,
+      {
+        userEmail,
+        courseId: courseId,
+      },
+    );
+
+    return {
+      success: true,
+      enrollment,
+    };
+  } catch (error) {
+    console.error("Error handling guest user single course enrollment:", error);
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",

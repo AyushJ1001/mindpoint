@@ -64,11 +64,19 @@ export default defineSchema({
     content: v.string(),
     course: v.id("courses"),
   }).index("by_course", ["course"]),
+
+  guestUsers: defineTable({
+    name: v.string(),
+    email: v.string(),
+    phone: v.string(),
+  }).index("by_email", ["email"]),
+
   enrollments: defineTable({
     userId: v.string(),
     userName: v.optional(v.string()),
     courseId: v.id("courses"),
     courseName: v.optional(v.string()),
     enrollmentNumber: v.string(),
+    isGuestUser: v.optional(v.boolean()),
   }),
 });

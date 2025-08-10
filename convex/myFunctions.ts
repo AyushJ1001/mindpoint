@@ -274,3 +274,313 @@ export const myAction = action({
     });
   },
 });
+
+// Create a guest user
+export const createGuestUser = mutation({
+  args: {
+    name: v.string(),
+    email: v.string(),
+    phone: v.string(),
+  },
+  returns: v.id("guestUsers"),
+  handler: async (ctx, args) => {
+    // Check if guest user already exists with this email
+    const existingUser = await ctx.db
+      .query("guestUsers")
+      .withIndex("by_email", (q) => q.eq("email", args.email))
+      .first();
+
+    if (existingUser) {
+      // Update existing user with new information
+      await ctx.db.patch(existingUser._id, {
+        name: args.name,
+        phone: args.phone,
+      });
+      return existingUser._id;
+    }
+
+    // Create new guest user
+    return await ctx.db.insert("guestUsers", {
+      name: args.name,
+      email: args.email,
+      phone: args.phone,
+    });
+  },
+});
+
+// Handle guest user cart checkout using email
+export const handleGuestUserCartCheckoutByEmail = mutation({
+  args: {
+    userEmail: v.string(),
+    courseIds: v.array(v.id("courses")),
+  },
+
+  handler: async (ctx, args) => {
+    // Check if guest user already exists with this email
+    let guestUser = await ctx.db
+      .query("guestUsers")
+      .withIndex("by_email", (q) => q.eq("email", args.userEmail))
+      .first();
+
+    if (!guestUser) {
+      // Create a new guest user with the email
+      const guestUserId = await ctx.db.insert("guestUsers", {
+        name: "Guest User", // Will be updated when we have the actual name
+        email: args.userEmail,
+        phone: "", // Will be updated when we have the actual phone
+      });
+      guestUser = await ctx.db.get(guestUserId);
+    }
+
+    if (!guestUser) {
+      throw new Error("Failed to create or retrieve guest user");
+    }
+
+    const enrollments = [];
+
+    for (const courseId of args.courseIds) {
+      // Get the course details
+      const course = await ctx.db.get(courseId);
+      if (!course) {
+        throw new Error(`Course with ID ${courseId} not found`);
+      }
+
+      // Check if user is already enrolled (using email as unique identifier for guest users)
+      if (course.enrolledUsers.includes(args.userEmail)) {
+        console.log(
+          `Guest user ${args.userEmail} is already enrolled in course ${course.name}`,
+        );
+        continue;
+      }
+
+      // Generate enrollment number
+      const enrollmentNumber = generateEnrollmentNumber(
+        course.code,
+        course.startDate,
+      );
+
+      // Create enrollment record
+      const enrollmentId = await ctx.db.insert("enrollments", {
+        userId: args.userEmail, // Use email as userId for guest users
+        userName: guestUser.name,
+        courseId: courseId,
+        courseName: course.name,
+        enrollmentNumber: enrollmentNumber,
+        isGuestUser: true,
+      });
+
+      // Update course to add user to enrolledUsers array
+      await ctx.db.patch(courseId, {
+        enrolledUsers: [...course.enrolledUsers, args.userEmail],
+      });
+
+      enrollments.push({
+        enrollmentId,
+        enrollmentNumber,
+        courseName: course.name,
+        courseId: courseId,
+        startDate: course.startDate,
+        endDate: course.endDate,
+        startTime: course.startTime,
+        endTime: course.endTime,
+      });
+    }
+
+    // Schedule email sending action
+    await ctx.scheduler.runAfter(
+      0,
+      api.emailActions.sendCartCheckoutConfirmation,
+      {
+        userEmail: args.userEmail,
+        enrollments: enrollments,
+      },
+    );
+
+    return enrollments;
+  },
+});
+
+// Handle guest user cart checkout with complete user data
+export const handleGuestUserCartCheckoutWithData = mutation({
+  args: {
+    userData: v.object({
+      name: v.string(),
+      email: v.string(),
+      phone: v.string(),
+    }),
+    courseIds: v.array(v.id("courses")),
+  },
+
+  handler: async (ctx, args) => {
+    // Check if guest user already exists with this email
+    let guestUser = await ctx.db
+      .query("guestUsers")
+      .withIndex("by_email", (q) => q.eq("email", args.userData.email))
+      .first();
+
+    if (guestUser) {
+      // Update existing guest user with new information
+      await ctx.db.patch(guestUser._id, {
+        name: args.userData.name,
+        phone: args.userData.phone,
+      });
+    } else {
+      // Create a new guest user
+      const guestUserId = await ctx.db.insert("guestUsers", {
+        name: args.userData.name,
+        email: args.userData.email,
+        phone: args.userData.phone,
+      });
+      guestUser = await ctx.db.get(guestUserId);
+    }
+
+    if (!guestUser) {
+      throw new Error("Failed to create or retrieve guest user");
+    }
+
+    const enrollments = [];
+
+    for (const courseId of args.courseIds) {
+      // Get the course details
+      const course = await ctx.db.get(courseId);
+      if (!course) {
+        throw new Error(`Course with ID ${courseId} not found`);
+      }
+
+      // Check if user is already enrolled (using email as unique identifier for guest users)
+      if (course.enrolledUsers.includes(args.userData.email)) {
+        console.log(
+          `Guest user ${args.userData.email} is already enrolled in course ${course.name}`,
+        );
+        continue;
+      }
+
+      // Generate enrollment number
+      const enrollmentNumber = generateEnrollmentNumber(
+        course.code,
+        course.startDate,
+      );
+
+      // Create enrollment record
+      const enrollmentId = await ctx.db.insert("enrollments", {
+        userId: args.userData.email, // Use email as userId for guest users
+        userName: args.userData.name,
+        courseId: courseId,
+        courseName: course.name,
+        enrollmentNumber: enrollmentNumber,
+        isGuestUser: true,
+      });
+
+      // Update course to add user to enrolledUsers array
+      await ctx.db.patch(courseId, {
+        enrolledUsers: [...course.enrolledUsers, args.userData.email],
+      });
+
+      enrollments.push({
+        enrollmentId,
+        enrollmentNumber,
+        courseName: course.name,
+        courseId: courseId,
+        startDate: course.startDate,
+        endDate: course.endDate,
+        startTime: course.startTime,
+        endTime: course.endTime,
+      });
+    }
+
+    // Schedule email sending action
+    await ctx.scheduler.runAfter(
+      0,
+      api.emailActions.sendCartCheckoutConfirmation,
+      {
+        userEmail: args.userData.email,
+        enrollments: enrollments,
+      },
+    );
+
+    return enrollments;
+  },
+});
+
+// Handle single course enrollment for guest user using email
+export const handleGuestUserSingleEnrollmentByEmail = mutation({
+  args: {
+    userEmail: v.string(),
+    courseId: v.id("courses"),
+  },
+
+  handler: async (ctx, args) => {
+    // Check if guest user already exists with this email
+    let guestUser = await ctx.db
+      .query("guestUsers")
+      .withIndex("by_email", (q) => q.eq("email", args.userEmail))
+      .first();
+
+    if (!guestUser) {
+      // Create a new guest user with the email
+      const guestUserId = await ctx.db.insert("guestUsers", {
+        name: "Guest User", // Will be updated when we have the actual name
+        email: args.userEmail,
+        phone: "", // Will be updated when we have the actual phone
+      });
+      guestUser = await ctx.db.get(guestUserId);
+    }
+
+    if (!guestUser) {
+      throw new Error("Failed to create or retrieve guest user");
+    }
+
+    // Get the course details
+    const course = await ctx.db.get(args.courseId);
+    if (!course) {
+      throw new Error("Course not found");
+    }
+
+    // Check if user is already enrolled
+    if (course.enrolledUsers.includes(args.userEmail)) {
+      throw new Error("User is already enrolled in this course");
+    }
+
+    // Generate enrollment number
+    const enrollmentNumber = generateEnrollmentNumber(
+      course.code,
+      course.startDate,
+    );
+
+    // Create enrollment record
+    const enrollmentId = await ctx.db.insert("enrollments", {
+      userId: args.userEmail, // Use email as userId for guest users
+      userName: guestUser.name,
+      courseId: args.courseId,
+      courseName: course.name,
+      enrollmentNumber: enrollmentNumber,
+      isGuestUser: true,
+    });
+
+    // Update course to add user to enrolledUsers array
+    await ctx.db.patch(args.courseId, {
+      enrolledUsers: [...course.enrolledUsers, args.userEmail],
+    });
+
+    // Schedule email sending action
+    await ctx.scheduler.runAfter(
+      0,
+      api.emailActions.sendEnrollmentConfirmation,
+      {
+        userEmail: args.userEmail,
+        courseName: course.name,
+        enrollmentNumber: enrollmentNumber,
+        startDate: course.startDate,
+        endDate: course.endDate,
+        startTime: course.startTime,
+        endTime: course.endTime,
+      },
+    );
+
+    return {
+      enrollmentId,
+      enrollmentNumber,
+      courseName: course.name,
+    };
+  },
+});

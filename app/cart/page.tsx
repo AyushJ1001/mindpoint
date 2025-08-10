@@ -17,9 +17,13 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, ShoppingCart, CreditCard, Plus, Minus } from "lucide-react";
 import { showRupees } from "@/lib/utils";
 import { useUser } from "@clerk/clerk-react";
-import { handlePaymentSuccess } from "../actions/payment";
+import {
+  handlePaymentSuccess,
+  handleGuestUserPaymentSuccessWithData,
+} from "../actions/payment";
 import { toast } from "sonner";
 import { Id } from "@/convex/_generated/dataModel";
+import { GuestCheckoutModal } from "../../components/guest-checkout-modal";
 
 export const dynamic = "force-dynamic";
 
@@ -34,10 +38,15 @@ const CartContent = () => {
   } = useCart();
   const courses = useQuery(api.courses.listCourses, { count: undefined });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showGuestModal, setShowGuestModal] = useState(false);
   const { Razorpay, error, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
 
-  const handlePayment = async () => {
+  const handlePayment = async (guestUserData?: {
+    name: string;
+    email: string;
+    phone: string;
+  }) => {
     if (isEmpty) return;
 
     setIsProcessing(true);
@@ -62,6 +71,7 @@ const CartContent = () => {
           console.log("Payment successful", response);
 
           if (user?.id) {
+            // Handle signed-in user
             try {
               // Get course IDs from cart items
               const courseIds = items.map((item) => item.id as Id<"courses">);
@@ -103,14 +113,60 @@ const CartContent = () => {
                 },
               );
             }
+          } else if (guestUserData) {
+            // Handle guest user
+            try {
+              // Get course IDs from cart items
+              const courseIds = items.map((item) => item.id as Id<"courses">);
+
+              // Call server action to handle guest user enrollment
+              const result = await handleGuestUserPaymentSuccessWithData(
+                guestUserData,
+                courseIds as Id<"courses">[],
+              );
+
+              if (result.success) {
+                console.log("Guest enrollment successful:", result.enrollments);
+                // Show success message to user
+                toast.success(
+                  `Payment successful! You have been enrolled in ${result.enrollments?.length || 0} course(s).`,
+                  {
+                    description: `Enrollment numbers: ${result.enrollments?.map((e) => e.enrollmentNumber).join(", ")}`,
+                  },
+                );
+              } else {
+                console.error("Guest enrollment failed:", result.error);
+                toast.error(
+                  "Payment successful but enrollment failed. Please contact support.",
+                  {
+                    description: result.error,
+                  },
+                );
+              }
+            } catch (error) {
+              console.error("Error processing guest enrollment:", error);
+              toast.error(
+                "Payment successful but enrollment failed. Please contact support.",
+                {
+                  description:
+                    error instanceof Error
+                      ? error.message
+                      : "Unknown error occurred",
+                },
+              );
+            }
           }
 
           emptyCart();
         },
         prefill: {
-          name: user?.fullName || user?.firstName || "Guest User",
-          email: user?.primaryEmailAddress?.emailAddress || "",
-          contact: user?.primaryPhoneNumber?.phoneNumber || "",
+          name: user?.fullName || user?.firstName || guestUserData?.name || "",
+          email:
+            user?.primaryEmailAddress?.emailAddress ||
+            guestUserData?.email ||
+            "",
+          contact:
+            user?.primaryPhoneNumber?.phoneNumber || guestUserData?.phone || "",
         },
         notes: "Course purchase from The Mind Point",
         theme: {
@@ -122,9 +178,29 @@ const CartContent = () => {
       rzp.open();
     } catch (error) {
       console.error("Error processing payment", error);
+      toast.error("Failed to initialize payment. Please try again.");
     } finally {
       setIsProcessing(false);
     }
+  };
+
+  const handleCheckoutClick = () => {
+    if (user?.id) {
+      // User is signed in, proceed with payment
+      handlePayment();
+    } else {
+      // User is not signed in, show guest modal
+      setShowGuestModal(true);
+    }
+  };
+
+  const handleGuestProceed = (userData: {
+    name: string;
+    email: string;
+    phone: string;
+  }) => {
+    setShowGuestModal(false);
+    handlePayment(userData);
   };
 
   if (isLoading) {
@@ -268,7 +344,7 @@ const CartContent = () => {
                 </div>
 
                 <Button
-                  onClick={handlePayment}
+                  onClick={handleCheckoutClick}
                   disabled={isProcessing || isEmpty}
                   className="w-full"
                   size="lg"
@@ -278,11 +354,23 @@ const CartContent = () => {
                     ? "Processing..."
                     : `Pay ${showRupees(cartTotal)}`}
                 </Button>
+
+                {!user?.id && (
+                  <p className="text-muted-foreground text-center text-xs">
+                    You'll be asked to provide your details before payment
+                  </p>
+                )}
               </CardContent>
             </Card>
           </div>
         </div>
       )}
+
+      <GuestCheckoutModal
+        isOpen={showGuestModal}
+        onClose={() => setShowGuestModal(false)}
+        onProceed={handleGuestProceed}
+      />
     </div>
   );
 };
