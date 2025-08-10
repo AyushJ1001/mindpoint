@@ -194,40 +194,22 @@ export default function Internship({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  {internship.learningOutcomes
-                    ?.slice(
-                      0,
-                      Math.ceil((internship.learningOutcomes?.length || 0) / 2),
-                    )
-                    .map((outcome, index) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                          <CheckCircle className="h-4 w-4 text-slate-600" />
-                        </div>
-                        <span className="text-sm font-medium text-slate-700">
-                          {outcome.title}
-                        </span>
+              <div className="space-y-4">
+                {internship.learningOutcomes
+                  ?.slice(
+                    0,
+                    Math.ceil((internship.learningOutcomes?.length || 0) / 2),
+                  )
+                  .map((outcome, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
+                        <CheckCircle className="h-4 w-4 text-slate-600" />
                       </div>
-                    ))}
-                </div>
-                <div className="space-y-4">
-                  {internship.learningOutcomes
-                    ?.slice(
-                      Math.ceil((internship.learningOutcomes?.length || 0) / 2),
-                    )
-                    .map((outcome, index) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                          <CheckCircle className="h-4 w-4 text-slate-600" />
-                        </div>
-                        <span className="text-sm font-medium text-slate-700">
-                          {outcome.title}
-                        </span>
-                      </div>
-                    ))}
-                </div>
+                      <span className="text-sm font-medium text-slate-700">
+                        {outcome.title}
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
 
@@ -244,52 +226,29 @@ export default function Internship({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="space-y-4">
-                  <div className="flex items-center space-x-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                      <CheckCircle className="h-4 w-4 text-slate-600" />
-                    </div>
-                    <span className="text-sm font-medium text-slate-700">
-                      All topics in 120 hours
-                    </span>
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
+                    <CheckCircle className="h-4 w-4 text-slate-600" />
                   </div>
-                  {internship.learningOutcomes
-                    ?.slice(
-                      Math.ceil((internship.learningOutcomes?.length || 0) / 2),
-                      Math.ceil(
-                        (internship.learningOutcomes?.length || 0) * 0.75,
-                      ),
-                    )
-                    .map((outcome, index) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                          <CheckCircle className="h-4 w-4 text-slate-600" />
-                        </div>
-                        <span className="text-sm font-medium text-slate-700">
-                          {outcome.title}
-                        </span>
-                      </div>
-                    ))}
+                  <span className="text-sm font-medium text-slate-700">
+                    Everything in 120 hours
+                  </span>
                 </div>
-                <div className="space-y-4">
-                  {internship.learningOutcomes
-                    ?.slice(
-                      Math.ceil(
-                        (internship.learningOutcomes?.length || 0) * 0.75,
-                      ),
-                    )
-                    .map((outcome, index) => (
-                      <div key={index} className="flex items-center space-x-3">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                          <CheckCircle className="h-4 w-4 text-slate-600" />
-                        </div>
-                        <span className="text-sm font-medium text-slate-700">
-                          {outcome.title}
-                        </span>
+                {internship.learningOutcomes
+                  ?.slice(
+                    Math.ceil((internship.learningOutcomes?.length || 0) / 2),
+                  )
+                  .map((outcome, index) => (
+                    <div key={index} className="flex items-center space-x-3">
+                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
+                        <CheckCircle className="h-4 w-4 text-slate-600" />
                       </div>
-                    ))}
-                </div>
+                      <span className="text-sm font-medium text-slate-700">
+                        {outcome.title}
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
           </div>

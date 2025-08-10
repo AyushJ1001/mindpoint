@@ -45,12 +45,12 @@ export default function ReviewsSection({
             <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
               <CardHeader className="pb-6 text-center">
                 <CardTitle className="text-3xl font-bold md:text-4xl">
-                  {courseType === "certificate"
+                  {courseType === "certificate" || courseType === "internship"
                     ? "Student Reviews"
                     : "Client Reviews"}
                 </CardTitle>
                 <CardDescription className="text-lg">
-                  {courseType === "certificate"
+                  {courseType === "certificate" || courseType === "internship"
                     ? "Hear from our successful students"
                     : "Hear from our successful clients"}
                 </CardDescription>
