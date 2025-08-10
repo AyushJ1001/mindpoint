@@ -4,7 +4,15 @@ import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCart } from "react-use-cart";
-import { Plus, Minus, Trash2 } from "lucide-react";
+import {
+  Plus,
+  Minus,
+  Trash2,
+  Users,
+  BookOpen,
+  Clock,
+  Award,
+} from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,12 +44,12 @@ import remarkGfm from "remark-gfm";
 
 import {
   Calendar,
-  Clock,
   MapPin,
   ShoppingCart,
   Sparkles,
   HeartHandshake,
-  CircleCheck,
+  Star,
+  TrendingUp,
 } from "lucide-react";
 import CourseImageGallery from "@/components/course/gallery";
 import TrustBar from "@/components/course/trust-bar";
@@ -50,9 +58,10 @@ import { StarRating } from "@/components/course/ratings";
 import ReviewForm from "@/components/course/review-form";
 import StructuredContent from "@/components/course/structured-content";
 import { parseFaqMarkdown } from "@/components/course/faq";
-import CourseModulesSection from "@/course-modules-section";
+import CourseModulesSection from "@/components/course/course-modules-section";
+import InternshipSection from "@/components/course/internship-section";
 import Educators from "@/components/course/educators";
-import { Doc, Id } from "@/convex/_generated/dataModel";
+import type { Doc } from "@/convex/_generated/dataModel";
 
 type Course = {
   id: string;
@@ -98,6 +107,7 @@ function parseUTCDateOnly(dateStr: string): Date | null {
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? null : d;
 }
+
 function getOrdinal(n: number) {
   const rem10 = n % 10;
   const rem100 = n % 100;
@@ -107,6 +117,7 @@ function getOrdinal(n: number) {
   if (rem10 === 3) return "rd";
   return "th";
 }
+
 function formatDateCommon(dateStr: string) {
   const d = parseUTCDateOnly(dateStr);
   if (!d) return dateStr;
@@ -177,15 +188,16 @@ const REVIEWS: Review[] = [
   },
 ];
 
-// FAQ content is now loaded from `/public/faq.md` at runtime.
-
 function useScrollAnimation() {
   const [isVisible, setIsVisible] = useState(false);
   const ref = React.useRef<HTMLDivElement>(null);
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => entry.isIntersecting && setIsVisible(true),
-      { threshold: 0.1, rootMargin: "0px 0px -50px 0px" },
+      {
+        threshold: 0.1,
+        rootMargin: "0px 0px -50px 0px",
+      },
     );
     if (ref.current) observer.observe(ref.current);
     return () => {
@@ -209,12 +221,11 @@ export default function CourseClient({
   const [activeCourse, setActiveCourse] = useState<Doc<"courses">>(course);
   useEffect(() => {
     setActiveCourse(course);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [course._id]);
+  }, [course]);
 
-  const cardsAnimation = useScrollAnimation();
-  const countdownAnimation = useScrollAnimation();
-  const detailsAnimation = useScrollAnimation();
+  const heroAnimation = useScrollAnimation();
+  const statsAnimation = useScrollAnimation();
+  const featuresAnimation = useScrollAnimation();
 
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
@@ -332,7 +343,7 @@ export default function CourseClient({
       const parseWeeks = (d?: string) => {
         if (!d) return Number.MAX_SAFE_INTEGER;
         const m = d.match(/(\d+)\s*week/i);
-        return m ? parseInt(m[1]!, 10) : Number.MAX_SAFE_INTEGER;
+        return m ? Number.parseInt(m[1]!, 10) : Number.MAX_SAFE_INTEGER;
       };
       sameGroup.sort((a, b) => {
         const aw = parseWeeks((a as any).duration);
@@ -395,184 +406,205 @@ export default function CourseClient({
   };
 
   return (
-    <div className="min-h-screen overflow-x-clip">
-      <section className="from-primary/5 via-background to-accent/5 bg-gradient-to-br py-6 md:py-8">
-        <div className="container">
-          <div className="text-muted-foreground mb-4 text-sm">
-            <Link href="/courses" className="hover:text-foreground">
+    <div className="from-background via-background to-muted/20 min-h-screen overflow-x-clip bg-gradient-to-br">
+      {/* Enhanced Hero Section */}
+      <section className="relative overflow-hidden py-12 md:py-20">
+        <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent" />
+        <div className="bg-primary/10 absolute top-0 right-0 h-96 w-96 rounded-full blur-3xl" />
+        <div className="bg-accent/10 absolute bottom-0 left-0 h-96 w-96 rounded-full blur-3xl" />
+
+        <div className="relative z-10 container">
+          <div className="text-muted-foreground mb-6 text-sm">
+            <Link
+              href="/courses"
+              className="hover:text-foreground transition-colors"
+            >
               Courses
             </Link>
             <span className="mx-2">/</span>
-            <span className="text-foreground">{course.name}</span>
+            <span className="text-foreground font-medium">{course.name}</span>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-            <div className="min-w-0">
-              <div className="border-primary bg-primary/5 relative overflow-hidden rounded-xl border-2 p-1">
-                <div className="bg-primary/20 absolute top-[-30%] left-[-15%] h-60 w-60 rounded-full blur-3xl" />
-                <div className="bg-primary/15 absolute right-[-15%] bottom-[-30%] h-60 w-60 rounded-full blur-3xl" />
-                <div className="overflow-visible">
+          <div
+            ref={heroAnimation.ref}
+            className={`grid grid-cols-1 gap-12 transition-all duration-1000 ease-out lg:grid-cols-2 ${
+              heroAnimation.isVisible
+                ? "translate-y-0 opacity-100"
+                : "translate-y-8 opacity-0"
+            }`}
+          >
+            {/* Left Column - Course Image */}
+            <div className="space-y-6">
+              <div className="border-primary/20 from-primary/5 to-accent/5 relative overflow-hidden rounded-2xl border-2 bg-gradient-to-br p-2 shadow-2xl">
+                <div className="bg-primary/20 absolute top-0 left-0 h-32 w-32 rounded-full blur-2xl" />
+                <div className="bg-accent/20 absolute right-0 bottom-0 h-32 w-32 rounded-full blur-2xl" />
+                <div className="relative z-10">
                   <CourseImageGallery
                     imageUrls={displayCourse.imageUrls ?? []}
                   />
                 </div>
               </div>
-              <div className="mt-3">
-                <TrustBar />
-              </div>
+              <TrustBar />
             </div>
 
-            <div className="flex min-w-0 flex-col gap-6 lg:sticky lg:top-24">
-              {seatsLeft > 0 && seatsLeft <= 5 && (
-                <Badge variant="default" className="w-fit">
-                  Limited seats: {seatsLeft} left
+            {/* Right Column - Course Details */}
+            <div className="flex flex-col gap-8">
+              {/* Status Badges */}
+              <div className="flex flex-wrap gap-3">
+                {seatsLeft > 0 && seatsLeft <= 5 && (
+                  <Badge variant="destructive" className="animate-pulse">
+                    🔥 Only {seatsLeft} seats left
+                  </Badge>
+                )}
+                {seatsLeft === 0 && (
+                  <Badge variant="secondary">📋 Waitlist Available</Badge>
+                )}
+                <Badge
+                  variant="outline"
+                  className="border-primary/50 text-primary"
+                >
+                  {course.type ?? "Course"}
                 </Badge>
-              )}
-              {seatsLeft === 0 && (
-                <Badge variant="secondary" className="w-fit">
-                  Waitlist
-                </Badge>
-              )}
+              </div>
 
-              <div>
-                <h1 className="mb-2 break-words">{displayCourse.name}</h1>
-                <p className="text-muted-foreground">
+              {/* Course Title & Description */}
+              <div className="space-y-4">
+                <h1 className="text-4xl leading-tight font-bold tracking-tight md:text-5xl lg:text-6xl">
+                  {displayCourse.name}
+                </h1>
+                <p className="text-muted-foreground text-lg leading-relaxed">
                   Guided, interactive classes with recordings and lifetime
                   support.
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge variant="secondary" className="text-sm">
-                  {course.type ?? "Course"}
-                </Badge>
-                {displayCourse.sessions ? (
-                  <Badge className="text-sm whitespace-nowrap">
-                    {displayCourse.sessions} sessions
-                  </Badge>
-                ) : null}
-                {Number.isFinite(displayCourse.capacity ?? 0) && (
-                  <Badge className="text-sm whitespace-nowrap">
-                    Capacity: {displayCourse.capacity}
-                  </Badge>
-                )}
+              {/* Course Stats */}
+              <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                {[
+                  {
+                    icon: Users,
+                    label: "Students",
+                    value: course.enrolledUsers?.length || 0,
+                  },
+                  {
+                    icon: BookOpen,
+                    label: "Sessions",
+                    value: displayCourse.sessions || 6,
+                  },
+                  {
+                    icon: Clock,
+                    label: "Duration",
+                    value: course.duration || "6 weeks",
+                  },
+                  { icon: Award, label: "Certificate", value: "Yes" },
+                ].map((stat, idx) => (
+                  <div key={idx} className="text-center">
+                    <div className="bg-primary/10 mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
+                      <stat.icon className="text-primary h-6 w-6" />
+                    </div>
+                    <div className="text-muted-foreground text-sm font-medium">
+                      {stat.label}
+                    </div>
+                    <div className="text-lg font-bold">{stat.value}</div>
+                  </div>
+                ))}
               </div>
 
-              <Card className="card-shadow overflow-visible">
-                <CardContent className="flex flex-col gap-3 p-5">
-                  <div className="flex flex-row flex-wrap items-center gap-3">
-                    <div className="flex items-baseline gap-2 whitespace-nowrap">
-                      <span className="text-primary text-3xl font-bold">
-                        {formatINR(displayCourse.price)}
-                      </span>
-                      <span className="text-muted-foreground text-sm">
-                        incl. taxes
-                      </span>
+              {/* Pricing Card */}
+              <Card className="border-primary/20 from-background to-primary/5 border-2 bg-gradient-to-br shadow-xl">
+                <CardContent className="p-6">
+                  <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <div className="flex items-baseline gap-3">
+                        <span className="text-primary text-4xl font-bold">
+                          {formatINR(displayCourse.price)}
+                        </span>
+                        <span className="text-muted-foreground text-sm line-through">
+                          {formatINR(displayCourse.price * 1.5)}
+                        </span>
+                      </div>
+                      <p className="text-muted-foreground text-sm">
+                        Inclusive of all taxes • Limited time offer
+                      </p>
                     </div>
 
                     {shouldShowVariantSelect && (
-                      <div className="ml-2 max-w-full">
-                        <Select
-                          key={displayCourse._id as unknown as string}
-                          value={displayCourse._id as unknown as string}
-                          onValueChange={handleVariantSelect}
-                        >
-                          <SelectTrigger
-                            size="sm"
-                            className="w-full max-w-[280px] min-w-40 truncate"
-                          >
-                            <SelectValue placeholder="Choose option" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectGroup>
-                              <SelectLabel>
-                                {course.type === "therapy"
-                                  ? "Sessions"
-                                  : "Duration"}
-                              </SelectLabel>
-                              {normalizedVariants.map((v) => (
-                                <SelectItem
-                                  key={v._id}
-                                  value={v._id as unknown as string}
-                                >
-                                  <span className="font-medium">
-                                    {variantLabel(v)}
-                                  </span>{" "}
-                                  <span className="text-muted-foreground">
-                                    — {formatINR(v.price)}
-                                  </span>
-                                </SelectItem>
-                              ))}
-                            </SelectGroup>
-                          </SelectContent>
-                        </Select>
-                        {/* Hidden links to enable Next prefetch */}
-                        <div className="hidden">
-                          {normalizedVariants.map((v) => (
-                            <Link
-                              key={v._id}
-                              href={`/courses/${v._id}`}
-                              prefetch
-                            >
-                              {v._id}
-                            </Link>
-                          ))}
-                        </div>
-                      </div>
+                      <Select
+                        key={displayCourse._id as unknown as string}
+                        value={displayCourse._id as unknown as string}
+                        onValueChange={handleVariantSelect}
+                      >
+                        <SelectTrigger className="w-48">
+                          <SelectValue placeholder="Choose option" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectGroup>
+                            <SelectLabel>
+                              {course.type === "therapy"
+                                ? "Sessions"
+                                : "Duration"}
+                            </SelectLabel>
+                            {normalizedVariants.map((v) => (
+                              <SelectItem
+                                key={v._id}
+                                value={v._id as unknown as string}
+                              >
+                                <span className="font-medium">
+                                  {variantLabel(v)}
+                                </span>{" "}
+                                <span className="text-muted-foreground">
+                                  — {formatINR(v.price)}
+                                </span>
+                              </SelectItem>
+                            ))}
+                          </SelectGroup>
+                        </SelectContent>
+                      </Select>
                     )}
                   </div>
-                  <div className="flex flex-col gap-2 sm:flex-row">
+
+                  {/* Action Buttons */}
+                  <div className="space-y-3">
                     {isOutOfStock ? (
-                      <Button
-                        disabled
-                        className="w-full cursor-not-allowed bg-gray-100 text-base text-gray-500 sm:w-auto"
-                      >
+                      <Button disabled className="h-12 w-full text-base">
                         Out of Stock
                       </Button>
                     ) : inCart(displayCourse._id) ? (
-                      <div className="flex w-full items-center gap-2 sm:w-auto">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDecreaseQuantity(displayCourse)}
-                          className="h-10 w-10 p-0"
-                          title="Decrease quantity"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="min-w-[3rem] text-center font-medium">
-                          {getCurrentQuantity(displayCourse._id)}
-                          {displayCourse.capacity &&
-                            displayCourse.capacity > 1 && (
-                              <span className="text-muted-foreground block text-xs">
-                                /{displayCourse.capacity}
-                              </span>
-                            )}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleIncreaseQuantity(displayCourse)}
-                          disabled={
-                            getCurrentQuantity(displayCourse._id) >=
-                            (displayCourse.capacity || 1)
-                          }
-                          className="h-10 w-10 p-0"
-                          title={
-                            getCurrentQuantity(displayCourse._id) >=
-                            (displayCourse.capacity || 1)
-                              ? "Maximum capacity reached"
-                              : "Increase quantity"
-                          }
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
+                      <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleDecreaseQuantity(displayCourse)
+                            }
+                            className="h-10 w-10 p-0"
+                          >
+                            <Minus className="h-4 w-4" />
+                          </Button>
+                          <span className="min-w-[3rem] text-center font-medium">
+                            {getCurrentQuantity(displayCourse._id)}
+                          </span>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              handleIncreaseQuantity(displayCourse)
+                            }
+                            disabled={
+                              getCurrentQuantity(displayCourse._id) >=
+                              (displayCourse.capacity || 1)
+                            }
+                            className="h-10 w-10 p-0"
+                          >
+                            <Plus className="h-4 w-4" />
+                          </Button>
+                        </div>
                         <Button
                           variant="outline"
                           size="sm"
                           onClick={() => removeItem(displayCourse._id)}
-                          className="h-10 px-3 text-red-600 hover:bg-red-50 hover:text-red-700"
-                          title="Remove from cart"
+                          className="text-red-600 hover:bg-red-50"
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -580,216 +612,214 @@ export default function CourseClient({
                     ) : (
                       <Button
                         onClick={() => handleIncreaseQuantity(displayCourse)}
-                        className="w-full text-base sm:w-auto"
+                        className="h-12 w-full text-base font-semibold"
+                        size="lg"
                       >
-                        + Add to cart
+                        🛒 Add to Cart
                       </Button>
                     )}
+
                     <Button
                       variant="outline"
-                      className="w-full text-base sm:w-auto"
+                      className="h-12 w-full border-2 bg-transparent text-base font-semibold"
                       disabled={isOutOfStock}
                     >
-                      <ShoppingCart className="mr-2 h-4 w-4" /> Buy now
+                      <ShoppingCart className="mr-2 h-5 w-5" />
+                      Buy Now
                     </Button>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle>Schedule</CardTitle>
-                  <CardDescription>Key timings and dates</CardDescription>
+              {/* Schedule Card */}
+              <Card className="border-muted border">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="text-primary h-5 w-5" />
+                    Schedule & Timing
+                  </CardTitle>
                 </CardHeader>
                 <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4" />
-                    <span>Start: {formatDateCommon(course.startDate)}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                      <Calendar className="text-primary h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">Start Date</div>
+                      <div className="text-muted-foreground text-sm">
+                        {formatDateCommon(course.startDate)}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Calendar className="h-4 w-4" />
-                    <span>End: {formatDateCommon(course.endDate)}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                      <Clock className="text-primary h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">Time</div>
+                      <div className="text-muted-foreground text-sm">
+                        {course.startTime} - {course.endTime}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <Clock className="h-4 w-4" />
-                    <span>
-                      {course.startTime} - {course.endTime}
-                    </span>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                      <MapPin className="text-primary h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">Days</div>
+                      <div className="text-muted-foreground text-sm">
+                        {course.daysOfWeek.join(", ")}
+                      </div>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 text-sm">
-                    <MapPin className="h-4 w-4" />
-                    <span>{course.daysOfWeek.join(", ")}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                      <TrendingUp className="text-primary h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">Duration</div>
+                      <div className="text-muted-foreground text-sm">
+                        {course.duration || "6 weeks"}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <div className="border-primary bg-primary/5 flex flex-wrap items-center gap-3 rounded-lg border p-3">
-                <Sparkles className="text-primary h-5 w-5" />
-                <span className="text-foreground text-sm font-medium">
-                  Practical, guided learning
-                </span>
-                <span className="text-muted-foreground">•</span>
-                <HeartHandshake className="text-primary h-5 w-5" />
-                <span className="text-foreground text-sm font-medium">
-                  Lifetime doubt clearing
-                </span>
+              {/* Benefits */}
+              <div className="border-primary/20 from-primary/5 to-accent/5 rounded-xl border-2 bg-gradient-to-r p-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div className="flex items-center gap-3">
+                    <Sparkles className="text-primary h-6 w-6" />
+                    <span className="font-medium">
+                      Practical, guided learning
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <HeartHandshake className="text-primary h-6 w-6" />
+                    <span className="font-medium">Lifetime doubt clearing</span>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <Separator className="my-6" />
+      <Separator className="my-8" />
 
-      <section className="py-8">
+      {/* Enhanced Stats Section */}
+      <section className="py-16">
         <div className="container">
-          <div className="mx-auto max-w-6xl">
-            <div
-              ref={cardsAnimation.ref}
-              className={`mb-8 grid grid-cols-1 gap-4 transition-all duration-1000 ease-out sm:grid-cols-2 lg:grid-cols-5 ${cardsAnimation.isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}
-            >
+          <div
+            ref={statsAnimation.ref}
+            className={`mx-auto max-w-6xl transition-all duration-1000 ease-out ${
+              statsAnimation.isVisible
+                ? "translate-y-0 opacity-100"
+                : "translate-y-8 opacity-0"
+            }`}
+          >
+            <div className="mb-12 text-center">
+              <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+                Course Highlights
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Everything you need to know at a glance
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
               {[
                 {
                   label: "Start Date",
                   value: formatDateCommon(course.startDate),
+                  icon: Calendar,
                 },
-                { label: "Duration", value: course.duration || "3 Days" },
                 {
-                  label: "Choose Time Slot (IST)",
-                  value: `${course.startTime} - ${course.endTime}`,
+                  label: "Duration",
+                  value: course.duration || "6 weeks",
+                  icon: Clock,
                 },
-                { label: "Language", value: "English" },
-                { label: "Contribution", value: formatINR(course.price) },
-              ].map((it, idx) => {
-                const delays = [
-                  "delay-100",
-                  "delay-200",
-                  "delay-300",
-                  "delay-400",
-                  "delay-500",
-                ] as const;
-                const delayClass = delays[idx] ?? "";
-                return (
-                  <Card
-                    key={idx}
-                    className={`p-4 text-center transition-all ${delayClass} duration-500 ease-out ${cardsAnimation.isVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-95 opacity-0"}`}
-                  >
-                    <CardContent className="p-4">
-                      <div className="text-foreground text-sm font-medium">
-                        {it.label}
-                      </div>
-                      <div className="text-muted-foreground text-sm">
-                        {it.value}
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
+                {
+                  label: "Time Slot (IST)",
+                  value: `${course.startTime} - ${course.endTime}`,
+                  icon: Clock,
+                },
+                { label: "Language", value: "English", icon: BookOpen },
+                {
+                  label: "Investment",
+                  value: formatINR(course.price),
+                  icon: Award,
+                },
+              ].map((item, idx) => (
+                <Card
+                  key={idx}
+                  className={`group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
+                    statsAnimation.isVisible
+                      ? `animate-in slide-in-from-bottom-4 duration-700 delay-${idx * 100}`
+                      : ""
+                  }`}
+                >
+                  <CardContent className="p-6 text-center">
+                    <div className="bg-primary/10 group-hover:bg-primary/20 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full transition-colors">
+                      <item.icon className="text-primary h-6 w-6" />
+                    </div>
+                    <div className="text-muted-foreground mb-1 text-sm font-medium">
+                      {item.label}
+                    </div>
+                    <div className="font-semibold">{item.value}</div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
 
-            <div
-              ref={countdownAnimation.ref}
-              className={`mb-8 text-center transition-all delay-300 duration-1000 ease-out ${countdownAnimation.isVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-8 scale-95 opacity-0"}`}
-            >
-              <h2 className="text-foreground mb-4 text-2xl font-semibold">
-                Workshop Starting In
-              </h2>
-              <div className="border-primary bg-primary/10 rounded-lg border-2 p-6">
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {/* Countdown Timer */}
+            <div className="mt-16 text-center">
+              <h3 className="mb-6 text-2xl font-semibold">
+                Course Starting In
+              </h3>
+              <div className="border-primary/20 from-primary/5 to-accent/5 mx-auto max-w-2xl rounded-2xl border-2 bg-gradient-to-br p-8">
+                <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
                   {[
-                    { k: "days", v: timeLeft.days },
-                    { k: "hours", v: timeLeft.hours },
-                    { k: "mins", v: timeLeft.minutes },
-                    { k: "secs", v: timeLeft.seconds },
-                  ].map((t) => (
-                    <div
-                      key={t.k}
-                      className="border-primary/30 bg-background rounded-lg border p-4"
-                    >
-                      <div className="text-primary text-2xl font-bold">
-                        {String(t.v).padStart(2, "0")}
+                    { label: "Days", value: timeLeft.days },
+                    { label: "Hours", value: timeLeft.hours },
+                    { label: "Minutes", value: timeLeft.minutes },
+                    { label: "Seconds", value: timeLeft.seconds },
+                  ].map((time, idx) => (
+                    <div key={idx} className="text-center">
+                      <div className="border-primary/30 bg-background text-primary mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-xl border-2 text-2xl font-bold">
+                        {String(time.value).padStart(2, "0")}
                       </div>
-                      <div className="text-muted-foreground text-sm">{t.k}</div>
+                      <div className="text-muted-foreground text-sm font-medium">
+                        {time.label}
+                      </div>
                     </div>
                   ))}
                 </div>
               </div>
             </div>
-
-            <div
-              ref={detailsAnimation.ref}
-              className={`grid grid-cols-1 gap-8 transition-all delay-500 duration-1000 ease-out lg:grid-cols-3 ${detailsAnimation.isVisible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0"}`}
-            >
-              <div className="lg:col-span-3">
-                <Card
-                  className={`border-primary bg-primary/5 border-2 transition-all delay-700 duration-700 ease-out ${detailsAnimation.isVisible ? "translate-x-0 scale-100 opacity-100" : "-translate-x-8 scale-95 opacity-0"}`}
-                >
-                  <CardHeader>
-                    <CardTitle className="text-foreground">
-                      {course.name} Challenge
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="text-primary h-4 w-4" />
-                      <span>
-                        {formatDateCommon(course.startDate)} -{" "}
-                        {formatDateCommon(course.endDate)}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="text-primary h-4 w-4" />
-                      <span>Multiple time slots available</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <span className="text-primary font-bold">₹</span>
-                      <span>Contribution: {formatINR(course.price)}</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="text-primary h-4 w-4" />
-                      <span>Recording available: 1 week</span>
-                    </div>
-                    <div className="pt-4">
-                      <Button className="w-full">Register Now</Button>
-                    </div>
-                    <div className="space-y-2">
-                      {[
-                        "Reduced junk food addiction",
-                        "Improved mental clarity",
-                        "Better sleep patterns",
-                      ].map((t, i) => (
-                        <div
-                          key={i}
-                          className="flex items-center gap-2 text-sm"
-                        >
-                          <CircleCheck className="h-4 w-4 text-green-600" />
-                          <span>{t}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="py-12">
+      {/* Enhanced Course Overview */}
+      <section className="from-muted/20 to-background bg-gradient-to-br py-16">
         <div className="container">
-          <div className="mx-auto max-w-3xl">
-            <div className="relative overflow-hidden">
-              <div className="border-primary/30 bg-primary/10 pointer-events-none absolute -inset-2 -z-10 translate-x-3 translate-y-3 border-2" />
-              <Card className="border-primary bg-primary/5 rounded-none border-[3px]">
-                <CardHeader className="items-center pb-4 text-center">
-                  <CardTitle className="text-foreground font-serif text-4xl font-semibold md:text-5xl">
+          <div className="mx-auto max-w-4xl">
+            <div className="relative overflow-hidden rounded-2xl">
+              <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
+              <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
+                <CardHeader className="pb-6 text-center">
+                  <CardTitle className="text-4xl font-bold md:text-5xl">
                     Course Overview
                   </CardTitle>
+                  <CardDescription className="text-lg">
+                    Comprehensive learning experience designed for your success
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="prose prose-neutral dark:prose-invert mx-auto text-center font-serif">
-                    <StructuredContent text={course.description ?? ""} />
-                  </div>
+                <CardContent className="prose prose-lg dark:prose-invert mx-auto max-w-none">
+                  <StructuredContent text={course.description ?? ""} />
                 </CardContent>
               </Card>
             </div>
@@ -797,50 +827,111 @@ export default function CourseClient({
         </div>
       </section>
 
-      <section className="py-8">
+      {/* Learning Outcomes */}
+      <section className="py-16">
         <div className="container">
-          <h2 className="mb-6 text-center font-serif text-4xl font-semibold md:text-5xl">
-            What will you learn?
-          </h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {course.learningOutcomes?.map((item, idx) => (
-              <div key={idx} className="relative overflow-hidden">
-                <div className="border-primary/30 bg-primary/10 pointer-events-none absolute -inset-1 -z-10 translate-x-1 translate-y-1 border-2" />
-                <div className="border-primary bg-primary/5 rounded-none border-[3px] p-6 shadow-lg">
-                  <div className="text-4xl">{item.icon}</div>
-                  <p className="mt-2 font-serif font-semibold">{item.title}</p>
+          <div
+            ref={featuresAnimation.ref}
+            className={`transition-all duration-1000 ease-out ${
+              featuresAnimation.isVisible
+                ? "translate-y-0 opacity-100"
+                : "translate-y-8 opacity-0"
+            }`}
+          >
+            <div className="mb-12 text-center">
+              <h2 className="mb-4 text-4xl font-bold md:text-5xl">
+                What You'll Master
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Practical skills and knowledge you'll gain from this course
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
+              {course.learningOutcomes?.map((outcome, idx) => (
+                <div
+                  key={idx}
+                  className={`group transition-all duration-500 delay-${idx * 100} ${
+                    featuresAnimation.isVisible
+                      ? "translate-y-0 opacity-100"
+                      : "translate-y-8 opacity-0"
+                  }`}
+                >
+                  <div className="relative overflow-hidden rounded-xl">
+                    <div className="border-primary/30 bg-primary/10 absolute -inset-1 -z-10 translate-x-2 translate-y-2 rounded-xl border-2 transition-transform group-hover:translate-x-1 group-hover:translate-y-1" />
+                    <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br p-8 text-center transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1">
+                      <div className="mb-4 text-5xl">{outcome.icon}</div>
+                      <h3 className="text-lg font-semibold">{outcome.title}</h3>
+                    </Card>
+                  </div>
                 </div>
-              </div>
-            ))}
+              )) ||
+                // Fallback content if no learning outcomes
+                [
+                  { icon: "🧠", title: "Deep Understanding" },
+                  { icon: "🛠️", title: "Practical Skills" },
+                  { icon: "📊", title: "Real-world Application" },
+                  { icon: "🎯", title: "Expert Guidance" },
+                ].map((item, idx) => (
+                  <div key={idx} className="group">
+                    <div className="relative overflow-hidden rounded-xl">
+                      <div className="border-primary/30 bg-primary/10 absolute -inset-1 -z-10 translate-x-2 translate-y-2 rounded-xl border-2 transition-transform group-hover:translate-x-1 group-hover:translate-y-1" />
+                      <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br p-8 text-center transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1">
+                        <div className="mb-4 text-5xl">{item.icon}</div>
+                        <h3 className="text-lg font-semibold">{item.title}</h3>
+                      </Card>
+                    </div>
+                  </div>
+                ))}
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Educators Section */}
       <Educators />
 
-      <section className="py-8">
-        <div className="container">
-          <CourseModulesSection modules={course.modules ?? []} />
-        </div>
-      </section>
+      {/* Course Modules or Internship Section */}
+      {course.type === "internship" ? (
+        <section className="from-background to-muted/20 bg-gradient-to-br py-16">
+          <div className="container">
+            <InternshipSection internship={course} />
+          </div>
+        </section>
+      ) : (
+        <section className="from-background to-muted/20 bg-gradient-to-br py-16">
+          <div className="container">
+            <CourseModulesSection modules={course.modules ?? []} />
+          </div>
+        </section>
+      )}
 
-      <section className="py-12">
+      {/* FAQ Section */}
+      <section className="py-16">
         <div className="container">
-          <div className="mx-auto max-w-3xl">
-            <Card className="card-shadow">
-              <CardHeader>
-                <CardTitle>Frequently Asked Questions</CardTitle>
-                <CardDescription>Common queries answered</CardDescription>
-              </CardHeader>
-              <CardContent>
+          <div className="mx-auto max-w-4xl">
+            <div className="mb-12 text-center">
+              <h2 className="mb-4 text-4xl font-bold">
+                Frequently Asked Questions
+              </h2>
+              <p className="text-muted-foreground text-lg">
+                Get answers to common questions about this course
+              </p>
+            </div>
+
+            <Card className="border-muted border-2 shadow-xl">
+              <CardContent className="p-8">
                 {faqMarkdown == null ? (
-                  <p className="text-muted-foreground text-sm">Loading FAQs…</p>
+                  <div className="py-8 text-center">
+                    <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+                    <p className="text-muted-foreground">Loading FAQs...</p>
+                  </div>
                 ) : (
                   (() => {
                     const items = parseFaqMarkdown(faqMarkdown);
                     if (items.length === 0) {
                       return (
-                        <div className="prose prose-neutral dark:prose-invert max-w-none">
+                        <div className="prose prose-lg dark:prose-invert max-w-none">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {faqMarkdown}
                           </ReactMarkdown>
@@ -849,13 +940,15 @@ export default function CourseClient({
                     }
                     return (
                       <Accordion type="single" collapsible className="w-full">
-                        {items.map((it, idx) => (
+                        {items.map((item, idx) => (
                           <AccordionItem key={idx} value={`faq-${idx + 1}`}>
-                            <AccordionTrigger>{it.q}</AccordionTrigger>
+                            <AccordionTrigger className="hover:text-primary text-left text-lg font-semibold">
+                              {item.q}
+                            </AccordionTrigger>
                             <AccordionContent>
-                              <div className="prose prose-neutral dark:prose-invert max-w-none">
+                              <div className="prose dark:prose-invert max-w-none pt-2">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                  {it.a}
+                                  {item.a}
                                 </ReactMarkdown>
                               </div>
                             </AccordionContent>
@@ -871,77 +964,88 @@ export default function CourseClient({
         </div>
       </section>
 
-      <section className="py-12">
+      {/* Reviews Section */}
+      <section className="from-muted/20 to-background bg-gradient-to-br py-16">
         <div className="container">
-          <h2 className="mb-6 text-2xl font-semibold">What learners say</h2>
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-4xl font-bold">Student Reviews</h2>
+            <p className="text-muted-foreground text-lg">
+              Hear from our successful students
+            </p>
+          </div>
+
           {REVIEWS.length > 0 ? (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {REVIEWS.map((r) => (
-                <Card key={r.id} className="card-shadow">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <StarRating rating={r.rating} size="sm" />
-                      <span className="text-muted-foreground text-sm">
-                        {r.rating.toFixed(1)} / 5
+            <div className="mb-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {REVIEWS.map((review, idx) => (
+                <Card
+                  key={review.id}
+                  className="border-muted border-2 shadow-lg transition-shadow hover:shadow-xl"
+                >
+                  <CardHeader className="pb-3">
+                    <div className="flex items-center gap-3">
+                      <StarRating rating={review.rating} size="sm" />
+                      <span className="text-muted-foreground text-sm font-medium">
+                        {review.rating.toFixed(1)} / 5
                       </span>
-                    </CardTitle>
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-muted-foreground text-sm whitespace-pre-line">
-                      {r.content}
+                    <p className="text-muted-foreground leading-relaxed">
+                      "{review.content}"
                     </p>
                   </CardContent>
                 </Card>
               ))}
             </div>
           ) : (
-            <p className="text-muted-foreground">No reviews yet</p>
+            <div className="py-12 text-center">
+              <Star className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+              <p className="text-muted-foreground text-lg">
+                No reviews yet - be the first!
+              </p>
+            </div>
           )}
-        </div>
-      </section>
 
-      <section className="py-12 pt-0">
-        <div className="container">
           <div className="mx-auto max-w-2xl">
             <ReviewForm />
           </div>
         </div>
       </section>
 
-      <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-8">
+      {/* Community Section */}
+      <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-16">
         <div className="container">
-          <div className="mx-auto max-w-2xl text-center text-white">
-            <h3 className="mb-2 text-xl font-semibold">
-              Join Our Dream-Sharing Community!
+          <div className="mx-auto max-w-3xl text-center text-white">
+            <h3 className="mb-4 text-3xl font-bold">
+              Join Our Learning Community! 🚀
             </h3>
-            <p className="text-primary-foreground/80 mb-6 text-sm">
+            <p className="mb-8 text-lg text-white/90">
               Connect with fellow learners, share insights, and continue your
               journey together
             </p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Link
                 href="https://chat.whatsapp.com/LYKNhlQbmV84YiBioVo83Y?mode=ac_t"
-                className="bg-background text-primary hover:bg-muted inline-flex items-center gap-2 rounded-lg px-6 py-3 font-medium transition-all hover:shadow-lg"
-                aria-label="Join WhatsApp community"
+                className="inline-flex items-center gap-3 rounded-xl bg-white px-8 py-4 font-semibold text-blue-600 transition-all hover:bg-gray-100 hover:shadow-lg"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Join WhatsApp
+                💬 Join WhatsApp Community
               </Link>
               <Link
                 href="https://www.instagram.com/channel/AbZNVUaQ3yMrfJGm/?igsh=dTV3MWozOXJsdDFy"
-                className="bg-background text-primary hover:bg-muted inline-flex items-center gap-2 rounded-lg px-6 py-3 font-medium transition-all hover:shadow-lg"
-                aria-label="Follow our Instagram channel"
+                className="inline-flex items-center gap-3 rounded-xl bg-white px-8 py-4 font-semibold text-purple-600 transition-all hover:bg-gray-100 hover:shadow-lg"
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Follow Instagram
+                📸 Follow on Instagram
               </Link>
             </div>
           </div>
         </div>
       </section>
 
+      {/* Sticky CTA */}
       <StickyCTA
         price={course.price}
         onPrimary={() => handleIncreaseQuantity(course)}
