@@ -10,6 +10,7 @@ export default function StickyCTA({
   inCart,
   quantity,
   isOutOfStock,
+  gradientClass,
 }: {
   price: number;
   onPrimary: () => void;
@@ -17,9 +18,12 @@ export default function StickyCTA({
   inCart?: boolean;
   quantity?: number;
   isOutOfStock?: boolean;
+  gradientClass?: string;
 }) {
   return (
-    <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky bottom-0 z-30 border-t backdrop-blur">
+    <div
+      className={`${gradientClass || "bg-background/95"} sticky bottom-0 z-30 border-t backdrop-blur`}
+    >
       <div className="container">
         <div className="flex flex-col items-center gap-3 py-3 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-3">
