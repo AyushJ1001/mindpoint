@@ -258,9 +258,6 @@ const CartContent = () => {
                       <h3 className="mb-2 text-lg font-semibold">
                         {item.name}
                       </h3>
-                      <p className="text-muted-foreground mb-4">
-                        {item.description}
-                      </p>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                           <label className="text-sm font-medium">

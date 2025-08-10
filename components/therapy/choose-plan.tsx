@@ -18,72 +18,131 @@ import {
   HeartHandshake,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
+import type { Doc } from "@/convex/_generated/dataModel";
 
-type Sessions = 1 | 4 | 7;
+// Configuration constants
+const PREMIUM_MULTIPLIER = 1.2; // Connection plan is 1.2x the base Express price
+
+type Sessions = number;
 
 type Plan = {
   id: "connection" | "express";
   name: string;
   highlights: string[];
-  perSession: Record<Sessions, number>;
-  validityDays: Record<Sessions, number>;
+  perSession: Record<number, number>;
+  validityDays: Record<number, number>;
   gradient: string;
   icon: React.ReactNode;
   description: string;
 };
 
-export default function ChoosePlan({
-  onBook = () => {},
-}: {
+interface ChoosePlanProps {
+  course: Doc<"courses">;
+  variants: Doc<"courses">[];
   onBook?: (payload: {
     planId: string;
     sessions: Sessions;
     total: number;
     perSession: number;
   }) => void;
-}) {
-  const [sessions, setSessions] = useState<Sessions>(1);
+}
+
+export default function ChoosePlan({
+  course,
+  variants,
+  onBook = () => {},
+}: ChoosePlanProps) {
   const { ref, visible } = useInView<HTMLDivElement>();
 
-  const plans: Plan[] = useMemo(
-    () => [
-      {
-        id: "connection",
-        name: "Connection",
-        description: "Premium therapy with senior experts",
-        highlights: [
-          "Connect with senior experts",
-          "Get a therapist in 60 mins",
-          "Validity adjusts with pack",
-          "Session duration ~60 mins",
-        ],
-        perSession: { 1: 1799, 4: 1599, 7: 1499 },
-        validityDays: { 1: 15, 4: 120, 7: 210 },
-        gradient: "from-blue-600 via-purple-600 to-indigo-700",
-        icon: <Sparkles className="h-6 w-6" />,
-      },
-      {
-        id: "express",
-        name: "Express",
-        description: "Quick therapy at affordable rates",
-        highlights: [
-          "Start at lower prices",
-          "Get a therapist in 24–36 hrs",
-          "Validity adjusts with pack",
-          "Session duration ~40 mins",
-        ],
-        perSession: { 1: 1299, 4: 1149, 7: 999 },
-        validityDays: { 1: 10, 4: 120, 7: 210 },
-        gradient: "from-emerald-500 via-teal-500 to-cyan-600",
-        icon: <HeartHandshake className="h-6 w-6" />,
-      },
-    ],
-    [],
-  );
+  // Get unique session counts from variants
+  const sessionOptions = useMemo(() => {
+    const sessionCounts = new Set<number>();
+    variants.forEach((variant) => {
+      const sessionCount = (variant as any).sessions;
+      if (sessionCount && typeof sessionCount === "number") {
+        sessionCounts.add(sessionCount);
+      }
+    });
+    // Fallback to default options if no variants found
+    if (sessionCounts.size === 0) {
+      sessionCounts.add(1);
+      sessionCounts.add(3);
+      sessionCounts.add(6);
+    }
+    return Array.from(sessionCounts).sort((a, b) => a - b);
+  }, [variants]);
+
+  const [sessions, setSessions] = useState<Sessions>(sessionOptions[0] || 1);
+
+  // Create plans from database variants
+  const plans: Plan[] = useMemo(() => {
+    // Create Connection plan (premium)
+    const connectionPlan: Plan = {
+      id: "connection",
+      name: "Connection",
+      description: "Premium therapy with senior experts",
+      highlights: [
+        "Connect with senior experts",
+        "Get a therapist in 60 mins",
+        "Validity adjusts with pack",
+        "Session duration ~60 mins",
+      ],
+      perSession: {}, // Will be populated from variants
+      validityDays: {}, // Will be populated from variants
+      gradient: "from-blue-600 via-purple-600 to-indigo-700",
+      icon: <Sparkles className="h-6 w-6" />,
+    };
+
+    // Create Express plan (affordable)
+    const expressPlan: Plan = {
+      id: "express",
+      name: "Express",
+      description: "Quick therapy at affordable rates",
+      highlights: [
+        "Start at lower prices",
+        "Get a therapist in 24–36 hrs",
+        "Validity adjusts with pack",
+        "Session duration ~40 mins",
+      ],
+      perSession: {}, // Will be populated from variants
+      validityDays: {}, // Will be populated from variants
+      gradient: "from-emerald-500 via-teal-500 to-cyan-600",
+      icon: <HeartHandshake className="h-6 w-6" />,
+    };
+
+    // Extract base prices per session from variants (total price divided by session count)
+    const basePrices: Record<number, number> = {};
+    const validityDays: Record<number, number> = {};
+
+    variants.forEach((variant) => {
+      const sessionCount = (variant as any).sessions;
+      if (sessionCount && typeof sessionCount === "number") {
+        // Calculate price per session (total price divided by number of sessions)
+        const pricePerSession = Math.round(variant.price / sessionCount);
+        basePrices[sessionCount] = pricePerSession;
+        // Set validity days based on session count
+        validityDays[sessionCount] =
+          sessionCount === 1 ? 10 : sessionCount * 30;
+      }
+    });
+
+    // Set Express prices (base prices)
+    expressPlan.perSession = { ...basePrices };
+    expressPlan.validityDays = { ...validityDays };
+
+    // Set Connection prices (PREMIUM_MULTIPLIER x of base prices)
+    Object.keys(basePrices).forEach((sessionCount) => {
+      const count = parseInt(sessionCount);
+      connectionPlan.perSession[count] = Math.round(
+        basePrices[count] * PREMIUM_MULTIPLIER,
+      );
+      connectionPlan.validityDays[count] = validityDays[count];
+    });
+
+    return [connectionPlan, expressPlan];
+  }, [variants]);
 
   const formatter = new Intl.NumberFormat("en-IN");
-
-  const options: Sessions[] = [1, 4, 7];
 
   return (
     <section id="plans" className="scroll-mt-24">
@@ -93,12 +152,12 @@ export default function ChoosePlan({
 
         {/* Animated background elements */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="animate-float-slow absolute -top-20 -left-20 h-80 w-80 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-600/20 blur-3xl" />
-          <div className="animate-float-slower absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-600/20 blur-3xl" />
-          <div className="animate-float-medium absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-pink-500/10 to-rose-600/10 blur-2xl" />
+          <div className="animate-float-slow absolute -left-20 -top-20 h-80 w-80 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-600/20 blur-3xl" />
+          <div className="animate-float-slower absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-600/20 blur-3xl" />
+          <div className="animate-float-medium absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-pink-500/10 to-rose-600/10 blur-2xl" />
         </div>
 
-        <div className="relative container mx-auto px-4 py-16 md:py-20">
+        <div className="container relative mx-auto px-4 py-16 md:py-20">
           <div className="mb-12 text-center">
             <div className="from-primary/10 to-accent/10 border-primary/20 mb-4 inline-flex items-center gap-2 rounded-full border bg-gradient-to-r px-4 py-2">
               <Sparkles className="text-primary h-4 w-4" />
@@ -119,7 +178,7 @@ export default function ChoosePlan({
 
             {/* Enhanced Session selector */}
             <div className="from-muted/50 to-muted/30 border-border/50 mt-8 inline-flex items-center justify-center gap-3 rounded-2xl border bg-gradient-to-r p-2 shadow-lg backdrop-blur-sm">
-              {options.map((opt) => (
+              {sessionOptions.map((opt) => (
                 <button
                   key={opt}
                   type="button"
@@ -152,6 +211,9 @@ export default function ChoosePlan({
           >
             {plans.map((plan, idx) => {
               const per = plan.perSession[sessions];
+              // Skip rendering if no pricing available for this session count
+              if (!per) return null;
+
               const total = per * sessions;
               const billed =
                 sessions === 1
@@ -238,7 +300,7 @@ export default function ChoosePlan({
 
                   <CardFooter className="relative flex items-center justify-between gap-4 pt-0">
                     <div className="text-muted-foreground bg-muted/30 rounded-full px-3 py-1 text-xs">
-                      Valid for {plan.validityDays[sessions]} days
+                      Valid for {plan.validityDays[sessions] || 30} days
                     </div>
                     <Button
                       className={cn(

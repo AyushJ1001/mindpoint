@@ -17,10 +17,12 @@ import CommunitiesSection from "./communities-section";
 
 interface CourseTypeRendererProps {
   course: Doc<"courses">;
+  variants?: Doc<"courses">[];
 }
 
 export default function CourseTypeRenderer({
   course,
+  variants = [],
 }: CourseTypeRendererProps) {
   const courseType = course.type;
 
@@ -32,7 +34,7 @@ export default function CourseTypeRenderer({
       case "internship":
         return <InternshipCourse course={course} />;
       case "therapy":
-        return <TherapyCourse course={course} />;
+        return <TherapyCourse course={course} variants={variants} />;
       case "diploma":
         return <DiplomaCourse course={course} />;
       case "pre-recorded":

@@ -28,8 +28,8 @@ export default function FAQSection({
     let cancelled = false;
     const load = async () => {
       try {
-        const res = await fetch("/faq.md", { cache: "force-cache" });
-        if (!res.ok) throw new Error("Failed to load faq.md");
+        const res = await fetch("/faq/course.md", { cache: "force-cache" });
+        if (!res.ok) throw new Error("Failed to load faq/course.md");
         const text = await res.text();
         if (!cancelled) setFaqMarkdown(text);
       } catch (err) {

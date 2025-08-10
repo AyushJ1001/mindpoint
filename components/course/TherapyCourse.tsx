@@ -13,15 +13,65 @@ import type { Doc } from "@/convex/_generated/dataModel";
 
 interface TherapyCourseProps {
   course: Doc<"courses">;
+  variants?: Doc<"courses">[];
 }
 
-export default function TherapyCourse({ course }: TherapyCourseProps) {
+// Function to generate a concise summary from the course description
+const generateSummary = (description: string | undefined): string => {
+  if (!description) {
+    return "Professional therapy sessions for mental health support and personal growth.";
+  }
+
+  // Remove HTML tags if present
+  const cleanText = description.replace(/<[^>]*>/g, "");
+
+  // Split into sentences and take the first meaningful sentence
+  const sentences = cleanText
+    .split(/[.!?]+/)
+    .filter((s) => s.trim().length > 10);
+
+  if (sentences.length === 0) {
+    return "Professional therapy sessions for mental health support and personal growth.";
+  }
+
+  // Take the first sentence and limit to ~100 characters
+  let summary = sentences[0].trim();
+
+  // If it's too long, truncate it
+  if (summary.length > 100) {
+    summary = summary.substring(0, 97) + "...";
+  }
+
+  return summary;
+};
+
+export default function TherapyCourse({
+  course,
+  variants = [],
+}: TherapyCourseProps) {
   return (
     <>
+      {/* Course Title Section */}
+      <section className="relative overflow-hidden py-16 md:py-20">
+        <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent" />
+        <div className="bg-primary/10 absolute top-0 right-0 h-96 w-96 rounded-full blur-3xl" />
+        <div className="bg-accent/10 absolute bottom-0 left-0 h-96 w-96 rounded-full blur-3xl" />
+
+        <div className="relative z-10 container">
+          <div className="mx-auto max-w-4xl text-center">
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+              {course.name}
+            </h1>
+          </div>
+        </div>
+      </section>
+
       {/* Choose Plan Section */}
       <section className="py-16">
         <div className="container">
           <ChoosePlan
+            course={course}
+            variants={variants}
             onBook={(payload) => {
               console.log("Booking payload:", payload);
             }}

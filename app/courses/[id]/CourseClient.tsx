@@ -397,7 +397,7 @@ export default function CourseClient({
         )}
 
         {/* Course Type Specific Sections */}
-        <CourseTypeRenderer course={course} />
+        <CourseTypeRenderer course={course} variants={variants} />
 
         {/* Buy Now Confirmation Dialog */}
         <Dialog open={showBuyNowDialog} onOpenChange={setShowBuyNowDialog}>

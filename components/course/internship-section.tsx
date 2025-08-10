@@ -315,9 +315,8 @@ export default function Internship({
                   THE MIND POINT'S
                 </div>
                 <div className="mb-4 text-sm font-medium text-slate-600">
-                  ONLINE{" "}
                   <span className="font-semibold text-slate-800">
-                    TRAINING BASED INTERNSHIP
+                    ONLINE TRAINING BASED INTERNSHIP
                   </span>
                 </div>
                 <h3 className="mb-4 text-lg font-semibold text-slate-800">
@@ -446,12 +445,11 @@ export default function Internship({
             <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl transition-shadow duration-300 hover:shadow-2xl">
               <div className="mb-8 text-center">
                 <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
-                  MIND POINT'S
+                  THE MIND POINT'S
                 </div>
                 <div className="mb-4 text-sm font-medium text-slate-600">
-                  ONLINE{" "}
                   <span className="font-semibold text-slate-800">
-                    TRAINING BASED INTERNSHIP
+                    ONLINE TRAINING BASED INTERNSHIP
                   </span>
                 </div>
                 <h3 className="mb-4 text-lg font-semibold text-slate-800">

@@ -116,3 +116,59 @@ export const createTestCourseWithExpiredOffer = mutation({
     return courseId;
   },
 });
+
+// Test mutation to create therapy course variants
+export const createTherapyCourseVariants = mutation({
+  args: {},
+  returns: v.array(v.id("courses")),
+  handler: async (ctx, args) => {
+    const courseIds: string[] = [];
+
+    // Create therapy variants (all treated as base prices for Express plan)
+    const therapyVariants = [
+      {
+        name: "Individual Therapy - 1 Session",
+        description: "Professional therapy session - 1 session",
+        sessions: 1,
+        price: 1299,
+      },
+      {
+        name: "Individual Therapy - 3 Sessions",
+        description: "Professional therapy session - 3 sessions",
+        sessions: 3,
+        price: 1149,
+      },
+      {
+        name: "Individual Therapy - 6 Sessions",
+        description: "Professional therapy session - 6 sessions",
+        sessions: 6,
+        price: 999,
+      },
+    ];
+
+    // Insert therapy variants
+    for (const variant of therapyVariants) {
+      const courseId = await ctx.db.insert("courses", {
+        name: variant.name,
+        description: variant.description,
+        type: "therapy",
+        code: `THERAPY-${variant.sessions}`,
+        price: variant.price,
+        sessions: variant.sessions,
+        capacity: 100,
+        enrolledUsers: [],
+        startDate: "2025-01-01",
+        endDate: "2025-12-31",
+        startTime: "09:00",
+        endTime: "21:00",
+        daysOfWeek: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+        content: "Professional therapy sessions with experienced counselors",
+        reviews: [],
+        imageUrls: ["/blue-dream-therapy-hero.png"],
+      });
+      courseIds.push(courseId);
+    }
+
+    return courseIds as any;
+  },
+});

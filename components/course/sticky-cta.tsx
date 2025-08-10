@@ -22,9 +22,13 @@ export default function StickyCTA({
 }) {
   return (
     <div
-      className={`${gradientClass || "bg-background/95"} sticky bottom-0 z-30 border-t backdrop-blur`}
+      className={`${gradientClass || "bg-background/95"} sticky bottom-0 left-0 z-30 border-t backdrop-blur md:left-[var(--sidebar-width,0px)]`}
+      style={{
+        right: "0",
+        marginLeft: "0",
+      }}
     >
-      <div className="container">
+      <div className="px-4 sm:px-6 md:px-8">
         <div className="flex flex-col items-center gap-3 py-3 sm:flex-row sm:justify-between">
           <div className="flex items-center gap-3">
             <span className="text-muted-foreground text-sm">
