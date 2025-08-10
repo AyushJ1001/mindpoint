@@ -17,6 +17,7 @@ import type * as courses from "../courses.js";
 import type * as emailActions from "../emailActions.js";
 import type * as image from "../image.js";
 import type * as myFunctions from "../myFunctions.js";
+import type * as testOffer from "../testOffer.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -31,6 +32,7 @@ declare const fullApi: ApiFromModules<{
   emailActions: typeof emailActions;
   image: typeof image;
   myFunctions: typeof myFunctions;
+  testOffer: typeof testOffer;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

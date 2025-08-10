@@ -26,6 +26,14 @@ export default defineSchema({
     type: v.optional(CourseType),
     code: v.string(),
     price: v.number(),
+    offer: v.optional(
+      v.object({
+        name: v.string(),
+        discount: v.number(),
+        startDate: v.string(),
+        endDate: v.string(),
+      }),
+    ),
     // Number of sessions for session-based offerings (e.g., therapy)
     sessions: v.optional(v.number()),
     capacity: v.number(),

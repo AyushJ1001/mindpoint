@@ -12,6 +12,18 @@ import {
   BookOpen,
   Clock,
   Award,
+  Check,
+  Video,
+  Target,
+  Star,
+  GraduationCap,
+  Users2,
+  MessageCircle,
+  Globe,
+  TrendingUp,
+  Heart,
+  Zap,
+  Shield,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -48,8 +60,8 @@ import {
   ShoppingCart,
   Sparkles,
   HeartHandshake,
-  Star,
-  TrendingUp,
+  Star as StarIcon,
+  TrendingUp as TrendingUpIcon,
 } from "lucide-react";
 import CourseImageGallery from "@/components/course/gallery";
 import TrustBar from "@/components/course/trust-bar";
@@ -61,13 +73,47 @@ import { parseFaqMarkdown } from "@/components/course/faq";
 import CourseModulesSection from "@/components/course/course-modules-section";
 import InternshipSection from "@/components/course/internship-section";
 import Educators from "@/components/course/educators";
+import ChoosePlan from "@/components/choose-plan";
 import type { Doc } from "@/convex/_generated/dataModel";
+
+// WhatsApp and Instagram SVG Icons
+const WhatsAppIcon = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893A11.821 11.821 0 0020.885 3.488" />
+  </svg>
+);
+
+const InstagramIcon = () => (
+  <svg
+    width="24"
+    height="24"
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    xmlns="http://www.w3.org/2000/svg"
+  >
+    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z" />
+  </svg>
+);
 
 type Course = {
   id: string;
   name: string;
   description: string;
-  type: "certificate" | "internship" | "course";
+  type:
+    | "certificate"
+    | "internship"
+    | "diploma"
+    | "pre-recorded"
+    | "masterclass"
+    | "therapy"
+    | "supervised"
+    | "resume-studio";
   price: number;
   imageUrls: string[];
   capacity?: number;
@@ -132,7 +178,7 @@ const SAMPLE_COURSE: Course = {
   name: "Dream Therapy: Foundations to Practice",
   description:
     "Discover the psychology of dreams and learn practical, evidence-based frameworks for analysis and therapy. Build confidence with role-plays, case studies, and guided journaling.",
-  type: "course",
+  type: "therapy",
   price: 3499,
   imageUrls: [
     "/blue-dream-therapy-hero.png",
@@ -268,13 +314,30 @@ export default function CourseClient({
     const currentQuantity = getCurrentQuantity(course._id);
     const maxQuantity = course.capacity || 1;
 
+    // Check if this specific course has a valid offer
+    const courseHasValidOffer = (() => {
+      if (!course.offer) return false;
+
+      const now = new Date();
+      const startDate = new Date(course.offer.startDate);
+      const endDate = new Date(course.offer.endDate);
+
+      return now >= startDate && now <= endDate;
+    })();
+
+    // Calculate the price to use (offer price if available, otherwise regular price)
+    const priceToUse =
+      courseHasValidOffer && course.offer
+        ? course.price - (course.price * course.offer.discount) / 100
+        : course.price || 100;
+
     if (currentQuantity === 0) {
       // Add to cart if not already there
       addItem({
         id: course._id,
         name: course.name,
         description: course.description,
-        price: course.price || 100,
+        price: priceToUse,
         imageUrls: course.imageUrls || [],
         capacity: course.capacity || 1,
         quantity: 1, // Explicitly set initial quantity to 1
@@ -387,6 +450,68 @@ export default function CourseClient({
 
   const displayCourse = activeCourse ?? course;
 
+  // Check if course has a valid offer
+  const hasValidOffer = useMemo(() => {
+    if (!displayCourse.offer) return false;
+
+    const now = new Date();
+    const startDate = new Date(displayCourse.offer.startDate);
+    const endDate = new Date(displayCourse.offer.endDate);
+
+    return now >= startDate && now <= endDate;
+  }, [displayCourse.offer]);
+
+  // Real-time offer countdown timer
+  const [offerTimeLeft, setOfferTimeLeft] = useState({
+    days: 0,
+    hours: 0,
+    minutes: 0,
+  });
+
+  useEffect(() => {
+    if (!hasValidOffer || !displayCourse.offer) return;
+
+    const updateOfferTime = () => {
+      const now = new Date();
+      const endDate = new Date(displayCourse.offer!.endDate);
+      const timeLeft = endDate.getTime() - now.getTime();
+
+      if (timeLeft > 0) {
+        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+        const hours = Math.floor(
+          (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+        );
+        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+        setOfferTimeLeft({ days, hours, minutes });
+      } else {
+        setOfferTimeLeft({ days: 0, hours: 0, minutes: 0 });
+      }
+    };
+
+    updateOfferTime();
+    const interval = setInterval(updateOfferTime, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [hasValidOffer, displayCourse.offer]);
+
+  // Calculate offer price and time left
+  const offerDetails = useMemo(() => {
+    if (!hasValidOffer || !displayCourse.offer) return null;
+
+    const originalPrice = displayCourse.price;
+    const discountAmount = (originalPrice * displayCourse.offer.discount) / 100;
+    const offerPrice = originalPrice - discountAmount;
+
+    return {
+      originalPrice,
+      offerPrice,
+      discountAmount,
+      discountPercentage: displayCourse.offer.discount,
+      offerName: displayCourse.offer.name,
+      timeLeft: offerTimeLeft,
+    };
+  }, [hasValidOffer, displayCourse.offer, displayCourse.price, offerTimeLeft]);
+
   const handleVariantSelect = (val: string) => {
     if (!val) return;
     if ((displayCourse._id as unknown as string) === val) return;
@@ -406,8 +531,8 @@ export default function CourseClient({
   };
 
   return (
-    <div className="from-background via-background to-muted/20 min-h-screen overflow-x-clip bg-gradient-to-br">
-      {/* Enhanced Hero Section */}
+    <div className="bg-background min-h-screen">
+      {/* 1. Image + Timer + Highlights Section */}
       <section className="relative overflow-hidden py-12 md:py-20">
         <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent" />
         <div className="bg-primary/10 absolute top-0 right-0 h-96 w-96 rounded-full blur-3xl" />
@@ -482,14 +607,14 @@ export default function CourseClient({
               <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                 {[
                   {
-                    icon: Users,
-                    label: "Students",
-                    value: course.enrolledUsers?.length || 0,
+                    icon: BookOpen,
+                    label: "Past Sessions",
+                    value: (displayCourse.sessions || 6) - 1,
                   },
                   {
-                    icon: BookOpen,
-                    label: "Sessions",
-                    value: displayCourse.sessions || 6,
+                    icon: Video,
+                    label: "Session Recordings",
+                    value: "✓ ",
                   },
                   {
                     icon: Clock,
@@ -517,15 +642,40 @@ export default function CourseClient({
                     <div className="space-y-1">
                       <div className="flex items-baseline gap-3">
                         <span className="text-primary text-4xl font-bold">
-                          {formatINR(displayCourse.price)}
+                          {hasValidOffer && offerDetails
+                            ? formatINR(offerDetails.offerPrice)
+                            : formatINR(displayCourse.price)}
                         </span>
-                        <span className="text-muted-foreground text-sm line-through">
-                          {formatINR(displayCourse.price * 1.5)}
-                        </span>
+                        {hasValidOffer && offerDetails && (
+                          <span className="text-muted-foreground text-sm line-through">
+                            {formatINR(offerDetails.originalPrice)}
+                          </span>
+                        )}
                       </div>
                       <p className="text-muted-foreground text-sm">
-                        Inclusive of all taxes • Limited time offer
+                        Inclusive of all taxes
+                        {hasValidOffer && offerDetails && (
+                          <span className="text-primary font-medium">
+                            {" "}
+                            • {offerDetails.offerName}
+                          </span>
+                        )}
                       </p>
+                      {hasValidOffer && offerDetails && (
+                        <div className="flex items-center gap-2 text-xs font-medium text-orange-600">
+                          <span>🔥 {offerDetails.discountPercentage}% OFF</span>
+                          <span>•</span>
+                          <span>
+                            {offerDetails.timeLeft.days > 0 &&
+                              `${offerDetails.timeLeft.days}d `}
+                            {offerDetails.timeLeft.hours > 0 &&
+                              `${offerDetails.timeLeft.hours}h `}
+                            {offerDetails.timeLeft.minutes > 0 &&
+                              `${offerDetails.timeLeft.minutes}m`}{" "}
+                            left
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     {shouldShowVariantSelect && (
@@ -634,7 +784,7 @@ export default function CourseClient({
               {/* Schedule Card */}
               <Card className="border-muted border">
                 <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <Calendar className="text-primary h-5 w-5" />
                     Schedule & Timing
                   </CardTitle>
@@ -675,7 +825,7 @@ export default function CourseClient({
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                      <TrendingUp className="text-primary h-5 w-5" />
+                      <TrendingUpIcon className="text-primary h-5 w-5" />
                     </div>
                     <div>
                       <div className="text-sm font-medium">Duration</div>
@@ -707,9 +857,22 @@ export default function CourseClient({
         </div>
       </section>
 
+      {/* Choose Plan Section for Therapy Courses */}
+      {course.type === "therapy" && (
+        <section className="py-16">
+          <div className="container">
+            <ChoosePlan
+              onBook={(payload) => {
+                console.log("Booking payload:", payload);
+              }}
+            />
+          </div>
+        </section>
+      )}
+
       <Separator className="my-8" />
 
-      {/* Enhanced Stats Section */}
+      {/* Countdown Timer Section */}
       <section className="py-16">
         <div className="container">
           <div
@@ -803,7 +966,7 @@ export default function CourseClient({
         </div>
       </section>
 
-      {/* Enhanced Course Overview */}
+      {/* 2. Overview Section */}
       <section className="from-muted/20 to-background bg-gradient-to-br py-16">
         <div className="container">
           <div className="mx-auto max-w-4xl">
@@ -811,7 +974,7 @@ export default function CourseClient({
               <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
               <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
                 <CardHeader className="pb-6 text-center">
-                  <CardTitle className="text-4xl font-bold md:text-5xl">
+                  <CardTitle className="text-3xl font-bold md:text-4xl">
                     Course Overview
                   </CardTitle>
                   <CardDescription className="text-lg">
@@ -827,71 +990,7 @@ export default function CourseClient({
         </div>
       </section>
 
-      {/* Learning Outcomes */}
-      <section className="py-16">
-        <div className="container">
-          <div
-            ref={featuresAnimation.ref}
-            className={`transition-all duration-1000 ease-out ${
-              featuresAnimation.isVisible
-                ? "translate-y-0 opacity-100"
-                : "translate-y-8 opacity-0"
-            }`}
-          >
-            <div className="mb-12 text-center">
-              <h2 className="mb-4 text-4xl font-bold md:text-5xl">
-                What You'll Master
-              </h2>
-              <p className="text-muted-foreground text-lg">
-                Practical skills and knowledge you'll gain from this course
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-4">
-              {course.learningOutcomes?.map((outcome, idx) => (
-                <div
-                  key={idx}
-                  className={`group transition-all duration-500 delay-${idx * 100} ${
-                    featuresAnimation.isVisible
-                      ? "translate-y-0 opacity-100"
-                      : "translate-y-8 opacity-0"
-                  }`}
-                >
-                  <div className="relative overflow-hidden rounded-xl">
-                    <div className="border-primary/30 bg-primary/10 absolute -inset-1 -z-10 translate-x-2 translate-y-2 rounded-xl border-2 transition-transform group-hover:translate-x-1 group-hover:translate-y-1" />
-                    <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br p-8 text-center transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1">
-                      <div className="mb-4 text-5xl">{outcome.icon}</div>
-                      <h3 className="text-lg font-semibold">{outcome.title}</h3>
-                    </Card>
-                  </div>
-                </div>
-              )) ||
-                // Fallback content if no learning outcomes
-                [
-                  { icon: "🧠", title: "Deep Understanding" },
-                  { icon: "🛠️", title: "Practical Skills" },
-                  { icon: "📊", title: "Real-world Application" },
-                  { icon: "🎯", title: "Expert Guidance" },
-                ].map((item, idx) => (
-                  <div key={idx} className="group">
-                    <div className="relative overflow-hidden rounded-xl">
-                      <div className="border-primary/30 bg-primary/10 absolute -inset-1 -z-10 translate-x-2 translate-y-2 rounded-xl border-2 transition-transform group-hover:translate-x-1 group-hover:translate-y-1" />
-                      <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br p-8 text-center transition-transform group-hover:-translate-x-1 group-hover:-translate-y-1">
-                        <div className="mb-4 text-5xl">{item.icon}</div>
-                        <h3 className="text-lg font-semibold">{item.title}</h3>
-                      </Card>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Educators Section */}
-      <Educators />
-
-      {/* Course Modules or Internship Section */}
+      {/* 3. What Will You Learn Section */}
       {course.type === "internship" ? (
         <section className="from-background to-muted/20 bg-gradient-to-br py-16">
           <div className="container">
@@ -901,17 +1000,279 @@ export default function CourseClient({
       ) : (
         <section className="from-background to-muted/20 bg-gradient-to-br py-16">
           <div className="container">
-            <CourseModulesSection modules={course.modules ?? []} />
+            <CourseModulesSection
+              learningOutcomes={course.learningOutcomes ?? []}
+            />
           </div>
         </section>
       )}
 
-      {/* FAQ Section */}
+      {/* 4. Who Should Do This Course Section */}
       <section className="py-16">
         <div className="container">
           <div className="mx-auto max-w-4xl">
+            <div className="relative overflow-hidden rounded-2xl">
+              <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
+              <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
+                <CardHeader className="pb-6 text-center">
+                  <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold md:text-4xl">
+                    <Target className="text-primary h-10 w-10" />
+                    Who Should Do This Course?
+                  </CardTitle>
+                  <CardDescription className="text-lg">
+                    Find out if this course is the perfect fit for your learning
+                    journey
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {[
+                      {
+                        icon: "🎓",
+                        title: "Students & Graduates",
+                        description:
+                          "Looking to build a strong foundation in psychology and mental health practices.",
+                      },
+                      {
+                        icon: "👨‍⚕️",
+                        title: "Healthcare Professionals",
+                        description:
+                          "Wanting to expand their knowledge and skills in mental health care.",
+                      },
+                      {
+                        icon: "💼",
+                        title: "Career Changers",
+                        description:
+                          "Seeking to transition into the mental health and wellness industry.",
+                      },
+                      {
+                        icon: "🧠",
+                        title: "Psychology Enthusiasts",
+                        description:
+                          "Passionate about understanding human behavior and mental processes.",
+                      },
+                    ].map((item, idx) => (
+                      <div key={idx} className="group">
+                        <div className="border-primary/20 from-primary/5 to-accent/5 rounded-xl border-2 bg-gradient-to-r p-6 transition-all hover:-translate-y-1 hover:shadow-lg">
+                          <div className="mb-4 text-4xl">{item.icon}</div>
+                          <h3 className="mb-2 text-xl font-semibold">
+                            {item.title}
+                          </h3>
+                          <p className="text-muted-foreground leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. Why This Course Section */}
+      <section className="from-muted/20 to-background bg-gradient-to-br py-16">
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
+            <div className="relative overflow-hidden rounded-2xl">
+              <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
+              <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
+                <CardHeader className="pb-6 text-center">
+                  <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold md:text-4xl">
+                    <Star className="text-primary h-10 w-10" />
+                    Why Choose This Course?
+                  </CardTitle>
+                  <CardDescription className="text-lg">
+                    Discover what makes this course unique and valuable
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {[
+                      {
+                        icon: Zap,
+                        title: "Expert-Led Learning",
+                        description:
+                          "Learn from industry professionals with years of practical experience.",
+                      },
+                      {
+                        icon: Shield,
+                        title: "Comprehensive Curriculum",
+                        description:
+                          "Well-structured content covering all essential aspects of the subject.",
+                      },
+                      {
+                        icon: Heart,
+                        title: "Personalized Support",
+                        description:
+                          "Get individual attention and support throughout your learning journey.",
+                      },
+                      {
+                        icon: TrendingUp,
+                        title: "Career Growth",
+                        description:
+                          "Gain skills that directly translate to career advancement opportunities.",
+                      },
+                    ].map((item, idx) => (
+                      <div key={idx} className="group">
+                        <div className="border-primary/20 from-primary/5 to-accent/5 rounded-xl border-2 bg-gradient-to-r p-6 transition-all hover:-translate-y-1 hover:shadow-lg">
+                          <div className="bg-primary/10 mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+                            <item.icon className="text-primary h-6 w-6" />
+                          </div>
+                          <h3 className="mb-2 text-xl font-semibold">
+                            {item.title}
+                          </h3>
+                          <p className="text-muted-foreground leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 6. Educators + Supervisors Section */}
+      <section className="py-16">
+        <div className="container">
+          <Educators />
+        </div>
+      </section>
+
+      {/* 7. Certification & Its Applications Section */}
+      <section className="from-background to-muted/20 bg-gradient-to-br py-16">
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
+            <div className="relative overflow-hidden rounded-2xl">
+              <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
+              <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
+                <CardHeader className="pb-6 text-center">
+                  <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold md:text-4xl">
+                    <Award className="text-primary h-10 w-10" />
+                    Certification & Its Applications
+                  </CardTitle>
+                  <CardDescription className="text-lg">
+                    Understand the value and applications of your certification
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    {[
+                      {
+                        icon: "🎯",
+                        title: "Professional Recognition",
+                        description:
+                          "Gain industry-recognized certification that validates your expertise.",
+                      },
+                      {
+                        icon: "💼",
+                        title: "Career Opportunities",
+                        description:
+                          "Open doors to new job opportunities and career advancement.",
+                      },
+                      {
+                        icon: "🌍",
+                        title: "Global Applicability",
+                        description:
+                          "Certification recognized and valued worldwide in the field.",
+                      },
+                      {
+                        icon: "📈",
+                        title: "Skill Validation",
+                        description:
+                          "Demonstrate your practical skills and theoretical knowledge.",
+                      },
+                    ].map((item, idx) => (
+                      <div key={idx} className="group">
+                        <div className="border-primary/20 from-primary/5 to-accent/5 rounded-xl border-2 bg-gradient-to-r p-6 transition-all hover:-translate-y-1 hover:shadow-lg">
+                          <div className="mb-4 text-4xl">{item.icon}</div>
+                          <h3 className="mb-2 text-xl font-semibold">
+                            {item.title}
+                          </h3>
+                          <p className="text-muted-foreground leading-relaxed">
+                            {item.description}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 8. Reviews Section */}
+      <section className="py-16">
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
+            <div className="relative overflow-hidden rounded-2xl">
+              <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
+              <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
+                <CardHeader className="pb-6 text-center">
+                  <CardTitle className="text-3xl font-bold md:text-4xl">
+                    Student Reviews
+                  </CardTitle>
+                  <CardDescription className="text-lg">
+                    Hear from our successful students
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  {REVIEWS.length > 0 ? (
+                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                      {REVIEWS.map((review, idx) => (
+                        <Card
+                          key={review.id}
+                          className="border-muted border-2 shadow-lg transition-shadow hover:shadow-xl"
+                        >
+                          <CardHeader className="pb-3">
+                            <div className="flex items-center gap-3">
+                              <StarRating rating={review.rating} size="sm" />
+                              <span className="text-muted-foreground text-sm font-medium">
+                                {review.rating.toFixed(1)} / 5
+                              </span>
+                            </div>
+                          </CardHeader>
+                          <CardContent>
+                            <p className="text-muted-foreground leading-relaxed">
+                              "{review.content}"
+                            </p>
+                          </CardContent>
+                        </Card>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="py-12 text-center">
+                      <StarIcon className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+                      <p className="text-muted-foreground text-lg">
+                        No reviews yet - be the first!
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mx-auto max-w-2xl">
+                    <ReviewForm />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. FAQ Section */}
+      <section className="from-muted/20 to-background bg-gradient-to-br py-16">
+        <div className="container">
+          <div className="mx-auto max-w-4xl">
             <div className="mb-12 text-center">
-              <h2 className="mb-4 text-4xl font-bold">
+              <h2 className="mb-4 text-3xl font-bold md:text-4xl">
                 Frequently Asked Questions
               </h2>
               <p className="text-muted-foreground text-lg">
@@ -964,55 +1325,7 @@ export default function CourseClient({
         </div>
       </section>
 
-      {/* Reviews Section */}
-      <section className="from-muted/20 to-background bg-gradient-to-br py-16">
-        <div className="container">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-4xl font-bold">Student Reviews</h2>
-            <p className="text-muted-foreground text-lg">
-              Hear from our successful students
-            </p>
-          </div>
-
-          {REVIEWS.length > 0 ? (
-            <div className="mb-12 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {REVIEWS.map((review, idx) => (
-                <Card
-                  key={review.id}
-                  className="border-muted border-2 shadow-lg transition-shadow hover:shadow-xl"
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center gap-3">
-                      <StarRating rating={review.rating} size="sm" />
-                      <span className="text-muted-foreground text-sm font-medium">
-                        {review.rating.toFixed(1)} / 5
-                      </span>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground leading-relaxed">
-                      "{review.content}"
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <div className="py-12 text-center">
-              <Star className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
-              <p className="text-muted-foreground text-lg">
-                No reviews yet - be the first!
-              </p>
-            </div>
-          )}
-
-          <div className="mx-auto max-w-2xl">
-            <ReviewForm />
-          </div>
-        </div>
-      </section>
-
-      {/* Community Section */}
+      {/* 10. Communities Section */}
       <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-16">
         <div className="container">
           <div className="mx-auto max-w-3xl text-center text-white">
@@ -1030,7 +1343,8 @@ export default function CourseClient({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                💬 Join WhatsApp Community
+                <WhatsAppIcon />
+                Join WhatsApp Community
               </Link>
               <Link
                 href="https://www.instagram.com/channel/AbZNVUaQ3yMrfJGm/?igsh=dTV3MWozOXJsdDFy"
@@ -1038,7 +1352,8 @@ export default function CourseClient({
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                📸 Follow on Instagram
+                <InstagramIcon />
+                Follow on Instagram
               </Link>
             </div>
           </div>
@@ -1047,7 +1362,9 @@ export default function CourseClient({
 
       {/* Sticky CTA */}
       <StickyCTA
-        price={course.price}
+        price={
+          hasValidOffer && offerDetails ? offerDetails.offerPrice : course.price
+        }
         onPrimary={() => handleIncreaseQuantity(course)}
         disabled={
           isOutOfStock ||
