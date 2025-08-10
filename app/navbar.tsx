@@ -52,7 +52,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="bg-background/95 border-border sticky top-0 z-50 border-b shadow-sm backdrop-blur-sm"
+      className="bg-background/95 border-border sticky top-0 z-50 border-b bg-gradient-to-br from-10% via-blue-100 to-blue-300 shadow-sm backdrop-blur-sm"
       role="navigation"
       aria-label="Primary"
     >
@@ -72,7 +72,7 @@ export default function Navbar() {
               className="transition-smooth hover:scale-105"
               priority
             />
-            <span className="text-foreground hidden text-xl font-bold sm:block">
+            <span className="hidden text-xl font-bold text-blue-950 text-shadow-black sm:block">
               The Mind Point
             </span>
           </Link>
@@ -151,9 +151,6 @@ export default function Navbar() {
                           "/courses/diploma",
                           "/courses/pre-recorded",
                           "/courses/masterclass",
-                          "/courses/therapy",
-                          "/courses/supervised",
-                          "/courses/resume-studio",
                         ].map((href) => (
                           <NavigationMenuLink asChild key={href}>
                             <Link
@@ -432,9 +429,6 @@ export default function Navbar() {
                   "/courses/diploma",
                   "/courses/pre-recorded",
                   "/courses/masterclass",
-                  "/courses/therapy",
-                  "/courses/supervised",
-                  "/courses/resume-studio",
                 ].map((href) => (
                   <Link
                     key={href}
