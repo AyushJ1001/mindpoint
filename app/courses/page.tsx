@@ -138,6 +138,19 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       : (sorted.find((c) => c._id === selectedId) ?? sorted[0]);
 
   const handleAddToCart = () => {
+    // Check if course is out of stock
+    const seatsLeft = Math.max(
+      0,
+      (selectedCourse.capacity ?? 0) -
+        (selectedCourse.enrolledUsers?.length ?? 0),
+    );
+    const isOutOfStock =
+      (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
+
+    if (isOutOfStock) {
+      return; // Don't add to cart if out of stock
+    }
+
     const label = extractVariantLabel(selectedCourse);
     addItem({
       id: selectedCourse._id,
@@ -146,6 +159,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       price: selectedCourse.price || 100,
       imageUrls: selectedCourse.imageUrls || [],
       capacity: selectedCourse.capacity || 1,
+      quantity: 1, // Explicitly set initial quantity to 1
     });
   };
 
@@ -254,15 +268,31 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
           >
             {showRupees(selectedCourse.price || 100)}
           </Badge>
-          <Button
-            onClick={handleAddToCart}
-            disabled={inCart(selectedCourse._id)}
-            size="sm"
-            className="transition-smooth"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {inCart(selectedCourse._id) ? "Added" : "Add to Cart"}
-          </Button>
+          {(() => {
+            const seatsLeft = Math.max(
+              0,
+              (selectedCourse.capacity ?? 0) -
+                (selectedCourse.enrolledUsers?.length ?? 0),
+            );
+            const isOutOfStock =
+              (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
+
+            return (
+              <Button
+                onClick={handleAddToCart}
+                disabled={inCart(selectedCourse._id) || isOutOfStock}
+                size="sm"
+                className="transition-smooth"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : inCart(selectedCourse._id)
+                    ? "Added"
+                    : "Add to Cart"}
+              </Button>
+            );
+          })()}
         </div>
       </CardContent>
     </Card>
@@ -273,6 +303,17 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
 
   const handleAddToCart = () => {
+    // Check if course is out of stock
+    const seatsLeft = Math.max(
+      0,
+      (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+    );
+    const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
+
+    if (isOutOfStock) {
+      return; // Don't add to cart if out of stock
+    }
+
     addItem({
       id: course._id,
       name: course.name,
@@ -280,6 +321,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       price: course.price || 100,
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
+      quantity: 1, // Explicitly set initial quantity to 1
     });
   };
 
@@ -304,15 +346,30 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           >
             {showRupees(course.price || 100)}
           </Badge>
-          <Button
-            onClick={handleAddToCart}
-            disabled={inCart(course._id)}
-            size="sm"
-            className="transition-smooth"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            {inCart(course._id) ? "Added" : "Add to Cart"}
-          </Button>
+          {(() => {
+            const seatsLeft = Math.max(
+              0,
+              (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+            );
+            const isOutOfStock =
+              (course.capacity ?? 0) === 0 || seatsLeft === 0;
+
+            return (
+              <Button
+                onClick={handleAddToCart}
+                disabled={inCart(course._id) || isOutOfStock}
+                size="sm"
+                className="transition-smooth"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : inCart(course._id)
+                    ? "Added"
+                    : "Add to Cart"}
+              </Button>
+            );
+          })()}
         </div>
       </CardContent>
     </Card>

@@ -52,7 +52,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="bg-background/95 border-border sticky top-0 z-50 border-b bg-gradient-to-br from-10% via-blue-100 to-blue-300 shadow-sm backdrop-blur-sm"
+      className="bg-background/95 border-border sticky top-0 z-50 border-b bg-gradient-to-br from-10% via-blue-100 to-blue-300 shadow-sm backdrop-blur-sm dark:bg-gradient-to-br dark:from-10% dark:via-slate-800 dark:to-slate-900 dark:text-white"
       role="navigation"
       aria-label="Primary"
     >
@@ -72,7 +72,7 @@ export default function Navbar() {
               className="transition-smooth hover:scale-105"
               priority
             />
-            <span className="hidden text-xl font-bold text-blue-950 text-shadow-black sm:block">
+            <span className="hidden text-xl font-bold text-blue-950 text-shadow-black sm:block dark:text-white">
               The Mind Point
             </span>
           </Link>

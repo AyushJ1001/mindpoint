@@ -9,12 +9,14 @@ export default function StickyCTA({
   disabled,
   inCart,
   quantity,
+  isOutOfStock,
 }: {
   price: number;
   onPrimary: () => void;
   disabled?: boolean;
   inCart?: boolean;
   quantity?: number;
+  isOutOfStock?: boolean;
 }) {
   return (
     <div className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky bottom-0 z-30 border-t backdrop-blur">
@@ -31,14 +33,16 @@ export default function StickyCTA({
           <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row">
             <Button
               onClick={onPrimary}
-              disabled={disabled}
+              disabled={disabled || isOutOfStock}
               className="w-full sm:w-auto"
             >
-              {inCart
-                ? quantity && quantity > 1
-                  ? `In cart (${quantity})`
-                  : "Added to cart"
-                : "Add to cart"}
+              {isOutOfStock
+                ? "Out of Stock"
+                : inCart
+                  ? quantity && quantity > 1
+                    ? `In cart (${quantity})`
+                    : "Added to cart"
+                  : "Add to cart"}
             </Button>
             <Button variant="outline" className="w-full sm:w-auto">
               <ShoppingCart className="mr-2 h-4 w-4" /> Buy now

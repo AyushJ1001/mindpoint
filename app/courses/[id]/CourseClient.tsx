@@ -266,6 +266,7 @@ export default function CourseClient({
         price: course.price || 100,
         imageUrls: course.imageUrls || [],
         capacity: course.capacity || 1,
+        quantity: 1, // Explicitly set initial quantity to 1
       });
     } else if (currentQuantity < maxQuantity) {
       // Increase quantity if below capacity
@@ -307,6 +308,9 @@ export default function CourseClient({
     0,
     (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
   );
+
+  // Check if course is out of stock (capacity 0 or no seats left)
+  const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
   // Build variant options only for internship or therapy
   const normalizedVariants: CourseVariant[] = useMemo(() => {
@@ -518,7 +522,14 @@ export default function CourseClient({
                     )}
                   </div>
                   <div className="flex flex-col gap-2 sm:flex-row">
-                    {inCart(displayCourse._id) ? (
+                    {isOutOfStock ? (
+                      <Button
+                        disabled
+                        className="w-full cursor-not-allowed bg-gray-100 text-base text-gray-500 sm:w-auto"
+                      >
+                        Out of Stock
+                      </Button>
+                    ) : inCart(displayCourse._id) ? (
                       <div className="flex w-full items-center gap-2 sm:w-auto">
                         <Button
                           variant="outline"
@@ -577,6 +588,7 @@ export default function CourseClient({
                     <Button
                       variant="outline"
                       className="w-full text-base sm:w-auto"
+                      disabled={isOutOfStock}
                     >
                       <ShoppingCart className="mr-2 h-4 w-4" /> Buy now
                     </Button>
@@ -934,11 +946,13 @@ export default function CourseClient({
         price={course.price}
         onPrimary={() => handleIncreaseQuantity(course)}
         disabled={
-          inCart(course._id) &&
-          getCurrentQuantity(course._id) >= (course.capacity || 1)
+          isOutOfStock ||
+          (inCart(course._id) &&
+            getCurrentQuantity(course._id) >= (course.capacity || 1))
         }
         inCart={inCart(course._id)}
         quantity={getCurrentQuantity(course._id)}
+        isOutOfStock={isOutOfStock}
       />
     </div>
   );

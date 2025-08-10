@@ -16,16 +16,16 @@ export default function CourseImageGallery({
 }) {
   return (
     <div className="bg-muted/20 border-primary/20 relative overflow-hidden rounded-lg border-2">
-      <div className="relative aspect-[4/3] w-full">
+      <div className="relative aspect-[9/16] w-full">
         {imageUrls.length <= 1 ? (
           <Image
             src={
               imageUrls[0] ??
-              "/placeholder.svg?height=900&width=1200&query=course%20image"
+              "/placeholder.svg?height=1600&width=900&query=course%20image"
             }
             alt="Course image"
             fill
-            className="object-cover"
+            className="object-contain"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
             priority
             quality={95}
@@ -40,7 +40,7 @@ export default function CourseImageGallery({
                       src={url || "/placeholder.svg"}
                       alt={`Course image ${i + 1}`}
                       fill
-                      className="object-cover"
+                      className="object-contain"
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
                       priority={i === 0}
                       quality={95}

@@ -16,6 +16,18 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
+
+    // Check if course is out of stock
+    const seatsLeft = Math.max(
+      0,
+      (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+    );
+    const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
+
+    if (isOutOfStock) {
+      return; // Don't add to cart if out of stock
+    }
+
     addItem({
       id: course._id,
       name: course.name,
@@ -23,6 +35,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
       price: course.price || 100,
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
+      quantity: 1, // Explicitly set initial quantity to 1
     });
   };
 
@@ -47,14 +60,28 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
         <Badge variant="secondary" className="px-3 py-1 text-sm font-semibold">
           {showRupees(course.price || 100)}
         </Badge>
-        <Button
-          onClick={handleAddToCart}
-          disabled={inCart(course._id)}
-          size="sm"
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          {inCart(course._id) ? "Added" : "Add to Cart"}
-        </Button>
+        {(() => {
+          const seatsLeft = Math.max(
+            0,
+            (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+          );
+          const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
+
+          return (
+            <Button
+              onClick={handleAddToCart}
+              disabled={inCart(course._id) || isOutOfStock}
+              size="sm"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {isOutOfStock
+                ? "Out of Stock"
+                : inCart(course._id)
+                  ? "Added"
+                  : "Add to Cart"}
+            </Button>
+          );
+        })()}
       </CardContent>
     </Card>
   );
