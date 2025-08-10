@@ -132,9 +132,7 @@ export default function CountdownTimer({ course }: CountdownTimerProps) {
             </p>
           </div>
 
-          <div
-            className={`grid grid-cols-1 gap-6 sm:grid-cols-2 ${course.type === "certificate" && course.endDate ? "lg:grid-cols-6" : "lg:grid-cols-5"}`}
-          >
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:grid-rows-2">
             {[
               {
                 label: "Start Date",
@@ -160,7 +158,17 @@ export default function CountdownTimer({ course }: CountdownTimerProps) {
                 value: `${course.startTime} - ${course.endTime}`,
                 icon: Clock,
               },
-              { label: "Language", value: "English", icon: BookOpen },
+              {
+                label: "Language",
+                value: (
+                  <span>
+                    English
+                    <hr className="border-muted-foreground mx-auto my-1 border-dotted opacity-50" />
+                    Hindi (if requested)
+                  </span>
+                ),
+                icon: BookOpen,
+              },
               {
                 label: "Investment",
                 value: formatINR(course.price),

@@ -1,7 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
-import { Award, Download, Eye } from "lucide-react";
+import { Award, Download, Eye, ChevronLeft, ChevronRight } from "lucide-react";
+import Image from "next/image";
 import {
   Card,
   CardContent,
@@ -61,6 +62,33 @@ export default function Certification({
     },
   ],
 }: CertificationProps) {
+  const [currentSlide, setCurrentSlide] = useState(0);
+
+  const certificates = [
+    {
+      src: "/certificate.png",
+      alt: "Sample Certificate",
+      title: "Certificate of Completion",
+      description: "Official certificate recognizing your achievement",
+    },
+    {
+      src: "/performance-letter.png",
+      alt: "Performance Letter",
+      title: "Performance Letter",
+      description: "Detailed evaluation of your performance",
+    },
+  ];
+
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % certificates.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide(
+      (prev) => (prev - 1 + certificates.length) % certificates.length,
+    );
+  };
+
   return (
     <section className="from-background to-muted/20 bg-gradient-to-br py-16">
       <div className="container">
@@ -94,65 +122,79 @@ export default function Certification({
                   ))}
                 </div>
 
-                {/* Sample Certificate Section for Certificate Courses */}
+                {/* Sample Certificate Carousel for Certificate Courses */}
                 {courseType === "certificate" && (
                   <div className="mt-12">
                     <div className="mb-8 text-center">
                       <h3 className="mb-4 text-2xl font-bold">
-                        Sample Certificate
+                        Sample Documents
                       </h3>
                       <p className="text-muted-foreground">
-                        Preview what your certificate will look like upon
+                        Preview what your documents will look like upon
                         completion
                       </p>
                     </div>
 
                     <div className="mx-auto max-w-2xl">
-                      <Card className="border-primary/20 border-2 shadow-lg">
-                        <CardContent className="p-8">
-                          <div className="text-center">
-                            <div className="mb-6">
-                              <Award className="text-primary mx-auto h-16 w-16" />
+                      <div className="relative">
+                        <Card className="border-primary/20 overflow-hidden border-2 shadow-lg">
+                          <CardContent className="p-4">
+                            <div className="relative">
+                              <Image
+                                src={certificates[currentSlide].src}
+                                alt={certificates[currentSlide].alt}
+                                width={800}
+                                height={600}
+                                className="h-auto w-full rounded-lg"
+                              />
+
+                              {/* Navigation buttons */}
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="bg-background/80 absolute top-1/2 left-2 -translate-y-1/2 backdrop-blur-sm"
+                                onClick={prevSlide}
+                              >
+                                <ChevronLeft className="h-4 w-4" />
+                              </Button>
+
+                              <Button
+                                variant="outline"
+                                size="icon"
+                                className="bg-background/80 absolute top-1/2 right-2 -translate-y-1/2 backdrop-blur-sm"
+                                onClick={nextSlide}
+                              >
+                                <ChevronRight className="h-4 w-4" />
+                              </Button>
                             </div>
-                            <h4 className="mb-2 text-xl font-bold">
-                              Certificate of Completion
-                            </h4>
-                            <p className="text-muted-foreground mb-4">
-                              This is to certify that
-                            </p>
-                            <p className="mb-4 text-lg font-semibold">
-                              [Student Name]
-                            </p>
-                            <p className="text-muted-foreground mb-6">
-                              has successfully completed the course requirements
-                              and demonstrated proficiency in the subject
-                              matter.
-                            </p>
-                            <div className="mb-6 flex justify-center space-x-4">
-                              <div className="text-center">
-                                <p className="text-muted-foreground text-sm">
-                                  Date
-                                </p>
-                                <p className="font-semibold">
-                                  [Completion Date]
-                                </p>
-                              </div>
-                              <div className="text-center">
-                                <p className="text-muted-foreground text-sm">
-                                  Certificate ID
-                                </p>
-                                <p className="font-semibold">[Unique ID]</p>
-                              </div>
-                            </div>
-                            <div className="border-t pt-4">
-                              <p className="text-muted-foreground text-sm">
-                                This certificate is issued by The Mind Point and
-                                is valid for professional use.
-                              </p>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+
+                        {/* Slide indicators */}
+                        <div className="mt-4 flex justify-center space-x-2">
+                          {certificates.map((_, idx) => (
+                            <button
+                              key={idx}
+                              className={`h-2 w-8 rounded-full transition-colors ${
+                                idx === currentSlide
+                                  ? "bg-primary"
+                                  : "bg-muted-foreground/30"
+                              }`}
+                              onClick={() => setCurrentSlide(idx)}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Current slide info */}
+                        <div className="mt-4 text-center">
+                          <h4 className="text-lg font-semibold">
+                            {certificates[currentSlide].title}
+                          </h4>
+                          <p className="text-muted-foreground text-sm">
+                            {certificates[currentSlide].description}
+                          </p>
+                        </div>
+                      </div>
 
                       <div className="mt-6 flex justify-center space-x-4">
                         <Dialog>
@@ -167,60 +209,21 @@ export default function Certification({
                           </DialogTrigger>
                           <DialogContent className="max-w-4xl">
                             <DialogHeader>
-                              <DialogTitle>Sample Certificate</DialogTitle>
+                              <DialogTitle>
+                                {certificates[currentSlide].title}
+                              </DialogTitle>
                               <DialogDescription>
-                                This is a preview of your certificate upon
-                                course completion
+                                {certificates[currentSlide].description}
                               </DialogDescription>
                             </DialogHeader>
                             <div className="max-h-96 overflow-auto">
-                              <Card className="border-primary/20 border-2">
-                                <CardContent className="p-12">
-                                  <div className="text-center">
-                                    <div className="mb-8">
-                                      <Award className="text-primary mx-auto h-20 w-20" />
-                                    </div>
-                                    <h4 className="mb-4 text-3xl font-bold">
-                                      Certificate of Completion
-                                    </h4>
-                                    <p className="text-muted-foreground mb-6 text-lg">
-                                      This is to certify that
-                                    </p>
-                                    <p className="mb-6 text-2xl font-semibold">
-                                      [Student Name]
-                                    </p>
-                                    <p className="text-muted-foreground mb-8 text-lg">
-                                      has successfully completed the course
-                                      requirements and demonstrated proficiency
-                                      in the subject matter.
-                                    </p>
-                                    <div className="mb-8 flex justify-center space-x-8">
-                                      <div className="text-center">
-                                        <p className="text-muted-foreground">
-                                          Date
-                                        </p>
-                                        <p className="font-semibold">
-                                          [Completion Date]
-                                        </p>
-                                      </div>
-                                      <div className="text-center">
-                                        <p className="text-muted-foreground">
-                                          Certificate ID
-                                        </p>
-                                        <p className="font-semibold">
-                                          [Unique ID]
-                                        </p>
-                                      </div>
-                                    </div>
-                                    <div className="border-t pt-6">
-                                      <p className="text-muted-foreground">
-                                        This certificate is issued by The Mind
-                                        Point and is valid for professional use.
-                                      </p>
-                                    </div>
-                                  </div>
-                                </CardContent>
-                              </Card>
+                              <Image
+                                src={certificates[currentSlide].src}
+                                alt={certificates[currentSlide].alt}
+                                width={1200}
+                                height={900}
+                                className="h-auto w-full rounded-lg"
+                              />
                             </div>
                           </DialogContent>
                         </Dialog>
