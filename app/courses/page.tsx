@@ -39,15 +39,15 @@ import {
 const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   if (!imageUrls || imageUrls.length === 0) {
     return (
-      <div className="relative flex h-80 items-center justify-center rounded-t-lg bg-gray-100">
-        <BookOpen className="h-12 w-12 text-gray-400" />
+      <div className="bg-muted relative flex h-80 items-center justify-center rounded-t-lg">
+        <BookOpen className="text-muted-foreground h-12 w-12" />
       </div>
     );
   }
 
   if (imageUrls.length === 1) {
     return (
-      <div className="relative flex h-80 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100">
+      <div className="bg-muted relative flex h-80 items-center justify-center overflow-hidden rounded-t-lg">
         <Image
           src={
             imageUrls[0] ??
@@ -63,7 +63,7 @@ const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   }
 
   return (
-    <div className="relative h-80 overflow-hidden rounded-t-lg bg-gray-100">
+    <div className="bg-muted relative h-80 overflow-hidden rounded-t-lg">
       <Carousel className="h-full w-full">
         <CarouselContent>
           {imageUrls.map((imageUrl, index) => (

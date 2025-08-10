@@ -61,15 +61,15 @@ import {
 export const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   if (!imageUrls || imageUrls.length === 0) {
     return (
-      <div className="relative flex h-72 items-center justify-center rounded-t-lg bg-gray-100">
-        <BookOpen className="h-12 w-12 text-gray-400" />
+      <div className="bg-muted relative flex h-72 items-center justify-center rounded-t-lg">
+        <BookOpen className="text-muted-foreground h-12 w-12" />
       </div>
     );
   }
 
   if (imageUrls.length === 1) {
     return (
-      <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-t-lg bg-gray-100">
+      <div className="bg-muted relative flex h-72 items-center justify-center overflow-hidden rounded-t-lg">
         <Image
           src={
             imageUrls[0] ??
@@ -85,7 +85,7 @@ export const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   }
 
   return (
-    <div className="relative h-72 overflow-hidden rounded-t-lg bg-gray-100">
+    <div className="bg-muted relative h-72 overflow-hidden rounded-t-lg">
       <Carousel className="h-full w-full">
         <CarouselContent>
           {imageUrls.map((imageUrl, index) => (
@@ -431,7 +431,7 @@ export default function CourseTypePage({
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="section-padding from-primary/5 bg-gradient-to-br via-blue-100 to-blue-300">
+      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
         <div className="bg-[url('data:image/svg+xml;utf8,<svg ...>')] pointer-events-none absolute inset-0 bg-repeat opacity-20"></div>
         <div className="container text-center">
           <div className="mx-auto max-w-4xl">
@@ -439,7 +439,7 @@ export default function CourseTypePage({
               {Icon && <Icon className="text-primary h-10 w-10" />}
             </div>
             <div>
-              <h1 className="from-primary to-primary/70 text-blue800 md:text-5x mb-6 bg-gradient-to-r bg-clip-text font-serif text-4xl font-bold text-blue-950 uppercase">
+              <h1 className="from-foreground to-foreground/70 bg-gradient-to-b bg-clip-text font-serif text-4xl font-bold text-transparent uppercase">
                 {title}
               </h1>
               <p className="text-muted-foreground mb-8 font-serif text-lg leading-relaxed">

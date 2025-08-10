@@ -24,7 +24,7 @@ export default function StickyCTA({
             <span className="text-muted-foreground text-sm">
               Your selection
             </span>
-            <span className="text-xl font-semibold text-blue-900">
+            <span className="text-primary text-xl font-semibold">
               ₹{price.toLocaleString("en-IN")}
             </span>
           </div>

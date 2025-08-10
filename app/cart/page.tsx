@@ -160,9 +160,9 @@ const CartContent = () => {
       {isEmpty ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
-            <ShoppingCart className="mb-4 h-16 w-16 text-gray-400" />
+            <ShoppingCart className="text-muted-foreground mb-4 h-16 w-16" />
             <h2 className="mb-2 text-xl font-semibold">Your cart is empty</h2>
-            <p className="mb-4 text-gray-600">
+            <p className="text-muted-foreground mb-4">
               Add some courses to get started!
             </p>
             <Button onClick={() => window.history.back()}>
@@ -182,7 +182,9 @@ const CartContent = () => {
                       <h3 className="mb-2 text-lg font-semibold">
                         {item.name}
                       </h3>
-                      <p className="mb-4 text-gray-600">{item.description}</p>
+                      <p className="text-muted-foreground mb-4">
+                        {item.description}
+                      </p>
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-2">
                           <label className="text-sm font-medium">

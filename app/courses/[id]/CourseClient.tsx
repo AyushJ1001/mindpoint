@@ -404,9 +404,9 @@ export default function CourseClient({
 
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <div className="min-w-0">
-              <div className="relative overflow-hidden rounded-xl border-2 border-blue-900 bg-blue-50 p-1">
-                <div className="absolute top-[-30%] left-[-15%] h-60 w-60 rounded-full bg-blue-300/40 blur-3xl" />
-                <div className="absolute right-[-15%] bottom-[-30%] h-60 w-60 rounded-full bg-blue-300/30 blur-3xl" />
+              <div className="border-primary bg-primary/5 relative overflow-hidden rounded-xl border-2 p-1">
+                <div className="bg-primary/20 absolute top-[-30%] left-[-15%] h-60 w-60 rounded-full blur-3xl" />
+                <div className="bg-primary/15 absolute right-[-15%] bottom-[-30%] h-60 w-60 rounded-full blur-3xl" />
                 <div className="overflow-visible">
                   <CourseImageGallery
                     imageUrls={displayCourse.imageUrls ?? []}
@@ -458,7 +458,7 @@ export default function CourseClient({
                 <CardContent className="flex flex-col gap-3 p-5">
                   <div className="flex flex-row flex-wrap items-center gap-3">
                     <div className="flex items-baseline gap-2 whitespace-nowrap">
-                      <span className="text-3xl font-bold text-blue-900">
+                      <span className="text-primary text-3xl font-bold">
                         {formatINR(displayCourse.price)}
                       </span>
                       <span className="text-muted-foreground text-sm">
@@ -611,14 +611,14 @@ export default function CourseClient({
                 </CardContent>
               </Card>
 
-              <div className="flex flex-wrap items-center gap-3 rounded-lg border border-blue-900 bg-blue-50 p-3">
-                <Sparkles className="h-5 w-5 text-blue-900" />
-                <span className="text-sm font-medium text-blue-950">
+              <div className="border-primary bg-primary/5 flex flex-wrap items-center gap-3 rounded-lg border p-3">
+                <Sparkles className="text-primary h-5 w-5" />
+                <span className="text-foreground text-sm font-medium">
                   Practical, guided learning
                 </span>
                 <span className="text-muted-foreground">•</span>
-                <HeartHandshake className="h-5 w-5 text-blue-900" />
-                <span className="text-sm font-medium text-blue-950">
+                <HeartHandshake className="text-primary h-5 w-5" />
+                <span className="text-foreground text-sm font-medium">
                   Lifetime doubt clearing
                 </span>
               </div>
@@ -663,7 +663,7 @@ export default function CourseClient({
                     className={`p-4 text-center transition-all ${delayClass} duration-500 ease-out ${cardsAnimation.isVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-95 opacity-0"}`}
                   >
                     <CardContent className="p-4">
-                      <div className="text-sm font-medium text-blue-950">
+                      <div className="text-foreground text-sm font-medium">
                         {it.label}
                       </div>
                       <div className="text-muted-foreground text-sm">
@@ -679,10 +679,10 @@ export default function CourseClient({
               ref={countdownAnimation.ref}
               className={`mb-8 text-center transition-all delay-300 duration-1000 ease-out ${countdownAnimation.isVisible ? "translate-y-0 scale-100 opacity-100" : "translate-y-8 scale-95 opacity-0"}`}
             >
-              <h2 className="mb-4 text-2xl font-semibold text-blue-950">
+              <h2 className="text-foreground mb-4 text-2xl font-semibold">
                 Workshop Starting In
               </h2>
-              <div className="rounded-lg border-2 border-blue-900 bg-blue-100 p-6">
+              <div className="border-primary bg-primary/10 rounded-lg border-2 p-6">
                 <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
                   {[
                     { k: "days", v: timeLeft.days },
@@ -692,9 +692,9 @@ export default function CourseClient({
                   ].map((t) => (
                     <div
                       key={t.k}
-                      className="rounded-lg border border-blue-300 bg-white p-4"
+                      className="border-primary/30 bg-background rounded-lg border p-4"
                     >
-                      <div className="text-2xl font-bold text-blue-900">
+                      <div className="text-primary text-2xl font-bold">
                         {String(t.v).padStart(2, "0")}
                       </div>
                       <div className="text-muted-foreground text-sm">{t.k}</div>
@@ -710,37 +710,35 @@ export default function CourseClient({
             >
               <div className="lg:col-span-3">
                 <Card
-                  className={`border-2 border-blue-900 bg-blue-50 transition-all delay-700 duration-700 ease-out ${detailsAnimation.isVisible ? "translate-x-0 scale-100 opacity-100" : "-translate-x-8 scale-95 opacity-0"}`}
+                  className={`border-primary bg-primary/5 border-2 transition-all delay-700 duration-700 ease-out ${detailsAnimation.isVisible ? "translate-x-0 scale-100 opacity-100" : "-translate-x-8 scale-95 opacity-0"}`}
                 >
                   <CardHeader>
-                    <CardTitle className="text-blue-950">
+                    <CardTitle className="text-foreground">
                       {course.name} Challenge
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="flex items-center gap-2 text-sm">
-                      <Calendar className="h-4 w-4 text-blue-900" />
+                      <Calendar className="text-primary h-4 w-4" />
                       <span>
                         {formatDateCommon(course.startDate)} -{" "}
                         {formatDateCommon(course.endDate)}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-4 w-4 text-blue-900" />
+                      <Clock className="text-primary h-4 w-4" />
                       <span>Multiple time slots available</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="font-bold text-blue-900">₹</span>
+                      <span className="text-primary font-bold">₹</span>
                       <span>Contribution: {formatINR(course.price)}</span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
-                      <Clock className="h-4 w-4 text-blue-900" />
+                      <Clock className="text-primary h-4 w-4" />
                       <span>Recording available: 1 week</span>
                     </div>
                     <div className="pt-4">
-                      <Button className="w-full bg-blue-900 text-white hover:bg-blue-800">
-                        Register Now
-                      </Button>
+                      <Button className="w-full">Register Now</Button>
                     </div>
                     <div className="space-y-2">
                       {[
@@ -769,10 +767,10 @@ export default function CourseClient({
         <div className="container">
           <div className="mx-auto max-w-3xl">
             <div className="relative overflow-hidden">
-              <div className="pointer-events-none absolute -inset-2 -z-10 translate-x-3 translate-y-3 border-2 border-blue-800 bg-blue-300" />
-              <Card className="rounded-none border-[3px] border-blue-900 bg-blue-50">
+              <div className="border-primary/30 bg-primary/10 pointer-events-none absolute -inset-2 -z-10 translate-x-3 translate-y-3 border-2" />
+              <Card className="border-primary bg-primary/5 rounded-none border-[3px]">
                 <CardHeader className="items-center pb-4 text-center">
-                  <CardTitle className="font-serif text-4xl font-semibold text-blue-950 md:text-5xl">
+                  <CardTitle className="text-foreground font-serif text-4xl font-semibold md:text-5xl">
                     Course Overview
                   </CardTitle>
                 </CardHeader>
@@ -795,8 +793,8 @@ export default function CourseClient({
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {course.learningOutcomes?.map((item, idx) => (
               <div key={idx} className="relative overflow-hidden">
-                <div className="pointer-events-none absolute -inset-1 -z-10 translate-x-1 translate-y-1 border-2 border-blue-800 bg-blue-300" />
-                <div className="rounded-none border-[3px] border-blue-900 bg-blue-50 p-6 shadow-lg">
+                <div className="border-primary/30 bg-primary/10 pointer-events-none absolute -inset-1 -z-10 translate-x-1 translate-y-1 border-2" />
+                <div className="border-primary bg-primary/5 rounded-none border-[3px] p-6 shadow-lg">
                   <div className="text-4xl">{item.icon}</div>
                   <p className="mt-2 font-serif font-semibold">{item.title}</p>
                 </div>
@@ -904,14 +902,14 @@ export default function CourseClient({
             <h3 className="mb-2 text-xl font-semibold">
               Join Our Dream-Sharing Community!
             </h3>
-            <p className="mb-6 text-sm text-blue-100">
+            <p className="text-primary-foreground/80 mb-6 text-sm">
               Connect with fellow learners, share insights, and continue your
               journey together
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:justify-center">
               <Link
                 href="https://chat.whatsapp.com/LYKNhlQbmV84YiBioVo83Y?mode=ac_t"
-                className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 font-medium text-purple-600 transition-all hover:bg-gray-50 hover:shadow-lg"
+                className="bg-background text-primary hover:bg-muted inline-flex items-center gap-2 rounded-lg px-6 py-3 font-medium transition-all hover:shadow-lg"
                 aria-label="Join WhatsApp community"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -920,7 +918,7 @@ export default function CourseClient({
               </Link>
               <Link
                 href="https://www.instagram.com/channel/AbZNVUaQ3yMrfJGm/?igsh=dTV3MWozOXJsdDFy"
-                className="inline-flex items-center gap-2 rounded-lg bg-white px-6 py-3 font-medium text-purple-600 transition-all hover:bg-gray-50 hover:shadow-lg"
+                className="bg-background text-primary hover:bg-muted inline-flex items-center gap-2 rounded-lg px-6 py-3 font-medium transition-all hover:shadow-lg"
                 aria-label="Follow our Instagram channel"
                 target="_blank"
                 rel="noopener noreferrer"

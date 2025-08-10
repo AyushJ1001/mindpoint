@@ -86,7 +86,7 @@ export default function Footer() {
               <li>
                 <Link
                   href="https://chat.whatsapp.com/LYKNhlQbmV84YiBioVo83Y?mode=ac_t"
-                  className="rounded-lg bg-white px-4 py-2 text-purple-600 transition hover:bg-gray-100"
+                  className="bg-background text-primary hover:bg-muted rounded-lg px-4 py-2 transition"
                   aria-label="Join WhatsApp community"
                 >
                   Join Now

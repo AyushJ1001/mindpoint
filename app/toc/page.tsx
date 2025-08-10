@@ -17,20 +17,20 @@ export default function TOC() {
           use our Website.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="text-foreground mb-4 text-2xl font-semibold">
           1. Information Collection and Use
         </h2>
-        <p className="mb-4 leading-relaxed text-gray-700">
+        <p className="text-muted-foreground mb-4 leading-relaxed">
           The Mind Point collects information from visitors to analyze usage
           trends, administer the Website, track user movement, and gather
           general demographic information. This information is primarily
           collected through the following means:
         </p>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="text-foreground mb-3 text-xl font-semibold">
           1. Log Files
         </h3>
-        <p className="mb-2 leading-relaxed text-gray-700">
+        <p className="text-muted-foreground mb-2 leading-relaxed">
           Like many websites, The Mind Point utilizes log files to automatically
           record specific data whenever you visit. This data may include:
         </p>
@@ -132,10 +132,10 @@ export default function TOC() {
 
       {/* Terms & Conditions Section */}
       <section className="mb-12">
-        <h1 className="mb-6 text-3xl font-bold text-gray-900">
+        <h1 className="text-foreground mb-6 text-3xl font-bold">
           TERMS & CONDITIONS
         </h1>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="text-muted-foreground mb-6 leading-relaxed">
           These terms and conditions outline the rules and regulations for the
           use of The Mind Point's Website, located at themindpointmhs.com. By
           accessing this website, we assume you accept these terms and
@@ -357,7 +357,7 @@ export default function TOC() {
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
           4. Attendance and Certification Policy
         </h2>
-        <div className="mb-6 border-l-4 border-blue-400 bg-blue-50 p-4">
+        <div className="border-primary bg-primary/5 mb-6 border-l-4 p-4">
           <ul className="list-inside list-disc text-gray-700">
             <li>
               Any student who misses more than 3 live lectures, for any reason,
@@ -490,7 +490,7 @@ export default function TOC() {
           </li>
         </ul>
 
-        <div className="mt-8 rounded-lg border border-gray-200 bg-gray-50 p-6">
+        <div className="border-border bg-muted mt-8 rounded-lg border p-6">
           <p className="leading-relaxed text-gray-700">
             By registering or making a purchase, you acknowledge and agree to
             the terms of The Mind Point's Refund and Payment Policy. For further

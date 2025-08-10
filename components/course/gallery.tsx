@@ -15,7 +15,7 @@ export default function CourseImageGallery({
   imageUrls: string[];
 }) {
   return (
-    <div className="bg-muted/20 relative overflow-hidden rounded-lg border-2 border-blue-200">
+    <div className="bg-muted/20 border-primary/20 relative overflow-hidden rounded-lg border-2">
       <div className="relative aspect-[4/3] w-full">
         {imageUrls.length <= 1 ? (
           <Image
@@ -49,8 +49,8 @@ export default function CourseImageGallery({
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="absolute top-1/2 left-4 -translate-y-1/2 bg-white/90 shadow-lg hover:bg-white" />
-            <CarouselNext className="absolute top-1/2 right-4 -translate-y-1/2 bg-white/90 shadow-lg hover:bg-white" />
+            <CarouselPrevious className="bg-background/90 hover:bg-background absolute top-1/2 left-4 -translate-y-1/2 shadow-lg" />
+            <CarouselNext className="bg-background/90 hover:bg-background absolute top-1/2 right-4 -translate-y-1/2 shadow-lg" />
           </Carousel>
         )}
       </div>

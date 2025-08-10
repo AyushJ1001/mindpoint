@@ -1,30 +1,32 @@
 "use client";
 
-import { Clock, ShieldCheck, Users } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle, Shield, Users, Award } from "lucide-react";
 
 export default function TrustBar() {
-  const items = [
-    { icon: <Users className="h-6 w-6" />, label: "2,500+ Learners" },
-    {
-      icon: <ShieldCheck className="h-6 w-6" />,
-      label: "IAOTH-Ready Certificate",
-    },
-    { icon: <Clock className="h-6 w-6" />, label: "3 Months Recording Access" },
-  ];
   return (
-    <div className="relative overflow-hidden rounded-xl border-2 border-blue-900 bg-blue-50 p-6">
-      <div className="absolute top-[-50%] right-[-25%] h-64 w-64 rotate-12 rounded-full bg-blue-300/40 blur-3xl" />
-      <div className="absolute bottom-[-50%] left-[-15%] h-56 w-56 -rotate-12 rounded-full bg-blue-300/30 blur-3xl" />
-      <div className="relative grid grid-cols-1 gap-4 sm:grid-cols-3">
-        {items.map((it, i) => (
-          <div
-            key={i}
-            className="flex items-center justify-center gap-3 rounded-lg bg-white/70 px-4 py-3 text-blue-950 shadow-sm ring-2 ring-blue-200 transition-shadow hover:shadow-md"
-          >
-            {it.icon}
-            <span className="text-base font-semibold">{it.label}</span>
+    <div className="border-primary bg-primary/5 relative overflow-hidden rounded-xl border-2 p-6">
+      <div className="bg-primary/20 absolute top-[-50%] right-[-25%] h-64 w-64 rotate-12 rounded-full blur-3xl" />
+      <div className="bg-primary/15 absolute bottom-[-50%] left-[-15%] h-56 w-56 -rotate-12 rounded-full blur-3xl" />
+      <div className="relative z-10">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="bg-background/70 text-foreground ring-primary/20 flex items-center justify-center gap-3 rounded-lg px-4 py-3 shadow-sm ring-2 transition-shadow hover:shadow-md">
+            <CheckCircle className="text-primary h-5 w-5" />
+            <span className="text-sm font-medium">Certified</span>
           </div>
-        ))}
+          <div className="bg-background/70 text-foreground ring-primary/20 flex items-center justify-center gap-3 rounded-lg px-4 py-3 shadow-sm ring-2 transition-shadow hover:shadow-md">
+            <Shield className="text-primary h-5 w-5" />
+            <span className="text-sm font-medium">Secure</span>
+          </div>
+          <div className="bg-background/70 text-foreground ring-primary/20 flex items-center justify-center gap-3 rounded-lg px-4 py-3 shadow-sm ring-2 transition-shadow hover:shadow-md">
+            <Users className="text-primary h-5 w-5" />
+            <span className="text-sm font-medium">Community</span>
+          </div>
+          <div className="bg-background/70 text-foreground ring-primary/20 flex items-center justify-center gap-3 rounded-lg px-4 py-3 shadow-sm ring-2 transition-shadow hover:shadow-md">
+            <Award className="text-primary h-5 w-5" />
+            <span className="text-sm font-medium">Quality</span>
+          </div>
+        </div>
       </div>
     </div>
   );
