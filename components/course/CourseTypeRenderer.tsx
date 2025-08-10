@@ -75,8 +75,8 @@ export default function CourseTypeRenderer({
         {/* Common sections for all course types except therapy */}
         <WhoShouldDo />
         <WhyChoose />
-        <Certification />
-        <ReviewsSection />
+        <Certification courseType={course.type} />
+        <ReviewsSection courseType={course.type} />
         <FAQSection />
         <CommunitiesSection />
       </>

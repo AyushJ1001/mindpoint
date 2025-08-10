@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useCart } from "react-use-cart";
 import {
   Plus,
   Minus,
@@ -22,13 +20,7 @@ import {
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -131,9 +123,7 @@ interface CourseHeroProps {
 
 export default function CourseHero({
   course,
-  variants = [],
   activeCourse,
-  setActiveCourse,
   hasValidOffer,
   offerDetails,
   isOutOfStock,
@@ -226,7 +216,10 @@ export default function CourseHero({
               {[
                 {
                   icon: BookOpen,
-                  label: "Past Sessions",
+                  label:
+                    course.type === "certificate"
+                      ? "Batches Completed"
+                      : "Past Sessions",
                   value: (displayCourse.sessions || 6) - 1,
                 },
                 {
@@ -416,6 +409,19 @@ export default function CourseHero({
                     </div>
                   </div>
                 </div>
+                {course.type === "certificate" && course.endDate && (
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                      <Calendar className="text-primary h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">End Date</div>
+                      <div className="text-muted-foreground text-sm">
+                        {formatDateCommon(course.endDate)}
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-3">
                   <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                     <Clock className="text-primary h-5 w-5" />

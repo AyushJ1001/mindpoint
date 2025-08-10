@@ -17,6 +17,7 @@ type Review = { id: string; rating: number; content: string };
 
 interface ReviewsSectionProps {
   reviews?: Review[];
+  courseType?: string;
 }
 
 export default function ReviewsSection({
@@ -33,6 +34,7 @@ export default function ReviewsSection({
       content: "Great intro for beginners. Journaling module was my favorite.",
     },
   ],
+  courseType,
 }: ReviewsSectionProps) {
   return (
     <section className="py-16">
@@ -43,10 +45,14 @@ export default function ReviewsSection({
             <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
               <CardHeader className="pb-6 text-center">
                 <CardTitle className="text-3xl font-bold md:text-4xl">
-                  Client Reviews
+                  {courseType === "certificate"
+                    ? "Student Reviews"
+                    : "Client Reviews"}
                 </CardTitle>
                 <CardDescription className="text-lg">
-                  Hear from our successful clients
+                  {courseType === "certificate"
+                    ? "Hear from our successful students"
+                    : "Hear from our successful clients"}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-8">

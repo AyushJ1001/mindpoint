@@ -71,10 +71,12 @@ function useScrollAnimation() {
 interface CountdownTimerProps {
   course: {
     startDate: string;
+    endDate?: string;
     duration?: string;
     startTime: string;
     endTime: string;
     price: number;
+    type?: string;
   };
 }
 
@@ -130,13 +132,24 @@ export default function CountdownTimer({ course }: CountdownTimerProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-5">
+          <div
+            className={`grid grid-cols-1 gap-6 sm:grid-cols-2 ${course.type === "certificate" && course.endDate ? "lg:grid-cols-6" : "lg:grid-cols-5"}`}
+          >
             {[
               {
                 label: "Start Date",
                 value: formatDateCommon(course.startDate),
                 icon: Calendar,
               },
+              ...(course.type === "certificate" && course.endDate
+                ? [
+                    {
+                      label: "End Date",
+                      value: formatDateCommon(course.endDate),
+                      icon: Calendar,
+                    },
+                  ]
+                : []),
               {
                 label: "Duration",
                 value: course.duration || "6 weeks",
