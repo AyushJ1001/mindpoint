@@ -83,15 +83,6 @@ export default function Footer() {
                   Terms & Conditions
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="https://chat.whatsapp.com/LYKNhlQbmV84YiBioVo83Y?mode=ac_t"
-                  className="bg-background text-primary hover:bg-muted rounded-lg px-4 py-2 transition"
-                  aria-label="Join WhatsApp community"
-                >
-                  Join Now
-                </Link>
-              </li>
             </ul>
           </div>
 
@@ -101,7 +92,7 @@ export default function Footer() {
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="#"
+                  href="/courses/certificate"
                   className="text-muted-foreground hover:text-primary transition-smooth"
                 >
                   Certificate Courses
@@ -109,7 +100,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/courses/therapy"
                   className="text-muted-foreground hover:text-primary transition-smooth"
                 >
                   Therapy Sessions
@@ -117,7 +108,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link
-                  href="#"
+                  href="/careers"
                   className="text-muted-foreground hover:text-primary transition-smooth"
                 >
                   Career Support

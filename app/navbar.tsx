@@ -151,27 +151,36 @@ export default function Navbar() {
                     <div className="w-[300px] p-4">
                       <div className="grid gap-2">
                         {[
-                          "/courses/certificate",
-                          "/courses/internship",
-                          "/courses/diploma",
-                          "/courses/pre-recorded",
-                          "/courses/masterclass",
-                        ].map((href) => (
-                          <NavigationMenuLink asChild key={href}>
+                          {
+                            name: "Certificate Courses",
+                            link: "/courses/certificate",
+                          },
+                          {
+                            name: "Training based Internship",
+                            link: "/courses/internship",
+                          },
+                          {
+                            name: "Prerecorded Courses",
+                            link: "/courses/pre-recorded",
+                          },
+                          {
+                            name: "Diploma Programs",
+                            link: "/courses/diploma",
+                          },
+                          {
+                            name: "Masterclass/Workshop",
+                            link: "/courses/masterclass",
+                          },
+                        ].map(({ name, link }) => (
+                          <NavigationMenuLink asChild key={link}>
                             <Link
-                              href={href}
+                              href={link}
                               className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
-                                isActive(href) ? "bg-accent" : ""
+                                isActive(link) ? "bg-accent" : ""
                               }`}
-                              aria-current={isActive(href) ? "page" : undefined}
+                              aria-current={isActive(link) ? "page" : undefined}
                             >
-                              <div className="text-sm font-medium">
-                                {href
-                                  .split("/")
-                                  .pop()
-                                  ?.replace("-", " ")
-                                  ?.replace(/^\w/, (c) => c.toUpperCase())}
-                              </div>
+                              <div className="text-sm font-medium">{name}</div>
                             </Link>
                           </NavigationMenuLink>
                         ))}
@@ -187,25 +196,28 @@ export default function Navbar() {
                     <div className="w-[280px] p-4">
                       <div className="grid gap-2">
                         {[
-                          "/courses/therapy",
-                          "/courses/supervised",
-                          "/courses/resume-studio",
-                        ].map((href) => (
-                          <NavigationMenuLink asChild key={href}>
+                          {
+                            name: "Therapy/Counselling",
+                            link: "/courses/therapy",
+                          },
+                          {
+                            name: "Supervised Sessions",
+                            link: "/courses/supervised",
+                          },
+                          {
+                            name: "Resume Studio",
+                            link: "/courses/resume-studio",
+                          },
+                        ].map(({ name, link }) => (
+                          <NavigationMenuLink asChild key={link}>
                             <Link
-                              href={href}
+                              href={link}
                               className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
-                                isActive(href) ? "bg-accent" : ""
+                                isActive(link) ? "bg-accent" : ""
                               }`}
-                              aria-current={isActive(href) ? "page" : undefined}
+                              aria-current={isActive(link) ? "page" : undefined}
                             >
-                              <div className="text-sm font-medium">
-                                {href
-                                  .split("/")
-                                  .pop()
-                                  ?.replace("-", " ")
-                                  ?.replace(/^\w/, (c) => c.toUpperCase())}
-                              </div>
+                              <div className="text-sm font-medium">{name}</div>
                             </Link>
                           </NavigationMenuLink>
                         ))}

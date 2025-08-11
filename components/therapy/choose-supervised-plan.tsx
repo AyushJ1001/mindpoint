@@ -26,8 +26,38 @@ import { useInView } from "@/hooks/use-in-view";
 import type { Doc } from "@/convex/_generated/dataModel";
 
 // Configuration constants
-const PREMIUM_MULTIPLIER = 1.3; // Elevate plan is 1.3x the base Focus price
-const FLOW_MULTIPLIER = 1.15; // Flow plan is 1.15x the base Focus price
+// Based on the actual pricing table:
+// Focus: 1 session ₹800, 2 sessions ₹1500, 4 sessions ₹2800, 6 sessions ₹3900
+// Flow: 1 session ₹1100, 2 sessions ₹2100, 4 sessions ₹4000, 6 sessions ₹5700
+// Elevate: 1 session ₹1500, 2 sessions ₹2900, 4 sessions ₹5600, 6 sessions ₹8100
+
+// Calculate the correct price for each plan based on actual ratios
+const calculateSupervisedPlanPrice = (
+  basePrice: number,
+  sessionCount: number,
+  planId: string,
+): number => {
+  // Define the actual price ratios for each session count
+  const priceRatios = {
+    1: { flow: 1100 / 800, elevate: 1500 / 800 },
+    2: { flow: 2100 / 1500, elevate: 2900 / 1500 },
+    4: { flow: 4000 / 2800, elevate: 5600 / 2800 },
+    6: { flow: 5700 / 3900, elevate: 8100 / 3900 },
+  };
+
+  if (planId === "focus") {
+    return basePrice; // Focus uses base price
+  } else if (planId === "flow") {
+    const ratio = priceRatios[sessionCount as keyof typeof priceRatios]?.flow;
+    return ratio ? Math.round(basePrice * ratio) : basePrice;
+  } else if (planId === "elevate") {
+    const ratio =
+      priceRatios[sessionCount as keyof typeof priceRatios]?.elevate;
+    return ratio ? Math.round(basePrice * ratio) : basePrice;
+  }
+
+  return basePrice;
+};
 
 type Sessions = number;
 
@@ -74,7 +104,8 @@ export default function ChooseSupervisedPlan({
     // Fallback to default options if no variants found
     if (sessionCounts.size === 0) {
       sessionCounts.add(1);
-      sessionCounts.add(3);
+      sessionCounts.add(2);
+      sessionCounts.add(4);
       sessionCounts.add(6);
     }
     return Array.from(sessionCounts).sort((a, b) => a - b);
@@ -90,10 +121,10 @@ export default function ChooseSupervisedPlan({
       name: "Focus",
       description: "Essential supervised learning",
       highlights: [
-        "Basic supervision structure",
-        "Standard feedback sessions",
-        "Validity adjusts with pack",
-        "Session duration ~45 mins",
+        "Targeted supervision for specific skill development",
+        "Practical, concise feedback to improve therapy techniques",
+        "Ideal for students and early career therapists",
+        "Session duration ~40 mins",
       ],
       perSession: {}, // Will be populated from variants
       validityDays: {}, // Will be populated from variants
@@ -107,9 +138,9 @@ export default function ChooseSupervisedPlan({
       name: "Flow",
       description: "Enhanced learning experience",
       highlights: [
-        "Enhanced supervision",
-        "Detailed feedback & guidance",
-        "Validity adjusts with pack",
+        "Comprehensive supervision with detailed feedback",
+        "Supports deepening therapeutic skills and session management",
+        "Enhance client handling and therapeutic effectiveness",
         "Session duration ~60 mins",
       ],
       perSession: {}, // Will be populated from variants
@@ -124,9 +155,9 @@ export default function ChooseSupervisedPlan({
       name: "Elevate",
       description: "Premium expert supervision",
       highlights: [
-        "Expert-level supervision",
-        "Comprehensive feedback & mentoring",
-        "Validity adjusts with pack",
+        "Advanced package including 2 live client session observations",
+        "Extensive feedback and elevate practice to expert level",
+        "Supports real-world application and confidence building",
         "Session duration ~75 mins",
       ],
       perSession: {}, // Will be populated from variants
@@ -151,24 +182,27 @@ export default function ChooseSupervisedPlan({
       }
     });
 
-    // Set Focus prices (base prices)
-    focusPlan.perSession = { ...basePrices };
-    focusPlan.validityDays = { ...validityDays };
-
-    // Set Flow prices (FLOW_MULTIPLIER x of base prices)
+    // Set prices for each plan using the correct ratios for each session count
     Object.keys(basePrices).forEach((sessionCount) => {
       const count = parseInt(sessionCount);
-      flowPlan.perSession[count] = Math.round(
-        basePrices[count] * FLOW_MULTIPLIER,
+
+      // Focus plan (base price)
+      focusPlan.perSession[count] = basePrices[count];
+      focusPlan.validityDays[count] = validityDays[count];
+
+      // Flow plan (calculated based on actual ratios)
+      flowPlan.perSession[count] = calculateSupervisedPlanPrice(
+        basePrices[count],
+        count,
+        "flow",
       );
       flowPlan.validityDays[count] = validityDays[count];
-    });
 
-    // Set Elevate prices (PREMIUM_MULTIPLIER x of base prices)
-    Object.keys(basePrices).forEach((sessionCount) => {
-      const count = parseInt(sessionCount);
-      elevatePlan.perSession[count] = Math.round(
-        basePrices[count] * PREMIUM_MULTIPLIER,
+      // Elevate plan (calculated based on actual ratios)
+      elevatePlan.perSession[count] = calculateSupervisedPlanPrice(
+        basePrices[count],
+        count,
+        "elevate",
       );
       elevatePlan.validityDays[count] = validityDays[count];
     });
@@ -259,9 +293,10 @@ export default function ChooseSupervisedPlan({
               </span>
             </div>
             <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
-              Begin Your{" "}
+              Grow your skills. Build your confidence.
+              <br />
               <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                Learning Journey
+                Thrive as a therapist.
               </span>
             </h2>
             <p className="text-muted-foreground mx-auto max-w-2xl text-lg">

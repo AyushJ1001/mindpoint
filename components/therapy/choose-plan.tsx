@@ -18,17 +18,49 @@ import {
   ArrowUpRight,
   Sparkles,
   HeartHandshake,
+  Flame,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 import type { Doc } from "@/convex/_generated/dataModel";
 
 // Configuration constants
-const PREMIUM_MULTIPLIER = 1.2; // Connection plan is 1.2x the base Express price
+// Based on the actual pricing table:
+// Spark: 1 session ₹600, 3 sessions ₹1650, 6 sessions ₹3000
+// Express: 1 session ₹950, 3 sessions ₹2700, 6 sessions ₹5100
+// Connection: 1 session ₹1400, 3 sessions ₹4050, 6 sessions ₹7800
+
+// Calculate the correct price for each plan based on actual ratios
+const calculatePlanPrice = (
+  basePrice: number,
+  sessionCount: number,
+  planId: string,
+): number => {
+  // Define the actual price ratios for each session count
+  const priceRatios = {
+    1: { express: 950 / 600, connection: 1400 / 600 },
+    3: { express: 2700 / 1650, connection: 4050 / 1650 },
+    6: { express: 5100 / 3000, connection: 7800 / 3000 },
+  };
+
+  if (planId === "spark") {
+    return basePrice; // Spark uses base price
+  } else if (planId === "express") {
+    const ratio =
+      priceRatios[sessionCount as keyof typeof priceRatios]?.express;
+    return ratio ? Math.round(basePrice * ratio) : basePrice;
+  } else if (planId === "connection") {
+    const ratio =
+      priceRatios[sessionCount as keyof typeof priceRatios]?.connection;
+    return ratio ? Math.round(basePrice * ratio) : basePrice;
+  }
+
+  return basePrice;
+};
 
 type Sessions = number;
 
 type Plan = {
-  id: "connection" | "express";
+  id: "spark" | "connection" | "express";
   name: string;
   highlights: string[];
   perSession: Record<number, number>;
@@ -86,15 +118,32 @@ export default function ChoosePlan({
       name: "Express",
       description: "Quick therapy at affordable rates",
       highlights: [
-        "Start at lower prices",
-        "Get a therapist in 24–36 hrs",
-        "Validity adjusts with pack",
-        "Session duration ~40 mins",
+        "A balanced option for those seeking to address a specific concern",
+        "Suitable for stress, anxiety, or situational challenges",
+        "Provides practical coping tools and short term support",
+        "Session duration ~30 to 35 mins",
       ],
       perSession: {}, // Will be populated from variants
       validityDays: {}, // Will be populated from variants
       gradient: "from-emerald-500 via-teal-500 to-cyan-600",
       icon: <HeartHandshake className="h-6 w-6" />,
+    };
+
+    // Create Spark plan (starter)
+    const sparkPlan: Plan = {
+      id: "spark",
+      name: "Spark",
+      description: "Starter plan to begin your journey",
+      highlights: [
+        "Low commitment option for those who want to try therapy",
+        "Convenient and flexible for busy schedules",
+        "Great for follow up sessions",
+        "Session duration ~20 mins",
+      ],
+      perSession: {}, // Will be populated from variants
+      validityDays: {}, // Will be populated from variants
+      gradient: "from-rose-500 via-orange-500 to-amber-500",
+      icon: <Flame className="h-6 w-6" />,
     };
 
     // Create Connection plan (premium)
@@ -103,10 +152,10 @@ export default function ChoosePlan({
       name: "Connection",
       description: "Premium therapy with senior experts",
       highlights: [
-        "Connect with senior experts",
-        "Get a therapist in 60 mins",
-        "Validity adjusts with pack",
-        "Session duration ~60 mins",
+        "Ideal for ongoing therapy and complex issues",
+        "In depth comprehensive counselling",
+        "Builds lasting therapeutic relationship and progress",
+        "Session duration ~50 mins",
       ],
       perSession: {}, // Will be populated from variants
       validityDays: {}, // Will be populated from variants
@@ -130,20 +179,32 @@ export default function ChoosePlan({
       }
     });
 
-    // Set Express prices (base prices)
-    expressPlan.perSession = { ...basePrices };
-    expressPlan.validityDays = { ...validityDays };
-
-    // Set Connection prices (PREMIUM_MULTIPLIER x of base prices)
+    // Set prices for each plan using the correct ratios for each session count
     Object.keys(basePrices).forEach((sessionCount) => {
       const count = parseInt(sessionCount);
-      connectionPlan.perSession[count] = Math.round(
-        basePrices[count] * PREMIUM_MULTIPLIER,
+
+      // Spark plan (base price)
+      sparkPlan.perSession[count] = basePrices[count];
+      sparkPlan.validityDays[count] = validityDays[count];
+
+      // Express plan (calculated based on actual ratios)
+      expressPlan.perSession[count] = calculatePlanPrice(
+        basePrices[count],
+        count,
+        "express",
+      );
+      expressPlan.validityDays[count] = validityDays[count];
+
+      // Connection plan (calculated based on actual ratios)
+      connectionPlan.perSession[count] = calculatePlanPrice(
+        basePrices[count],
+        count,
+        "connection",
       );
       connectionPlan.validityDays[count] = validityDays[count];
     });
 
-    return [expressPlan, connectionPlan];
+    return [sparkPlan, expressPlan, connectionPlan];
   }, [variants]);
 
   const formatter = new Intl.NumberFormat("en-IN");
@@ -180,7 +241,12 @@ export default function ChoosePlan({
     }
 
     // Create a descriptive name for the cart item
-    const planName = planId === "connection" ? "Connection" : "Express";
+    const planName =
+      planId === "connection"
+        ? "Connection"
+        : planId === "spark"
+          ? "Spark"
+          : "Express";
     const cartItemName = `${selectedVariant.name} - ${planName} (${sessions} ${sessions === 1 ? "session" : "sessions"})`;
 
     // Add to cart
@@ -266,7 +332,7 @@ export default function ChoosePlan({
           <div
             ref={ref}
             className={cn(
-              "mx-auto grid max-w-5xl gap-8 md:grid-cols-2",
+              "mx-auto grid max-w-5xl gap-8 md:grid-cols-3",
               visible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
               "transition-all duration-700",
             )}
