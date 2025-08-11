@@ -324,23 +324,23 @@ export default function CourseClient({
   const getCourseTypeGradient = (courseType: string) => {
     switch (courseType) {
       case "certificate":
-        return "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20";
+        return "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
       case "internship":
-        return "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20";
+        return "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
       case "therapy":
-        return "bg-gradient-to-br from-pink-50 to-rose-50 dark:from-pink-950/20 dark:to-rose-950/20";
+        return "bg-gradient-to-br from-pink-50 to-rose-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
       case "diploma":
-        return "bg-gradient-to-br from-purple-50 to-violet-50 dark:from-purple-950/20 dark:to-violet-950/20";
+        return "bg-gradient-to-br from-purple-50 to-violet-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
       case "pre-recorded":
-        return "bg-gradient-to-br from-orange-50 to-amber-50 dark:from-orange-950/20 dark:to-amber-950/20";
+        return "bg-gradient-to-br from-orange-50 to-amber-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
       case "masterclass":
-        return "bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-yellow-950/20 dark:to-amber-950/20";
+        return "bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
       case "supervised":
-        return "bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/20 dark:to-cyan-950/20";
+        return "bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
       case "resume-studio":
-        return "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-emerald-950/20 dark:to-green-950/20";
+        return "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
       default:
-        return "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20";
+        return "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
     }
   };
 
@@ -348,23 +348,23 @@ export default function CourseClient({
   const getStickyGradient = (courseType: string) => {
     switch (courseType) {
       case "certificate":
-        return "!bg-gradient-to-br !from-blue-50 !to-indigo-50 dark:!from-blue-950/30 dark:!to-indigo-950/30";
+        return "!bg-gradient-to-br !from-blue-50 !to-indigo-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
       case "internship":
-        return "!bg-gradient-to-br !from-green-50 !to-emerald-50 dark:!from-green-950/30 dark:!to-emerald-950/30";
+        return "!bg-gradient-to-br !from-green-50 !to-emerald-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
       case "therapy":
-        return "!bg-gradient-to-br !from-pink-50 !to-rose-50 dark:!from-pink-950/30 dark:!to-rose-950/30";
+        return "!bg-gradient-to-br !from-pink-50 !to-rose-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
       case "diploma":
-        return "!bg-gradient-to-br !from-purple-50 !to-violet-50 dark:!from-purple-950/30 dark:!to-violet-950/30";
+        return "!bg-gradient-to-br !from-purple-50 !to-violet-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
       case "pre-recorded":
-        return "!bg-gradient-to-br !from-orange-50 !to-amber-50 dark:!from-orange-950/30 dark:!to-amber-950/30";
+        return "!bg-gradient-to-br !from-orange-50 !to-amber-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
       case "masterclass":
-        return "!bg-gradient-to-br !from-yellow-50 !to-amber-50 dark:!from-yellow-950/30 dark:!to-amber-950/30";
+        return "!bg-gradient-to-br !from-yellow-50 !to-amber-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
       case "supervised":
-        return "!bg-gradient-to-br !from-teal-50 !to-cyan-50 dark:!from-teal-950/30 dark:!to-cyan-950/30";
+        return "!bg-gradient-to-br !from-teal-50 !to-cyan-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
       case "resume-studio":
-        return "!bg-gradient-to-br !from-emerald-50 !to-green-50 dark:!from-emerald-950/30 dark:!to-green-950/30";
+        return "!bg-gradient-to-br !from-emerald-50 !to-green-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
       default:
-        return "!bg-gradient-to-br !from-blue-50 !to-indigo-50 dark:!from-blue-950/30 dark:!to-indigo-950/30";
+        return "!bg-gradient-to-br !from-blue-50 !to-indigo-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
     }
   };
 
@@ -382,8 +382,8 @@ export default function CourseClient({
       />
 
       <div className="relative z-10">
-        {/* Conditionally render hero section for non-therapy courses */}
-        {course.type !== "therapy" && (
+        {/* Conditionally render hero section for course types that use it */}
+        {course.type !== "therapy" && course.type !== "supervised" && (
           <>
             <CourseHero
               course={activeCourse}

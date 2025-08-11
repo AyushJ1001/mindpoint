@@ -13,6 +13,7 @@ import WhyChoose from "./why-choose";
 import Certification from "./certification";
 import ReviewsSection from "./reviews-section";
 import FAQSection from "./faq-section";
+import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
 import CommunitiesSection from "./communities-section";
 
 interface CourseTypeRendererProps {
@@ -50,7 +51,7 @@ export default function CourseTypeRenderer({
       case "masterclass":
         return <MasterclassCourse course={course} />;
       case "supervised":
-        return <SupervisedCourse course={course} />;
+        return <SupervisedCourse course={course} variants={variants} />;
       case "resume-studio":
         return <ResumeStudioCourse course={course} />;
       default:
@@ -61,16 +62,20 @@ export default function CourseTypeRenderer({
 
   // Render common sections based on course type
   const renderCommonSections = () => {
-    // For therapy courses, skip the hero section and start directly with plan selection
-    if (courseType === "therapy") {
+    // For therapy and supervised courses, skip the hero section and start directly with plan selection
+    if (courseType === "therapy" || courseType === "supervised") {
       return (
         <>
-          {/* Therapy courses start directly with plan selection */}
+          {/* Therapy and supervised courses start directly with plan selection */}
           {renderCourseTypeContent()}
 
-          {/* Common sections for therapy */}
+          {/* Common sections for therapy and supervised */}
           <ReviewsSection />
-          <FAQSection />
+          {courseType === "supervised" ? (
+            <SupervisedFAQSection />
+          ) : (
+            <FAQSection />
+          )}
           <CommunitiesSection />
         </>
       );

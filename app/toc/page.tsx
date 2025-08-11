@@ -1,3 +1,16 @@
+export const metadata = {
+  title: "Terms & Conditions - The Mind Point",
+  description:
+    "Read The Mind Point's terms and conditions, privacy policy, and legal information for our mental health education platform.",
+  keywords:
+    "terms and conditions, privacy policy, legal, mental health education, The Mind Point",
+  openGraph: {
+    title: "Terms & Conditions - The Mind Point",
+    description: "Read our terms and conditions and privacy policy.",
+    type: "website",
+  },
+};
+
 export default function TOC() {
   return (
     <div className="mx-auto max-w-4xl bg-white p-6">

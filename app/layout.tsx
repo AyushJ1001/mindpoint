@@ -43,26 +43,19 @@ export default function RootLayout({
         </a>
         <ClerkProvider dynamic>
           <ConvexClientProvider>
-            <ThemeProvider
-              attribute="class"
-              defaultTheme="system"
-              enableSystem
-              disableTransitionOnChange
-            >
-              <CartProvider>
-                <Navbar />
-                <main
-                  id="main-content"
-                  className="flex-grow"
-                  role="main"
-                  tabIndex={-1}
-                >
-                  {children}
-                </main>
-                <Footer />
-                <Toaster />
-              </CartProvider>
-            </ThemeProvider>
+            <CartProvider>
+              <Navbar />
+              <main
+                id="main-content"
+                className="flex-grow"
+                role="main"
+                tabIndex={-1}
+              >
+                {children}
+              </main>
+              <Footer />
+              <Toaster />
+            </CartProvider>
           </ConvexClientProvider>
         </ClerkProvider>
       </body>

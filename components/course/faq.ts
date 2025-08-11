@@ -29,7 +29,7 @@ export function parseFaqMarkdown(md: string): Array<{ q: string; a: string }> {
   }
   if (tableItems.length > 0) return tableItems;
 
-  // Try to parse numbered list format (for course.md)
+  // Try to parse numbered list format (for course.md and therapy.md)
   const numberedItems: Array<{ q: string; a: string }> = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
@@ -38,18 +38,35 @@ export function parseFaqMarkdown(md: string): Array<{ q: string; a: string }> {
     if (numberedMatch) {
       const question = numberedMatch[2].trim();
       let answer = "";
+      let hasStartedAnswer = false;
 
       // Look for the answer on the next line(s)
       let j = i + 1;
       while (j < lines.length) {
-        const nextLine = lines[j].trim();
-        // If we hit another numbered item or empty line, stop
-        if (nextLine === "" || /^\d+\.\s+/.test(nextLine)) {
+        const nextLine = lines[j]; // Keep original line with whitespace for markdown formatting
+
+        // If we hit another numbered item, stop
+        if (/^\d+\.\s+/.test(nextLine.trim())) {
           break;
         }
-        // If this line is not empty and doesn't start with a number, it's part of the answer
-        if (nextLine !== "") {
+
+        // If this line is not empty, it's part of the answer
+        if (nextLine.trim() !== "") {
+          hasStartedAnswer = true;
+          // Preserve original formatting including indentation and markdown elements
           answer += (answer ? "\n" : "") + nextLine;
+        } else if (hasStartedAnswer) {
+          // If we've already started the answer and hit an empty line,
+          // check if the next non-empty line is another numbered item
+          let k = j + 1;
+          while (k < lines.length && lines[k].trim() === "") {
+            k++;
+          }
+          if (k < lines.length && /^\d+\.\s+/.test(lines[k].trim())) {
+            break; // Stop if next non-empty line is a numbered item
+          }
+          // Otherwise, add the empty line to preserve formatting
+          answer += "\n";
         }
         j++;
       }

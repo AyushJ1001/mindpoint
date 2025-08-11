@@ -1,5 +1,19 @@
 import CourseTypePage from "@/components/CourseTypePage";
 
+export const metadata = {
+  title: "Internship Programs - The Mind Point",
+  description:
+    "Gain practical experience through our supervised internship programs in psychology and mental health. Apply theory to practice with hands-on training.",
+  keywords:
+    "internship programs, psychology internships, mental health training, practical experience, supervised learning",
+  openGraph: {
+    title: "Internship Programs - The Mind Point",
+    description:
+      "Gain practical experience through our supervised internship programs.",
+    type: "website",
+  },
+};
+
 export default function InternshipCoursesPage() {
   return (
     <CourseTypePage

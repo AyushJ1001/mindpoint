@@ -19,10 +19,7 @@ export const listCourses = query({
           .order("desc")
           .take(args.count)
       : await ctx.db.query("courses").order("desc").collect();
-    return {
-      viewer: (await ctx.auth.getUserIdentity())?.name ?? null,
-      courses: courses.reverse().map((course) => course),
-    };
+    return courses;
   },
 });
 

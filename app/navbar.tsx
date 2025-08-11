@@ -12,7 +12,6 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import Image from "next/image";
-import { ModeToggle } from "@/components/theme-toggle";
 import { Authenticated, Unauthenticated } from "convex/react";
 import { SignInButton, UserButton } from "@clerk/clerk-react";
 import { useCart } from "react-use-cart";
@@ -52,7 +51,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="bg-background/95 border-border sticky top-0 z-50 border-b bg-gradient-to-br from-10% via-blue-100 to-blue-300 shadow-sm backdrop-blur-sm dark:bg-gradient-to-br dark:from-10% dark:via-slate-800 dark:to-slate-900 dark:text-white"
+      className="bg-background/95 border-border sticky top-0 z-50 border-b bg-gradient-to-br from-10% via-blue-100 to-blue-300 shadow-sm backdrop-blur-sm dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white dark:shadow-lg dark:shadow-black/20"
       role="navigation"
       aria-label="Primary"
     >
@@ -91,7 +90,9 @@ export default function Navbar() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/about"
-                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${isActive("/about") ? "bg-accent" : ""}`}
+                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
+                              isActive("/about") ? "bg-accent" : ""
+                            }`}
                             aria-current={
                               isActive("/about") ? "page" : undefined
                             }
@@ -107,7 +108,9 @@ export default function Navbar() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/toc"
-                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${isActive("/toc") ? "bg-accent" : ""}`}
+                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
+                              isActive("/toc") ? "bg-accent" : ""
+                            }`}
                             aria-current={isActive("/toc") ? "page" : undefined}
                           >
                             <div className="text-sm leading-none font-medium">
@@ -121,7 +124,9 @@ export default function Navbar() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/contact"
-                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${isActive("/contact") ? "bg-accent" : ""}`}
+                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
+                              isActive("/contact") ? "bg-accent" : ""
+                            }`}
                             aria-current={
                               isActive("/contact") ? "page" : undefined
                             }
@@ -155,7 +160,9 @@ export default function Navbar() {
                           <NavigationMenuLink asChild key={href}>
                             <Link
                               href={href}
-                              className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${isActive(href) ? "bg-accent" : ""}`}
+                              className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
+                                isActive(href) ? "bg-accent" : ""
+                              }`}
                               aria-current={isActive(href) ? "page" : undefined}
                             >
                               <div className="text-sm font-medium">
@@ -187,7 +194,9 @@ export default function Navbar() {
                           <NavigationMenuLink asChild key={href}>
                             <Link
                               href={href}
-                              className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${isActive(href) ? "bg-accent" : ""}`}
+                              className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
+                                isActive(href) ? "bg-accent" : ""
+                              }`}
                               aria-current={isActive(href) ? "page" : undefined}
                             >
                               <div className="text-sm font-medium">
@@ -379,7 +388,6 @@ export default function Navbar() {
                 </div>
               </SheetContent>
             </Sheet>
-            <ModeToggle />
             <div className="hidden items-center gap-2 sm:flex">
               <Authenticated>
                 <UserButton />
@@ -410,7 +418,9 @@ export default function Navbar() {
                   <Link
                     key={link.href}
                     href={link.href}
-                    className={`hover:bg-accent transition-smooth mx-2 block rounded-md px-4 py-2 text-sm ${isActive(link.href) ? "bg-accent" : ""}`}
+                    className={`hover:bg-accent transition-smooth mx-2 block rounded-md px-4 py-2 text-sm ${
+                      isActive(link.href) ? "bg-accent" : ""
+                    }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     aria-current={isActive(link.href) ? "page" : undefined}
                   >
@@ -433,7 +443,9 @@ export default function Navbar() {
                   <Link
                     key={href}
                     href={href}
-                    className={`hover:bg-accent transition-smooth mx-2 block rounded-md px-4 py-2 text-sm ${isActive(href) ? "bg-accent" : ""}`}
+                    className={`hover:bg-accent transition-smooth mx-2 block rounded-md px-4 py-2 text-sm ${
+                      isActive(href) ? "bg-accent" : ""
+                    }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     aria-current={isActive(href) ? "page" : undefined}
                   >
@@ -458,7 +470,9 @@ export default function Navbar() {
                   <Link
                     key={href}
                     href={href}
-                    className={`hover:bg-accent transition-smooth mx-2 block rounded-md px-4 py-2 text-sm ${isActive(href) ? "bg-accent" : ""}`}
+                    className={`hover:bg-accent transition-smooth mx-2 block rounded-md px-4 py-2 text-sm ${
+                      isActive(href) ? "bg-accent" : ""
+                    }`}
                     onClick={() => setIsMobileMenuOpen(false)}
                     aria-current={isActive(href) ? "page" : undefined}
                   >

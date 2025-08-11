@@ -45,7 +45,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
 
   return (
     <Card
-      className="group ring-border/60 h-full cursor-pointer overflow-hidden border-0 shadow-sm ring-1 transition-all hover:shadow-md"
+      className="group ring-border/60 dark:ring-oklch(0.2_0.02_240) h-full cursor-pointer overflow-hidden border-0 shadow-sm ring-1 transition-all hover:shadow-md dark:shadow-lg dark:shadow-black/30 dark:hover:shadow-xl dark:hover:shadow-black/40"
       onClick={handleCardClick}
     >
       {/* Course Image */}

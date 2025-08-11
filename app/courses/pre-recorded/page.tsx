@@ -1,5 +1,18 @@
 import CourseTypePage from "@/components/CourseTypePage";
 
+export const metadata = {
+  title: "Pre-recorded Courses - The Mind Point",
+  description:
+    "Learn at your own pace with our pre-recorded courses in psychology and mental health. Flexible, self-paced learning with comprehensive content.",
+  keywords:
+    "pre-recorded courses, self-paced learning, psychology courses, mental health education, online learning",
+  openGraph: {
+    title: "Pre-recorded Courses - The Mind Point",
+    description: "Learn at your own pace with our pre-recorded courses.",
+    type: "website",
+  },
+};
+
 export default function PreRecordedCoursesPage() {
   return (
     <CourseTypePage

@@ -1,5 +1,19 @@
 import CourseTypePage from "@/components/CourseTypePage";
 
+export const metadata = {
+  title: "Masterclass Programs - The Mind Point",
+  description:
+    "Join our exclusive masterclass programs led by industry experts in psychology and mental health. Intensive learning experiences for advanced professionals.",
+  keywords:
+    "masterclass programs, psychology masterclasses, expert-led training, intensive learning, mental health education",
+  openGraph: {
+    title: "Masterclass Programs - The Mind Point",
+    description:
+      "Join our exclusive masterclass programs led by industry experts.",
+    type: "website",
+  },
+};
+
 export default function MasterclassCoursesPage() {
   return (
     <CourseTypePage

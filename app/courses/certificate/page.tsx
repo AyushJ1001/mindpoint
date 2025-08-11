@@ -1,5 +1,19 @@
 import CourseTypePage from "@/components/CourseTypePage";
 
+export const metadata = {
+  title: "Certificate Courses - The Mind Point",
+  description:
+    "Discover our expertly designed certificate courses in psychology and mental health. Learn from experienced professionals with evidence-based theory and practical exercises.",
+  keywords:
+    "certificate courses, psychology courses, mental health education, professional development, online learning",
+  openGraph: {
+    title: "Certificate Courses - The Mind Point",
+    description:
+      "Discover our expertly designed certificate courses in psychology and mental health.",
+    type: "website",
+  },
+};
+
 export default function CertificateCoursesPage() {
   return (
     <CourseTypePage

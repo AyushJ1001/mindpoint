@@ -1,5 +1,19 @@
 import CourseTypePage from "@/components/CourseTypePage";
 
+export const metadata = {
+  title: "Resume Studio - The Mind Point",
+  description:
+    "Build your professional resume and career development skills with our specialized resume studio program. Stand out in the mental health field.",
+  keywords:
+    "resume studio, career development, professional resume, mental health careers, job preparation",
+  openGraph: {
+    title: "Resume Studio - The Mind Point",
+    description:
+      "Build your professional resume and career development skills.",
+    type: "website",
+  },
+};
+
 export default function ResumeStudioCoursesPage() {
   return (
     <CourseTypePage

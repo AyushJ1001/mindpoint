@@ -18,17 +18,21 @@ import {
   ArrowUpRight,
   Sparkles,
   HeartHandshake,
+  Target,
+  Zap,
+  TrendingUp,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
 import type { Doc } from "@/convex/_generated/dataModel";
 
 // Configuration constants
-const PREMIUM_MULTIPLIER = 1.2; // Connection plan is 1.2x the base Express price
+const PREMIUM_MULTIPLIER = 1.3; // Elevate plan is 1.3x the base Focus price
+const FLOW_MULTIPLIER = 1.15; // Flow plan is 1.15x the base Focus price
 
 type Sessions = number;
 
 type Plan = {
-  id: "connection" | "express";
+  id: "focus" | "flow" | "elevate";
   name: string;
   highlights: string[];
   perSession: Record<number, number>;
@@ -38,7 +42,7 @@ type Plan = {
   description: string;
 };
 
-interface ChoosePlanProps {
+interface ChooseSupervisedPlanProps {
   course: Doc<"courses">;
   variants: Doc<"courses">[];
   onBook?: (payload: {
@@ -49,11 +53,11 @@ interface ChoosePlanProps {
   }) => void;
 }
 
-export default function ChoosePlan({
+export default function ChooseSupervisedPlan({
   course,
   variants,
-  onBook = () => {},
-}: ChoosePlanProps) {
+  onBook,
+}: ChooseSupervisedPlanProps) {
   const { ref, visible } = useInView<HTMLDivElement>();
   const { addItem, inCart } = useCart();
   const router = useRouter();
@@ -80,38 +84,55 @@ export default function ChoosePlan({
 
   // Create plans from database variants
   const plans: Plan[] = useMemo(() => {
-    // Create Express plan (affordable)
-    const expressPlan: Plan = {
-      id: "express",
-      name: "Express",
-      description: "Quick therapy at affordable rates",
+    // Create Focus plan (base)
+    const focusPlan: Plan = {
+      id: "focus",
+      name: "Focus",
+      description: "Essential supervised learning",
       highlights: [
-        "Start at lower prices",
-        "Get a therapist in 24–36 hrs",
+        "Basic supervision structure",
+        "Standard feedback sessions",
         "Validity adjusts with pack",
-        "Session duration ~40 mins",
+        "Session duration ~45 mins",
       ],
       perSession: {}, // Will be populated from variants
       validityDays: {}, // Will be populated from variants
       gradient: "from-emerald-500 via-teal-500 to-cyan-600",
-      icon: <HeartHandshake className="h-6 w-6" />,
+      icon: <Target className="h-6 w-6" />,
     };
 
-    // Create Connection plan (premium)
-    const connectionPlan: Plan = {
-      id: "connection",
-      name: "Connection",
-      description: "Premium therapy with senior experts",
+    // Create Flow plan (enhanced)
+    const flowPlan: Plan = {
+      id: "flow",
+      name: "Flow",
+      description: "Enhanced learning experience",
       highlights: [
-        "Connect with senior experts",
-        "Get a therapist in 60 mins",
+        "Enhanced supervision",
+        "Detailed feedback & guidance",
         "Validity adjusts with pack",
         "Session duration ~60 mins",
       ],
       perSession: {}, // Will be populated from variants
       validityDays: {}, // Will be populated from variants
-      gradient: "from-blue-600 via-purple-600 to-indigo-700",
-      icon: <Sparkles className="h-6 w-6" />,
+      gradient: "from-blue-500 via-indigo-500 to-purple-600",
+      icon: <Zap className="h-6 w-6" />,
+    };
+
+    // Create Elevate plan (premium)
+    const elevatePlan: Plan = {
+      id: "elevate",
+      name: "Elevate",
+      description: "Premium expert supervision",
+      highlights: [
+        "Expert-level supervision",
+        "Comprehensive feedback & mentoring",
+        "Validity adjusts with pack",
+        "Session duration ~75 mins",
+      ],
+      perSession: {}, // Will be populated from variants
+      validityDays: {}, // Will be populated from variants
+      gradient: "from-purple-600 via-pink-600 to-rose-700",
+      icon: <TrendingUp className="h-6 w-6" />,
     };
 
     // Extract base prices per session from variants (total price divided by session count)
@@ -126,24 +147,33 @@ export default function ChoosePlan({
         basePrices[sessionCount] = pricePerSession;
         // Set validity days based on session count
         validityDays[sessionCount] =
-          sessionCount === 1 ? 10 : sessionCount * 30;
+          sessionCount === 1 ? 15 : sessionCount * 45;
       }
     });
 
-    // Set Express prices (base prices)
-    expressPlan.perSession = { ...basePrices };
-    expressPlan.validityDays = { ...validityDays };
+    // Set Focus prices (base prices)
+    focusPlan.perSession = { ...basePrices };
+    focusPlan.validityDays = { ...validityDays };
 
-    // Set Connection prices (PREMIUM_MULTIPLIER x of base prices)
+    // Set Flow prices (FLOW_MULTIPLIER x of base prices)
     Object.keys(basePrices).forEach((sessionCount) => {
       const count = parseInt(sessionCount);
-      connectionPlan.perSession[count] = Math.round(
-        basePrices[count] * PREMIUM_MULTIPLIER,
+      flowPlan.perSession[count] = Math.round(
+        basePrices[count] * FLOW_MULTIPLIER,
       );
-      connectionPlan.validityDays[count] = validityDays[count];
+      flowPlan.validityDays[count] = validityDays[count];
     });
 
-    return [expressPlan, connectionPlan];
+    // Set Elevate prices (PREMIUM_MULTIPLIER x of base prices)
+    Object.keys(basePrices).forEach((sessionCount) => {
+      const count = parseInt(sessionCount);
+      elevatePlan.perSession[count] = Math.round(
+        basePrices[count] * PREMIUM_MULTIPLIER,
+      );
+      elevatePlan.validityDays[count] = validityDays[count];
+    });
+
+    return [focusPlan, flowPlan, elevatePlan];
   }, [variants]);
 
   const formatter = new Intl.NumberFormat("en-IN");
@@ -180,7 +210,8 @@ export default function ChoosePlan({
     }
 
     // Create a descriptive name for the cart item
-    const planName = planId === "connection" ? "Connection" : "Express";
+    const planName =
+      planId === "focus" ? "Focus" : planId === "flow" ? "Flow" : "Elevate";
     const cartItemName = `${selectedVariant.name} - ${planName} (${sessions} ${sessions === 1 ? "session" : "sessions"})`;
 
     // Add to cart
@@ -195,7 +226,7 @@ export default function ChoosePlan({
     });
 
     // Call the original onBook callback
-    onBook({
+    onBook?.({
       planId,
       sessions,
       total,
@@ -214,28 +245,28 @@ export default function ChoosePlan({
 
         {/* Animated background elements */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="animate-float-slow absolute -top-20 -left-20 h-80 w-80 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-600/20 blur-3xl dark:from-blue-700/15 dark:to-purple-800/15" />
-          <div className="animate-float-slower absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-600/20 blur-3xl dark:from-emerald-700/15 dark:to-cyan-700/15" />
-          <div className="animate-float-medium absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-pink-500/10 to-rose-600/10 blur-2xl dark:from-pink-700/10 dark:to-rose-800/10" />
+          <div className="animate-float-slow absolute -top-20 -left-20 h-80 w-80 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-600/20 blur-3xl dark:from-emerald-700/15 dark:to-cyan-700/15" />
+          <div className="animate-float-slower absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-gradient-to-br from-purple-500/20 to-pink-600/20 blur-3xl dark:from-purple-700/15 dark:to-pink-700/15" />
+          <div className="animate-float-medium absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-blue-500/10 to-indigo-600/10 blur-2xl dark:from-blue-700/10 dark:to-indigo-800/10" />
         </div>
 
         <div className="relative container mx-auto px-4 py-16 md:py-20">
           <div className="mb-12 text-center">
             <div className="from-primary/10 to-accent/10 border-primary/20 mb-4 inline-flex items-center gap-2 rounded-full border bg-gradient-to-r px-4 py-2">
-              <Sparkles className="text-primary h-4 w-4" />
+              <Target className="text-primary h-4 w-4" />
               <span className="text-primary text-sm font-medium">
-                Choose Your Therapy Plan
+                Choose Your Supervision Plan
               </span>
             </div>
             <h2 className="mb-4 text-3xl font-bold tracking-tight md:text-4xl lg:text-5xl">
               Begin Your{" "}
               <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                Wellness Journey
+                Learning Journey
               </span>
             </h2>
             <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-              Select the number of sessions that work best for you. You can
-              always add more later.
+              Select the number of sessions and supervision level that work best
+              for you. You can always upgrade later.
             </p>
 
             {/* Enhanced Session selector */}
@@ -266,7 +297,7 @@ export default function ChoosePlan({
           <div
             ref={ref}
             className={cn(
-              "mx-auto grid max-w-5xl gap-8 md:grid-cols-2",
+              "mx-auto grid max-w-6xl gap-8 md:grid-cols-3",
               visible ? "translate-y-0 opacity-100" : "translate-y-8 opacity-0",
               "transition-all duration-700",
             )}
@@ -362,7 +393,7 @@ export default function ChoosePlan({
 
                   <CardFooter className="relative flex items-center justify-between gap-4 pt-0">
                     <div className="text-muted-foreground bg-muted/30 rounded-full px-3 py-1 text-xs">
-                      Valid for {plan.validityDays[sessions] || 30} days
+                      Valid for {plan.validityDays[sessions] || 45} days
                     </div>
                     <Button
                       className={cn(

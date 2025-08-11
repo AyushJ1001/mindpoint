@@ -9,6 +9,7 @@ import {
   Brain,
 } from "lucide-react";
 import ChoosePlan from "@/components/therapy/choose-plan";
+import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import type { Doc } from "@/convex/_generated/dataModel";
 
 interface TherapyCourseProps {
@@ -53,7 +54,7 @@ export default function TherapyCourse({
     <>
       {/* Course Title Section */}
       <section className="relative overflow-hidden py-16 md:py-20">
-        <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent" />
+        <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950" />
         <div className="bg-primary/10 absolute top-0 right-0 h-96 w-96 rounded-full blur-3xl" />
         <div className="bg-accent/10 absolute bottom-0 left-0 h-96 w-96 rounded-full blur-3xl" />
 
@@ -80,7 +81,7 @@ export default function TherapyCourse({
       </section>
 
       {/* Therapy Benefits */}
-      <section className="from-background to-muted/20 bg-gradient-to-br py-16">
+      <section className="from-background to-muted/20 bg-gradient-to-br py-16 dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
         <div className="container">
           <div className="mx-auto max-w-4xl">
             <div className="mb-12 text-center">
@@ -156,6 +157,9 @@ export default function TherapyCourse({
           </div>
         </div>
       </section>
+
+      {/* FAQ Section */}
+      <TherapyFAQSection />
     </>
   );
 }

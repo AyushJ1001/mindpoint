@@ -12,11 +12,25 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 
+export const metadata = {
+  title: "About Us - The Mind Point",
+  description:
+    "Learn about The Mind Point's mission to transform mental health education through compassionate, evidence-based programs and professional development courses.",
+  keywords:
+    "about us, mental health education, psychology courses, professional development, The Mind Point mission",
+  openGraph: {
+    title: "About Us - The Mind Point",
+    description:
+      "Learn about The Mind Point's mission to transform mental health education.",
+    type: "website",
+  },
+};
+
 export default function About() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
+      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
         <div className="container">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
@@ -185,7 +199,7 @@ export default function About() {
           </div>
 
           {/* Why Choose Us */}
-          <div className="from-primary/5 to-accent/5 rounded-2xl bg-gradient-to-br p-8 md:p-12">
+          <div className="from-primary/5 to-accent/5 rounded-2xl bg-gradient-to-br p-8 md:p-12 dark:bg-gradient-to-br dark:from-slate-900 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
             <h2 className="mb-12 text-center text-3xl font-bold">
               Why Choose The Mind Point?
             </h2>

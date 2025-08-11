@@ -1,5 +1,19 @@
 import CourseTypePage from "@/components/CourseTypePage";
 
+export const metadata = {
+  title: "Diploma Courses - The Mind Point",
+  description:
+    "Explore our comprehensive diploma programs in psychology and mental health. Advanced training for professionals seeking in-depth knowledge and practical skills.",
+  keywords:
+    "diploma courses, psychology diplomas, mental health education, advanced training, professional development",
+  openGraph: {
+    title: "Diploma Courses - The Mind Point",
+    description:
+      "Explore our comprehensive diploma programs in psychology and mental health.",
+    type: "website",
+  },
+};
+
 export default function DiplomaCoursesPage() {
   return (
     <CourseTypePage

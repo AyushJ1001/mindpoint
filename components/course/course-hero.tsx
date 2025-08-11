@@ -150,8 +150,8 @@ export default function CourseHero({
   const displayCourse = activeCourse ?? course;
 
   return (
-    <section className="relative overflow-hidden py-12 md:py-20">
-      <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent" />
+    <section className="relative overflow-hidden py-12 md:py-20 dark:text-white">
+      <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950" />
       <div className="bg-primary/10 absolute top-0 right-0 h-96 w-96 rounded-full blur-3xl" />
       <div className="bg-accent/10 absolute bottom-0 left-0 h-96 w-96 rounded-full blur-3xl" />
 

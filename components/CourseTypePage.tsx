@@ -488,7 +488,7 @@ export default function CourseTypePage({
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
+      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
         <div className="bg-[url('data:image/svg+xml;utf8,<svg ...>')] pointer-events-none absolute inset-0 bg-repeat opacity-20"></div>
         <div className="container text-center">
           <div className="mx-auto max-w-4xl">

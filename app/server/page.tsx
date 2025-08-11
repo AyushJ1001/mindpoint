@@ -2,6 +2,18 @@ import Home from "./inner";
 import { preloadQuery, preloadedQueryResult } from "convex/nextjs";
 import { api } from "@/convex/_generated/api";
 
+export const metadata = {
+  title: "Server - The Mind Point",
+  description:
+    "Server-side rendering demonstration page for The Mind Point platform.",
+  keywords: "server, SSR, Convex, Next.js, mental health education",
+  openGraph: {
+    title: "Server - The Mind Point",
+    description: "Server-side rendering demonstration page.",
+    type: "website",
+  },
+};
+
 export default async function ServerPage() {
   const preloaded = await preloadQuery(api.myFunctions.listNumbers, {
     count: 3,

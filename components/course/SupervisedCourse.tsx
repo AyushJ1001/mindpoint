@@ -1,35 +1,59 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Eye, Users, Clock, Target, Award, MessageCircle } from "lucide-react";
-import CourseModulesSection from "./course-modules-section";
+import { Eye, MessageCircle, Users, Clock, Shield, Brain } from "lucide-react";
+import ChooseSupervisedPlan from "@/components/therapy/choose-supervised-plan";
 import type { Doc } from "@/convex/_generated/dataModel";
 
 interface SupervisedCourseProps {
   course: Doc<"courses">;
+  variants?: Doc<"courses">[];
 }
 
-export default function SupervisedCourse({ course }: SupervisedCourseProps) {
+export default function SupervisedCourse({
+  course,
+  variants = [],
+}: SupervisedCourseProps) {
   return (
     <>
-      {/* Learning Outcomes Section */}
+      {/* Course Title Section */}
+      <section className="relative overflow-hidden py-16 md:py-20">
+        <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950" />
+        <div className="bg-primary/10 absolute top-0 right-0 h-96 w-96 rounded-full blur-3xl" />
+        <div className="bg-accent/10 absolute bottom-0 left-0 h-96 w-96 rounded-full blur-3xl" />
+
+        <div className="relative z-10 container">
+          <div className="mx-auto max-w-4xl text-center">
+            <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
+              {course.name}
+            </h1>
+          </div>
+        </div>
+      </section>
+
+      {/* Choose Plan Section */}
       <section className="py-16">
         <div className="container">
-          <CourseModulesSection
-            learningOutcomes={course.learningOutcomes ?? []}
+          <ChooseSupervisedPlan
+            course={course}
+            variants={variants}
+            onBook={(payload) => {
+              console.log("Booking payload:", payload);
+            }}
           />
         </div>
       </section>
 
-      {/* Supervised Learning Benefits */}
-      <section className="from-background to-muted/20 bg-gradient-to-br py-16">
+      {/* Supervision Benefits */}
+      <section className="from-background to-muted/20 bg-gradient-to-br py-16 dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
         <div className="container">
           <div className="mx-auto max-w-4xl">
             <div className="mb-12 text-center">
               <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-                Supervised Learning Benefits
+                Supervision Benefits
               </h2>
               <p className="text-muted-foreground text-lg">
-                Advantages of guided learning with personal supervision
+                How supervised learning can enhance your professional
+                development
               </p>
             </div>
 
@@ -38,13 +62,14 @@ export default function SupervisedCourse({ course }: SupervisedCourseProps) {
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-3">
                     <Eye className="text-primary h-6 w-6" />
-                    Personalized Attention
+                    Expert Guidance
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Receive individualized guidance and feedback tailored to
-                    your specific learning needs and progress.
+                    Learn from experienced professionals who provide
+                    personalized feedback and mentorship to help you develop
+                    your skills.
                   </p>
                 </CardContent>
               </Card>
@@ -53,13 +78,43 @@ export default function SupervisedCourse({ course }: SupervisedCourseProps) {
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-3">
                     <MessageCircle className="text-primary h-6 w-6" />
-                    Regular Feedback
+                    Real Practice
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Get consistent feedback and guidance to ensure you're on the
-                    right track and making steady progress.
+                    Apply theoretical knowledge in real-world scenarios with
+                    hands-on experience under professional supervision.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="p-6">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3">
+                    <Shield className="text-primary h-6 w-6" />
+                    Safe Environment
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Practice in a controlled, ethical environment where mistakes
+                    become learning opportunities.
+                  </p>
+                </CardContent>
+              </Card>
+
+              <Card className="p-6">
+                <CardHeader className="pb-4">
+                  <CardTitle className="flex items-center gap-3">
+                    <Brain className="text-primary h-6 w-6" />
+                    Skill Development
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    Develop essential therapeutic techniques and build
+                    confidence in your professional abilities.
                   </p>
                 </CardContent>
               </Card>
@@ -68,13 +123,13 @@ export default function SupervisedCourse({ course }: SupervisedCourseProps) {
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-3">
                     <Users className="text-primary h-6 w-6" />
-                    Mentorship
+                    Peer Learning
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Build relationships with experienced mentors who can guide
-                    your learning journey and career development.
+                    Collaborate with fellow students and professionals in a
+                    supportive learning community.
                   </p>
                 </CardContent>
               </Card>
@@ -82,14 +137,14 @@ export default function SupervisedCourse({ course }: SupervisedCourseProps) {
               <Card className="p-6">
                 <CardHeader className="pb-4">
                   <CardTitle className="flex items-center gap-3">
-                    <Target className="text-primary h-6 w-6" />
-                    Structured Progress
+                    <Clock className="text-primary h-6 w-6" />
+                    Flexible Scheduling
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-muted-foreground">
-                    Follow a well-organized learning path with clear milestones
-                    and objectives to track your advancement.
+                    Choose from various session packages and schedules that fit
+                    your learning pace and availability.
                   </p>
                 </CardContent>
               </Card>
