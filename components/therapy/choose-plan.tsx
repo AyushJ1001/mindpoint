@@ -152,12 +152,12 @@ export default function ChoosePlan({
 
         {/* Animated background elements */}
         <div className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="animate-float-slow absolute -left-20 -top-20 h-80 w-80 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-600/20 blur-3xl" />
-          <div className="animate-float-slower absolute -bottom-20 -right-20 h-96 w-96 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-600/20 blur-3xl" />
-          <div className="animate-float-medium absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-pink-500/10 to-rose-600/10 blur-2xl" />
+          <div className="animate-float-slow absolute -top-20 -left-20 h-80 w-80 rounded-full bg-gradient-to-br from-blue-500/20 to-purple-600/20 blur-3xl" />
+          <div className="animate-float-slower absolute -right-20 -bottom-20 h-96 w-96 rounded-full bg-gradient-to-br from-emerald-500/20 to-cyan-600/20 blur-3xl" />
+          <div className="animate-float-medium absolute top-1/2 left-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full bg-gradient-to-br from-pink-500/10 to-rose-600/10 blur-2xl" />
         </div>
 
-        <div className="container relative mx-auto px-4 py-16 md:py-20">
+        <div className="relative container mx-auto px-4 py-16 md:py-20">
           <div className="mb-12 text-center">
             <div className="from-primary/10 to-accent/10 border-primary/20 mb-4 inline-flex items-center gap-2 rounded-full border bg-gradient-to-r px-4 py-2">
               <Sparkles className="text-primary h-4 w-4" />
