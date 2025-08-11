@@ -183,21 +183,6 @@ export default function Internship({
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
-        {/* Selected Duration Display */}
-        <div className="mb-8 text-center">
-          <div className="mx-auto max-w-2xl rounded-2xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 p-6 shadow-lg">
-            <h3 className="mb-2 text-lg font-semibold text-slate-800">
-              Selected Program Duration
-            </h3>
-            <div className="text-3xl font-bold text-blue-600">
-              {selectedHours} Hours • {getDuration(selectedHours)}
-            </div>
-            <p className="mt-2 text-sm text-slate-600">
-              Click on any program below to change your selection
-            </p>
-          </div>
-        </div>
-
         {/* Curriculum Breakdown Section */}
         <div className="mb-16">
           <div className="mb-12 text-center">
