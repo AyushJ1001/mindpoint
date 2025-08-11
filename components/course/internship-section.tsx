@@ -22,39 +22,39 @@ export default function Internship({
     console.log("InternshipSection variants:", variants);
     console.log("InternshipSection internship:", internship);
 
-    const variant120 = variants.find((variant) => {
-      const duration = variant.duration?.toLowerCase() || "";
-      const name = variant.name?.toLowerCase() || "";
-      return (
-        duration.includes("120") ||
-        name.includes("120") ||
-        duration.includes("120 hour") ||
-        name.includes("120 hour") ||
-        duration.includes("120-hour") ||
-        name.includes("120-hour")
-      );
-    });
+    // Sort variants by price (ascending) - lower price = 120 hours, higher price = 240 hours
+    const sortedVariants = [...variants].sort(
+      (a, b) => (a.price || 0) - (b.price || 0),
+    );
 
-    const variant240 = variants.find((variant) => {
-      const duration = variant.duration?.toLowerCase() || "";
-      const name = variant.name?.toLowerCase() || "";
-      return (
-        duration.includes("240") ||
-        name.includes("240") ||
-        duration.includes("240 hour") ||
-        name.includes("240 hour") ||
-        duration.includes("240-hour") ||
-        name.includes("240-hour")
-      );
-    });
+    // If we have at least 2 variants, use the first (lowest price) as 120 hours and second (higher price) as 240 hours
+    let variant120 = internship;
+    let variant240 = internship;
 
-    console.log("Found variant120:", variant120);
-    console.log("Found variant240:", variant240);
+    if (sortedVariants.length >= 2) {
+      variant120 = sortedVariants[0]; // Lower price = 120 hours
+      variant240 = sortedVariants[1]; // Higher price = 240 hours
+    } else if (sortedVariants.length === 1) {
+      // If only one variant, compare with current course
+      const currentPrice = internship.price || 0;
+      const variantPrice = sortedVariants[0].price || 0;
 
-    // If no variants found, use the current course as fallback
+      if (variantPrice < currentPrice) {
+        variant120 = sortedVariants[0];
+        variant240 = internship;
+      } else {
+        variant120 = internship;
+        variant240 = sortedVariants[0];
+      }
+    }
+
+    console.log("Found variant120 (lower price):", variant120);
+    console.log("Found variant240 (higher price):", variant240);
+
+    // Return the variants
     return {
-      120: variant120 || internship,
-      240: variant240 || internship,
+      120: variant120,
+      240: variant240,
     };
   }, [variants, internship]);
 

@@ -429,32 +429,19 @@ export default function CourseClient({
             );
             console.log("CourseClient normalizedVariants:", normalizedVariants);
 
-            // Find the variant that matches the selected hours
-            const targetVariant = normalizedVariants.find((variant) => {
-              const duration = variant.duration?.toLowerCase() || "";
-              const name = variant.name?.toLowerCase() || "";
-              if (hours === 120) {
-                return (
-                  duration.includes("120") ||
-                  name.includes("120") ||
-                  duration.includes("120 hour") ||
-                  name.includes("120 hour") ||
-                  duration.includes("120-hour") ||
-                  name.includes("120-hour")
-                );
-              }
-              if (hours === 240) {
-                return (
-                  duration.includes("240") ||
-                  name.includes("240") ||
-                  duration.includes("240 hour") ||
-                  name.includes("240 hour") ||
-                  duration.includes("240-hour") ||
-                  name.includes("240-hour")
-                );
-              }
-              return false;
-            });
+            // Sort variants by price (ascending) - lower price = 120 hours, higher price = 240 hours
+            const sortedVariants = [...normalizedVariants].sort(
+              (a, b) => (a.price || 0) - (b.price || 0),
+            );
+
+            let targetVariant;
+            if (hours === 120) {
+              // Select the lower-priced variant for 120 hours
+              targetVariant = sortedVariants[0];
+            } else if (hours === 240) {
+              // Select the higher-priced variant for 240 hours
+              targetVariant = sortedVariants[sortedVariants.length - 1];
+            }
 
             console.log("CourseClient found targetVariant:", targetVariant);
 
