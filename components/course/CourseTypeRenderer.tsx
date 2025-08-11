@@ -35,7 +35,11 @@ export default function CourseTypeRenderer({
         return <CertificateCourse course={course} />;
       case "internship":
         return (
-          <InternshipCourse course={course} onVariantSelect={onVariantSelect} />
+          <InternshipCourse
+            course={course}
+            variants={variants}
+            onVariantSelect={onVariantSelect}
+          />
         );
       case "therapy":
         return <TherapyCourse course={course} variants={variants} />;

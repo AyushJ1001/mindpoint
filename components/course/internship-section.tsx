@@ -1,183 +1,65 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import React, { useState, useMemo } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import {
-  BookOpen,
-  Users,
-  Brain,
-  CheckCircle,
-  Star,
-  Award,
-  Calendar,
-} from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { Doc } from "@/convex/_generated/dataModel";
-
-interface CurriculumItem {
-  week: string;
-  topic: string;
-  hours: number;
-  focus: string;
-  skills: string[];
-}
-
-const curriculum120: CurriculumItem[] = [
-  {
-    week: "Weeks 1-2",
-    topic: "Foundations of Clinical Practice",
-    hours: 20,
-    focus: "Assessment & Ethics",
-    skills: ["Clinical interviewing", "Ethical guidelines", "Documentation"],
-  },
-  {
-    week: "Weeks 3-4",
-    topic: "Psychological Assessment",
-    hours: 20,
-    focus: "Testing & Evaluation",
-    skills: ["Cognitive assessments", "Personality testing", "Report writing"],
-  },
-  {
-    week: "Weeks 5-6",
-    topic: "Individual Therapy Basics",
-    hours: 20,
-    focus: "Therapeutic Techniques",
-    skills: ["CBT fundamentals", "Active listening", "Treatment planning"],
-  },
-  {
-    week: "Weeks 7-8",
-    topic: "Group Dynamics",
-    hours: 20,
-    focus: "Group Therapy",
-    skills: [
-      "Group facilitation",
-      "Interpersonal skills",
-      "Conflict resolution",
-    ],
-  },
-  {
-    week: "Weeks 9-10",
-    topic: "Crisis Intervention",
-    hours: 20,
-    focus: "Emergency Response",
-    skills: ["Risk assessment", "Safety planning", "Crisis counseling"],
-  },
-  {
-    week: "Weeks 11-12",
-    topic: "Professional Development",
-    hours: 20,
-    focus: "Career Preparation",
-    skills: ["Case presentation", "Supervision skills", "Self-care practices"],
-  },
-];
-
-const curriculum240: CurriculumItem[] = [
-  {
-    week: "Weeks 1-3",
-    topic: "Advanced Clinical Assessment",
-    hours: 30,
-    focus: "Comprehensive Evaluation",
-    skills: [
-      "Neuropsychological testing",
-      "Diagnostic interviewing",
-      "Differential diagnosis",
-    ],
-  },
-  {
-    week: "Weeks 4-6",
-    topic: "Evidence-Based Therapies",
-    hours: 30,
-    focus: "Specialized Treatments",
-    skills: ["DBT techniques", "EMDR therapy", "Trauma-informed care"],
-  },
-  {
-    week: "Weeks 7-9",
-    topic: "Family & Couples Therapy",
-    hours: 30,
-    focus: "Systems Approach",
-    skills: ["Family dynamics", "Couples counseling", "Systemic interventions"],
-  },
-  {
-    week: "Weeks 10-12",
-    topic: "Specialized Populations",
-    hours: 30,
-    focus: "Diverse Client Groups",
-    skills: ["Child psychology", "Geriatric care", "Cultural competency"],
-  },
-  {
-    week: "Weeks 13-15",
-    topic: "Advanced Group Work",
-    hours: 30,
-    focus: "Group Leadership",
-    skills: ["Process groups", "Psychoeducational groups", "Group supervision"],
-  },
-  {
-    week: "Weeks 16-18",
-    topic: "Research & Evaluation",
-    hours: 30,
-    focus: "Clinical Research",
-    skills: [
-      "Outcome measurement",
-      "Program evaluation",
-      "Research methodology",
-    ],
-  },
-  {
-    week: "Weeks 19-21",
-    topic: "Consultation & Collaboration",
-    hours: 30,
-    focus: "Professional Networking",
-    skills: [
-      "Interdisciplinary work",
-      "Case consultation",
-      "Community outreach",
-    ],
-  },
-  {
-    week: "Weeks 22-24",
-    topic: "Advanced Practice Integration",
-    hours: 30,
-    focus: "Clinical Mastery",
-    skills: [
-      "Complex case management",
-      "Supervision provision",
-      "Professional identity",
-    ],
-  },
-];
-
-const features = [
-  "Hands-on clinical experience",
-  "Expert supervision and mentorship",
-  "Comprehensive skill development",
-  "Professional networking opportunities",
-  "Certificate of completion",
-  "Career placement assistance",
-];
 
 export default function Internship({
   internship,
+  variants = [],
   onVariantSelect,
 }: {
   internship: Doc<"courses">;
+  variants?: Doc<"courses">[];
   onVariantSelect?: (hours: 120 | 240) => void;
 }) {
   const [selectedHours, setSelectedHours] = useState<120 | 240>(120);
 
-  // Calculate duration based on selected hours
-  const getDuration = (hours: number) => {
-    if (hours === 120) return "2 weeks";
-    if (hours === 240) return "4 weeks";
-    return "2 weeks";
-  };
+  // Find the 120 and 240 hour variants
+  const courseVariants = useMemo(() => {
+    console.log("InternshipSection variants:", variants);
+    console.log("InternshipSection internship:", internship);
+
+    const variant120 = variants.find((variant) => {
+      const duration = variant.duration?.toLowerCase() || "";
+      const name = variant.name?.toLowerCase() || "";
+      return (
+        duration.includes("120") ||
+        name.includes("120") ||
+        duration.includes("120 hour") ||
+        name.includes("120 hour") ||
+        duration.includes("120-hour") ||
+        name.includes("120-hour")
+      );
+    });
+
+    const variant240 = variants.find((variant) => {
+      const duration = variant.duration?.toLowerCase() || "";
+      const name = variant.name?.toLowerCase() || "";
+      return (
+        duration.includes("240") ||
+        name.includes("240") ||
+        duration.includes("240 hour") ||
+        name.includes("240 hour") ||
+        duration.includes("240-hour") ||
+        name.includes("240-hour")
+      );
+    });
+
+    console.log("Found variant120:", variant120);
+    console.log("Found variant240:", variant240);
+
+    // If no variants found, use the current course as fallback
+    return {
+      120: variant120 || internship,
+      240: variant240 || internship,
+    };
+  }, [variants, internship]);
+
+  // Get the currently selected course data
+  const selectedCourse = courseVariants[selectedHours];
 
   // Handle hour selection and trigger variant selection
   const handleHourSelection = (hours: 120 | 240) => {
@@ -227,21 +109,16 @@ export default function Internship({
               </div>
 
               <div className="space-y-4">
-                {internship.learningOutcomes
-                  ?.slice(
-                    0,
-                    Math.ceil((internship.learningOutcomes?.length || 0) / 2),
-                  )
-                  .map((outcome, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                        <CheckCircle className="h-4 w-4 text-slate-600" />
-                      </div>
-                      <span className="text-sm font-medium text-slate-700">
-                        {outcome.title}
-                      </span>
+                {courseVariants[120].learningOutcomes?.map((outcome, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
+                      <CheckCircle className="h-4 w-4 text-slate-600" />
                     </div>
-                  ))}
+                    <span className="text-sm font-medium text-slate-700">
+                      {outcome.title}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -271,28 +148,16 @@ export default function Internship({
               </div>
 
               <div className="space-y-4">
-                <div className="flex items-center space-x-3">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                    <CheckCircle className="h-4 w-4 text-slate-600" />
-                  </div>
-                  <span className="text-sm font-medium text-slate-700">
-                    Everything in 120 hours
-                  </span>
-                </div>
-                {internship.learningOutcomes
-                  ?.slice(
-                    Math.ceil((internship.learningOutcomes?.length || 0) / 2),
-                  )
-                  .map((outcome, index) => (
-                    <div key={index} className="flex items-center space-x-3">
-                      <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                        <CheckCircle className="h-4 w-4 text-slate-600" />
-                      </div>
-                      <span className="text-sm font-medium text-slate-700">
-                        {outcome.title}
-                      </span>
+                {courseVariants[240].learningOutcomes?.map((outcome, index) => (
+                  <div key={index} className="flex items-center space-x-3">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
+                      <CheckCircle className="h-4 w-4 text-slate-600" />
                     </div>
-                  ))}
+                    <span className="text-sm font-medium text-slate-700">
+                      {outcome.title}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
           </div>

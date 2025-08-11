@@ -423,15 +423,40 @@ export default function CourseClient({
           course={course}
           variants={variants}
           onVariantSelect={(hours) => {
+            console.log(
+              "CourseClient onVariantSelect called with hours:",
+              hours,
+            );
+            console.log("CourseClient normalizedVariants:", normalizedVariants);
+
             // Find the variant that matches the selected hours
             const targetVariant = normalizedVariants.find((variant) => {
-              const variantDuration = variant.duration;
-              if (hours === 120 && variantDuration?.includes("120"))
-                return true;
-              if (hours === 240 && variantDuration?.includes("240"))
-                return true;
+              const duration = variant.duration?.toLowerCase() || "";
+              const name = variant.name?.toLowerCase() || "";
+              if (hours === 120) {
+                return (
+                  duration.includes("120") ||
+                  name.includes("120") ||
+                  duration.includes("120 hour") ||
+                  name.includes("120 hour") ||
+                  duration.includes("120-hour") ||
+                  name.includes("120-hour")
+                );
+              }
+              if (hours === 240) {
+                return (
+                  duration.includes("240") ||
+                  name.includes("240") ||
+                  duration.includes("240 hour") ||
+                  name.includes("240 hour") ||
+                  duration.includes("240-hour") ||
+                  name.includes("240-hour")
+                );
+              }
               return false;
             });
+
+            console.log("CourseClient found targetVariant:", targetVariant);
 
             if (targetVariant) {
               // Select the variant using the existing handler
