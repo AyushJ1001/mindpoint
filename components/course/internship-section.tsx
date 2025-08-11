@@ -1,3 +1,6 @@
+"use client";
+
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
@@ -165,9 +168,36 @@ export default function Internship({
 }: {
   internship: Doc<"courses">;
 }) {
+  const [selectedHours, setSelectedHours] = useState<120 | 240>(120);
+
+  // Calculate duration based on selected hours
+  const getDuration = (hours: number) => {
+    if (hours === 120) return "2 weeks";
+    if (hours === 240) return "4 weeks";
+    return "2 weeks";
+  };
+
+  // Don't update parent component duration - let the course variant handle it
+  // The internship section is just for visual selection indicators
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
+        {/* Selected Duration Display */}
+        <div className="mb-8 text-center">
+          <div className="mx-auto max-w-2xl rounded-2xl border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-purple-50 p-6 shadow-lg">
+            <h3 className="mb-2 text-lg font-semibold text-slate-800">
+              Selected Program Duration
+            </h3>
+            <div className="text-3xl font-bold text-blue-600">
+              {selectedHours} Hours • {getDuration(selectedHours)}
+            </div>
+            <p className="mt-2 text-sm text-slate-600">
+              Click on any program below to change your selection
+            </p>
+          </div>
+        </div>
+
         {/* Curriculum Breakdown Section */}
         <div className="mb-16">
           <div className="mb-12 text-center">
@@ -182,7 +212,19 @@ export default function Internship({
 
           <div className="mx-auto max-w-4xl space-y-8">
             {/* 120 Hours Curriculum */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl transition-shadow duration-300 hover:shadow-2xl">
+            <div
+              className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
+                selectedHours === 120
+                  ? "border-blue-500 bg-blue-50 shadow-2xl"
+                  : "border-slate-200 bg-white hover:shadow-2xl"
+              }`}
+              onClick={() => setSelectedHours(120)}
+            >
+              {selectedHours === 120 && (
+                <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
+                  <CheckCircle className="h-5 w-5" />
+                </div>
+              )}
               <div className="mb-6 text-center">
                 <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
                   Topics to be covered in
@@ -214,7 +256,19 @@ export default function Internship({
             </div>
 
             {/* 240 Hours Curriculum */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl transition-shadow duration-300 hover:shadow-2xl">
+            <div
+              className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
+                selectedHours === 240
+                  ? "border-purple-500 bg-purple-50 shadow-2xl"
+                  : "border-slate-200 bg-white hover:shadow-2xl"
+              }`}
+              onClick={() => setSelectedHours(240)}
+            >
+              {selectedHours === 240 && (
+                <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-white shadow-lg">
+                  <CheckCircle className="h-5 w-5" />
+                </div>
+              )}
               <div className="mb-6 text-center">
                 <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
                   Topics to be covered in
@@ -268,7 +322,19 @@ export default function Internship({
 
           <div className="mx-auto max-w-4xl space-y-8">
             {/* 120 Hours Infographic */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl transition-shadow duration-300 hover:shadow-2xl">
+            <div
+              className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
+                selectedHours === 120
+                  ? "border-blue-500 bg-blue-50 shadow-2xl"
+                  : "border-slate-200 bg-white hover:shadow-2xl"
+              }`}
+              onClick={() => setSelectedHours(120)}
+            >
+              {selectedHours === 120 && (
+                <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
+                  <CheckCircle className="h-5 w-5" />
+                </div>
+              )}
               <div className="mb-8 text-center">
                 <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
                   THE MIND POINT'S
@@ -401,7 +467,19 @@ export default function Internship({
             </div>
 
             {/* 240 Hours Infographic */}
-            <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl transition-shadow duration-300 hover:shadow-2xl">
+            <div
+              className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
+                selectedHours === 240
+                  ? "border-purple-500 bg-purple-50 shadow-2xl"
+                  : "border-slate-200 bg-white hover:shadow-2xl"
+              }`}
+              onClick={() => setSelectedHours(240)}
+            >
+              {selectedHours === 240 && (
+                <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-white shadow-lg">
+                  <CheckCircle className="h-5 w-5" />
+                </div>
+              )}
               <div className="mb-8 text-center">
                 <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
                   THE MIND POINT'S

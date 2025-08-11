@@ -6,12 +6,17 @@ import { Calendar, Clock, BookOpen, Award } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 function parseUTCDateOnly(dateStr: string): Date | null {
-  const isoDate = /^(\d{4})-(\d{2})-(\d{2})$/;
+  // First try to parse as ISO format (YYYY-MM-DD)
+  const isoDate = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
   const match = isoDate.exec(dateStr);
-  if (match)
-    return new Date(
-      Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
-    );
+  if (match) {
+    const year = Number(match[1]);
+    const month = Number(match[2]) - 1; // Month is 0-indexed
+    const day = Number(match[3]);
+    return new Date(Date.UTC(year, month, day));
+  }
+
+  // Fallback to standard Date parsing
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? null : d;
 }
@@ -78,9 +83,13 @@ interface CountdownTimerProps {
     price: number;
     type?: string;
   };
+  customDuration?: string;
 }
 
-export default function CountdownTimer({ course }: CountdownTimerProps) {
+export default function CountdownTimer({
+  course,
+  customDuration,
+}: CountdownTimerProps) {
   const statsAnimation = useScrollAnimation();
 
   const [timeLeft, setTimeLeft] = useState({
@@ -92,9 +101,15 @@ export default function CountdownTimer({ course }: CountdownTimerProps) {
 
   useEffect(() => {
     const calculate = () => {
-      const startDate = new Date(course.startDate + "T00:00:00");
+      const parsedDate = parseUTCDateOnly(course.startDate);
+      if (!parsedDate) {
+        console.error("Invalid date format:", course.startDate);
+        setTimeLeft({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+        return;
+      }
+
       const now = new Date();
-      const diff = startDate.getTime() - now.getTime();
+      const diff = parsedDate.getTime() - now.getTime();
       if (diff > 0) {
         const days = Math.floor(diff / (1000 * 60 * 60 * 24));
         const hours = Math.floor(
@@ -150,7 +165,7 @@ export default function CountdownTimer({ course }: CountdownTimerProps) {
                 : []),
               {
                 label: "Duration",
-                value: course.duration || "6 weeks",
+                value: course.duration || customDuration || "2 weeks",
                 icon: Clock,
               },
               {

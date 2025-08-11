@@ -50,12 +50,17 @@ function formatINR(value: number): string {
 }
 
 function parseUTCDateOnly(dateStr: string): Date | null {
-  const isoDate = /^(\d{4})-(\d{2})-(\d{2})$/;
+  // First try to parse as ISO format (YYYY-MM-DD)
+  const isoDate = /^(\d{4})-(\d{1,2})-(\d{1,2})$/;
   const match = isoDate.exec(dateStr);
-  if (match)
-    return new Date(
-      Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])),
-    );
+  if (match) {
+    const year = Number(match[1]);
+    const month = Number(match[2]) - 1; // Month is 0-indexed
+    const day = Number(match[3]);
+    return new Date(Date.UTC(year, month, day));
+  }
+
+  // Fallback to standard Date parsing
   const d = new Date(dateStr);
   return isNaN(d.getTime()) ? null : d;
 }
@@ -119,6 +124,7 @@ interface CourseHeroProps {
   getCurrentQuantity: (courseId: string) => number;
   inCart: (courseId: string) => boolean;
   removeItem: (courseId: string) => void;
+  customDuration?: string;
 }
 
 export default function CourseHero({
@@ -138,6 +144,7 @@ export default function CourseHero({
   getCurrentQuantity,
   inCart,
   removeItem,
+  customDuration,
 }: CourseHeroProps) {
   const heroAnimation = useScrollAnimation();
   const displayCourse = activeCourse ?? course;
@@ -230,7 +237,7 @@ export default function CourseHero({
                 {
                   icon: Clock,
                   label: "Duration",
-                  value: course.duration || "6 weeks",
+                  value: course.duration || customDuration || "2 weeks",
                 },
                 { icon: Award, label: "Certificate", value: "Yes" },
               ].map((stat, idx) => (
@@ -451,7 +458,7 @@ export default function CourseHero({
                   <div>
                     <div className="text-sm font-medium">Duration</div>
                     <div className="text-muted-foreground text-sm">
-                      {course.duration || "6 weeks"}
+                      {course.duration || customDuration || "2 weeks"}
                     </div>
                   </div>
                 </div>

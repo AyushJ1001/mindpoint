@@ -34,9 +34,23 @@ export default function CourseClient({
   console.log(course);
   const router = useRouter();
   const [activeCourse, setActiveCourse] = useState<Doc<"courses">>(course);
+  const [customDuration, setCustomDuration] = useState<string | undefined>(
+    undefined,
+  );
+
   useEffect(() => {
     setActiveCourse(course);
   }, [course]);
+
+  // Update customDuration when activeCourse changes (for live updates)
+  useEffect(() => {
+    if (activeCourse && activeCourse.duration) {
+      setCustomDuration(activeCourse.duration);
+    } else {
+      // Reset customDuration if no course duration is set
+      setCustomDuration(undefined);
+    }
+  }, [activeCourse]);
 
   const { addItem, inCart, updateItemQuantity, removeItem, items, emptyCart } =
     useCart();
@@ -293,6 +307,10 @@ export default function CourseClient({
     if (target) {
       // Instantly update UI client-side
       setActiveCourse(target);
+      // Update customDuration immediately for live updates
+      if (target.duration) {
+        setCustomDuration(target.duration);
+      }
       // Update URL without full navigation to avoid white flash
       if (typeof window !== "undefined") {
         window.history.replaceState(null, "", `/courses/${val}`);
@@ -368,7 +386,7 @@ export default function CourseClient({
         {course.type !== "therapy" && (
           <>
             <CourseHero
-              course={course}
+              course={activeCourse}
               variants={variants}
               activeCourse={activeCourse}
               setActiveCourse={setActiveCourse}
@@ -386,11 +404,15 @@ export default function CourseClient({
               getCurrentQuantity={getCurrentQuantity}
               inCart={inCart}
               removeItem={removeItem}
+              customDuration={customDuration}
             />
 
             <Separator className="my-8" />
 
-            <CountdownTimer course={course} />
+            <CountdownTimer
+              course={activeCourse}
+              customDuration={customDuration}
+            />
 
             <CourseOverview description={course.description ?? ""} />
           </>
