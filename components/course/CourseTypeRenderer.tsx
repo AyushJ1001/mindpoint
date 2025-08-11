@@ -18,11 +18,13 @@ import CommunitiesSection from "./communities-section";
 interface CourseTypeRendererProps {
   course: Doc<"courses">;
   variants?: Doc<"courses">[];
+  onVariantSelect?: (hours: 120 | 240) => void;
 }
 
 export default function CourseTypeRenderer({
   course,
   variants = [],
+  onVariantSelect,
 }: CourseTypeRendererProps) {
   const courseType = course.type;
 
@@ -32,7 +34,9 @@ export default function CourseTypeRenderer({
       case "certificate":
         return <CertificateCourse course={course} />;
       case "internship":
-        return <InternshipCourse course={course} />;
+        return (
+          <InternshipCourse course={course} onVariantSelect={onVariantSelect} />
+        );
       case "therapy":
         return <TherapyCourse course={course} variants={variants} />;
       case "diploma":

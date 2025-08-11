@@ -165,8 +165,10 @@ const features = [
 
 export default function Internship({
   internship,
+  onVariantSelect,
 }: {
   internship: Doc<"courses">;
+  onVariantSelect?: (hours: 120 | 240) => void;
 }) {
   const [selectedHours, setSelectedHours] = useState<120 | 240>(120);
 
@@ -177,8 +179,11 @@ export default function Internship({
     return "2 weeks";
   };
 
-  // Don't update parent component duration - let the course variant handle it
-  // The internship section is just for visual selection indicators
+  // Handle hour selection and trigger variant selection
+  const handleHourSelection = (hours: 120 | 240) => {
+    setSelectedHours(hours);
+    onVariantSelect?.(hours);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
@@ -203,7 +208,7 @@ export default function Internship({
                   ? "border-blue-500 bg-blue-50 shadow-2xl"
                   : "border-slate-200 bg-white hover:shadow-2xl"
               }`}
-              onClick={() => setSelectedHours(120)}
+              onClick={() => handleHourSelection(120)}
             >
               {selectedHours === 120 && (
                 <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
@@ -247,7 +252,7 @@ export default function Internship({
                   ? "border-purple-500 bg-purple-50 shadow-2xl"
                   : "border-slate-200 bg-white hover:shadow-2xl"
               }`}
-              onClick={() => setSelectedHours(240)}
+              onClick={() => handleHourSelection(240)}
             >
               {selectedHours === 240 && (
                 <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-white shadow-lg">
@@ -313,7 +318,7 @@ export default function Internship({
                   ? "border-blue-500 bg-blue-50 shadow-2xl"
                   : "border-slate-200 bg-white hover:shadow-2xl"
               }`}
-              onClick={() => setSelectedHours(120)}
+              onClick={() => handleHourSelection(120)}
             >
               {selectedHours === 120 && (
                 <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
@@ -458,7 +463,7 @@ export default function Internship({
                   ? "border-purple-500 bg-purple-50 shadow-2xl"
                   : "border-slate-200 bg-white hover:shadow-2xl"
               }`}
-              onClick={() => setSelectedHours(240)}
+              onClick={() => handleHourSelection(240)}
             >
               {selectedHours === 240 && (
                 <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-purple-500 text-white shadow-lg">

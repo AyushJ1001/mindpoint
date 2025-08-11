@@ -419,7 +419,26 @@ export default function CourseClient({
         )}
 
         {/* Course Type Specific Sections */}
-        <CourseTypeRenderer course={course} variants={variants} />
+        <CourseTypeRenderer
+          course={course}
+          variants={variants}
+          onVariantSelect={(hours) => {
+            // Find the variant that matches the selected hours
+            const targetVariant = normalizedVariants.find((variant) => {
+              const variantDuration = variant.duration;
+              if (hours === 120 && variantDuration?.includes("120"))
+                return true;
+              if (hours === 240 && variantDuration?.includes("240"))
+                return true;
+              return false;
+            });
+
+            if (targetVariant) {
+              // Select the variant using the existing handler
+              handleVariantSelect(targetVariant._id as unknown as string);
+            }
+          }}
+        />
 
         {/* Buy Now Confirmation Dialog */}
         <Dialog open={showBuyNowDialog} onOpenChange={setShowBuyNowDialog}>
@@ -460,18 +479,19 @@ export default function CourseClient({
           price={
             hasValidOffer && offerDetails
               ? offerDetails.offerPrice
-              : course.price
+              : activeCourse.price
           }
-          onPrimary={() => handleIncreaseQuantity(course)}
+          onPrimary={() => handleIncreaseQuantity(activeCourse)}
           disabled={
             isOutOfStock ||
-            (inCart(course._id) &&
-              getCurrentQuantity(course._id) >= (course.capacity || 1))
+            (inCart(activeCourse._id) &&
+              getCurrentQuantity(activeCourse._id) >=
+                (activeCourse.capacity || 1))
           }
-          inCart={inCart(course._id)}
-          quantity={getCurrentQuantity(course._id)}
+          inCart={inCart(activeCourse._id)}
+          quantity={getCurrentQuantity(activeCourse._id)}
           isOutOfStock={isOutOfStock}
-          gradientClass={getStickyGradient(course.type || "certificate")}
+          gradientClass={getStickyGradient(activeCourse.type || "certificate")}
         />
       </div>
     </>

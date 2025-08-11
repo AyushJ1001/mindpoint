@@ -13,15 +13,22 @@ import type { Doc } from "@/convex/_generated/dataModel";
 
 interface InternshipCourseProps {
   course: Doc<"courses">;
+  onVariantSelect?: (hours: 120 | 240) => void;
 }
 
-export default function InternshipCourse({ course }: InternshipCourseProps) {
+export default function InternshipCourse({
+  course,
+  onVariantSelect,
+}: InternshipCourseProps) {
   return (
     <>
       {/* Internship Details Section */}
       <section className="py-16">
         <div className="container">
-          <InternshipSection internship={course} />
+          <InternshipSection
+            internship={course}
+            onVariantSelect={onVariantSelect}
+          />
         </div>
       </section>
     </>
