@@ -67,6 +67,36 @@ export default function Internship({
     onVariantSelect?.(hours);
   };
 
+  // Helper function to render allocation breakdown
+  const renderAllocationBreakdown = (
+    course: Doc<"courses">,
+    colorClass: string,
+  ) => {
+    const allocation = course.allocation || [];
+    const totalHours = allocation.reduce((sum, item) => sum + item.hours, 0);
+
+    return (
+      <div className="mb-8 space-y-3">
+        {allocation.map((item, index) => (
+          <div key={index} className="flex items-center justify-between py-2">
+            <span className="font-medium text-slate-700">{item.topic}</span>
+            <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
+            <span className={`font-semibold ${colorClass}`}>
+              {item.hours} {item.hours === 1 ? "hour" : "hours"}
+            </span>
+          </div>
+        ))}
+
+        {/* Total hours display */}
+        <div className="mb-6 border-t border-slate-200 pt-4">
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-center text-xl font-bold text-transparent">
+            {totalHours} hours
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
@@ -212,98 +242,7 @@ export default function Internship({
                 </div>
               </div>
 
-              <div className="mb-8 space-y-3">
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Orientation
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">1 hour</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Pre-reading Material and Quiz
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">10 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Live Classes
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">9 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Ice-breaker Activity
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">1 hour</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Week 1 Resource Material and Quiz
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">15 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Week 2 Resource Material and Quiz
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">15 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Group Activities
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">6 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Learning from Videos
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">8 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Reflective Self Paced Learning
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">9 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Homework and Report Making
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">15 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    5 Case Studies Formulation
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">30 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Final Assessment
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-blue-600">1 hour</span>
-                </div>
-              </div>
-
-              <div className="mb-6 border-t border-slate-200 pt-4">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-center text-xl font-bold text-transparent">
-                  120 hours
-                </div>
-              </div>
+              {renderAllocationBreakdown(courseVariants[120], "text-blue-600")}
 
               <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-6">
                 <h4 className="mb-3 text-center font-bold text-slate-800">
@@ -357,123 +296,10 @@ export default function Internship({
                 </div>
               </div>
 
-              <div className="mb-8 space-y-3">
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Orientation
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">1 hour</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Pre-reading Material and Quiz
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">
-                    10 hours
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Live Classes
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">
-                    18 hours
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Ice-breaker Activity
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">1 hour</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Week 1-2 Resource Material and Quiz
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">
-                    30 hours
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Week 3-4 Resource Material and Quiz
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">
-                    30 hours
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Group Activities
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">9 hours</span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Worksheets and Presentations
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">
-                    12 hours
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Reflective Learning
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">
-                    31 hours
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    10 Case Studies
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">
-                    60 hours
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Homework and Report Making
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">
-                    16 hours
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    5 Case Studies Formulation
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">
-                    30 hours
-                  </span>
-                </div>
-                <div className="flex items-center justify-between py-2">
-                  <span className="font-medium text-slate-700">
-                    Final Assessment
-                  </span>
-                  <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
-                  <span className="font-semibold text-purple-600">2 hours</span>
-                </div>
-              </div>
-
-              <div className="mb-6 border-t border-slate-200 pt-4">
-                <div className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-center text-xl font-bold text-transparent">
-                  240 hours
-                </div>
-              </div>
+              {renderAllocationBreakdown(
+                courseVariants[240],
+                "text-purple-600",
+              )}
 
               <div className="rounded-xl border border-purple-100 bg-gradient-to-r from-purple-50 to-blue-50 p-6">
                 <h4 className="mb-3 text-center font-bold text-slate-800">

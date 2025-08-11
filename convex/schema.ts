@@ -63,6 +63,14 @@ export default defineSchema({
         }),
       ),
     ),
+    allocation: v.optional(
+      v.array(
+        v.object({
+          topic: v.string(),
+          hours: v.number(),
+        }),
+      ),
+    ),
   }).index("by_name_and_type", ["name", "type"]),
 
   reviews: defineTable({

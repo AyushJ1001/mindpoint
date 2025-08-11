@@ -223,23 +223,26 @@ export default function CourseHero({
               {[
                 {
                   icon: BookOpen,
-                  label:
-                    course.type === "certificate"
-                      ? "Batches Completed"
-                      : "Past Sessions",
-                  value: (displayCourse.sessions || 6) - 1,
+                  label: "Study Material",
+                  value: "✔︎",
                 },
                 {
                   icon: Video,
                   label: "Session Recordings",
-                  value: "✓ ",
+                  value: "✔︎",
                 },
-                {
-                  icon: Clock,
-                  label: "Duration",
-                  value: course.duration || customDuration || "2 weeks",
-                },
-                { icon: Award, label: "Certificate", value: "Yes" },
+                course.type === "pre-recorded"
+                  ? {
+                      icon: Clock,
+                      label: "Recording Duration",
+                      value: <span className="text-sm">3 months</span>,
+                    }
+                  : {
+                      icon: Clock,
+                      label: "Duration",
+                      value: course.duration || customDuration || "2 weeks",
+                    },
+                { icon: Award, label: "Certificate", value: "✔︎" },
               ].map((stat, idx) => (
                 <div key={idx} className="text-center">
                   <div className="bg-primary/10 mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
@@ -248,7 +251,11 @@ export default function CourseHero({
                   <div className="text-muted-foreground text-sm font-medium">
                     {stat.label}
                   </div>
-                  <div className="text-lg font-bold">{stat.value}</div>
+                  <div
+                    className={`font-bold ${stat.label === "Duration" ? "text-sm" : "text-lg"}`}
+                  >
+                    {stat.value}
+                  </div>
                 </div>
               ))}
             </div>
@@ -457,8 +464,10 @@ export default function CourseHero({
                   </div>
                   <div>
                     <div className="text-sm font-medium">Duration</div>
-                    <div className="text-muted-foreground text-sm">
-                      {course.duration || customDuration || "2 weeks"}
+                    <div className="text-muted-foreground text-xs">
+                      {course.type === "pre-recorded"
+                        ? "3 months"
+                        : course.duration || customDuration || "2 weeks"}
                     </div>
                   </div>
                 </div>
