@@ -72,6 +72,10 @@ export const handleSuccessfulPayment = mutation({
     userId: v.string(),
     courseId: v.id("courses"),
     userEmail: v.string(),
+    studentName: v.optional(v.string()),
+    sessionType: v.optional(
+      v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
+    ),
   },
 
   handler: async (ctx, args) => {
@@ -90,10 +94,11 @@ export const handleSuccessfulPayment = mutation({
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
       userId: args.userId,
-      userName: args.userEmail,
+      userName: args.studentName || args.userEmail,
       courseId: args.courseId,
       courseName: course.name,
       enrollmentNumber: enrollmentNumber,
+      sessionType: args.sessionType, // Store session type if provided
     });
 
     // Update course to add user to enrolledUsers array
@@ -101,25 +106,40 @@ export const handleSuccessfulPayment = mutation({
       enrolledUsers: [...course.enrolledUsers, args.userId],
     });
 
-    // Schedule email sending action
-    await ctx.scheduler.runAfter(
-      0,
-      api.emailActions.sendEnrollmentConfirmation,
-      {
-        userEmail: args.userEmail,
-        courseName: course.name,
-        enrollmentNumber: enrollmentNumber,
-        startDate: course.startDate,
-        endDate: course.endDate,
-        startTime: course.startTime,
-        endTime: course.endTime,
-      },
-    );
+    // Check if this is a supervised therapy course
+    if (course.type === "supervised" && args.sessionType && args.studentName) {
+      // Schedule supervised therapy welcome email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendSupervisedTherapyWelcomeEmail,
+        {
+          userEmail: args.userEmail,
+          studentName: args.studentName,
+          sessionType: args.sessionType,
+        },
+      );
+    } else {
+      // Schedule regular enrollment confirmation email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          courseName: course.name,
+          enrollmentNumber: enrollmentNumber,
+          startDate: course.startDate,
+          endDate: course.endDate,
+          startTime: course.startTime,
+          endTime: course.endTime,
+        },
+      );
+    }
 
     return {
       enrollmentId,
       enrollmentNumber,
       courseName: course.name,
+      sessionType: args.sessionType,
     };
   },
 });
@@ -130,10 +150,15 @@ export const handleCartCheckout = mutation({
     userId: v.string(),
     courseIds: v.array(v.id("courses")),
     userEmail: v.string(),
+    studentName: v.optional(v.string()),
+    sessionType: v.optional(
+      v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
+    ),
   },
 
   handler: async (ctx, args) => {
     const enrollments = [];
+    const supervisedEnrollments = [];
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -161,8 +186,9 @@ export const handleCartCheckout = mutation({
         userId: args.userId,
         courseId: courseId,
         courseName: course.name,
-        userName: args.userEmail,
+        userName: args.studentName || args.userEmail,
         enrollmentNumber: enrollmentNumber,
+        sessionType: args.sessionType, // Store session type if provided
       });
 
       // Update course to add user to enrolledUsers array
@@ -170,7 +196,7 @@ export const handleCartCheckout = mutation({
         enrolledUsers: [...course.enrolledUsers, args.userId],
       });
 
-      enrollments.push({
+      const enrollmentData = {
         enrollmentId,
         enrollmentNumber,
         courseName: course.name,
@@ -179,20 +205,53 @@ export const handleCartCheckout = mutation({
         endDate: course.endDate,
         startTime: course.startTime,
         endTime: course.endTime,
-      });
+      };
+
+      // Check if this is a supervised therapy course
+      if (
+        course.type === "supervised" &&
+        args.sessionType &&
+        args.studentName
+      ) {
+        supervisedEnrollments.push(enrollmentData);
+      } else {
+        enrollments.push(enrollmentData);
+      }
     }
 
-    // Schedule email sending action
-    await ctx.scheduler.runAfter(
-      0,
-      api.emailActions.sendCartCheckoutConfirmation,
-      {
-        userEmail: args.userEmail,
-        enrollments: enrollments,
-      },
-    );
+    // Send appropriate emails based on course types
+    if (
+      supervisedEnrollments.length > 0 &&
+      args.sessionType &&
+      args.studentName
+    ) {
+      // Send supervised therapy welcome email for each supervised course
+      for (const enrollment of supervisedEnrollments) {
+        await ctx.scheduler.runAfter(
+          0,
+          api.emailActions.sendSupervisedTherapyWelcomeEmail,
+          {
+            userEmail: args.userEmail,
+            studentName: args.studentName,
+            sessionType: args.sessionType,
+          },
+        );
+      }
+    }
 
-    return enrollments;
+    if (enrollments.length > 0) {
+      // Send regular cart checkout confirmation for non-supervised courses
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendCartCheckoutConfirmation,
+        {
+          userEmail: args.userEmail,
+          enrollments: enrollments,
+        },
+      );
+    }
+
+    return [...enrollments, ...supervisedEnrollments];
   },
 });
 
@@ -409,6 +468,9 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       phone: v.string(),
     }),
     courseIds: v.array(v.id("courses")),
+    sessionType: v.optional(
+      v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
+    ),
   },
 
   handler: async (ctx, args) => {
@@ -439,6 +501,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     }
 
     const enrollments = [];
+    const supervisedEnrollments = [];
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -469,6 +532,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         courseName: course.name,
         enrollmentNumber: enrollmentNumber,
         isGuestUser: true,
+        sessionType: args.sessionType, // Store session type if provided
       });
 
       // Update course to add user to enrolledUsers array
@@ -476,7 +540,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         enrolledUsers: [...course.enrolledUsers, args.userData.email],
       });
 
-      enrollments.push({
+      const enrollmentData = {
         enrollmentId,
         enrollmentNumber,
         courseName: course.name,
@@ -485,20 +549,45 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         endDate: course.endDate,
         startTime: course.startTime,
         endTime: course.endTime,
-      });
+      };
+
+      // Check if this is a supervised therapy course
+      if (course.type === "supervised" && args.sessionType) {
+        supervisedEnrollments.push(enrollmentData);
+      } else {
+        enrollments.push(enrollmentData);
+      }
     }
 
-    // Schedule email sending action
-    await ctx.scheduler.runAfter(
-      0,
-      api.emailActions.sendCartCheckoutConfirmation,
-      {
-        userEmail: args.userData.email,
-        enrollments: enrollments,
-      },
-    );
+    // Send appropriate emails based on course types
+    if (supervisedEnrollments.length > 0 && args.sessionType) {
+      // Send supervised therapy welcome email for each supervised course
+      for (const enrollment of supervisedEnrollments) {
+        await ctx.scheduler.runAfter(
+          0,
+          api.emailActions.sendSupervisedTherapyWelcomeEmail,
+          {
+            userEmail: args.userData.email,
+            studentName: args.userData.name,
+            sessionType: args.sessionType,
+          },
+        );
+      }
+    }
 
-    return enrollments;
+    if (enrollments.length > 0) {
+      // Send regular cart checkout confirmation for non-supervised courses
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendCartCheckoutConfirmation,
+        {
+          userEmail: args.userData.email,
+          enrollments: enrollments,
+        },
+      );
+    }
+
+    return [...enrollments, ...supervisedEnrollments];
   },
 });
 
@@ -581,6 +670,160 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       enrollmentId,
       enrollmentNumber,
       courseName: course.name,
+    };
+  },
+});
+
+// Handle supervised therapy enrollment
+export const handleSupervisedTherapyEnrollment = mutation({
+  args: {
+    userId: v.string(),
+    courseId: v.id("courses"),
+    userEmail: v.string(),
+    studentName: v.string(),
+    sessionType: v.union(
+      v.literal("focus"),
+      v.literal("flow"),
+      v.literal("elevate"),
+    ),
+  },
+
+  handler: async (ctx, args) => {
+    // Get the course details
+    const course = await ctx.db.get(args.courseId);
+    if (!course) {
+      throw new Error("Course not found");
+    }
+
+    // Generate enrollment number
+    const enrollmentNumber = generateEnrollmentNumber(
+      course.code,
+      course.startDate,
+    );
+
+    // Create enrollment record
+    const enrollmentId = await ctx.db.insert("enrollments", {
+      userId: args.userId,
+      userName: args.studentName,
+      courseId: args.courseId,
+      courseName: course.name,
+      enrollmentNumber: enrollmentNumber,
+      sessionType: args.sessionType, // Store the session type
+    });
+
+    // Update course to add user to enrolledUsers array
+    await ctx.db.patch(args.courseId, {
+      enrolledUsers: [...course.enrolledUsers, args.userId],
+    });
+
+    // Schedule the new supervised therapy welcome email
+    await ctx.scheduler.runAfter(
+      0,
+      api.emailActions.sendSupervisedTherapyWelcomeEmail,
+      {
+        userEmail: args.userEmail,
+        studentName: args.studentName,
+        sessionType: args.sessionType,
+      },
+    );
+
+    return {
+      enrollmentId,
+      enrollmentNumber,
+      courseName: course.name,
+      sessionType: args.sessionType,
+    };
+  },
+});
+
+// Handle guest user supervised therapy enrollment
+export const handleGuestUserSupervisedTherapyEnrollment = mutation({
+  args: {
+    userEmail: v.string(),
+    courseId: v.id("courses"),
+    studentName: v.string(),
+    sessionType: v.union(
+      v.literal("focus"),
+      v.literal("flow"),
+      v.literal("elevate"),
+    ),
+  },
+
+  handler: async (ctx, args) => {
+    // Check if guest user already exists with this email
+    let guestUser = await ctx.db
+      .query("guestUsers")
+      .withIndex("by_email", (q) => q.eq("email", args.userEmail))
+      .first();
+
+    if (!guestUser) {
+      // Create a new guest user with the email
+      const guestUserId = await ctx.db.insert("guestUsers", {
+        name: args.studentName,
+        email: args.userEmail,
+        phone: "", // Will be updated when we have the actual phone
+      });
+      guestUser = await ctx.db.get(guestUserId);
+    } else {
+      // Update existing guest user with the student name
+      await ctx.db.patch(guestUser._id, {
+        name: args.studentName,
+      });
+    }
+
+    if (!guestUser) {
+      throw new Error("Failed to create or retrieve guest user");
+    }
+
+    // Get the course details
+    const course = await ctx.db.get(args.courseId);
+    if (!course) {
+      throw new Error("Course not found");
+    }
+
+    // Check if user is already enrolled
+    if (course.enrolledUsers.includes(args.userEmail)) {
+      throw new Error("User is already enrolled in this course");
+    }
+
+    // Generate enrollment number
+    const enrollmentNumber = generateEnrollmentNumber(
+      course.code,
+      course.startDate,
+    );
+
+    // Create enrollment record
+    const enrollmentId = await ctx.db.insert("enrollments", {
+      userId: args.userEmail, // Use email as userId for guest users
+      userName: args.studentName,
+      courseId: args.courseId,
+      courseName: course.name,
+      enrollmentNumber: enrollmentNumber,
+      isGuestUser: true,
+      sessionType: args.sessionType, // Store the session type
+    });
+
+    // Update course to add user to enrolledUsers array
+    await ctx.db.patch(args.courseId, {
+      enrolledUsers: [...course.enrolledUsers, args.userEmail],
+    });
+
+    // Schedule the new supervised therapy welcome email
+    await ctx.scheduler.runAfter(
+      0,
+      api.emailActions.sendSupervisedTherapyWelcomeEmail,
+      {
+        userEmail: args.userEmail,
+        studentName: args.studentName,
+        sessionType: args.sessionType,
+      },
+    );
+
+    return {
+      enrollmentId,
+      enrollmentNumber,
+      courseName: course.name,
+      sessionType: args.sessionType,
     };
   },
 });

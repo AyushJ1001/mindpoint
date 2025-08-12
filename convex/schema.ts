@@ -94,5 +94,8 @@ export default defineSchema({
     courseName: v.optional(v.string()),
     enrollmentNumber: v.string(),
     isGuestUser: v.optional(v.boolean()),
+    sessionType: v.optional(
+      v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
+    ),
   }),
 });

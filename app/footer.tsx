@@ -86,16 +86,24 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Careers */}
+          {/* Services */}
           <div>
-            <h4 className="mb-4 font-semibold">Careers</h4>
+            <h4 className="mb-4 font-semibold">Services</h4>
             <ul className="space-y-2">
               <li>
                 <Link
-                  href="/careers"
+                  href="/courses/certificate"
                   className="text-muted-foreground hover:text-primary transition-smooth"
                 >
-                  Join Our Team
+                  Certificate Course
+                </Link>
+              </li>
+              <li>
+                <Link
+                  href="/courses/therapy"
+                  className="text-muted-foreground hover:text-primary transition-smooth"
+                >
+                  Therapy Sessions
                 </Link>
               </li>
               <li>
@@ -103,15 +111,7 @@ export default function Footer() {
                   href="/careers"
                   className="text-muted-foreground hover:text-primary transition-smooth"
                 >
-                  Open Positions
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/careers"
-                  className="text-muted-foreground hover:text-primary transition-smooth"
-                >
-                  Apply Now
+                  Careers - Join Us
                 </Link>
               </li>
             </ul>

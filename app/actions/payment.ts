@@ -7,6 +7,8 @@ export async function handlePaymentSuccess(
   userId: string,
   courseIds: Id<"courses">[],
   userEmail: string,
+  studentName?: string,
+  sessionType?: "focus" | "flow" | "elevate",
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -31,6 +33,8 @@ export async function handlePaymentSuccess(
         userId,
         courseIds: courseIds,
         userEmail: userEmail,
+        studentName: studentName,
+        sessionType: sessionType,
       },
     );
 
@@ -92,6 +96,7 @@ export async function handleGuestUserPaymentSuccess(
 export async function handleGuestUserPaymentSuccessWithData(
   userData: { name: string; email: string; phone: string },
   courseIds: Id<"courses">[],
+  sessionType?: "focus" | "flow" | "elevate",
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -115,6 +120,7 @@ export async function handleGuestUserPaymentSuccessWithData(
       {
         userData,
         courseIds: courseIds,
+        sessionType: sessionType,
       },
     );
 
@@ -135,6 +141,8 @@ export async function handleSingleCourseEnrollment(
   userId: string,
   courseId: Id<"courses">,
   userEmail: string,
+  studentName?: string,
+  sessionType?: "focus" | "flow" | "elevate",
 ): Promise<{
   success: boolean;
   enrollment?: {
@@ -158,6 +166,8 @@ export async function handleSingleCourseEnrollment(
         userId,
         courseId: courseId,
         userEmail: userEmail,
+        studentName: studentName,
+        sessionType: sessionType,
       },
     );
 
@@ -208,6 +218,103 @@ export async function handleGuestUserSingleEnrollment(
     };
   } catch (error) {
     console.error("Error handling guest user single course enrollment:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+export async function handleSupervisedTherapyEnrollment(
+  userId: string,
+  courseId: Id<"courses">,
+  userEmail: string,
+  studentName: string,
+  sessionType: "focus" | "flow" | "elevate",
+): Promise<{
+  success: boolean;
+  enrollment?: {
+    enrollmentId: string;
+    enrollmentNumber: string;
+    courseName: string;
+    sessionType: string;
+  };
+  error?: string;
+}> {
+  try {
+    // Import the Convex client for server-side usage
+    const { ConvexHttpClient } = await import("convex/browser");
+
+    // Create a Convex client for server-side operations
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+    // Call the mutation to handle supervised therapy enrollment
+    const enrollment = await convex.mutation(
+      api.myFunctions.handleSupervisedTherapyEnrollment,
+      {
+        userId,
+        courseId: courseId,
+        userEmail: userEmail,
+        studentName: studentName,
+        sessionType: sessionType,
+      },
+    );
+
+    return {
+      success: true,
+      enrollment,
+    };
+  } catch (error) {
+    console.error("Error handling supervised therapy enrollment:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unknown error occurred",
+    };
+  }
+}
+
+export async function handleGuestUserSupervisedTherapyEnrollment(
+  userEmail: string,
+  courseId: Id<"courses">,
+  studentName: string,
+  sessionType: "focus" | "flow" | "elevate",
+): Promise<{
+  success: boolean;
+  enrollment?: {
+    enrollmentId: string;
+    enrollmentNumber: string;
+    courseName: string;
+    sessionType: string;
+  };
+  error?: string;
+}> {
+  try {
+    // Import the Convex client for server-side usage
+    const { ConvexHttpClient } = await import("convex/browser");
+
+    // Create a Convex client for server-side operations
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+
+    // Call the mutation to handle guest user supervised therapy enrollment
+    const enrollment = await convex.mutation(
+      api.myFunctions.handleGuestUserSupervisedTherapyEnrollment,
+      {
+        userEmail,
+        courseId: courseId,
+        studentName: studentName,
+        sessionType: sessionType,
+      },
+    );
+
+    return {
+      success: true,
+      enrollment,
+    };
+  } catch (error) {
+    console.error(
+      "Error handling guest user supervised therapy enrollment:",
+      error,
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",

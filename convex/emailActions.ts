@@ -3,7 +3,6 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { Resend } from "resend";
-import { whatsappService } from "../../lib/whatsapp";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
@@ -71,21 +70,6 @@ export const sendEnrollmentConfirmation = action({
         </div>
       `,
     });
-
-    // Send WhatsApp message if phone number is provided
-    if (args.userPhone) {
-      const whatsappMessage = whatsappService.generateCourseEnrollmentMessage({
-        phone: args.userPhone,
-        courseName: args.courseName,
-        enrollmentNumber: args.enrollmentNumber,
-        startDate: args.startDate,
-        endDate: args.endDate,
-        startTime: args.startTime,
-        endTime: args.endTime,
-      });
-
-      await whatsappService.sendMessage(whatsappMessage);
-    }
 
     return null;
   },
@@ -164,43 +148,6 @@ export const sendCartCheckoutConfirmation = action({
       `,
     });
 
-    // Send WhatsApp message if phone number is provided
-    if (args.userPhone && args.enrollments.length > 0) {
-      // For multiple enrollments, send a combined message
-      const courseNames = args.enrollments.map((e) => e.courseName).join(", ");
-      const enrollmentNumbers = args.enrollments
-        .map((e) => e.enrollmentNumber)
-        .join(", ");
-
-      const whatsappMessage = {
-        phone: args.userPhone,
-        message: `🎓 *Multiple Course Enrollment Confirmation - The Mind Point*
-
-Dear Learner,
-
-We are happy to confirm that your payments for the following courses have been successfully received:
-
-*Courses Enrolled:*
-${args.enrollments.map((e) => `• ${e.courseName} (${e.enrollmentNumber})`).join("\n")}
-
-*Important Notes:*
-• You will be added to the groups a day prior to each course
-• Check your email & WhatsApp for group links (a week before course start)
-• Provide your WhatsApp number if not provided on +91 9770780086
-
-For any help, contact us at +91 9770780086
-
-Please save these enrollment numbers for future reference.
-
-Thank you for learning with us!
-
-Best regards,
-The Mind Point Team`,
-      };
-
-      await whatsappService.sendMessage(whatsappMessage);
-    }
-
     return null;
   },
 });
@@ -259,18 +206,6 @@ export const sendTherapyEnrollmentConfirmation = action({
         </div>
       `,
     });
-
-    // Send WhatsApp message if phone number is provided
-    if (args.userPhone) {
-      const whatsappMessage = whatsappService.generateTherapyEnrollmentMessage({
-        phone: args.userPhone,
-        therapyType: args.therapyType,
-        sessionCount: args.sessionCount,
-        enrollmentNumber: args.enrollmentNumber,
-      });
-
-      await whatsappService.sendMessage(whatsappMessage);
-    }
 
     return null;
   },
@@ -331,18 +266,80 @@ export const sendSupervisedEnrollmentConfirmation = action({
       `,
     });
 
-    // Send WhatsApp message if phone number is provided
-    if (args.userPhone) {
-      const whatsappMessage =
-        whatsappService.generateSupervisedEnrollmentMessage({
-          phone: args.userPhone,
-          supervisionPackage: args.supervisionPackage,
-          sessionCount: args.sessionCount,
-          enrollmentNumber: args.enrollmentNumber,
-        });
+    return null;
+  },
+});
 
-      await whatsappService.sendMessage(whatsappMessage);
-    }
+export const sendSupervisedTherapyWelcomeEmail = action({
+  args: {
+    userEmail: v.string(),
+    studentName: v.string(),
+    sessionType: v.union(
+      v.literal("focus"),
+      v.literal("flow"),
+      v.literal("elevate"),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Send email with attachments
+    await resend.emails.send({
+      from: "The Mind Point <no-reply@themindpoint.org>",
+      to: args.userEmail,
+      subject: "Welcome to The Mind Point Supervised Sessions Program!",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+          <h2 style="color: #4CAF50; margin-bottom: 20px;">Welcome to The Mind Point Supervised Sessions Program!</h2>
+          
+          <p>Dear <strong>${args.studentName}</strong>,</p>
+          
+          <p>Thank you for registering for The Mind Point's Supervised Sessions Program! We're excited to support your growth as a confident, skilled therapist.</p>
+          
+          <p>You have enrolled in the <strong>${args.sessionType.charAt(0).toUpperCase() + args.sessionType.slice(1)}</strong> session package.</p>
+          
+          <h3 style="color: #2E86C1; margin-top: 30px; margin-bottom: 15px;">Here's what happens next:</h3>
+          
+          <h4 style="color: #333; margin-top: 25px; margin-bottom: 10px;">Next Steps:</h4>
+          <ul style="margin-left: 20px; margin-bottom: 20px;">
+            <li>Please review and sign the attached Supervision Agreement and Consent Form.</li>
+            <li>A member of our supervision team will contact you shortly to schedule your first session at a convenient time.</li>
+            <li>Before your session, we will send you a Pre-Supervision Checklist and Session Preparation Templates to help you prepare.</li>
+          </ul>
+          
+          <h4 style="color: #333; margin-top: 25px; margin-bottom: 10px;">Important Notes:</h4>
+          <ul style="margin-left: 20px; margin-bottom: 20px;">
+            <li>All sessions are conducted online via Google Meet, so please ensure you have a quiet, private space with a stable internet connection.</li>
+            <li>For any questions or assistance, feel free to reply to this email or contact us at <strong>+91 97707 80086</strong>.</li>
+          </ul>
+          
+          <p style="margin-top: 30px;">We look forward to supporting your journey toward becoming a skilled therapist!</p>
+          
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <p style="margin: 0;"><strong>Warm regards,</strong><br>
+            The Mind Point Team<br>
+            <a href="https://www.themindpoint.org" style="color: #4CAF50; text-decoration: none;">www.themindpoint.org</a></p>
+          </div>
+        </div>
+      `,
+      attachments: [
+        {
+          filename: "TMP Client Intake Form.pdf",
+          path: "https://themindpoint.org/checklist/TMP%20Client%20Intake%20Form%20(1).pdf",
+        },
+        {
+          filename: "TMP Consent Form for Live Client Session Observation.pdf",
+          path: "https://themindpoint.org/checklist/TMP%20Consent%20Form%20for%20Live%20Client%20Session%20Observation%20(1).pdf",
+        },
+        {
+          filename: "TMP Session Preparation Template.pdf",
+          path: "https://themindpoint.org/checklist/TMP%20Session%20Preparation%20Template.pdf",
+        },
+        {
+          filename: "TMP Supervised Session Self-Preparation Checklist.pdf",
+          path: "https://themindpoint.org/checklist/TMP%20Supervised%20Session%20Self-Preparation%20Checklist.pdf",
+        },
+      ],
+    });
 
     return null;
   },
