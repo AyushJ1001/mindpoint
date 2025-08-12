@@ -22,8 +22,8 @@ export default function TOC() {
         <p className="mb-6 leading-relaxed text-gray-700">
           This Privacy Policy outlines the types, purposes, and handling
           practices for information collected by The Mind Point, accessible at
-          themindpointmhs.com (the "Website"). This Privacy Policy is intended
-          to comply with all applicable legal requirements and governs the
+          themindpoint.org (the "Website"). This Privacy Policy is intended to
+          comply with all applicable legal requirements and governs the
           collection, use, and sharing of information for users of this Website.
           By using this Website, you acknowledge and agree to the terms of this
           Privacy Policy. If you do not agree with this policy, please do not
@@ -150,7 +150,7 @@ export default function TOC() {
         </h1>
         <p className="text-muted-foreground mb-6 leading-relaxed">
           These terms and conditions outline the rules and regulations for the
-          use of The Mind Point's Website, located at themindpointmhs.com. By
+          use of The Mind Point's Website, located at themindpoint.org. By
           accessing this website, we assume you accept these terms and
           conditions in full. Do not continue to use The Mind Point if you do
           not agree to take all of the terms and conditions stated on this page.

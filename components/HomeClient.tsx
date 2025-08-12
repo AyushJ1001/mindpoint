@@ -120,38 +120,6 @@ export default function HomeClient() {
         </div>
       </section>
 
-      {/* Featured Courses Section */}
-      <section className="section-padding">
-        <div className="container">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              Featured Courses
-            </h2>
-            <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
-              Discover our most popular courses designed to enhance your mental
-              health knowledge and professional skills
-            </p>
-          </div>
-
-          {courses && courses.length > 0 && (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {courses.slice(0, 6).map((course) => (
-                <CourseCard key={course._id} course={course} />
-              ))}
-            </div>
-          )}
-
-          <div className="mt-12 text-center">
-            <Button asChild size="lg">
-              <Link href="/courses">
-                View All Courses
-                <ArrowRight className="ml-2 h-4 w-4" />
-              </Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
       {/* Why Choose Us Section */}
       <section className="section-padding bg-muted/50">
         <div className="container">

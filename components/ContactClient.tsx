@@ -112,7 +112,7 @@ export default function ContactClient() {
                       <div>
                         <h3 className="mb-2 font-semibold">Email</h3>
                         <p className="text-muted-foreground">
-                          info@themindpointmhs.com
+                          info@themindpoint.org
                         </p>
                       </div>
                     </div>

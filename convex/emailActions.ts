@@ -3,12 +3,14 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { Resend } from "resend";
+import { whatsappService } from "../../lib/whatsapp";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
 export const sendEnrollmentConfirmation = action({
   args: {
     userEmail: v.string(),
+    userPhone: v.optional(v.string()),
     courseName: v.string(),
     enrollmentNumber: v.string(),
     startDate: v.string(),
@@ -18,6 +20,7 @@ export const sendEnrollmentConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    // Send email
     await resend.emails.send({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
@@ -68,6 +71,22 @@ export const sendEnrollmentConfirmation = action({
         </div>
       `,
     });
+
+    // Send WhatsApp message if phone number is provided
+    if (args.userPhone) {
+      const whatsappMessage = whatsappService.generateCourseEnrollmentMessage({
+        phone: args.userPhone,
+        courseName: args.courseName,
+        enrollmentNumber: args.enrollmentNumber,
+        startDate: args.startDate,
+        endDate: args.endDate,
+        startTime: args.startTime,
+        endTime: args.endTime,
+      });
+
+      await whatsappService.sendMessage(whatsappMessage);
+    }
+
     return null;
   },
 });
@@ -75,6 +94,7 @@ export const sendEnrollmentConfirmation = action({
 export const sendCartCheckoutConfirmation = action({
   args: {
     userEmail: v.string(),
+    userPhone: v.optional(v.string()),
     enrollments: v.array(
       v.object({
         enrollmentId: v.id("enrollments"),
@@ -90,6 +110,7 @@ export const sendCartCheckoutConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    // Send email
     await resend.emails.send({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
@@ -142,6 +163,187 @@ export const sendCartCheckoutConfirmation = action({
         </div>
       `,
     });
+
+    // Send WhatsApp message if phone number is provided
+    if (args.userPhone && args.enrollments.length > 0) {
+      // For multiple enrollments, send a combined message
+      const courseNames = args.enrollments.map((e) => e.courseName).join(", ");
+      const enrollmentNumbers = args.enrollments
+        .map((e) => e.enrollmentNumber)
+        .join(", ");
+
+      const whatsappMessage = {
+        phone: args.userPhone,
+        message: `🎓 *Multiple Course Enrollment Confirmation - The Mind Point*
+
+Dear Learner,
+
+We are happy to confirm that your payments for the following courses have been successfully received:
+
+*Courses Enrolled:*
+${args.enrollments.map((e) => `• ${e.courseName} (${e.enrollmentNumber})`).join("\n")}
+
+*Important Notes:*
+• You will be added to the groups a day prior to each course
+• Check your email & WhatsApp for group links (a week before course start)
+• Provide your WhatsApp number if not provided on +91 9770780086
+
+For any help, contact us at +91 9770780086
+
+Please save these enrollment numbers for future reference.
+
+Thank you for learning with us!
+
+Best regards,
+The Mind Point Team`,
+      };
+
+      await whatsappService.sendMessage(whatsappMessage);
+    }
+
+    return null;
+  },
+});
+
+export const sendTherapyEnrollmentConfirmation = action({
+  args: {
+    userEmail: v.string(),
+    userPhone: v.optional(v.string()),
+    therapyType: v.string(),
+    sessionCount: v.number(),
+    enrollmentNumber: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Send email
+    await resend.emails.send({
+      from: "The Mind Point <no-reply@themindpoint.org>",
+      to: args.userEmail,
+      subject: "Therapy Session Enrollment Confirmation",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #4CAF50;">Therapy Session Enrollment Confirmation</h2>
+          <p>Dear Client,</p>
+          <p>We are pleased to confirm your enrollment for <strong>${args.therapyType}</strong> therapy sessions.</p>
+
+          <h3 style="margin-top: 20px;">Session Details</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tbody>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Therapy Type</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.therapyType}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Number of Sessions</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.sessionCount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${args.enrollmentNumber}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 24px;">Next Steps</h3>
+          <ul>
+            <li>Your assigned therapist will contact you within 24-48 hours to schedule your first session.</li>
+            <li>Sessions will be conducted online via secure video conferencing platforms.</li>
+            <li>Please ensure you have a quiet, private space for your sessions.</li>
+            <li>Your therapist will provide you with session links and any preparation materials.</li>
+          </ul>
+
+          <p>If you have any questions or need to reschedule, please contact us at <strong>+91 9770780086</strong>.</p>
+          <p>Thank you for choosing The Mind Point for your therapy journey.</p>
+          <br>
+          <p>Best regards,<br>The Mind Point Therapy Team</p>
+        </div>
+      `,
+    });
+
+    // Send WhatsApp message if phone number is provided
+    if (args.userPhone) {
+      const whatsappMessage = whatsappService.generateTherapyEnrollmentMessage({
+        phone: args.userPhone,
+        therapyType: args.therapyType,
+        sessionCount: args.sessionCount,
+        enrollmentNumber: args.enrollmentNumber,
+      });
+
+      await whatsappService.sendMessage(whatsappMessage);
+    }
+
+    return null;
+  },
+});
+
+export const sendSupervisedEnrollmentConfirmation = action({
+  args: {
+    userEmail: v.string(),
+    userPhone: v.optional(v.string()),
+    supervisionPackage: v.string(),
+    sessionCount: v.number(),
+    enrollmentNumber: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Send email
+    await resend.emails.send({
+      from: "The Mind Point <no-reply@themindpoint.org>",
+      to: args.userEmail,
+      subject: "Supervised Session Enrollment Confirmation",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #4CAF50;">Supervised Session Enrollment Confirmation</h2>
+          <p>Dear Trainee,</p>
+          <p>We are pleased to confirm your enrollment for <strong>${args.supervisionPackage}</strong> supervised sessions.</p>
+
+          <h3 style="margin-top: 20px;">Supervision Details</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tbody>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Supervision Package</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.supervisionPackage}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Number of Sessions</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.sessionCount}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${args.enrollmentNumber}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 24px;">Next Steps</h3>
+          <ul>
+            <li>Your supervisor will contact you within 24-48 hours to schedule your first session.</li>
+            <li>All sessions will be conducted online via Google Meet.</li>
+            <li>You will receive preparation materials and templates before your first session.</li>
+            <li>Please ensure you have a quiet environment and necessary materials ready.</li>
+          </ul>
+
+          <p>If you have any questions or need to reschedule, please contact us at <strong>+91 9770780086</strong>.</p>
+          <p>Thank you for choosing The Mind Point for your professional development.</p>
+          <br>
+          <p>Best regards,<br>The Mind Point Supervision Team</p>
+        </div>
+      `,
+    });
+
+    // Send WhatsApp message if phone number is provided
+    if (args.userPhone) {
+      const whatsappMessage =
+        whatsappService.generateSupervisedEnrollmentMessage({
+          phone: args.userPhone,
+          supervisionPackage: args.supervisionPackage,
+          sessionCount: args.sessionCount,
+          enrollmentNumber: args.enrollmentNumber,
+        });
+
+      await whatsappService.sendMessage(whatsappMessage);
+    }
+
     return null;
   },
 });
