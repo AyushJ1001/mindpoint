@@ -196,8 +196,8 @@ export default function TherapyCourse({
                   </h3>
                   <p className="text-muted-foreground">
                     Your privacy is our priority. All sessions are completely
-                    confidential and conducted through secure, HIPAA-compliant
-                    platforms.
+                    confidential and conducted through secure platforms
+                    compliant with Indian data protection laws.
                   </p>
                 </div>
               </Card>
