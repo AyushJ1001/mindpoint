@@ -6,6 +6,351 @@ import { Resend } from "resend";
 
 const resend = new Resend(process.env.RESEND_API_KEY!);
 
+export const sendCertificateEnrollmentConfirmation = action({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    userPhone: v.optional(v.string()),
+    courseName: v.string(),
+    enrollmentNumber: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    startTime: v.string(),
+    endTime: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Send email
+    await resend.emails.send({
+      from: "The Mind Point <no-reply@themindpoint.org>",
+      to: args.userEmail,
+      subject: "Certificate Course Enrollment Confirmation",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #4CAF50;">Certificate Course Enrollment Confirmation</h2>
+          <p>Dear ${args.userName},</p>
+          <p>We are pleased to inform you that your payment for the certificate course <strong>${args.courseName}</strong> has been successfully received.</p>
+
+          <h3 style="margin-top: 20px;">Course Details</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tbody>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Course Name</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Start Date</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.startDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">End Date</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.endDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Time</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.startTime} - ${args.endTime}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${args.enrollmentNumber}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 24px;">Please Note</h3>
+          <ul>
+            <li>You will be added to the group a day prior to the course.</li>
+            <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>
+            <li>Please provide your WhatsApp number if not provided on <strong>+91 9770780086</strong>.</li>
+          </ul>
+
+          <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          <p>Thank you for choosing us. We wish you a great learning experience!</p>
+          <br>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+    });
+
+    return null;
+  },
+});
+
+export const sendInternshipEnrollmentConfirmation = action({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    userPhone: v.optional(v.string()),
+    courseName: v.string(),
+    enrollmentNumber: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    startTime: v.string(),
+    endTime: v.string(),
+    internshipPlan: v.union(v.literal("120"), v.literal("240")),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const planText =
+      args.internshipPlan === "120"
+        ? "2 week (120 hours)"
+        : "4 week (240 hours)";
+
+    // Send email
+    await resend.emails.send({
+      from: "The Mind Point <no-reply@themindpoint.org>",
+      to: args.userEmail,
+      subject: "Internship Program Enrollment Confirmation",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #4CAF50;">Internship Program Enrollment Confirmation</h2>
+          <p>Dear ${args.userName},</p>
+          <p>We are pleased to inform you that your payment for the internship program <strong>${args.courseName}</strong> has been successfully received.</p>
+
+          <h3 style="margin-top: 20px;">Program Details</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tbody>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Program Name</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Program Plan</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${planText}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Start Date</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.startDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">End Date</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.endDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Time</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.startTime} - ${args.endTime}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${args.enrollmentNumber}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 24px;">Please Note</h3>
+          <ul>
+            <li>You will be added to the group a day prior to the program.</li>
+            <li>Kindly check your email & WhatsApp for the group link (a week before the program start date).</li>
+            <li>Please provide your WhatsApp number if not provided on <strong>+91 9770780086</strong>.</li>
+          </ul>
+
+          <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          <p>Thank you for choosing us. We wish you a great learning experience!</p>
+          <br>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+    });
+
+    return null;
+  },
+});
+
+export const sendDiplomaEnrollmentConfirmation = action({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    userPhone: v.optional(v.string()),
+    courseName: v.string(),
+    enrollmentNumber: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    startTime: v.string(),
+    endTime: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Send email
+    await resend.emails.send({
+      from: "The Mind Point <no-reply@themindpoint.org>",
+      to: args.userEmail,
+      subject: "Diploma Course Enrollment Confirmation",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #4CAF50;">Diploma Course Enrollment Confirmation</h2>
+          <p>Dear ${args.userName},</p>
+          <p>We are pleased to inform you that your payment for the diploma course <strong>${args.courseName}</strong> has been successfully received.</p>
+
+          <h3 style="margin-top: 20px;">Course Details</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tbody>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Course Name</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Start Date</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.startDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">End Date</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.endDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Time</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.startTime} - ${args.endTime}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${args.enrollmentNumber}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 24px;">Please Note</h3>
+          <ul>
+            <li>You will be added to the group a day prior to the course.</li>
+            <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>
+            <li>Please provide your WhatsApp number if not provided on <strong>+91 9770780086</strong>.</li>
+          </ul>
+
+          <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          <p>Thank you for choosing us. We wish you a great learning experience!</p>
+          <br>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+    });
+
+    return null;
+  },
+});
+
+export const sendPreRecordedEnrollmentConfirmation = action({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    userPhone: v.optional(v.string()),
+    courseName: v.string(),
+    enrollmentNumber: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Send email
+    await resend.emails.send({
+      from: "The Mind Point <no-reply@themindpoint.org>",
+      to: args.userEmail,
+      subject: "Pre-Recorded Course Enrollment Confirmation",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #4CAF50;">Pre-Recorded Course Enrollment Confirmation</h2>
+          <p>Dear ${args.userName},</p>
+          <p>We are pleased to inform you that your payment for the pre-recorded course <strong>${args.courseName}</strong> has been successfully received.</p>
+
+          <h3 style="margin-top: 20px;">Course Details</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tbody>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Course Name</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${args.enrollmentNumber}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 24px;">Please Note</h3>
+          <ul>
+            <li>You will receive access to the course materials within 24 hours.</li>
+            <li>You can access the course at your own pace.</li>
+            <li>For technical support, please contact us at <strong>+91 9770780086</strong>.</li>
+          </ul>
+
+          <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          <p>Thank you for choosing us. We wish you a great learning experience!</p>
+          <br>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+    });
+
+    return null;
+  },
+});
+
+export const sendMasterclassEnrollmentConfirmation = action({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    userPhone: v.optional(v.string()),
+    courseName: v.string(),
+    enrollmentNumber: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    startTime: v.string(),
+    endTime: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    // Send email
+    await resend.emails.send({
+      from: "The Mind Point <no-reply@themindpoint.org>",
+      to: args.userEmail,
+      subject: "Masterclass Enrollment Confirmation",
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #4CAF50;">Masterclass Enrollment Confirmation</h2>
+          <p>Dear ${args.userName},</p>
+          <p>We are pleased to inform you that your payment for the masterclass <strong>${args.courseName}</strong> has been successfully received.</p>
+
+          <h3 style="margin-top: 20px;">Masterclass Details</h3>
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <tbody>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Masterclass Name</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Start Date</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.startDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">End Date</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.endDate}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Time</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${args.startTime} - ${args.endTime}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${args.enrollmentNumber}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3 style="margin-top: 24px;">Please Note</h3>
+          <ul>
+            <li>You will be added to the group a day prior to the masterclass.</li>
+            <li>Kindly check your email & WhatsApp for the group link (a week before the masterclass start date).</li>
+            <li>Please provide your WhatsApp number if not provided on <strong>+91 9770780086</strong>.</li>
+          </ul>
+
+          <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          <p>Thank you for choosing us. We wish you a great learning experience!</p>
+          <br>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+    });
+
+    return null;
+  },
+});
+
+// Legacy function for backward compatibility
 export const sendEnrollmentConfirmation = action({
   args: {
     userEmail: v.string(),
@@ -56,7 +401,7 @@ export const sendEnrollmentConfirmation = action({
             </tbody>
           </table>
 
-          <h3 style="margin-top: 24px;">Things to note</h3>
+          <h3 style="margin-top: 24px;">Please Note</h3>
           <ul>
             <li>You will be added to the group a day prior to the course.</li>
             <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>
@@ -78,6 +423,7 @@ export const sendEnrollmentConfirmation = action({
 export const sendCartCheckoutConfirmation = action({
   args: {
     userEmail: v.string(),
+    userName: v.string(),
     userPhone: v.optional(v.string()),
     enrollments: v.array(
       v.object({
@@ -85,10 +431,12 @@ export const sendCartCheckoutConfirmation = action({
         enrollmentNumber: v.string(),
         courseName: v.string(),
         courseId: v.id("courses"),
+        courseType: v.optional(v.string()),
         startDate: v.string(),
         endDate: v.string(),
         startTime: v.string(),
         endTime: v.string(),
+        internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
       }),
     ),
   },
@@ -102,13 +450,14 @@ export const sendCartCheckoutConfirmation = action({
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
-          <p>Dear Learner,</p>
+          <p>Dear ${args.userName},</p>
           <p>We are happy to confirm that your payments for the following courses have been successfully received:</p>
 
           <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
             <thead>
               <tr>
                 <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Name</th>
+                <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Type</th>
                 <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Start Date</th>
                 <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">End Date</th>
                 <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Time</th>
@@ -117,22 +466,30 @@ export const sendCartCheckoutConfirmation = action({
             </thead>
             <tbody>
               ${args.enrollments
-                .map(
-                  (e) => `
+                .map((e) => {
+                  const courseType = e.courseType
+                    ? e.courseType.charAt(0).toUpperCase() +
+                      e.courseType.slice(1)
+                    : "Course";
+                  const planInfo = e.internshipPlan
+                    ? ` (${e.internshipPlan === "120" ? "2 week" : "4 week"} plan)`
+                    : "";
+                  return `
                 <tr>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${e.courseName}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${e.courseName}${planInfo}</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${courseType}</td>
                   <td style="padding: 8px; border: 1px solid #ddd;">${e.startDate}</td>
                   <td style="padding: 8px; border: 1px solid #ddd;">${e.endDate}</td>
                   <td style="padding: 8px; border: 1px solid #ddd;">${e.startTime} - ${e.endTime}</td>
                   <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${e.enrollmentNumber}</td>
                 </tr>
-              `,
-                )
+              `;
+                })
                 .join("")}
             </tbody>
           </table>
 
-          <h3 style="margin-top: 24px;">Things to note</h3>
+          <h3 style="margin-top: 24px;">Please Note</h3>
           <ul>
             <li>You will be added to the group a day prior to the course.</li>
             <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>
@@ -155,6 +512,7 @@ export const sendCartCheckoutConfirmation = action({
 export const sendTherapyEnrollmentConfirmation = action({
   args: {
     userEmail: v.string(),
+    userName: v.string(),
     userPhone: v.optional(v.string()),
     therapyType: v.string(),
     sessionCount: v.number(),
@@ -170,7 +528,7 @@ export const sendTherapyEnrollmentConfirmation = action({
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Therapy Session Enrollment Confirmation</h2>
-          <p>Dear Client,</p>
+          <p>Dear ${args.userName},</p>
           <p>We are pleased to confirm your enrollment for <strong>${args.therapyType}</strong> therapy sessions.</p>
 
           <h3 style="margin-top: 20px;">Session Details</h3>
@@ -214,6 +572,7 @@ export const sendTherapyEnrollmentConfirmation = action({
 export const sendSupervisedEnrollmentConfirmation = action({
   args: {
     userEmail: v.string(),
+    userName: v.string(),
     userPhone: v.optional(v.string()),
     supervisionPackage: v.string(),
     sessionCount: v.number(),
@@ -229,7 +588,7 @@ export const sendSupervisedEnrollmentConfirmation = action({
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Supervised Session Enrollment Confirmation</h2>
-          <p>Dear Trainee,</p>
+          <p>Dear ${args.userName},</p>
           <p>We are pleased to confirm your enrollment for <strong>${args.supervisionPackage}</strong> supervised sessions.</p>
 
           <h3 style="margin-top: 20px;">Supervision Details</h3>

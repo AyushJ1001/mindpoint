@@ -7,8 +7,10 @@ export async function handlePaymentSuccess(
   userId: string,
   courseIds: Id<"courses">[],
   userEmail: string,
+  userPhone?: string,
   studentName?: string,
   sessionType?: "focus" | "flow" | "elevate",
+  internshipPlan?: "120" | "240",
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -33,8 +35,10 @@ export async function handlePaymentSuccess(
         userId,
         courseIds: courseIds,
         userEmail: userEmail,
+        userPhone: userPhone,
         studentName: studentName,
         sessionType: sessionType,
+        internshipPlan: internshipPlan,
       },
     );
 
@@ -97,6 +101,7 @@ export async function handleGuestUserPaymentSuccessWithData(
   userData: { name: string; email: string; phone: string },
   courseIds: Id<"courses">[],
   sessionType?: "focus" | "flow" | "elevate",
+  internshipPlan?: "120" | "240",
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -121,6 +126,7 @@ export async function handleGuestUserPaymentSuccessWithData(
         userData,
         courseIds: courseIds,
         sessionType: sessionType,
+        internshipPlan: internshipPlan,
       },
     );
 
@@ -141,8 +147,10 @@ export async function handleSingleCourseEnrollment(
   userId: string,
   courseId: Id<"courses">,
   userEmail: string,
+  userPhone?: string,
   studentName?: string,
   sessionType?: "focus" | "flow" | "elevate",
+  internshipPlan?: "120" | "240",
 ): Promise<{
   success: boolean;
   enrollment?: {
@@ -166,8 +174,10 @@ export async function handleSingleCourseEnrollment(
         userId,
         courseId: courseId,
         userEmail: userEmail,
+        userPhone: userPhone,
         studentName: studentName,
         sessionType: sessionType,
+        internshipPlan: internshipPlan,
       },
     );
 
@@ -229,6 +239,7 @@ export async function handleSupervisedTherapyEnrollment(
   userId: string,
   courseId: Id<"courses">,
   userEmail: string,
+  userPhone: string,
   studentName: string,
   sessionType: "focus" | "flow" | "elevate",
 ): Promise<{
@@ -255,6 +266,7 @@ export async function handleSupervisedTherapyEnrollment(
         userId,
         courseId: courseId,
         userEmail: userEmail,
+        userPhone: userPhone,
         studentName: studentName,
         sessionType: sessionType,
       },
@@ -275,6 +287,7 @@ export async function handleSupervisedTherapyEnrollment(
 
 export async function handleGuestUserSupervisedTherapyEnrollment(
   userEmail: string,
+  userPhone: string,
   courseId: Id<"courses">,
   studentName: string,
   sessionType: "focus" | "flow" | "elevate",
@@ -300,6 +313,7 @@ export async function handleGuestUserSupervisedTherapyEnrollment(
       api.myFunctions.handleGuestUserSupervisedTherapyEnrollment,
       {
         userEmail,
+        userPhone: userPhone,
         courseId: courseId,
         studentName: studentName,
         sessionType: sessionType,

@@ -90,6 +90,8 @@ export default defineSchema({
   enrollments: defineTable({
     userId: v.string(),
     userName: v.optional(v.string()),
+    userEmail: v.optional(v.string()),
+    userPhone: v.optional(v.string()),
     courseId: v.id("courses"),
     courseName: v.optional(v.string()),
     enrollmentNumber: v.string(),
@@ -97,5 +99,7 @@ export default defineSchema({
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
+    courseType: v.optional(CourseType),
+    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   }),
 });

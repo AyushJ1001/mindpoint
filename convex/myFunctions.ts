@@ -66,16 +66,32 @@ function generateEnrollmentNumber(
   return `TMP-${courseCode}-${month}${year}-${randomNumber}`;
 }
 
+// Calculate end date based on internship plan
+function calculateInternshipEndDate(
+  startDate: string,
+  internshipPlan: "120" | "240",
+): string {
+  const start = new Date(startDate);
+  const weeks = internshipPlan === "120" ? 2 : 4; // 2 weeks for 120 hours, 4 weeks for 240 hours
+
+  const endDate = new Date(start);
+  endDate.setDate(start.getDate() + weeks * 7); // Add weeks * 7 days
+
+  return endDate.toISOString().split("T")[0]; // Return YYYY-MM-DD format
+}
+
 // Handle successful payment and create enrollment
 export const handleSuccessfulPayment = mutation({
   args: {
     userId: v.string(),
     courseId: v.id("courses"),
     userEmail: v.string(),
+    userPhone: v.optional(v.string()),
     studentName: v.optional(v.string()),
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
+    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   },
 
   handler: async (ctx, args) => {
@@ -95,10 +111,14 @@ export const handleSuccessfulPayment = mutation({
     const enrollmentId = await ctx.db.insert("enrollments", {
       userId: args.userId,
       userName: args.studentName || args.userEmail,
+      userEmail: args.userEmail,
+      userPhone: args.userPhone,
       courseId: args.courseId,
       courseName: course.name,
       enrollmentNumber: enrollmentNumber,
       sessionType: args.sessionType, // Store session type if provided
+      courseType: course.type, // Store course type
+      internshipPlan: args.internshipPlan, // Store internship plan if provided
     });
 
     // Update course to add user to enrolledUsers array
@@ -106,7 +126,9 @@ export const handleSuccessfulPayment = mutation({
       enrolledUsers: [...course.enrolledUsers, args.userId],
     });
 
-    // Check if this is a supervised therapy course
+    const userName = args.studentName || args.userEmail;
+
+    // Send appropriate email based on course type
     if (course.type === "supervised" && args.sessionType && args.studentName) {
       // Schedule supervised therapy welcome email
       await ctx.scheduler.runAfter(
@@ -118,8 +140,96 @@ export const handleSuccessfulPayment = mutation({
           sessionType: args.sessionType,
         },
       );
+    } else if (course.type === "internship" && args.internshipPlan) {
+      // Calculate end date based on internship plan
+      const calculatedEndDate = calculateInternshipEndDate(
+        course.startDate,
+        args.internshipPlan,
+      );
+
+      // Schedule internship enrollment confirmation email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendInternshipEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          userName: userName,
+          userPhone: args.userPhone,
+          courseName: course.name,
+          enrollmentNumber: enrollmentNumber,
+          startDate: course.startDate,
+          endDate: calculatedEndDate,
+          startTime: course.startTime,
+          endTime: course.endTime,
+          internshipPlan: args.internshipPlan,
+        },
+      );
+    } else if (course.type === "certificate") {
+      // Schedule certificate enrollment confirmation email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendCertificateEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          userName: userName,
+          userPhone: args.userPhone,
+          courseName: course.name,
+          enrollmentNumber: enrollmentNumber,
+          startDate: course.startDate,
+          endDate: course.endDate,
+          startTime: course.startTime,
+          endTime: course.endTime,
+        },
+      );
+    } else if (course.type === "diploma") {
+      // Schedule diploma enrollment confirmation email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendDiplomaEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          userName: userName,
+          userPhone: args.userPhone,
+          courseName: course.name,
+          enrollmentNumber: enrollmentNumber,
+          startDate: course.startDate,
+          endDate: course.endDate,
+          startTime: course.startTime,
+          endTime: course.endTime,
+        },
+      );
+    } else if (course.type === "pre-recorded") {
+      // Schedule pre-recorded enrollment confirmation email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendPreRecordedEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          userName: userName,
+          userPhone: args.userPhone,
+          courseName: course.name,
+          enrollmentNumber: enrollmentNumber,
+        },
+      );
+    } else if (course.type === "masterclass") {
+      // Schedule masterclass enrollment confirmation email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendMasterclassEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          userName: userName,
+          userPhone: args.userPhone,
+          courseName: course.name,
+          enrollmentNumber: enrollmentNumber,
+          startDate: course.startDate,
+          endDate: course.endDate,
+          startTime: course.startTime,
+          endTime: course.endTime,
+        },
+      );
     } else {
-      // Schedule regular enrollment confirmation email
+      // Schedule legacy enrollment confirmation email for other types
       await ctx.scheduler.runAfter(
         0,
         api.emailActions.sendEnrollmentConfirmation,
@@ -140,6 +250,8 @@ export const handleSuccessfulPayment = mutation({
       enrollmentNumber,
       courseName: course.name,
       sessionType: args.sessionType,
+      courseType: course.type,
+      internshipPlan: args.internshipPlan,
     };
   },
 });
@@ -150,10 +262,12 @@ export const handleCartCheckout = mutation({
     userId: v.string(),
     courseIds: v.array(v.id("courses")),
     userEmail: v.string(),
+    userPhone: v.optional(v.string()),
     studentName: v.optional(v.string()),
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
+    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   },
 
   handler: async (ctx, args) => {
@@ -187,8 +301,12 @@ export const handleCartCheckout = mutation({
         courseId: courseId,
         courseName: course.name,
         userName: args.studentName || args.userEmail,
+        userEmail: args.userEmail,
+        userPhone: args.userPhone,
         enrollmentNumber: enrollmentNumber,
         sessionType: args.sessionType, // Store session type if provided
+        courseType: course.type, // Store course type
+        internshipPlan: args.internshipPlan, // Store internship plan if provided
       });
 
       // Update course to add user to enrolledUsers array
@@ -196,15 +314,26 @@ export const handleCartCheckout = mutation({
         enrolledUsers: [...course.enrolledUsers, args.userId],
       });
 
+      // Calculate end date for internship courses
+      let endDate = course.endDate;
+      if (course.type === "internship" && args.internshipPlan) {
+        endDate = calculateInternshipEndDate(
+          course.startDate,
+          args.internshipPlan,
+        );
+      }
+
       const enrollmentData = {
         enrollmentId,
         enrollmentNumber,
         courseName: course.name,
         courseId: courseId,
+        courseType: course.type,
         startDate: course.startDate,
-        endDate: course.endDate,
+        endDate: endDate,
         startTime: course.startTime,
         endTime: course.endTime,
+        internshipPlan: args.internshipPlan,
       };
 
       // Check if this is a supervised therapy course
@@ -246,6 +375,8 @@ export const handleCartCheckout = mutation({
         api.emailActions.sendCartCheckoutConfirmation,
         {
           userEmail: args.userEmail,
+          userName: args.studentName || args.userEmail,
+          userPhone: args.userPhone,
           enrollments: enrollments,
         },
       );
@@ -471,6 +602,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
+    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   },
 
   handler: async (ctx, args) => {
@@ -528,11 +660,15 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       const enrollmentId = await ctx.db.insert("enrollments", {
         userId: args.userData.email, // Use email as userId for guest users
         userName: args.userData.name,
+        userEmail: args.userData.email,
+        userPhone: args.userData.phone,
         courseId: courseId,
         courseName: course.name,
         enrollmentNumber: enrollmentNumber,
         isGuestUser: true,
         sessionType: args.sessionType, // Store session type if provided
+        courseType: course.type, // Store course type
+        internshipPlan: args.internshipPlan, // Store internship plan if provided
       });
 
       // Update course to add user to enrolledUsers array
@@ -540,15 +676,26 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         enrolledUsers: [...course.enrolledUsers, args.userData.email],
       });
 
+      // Calculate end date for internship courses
+      let endDate = course.endDate;
+      if (course.type === "internship" && args.internshipPlan) {
+        endDate = calculateInternshipEndDate(
+          course.startDate,
+          args.internshipPlan,
+        );
+      }
+
       const enrollmentData = {
         enrollmentId,
         enrollmentNumber,
         courseName: course.name,
         courseId: courseId,
+        courseType: course.type,
         startDate: course.startDate,
-        endDate: course.endDate,
+        endDate: endDate,
         startTime: course.startTime,
         endTime: course.endTime,
+        internshipPlan: args.internshipPlan,
       };
 
       // Check if this is a supervised therapy course
@@ -582,6 +729,8 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         api.emailActions.sendCartCheckoutConfirmation,
         {
           userEmail: args.userData.email,
+          userName: args.userData.name,
+          userPhone: args.userData.phone,
           enrollments: enrollments,
         },
       );
@@ -680,6 +829,7 @@ export const handleSupervisedTherapyEnrollment = mutation({
     userId: v.string(),
     courseId: v.id("courses"),
     userEmail: v.string(),
+    userPhone: v.optional(v.string()),
     studentName: v.string(),
     sessionType: v.union(
       v.literal("focus"),
@@ -705,10 +855,13 @@ export const handleSupervisedTherapyEnrollment = mutation({
     const enrollmentId = await ctx.db.insert("enrollments", {
       userId: args.userId,
       userName: args.studentName,
+      userEmail: args.userEmail,
+      userPhone: args.userPhone,
       courseId: args.courseId,
       courseName: course.name,
       enrollmentNumber: enrollmentNumber,
       sessionType: args.sessionType, // Store the session type
+      courseType: course.type, // Store course type
     });
 
     // Update course to add user to enrolledUsers array
@@ -740,6 +893,7 @@ export const handleSupervisedTherapyEnrollment = mutation({
 export const handleGuestUserSupervisedTherapyEnrollment = mutation({
   args: {
     userEmail: v.string(),
+    userPhone: v.optional(v.string()),
     courseId: v.id("courses"),
     studentName: v.string(),
     sessionType: v.union(
@@ -761,13 +915,14 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
       const guestUserId = await ctx.db.insert("guestUsers", {
         name: args.studentName,
         email: args.userEmail,
-        phone: "", // Will be updated when we have the actual phone
+        phone: args.userPhone || "", // Use provided phone or empty string
       });
       guestUser = await ctx.db.get(guestUserId);
     } else {
-      // Update existing guest user with the student name
+      // Update existing guest user with the student name and phone
       await ctx.db.patch(guestUser._id, {
         name: args.studentName,
+        phone: args.userPhone || guestUser.phone,
       });
     }
 
@@ -796,11 +951,14 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
     const enrollmentId = await ctx.db.insert("enrollments", {
       userId: args.userEmail, // Use email as userId for guest users
       userName: args.studentName,
+      userEmail: args.userEmail,
+      userPhone: args.userPhone,
       courseId: args.courseId,
       courseName: course.name,
       enrollmentNumber: enrollmentNumber,
       isGuestUser: true,
       sessionType: args.sessionType, // Store the session type
+      courseType: course.type, // Store course type
     });
 
     // Update course to add user to enrolledUsers array
