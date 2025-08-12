@@ -318,30 +318,6 @@ export default function Internship({
             </div>
           </div>
         </div>
-
-        {/* Bottom CTA Section */}
-        <Card className="border-0 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-700 text-white shadow-2xl">
-          <CardContent className="p-12 text-center">
-            <h2 className="mb-6 text-3xl font-bold">
-              Ready to Start Your Clinical Psychology Journey?
-            </h2>
-            <p className="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-blue-100">
-              Join hundreds of successful graduates who have launched their
-              careers through our comprehensive training programs at Mind Point.
-            </p>
-            <div className="flex flex-col justify-center gap-4 sm:flex-row">
-              <Button className="rounded-xl bg-white px-8 py-4 text-lg font-semibold text-blue-600 shadow-lg transition-all duration-300 hover:bg-slate-100 hover:shadow-xl">
-                Apply Now
-              </Button>
-              <Button
-                variant="outline"
-                className="rounded-xl border-2 border-white bg-transparent px-8 py-4 text-lg font-semibold text-white transition-all duration-300 hover:bg-white hover:text-blue-600"
-              >
-                Schedule Consultation
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
