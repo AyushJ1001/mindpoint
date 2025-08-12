@@ -113,7 +113,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
         name: selectedVariant.name,
         price: selectedVariant.price,
         image: selectedVariant.imageUrls?.[0] || "",
-        courseType: selectedVariant.courseType,
+        courseType: selectedVariant.type,
         sessions: (selectedVariant as any).sessions,
         duration: (selectedVariant as any).duration,
       });
@@ -139,7 +139,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary">{selectedVariant?.courseType}</Badge>
+          <Badge variant="secondary">{selectedVariant?.type}</Badge>
           {variantLabel && <Badge variant="outline">{variantLabel}</Badge>}
         </div>
       </CardHeader>
@@ -192,7 +192,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       name: course.name,
       price: course.price,
       image: course.imageUrls?.[0] || "",
-      courseType: course.courseType,
+      courseType: course.type,
       sessions: (course as any).sessions,
       duration: (course as any).duration,
     });
@@ -213,7 +213,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Badge variant="secondary">{course.courseType}</Badge>
+          <Badge variant="secondary">{course.type}</Badge>
           {variantLabel && <Badge variant="outline">{variantLabel}</Badge>}
         </div>
       </CardHeader>
@@ -259,7 +259,7 @@ export default function CoursesClient() {
   const filteredGroups = Object.entries(courseGroups).filter(
     ([_, courseList]) => {
       if (selectedType === "all") return true;
-      return courseList.some((course) => course.courseType === selectedType);
+      return courseList.some((course) => course.type === selectedType);
     },
   );
 

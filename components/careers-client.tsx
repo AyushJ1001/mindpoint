@@ -2,13 +2,16 @@
 
 import type React from "react";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, forwardRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import {
   Upload,
   FileText,
@@ -20,16 +23,43 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Checkbox } from "./ui/checkbox";
+import PhoneInput from "react-phone-number-input";
+import { isValidPhoneNumber } from "react-phone-number-input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
 
-interface PersonalDetails {
-  fullName: string;
-  email: string;
-  phone: string;
-  location: string;
-  linkedIn: string;
-  experience: string;
-  coverLetter: string;
-}
+const ApplicationSchema = z.object({
+  fullName: z.string().min(1, "Full name is required"),
+  email: z.string().email("Enter a valid email address"),
+  phone: z
+    .string()
+    .min(1, "Phone number is required")
+    .refine((val) => isValidPhoneNumber(val), {
+      message: "Enter a valid phone number",
+    }),
+  location: z.string().min(1, "Location is required"),
+  linkedIn: z
+    .string()
+    .url("Enter a valid URL")
+    .refine((url) => url.includes("linkedin.com"), {
+      message: "Enter a valid LinkedIn profile URL",
+    })
+    .optional()
+    .or(z.literal("")),
+  coverLetter: z
+    .string()
+    .max(2000, "Cover letter is too long")
+    .optional()
+    .or(z.literal("")),
+});
+
+type FormValues = z.infer<typeof ApplicationSchema>;
 
 interface JobPosition {
   id: string;
@@ -40,59 +70,31 @@ interface JobPosition {
   description: string;
 }
 
-const jobPositions: JobPosition[] = [
-  {
-    id: "1",
-    title: "Clinical Psychologist",
-    department: "Therapy & Counselling",
-    type: "Full-time",
-    location: "Remote/Hybrid",
-    description:
-      "Join our therapy team to provide mental health support and counselling services to our community.",
-  },
-  {
-    id: "2",
-    title: "Course Content Developer",
-    department: "TMP Academy",
-    type: "Full-time",
-    location: "Remote",
-    description:
-      "Create engaging educational content for our mental health courses and certification programs.",
-  },
-  {
-    id: "3",
-    title: "Mental Health Educator",
-    department: "TMP Academy",
-    type: "Part-time",
-    location: "Remote",
-    description:
-      "Deliver workshops and masterclasses on various mental health topics to diverse audiences.",
-  },
-  {
-    id: "4",
-    title: "Career Counselor",
-    department: "Career Services",
-    type: "Full-time",
-    location: "Hybrid",
-    description:
-      "Guide individuals in their career development journey within the mental health field.",
-  },
-];
-
 export default function CareersClient() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState<string>("");
-  const [personalDetails, setPersonalDetails] = useState<PersonalDetails>({
-    fullName: "",
-    email: "",
-    phone: "",
-    location: "",
-    linkedIn: "",
-    experience: "",
-    coverLetter: "",
-  });
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const form = useForm<FormValues>({
+    resolver: zodResolver(ApplicationSchema),
+    defaultValues: {
+      fullName: "",
+      email: "",
+      phone: "",
+      location: "",
+      linkedIn: "",
+      coverLetter: "",
+    },
+    mode: "onBlur",
+  });
+
+  const PhoneInputField = forwardRef<
+    HTMLInputElement,
+    React.InputHTMLAttributes<HTMLInputElement>
+  >(({ value, ...rest }, ref) => (
+    <Input ref={ref} value={value ?? ""} {...rest} />
+  ));
+  PhoneInputField.displayName = "PhoneInputField";
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -143,32 +145,18 @@ export default function CareersClient() {
   };
 
   const simulateAutoFill = () => {
-    // Simulate extracting data from resume
-    setPersonalDetails((prev) => ({
-      ...prev,
-      fullName: prev.fullName || "John Doe",
-      email: prev.email || "john.doe@email.com",
-      phone: prev.phone || "+1 (555) 123-4567",
-      location: prev.location || "New York, NY",
-      experience:
-        prev.experience ||
-        "5+ years in clinical psychology with expertise in cognitive behavioral therapy and trauma counseling.",
-    }));
+    const current = form.getValues();
+    if (!current.fullName) form.setValue("fullName", "John Doe");
+    if (!current.email) form.setValue("email", "john.doe@email.com");
+    if (!current.phone) form.setValue("phone", "+1 555 123 4567");
+    if (!current.location) form.setValue("location", "New York, NY");
   };
 
   const removeFile = () => {
     setSelectedFile(null);
   };
 
-  const handleInputChange = (field: keyof PersonalDetails, value: string) => {
-    setPersonalDetails((prev) => ({
-      ...prev,
-      [field]: value,
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onSubmit = async (_data: FormValues) => {
     setIsSubmitting(true);
 
     // Simulate form submission
@@ -245,195 +233,234 @@ export default function CareersClient() {
             </p>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmit} className="space-y-8">
-              {/* Resume Upload */}
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">Resume/CV *</Label>
-                <div
-                  className={cn(
-                    "rounded-lg border-2 border-dashed p-8 text-center transition-colors",
-                    isDragOver
-                      ? "border-primary bg-primary/5"
-                      : "border-muted-foreground/25",
-                    selectedFile && "border-primary bg-primary/5",
-                  )}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                  {selectedFile ? (
-                    <div className="flex items-center justify-center gap-4">
-                      <FileText className="text-primary h-8 w-8" />
-                      <div className="text-left">
-                        <p className="font-medium">{selectedFile.name}</p>
-                        <p className="text-muted-foreground text-sm">
-                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-8"
+              >
+                {/* Resume Upload */}
+                <div className="space-y-4">
+                  <Label className="text-base font-semibold">Resume/CV *</Label>
+                  <div
+                    className={cn(
+                      "rounded-lg border-2 border-dashed p-8 text-center transition-colors",
+                      isDragOver
+                        ? "border-primary bg-primary/5"
+                        : "border-muted-foreground/25",
+                      selectedFile && "border-primary bg-primary/5",
+                    )}
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                  >
+                    {selectedFile ? (
+                      <div className="flex items-center justify-center gap-4">
+                        <FileText className="text-primary h-8 w-8" />
+                        <div className="text-left">
+                          <p className="font-medium">{selectedFile.name}</p>
+                          <p className="text-muted-foreground text-sm">
+                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={removeFile}
+                          className="text-muted-foreground hover:text-destructive"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <div>
+                        <Upload className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+                        <p className="mb-2 text-lg font-medium">
+                          Drop your resume here
+                        </p>
+                        <p className="text-muted-foreground mb-4">
+                          or click to browse files
+                        </p>
+                        <input
+                          type="file"
+                          accept=".pdf,.doc,.docx"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          id="resume-upload"
+                        />
+                        <Button type="button" variant="outline" asChild>
+                          <label
+                            htmlFor="resume-upload"
+                            className="cursor-pointer"
+                          >
+                            Choose File
+                          </label>
+                        </Button>
+                        <p className="text-muted-foreground mt-2 text-xs">
+                          Supported formats: PDF, DOC, DOCX (Max 10MB)
                         </p>
                       </div>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={removeFile}
-                        className="text-muted-foreground hover:text-destructive"
-                      >
-                        <X className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <div>
-                      <Upload className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                      <p className="mb-2 text-lg font-medium">
-                        Drop your resume here
-                      </p>
-                      <p className="text-muted-foreground mb-4">
-                        or click to browse files
-                      </p>
-                      <input
-                        type="file"
-                        accept=".pdf,.doc,.docx"
-                        onChange={handleFileSelect}
-                        className="hidden"
-                        id="resume-upload"
-                      />
-                      <Button type="button" variant="outline" asChild>
-                        <label
-                          htmlFor="resume-upload"
-                          className="cursor-pointer"
-                        >
-                          Choose File
-                        </label>
-                      </Button>
-                      <p className="text-muted-foreground mt-2 text-xs">
-                        Supported formats: PDF, DOC, DOCX (Max 10MB)
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Personal Details */}
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-blue-950 dark:text-white">
-                  Personal Details
-                </h3>
-
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="fullName">Full Name *</Label>
-                    <Input
-                      id="fullName"
-                      value={personalDetails.fullName}
-                      onChange={(e) =>
-                        handleInputChange("fullName", e.target.value)
-                      }
-                      placeholder="Enter your full name"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="email">Email Address *</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={personalDetails.email}
-                      onChange={(e) =>
-                        handleInputChange("email", e.target.value)
-                      }
-                      placeholder="your.email@example.com"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="phone">Phone Number *</Label>
-                    <Input
-                      id="phone"
-                      type="tel"
-                      value={personalDetails.phone}
-                      onChange={(e) =>
-                        handleInputChange("phone", e.target.value)
-                      }
-                      placeholder="+1 (555) 123-4567"
-                      required
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="location">Location *</Label>
-                    <Input
-                      id="location"
-                      value={personalDetails.location}
-                      onChange={(e) =>
-                        handleInputChange("location", e.target.value)
-                      }
-                      placeholder="City, State/Country"
-                      required
-                    />
+                    )}
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="linkedIn">LinkedIn Profile (Optional)</Label>
-                  <Input
-                    id="linkedIn"
-                    value={personalDetails.linkedIn}
-                    onChange={(e) =>
-                      handleInputChange("linkedIn", e.target.value)
-                    }
-                    placeholder="https://linkedin.com/in/yourprofile"
+                {/* Personal Details */}
+                <div className="space-y-6">
+                  <h3 className="text-lg font-semibold text-blue-950 dark:text-white">
+                    Personal Details
+                  </h3>
+
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                    <FormField
+                      control={form.control}
+                      name="fullName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Full Name *</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="fullName"
+                              placeholder="Enter your full name"
+                              required
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email Address *</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="your.email@example.com"
+                              required
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Phone Number *</FormLabel>
+                          <FormControl>
+                            <PhoneInput
+                              id="phone"
+                              placeholder="+1 555 123 4567"
+                              international
+                              defaultCountry="IN"
+                              inputComponent={PhoneInputField as any}
+                              value={field.value}
+                              onChange={field.onChange}
+                              onBlur={field.onBlur}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="location"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Location *</FormLabel>
+                          <FormControl>
+                            <Input
+                              id="location"
+                              placeholder="City, State/Country"
+                              required
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="linkedIn"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>LinkedIn Profile (Optional)</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="linkedIn"
+                            placeholder="https://linkedin.com/in/yourprofile"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="space-y-2">
+                    <Label htmlFor="experience">
+                      Which role are you interested in?{" "}
+                    </Label>
+                    {[
+                      "Administration",
+                      "Teaching Faculty",
+                      "Session Supervisor",
+                      "Counsellor/Therapist",
+                      "Social Media Intern",
+                    ].map((role, idx) => (
+                      <div className="flex items-center gap-2" key={idx}>
+                        <Checkbox id={role} />
+                        <Label htmlFor={role}>{role}</Label>
+                      </div>
+                    ))}
+                  </div>
+                  <FormField
+                    control={form.control}
+                    name="coverLetter"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Cover Letter (Optional)</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            id="coverLetter"
+                            placeholder="Tell us why you're interested in joining The Mind Point..."
+                            rows={6}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="experience">
-                    Which role are you interested in?{" "}
-                  </Label>
-                  {[
-                    "Administration",
-                    "Teaching Faculty",
-                    "Session Supervisor",
-                    "Counsellor/Therapist",
-                    "Social Media Intern",
-                  ].map((role, idx) => (
-                    <div className="flex items-center gap-2" key={idx}>
-                      <Checkbox id={role} />
-                      <Label htmlFor={role}>{role}</Label>
-                    </div>
-                  ))}
+                {/* Submit Button */}
+                <div className="flex justify-end">
+                  <Button
+                    type="submit"
+                    size="lg"
+                    disabled={!selectedFile || isSubmitting}
+                    className="min-w-[200px]"
+                  >
+                    {isSubmitting ? "Submitting..." : "Submit Application"}
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="coverLetter">Cover Letter (Optional)</Label>
-                  <Textarea
-                    id="coverLetter"
-                    value={personalDetails.coverLetter}
-                    onChange={(e) =>
-                      handleInputChange("coverLetter", e.target.value)
-                    }
-                    placeholder="Tell us why you're interested in joining The Mind Point..."
-                    rows={6}
-                  />
-                </div>
-              </div>
-
-              {/* Submit Button */}
-              <div className="flex justify-end">
-                <Button
-                  type="submit"
-                  size="lg"
-                  disabled={
-                    !selectedFile ||
-                    !personalDetails.fullName ||
-                    !personalDetails.email ||
-                    isSubmitting
-                  }
-                  className="min-w-[200px]"
-                >
-                  {isSubmitting ? "Submitting..." : "Submit Application"}
-                </Button>
-              </div>
-            </form>
+              </form>
+            </Form>
           </CardContent>
         </Card>
       </div>

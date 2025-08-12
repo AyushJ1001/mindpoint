@@ -111,7 +111,7 @@ export default function Footer() {
                   href="/careers"
                   className="text-muted-foreground hover:text-primary transition-smooth"
                 >
-                  Career Support
+                  Careers
                 </Link>
               </li>
             </ul>

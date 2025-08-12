@@ -66,7 +66,7 @@ export default function About() {
             <div className="grid grid-cols-2 gap-4">
               <div className="bg-card card-shadow rounded-lg p-6 text-center">
                 <Users className="text-primary mx-auto mb-4 h-12 w-12" />
-                <h3 className="mb-2 font-semibold">1000+</h3>
+                <h3 className="mb-2 font-semibold">10000+</h3>
                 <p className="text-muted-foreground text-sm">
                   Students Enrolled
                 </p>
