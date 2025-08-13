@@ -89,8 +89,14 @@ const CartContent = () => {
         handler: async (response) => {
           console.log("Payment successful", response);
 
-          // Clear timeout and cleanup monitoring
-          clearTimeoutAndCleanup();
+          // Define cleanup function before using it
+          const clearTimeoutAndCleanup = () => {
+            clearTimeout(timeoutId);
+            if (modalCheckInterval) clearInterval(modalCheckInterval);
+            if (observer) observer.disconnect();
+          };
+
+          // Add event handlers for payment modal
 
           if (user?.id) {
             // Handle signed-in user

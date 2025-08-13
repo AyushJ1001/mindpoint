@@ -231,17 +231,17 @@ export default function CourseHero({
                   label: "Session Recordings",
                   value: "✔︎",
                 },
-                course.type === "pre-recorded"
-                  ? {
-                      icon: Clock,
-                      label: "Recording Duration",
-                      value: <span className="text-sm">3 months</span>,
-                    }
-                  : {
-                      icon: Clock,
-                      label: "Duration",
-                      value: course.duration || customDuration || "2 weeks",
-                    },
+                {
+                  icon: Clock,
+                  label:
+                    course.type === "pre-recorded"
+                      ? "Recording Duration"
+                      : "Duration",
+                  value:
+                    course.type === "pre-recorded"
+                      ? "3 months"
+                      : course.duration || customDuration || "2 weeks",
+                },
                 { icon: Award, label: "Certificate", value: "✔︎" },
               ].map((stat, idx) => (
                 <div key={idx} className="text-center">
@@ -251,11 +251,7 @@ export default function CourseHero({
                   <div className="text-muted-foreground text-sm font-medium">
                     {stat.label}
                   </div>
-                  <div
-                    className={`font-bold ${stat.label === "Duration" ? "text-sm" : "text-lg"}`}
-                  >
-                    {stat.value}
-                  </div>
+                  <div className="text-sm font-bold">{stat.value}</div>
                 </div>
               ))}
             </div>

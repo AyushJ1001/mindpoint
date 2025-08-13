@@ -9,6 +9,7 @@ console.log("Resend API Key configured:", !!resendApiKey);
 
 if (!resendApiKey) {
   console.error("RESEND_API_KEY is not configured!");
+  throw new Error("RESEND_API_KEY environment variable is required");
 }
 
 const resend = new Resend(resendApiKey);

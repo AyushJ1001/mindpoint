@@ -5,6 +5,42 @@ import { api } from "./_generated/api";
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
 
+// Helper function to extract internship plan from duration field
+function extractInternshipPlanFromDuration(
+  duration?: string,
+): "120" | "240" | null {
+  if (!duration) return null;
+
+  // Look for patterns like "120 hours", "240 hours", "2 weeks", "4 weeks", etc.
+  const durationLower = duration.toLowerCase().trim();
+
+  // Check for hour patterns
+  if (durationLower.includes("120") || durationLower.includes("2 week")) {
+    return "120";
+  }
+  if (durationLower.includes("240") || durationLower.includes("4 week")) {
+    return "240";
+  }
+
+  // Check for week patterns
+  const weekMatch = durationLower.match(/(\d+)\s*week/);
+  if (weekMatch) {
+    const weeks = parseInt(weekMatch[1]);
+    if (weeks <= 2) return "120";
+    if (weeks >= 4) return "240";
+  }
+
+  // Check for hour patterns
+  const hourMatch = durationLower.match(/(\d+)\s*hour/);
+  if (hourMatch) {
+    const hours = parseInt(hourMatch[1]);
+    if (hours <= 120) return "120";
+    if (hours >= 240) return "240";
+  }
+
+  return null;
+}
+
 // You can read data from the database via a query:
 export const listNumbers = query({
   // Validators for arguments.
@@ -91,7 +127,6 @@ export const handleSuccessfulPayment = mutation({
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
-    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   },
 
   handler: async (ctx, args) => {
@@ -107,6 +142,10 @@ export const handleSuccessfulPayment = mutation({
       course.startDate,
     );
 
+    // Extract internship plan from course duration
+    const internshipPlan =
+      extractInternshipPlanFromDuration(course.duration) || undefined;
+
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
       userId: args.userId,
@@ -118,7 +157,7 @@ export const handleSuccessfulPayment = mutation({
       enrollmentNumber: enrollmentNumber,
       sessionType: args.sessionType, // Store session type if provided
       courseType: course.type, // Store course type
-      internshipPlan: args.internshipPlan, // Store internship plan if provided
+      internshipPlan: internshipPlan, // Store internship plan if provided
     });
 
     // Update course to add user to enrolledUsers array
@@ -140,11 +179,11 @@ export const handleSuccessfulPayment = mutation({
           sessionType: args.sessionType,
         },
       );
-    } else if (course.type === "internship" && args.internshipPlan) {
+    } else if (course.type === "internship" && internshipPlan) {
       // Calculate end date based on internship plan
       const calculatedEndDate = calculateInternshipEndDate(
         course.startDate,
-        args.internshipPlan,
+        internshipPlan,
       );
 
       // Schedule internship enrollment confirmation email
@@ -161,7 +200,7 @@ export const handleSuccessfulPayment = mutation({
           endDate: calculatedEndDate,
           startTime: course.startTime,
           endTime: course.endTime,
-          internshipPlan: args.internshipPlan,
+          internshipPlan: internshipPlan,
         },
       );
     } else if (course.type === "certificate") {
@@ -251,7 +290,7 @@ export const handleSuccessfulPayment = mutation({
       courseName: course.name,
       sessionType: args.sessionType,
       courseType: course.type,
-      internshipPlan: args.internshipPlan,
+      internshipPlan: internshipPlan,
     };
   },
 });
@@ -267,7 +306,6 @@ export const handleCartCheckout = mutation({
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
-    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   },
 
   handler: async (ctx, args) => {
@@ -301,6 +339,10 @@ export const handleCartCheckout = mutation({
         course.startDate,
       );
 
+      // Extract internship plan from course duration
+      const internshipPlan =
+        extractInternshipPlanFromDuration(course.duration) || undefined;
+
       // Create enrollment record
       const enrollmentId = await ctx.db.insert("enrollments", {
         userId: args.userId,
@@ -312,7 +354,7 @@ export const handleCartCheckout = mutation({
         enrollmentNumber: enrollmentNumber,
         sessionType: args.sessionType, // Store session type if provided
         courseType: course.type, // Store course type
-        internshipPlan: args.internshipPlan, // Store internship plan if provided
+        internshipPlan: internshipPlan, // Store internship plan if provided
       });
 
       // Update course to add user to enrolledUsers array
@@ -322,11 +364,8 @@ export const handleCartCheckout = mutation({
 
       // Calculate end date for internship courses
       let endDate = course.endDate;
-      if (course.type === "internship" && args.internshipPlan) {
-        endDate = calculateInternshipEndDate(
-          course.startDate,
-          args.internshipPlan,
-        );
+      if (course.type === "internship" && internshipPlan) {
+        endDate = calculateInternshipEndDate(course.startDate, internshipPlan);
       }
 
       const enrollmentData = {
@@ -339,7 +378,7 @@ export const handleCartCheckout = mutation({
         endDate: endDate,
         startTime: course.startTime,
         endTime: course.endTime,
-        internshipPlan: args.internshipPlan,
+        internshipPlan: internshipPlan,
       };
 
       // Check if this is a supervised therapy course
@@ -647,7 +686,6 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
-    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   },
 
   handler: async (ctx, args) => {
@@ -707,6 +745,10 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         course.startDate,
       );
 
+      // Extract internship plan from course duration
+      const internshipPlan =
+        extractInternshipPlanFromDuration(course.duration) || undefined;
+
       // Create enrollment record
       const enrollmentId = await ctx.db.insert("enrollments", {
         userId: args.userData.email, // Use email as userId for guest users
@@ -719,7 +761,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         isGuestUser: true,
         sessionType: args.sessionType, // Store session type if provided
         courseType: course.type, // Store course type
-        internshipPlan: args.internshipPlan, // Store internship plan if provided
+        internshipPlan: internshipPlan, // Store internship plan if provided
       });
 
       // Update course to add user to enrolledUsers array
@@ -729,11 +771,8 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
       // Calculate end date for internship courses
       let endDate = course.endDate;
-      if (course.type === "internship" && args.internshipPlan) {
-        endDate = calculateInternshipEndDate(
-          course.startDate,
-          args.internshipPlan,
-        );
+      if (course.type === "internship" && internshipPlan) {
+        endDate = calculateInternshipEndDate(course.startDate, internshipPlan);
       }
 
       const enrollmentData = {
@@ -746,7 +785,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         endDate: endDate,
         startTime: course.startTime,
         endTime: course.endTime,
-        internshipPlan: args.internshipPlan,
+        internshipPlan: internshipPlan,
       };
 
       // Check if this is a supervised therapy course
@@ -787,12 +826,8 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       );
     }
 
-    // If user was already enrolled in all courses, send a notification email
-    if (
-      enrollments.length === 0 &&
-      supervisedEnrollments.length === 0 &&
-      alreadyEnrolledCourses.length > 0
-    ) {
+    // Send notification for already enrolled courses (independent of new enrollments)
+    if (alreadyEnrolledCourses.length > 0) {
       await ctx.scheduler.runAfter(
         0,
         api.emailActions.sendAlreadyEnrolledNotification,

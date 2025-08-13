@@ -10,7 +10,6 @@ export async function handlePaymentSuccess(
   userPhone?: string,
   studentName?: string,
   sessionType?: "focus" | "flow" | "elevate",
-  internshipPlan?: "120" | "240",
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -38,7 +37,6 @@ export async function handlePaymentSuccess(
         userPhone: userPhone,
         studentName: studentName,
         sessionType: sessionType,
-        internshipPlan: internshipPlan,
       },
     );
 
@@ -101,7 +99,6 @@ export async function handleGuestUserPaymentSuccessWithData(
   userData: { name: string; email: string; phone: string },
   courseIds: Id<"courses">[],
   sessionType?: "focus" | "flow" | "elevate",
-  internshipPlan?: "120" | "240",
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -126,7 +123,6 @@ export async function handleGuestUserPaymentSuccessWithData(
         userData,
         courseIds: courseIds,
         sessionType: sessionType,
-        internshipPlan: internshipPlan,
       },
     );
 
@@ -150,7 +146,6 @@ export async function handleSingleCourseEnrollment(
   userPhone?: string,
   studentName?: string,
   sessionType?: "focus" | "flow" | "elevate",
-  internshipPlan?: "120" | "240",
 ): Promise<{
   success: boolean;
   enrollment?: {
@@ -177,7 +172,6 @@ export async function handleSingleCourseEnrollment(
         userPhone: userPhone,
         studentName: studentName,
         sessionType: sessionType,
-        internshipPlan: internshipPlan,
       },
     );
 
