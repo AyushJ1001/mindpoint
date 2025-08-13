@@ -41,6 +41,51 @@ function extractInternshipPlanFromDuration(
   return null;
 }
 
+// Helper function to add enrollment to Google Sheets
+async function addEnrollmentToGoogleSheets(
+  ctx: any,
+  enrollmentData: {
+    userId: string;
+    userName?: string;
+    userEmail?: string;
+    userPhone?: string;
+    courseId: string;
+    courseName?: string;
+    enrollmentNumber: string;
+    isGuestUser?: boolean;
+    sessionType?: string;
+    courseType?: string;
+    internshipPlan?: string;
+    sessions?: number;
+  },
+) {
+  try {
+    // Get Google Sheets configuration from environment variables
+    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+    const sheetName = process.env.GOOGLE_SHEETS_SHEET_NAME || "Enrollments";
+
+    if (!spreadsheetId) {
+      console.warn(
+        "Google Sheets spreadsheet ID not configured, skipping sheet update",
+      );
+      return;
+    }
+
+    // Schedule the Google Sheets action
+    await ctx.scheduler.runAfter(0, api.googleSheets.addEnrollmentToSheet, {
+      enrollmentData: {
+        ...enrollmentData,
+        enrollmentDate: new Date().toISOString(),
+      },
+      spreadsheetId,
+      sheetName,
+    });
+  } catch (error) {
+    console.error("Error scheduling Google Sheets update:", error);
+    // Don't throw error to avoid breaking the enrollment process
+  }
+}
+
 // You can read data from the database via a query:
 export const listNumbers = query({
   // Validators for arguments.
@@ -159,6 +204,21 @@ export const handleSuccessfulPayment = mutation({
       courseType: course.type, // Store course type
       internshipPlan: internshipPlan, // Store internship plan if provided
       sessions: course.sessions, // Store number of sessions for therapy courses
+    });
+
+    // Add enrollment to Google Sheets
+    await addEnrollmentToGoogleSheets(ctx, {
+      userId: args.userId,
+      userName: args.studentName || args.userEmail,
+      userEmail: args.userEmail,
+      userPhone: args.userPhone,
+      courseId: args.courseId,
+      courseName: course.name,
+      enrollmentNumber: enrollmentNumber,
+      sessionType: args.sessionType,
+      courseType: course.type,
+      internshipPlan: internshipPlan,
+      sessions: course.sessions,
     });
 
     // Update course to add user to enrolledUsers array
@@ -299,14 +359,7 @@ export const handleSuccessfulPayment = mutation({
       );
     }
 
-    return {
-      enrollmentId,
-      enrollmentNumber,
-      courseName: course.name,
-      sessionType: args.sessionType,
-      courseType: course.type,
-      internshipPlan: internshipPlan,
-    };
+    return enrollmentId;
   },
 });
 
@@ -371,6 +424,21 @@ export const handleCartCheckout = mutation({
         courseType: course.type, // Store course type
         internshipPlan: internshipPlan, // Store internship plan if provided
         sessions: course.sessions, // Store number of sessions for therapy courses
+      });
+
+      // Add enrollment to Google Sheets
+      await addEnrollmentToGoogleSheets(ctx, {
+        userId: args.userId,
+        userName: args.studentName || args.userEmail,
+        userEmail: args.userEmail,
+        userPhone: args.userPhone,
+        courseId: courseId,
+        courseName: course.name,
+        enrollmentNumber: enrollmentNumber,
+        sessionType: args.sessionType,
+        courseType: course.type,
+        internshipPlan: internshipPlan,
+        sessions: course.sessions,
       });
 
       // Update course to add user to enrolledUsers array
@@ -647,6 +715,20 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         sessions: course.sessions, // Store number of sessions for therapy courses
       });
 
+      // Add enrollment to Google Sheets
+      await addEnrollmentToGoogleSheets(ctx, {
+        userId: args.userEmail,
+        userName: guestUser.name,
+        userEmail: args.userEmail,
+        userPhone: guestUser.phone,
+        courseId: courseId,
+        courseName: course.name,
+        enrollmentNumber: enrollmentNumber,
+        isGuestUser: true,
+        courseType: course.type,
+        sessions: course.sessions,
+      });
+
       // Update course to add user to enrolledUsers array
       await ctx.db.patch(courseId, {
         enrolledUsers: [...course.enrolledUsers, args.userEmail],
@@ -788,6 +870,22 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         sessions: course.sessions, // Store number of sessions for therapy courses
       });
 
+      // Add enrollment to Google Sheets
+      await addEnrollmentToGoogleSheets(ctx, {
+        userId: args.userData.email,
+        userName: args.userData.name,
+        userEmail: args.userData.email,
+        userPhone: args.userData.phone,
+        courseId: courseId,
+        courseName: course.name,
+        enrollmentNumber: enrollmentNumber,
+        isGuestUser: true,
+        sessionType: args.sessionType,
+        courseType: course.type,
+        internshipPlan: internshipPlan,
+        sessions: course.sessions,
+      });
+
       // Update course to add user to enrolledUsers array
       await ctx.db.patch(courseId, {
         enrolledUsers: [...course.enrolledUsers, args.userData.email],
@@ -926,6 +1024,20 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       sessions: course.sessions, // Store number of sessions for therapy courses
     });
 
+    // Add enrollment to Google Sheets
+    await addEnrollmentToGoogleSheets(ctx, {
+      userId: args.userEmail,
+      userName: guestUser.name,
+      userEmail: args.userEmail,
+      userPhone: guestUser.phone,
+      courseId: args.courseId,
+      courseName: course.name,
+      enrollmentNumber: enrollmentNumber,
+      isGuestUser: true,
+      courseType: course.type,
+      sessions: course.sessions,
+    });
+
     // Update course to add user to enrolledUsers array
     await ctx.db.patch(args.courseId, {
       enrolledUsers: [...course.enrolledUsers, args.userEmail],
@@ -1010,6 +1122,19 @@ export const handleSupervisedTherapyEnrollment = mutation({
       enrollmentNumber: enrollmentNumber,
       sessionType: args.sessionType, // Store the session type
       courseType: course.type, // Store course type
+    });
+
+    // Add enrollment to Google Sheets
+    await addEnrollmentToGoogleSheets(ctx, {
+      userId: args.userId,
+      userName: args.studentName,
+      userEmail: args.userEmail,
+      userPhone: args.userPhone,
+      courseId: args.courseId,
+      courseName: course.name,
+      enrollmentNumber: enrollmentNumber,
+      sessionType: args.sessionType,
+      courseType: course.type,
     });
 
     // Update course to add user to enrolledUsers array
@@ -1109,6 +1234,20 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
       courseType: course.type, // Store course type
     });
 
+    // Add enrollment to Google Sheets
+    await addEnrollmentToGoogleSheets(ctx, {
+      userId: args.userEmail,
+      userName: args.studentName,
+      userEmail: args.userEmail,
+      userPhone: args.userPhone,
+      courseId: args.courseId,
+      courseName: course.name,
+      enrollmentNumber: enrollmentNumber,
+      isGuestUser: true,
+      sessionType: args.sessionType,
+      courseType: course.type,
+    });
+
     // Update course to add user to enrolledUsers array
     await ctx.db.patch(args.courseId, {
       enrolledUsers: [...course.enrolledUsers, args.userEmail],
@@ -1131,5 +1270,32 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
       courseName: course.name,
       sessionType: args.sessionType,
     };
+  },
+});
+
+// Setup Google Sheets for enrollments
+export const setupEnrollmentGoogleSheet = action({
+  args: {
+    spreadsheetId: v.string(),
+    sheetName: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      const sheetName = args.sheetName || "Enrollments";
+
+      await ctx.runAction(api.googleSheets.setupEnrollmentSheet, {
+        spreadsheetId: args.spreadsheetId,
+        sheetName: sheetName,
+      });
+
+      console.log(
+        `Successfully set up Google Sheets for enrollments: ${args.spreadsheetId}/${sheetName}`,
+      );
+      return null;
+    } catch (error) {
+      console.error("Error setting up Google Sheets:", error);
+      throw error;
+    }
   },
 });

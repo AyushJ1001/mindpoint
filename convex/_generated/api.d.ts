@@ -15,6 +15,7 @@ import type {
 } from "convex/server";
 import type * as courses from "../courses.js";
 import type * as emailActions from "../emailActions.js";
+import type * as googleSheets from "../googleSheets.js";
 import type * as image from "../image.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as testOffer from "../testOffer.js";
@@ -30,6 +31,7 @@ import type * as testOffer from "../testOffer.js";
 declare const fullApi: ApiFromModules<{
   courses: typeof courses;
   emailActions: typeof emailActions;
+  googleSheets: typeof googleSheets;
   image: typeof image;
   myFunctions: typeof myFunctions;
   testOffer: typeof testOffer;
