@@ -158,6 +158,7 @@ export const handleSuccessfulPayment = mutation({
       sessionType: args.sessionType, // Store session type if provided
       courseType: course.type, // Store course type
       internshipPlan: internshipPlan, // Store internship plan if provided
+      sessions: course.sessions, // Store number of sessions for therapy courses
     });
 
     // Update course to add user to enrolledUsers array
@@ -267,6 +268,20 @@ export const handleSuccessfulPayment = mutation({
           endTime: course.endTime,
         },
       );
+    } else if (course.type === "therapy") {
+      // Schedule therapy enrollment confirmation email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendTherapyEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          userName: userName,
+          userPhone: args.userPhone,
+          therapyType: course.name,
+          sessionCount: course.sessions || 1,
+          enrollmentNumber: enrollmentNumber,
+        },
+      );
     } else {
       // Schedule legacy enrollment confirmation email for other types
       await ctx.scheduler.runAfter(
@@ -355,6 +370,7 @@ export const handleCartCheckout = mutation({
         sessionType: args.sessionType, // Store session type if provided
         courseType: course.type, // Store course type
         internshipPlan: internshipPlan, // Store internship plan if provided
+        sessions: course.sessions, // Store number of sessions for therapy courses
       });
 
       // Update course to add user to enrolledUsers array
@@ -379,6 +395,7 @@ export const handleCartCheckout = mutation({
         startTime: course.startTime,
         endTime: course.endTime,
         internshipPlan: internshipPlan,
+        sessions: course.sessions, // Include sessions for therapy courses
       };
 
       // Check if this is a supervised therapy course
@@ -625,6 +642,8 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         courseName: course.name,
         enrollmentNumber: enrollmentNumber,
         isGuestUser: true,
+        courseType: course.type, // Store course type
+        sessions: course.sessions, // Store number of sessions for therapy courses
       });
 
       // Update course to add user to enrolledUsers array
@@ -637,10 +656,12 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         enrollmentNumber,
         courseName: course.name,
         courseId: courseId,
+        courseType: course.type,
         startDate: course.startDate,
         endDate: course.endDate,
         startTime: course.startTime,
         endTime: course.endTime,
+        sessions: course.sessions, // Include sessions for therapy courses
       });
     }
 
@@ -762,6 +783,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         sessionType: args.sessionType, // Store session type if provided
         courseType: course.type, // Store course type
         internshipPlan: internshipPlan, // Store internship plan if provided
+        sessions: course.sessions, // Store number of sessions for therapy courses
       });
 
       // Update course to add user to enrolledUsers array
@@ -786,6 +808,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         startTime: course.startTime,
         endTime: course.endTime,
         internshipPlan: internshipPlan,
+        sessions: course.sessions, // Include sessions for therapy courses
       };
 
       // Check if this is a supervised therapy course
@@ -896,6 +919,8 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       courseName: course.name,
       enrollmentNumber: enrollmentNumber,
       isGuestUser: true,
+      courseType: course.type, // Store course type
+      sessions: course.sessions, // Store number of sessions for therapy courses
     });
 
     // Update course to add user to enrolledUsers array
@@ -903,20 +928,37 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       enrolledUsers: [...course.enrolledUsers, args.userEmail],
     });
 
-    // Schedule email sending action
-    await ctx.scheduler.runAfter(
-      0,
-      api.emailActions.sendEnrollmentConfirmation,
-      {
-        userEmail: args.userEmail,
-        courseName: course.name,
-        enrollmentNumber: enrollmentNumber,
-        startDate: course.startDate,
-        endDate: course.endDate,
-        startTime: course.startTime,
-        endTime: course.endTime,
-      },
-    );
+    // Schedule appropriate email based on course type
+    if (course.type === "therapy") {
+      // Send therapy-specific email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendTherapyEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          userName: guestUser.name,
+          userPhone: guestUser.phone,
+          therapyType: course.name,
+          sessionCount: course.sessions || 1,
+          enrollmentNumber: enrollmentNumber,
+        },
+      );
+    } else {
+      // Send generic enrollment confirmation email
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          courseName: course.name,
+          enrollmentNumber: enrollmentNumber,
+          startDate: course.startDate,
+          endDate: course.endDate,
+          startTime: course.startTime,
+          endTime: course.endTime,
+        },
+      );
+    }
 
     return {
       enrollmentId,

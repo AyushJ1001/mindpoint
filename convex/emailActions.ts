@@ -480,6 +480,7 @@ export const sendCartCheckoutConfirmation = action({
         startTime: v.string(),
         endTime: v.string(),
         internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
+        sessions: v.optional(v.number()),
       }),
     ),
   },
@@ -518,9 +519,13 @@ export const sendCartCheckoutConfirmation = action({
                     const planInfo = e.internshipPlan
                       ? ` (${e.internshipPlan === "120" ? "2 week" : "4 week"} plan)`
                       : "";
+                    const sessionInfo =
+                      e.sessions && e.courseType === "therapy"
+                        ? ` (${e.sessions} session${e.sessions > 1 ? "s" : ""})`
+                        : "";
                     return `
                   <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${e.courseName}${planInfo}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${e.courseName}${planInfo}${sessionInfo}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${courseType}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.startDate}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.endDate}</td>

@@ -101,5 +101,6 @@ export default defineSchema({
     ),
     courseType: v.optional(CourseType),
     internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
+    sessions: v.optional(v.number()), // Number of sessions for therapy courses
   }),
 });
