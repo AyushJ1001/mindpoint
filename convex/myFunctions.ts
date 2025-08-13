@@ -396,6 +396,7 @@ export const handleCartCheckout = mutation({
         endTime: course.endTime,
         internshipPlan: internshipPlan,
         sessions: course.sessions, // Include sessions for therapy courses
+        sessionType: args.sessionType, // Include session type for supervised courses
       };
 
       // Check if this is a supervised therapy course
@@ -662,6 +663,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         startTime: course.startTime,
         endTime: course.endTime,
         sessions: course.sessions, // Include sessions for therapy courses
+        sessionType: undefined, // No session type for this function
       });
     }
 
@@ -809,6 +811,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         endTime: course.endTime,
         internshipPlan: internshipPlan,
         sessions: course.sessions, // Include sessions for therapy courses
+        sessionType: args.sessionType, // Include session type for supervised courses
       };
 
       // Check if this is a supervised therapy course

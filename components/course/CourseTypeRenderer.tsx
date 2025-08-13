@@ -13,6 +13,7 @@ import WhyChoose from "./why-choose";
 import Certification from "./certification";
 import ReviewsSection from "./reviews-section";
 import FAQSection from "./faq-section";
+import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
 import CommunitiesSection from "./communities-section";
 
@@ -74,7 +75,7 @@ export default function CourseTypeRenderer({
           {courseType === "supervised" ? (
             <SupervisedFAQSection />
           ) : (
-            <FAQSection />
+            <TherapyFAQSection />
           )}
           <CommunitiesSection />
         </>

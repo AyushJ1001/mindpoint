@@ -145,7 +145,6 @@ We are pleased to confirm your enrollment for *${data.therapyType}* therapy sess
 *Session Details:*
 • Therapy Type: ${data.therapyType}
 • Number of Sessions: ${data.sessionCount}
-• Enrollment No: *${data.enrollmentNumber}*
 
 *Next Steps:*
 • Your assigned therapist will contact you within 24-48 hours
@@ -185,7 +184,6 @@ We are pleased to confirm your enrollment for *${data.supervisionPackage}* super
 *Supervision Details:*
 • Supervision Package: ${data.supervisionPackage}
 • Number of Sessions: ${data.sessionCount}
-• Enrollment No: *${data.enrollmentNumber}*
 
 *Next Steps:*
 • Your supervisor will contact you within 24-48 hours

@@ -481,6 +481,9 @@ export const sendCartCheckoutConfirmation = action({
         endTime: v.string(),
         internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
         sessions: v.optional(v.number()),
+        sessionType: v.optional(
+          v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
+        ),
       }),
     ),
   },
@@ -523,14 +526,36 @@ export const sendCartCheckoutConfirmation = action({
                       e.sessions && e.courseType === "therapy"
                         ? ` (${e.sessions} session${e.sessions > 1 ? "s" : ""})`
                         : "";
+
+                    // Add therapy type or session type information
+                    let typeInfo = "";
+                    if (e.courseType === "therapy") {
+                      // Extract therapy type from course name (Spark, Express, Connection)
+                      const therapyType = e.courseName.includes("Spark")
+                        ? "Spark"
+                        : e.courseName.includes("Express")
+                          ? "Express"
+                          : e.courseName.includes("Connection")
+                            ? "Connection"
+                            : e.courseName;
+                      typeInfo = ` - ${therapyType}`;
+                    } else if (e.courseType === "supervised" && e.sessionType) {
+                      typeInfo = ` - ${e.sessionType.charAt(0).toUpperCase() + e.sessionType.slice(1)}`;
+                    }
+
+                    // Only show enrollment number for non-therapy and non-supervised courses
+                    const showEnrollmentNumber =
+                      e.courseType !== "therapy" &&
+                      e.courseType !== "supervised";
+
                     return `
                   <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${e.courseName}${planInfo}${sessionInfo}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${e.courseName}${planInfo}${sessionInfo}${typeInfo}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${courseType}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.startDate}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.endDate}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.startTime} - ${e.endTime}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${e.enrollmentNumber}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${showEnrollmentNumber ? e.enrollmentNumber : "-"}</td>
                   </tr>
                 `;
                   })
@@ -546,7 +571,14 @@ export const sendCartCheckoutConfirmation = action({
             </ul>
 
             <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
-            <p style="margin-top: 20px;">Please save these enrollment numbers for future reference and access to course materials.</p>
+            ${
+              args.enrollments.some(
+                (e) =>
+                  e.courseType !== "therapy" && e.courseType !== "supervised",
+              )
+                ? '<p style="margin-top: 20px;">Please save these enrollment numbers for future reference and access to course materials.</p>'
+                : ""
+            }
             <p>Thank you for learning with us!</p>
             <br>
             <p>Best regards,<br>The Mind Point Team</p>
@@ -601,10 +633,6 @@ export const sendTherapyEnrollmentConfirmation = action({
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Number of Sessions</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">${args.sessionCount}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
-                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${args.enrollmentNumber}</td>
               </tr>
             </tbody>
           </table>
@@ -661,10 +689,6 @@ export const sendSupervisedEnrollmentConfirmation = action({
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Number of Sessions</td>
                 <td style="padding: 8px; border: 1px solid #ddd;">${args.sessionCount}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
-                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${args.enrollmentNumber}</td>
               </tr>
             </tbody>
           </table>
