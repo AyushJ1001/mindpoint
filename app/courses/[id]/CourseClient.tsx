@@ -66,22 +66,18 @@ export default function CourseClient({
 
   // Helper function to handle buy now
   const handleBuyNow = (course: Doc<"courses">) => {
-    const cartItems = items.filter((item) => item.id !== course._id);
-
-    if (cartItems.length > 0) {
-      // Cart has other items, show confirmation dialog
+    // Check if cart has any items (including this course)
+    if (items.length > 0) {
+      // Cart has items, show confirmation dialog
       setShowBuyNowDialog(true);
     } else {
-      // Cart is empty or only has this course, proceed directly
+      // Cart is empty, proceed directly
       handleBuyNowConfirm(course);
     }
   };
 
   // Helper function to confirm buy now action
   const handleBuyNowConfirm = (course: Doc<"courses">) => {
-    // Clear cart and add only this course
-    emptyCart();
-
     // Check if this specific course has a valid offer
     const courseHasValidOffer = (() => {
       if (!course.offer) return false;
@@ -99,16 +95,28 @@ export default function CourseClient({
         ? course.price - (course.price * course.offer.discount) / 100
         : course.price || 100;
 
-    // Add the course to cart
-    addItem({
-      id: course._id,
-      name: course.name,
-      description: course.description,
-      price: priceToUse,
-      imageUrls: course.imageUrls || [],
-      capacity: course.capacity || 1,
-      quantity: 1,
+    // Remove all items from cart except the current course
+    items.forEach((item) => {
+      if (item.id !== course._id) {
+        removeItem(item.id);
+      }
     });
+
+    // If the current course is not in cart, add it
+    if (!inCart(course._id)) {
+      addItem({
+        id: course._id,
+        name: course.name,
+        description: course.description,
+        price: priceToUse,
+        imageUrls: course.imageUrls || [],
+        capacity: course.capacity || 1,
+        quantity: 1,
+      });
+    } else {
+      // If it's already in cart, ensure it has the correct price and quantity
+      updateItemQuantity(course._id, 1);
+    }
 
     // Navigate to cart
     router.push("/cart");
@@ -458,7 +466,7 @@ export default function CourseClient({
             <DialogHeader>
               <DialogTitle>Cart Already Has Items</DialogTitle>
               <DialogDescription>
-                Your cart currently contains other items. Would you like to:
+                Your cart currently contains items. Would you like to:
               </DialogDescription>
             </DialogHeader>
             <DialogFooter className="flex-col gap-2 sm:flex-row">
@@ -475,7 +483,10 @@ export default function CourseClient({
               <Button
                 onClick={() => {
                   setShowBuyNowDialog(false);
-                  handleIncreaseQuantity(displayCourse);
+                  // If course is not in cart, add it; if it is, just proceed to checkout
+                  if (!inCart(displayCourse._id)) {
+                    handleIncreaseQuantity(displayCourse);
+                  }
                   router.push("/cart");
                 }}
                 className="w-full sm:w-auto"
@@ -494,6 +505,7 @@ export default function CourseClient({
               : activeCourse.price
           }
           onPrimary={() => handleIncreaseQuantity(activeCourse)}
+          onBuyNow={() => handleBuyNow(activeCourse)}
           disabled={
             isOutOfStock ||
             (inCart(activeCourse._id) &&

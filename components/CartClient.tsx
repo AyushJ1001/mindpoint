@@ -154,6 +154,20 @@ const CartContent = () => {
       };
 
       const rzp = new Razorpay(options);
+
+      // Add event handlers for payment modal
+      rzp.on("payment.failed", (response) => {
+        console.error("Payment failed:", response.error);
+        toast.error("Payment failed. Please try again.");
+        setIsProcessing(false);
+      });
+
+      rzp.on("payment.cancel", () => {
+        console.log("Payment cancelled by user");
+        toast.info("Payment was cancelled.");
+        setIsProcessing(false);
+      });
+
       rzp.open();
     } catch (error) {
       console.error("Error creating order:", error);

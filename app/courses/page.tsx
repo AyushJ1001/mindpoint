@@ -4,6 +4,7 @@ import React from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCart } from "react-use-cart";
+import { useRouter } from "next/navigation";
 import { BookOpen } from "lucide-react";
 import { Doc } from "@/convex/_generated/dataModel";
 import { Id } from "@/convex/_generated/dataModel";
@@ -113,6 +114,7 @@ const extractVariantLabel = (course: Doc<"courses">): string | null => {
 
 const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   const { addItem, inCart } = useCart();
+  const router = useRouter();
   const sorted = [...courses].sort((a, b) => a.price - b.price);
   const useSessionsMode = sorted.every(
     (c) => typeof (c as any).sessions === "number",
@@ -163,8 +165,15 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     });
   };
 
+  const handleCardClick = () => {
+    router.push(`/courses/${selectedCourse._id}`);
+  };
+
   return (
-    <Card className="card-shadow hover:card-shadow-lg transition-smooth group h-full overflow-hidden">
+    <Card
+      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
+      onClick={handleCardClick}
+    >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
 
       <CardHeader className="pb-3">
@@ -183,7 +192,10 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
               value={String(selectedSessions)}
               onValueChange={(val) => setSelectedSessions(parseInt(val, 10))}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger
+                className="w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <SelectValue placeholder="Select sessions" />
               </SelectTrigger>
               <SelectContent>
@@ -206,7 +218,10 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
               value={selectedDuration}
               onValueChange={(val) => setSelectedDuration(val)}
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger
+                className="w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <SelectValue placeholder="Select duration" />
               </SelectTrigger>
               <SelectContent>
@@ -231,7 +246,10 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                 setSelectedId(val as unknown as Id<"courses">)
               }
             >
-              <SelectTrigger className="w-full">
+              <SelectTrigger
+                className="w-full"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <SelectValue placeholder="Select an option" />
               </SelectTrigger>
               <SelectContent>
@@ -279,7 +297,10 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
 
             return (
               <Button
-                onClick={handleAddToCart}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart();
+                }}
                 disabled={inCart(selectedCourse._id) || isOutOfStock}
                 size="sm"
                 className="transition-smooth"
@@ -301,6 +322,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
 
 const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
+  const router = useRouter();
 
   const handleAddToCart = () => {
     // Check if course is out of stock
@@ -325,8 +347,15 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     });
   };
 
+  const handleCardClick = () => {
+    router.push(`/courses/${course._id}`);
+  };
+
   return (
-    <Card className="card-shadow hover:card-shadow-lg transition-smooth group h-full overflow-hidden">
+    <Card
+      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
+      onClick={handleCardClick}
+    >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
       <CardHeader className="pb-4">
@@ -356,7 +385,10 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
 
             return (
               <Button
-                onClick={handleAddToCart}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart();
+                }}
                 disabled={inCart(course._id) || isOutOfStock}
                 size="sm"
                 className="transition-smooth"

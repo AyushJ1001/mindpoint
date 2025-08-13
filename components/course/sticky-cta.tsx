@@ -6,6 +6,7 @@ import { ShoppingCart } from "lucide-react";
 export default function StickyCTA({
   price,
   onPrimary,
+  onBuyNow,
   disabled,
   inCart,
   quantity,
@@ -14,6 +15,7 @@ export default function StickyCTA({
 }: {
   price: number;
   onPrimary: () => void;
+  onBuyNow: () => void;
   disabled?: boolean;
   inCart?: boolean;
   quantity?: number;
@@ -52,7 +54,12 @@ export default function StickyCTA({
                     : "Added to cart"
                   : "Add to cart"}
             </Button>
-            <Button variant="outline" className="w-full sm:w-auto">
+            <Button
+              variant="outline"
+              className="w-full sm:w-auto"
+              onClick={onBuyNow}
+              disabled={isOutOfStock}
+            >
               <ShoppingCart className="mr-2 h-4 w-4" /> Buy now
             </Button>
           </div>
