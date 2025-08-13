@@ -4,7 +4,7 @@ import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,6 +35,31 @@ const CartContent = () => {
   const [showGuestModal, setShowGuestModal] = useState(false);
   const { Razorpay, error, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
+
+  // Reset processing state when component unmounts or user navigates away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      setIsProcessing(false);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        // User navigated away or closed tab, reset processing state
+        setTimeout(() => {
+          setIsProcessing(false);
+        }, 1000);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      setIsProcessing(false);
+    };
+  }, []);
 
   const handlePayment = async (guestUserData?: {
     name: string;
@@ -160,13 +185,214 @@ const CartContent = () => {
         console.error("Payment failed:", response.error);
         toast.error("Payment failed. Please try again.");
         setIsProcessing(false);
+        if (modalCheckInterval) clearInterval(modalCheckInterval);
+        if (observer) observer.disconnect();
       });
 
       rzp.on("payment.cancel", () => {
         console.log("Payment cancelled by user");
         toast.info("Payment was cancelled.");
         setIsProcessing(false);
+        if (modalCheckInterval) clearInterval(modalCheckInterval);
+        if (observer) observer.disconnect();
       });
+
+      // Add handler for when modal is closed without payment
+      rzp.on("close", () => {
+        console.log("Payment modal closed");
+        setIsProcessing(false);
+        if (modalCheckInterval) clearInterval(modalCheckInterval);
+        if (observer) observer.disconnect();
+      });
+
+      // Add a timeout to reset processing state in case events don't fire
+      const timeoutId = setTimeout(() => {
+        console.log("Payment timeout - resetting processing state");
+        setIsProcessing(false);
+      }, 60000); // 1 minute timeout
+
+      // Clear timeout when payment is successful
+      rzp.on("payment.success", () => {
+        clearTimeout(timeoutId);
+        if (modalCheckInterval) clearInterval(modalCheckInterval);
+        if (observer) observer.disconnect();
+      });
+
+      // Add error handler for any other Razorpay errors
+      rzp.on("error", (error) => {
+        console.error("Razorpay error:", error);
+        toast.error("Payment error occurred. Please try again.");
+        setIsProcessing(false);
+        if (modalCheckInterval) clearInterval(modalCheckInterval);
+        if (observer) observer.disconnect();
+      });
+
+      // Monitor Razorpay modal state with comprehensive detection
+      let modalCheckInterval: NodeJS.Timeout;
+      let observer: MutationObserver;
+
+      const startModalMonitoring = () => {
+        console.log("Starting Razorpay modal monitoring...");
+
+        // More comprehensive selectors for Razorpay elements
+        const razorpaySelectors = [
+          "#razorpay-payment-button",
+          ".razorpay-container",
+          'iframe[src*="razorpay"]',
+          'iframe[src*="checkout"]',
+          '[id*="razorpay"]',
+          '[class*="razorpay"]',
+          ".razorpay-checkout",
+          "#razorpay-checkout",
+          'div[style*="position: fixed"][style*="z-index"]', // Common modal styling
+          'div[style*="position: fixed"][style*="top: 0"]', // Full screen modal
+        ];
+
+        const checkForRazorpayModal = () => {
+          let foundElements = [];
+          razorpaySelectors.forEach((selector) => {
+            const elements = document.querySelectorAll(selector);
+            if (elements.length > 0) {
+              foundElements.push(...Array.from(elements));
+            }
+          });
+
+          // Also check for any iframe that might be Razorpay
+          const allIframes = document.querySelectorAll("iframe");
+          const razorpayIframes = Array.from(allIframes).filter((iframe) => {
+            const src = iframe.src || "";
+            return (
+              src.includes("razorpay") ||
+              src.includes("checkout") ||
+              src.includes("pay")
+            );
+          });
+          foundElements.push(...razorpayIframes);
+
+          console.log(
+            `Found ${foundElements.length} potential Razorpay elements:`,
+            foundElements,
+          );
+
+          // Check if any of the found elements are actually visible and interactive
+          const visibleElements = foundElements.filter((element) => {
+            const style = window.getComputedStyle(element);
+            const rect = element.getBoundingClientRect();
+
+            // Check if element is visible (not hidden, has dimensions, not transparent)
+            const isVisible =
+              style.display !== "none" &&
+              style.visibility !== "hidden" &&
+              rect.width > 0 &&
+              rect.height > 0 &&
+              parseFloat(style.opacity) > 0;
+
+            // Check if element is in viewport
+            const isInViewport =
+              rect.top < window.innerHeight &&
+              rect.bottom > 0 &&
+              rect.left < window.innerWidth &&
+              rect.right > 0;
+
+            return isVisible && isInViewport;
+          });
+
+          console.log(
+            `Found ${visibleElements.length} visible Razorpay elements:`,
+            visibleElements,
+          );
+
+          // If no visible elements, consider modal closed
+          if (visibleElements.length === 0) {
+            console.log(
+              "No visible Razorpay elements found - resetting processing state",
+            );
+            setIsProcessing(false);
+            clearInterval(modalCheckInterval);
+            if (observer) observer.disconnect();
+            return true; // Modal is closed
+          }
+
+          // Additional check: look for modal backdrop/overlay
+          const modalBackdrop = document.querySelector(
+            '.razorpay-backdrop, div[style*="position: fixed"][style*="background"]',
+          );
+          if (modalBackdrop) {
+            const backdropStyle = window.getComputedStyle(modalBackdrop);
+            const backdropRect = modalBackdrop.getBoundingClientRect();
+
+            // Check if backdrop is visible and covers the screen
+            const isBackdropVisible =
+              backdropStyle.display !== "none" &&
+              backdropStyle.visibility !== "hidden" &&
+              backdropRect.width > 0 &&
+              backdropRect.height > 0 &&
+              parseFloat(backdropStyle.opacity) > 0;
+
+            console.log(
+              `Modal backdrop visible: ${isBackdropVisible}`,
+              backdropStyle,
+            );
+
+            if (!isBackdropVisible) {
+              console.log(
+                "Modal backdrop not visible - resetting processing state",
+              );
+              setIsProcessing(false);
+              clearInterval(modalCheckInterval);
+              if (observer) observer.disconnect();
+              return true; // Modal is closed
+            }
+          }
+
+          return false; // Modal is still open
+        };
+
+        // Interval-based monitoring
+        modalCheckInterval = setInterval(() => {
+          checkForRazorpayModal();
+        }, 1000); // Check every second for faster response
+
+        // DOM mutation observer for immediate detection
+        observer = new MutationObserver((mutations) => {
+          mutations.forEach((mutation) => {
+            if (mutation.type === "childList") {
+              // Check if any removed nodes were Razorpay elements
+              const removedNodes = Array.from(mutation.removedNodes);
+              const hadRazorpayElements = removedNodes.some((node) => {
+                if (node.nodeType === Node.ELEMENT_NODE) {
+                  const element = node as Element;
+                  return (
+                    razorpaySelectors.some((selector) =>
+                      element.matches(selector),
+                    ) ||
+                    (element.tagName === "IFRAME" &&
+                      (element.src?.includes("razorpay") ||
+                        element.src?.includes("checkout")))
+                  );
+                }
+                return false;
+              });
+
+              if (hadRazorpayElements) {
+                console.log(
+                  "Razorpay elements removed from DOM - checking if modal is closed",
+                );
+                setTimeout(() => {
+                  if (checkForRazorpayModal()) {
+                    console.log("Confirmed: Razorpay modal is closed");
+                  }
+                }, 500); // Small delay to ensure DOM is updated
+              }
+            }
+          });
+        });
+
+        observer.observe(document.body, { childList: true, subtree: true });
+      };
+
+      // Start monitoring after modal opens
+      setTimeout(startModalMonitoring, 2000);
 
       rzp.open();
     } catch (error) {

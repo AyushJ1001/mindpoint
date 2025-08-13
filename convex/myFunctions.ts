@@ -582,6 +582,8 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
       api.emailActions.sendCartCheckoutConfirmation,
       {
         userEmail: args.userEmail,
+        userName: guestUser.name,
+        userPhone: guestUser.phone,
         enrollments: enrollments,
       },
     );
