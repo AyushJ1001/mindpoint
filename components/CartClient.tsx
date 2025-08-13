@@ -89,6 +89,9 @@ const CartContent = () => {
         handler: async (response) => {
           console.log("Payment successful", response);
 
+          // Clear timeout and cleanup monitoring
+          clearTimeoutAndCleanup();
+
           if (user?.id) {
             // Handle signed-in user
             try {
@@ -105,12 +108,22 @@ const CartContent = () => {
               if (result.success) {
                 console.log("Enrollment successful:", result.enrollments);
                 // Show success message to user
-                toast.success(
-                  `Payment successful! You have been enrolled in ${result.enrollments?.length || 0} course(s).`,
-                  {
-                    description: `Enrollment numbers: ${result.enrollments?.map((e) => e.enrollmentNumber).join(", ")}`,
-                  },
-                );
+                if (result.enrollments && result.enrollments.length > 0) {
+                  toast.success(
+                    `Payment successful! You have been enrolled in ${result.enrollments.length} course(s).`,
+                    {
+                      description: `Enrollment numbers: ${result.enrollments.map((e) => e.enrollmentNumber).join(", ")}`,
+                    },
+                  );
+                } else {
+                  toast.success(
+                    "Payment successful! You are already enrolled in all selected courses.",
+                    {
+                      description:
+                        "Check your email for enrollment status details.",
+                    },
+                  );
+                }
               } else {
                 console.error("Enrollment failed:", result.error);
                 toast.error(
@@ -138,12 +151,22 @@ const CartContent = () => {
 
               if (result.success) {
                 console.log("Guest enrollment successful:", result.enrollments);
-                toast.success(
-                  `Payment successful! You have been enrolled in ${result.enrollments?.length || 0} course(s).`,
-                  {
-                    description: `Enrollment numbers: ${result.enrollments?.map((e) => e.enrollmentNumber).join(", ")}`,
-                  },
-                );
+                if (result.enrollments && result.enrollments.length > 0) {
+                  toast.success(
+                    `Payment successful! You have been enrolled in ${result.enrollments.length} course(s).`,
+                    {
+                      description: `Enrollment numbers: ${result.enrollments.map((e) => e.enrollmentNumber).join(", ")}`,
+                    },
+                  );
+                } else {
+                  toast.success(
+                    "Payment successful! You are already enrolled in all selected courses.",
+                    {
+                      description:
+                        "Check your email for enrollment status details.",
+                    },
+                  );
+                }
               } else {
                 console.error("Guest enrollment failed:", result.error);
                 toast.error(
@@ -189,21 +212,8 @@ const CartContent = () => {
         if (observer) observer.disconnect();
       });
 
-      rzp.on("payment.cancel", () => {
-        console.log("Payment cancelled by user");
-        toast.info("Payment was cancelled.");
-        setIsProcessing(false);
-        if (modalCheckInterval) clearInterval(modalCheckInterval);
-        if (observer) observer.disconnect();
-      });
-
-      // Add handler for when modal is closed without payment
-      rzp.on("close", () => {
-        console.log("Payment modal closed");
-        setIsProcessing(false);
-        if (modalCheckInterval) clearInterval(modalCheckInterval);
-        if (observer) observer.disconnect();
-      });
+      // Note: These event handlers are commented out as they may not be supported in the current version
+      // The payment success is handled in the main handler function above
 
       // Add a timeout to reset processing state in case events don't fire
       const timeoutId = setTimeout(() => {
@@ -211,21 +221,12 @@ const CartContent = () => {
         setIsProcessing(false);
       }, 60000); // 1 minute timeout
 
-      // Clear timeout when payment is successful
-      rzp.on("payment.success", () => {
+      // Clear timeout when payment is successful (handled in main handler)
+      const clearTimeoutAndCleanup = () => {
         clearTimeout(timeoutId);
         if (modalCheckInterval) clearInterval(modalCheckInterval);
         if (observer) observer.disconnect();
-      });
-
-      // Add error handler for any other Razorpay errors
-      rzp.on("error", (error) => {
-        console.error("Razorpay error:", error);
-        toast.error("Payment error occurred. Please try again.");
-        setIsProcessing(false);
-        if (modalCheckInterval) clearInterval(modalCheckInterval);
-        if (observer) observer.disconnect();
-      });
+      };
 
       // Monitor Razorpay modal state with comprehensive detection
       let modalCheckInterval: NodeJS.Timeout;
@@ -260,7 +261,7 @@ const CartContent = () => {
           // Also check for any iframe that might be Razorpay
           const allIframes = document.querySelectorAll("iframe");
           const razorpayIframes = Array.from(allIframes).filter((iframe) => {
-            const src = iframe.src || "";
+            const src = (iframe as HTMLIFrameElement).src || "";
             return (
               src.includes("razorpay") ||
               src.includes("checkout") ||
@@ -308,8 +309,7 @@ const CartContent = () => {
               "No visible Razorpay elements found - resetting processing state",
             );
             setIsProcessing(false);
-            clearInterval(modalCheckInterval);
-            if (observer) observer.disconnect();
+            clearTimeoutAndCleanup();
             return true; // Modal is closed
           }
 
@@ -339,8 +339,7 @@ const CartContent = () => {
                 "Modal backdrop not visible - resetting processing state",
               );
               setIsProcessing(false);
-              clearInterval(modalCheckInterval);
-              if (observer) observer.disconnect();
+              clearTimeoutAndCleanup();
               return true; // Modal is closed
             }
           }
@@ -367,8 +366,12 @@ const CartContent = () => {
                       element.matches(selector),
                     ) ||
                     (element.tagName === "IFRAME" &&
-                      (element.src?.includes("razorpay") ||
-                        element.src?.includes("checkout")))
+                      ((element as HTMLIFrameElement).src?.includes(
+                        "razorpay",
+                      ) ||
+                        (element as HTMLIFrameElement).src?.includes(
+                          "checkout",
+                        )))
                   );
                 }
                 return false;

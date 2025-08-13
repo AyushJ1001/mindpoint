@@ -4,7 +4,49 @@ import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { Resend } from "resend";
 
-const resend = new Resend(process.env.RESEND_API_KEY!);
+const resendApiKey = process.env.RESEND_API_KEY;
+console.log("Resend API Key configured:", !!resendApiKey);
+
+if (!resendApiKey) {
+  console.error("RESEND_API_KEY is not configured!");
+}
+
+const resend = new Resend(resendApiKey);
+
+// Test email action for debugging
+export const sendTestEmail = action({
+  args: {
+    userEmail: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      console.log("Attempting to send test email to:", args.userEmail);
+
+      const result = await resend.emails.send({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Test Email from The Mind Point",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #4CAF50;">Test Email</h2>
+            <p>This is a test email to verify that the email system is working correctly.</p>
+            <p>If you received this email, the email configuration is working properly.</p>
+            <br>
+            <p>Best regards,<br>The Mind Point Team</p>
+          </div>
+        `,
+      });
+
+      console.log("Test email sent successfully:", result);
+    } catch (error) {
+      console.error("Failed to send test email:", error);
+      throw error;
+    }
+
+    return null;
+  },
+});
 
 export const sendCertificateEnrollmentConfirmation = action({
   args: {
@@ -442,68 +484,80 @@ export const sendCartCheckoutConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Send email
-    await resend.emails.send({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Enrollment Confirmation",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
-          <p>We are happy to confirm that your payments for the following courses have been successfully received:</p>
+    try {
+      // Send email
+      await resend.emails.send({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Enrollment Confirmation",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
+            <p>Dear ${args.userName},</p>
+            <p>We are happy to confirm that your payments for the following courses have been successfully received:</p>
 
-          <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-            <thead>
-              <tr>
-                <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Name</th>
-                <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Type</th>
-                <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Start Date</th>
-                <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">End Date</th>
-                <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Time</th>
-                <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Enrollment No</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${args.enrollments
-                .map((e) => {
-                  const courseType = e.courseType
-                    ? e.courseType.charAt(0).toUpperCase() +
-                      e.courseType.slice(1)
-                    : "Course";
-                  const planInfo = e.internshipPlan
-                    ? ` (${e.internshipPlan === "120" ? "2 week" : "4 week"} plan)`
-                    : "";
-                  return `
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+              <thead>
                 <tr>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${e.courseName}${planInfo}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${courseType}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${e.startDate}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${e.endDate}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd;">${e.startTime} - ${e.endTime}</td>
-                  <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${e.enrollmentNumber}</td>
+                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Name</th>
+                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Type</th>
+                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Start Date</th>
+                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">End Date</th>
+                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Time</th>
+                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Enrollment No</th>
                 </tr>
-              `;
-                })
-                .join("")}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                ${args.enrollments
+                  .map((e) => {
+                    const courseType = e.courseType
+                      ? e.courseType.charAt(0).toUpperCase() +
+                        e.courseType.slice(1)
+                      : "Course";
+                    const planInfo = e.internshipPlan
+                      ? ` (${e.internshipPlan === "120" ? "2 week" : "4 week"} plan)`
+                      : "";
+                    return `
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${e.courseName}${planInfo}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${courseType}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${e.startDate}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${e.endDate}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${e.startTime} - ${e.endTime}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${e.enrollmentNumber}</td>
+                  </tr>
+                `;
+                  })
+                  .join("")}
+              </tbody>
+            </table>
 
-          <h3 style="margin-top: 24px;">Please Note</h3>
-          <ul>
-            <li>You will be added to the group a day prior to the course.</li>
-            <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>
-            <li>Please provide your WhatsApp number if not provided on <strong>+91 9770780086</strong>.</li>
-          </ul>
+            <h3 style="margin-top: 24px;">Please Note</h3>
+            <ul>
+              <li>You will be added to the group a day prior to the course.</li>
+              <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>
+              <li>Please provide your WhatsApp number if not provided on <strong>+91 9770780086</strong>.</li>
+            </ul>
 
-          <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
-          <p style="margin-top: 20px;">Please save these enrollment numbers for future reference and access to course materials.</p>
-          <p>Thank you for learning with us!</p>
-          <br>
-          <p>Best regards,<br>The Mind Point Team</p>
-        </div>
-      `,
-    });
+            <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+            <p style="margin-top: 20px;">Please save these enrollment numbers for future reference and access to course materials.</p>
+            <p>Thank you for learning with us!</p>
+            <br>
+            <p>Best regards,<br>The Mind Point Team</p>
+          </div>
+        `,
+      });
+
+      console.log(
+        `Cart checkout confirmation email sent successfully to ${args.userEmail}`,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to send cart checkout confirmation email to ${args.userEmail}:`,
+        error,
+      );
+      // Don't throw the error to avoid breaking the enrollment process
+    }
 
     return null;
   },
@@ -699,6 +753,90 @@ export const sendSupervisedTherapyWelcomeEmail = action({
         },
       ],
     });
+
+    return null;
+  },
+});
+
+export const sendAlreadyEnrolledNotification = action({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    alreadyEnrolledCourses: v.array(
+      v.object({
+        courseName: v.string(),
+        courseType: v.optional(v.string()),
+      }),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      // Send email
+      await resend.emails.send({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Course Enrollment Status - Already Enrolled",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #FFA500;">Course Enrollment Status</h2>
+            <p>Dear ${args.userName},</p>
+            <p>Thank you for your interest in our courses! We noticed that you attempted to enroll in the following courses, but you are already enrolled in them:</p>
+
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+              <thead>
+                <tr>
+                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Name</th>
+                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Type</th>
+                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${args.alreadyEnrolledCourses
+                  .map((course) => {
+                    const courseType = course.courseType
+                      ? course.courseType.charAt(0).toUpperCase() +
+                        course.courseType.slice(1)
+                      : "Course";
+                    return `
+                  <tr>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${course.courseName}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${courseType}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; color: #4CAF50; font-weight: bold;">Already Enrolled</td>
+                  </tr>
+                `;
+                  })
+                  .join("")}
+              </tbody>
+            </table>
+
+            <h3 style="margin-top: 24px;">What This Means</h3>
+            <ul>
+              <li>You are already enrolled in these courses and have access to all course materials.</li>
+              <li>No additional charges were made for these courses.</li>
+              <li>You can continue with your learning journey as usual.</li>
+            </ul>
+
+            <h3 style="margin-top: 24px;">Need Help?</h3>
+            <p>If you have any questions about your enrollment status or need assistance with your courses, please contact us at <strong>+91 9770780086</strong>.</p>
+            
+            <p>Thank you for being part of The Mind Point community!</p>
+            <br>
+            <p>Best regards,<br>The Mind Point Team</p>
+          </div>
+        `,
+      });
+
+      console.log(
+        `Already enrolled notification email sent successfully to ${args.userEmail}`,
+      );
+    } catch (error) {
+      console.error(
+        `Failed to send already enrolled notification email to ${args.userEmail}:`,
+        error,
+      );
+      // Don't throw the error to avoid breaking the enrollment process
+    }
 
     return null;
   },

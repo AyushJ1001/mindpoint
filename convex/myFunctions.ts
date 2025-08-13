@@ -273,6 +273,7 @@ export const handleCartCheckout = mutation({
   handler: async (ctx, args) => {
     const enrollments = [];
     const supervisedEnrollments = [];
+    const alreadyEnrolledCourses = [];
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -286,6 +287,11 @@ export const handleCartCheckout = mutation({
         console.log(
           `User ${args.userId} is already enrolled in course ${course.name}`,
         );
+        // Add to already enrolled courses for email notification
+        alreadyEnrolledCourses.push({
+          courseName: course.name,
+          courseType: course.type,
+        });
         continue;
       }
 
@@ -378,6 +384,23 @@ export const handleCartCheckout = mutation({
           userName: args.studentName || args.userEmail,
           userPhone: args.userPhone,
           enrollments: enrollments,
+        },
+      );
+    }
+
+    // If user was already enrolled in all courses, send a notification email
+    if (
+      enrollments.length === 0 &&
+      supervisedEnrollments.length === 0 &&
+      alreadyEnrolledCourses.length > 0
+    ) {
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendAlreadyEnrolledNotification,
+        {
+          userEmail: args.userEmail,
+          userName: args.studentName || args.userEmail,
+          alreadyEnrolledCourses: alreadyEnrolledCourses,
         },
       );
     }
@@ -527,6 +550,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
     }
 
     const enrollments = [];
+    const alreadyEnrolledCourses = [];
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -540,6 +564,11 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         console.log(
           `Guest user ${args.userEmail} is already enrolled in course ${course.name}`,
         );
+        // Add to already enrolled courses for email notification
+        alreadyEnrolledCourses.push({
+          courseName: course.name,
+          courseType: course.type,
+        });
         continue;
       }
 
@@ -576,17 +605,31 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
       });
     }
 
-    // Schedule email sending action
-    await ctx.scheduler.runAfter(
-      0,
-      api.emailActions.sendCartCheckoutConfirmation,
-      {
-        userEmail: args.userEmail,
-        userName: guestUser.name,
-        userPhone: guestUser.phone,
-        enrollments: enrollments,
-      },
-    );
+    // Send email based on enrollment status
+    if (enrollments.length > 0) {
+      // Schedule email sending action for new enrollments
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendCartCheckoutConfirmation,
+        {
+          userEmail: args.userEmail,
+          userName: guestUser.name,
+          userPhone: guestUser.phone,
+          enrollments: enrollments,
+        },
+      );
+    } else if (alreadyEnrolledCourses.length > 0) {
+      // Send notification for already enrolled courses
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendAlreadyEnrolledNotification,
+        {
+          userEmail: args.userEmail,
+          userName: guestUser.name,
+          alreadyEnrolledCourses: alreadyEnrolledCourses,
+        },
+      );
+    }
 
     return enrollments;
   },
@@ -636,6 +679,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
     const enrollments = [];
     const supervisedEnrollments = [];
+    const alreadyEnrolledCourses = [];
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -649,6 +693,11 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         console.log(
           `Guest user ${args.userData.email} is already enrolled in course ${course.name}`,
         );
+        // Add to already enrolled courses for email notification
+        alreadyEnrolledCourses.push({
+          courseName: course.name,
+          courseType: course.type,
+        });
         continue;
       }
 
@@ -734,6 +783,23 @@ export const handleGuestUserCartCheckoutWithData = mutation({
           userName: args.userData.name,
           userPhone: args.userData.phone,
           enrollments: enrollments,
+        },
+      );
+    }
+
+    // If user was already enrolled in all courses, send a notification email
+    if (
+      enrollments.length === 0 &&
+      supervisedEnrollments.length === 0 &&
+      alreadyEnrolledCourses.length > 0
+    ) {
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendAlreadyEnrolledNotification,
+        {
+          userEmail: args.userData.email,
+          userName: args.userData.name,
+          alreadyEnrolledCourses: alreadyEnrolledCourses,
         },
       );
     }
