@@ -75,7 +75,7 @@ Add the following environment variables to your Convex deployment:
 ```bash
 GOOGLE_APPLICATION_CREDENTIALS_JSON={"type":"service_account","project_id":"your-project",...}
 GOOGLE_SHEETS_SPREADSHEET_ID=your_spreadsheet_id_here
-GOOGLE_SHEETS_SHEET_NAME=Enrollments
+GOOGLE_SHEETS_SHEET_NAME=Sheet1
 ```
 
 **Note**: For production, you need to copy the entire JSON content from your service account key file and set it as the `GOOGLE_APPLICATION_CREDENTIALS_JSON` environment variable.
@@ -88,7 +88,7 @@ After deployment, you can set up the sheet headers by calling the setup function
 // In your Convex dashboard or through the API
 await convex.action(api.myFunctions.setupEnrollmentGoogleSheet, {
   spreadsheetId: "your_spreadsheet_id_here",
-  sheetName: "Enrollments", // optional, defaults to "Enrollments"
+  sheetName: "Sheet1", // optional, defaults to "Sheet1"
 });
 ```
 

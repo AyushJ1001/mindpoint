@@ -37,8 +37,8 @@ fi
 
 # Check if sheet name is provided
 if [ -z "$GOOGLE_SHEETS_SHEET_NAME" ]; then
-    echo "⚠️  GOOGLE_SHEETS_SHEET_NAME not set, using default 'Enrollments'"
-    export GOOGLE_SHEETS_SHEET_NAME="Enrollments"
+echo "⚠️  GOOGLE_SHEETS_SHEET_NAME not set, using default 'Sheet1'"
+export GOOGLE_SHEETS_SHEET_NAME="Sheet1"
 fi
 
 echo ""
@@ -47,7 +47,7 @@ echo ""
 echo "📋 Summary:"
 echo "   GOOGLE_APPLICATION_CREDENTIALS: $GOOGLE_APPLICATION_CREDENTIALS"
 echo "   GOOGLE_SHEETS_SPREADSHEET_ID: ${GOOGLE_SHEETS_SPREADSHEET_ID:-'NOT SET'}"
-echo "   GOOGLE_SHEETS_SHEET_NAME: ${GOOGLE_SHEETS_SHEET_NAME:-'Enrollments'}"
+echo "   GOOGLE_SHEETS_SHEET_NAME: ${GOOGLE_SHEETS_SHEET_NAME:-'Sheet1'}"
 echo ""
 echo "💡 To make these permanent, add them to your shell profile (.bashrc, .zshrc, etc.)"
 echo "💡 For production, set these in your Convex dashboard under Settings > Environment Variables"

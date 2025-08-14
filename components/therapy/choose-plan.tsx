@@ -254,7 +254,7 @@ export default function ChoosePlan({
       id: selectedVariant._id,
       name: cartItemName,
       description: selectedVariant.description,
-      price: selectedVariant.price || total,
+      price: total,
       imageUrls: selectedVariant.imageUrls || [],
       capacity: selectedVariant.capacity || 1,
       quantity: 1,
