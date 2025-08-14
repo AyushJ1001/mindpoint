@@ -96,7 +96,7 @@ export default function HomeClient() {
           </div>
 
           {/* Imagery: video with proper layering */}
-          <div className="hero-video-container relative mx-auto w-full max-w-xl transition-all duration-500 hover:scale-105">
+          <div className="hero-video-container relative mx-auto w-full max-w-lg transition-all duration-500 hover:scale-105">
             {/* Subtle backdrop for visual depth */}
             <div className="absolute -inset-6 -z-10 rounded-[28px] bg-gradient-to-br from-white/20 to-white/10 blur-md dark:from-blue-400/10 dark:to-indigo-400/5" />
 

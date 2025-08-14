@@ -1,0 +1,19 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://themindpoint.com/sitemap.xml
+
+# Disallow admin and private areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /_next/
+Disallow: /convex/
+
+# Allow important pages
+Allow: /courses/
+Allow: /about/
+Allow: /contact/
+Allow: /careers/
+Allow: /cart/
+Allow: /toc/

@@ -9,6 +9,7 @@ import { CartProvider } from "@/components/CartProvider";
 import Navbar from "./navbar";
 import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,6 +27,94 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo.png",
   },
+  metadataBase: new URL("https://themindpoint.com"),
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://themindpoint.com",
+    siteName: "The Mind Point",
+    images: [
+      {
+        url: "/logo.png",
+        width: 1200,
+        height: 630,
+        alt: "The Mind Point - Mental Health Education Platform",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    site: "@themindpoint",
+    creator: "@themindpoint",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+};
+
+// Structured data for the organization
+const structuredData = {
+  "@context": "https://schema.org",
+  "@type": "EducationalOrganization",
+  name: "The Mind Point",
+  description:
+    "A platform for mental health education and support, offering comprehensive courses in psychology, counseling, and professional development.",
+  url: "https://themindpoint.com",
+  logo: "https://themindpoint.com/logo.png",
+  sameAs: ["https://themindpoint.com"],
+  address: {
+    "@type": "PostalAddress",
+    addressCountry: "IN",
+  },
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer service",
+    availableLanguage: "English",
+  },
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Mental Health Education Courses",
+    itemListElement: [
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Course",
+          name: "Certificate Courses",
+          description:
+            "Professional certification programs in psychology and mental health",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Course",
+          name: "Diploma Programs",
+          description:
+            "Comprehensive diploma courses for in-depth knowledge and expertise",
+        },
+      },
+      {
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Course",
+          name: "Therapy Sessions",
+          description:
+            "Professional therapy and counseling services for mental wellness",
+        },
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
@@ -35,6 +124,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <Script
+          id="structured-data"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(structuredData),
+          }}
+        />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
       >

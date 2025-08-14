@@ -6,14 +6,14 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { BookOpen, Sparkles, ArrowRight, CheckCircle } from "lucide-react";
 import {
-  BookOpen,
-  Heart,
-  Users,
-  Sparkles,
-  ArrowRight,
-  CheckCircle,
-} from "lucide-react";
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const courses = [
   {
@@ -280,7 +280,7 @@ function AIQuiz() {
   if (currentStep === "type") {
     return (
       <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-16">
-        <div className="mx-auto max-w-6xl px-4">
+        <div className="mx-auto max-w-4xl px-4">
           <div className="mb-12 text-center">
             <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600">
               <Sparkles className="h-8 w-8 text-white" />
@@ -294,7 +294,7 @@ function AIQuiz() {
             </p>
           </div>
 
-          <div className="mx-auto grid max-w-2xl gap-8 md:grid-cols-1">
+          <div className="mx-auto max-w-2xl">
             {typeOptions.map((option) => (
               <Card
                 key={option.id}
@@ -346,34 +346,44 @@ function AIQuiz() {
 
           <Card className="mx-auto max-w-2xl">
             <CardContent className="p-8">
-              {quizQuestions.map((q) => (
-                <div key={q.id} className="mb-8">
-                  <h3 className="mb-4 text-xl font-semibold text-gray-900">
-                    {q.question}
-                  </h3>
-                  <div className="grid gap-3">
-                    {q.options.map((opt) => (
-                      <Button
-                        key={opt}
-                        variant={answers[q.id] === opt ? "default" : "outline"}
-                        className={`h-auto justify-start p-4 text-left ${
-                          answers[q.id] === opt
-                            ? "border-blue-600 bg-blue-600 text-white"
-                            : "hover:border-blue-300 hover:bg-blue-50"
-                        }`}
-                        onClick={() => handleAnswer(q.id, opt)}
-                      >
-                        {answers[q.id] === opt && (
-                          <CheckCircle className="mr-3 h-5 w-5" />
-                        )}
-                        {opt}
-                      </Button>
-                    ))}
-                  </div>
-                </div>
-              ))}
+              <Carousel className="w-full">
+                <CarouselContent>
+                  {quizQuestions.map((q) => (
+                    <CarouselItem key={q.id}>
+                      <div className="p-1">
+                        <h3 className="mb-4 text-xl font-semibold text-gray-900">
+                          {q.question}
+                        </h3>
+                        <div className="grid gap-3">
+                          {q.options.map((opt) => (
+                            <Button
+                              key={opt}
+                              variant={
+                                answers[q.id] === opt ? "default" : "outline"
+                              }
+                              className={`h-auto justify-start p-4 text-left ${
+                                answers[q.id] === opt
+                                  ? "border-blue-600 bg-blue-600 text-white"
+                                  : "hover:border-blue-300 hover:bg-blue-50"
+                              }`}
+                              onClick={() => handleAnswer(q.id, opt)}
+                            >
+                              {answers[q.id] === opt && (
+                                <CheckCircle className="mr-3 h-5 w-5" />
+                              )}
+                              {opt}
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+                    </CarouselItem>
+                  ))}
+                </CarouselContent>
+                <CarouselPrevious />
+                <CarouselNext />
+              </Carousel>
 
-              <div className="flex gap-4 pt-4">
+              <div className="flex gap-4 pt-8">
                 <Button
                   variant="outline"
                   onClick={resetQuiz}
