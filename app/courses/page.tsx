@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     description:
       "Explore our comprehensive collection of mental health courses and professional development programs.",
     type: "website",
-    url: "https://themindpoint.com/courses",
+    url: "https://themindpoint.org/courses",
   },
   twitter: {
     card: "summary_large_image",
@@ -30,7 +30,7 @@ const coursesStructuredData = {
   name: "Mental Health Education Courses",
   description:
     "Comprehensive collection of mental health courses, certificate programs, diplomas, and professional development courses",
-  url: "https://themindpoint.com/courses",
+  url: "https://themindpoint.org/courses",
   numberOfItems: "50+",
   itemListElement: [
     {
@@ -41,7 +41,7 @@ const coursesStructuredData = {
         name: "Certificate Courses",
         description:
           "Professional certification programs in psychology and mental health",
-        url: "https://themindpoint.com/courses/certificate",
+        url: "https://themindpoint.org/courses/certificate",
         provider: {
           "@type": "Organization",
           name: "The Mind Point",
@@ -56,7 +56,7 @@ const coursesStructuredData = {
         name: "Diploma Programs",
         description:
           "Comprehensive diploma courses for in-depth knowledge and expertise",
-        url: "https://themindpoint.com/courses/diploma",
+        url: "https://themindpoint.org/courses/diploma",
         provider: {
           "@type": "Organization",
           name: "The Mind Point",
@@ -71,7 +71,7 @@ const coursesStructuredData = {
         name: "Therapy Sessions",
         description:
           "Professional therapy and counseling services for mental wellness",
-        url: "https://themindpoint.com/courses/therapy",
+        url: "https://themindpoint.org/courses/therapy",
         provider: {
           "@type": "Organization",
           name: "The Mind Point",
@@ -86,7 +86,7 @@ const coursesStructuredData = {
         name: "Internship Programs",
         description:
           "Hands-on experience through structured internship opportunities",
-        url: "https://themindpoint.com/courses/internship",
+        url: "https://themindpoint.org/courses/internship",
         provider: {
           "@type": "Organization",
           name: "The Mind Point",
@@ -101,7 +101,7 @@ const coursesStructuredData = {
         name: "Masterclasses",
         description:
           "Intensive sessions with industry experts and thought leaders",
-        url: "https://themindpoint.com/courses/masterclass",
+        url: "https://themindpoint.org/courses/masterclass",
         provider: {
           "@type": "Organization",
           name: "The Mind Point",

@@ -34,8 +34,8 @@ const aboutStructuredData = {
   name: "The Mind Point",
   description:
     "A platform for mental health education and support, offering comprehensive courses in psychology, counseling, and professional development.",
-  url: "https://themindpoint.com",
-  logo: "https://themindpoint.com/logo.png",
+  url: "https://themindpoint.org",
+  logo: "https://themindpoint.org/logo.png",
   foundingDate: "2020",
   address: {
     "@type": "PostalAddress",

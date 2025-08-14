@@ -28,14 +28,14 @@ export const metadata: Metadata = {
   icons: {
     icon: "/logo.png",
   },
-  metadataBase: new URL("https://themindpoint.com"),
+  metadataBase: new URL("https://themindpoint.org"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://themindpoint.com",
+    url: "https://themindpoint.org",
     siteName: "The Mind Point",
     images: [
       {
@@ -71,9 +71,9 @@ const structuredData = {
   name: "The Mind Point",
   description:
     "A platform for mental health education and support, offering comprehensive courses in psychology, counseling, and professional development.",
-  url: "https://themindpoint.com",
-  logo: "https://themindpoint.com/logo.png",
-  sameAs: ["https://themindpoint.com"],
+  url: "https://themindpoint.org",
+  logo: "https://themindpoint.org/logo.png",
+  sameAs: ["https://themindpoint.org"],
   address: {
     "@type": "PostalAddress",
     addressCountry: "IN",

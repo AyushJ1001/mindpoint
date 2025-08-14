@@ -3,7 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://themindpoint.com";
+  const baseUrl = "https://themindpoint.org";
 
   // Create a Convex client for server-side data fetching
   const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);

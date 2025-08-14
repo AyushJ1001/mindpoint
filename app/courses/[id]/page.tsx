@@ -47,7 +47,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: `${course.name} - The Mind Point`,
         description,
         type: "website",
-        url: `https://themindpoint.com/courses/${params.id}`,
+        url: `https://themindpoint.org/courses/${params.id}`,
         images:
           course.imageUrls && course.imageUrls.length > 0
             ? [
@@ -114,9 +114,9 @@ export default async function CoursePage({ params }: Props) {
       provider: {
         "@type": "Organization",
         name: "The Mind Point",
-        url: "https://themindpoint.com",
+        url: "https://themindpoint.org",
       },
-      url: `https://themindpoint.com/courses/${params.id}`,
+      url: `https://themindpoint.org/courses/${params.id}`,
       image:
         course.imageUrls && course.imageUrls.length > 0
           ? course.imageUrls[0]
@@ -130,7 +130,7 @@ export default async function CoursePage({ params }: Props) {
         price: course.price || 0,
         priceCurrency: "INR",
         availability: "https://schema.org/InStock",
-        url: `https://themindpoint.com/courses/${params.id}`,
+        url: `https://themindpoint.org/courses/${params.id}`,
       },
       coursePrerequisites: course.prerequisites || "No prerequisites required",
       educationalCredentialAwarded:
