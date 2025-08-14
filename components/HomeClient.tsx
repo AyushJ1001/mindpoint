@@ -18,6 +18,8 @@ export default function HomeClient() {
     ?.filter((course) => {
       if (!course.startDate || course.startDate.trim() === "") return false;
 
+      if (!course.type) return false;
+
       // Only show courses that haven't started yet
       const startDate = new Date(course.startDate);
       const now = new Date();
