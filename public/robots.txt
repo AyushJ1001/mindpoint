@@ -1,19 +1,9 @@
+# *
 User-agent: *
 Allow: /
 
-# Sitemap
+# Host
+Host: https://themindpoint.org
+
+# Sitemaps
 Sitemap: https://themindpoint.org/sitemap.xml
-
-# Disallow admin and private areas
-Disallow: /admin/
-Disallow: /api/
-Disallow: /_next/
-Disallow: /convex/
-
-# Allow important pages
-Allow: /courses/
-Allow: /about/
-Allow: /contact/
-Allow: /careers/
-Allow: /cart/
-Allow: /toc/
