@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 import { CourseCard } from "@/components/course-card";
 import AnimatedCounter from "@/components/animated-counter";
+import AIQuiz from "@/components/quiz";
 
 export default function HomeClient() {
   const courses = useQuery(api.courses.listCourses, { count: undefined });
@@ -185,6 +186,9 @@ export default function HomeClient() {
           </div>
         </div>
       </section>
+
+      {/* AI Quiz Section */}
+      <AIQuiz />
 
       {/* Testimonial Section */}
       <section className="section-padding">
