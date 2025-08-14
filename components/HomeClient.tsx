@@ -3,19 +3,14 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Link from "next/link";
-import Image from "next/image";
 import { BookOpen, Star, Users, Award, ArrowRight, Quote } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { CourseCard } from "@/components/course-card";
 import AnimatedCounter from "@/components/animated-counter";
-import AIQuiz from "@/components/quiz";
 
 export default function HomeClient() {
-  const courses = useQuery(api.courses.listCourses, { count: undefined });
-
   return (
     <main className="flex-1">
       {/* Hero: blend the video with the page background so edges merge as you scroll */}
@@ -186,9 +181,6 @@ export default function HomeClient() {
           </div>
         </div>
       </section>
-
-      {/* AI Quiz Section */}
-      <AIQuiz />
 
       {/* Testimonial Section */}
       <section className="section-padding">
