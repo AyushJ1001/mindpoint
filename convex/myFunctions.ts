@@ -480,12 +480,15 @@ export const handleCartCheckout = mutation({
     }
 
     // Send appropriate emails based on course types
+    // For supervised courses: Send separate welcome email with checklist PDFs attached
+    // For other courses: Send regular cart checkout confirmation
     if (
       supervisedEnrollments.length > 0 &&
       args.sessionType &&
       args.studentName
     ) {
       // Send supervised therapy welcome email for each supervised course
+      // This email includes the 4 required checklist PDFs as attachments
       for (const enrollment of supervisedEnrollments) {
         await ctx.scheduler.runAfter(
           0,
@@ -921,8 +924,11 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     }
 
     // Send appropriate emails based on course types
+    // For supervised courses: Send separate welcome email with checklist PDFs attached
+    // For other courses: Send regular cart checkout confirmation
     if (supervisedEnrollments.length > 0 && args.sessionType) {
       // Send supervised therapy welcome email for each supervised course
+      // This email includes the 4 required checklist PDFs as attachments
       for (const enrollment of supervisedEnrollments) {
         await ctx.scheduler.runAfter(
           0,

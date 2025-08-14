@@ -46,3 +46,6 @@ package-lock.json
 # clerk configuration (can include secrets)
 /.clerk/
 /.secrets/
+
+# Sentry Config File
+.env.sentry-build-plugin

@@ -10,6 +10,7 @@ import Navbar from "./navbar";
 import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -125,6 +126,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <Analytics />
         <Script
           id="structured-data"
           type="application/ld+json"

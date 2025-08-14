@@ -671,61 +671,8 @@ export const sendTherapyEnrollmentConfirmation = action({
   },
 });
 
-export const sendSupervisedEnrollmentConfirmation = action({
-  args: {
-    userEmail: v.string(),
-    userName: v.string(),
-    userPhone: v.optional(v.string()),
-    supervisionPackage: v.string(),
-    sessionCount: v.number(),
-    enrollmentNumber: v.string(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    // Send email
-    await resend.emails.send({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Supervised Session Enrollment Confirmation",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2 style="color: #4CAF50;">Supervised Session Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
-          <p>We are pleased to confirm your enrollment for <strong>${args.supervisionPackage}</strong> supervised sessions.</p>
-
-          <h3 style="margin-top: 20px;">Supervision Details</h3>
-          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
-            <tbody>
-              <tr>
-                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Supervision Package</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${args.supervisionPackage}</td>
-              </tr>
-              <tr>
-                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Number of Sessions</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${args.sessionCount}</td>
-              </tr>
-            </tbody>
-          </table>
-
-          <h3 style="margin-top: 24px;">Next Steps</h3>
-          <ul>
-            <li>Your supervisor will contact you within 24-48 hours to schedule your first session.</li>
-            <li>All sessions will be conducted online via Google Meet.</li>
-            <li>You will receive preparation materials and templates before your first session.</li>
-            <li>Please ensure you have a quiet environment and necessary materials ready.</li>
-          </ul>
-
-          <p>If you have any questions or need to reschedule, please contact us at <strong>+91 9770780086</strong>.</p>
-          <p>Thank you for choosing The Mind Point for your professional development.</p>
-          <br>
-          <p>Best regards,<br>The Mind Point Supervision Team</p>
-        </div>
-      `,
-    });
-
-    return null;
-  },
-});
+// Note: sendSupervisedEnrollmentConfirmation function removed as it was unused
+// All supervised enrollments now use sendSupervisedTherapyWelcomeEmail which includes the required checklist PDFs
 
 export const sendSupervisedTherapyWelcomeEmail = action({
   args: {
@@ -739,6 +686,10 @@ export const sendSupervisedTherapyWelcomeEmail = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
+    // Get the base URL for attachments - use environment variable or fallback to production URL
+    const baseUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || "https://themindpoint.org";
+
     // Send email with attachments
     await resend.emails.send({
       from: "The Mind Point <no-reply@themindpoint.org>",
@@ -781,19 +732,19 @@ export const sendSupervisedTherapyWelcomeEmail = action({
       attachments: [
         {
           filename: "TMP Client Intake Form.pdf",
-          path: "https://themindpoint.org/checklist/TMP%20Client%20Intake%20Form%20(1).pdf",
+          path: `${baseUrl}/checklist/TMP%20Client%20Intake%20Form%20(1).pdf`,
         },
         {
           filename: "TMP Consent Form for Live Client Session Observation.pdf",
-          path: "https://themindpoint.org/checklist/TMP%20Consent%20Form%20for%20Live%20Client%20Session%20Observation%20(1).pdf",
+          path: `${baseUrl}/checklist/TMP%20Consent%20Form%20for%20Live%20Client%20Session%20Observation%20(1).pdf`,
         },
         {
           filename: "TMP Session Preparation Template.pdf",
-          path: "https://themindpoint.org/checklist/TMP%20Session%20Preparation%20Template.pdf",
+          path: `${baseUrl}/checklist/TMP%20Session%20Preparation%20Template.pdf`,
         },
         {
           filename: "TMP Supervised Session Self-Preparation Checklist.pdf",
-          path: "https://themindpoint.org/checklist/TMP%20Supervised%20Session%20Self-Preparation%20Checklist.pdf",
+          path: `${baseUrl}/checklist/TMP%20Supervised%20Session%20Self-Preparation%20Checklist.pdf`,
         },
       ],
     });
