@@ -22,10 +22,6 @@ export const metadata = {
 export default function Home() {
   return (
     <>
-      <header>
-        <h1>The Mind Point</h1>
-        <p>Your hub for mental health education and professional growth.</p>
-      </header>
       <HomeClient />
     </>
   );
