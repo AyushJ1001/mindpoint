@@ -99,7 +99,9 @@ export default function Certification({
               <CardHeader className="pb-6 text-center">
                 <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold md:text-4xl">
                   <Award className="text-primary h-10 w-10" />
-                  {title}
+                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                    {title}
+                  </span>
                 </CardTitle>
                 <CardDescription className="text-lg">
                   {description}
@@ -127,7 +129,9 @@ export default function Certification({
                   <div className="mt-12">
                     <div className="mb-8 text-center">
                       <h3 className="mb-4 text-2xl font-bold">
-                        Sample Documents
+                        <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                          Sample Documents
+                        </span>
                       </h3>
                       <p className="text-muted-foreground">
                         Preview what your documents will look like upon

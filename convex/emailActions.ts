@@ -14,6 +14,29 @@ if (!resendApiKey) {
 
 const resend = new Resend(resendApiKey);
 
+// Helper function to ensure all emails are also sent to contact.themindpoint@gmail.com
+const sendEmailWithCopy = async (emailConfig: {
+  from: string;
+  to: string | string[];
+  subject: string;
+  html: string;
+  replyTo?: string;
+  attachments?: any[];
+}) => {
+  // Ensure the main recipient gets the email
+  const mainRecipients = Array.isArray(emailConfig.to)
+    ? emailConfig.to
+    : [emailConfig.to];
+
+  // Add contact.themindpoint@gmail.com to the recipients
+  const allRecipients = [...mainRecipients, "contact.themindpoint@gmail.com"];
+
+  return await resend.emails.send({
+    ...emailConfig,
+    to: allRecipients,
+  });
+};
+
 // Test email action for debugging
 export const sendTestEmail = action({
   args: {
@@ -24,7 +47,7 @@ export const sendTestEmail = action({
     try {
       console.log("Attempting to send test email to:", args.userEmail);
 
-      const result = await resend.emails.send({
+      const result = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Test Email from The Mind Point",
@@ -64,7 +87,7 @@ export const sendCertificateEnrollmentConfirmation = action({
   returns: v.null(),
   handler: async (ctx, args) => {
     // Send email
-    await resend.emails.send({
+    await sendEmailWithCopy({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
       subject: "Certificate Course Enrollment Confirmation",
@@ -140,7 +163,7 @@ export const sendInternshipEnrollmentConfirmation = action({
         : "4 week (240 hours)";
 
     // Send email
-    await resend.emails.send({
+    await sendEmailWithCopy({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
       subject: "Internship Program Enrollment Confirmation",
@@ -214,7 +237,7 @@ export const sendDiplomaEnrollmentConfirmation = action({
   returns: v.null(),
   handler: async (ctx, args) => {
     // Send email
-    await resend.emails.send({
+    await sendEmailWithCopy({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
       subject: "Diploma Course Enrollment Confirmation",
@@ -280,7 +303,7 @@ export const sendPreRecordedEnrollmentConfirmation = action({
   returns: v.null(),
   handler: async (ctx, args) => {
     // Send email
-    await resend.emails.send({
+    await sendEmailWithCopy({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
       subject: "Pre-Recorded Course Enrollment Confirmation",
@@ -338,7 +361,7 @@ export const sendMasterclassEnrollmentConfirmation = action({
   returns: v.null(),
   handler: async (ctx, args) => {
     // Send email
-    await resend.emails.send({
+    await sendEmailWithCopy({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
       subject: "Masterclass Enrollment Confirmation",
@@ -408,7 +431,7 @@ export const sendEnrollmentConfirmation = action({
   returns: v.null(),
   handler: async (ctx, args) => {
     // Send email
-    await resend.emails.send({
+    await sendEmailWithCopy({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
       subject: "Enrollment Confirmation",
@@ -491,7 +514,7 @@ export const sendCartCheckoutConfirmation = action({
   handler: async (ctx, args) => {
     try {
       // Send email
-      await resend.emails.send({
+      await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Enrollment Confirmation",
@@ -627,7 +650,7 @@ export const sendTherapyEnrollmentConfirmation = action({
   returns: v.null(),
   handler: async (ctx, args) => {
     // Send email
-    await resend.emails.send({
+    await sendEmailWithCopy({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
       subject: "Therapy Session Enrollment Confirmation",
@@ -691,7 +714,7 @@ export const sendSupervisedTherapyWelcomeEmail = action({
       process.env.NEXT_PUBLIC_SITE_URL || "https://themindpoint.org";
 
     // Send email with attachments
-    await resend.emails.send({
+    await sendEmailWithCopy({
       from: "The Mind Point <no-reply@themindpoint.org>",
       to: args.userEmail,
       subject: "Welcome to The Mind Point Supervised Sessions Program!",
@@ -768,7 +791,7 @@ export const sendAlreadyEnrolledNotification = action({
   handler: async (ctx, args) => {
     try {
       // Send email
-      await resend.emails.send({
+      await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Course Enrollment Status - Already Enrolled",

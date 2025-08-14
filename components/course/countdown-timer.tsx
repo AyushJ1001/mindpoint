@@ -140,7 +140,9 @@ export default function CountdownTimer({
         >
           <div className="mb-12 text-center">
             <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              Course Highlights
+              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                Course Highlights
+              </span>
             </h2>
             <p className="text-muted-foreground text-lg">
               Everything you need to know at a glance
@@ -213,7 +215,11 @@ export default function CountdownTimer({
 
           {/* Countdown Timer */}
           <div className="mt-16 text-center">
-            <h3 className="mb-6 text-2xl font-semibold">Course Starting In</h3>
+            <h3 className="mb-6 text-2xl font-semibold">
+              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                Course Starting In
+              </span>
+            </h3>
             <div className="border-primary/20 from-primary/5 to-accent/5 mx-auto max-w-2xl rounded-2xl border-2 bg-gradient-to-br p-8">
               <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
                 {[

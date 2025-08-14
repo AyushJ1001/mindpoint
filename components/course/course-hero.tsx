@@ -210,7 +210,9 @@ export default function CourseHero({
             {/* Course Title & Description */}
             <div className="space-y-4">
               <h1 className="text-4xl leading-tight font-bold tracking-tight md:text-5xl lg:text-6xl">
-                {displayCourse.name}
+                <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                  {displayCourse.name}
+                </span>
               </h1>
               <p className="text-muted-foreground text-lg leading-relaxed">
                 Guided, interactive classes with recordings and lifetime

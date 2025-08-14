@@ -45,7 +45,11 @@ export default function CommunitiesSection({
     <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-16">
       <div className="container">
         <div className="mx-auto max-w-3xl text-center text-white">
-          <h3 className="mb-4 text-3xl font-bold">{title}</h3>
+          <h3 className="mb-4 text-3xl font-bold">
+            <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
+              {title}
+            </span>
+          </h3>
           <p className="mb-8 text-lg text-white/90">{description}</p>
           <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
             <Link

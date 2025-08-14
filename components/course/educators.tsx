@@ -37,7 +37,9 @@ export default function Educators() {
           <CardHeader className="pb-6 text-center">
             <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold md:text-4xl">
               <Users className="text-primary h-10 w-10" />
-              Educators and Supervisors
+              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                Educators and Supervisors
+              </span>
             </CardTitle>
             <CardDescription className="text-lg">
               Learn from experienced professionals in the field

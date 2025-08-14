@@ -25,7 +25,7 @@ export async function POST(req: Request) {
   try {
     const data = await resend.emails.send({
       from: `"Contact Form" <${fromEmail}>`,
-      to: [toEmail],
+      to: [toEmail, "contact.themindpoint@gmail.com"],
       subject: `New Contact Message from ${name}`,
       replyTo: email,
       html: `

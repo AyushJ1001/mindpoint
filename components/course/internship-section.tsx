@@ -89,7 +89,7 @@ export default function Internship({
 
         {/* Total hours display */}
         <div className="mb-6 border-t border-slate-200 pt-4">
-          <div className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-center text-xl font-bold text-transparent">
+          <div className="from-primary to-accent bg-gradient-to-r bg-clip-text text-center text-xl font-bold text-transparent">
             {totalHours} hours
           </div>
         </div>
@@ -103,8 +103,10 @@ export default function Internship({
         {/* Curriculum Breakdown Section */}
         <div className="mb-16">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
-              Curriculum Breakdown
+            <h2 className="mb-4 text-4xl font-bold">
+              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                Curriculum Breakdown
+              </span>
             </h2>
             <p className="mx-auto max-w-3xl text-lg text-slate-600">
               Comprehensive topics covered in our clinical psychology training
@@ -132,7 +134,7 @@ export default function Internship({
                   Topics to be covered in
                 </div>
                 <div className="mb-4">
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-bold text-transparent">
+                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent">
                     120 hours
                   </span>
                 </div>
@@ -171,7 +173,7 @@ export default function Internship({
                   Topics to be covered in
                 </div>
                 <div className="mb-4">
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-5xl font-bold text-transparent">
+                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent">
                     240 hours
                   </span>
                 </div>
@@ -196,8 +198,10 @@ export default function Internship({
         {/* Infographic Section */}
         <div className="mb-16">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-4xl font-bold text-transparent">
-              Program Structure Breakdown
+            <h2 className="mb-4 text-4xl font-bold">
+              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                Program Structure Breakdown
+              </span>
             </h2>
             <p className="mx-auto max-w-3xl text-lg text-slate-600">
               Detailed hourly allocation for each training component to ensure
@@ -233,7 +237,7 @@ export default function Internship({
                   Segregation of Hourly Structure
                 </h3>
                 <div className="mb-2">
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-6xl font-bold text-transparent">
+                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-6xl font-bold text-transparent">
                     120
                   </span>
                   <span className="ml-2 text-4xl font-bold text-slate-700">
@@ -287,7 +291,7 @@ export default function Internship({
                   Segregation of Hourly Structure
                 </h3>
                 <div className="mb-2">
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-6xl font-bold text-transparent">
+                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-6xl font-bold text-transparent">
                     240
                   </span>
                   <span className="ml-2 text-4xl font-bold text-slate-700">

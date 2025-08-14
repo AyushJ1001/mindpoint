@@ -67,7 +67,9 @@ export default function TherapyCourse({
         <div className="relative z-10 container">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="text-4xl font-bold tracking-tight md:text-5xl lg:text-6xl">
-              {course.name}
+              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                {course.name}
+              </span>
             </h1>
           </div>
         </div>
@@ -252,7 +254,9 @@ export default function TherapyCourse({
           <div className="mx-auto max-w-4xl">
             <div className="mb-12 text-center">
               <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-                Therapy Benefits
+                <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                  Therapy Benefits
+                </span>
               </h2>
               <p className="text-muted-foreground text-lg">
                 How therapy can support your mental health and well-being

@@ -47,7 +47,11 @@ export default function FAQSection({
       <div className="container">
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">{title}</h2>
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                {title}
+              </span>
+            </h2>
             <p className="text-muted-foreground text-lg">{description}</p>
           </div>
 

@@ -25,7 +25,9 @@ export default function CourseOverview({ description }: CourseOverviewProps) {
             <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
               <CardHeader className="pb-6 text-center">
                 <CardTitle className="text-3xl font-bold md:text-4xl">
-                  Course Overview
+                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                    Course Overview
+                  </span>
                 </CardTitle>
                 <CardDescription className="text-lg">
                   Comprehensive learning experience designed for your success

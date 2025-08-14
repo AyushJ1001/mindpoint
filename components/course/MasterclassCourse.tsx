@@ -26,7 +26,9 @@ export default function MasterclassCourse({ course }: MasterclassCourseProps) {
           <div className="mx-auto max-w-4xl">
             <div className="mb-12 text-center">
               <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-                Masterclass Benefits
+                <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                  Masterclass Benefits
+                </span>
               </h2>
               <p className="text-muted-foreground text-lg">
                 Why choose an intensive masterclass experience

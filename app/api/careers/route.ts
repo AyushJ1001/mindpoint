@@ -40,7 +40,11 @@ export async function POST(req: Request) {
       }
     })();
 
-    let attachments: { filename: string; content: Buffer; contentType?: string }[] = [];
+    let attachments: {
+      filename: string;
+      content: Buffer;
+      contentType?: string;
+    }[] = [];
 
     if (resume && resume instanceof File) {
       const arrayBuffer = await resume.arrayBuffer();
@@ -66,7 +70,7 @@ export async function POST(req: Request) {
 
     const data = await resend.emails.send({
       from: `Careers Application <${fromEmail}>`,
-      to: [toEmail],
+      to: [toEmail, "contact.themindpoint@gmail.com"],
       subject: `New Careers Application: ${fullName}`,
       replyTo: email || undefined,
       html,

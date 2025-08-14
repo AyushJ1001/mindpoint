@@ -27,7 +27,9 @@ export default function CourseModulesSection({
         <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
           <CardHeader className="pb-6 text-center">
             <CardTitle className="text-3xl font-bold md:text-4xl">
-              What Will You Learn?
+              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                What Will You Learn?
+              </span>
             </CardTitle>
             <CardDescription className="text-lg">
               Essential skills and knowledge you'll gain from this course

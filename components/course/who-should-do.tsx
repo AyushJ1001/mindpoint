@@ -60,7 +60,9 @@ export default function WhoShouldDo({
               <CardHeader className="pb-6 text-center">
                 <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold md:text-4xl">
                   <Target className="text-primary h-10 w-10" />
-                  {title}
+                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+                    {title}
+                  </span>
                 </CardTitle>
                 <CardDescription className="text-lg">
                   {description}
