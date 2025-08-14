@@ -1,16 +1,34 @@
 "use client";
 
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import Link from "next/link";
-import { BookOpen, Star, Users, Award, ArrowRight, Quote } from "lucide-react";
+import { BookOpen, Star, Users, Award, ArrowRight, Clock } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
 import AnimatedCounter from "@/components/animated-counter";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { UpcomingCourseCard } from "./course-card";
 
 export default function HomeClient() {
+  const allCourses = useQuery(api.courses.listCourses, { count: undefined });
+  console.log(allCourses);
+  const upcomingCourses = allCourses
+    ?.filter((course) => {
+      if (!course.startDate || course.startDate.trim() === "") return false;
+
+      // Only show courses that haven't started yet
+      const startDate = new Date(course.startDate);
+      const now = new Date();
+      return startDate > now;
+    })
+    ?.sort(
+      (a, b) =>
+        new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+    )
+    .slice(0, 4);
+
   return (
     <main className="flex-1">
       {/* Hero: blend the video with the page background so edges merge as you scroll */}
@@ -116,6 +134,43 @@ export default function HomeClient() {
         </div>
       </section>
 
+      {/* Upcoming Courses */}
+      <section className="section-padding">
+        <div className="container">
+          <div className="mb-12 text-center">
+            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
+              Upcoming Courses
+            </h2>
+            <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+              {upcomingCourses && upcomingCourses.length > 0
+                ? "Don't miss out on these exciting courses starting soon. Secure your spot today!"
+                : "We are currently working on our upcoming courses. Stay tuned for more information."}
+            </p>
+          </div>
+
+          {upcomingCourses && upcomingCourses.length > 0 ? (
+            <div className="mx-auto grid max-w-4xl gap-6 md:grid-cols-2">
+              {upcomingCourses.map((course) => (
+                <UpcomingCourseCard key={course._id} course={course} />
+              ))}
+            </div>
+          ) : (
+            <div className="py-12 text-center">
+              <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30">
+                <Clock className="h-8 w-8 text-orange-600 dark:text-orange-400" />
+              </div>
+              <h3 className="mb-2 text-xl font-semibold">
+                No upcoming courses at the moment
+              </h3>
+              <p className="text-muted-foreground">
+                We&apos;re working on new courses. Check back soon or explore
+                our current offerings!
+              </p>
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Why Choose Us Section */}
       <section className="section-padding bg-muted/50">
         <div className="container">
@@ -178,23 +233,6 @@ export default function HomeClient() {
                 </p>
               </CardContent>
             </Card>
-          </div>
-        </div>
-      </section>
-
-      {/* Testimonial Section */}
-      <section className="section-padding">
-        <div className="container">
-          <div className="mx-auto max-w-4xl text-center">
-            <Quote className="text-primary mx-auto mb-6 h-12 w-12" />
-            <blockquote className="mb-6 text-2xl font-medium italic md:text-3xl">
-              "The Mind Point has transformed my understanding of mental health
-              and equipped me with practical skills that I use every day in my
-              practice."
-            </blockquote>
-            <cite className="text-muted-foreground text-lg">
-              — Dr. Sarah Johnson, Licensed Therapist
-            </cite>
           </div>
         </div>
       </section>

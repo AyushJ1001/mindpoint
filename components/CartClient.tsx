@@ -18,6 +18,15 @@ import {
 import { toast } from "sonner";
 import { Id } from "@/convex/_generated/dataModel";
 import { GuestCheckoutModal } from "@/components/guest-checkout-modal";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -33,8 +42,15 @@ const CartContent = () => {
   const courses = useQuery(api.courses.listCourses, { count: undefined });
   const [isProcessing, setIsProcessing] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
+  const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const { Razorpay, error, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
+
+  const handleClearCart = () => {
+    emptyCart();
+    setShowClearCartDialog(false);
+    toast.success("Cart cleared successfully");
+  };
 
   // Reset processing state when component unmounts or user navigates away
   useEffect(() => {
@@ -470,6 +486,43 @@ const CartContent = () => {
                 <ShoppingCart className="h-5 w-5" />
                 Cart Items ({items.length})
               </CardTitle>
+              <div className="flex justify-end">
+                <Dialog
+                  open={showClearCartDialog}
+                  onOpenChange={setShowClearCartDialog}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Clear Cart
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Clear Cart</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to remove all items from your
+                        cart? This action cannot be undone.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowClearCartDialog(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button variant="destructive" onClick={handleClearCart}>
+                        Clear Cart
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {items.map((item) => (

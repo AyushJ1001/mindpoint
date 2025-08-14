@@ -306,8 +306,8 @@ export const sendPreRecordedEnrollmentConfirmation = action({
 
           <h3 style="margin-top: 24px;">Please Note</h3>
           <ul>
-            <li>You will receive access to the course materials within 24 hours.</li>
-            <li>You can access the course at your own pace.</li>
+            <li>Course content material and videos will be sent to you in 2-3 business days of the date of purchase.</li>
+            <li>You can access the course at your own pace once you receive the materials.</li>
             <li>For technical support, please contact us at <strong>+91 9770780086</strong>.</li>
           </ul>
 
@@ -565,8 +565,22 @@ export const sendCartCheckoutConfirmation = action({
 
             <h3 style="margin-top: 24px;">Please Note</h3>
             <ul>
-              <li>You will be added to the group a day prior to the course.</li>
-              <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>
+              ${
+                args.enrollments.some((e) => e.courseType === "pre-recorded")
+                  ? `<li>For pre-recorded courses: Course content material and videos will be sent to you in 2-3 business days of the date of purchase.</li>`
+                  : ""
+              }
+              ${
+                args.enrollments.some(
+                  (e) =>
+                    e.courseType !== "pre-recorded" &&
+                    e.courseType !== "therapy" &&
+                    e.courseType !== "supervised",
+                )
+                  ? `<li>For live courses: You will be added to the group a day prior to the course.</li>
+              <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>`
+                  : ""
+              }
               <li>Please provide your WhatsApp number if not provided on <strong>+91 9770780086</strong>.</li>
             </ul>
 

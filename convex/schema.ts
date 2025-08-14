@@ -71,7 +71,9 @@ export default defineSchema({
         }),
       ),
     ),
-  }).index("by_name_and_type", ["name", "type"]),
+  })
+    .index("by_name_and_type", ["name", "type"])
+    .index("by_startDate", ["startDate"]),
 
   reviews: defineTable({
     userId: v.string(),

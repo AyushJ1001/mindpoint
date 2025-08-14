@@ -27,8 +27,18 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { showRupees } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import { toast } from "sonner";
 
 export default function Navbar() {
   const {
@@ -38,10 +48,18 @@ export default function Navbar() {
     updateItemQuantity,
     cartTotal,
     isEmpty,
+    emptyCart,
   } = useCart();
   const [isHydrated, setIsHydrated] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const pathname = usePathname();
+
+  const handleClearCart = () => {
+    emptyCart();
+    setShowClearCartDialog(false);
+    toast.success("Cart cleared successfully");
+  };
 
   useEffect(() => {
     setIsHydrated(true);
@@ -277,7 +295,49 @@ export default function Navbar() {
                 aria-label="Shopping cart panel"
               >
                 <SheetHeader className="pb-4">
-                  <SheetTitle className="text-left">Shopping Cart</SheetTitle>
+                  <SheetTitle>Shopping Cart</SheetTitle>
+                  {!isEmpty && (
+                    <div className="flex justify-end">
+                      <Dialog
+                        open={showClearCartDialog}
+                        onOpenChange={setShowClearCartDialog}
+                      >
+                        <DialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="text-destructive hover:text-destructive hover:bg-destructive/10 h-8"
+                          >
+                            <Trash2 className="mr-1 h-3 w-3" />
+                            Clear
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Clear Cart</DialogTitle>
+                            <DialogDescription>
+                              Are you sure you want to remove all items from
+                              your cart? This action cannot be undone.
+                            </DialogDescription>
+                          </DialogHeader>
+                          <DialogFooter>
+                            <Button
+                              variant="outline"
+                              onClick={() => setShowClearCartDialog(false)}
+                            >
+                              Cancel
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              onClick={handleClearCart}
+                            >
+                              Clear Cart
+                            </Button>
+                          </DialogFooter>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
+                  )}
                 </SheetHeader>
                 <div className="flex h-full flex-col">
                   {isEmpty ? (
