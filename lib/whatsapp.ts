@@ -101,7 +101,7 @@ Your payment for the course *${data.courseName}* has been successfully received.
 • Start Date: ${data.startDate}
 • End Date: ${data.endDate}
 • Time: ${data.startTime} - ${data.endTime}
-• Enrollment No: *${data.enrollmentNumber}*
+• Enrollment No: *${data.enrollmentNumber === "N/A" ? "Not Applicable" : data.enrollmentNumber}*
 
 *Important Notes:*
 • You will be added to the group a day prior to the course

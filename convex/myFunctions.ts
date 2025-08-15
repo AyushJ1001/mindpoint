@@ -181,11 +181,25 @@ export const handleSuccessfulPayment = mutation({
       throw new Error("Course not found");
     }
 
-    // Generate enrollment number
-    const enrollmentNumber = generateEnrollmentNumber(
-      course.code,
-      course.startDate,
-    );
+    // Generate enrollment number only for non-therapy and non-supervised courses
+    let enrollmentNumber: string;
+    if (course.type === "therapy" || course.type === "supervised") {
+      enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
+      console.log(
+        "Course type is therapy or supervised - no enrollment number generated",
+      );
+    } else {
+      console.log("Course code:", course.code);
+      console.log("Course start date:", course.startDate);
+      console.log("Course type:", course.type);
+
+      enrollmentNumber = generateEnrollmentNumber(
+        course.code,
+        course.startDate,
+      );
+
+      console.log("Generated enrollment number:", enrollmentNumber);
+    }
 
     // Extract internship plan from course duration
     const internshipPlan =
@@ -229,7 +243,17 @@ export const handleSuccessfulPayment = mutation({
     const userName = args.studentName || args.userEmail;
 
     // Send appropriate email based on course type
+    console.log("Checking email conditions:");
+    console.log("- Course type is supervised:", course.type === "supervised");
+    console.log("- Session type exists:", !!args.sessionType);
+    console.log("- Student name exists:", !!args.studentName);
+    console.log(
+      "- All conditions met:",
+      course.type === "supervised" && args.sessionType && args.studentName,
+    );
+
     if (course.type === "supervised" && args.sessionType && args.studentName) {
+      console.log("Sending supervised therapy welcome email...");
       // Schedule supervised therapy welcome email
       await ctx.scheduler.runAfter(
         0,
@@ -240,6 +264,14 @@ export const handleSuccessfulPayment = mutation({
           sessionType: args.sessionType,
         },
       );
+      console.log("Supervised therapy welcome email scheduled successfully");
+    } else if (course.type === "supervised") {
+      console.log(
+        "WARNING: Supervised course but missing required parameters:",
+      );
+      console.log("- Session type missing:", !args.sessionType);
+      console.log("- Student name missing:", !args.studentName);
+      console.log("Falling back to generic course email...");
     } else if (course.type === "internship" && internshipPlan) {
       // Calculate end date based on internship plan
       const calculatedEndDate = calculateInternshipEndDate(
@@ -406,11 +438,16 @@ export const handleCartCheckout = mutation({
         continue;
       }
 
-      // Generate enrollment number
-      const enrollmentNumber = generateEnrollmentNumber(
-        course.code,
-        course.startDate,
-      );
+      // Generate enrollment number only for non-therapy and non-supervised courses
+      let enrollmentNumber: string;
+      if (course.type === "therapy" || course.type === "supervised") {
+        enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
+      } else {
+        enrollmentNumber = generateEnrollmentNumber(
+          course.code,
+          course.startDate,
+        );
+      }
 
       // Extract internship plan from course duration
       const internshipPlan =
@@ -473,13 +510,20 @@ export const handleCartCheckout = mutation({
       };
 
       // Check if this is a supervised therapy course
-      if (
-        course.type === "supervised" &&
-        args.sessionType &&
-        args.studentName
-      ) {
+      console.log("Course name:", course.name);
+      console.log("Course type:", course.type);
+      console.log(
+        "Checking if course is supervised:",
+        course.type === "supervised",
+      );
+      console.log("Session type provided:", !!args.sessionType);
+      console.log("Student name provided:", !!args.studentName);
+
+      if (course.type === "supervised") {
+        console.log("Adding to supervised enrollments");
         supervisedEnrollments.push(enrollmentData);
       } else {
+        console.log("Adding to regular enrollments");
         enrollments.push(enrollmentData);
       }
     }
@@ -487,11 +531,17 @@ export const handleCartCheckout = mutation({
     // Send appropriate emails based on course types
     // For supervised courses: Send separate welcome email with checklist PDFs attached
     // For other courses: Send regular cart checkout confirmation
-    if (
-      supervisedEnrollments.length > 0 &&
-      args.sessionType &&
-      args.studentName
-    ) {
+    console.log("Email sending logic:");
+    console.log(
+      "- Supervised enrollments count:",
+      supervisedEnrollments.length,
+    );
+    console.log("- Session type exists:", !!args.sessionType);
+    console.log("- Student name exists:", !!args.studentName);
+    console.log("- Regular enrollments count:", enrollments.length);
+
+    if (supervisedEnrollments.length > 0) {
+      console.log("Sending supervised therapy welcome emails...");
       // Send supervised therapy welcome email for each supervised course
       // This email includes the 4 required checklist PDFs as attachments
       for (const enrollment of supervisedEnrollments) {
@@ -500,25 +550,138 @@ export const handleCartCheckout = mutation({
           api.emailActions.sendSupervisedTherapyWelcomeEmail,
           {
             userEmail: args.userEmail,
-            studentName: args.studentName,
-            sessionType: args.sessionType,
+            studentName: args.studentName || args.userEmail,
+            sessionType: args.sessionType || "focus", // Default to focus if not provided
           },
         );
       }
+      console.log("Supervised therapy welcome emails scheduled successfully");
     }
 
     if (enrollments.length > 0) {
-      // Send regular cart checkout confirmation for non-supervised courses
-      await ctx.scheduler.runAfter(
-        0,
-        api.emailActions.sendCartCheckoutConfirmation,
-        {
-          userEmail: args.userEmail,
-          userName: args.studentName || args.userEmail,
-          userPhone: args.userPhone,
-          enrollments: enrollments,
-        },
-      );
+      console.log("Sending course-specific emails for each enrollment...");
+      // Send course-specific emails for each enrollment
+      for (const enrollment of enrollments) {
+        const course = await ctx.db.get(enrollment.courseId);
+        if (!course) continue;
+
+        const userName = args.studentName || args.userEmail;
+        const enrollmentNumber = enrollment.enrollmentNumber;
+
+        if (course.type === "internship" && enrollment.internshipPlan) {
+          // Calculate end date based on internship plan
+          const calculatedEndDate = calculateInternshipEndDate(
+            course.startDate,
+            enrollment.internshipPlan,
+          );
+
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendInternshipEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: args.userPhone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: calculatedEndDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+              internshipPlan: enrollment.internshipPlan,
+            },
+          );
+        } else if (course.type === "certificate") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendCertificateEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: args.userPhone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        } else if (course.type === "diploma") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendDiplomaEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: args.userPhone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        } else if (course.type === "pre-recorded") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendPreRecordedEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: args.userPhone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+            },
+          );
+        } else if (course.type === "masterclass") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendMasterclassEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: args.userPhone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        } else if (course.type === "therapy") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendTherapyEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: args.userPhone,
+              therapyType: course.name,
+              sessionCount: course.sessions || 1,
+              enrollmentNumber: enrollmentNumber,
+            },
+          );
+        } else {
+          // Fallback to generic enrollment confirmation for other types
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        }
+      }
+      console.log("Course-specific emails scheduled successfully");
     }
 
     // If user was already enrolled in all courses, send a notification email
@@ -710,11 +873,16 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         continue;
       }
 
-      // Generate enrollment number
-      const enrollmentNumber = generateEnrollmentNumber(
-        course.code,
-        course.startDate,
-      );
+      // Generate enrollment number only for non-therapy and non-supervised courses
+      let enrollmentNumber: string;
+      if (course.type === "therapy" || course.type === "supervised") {
+        enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
+      } else {
+        enrollmentNumber = generateEnrollmentNumber(
+          course.code,
+          course.startDate,
+        );
+      }
 
       // Create enrollment record
       const enrollmentId = await ctx.db.insert("enrollments", {
@@ -764,16 +932,127 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
 
     // Send email based on enrollment status
     if (enrollments.length > 0) {
-      // Schedule email sending action for new enrollments
-      await ctx.scheduler.runAfter(
-        0,
-        api.emailActions.sendCartCheckoutConfirmation,
-        {
-          userEmail: args.userEmail,
-          userName: guestUser.name,
-          userPhone: guestUser.phone,
-          enrollments: enrollments,
-        },
+      console.log(
+        "Sending course-specific emails for each guest enrollment...",
+      );
+      // Send course-specific emails for each enrollment
+      for (const enrollment of enrollments) {
+        const course = await ctx.db.get(enrollment.courseId);
+        if (!course) continue;
+
+        const userName = guestUser.name;
+        const enrollmentNumber = enrollment.enrollmentNumber;
+
+        if (course.type === "internship") {
+          // For guest users, we don't have internship plan info, so use default
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendInternshipEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: guestUser.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+              internshipPlan: "120", // Default to 120 hours
+            },
+          );
+        } else if (course.type === "certificate") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendCertificateEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: guestUser.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        } else if (course.type === "diploma") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendDiplomaEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: guestUser.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        } else if (course.type === "pre-recorded") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendPreRecordedEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: guestUser.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+            },
+          );
+        } else if (course.type === "masterclass") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendMasterclassEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: guestUser.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        } else if (course.type === "therapy") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendTherapyEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              userName: userName,
+              userPhone: guestUser.phone,
+              therapyType: course.name,
+              sessionCount: course.sessions || 1,
+              enrollmentNumber: enrollmentNumber,
+            },
+          );
+        } else {
+          // Fallback to generic enrollment confirmation for other types
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendEnrollmentConfirmation,
+            {
+              userEmail: args.userEmail,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        }
+      }
+      console.log(
+        "Course-specific emails for guest user scheduled successfully",
       );
     } else if (alreadyEnrolledCourses.length > 0) {
       // Send notification for already enrolled courses
@@ -862,11 +1141,16 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         continue;
       }
 
-      // Generate enrollment number
-      const enrollmentNumber = generateEnrollmentNumber(
-        course.code,
-        course.startDate,
-      );
+      // Generate enrollment number only for non-therapy and non-supervised courses
+      let enrollmentNumber: string;
+      if (course.type === "therapy" || course.type === "supervised") {
+        enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
+      } else {
+        enrollmentNumber = generateEnrollmentNumber(
+          course.code,
+          course.startDate,
+        );
+      }
 
       // Extract internship plan from course duration
       const internshipPlan =
@@ -931,7 +1215,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       };
 
       // Check if this is a supervised therapy course
-      if (course.type === "supervised" && args.sessionType) {
+      if (course.type === "supervised") {
         supervisedEnrollments.push(enrollmentData);
       } else {
         enrollments.push(enrollmentData);
@@ -941,7 +1225,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     // Send appropriate emails based on course types
     // For supervised courses: Send separate welcome email with checklist PDFs attached
     // For other courses: Send regular cart checkout confirmation
-    if (supervisedEnrollments.length > 0 && args.sessionType) {
+    if (supervisedEnrollments.length > 0) {
       // Send supervised therapy welcome email for each supervised course
       // This email includes the 4 required checklist PDFs as attachments
       for (const enrollment of supervisedEnrollments) {
@@ -951,23 +1235,139 @@ export const handleGuestUserCartCheckoutWithData = mutation({
           {
             userEmail: args.userData.email,
             studentName: args.userData.name,
-            sessionType: args.sessionType,
+            sessionType: args.sessionType || "focus", // Default to focus if not provided
           },
         );
       }
     }
 
     if (enrollments.length > 0) {
-      // Send regular cart checkout confirmation for non-supervised courses
-      await ctx.scheduler.runAfter(
-        0,
-        api.emailActions.sendCartCheckoutConfirmation,
-        {
-          userEmail: args.userData.email,
-          userName: args.userData.name,
-          userPhone: args.userData.phone,
-          enrollments: enrollments,
-        },
+      console.log(
+        "Sending course-specific emails for each guest enrollment...",
+      );
+      // Send course-specific emails for each enrollment
+      for (const enrollment of enrollments) {
+        const course = await ctx.db.get(enrollment.courseId);
+        if (!course) continue;
+
+        const userName = args.userData.name;
+        const enrollmentNumber = enrollment.enrollmentNumber;
+
+        if (course.type === "internship" && enrollment.internshipPlan) {
+          // Calculate end date based on internship plan
+          const calculatedEndDate = calculateInternshipEndDate(
+            course.startDate,
+            enrollment.internshipPlan,
+          );
+
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendInternshipEnrollmentConfirmation,
+            {
+              userEmail: args.userData.email,
+              userName: userName,
+              userPhone: args.userData.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: calculatedEndDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+              internshipPlan: enrollment.internshipPlan,
+            },
+          );
+        } else if (course.type === "certificate") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendCertificateEnrollmentConfirmation,
+            {
+              userEmail: args.userData.email,
+              userName: userName,
+              userPhone: args.userData.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        } else if (course.type === "diploma") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendDiplomaEnrollmentConfirmation,
+            {
+              userEmail: args.userData.email,
+              userName: userName,
+              userPhone: args.userData.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        } else if (course.type === "pre-recorded") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendPreRecordedEnrollmentConfirmation,
+            {
+              userEmail: args.userData.email,
+              userName: userName,
+              userPhone: args.userData.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+            },
+          );
+        } else if (course.type === "masterclass") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendMasterclassEnrollmentConfirmation,
+            {
+              userEmail: args.userData.email,
+              userName: userName,
+              userPhone: args.userData.phone,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        } else if (course.type === "therapy") {
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendTherapyEnrollmentConfirmation,
+            {
+              userEmail: args.userData.email,
+              userName: userName,
+              userPhone: args.userData.phone,
+              therapyType: course.name,
+              sessionCount: course.sessions || 1,
+              enrollmentNumber: enrollmentNumber,
+            },
+          );
+        } else {
+          // Fallback to generic enrollment confirmation for other types
+          await ctx.scheduler.runAfter(
+            0,
+            api.emailActions.sendEnrollmentConfirmation,
+            {
+              userEmail: args.userData.email,
+              courseName: course.name,
+              enrollmentNumber: enrollmentNumber,
+              startDate: course.startDate,
+              endDate: course.endDate,
+              startTime: course.startTime,
+              endTime: course.endTime,
+            },
+          );
+        }
+      }
+      console.log(
+        "Course-specific emails for guest user scheduled successfully",
       );
     }
 
@@ -1032,11 +1432,16 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       throw new Error("User is already enrolled in this course");
     }
 
-    // Generate enrollment number
-    const enrollmentNumber = generateEnrollmentNumber(
-      course.code,
-      course.startDate,
-    );
+    // Generate enrollment number only for non-therapy and non-supervised courses
+    let enrollmentNumber: string;
+    if (course.type === "therapy" || course.type === "supervised") {
+      enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
+    } else {
+      enrollmentNumber = generateEnrollmentNumber(
+        course.code,
+        course.startDate,
+      );
+    }
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
@@ -1131,11 +1536,27 @@ export const handleSupervisedTherapyEnrollment = mutation({
       throw new Error("Course not found");
     }
 
-    // Generate enrollment number
-    const enrollmentNumber = generateEnrollmentNumber(
-      course.code,
-      course.startDate,
-    );
+    // Generate enrollment number only for non-therapy and non-supervised courses
+    let enrollmentNumber: string;
+    if (course.type === "therapy" || course.type === "supervised") {
+      enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
+      console.log(
+        "Course is therapy or supervised - using N/A for enrollment number",
+      );
+    } else {
+      console.log("Course code:", course.code, "Type:", typeof course.code);
+      console.log(
+        "Course start date:",
+        course.startDate,
+        "Type:",
+        typeof course.startDate,
+      );
+      enrollmentNumber = generateEnrollmentNumber(
+        course.code,
+        course.startDate,
+      );
+      console.log("Generated enrollment number:", enrollmentNumber);
+    }
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
@@ -1238,11 +1659,27 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
     // Note: Removed already enrolled check for supervised courses
     // Users should be able to enroll multiple times for supervised sessions
 
-    // Generate enrollment number
-    const enrollmentNumber = generateEnrollmentNumber(
-      course.code,
-      course.startDate,
-    );
+    // Generate enrollment number only for non-therapy and non-supervised courses
+    let enrollmentNumber: string;
+    if (course.type === "therapy" || course.type === "supervised") {
+      enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
+      console.log(
+        "Course is therapy or supervised - using N/A for enrollment number",
+      );
+    } else {
+      console.log("Course code:", course.code, "Type:", typeof course.code);
+      console.log(
+        "Course start date:",
+        course.startDate,
+        "Type:",
+        typeof course.startDate,
+      );
+      enrollmentNumber = generateEnrollmentNumber(
+        course.code,
+        course.startDate,
+      );
+      console.log("Generated enrollment number:", enrollmentNumber);
+    }
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {

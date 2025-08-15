@@ -124,10 +124,19 @@ const CartContent = () => {
                 console.log("Enrollment successful:", result.enrollments);
                 // Show success message to user
                 if (result.enrollments && result.enrollments.length > 0) {
+                  // Filter out enrollment numbers for therapy and supervised courses
+                  const enrollmentNumbers = result.enrollments
+                    .filter((e) => e.enrollmentNumber !== "N/A")
+                    .map((e) => e.enrollmentNumber);
+
+                  const hasValidEnrollments = enrollmentNumbers.length > 0;
+
                   toast.success(
                     `Payment successful! You have been enrolled in ${result.enrollments.length} course(s).`,
                     {
-                      description: `Enrollment numbers: ${result.enrollments.map((e) => e.enrollmentNumber).join(", ")}`,
+                      description: hasValidEnrollments
+                        ? `Enrollment numbers: ${enrollmentNumbers.join(", ")}`
+                        : "Check your email for enrollment confirmation.",
                     },
                   );
                 } else {
@@ -167,10 +176,19 @@ const CartContent = () => {
               if (result.success) {
                 console.log("Guest enrollment successful:", result.enrollments);
                 if (result.enrollments && result.enrollments.length > 0) {
+                  // Filter out enrollment numbers for therapy and supervised courses
+                  const enrollmentNumbers = result.enrollments
+                    .filter((e) => e.enrollmentNumber !== "N/A")
+                    .map((e) => e.enrollmentNumber);
+
+                  const hasValidEnrollments = enrollmentNumbers.length > 0;
+
                   toast.success(
                     `Payment successful! You have been enrolled in ${result.enrollments.length} course(s).`,
                     {
-                      description: `Enrollment numbers: ${result.enrollments.map((e) => e.enrollmentNumber).join(", ")}`,
+                      description: hasValidEnrollments
+                        ? `Enrollment numbers: ${enrollmentNumbers.join(", ")}`
+                        : "Check your email for enrollment confirmation.",
                     },
                   );
                 } else {

@@ -22,7 +22,10 @@ const sendEmailWithCopy = async (emailConfig: {
   subject: string;
   html: string;
   replyTo?: string;
-  attachments?: any[];
+  attachments?: Array<{
+    filename: string;
+    content: Buffer;
+  }>;
 }) => {
   // Ensure the main recipient gets the email
   const mainRecipients = Array.isArray(emailConfig.to)
@@ -99,6 +102,87 @@ export const sendTestSupervisedEmail = action({
       console.log("Test supervised email sent successfully!");
     } catch (error) {
       console.error("Test supervised email failed:", error);
+      throw error;
+    }
+
+    return null;
+  },
+});
+
+// Test email with simple attachment for debugging
+export const sendTestEmailWithAttachment = action({
+  args: {
+    userEmail: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      console.log("Testing email with simple attachment...");
+
+      // Create a simple text file as attachment
+      const testAttachment = {
+        filename: "test.txt",
+        content: Buffer.from(
+          "This is a test attachment for debugging purposes.",
+        ),
+      };
+
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Test Email with Attachment",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #4CAF50;">Test Email with Attachment</h2>
+            <p>This is a test email to verify that attachments are working correctly.</p>
+            <p>You should see a file called "test.txt" attached to this email.</p>
+            <br>
+            <p>Best regards,<br>The Mind Point Team</p>
+          </div>
+        `,
+        attachments: [testAttachment],
+      });
+
+      console.log("Test email with attachment sent successfully!");
+    } catch (error) {
+      console.error("Test email with attachment failed:", error);
+      throw error;
+    }
+
+    return null;
+  },
+});
+
+// Test actual supervised enrollment email (simulates real enrollment)
+export const testActualSupervisedEnrollment = action({
+  args: {
+    userEmail: v.string(),
+    studentName: v.string(),
+    sessionType: v.union(
+      v.literal("focus"),
+      v.literal("flow"),
+      v.literal("elevate"),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      console.log("Testing ACTUAL supervised enrollment email...");
+      console.log("This simulates the real enrollment process");
+
+      // Call the actual supervised email function that gets called during real enrollment
+      await ctx.runAction(api.emailActions.sendSupervisedTherapyWelcomeEmail, {
+        userEmail: args.userEmail,
+        studentName: args.studentName,
+        sessionType: args.sessionType,
+      });
+
+      console.log("Actual supervised enrollment email sent successfully!");
+      console.log(
+        "This is the SAME email that gets sent during real supervised course enrollment",
+      );
+    } catch (error) {
+      console.error("Actual supervised enrollment email failed:", error);
       throw error;
     }
 
@@ -612,7 +696,7 @@ export const sendCartCheckoutConfirmation = action({
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.startDate}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.endDate}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.startTime} - ${e.endTime}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${showEnrollmentNumber ? e.enrollmentNumber : "-"}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${showEnrollmentNumber ? e.enrollmentNumber : "N/A"}</td>
                   </tr>
                 `;
                   })
@@ -753,17 +837,29 @@ export const sendSupervisedTherapyWelcomeEmail = action({
         args.userEmail,
       );
       console.log("Using base URL for attachments:", baseUrl);
+      console.log(
+        "Environment variable NEXT_PUBLIC_SITE_URL:",
+        process.env.NEXT_PUBLIC_SITE_URL,
+      );
 
       // Fetch the PDF files and convert them to buffers for attachments
       const fetchFile = async (url: string): Promise<Buffer> => {
+        console.log(`Fetching file from: ${url}`);
         const response = await fetch(url);
+        console.log(
+          `Response status: ${response.status} ${response.statusText}`,
+        );
         if (!response.ok) {
           throw new Error(
-            `Failed to fetch file from ${url}: ${response.statusText}`,
+            `Failed to fetch file from ${url}: ${response.status} ${response.statusText}`,
           );
         }
         const arrayBuffer = await response.arrayBuffer();
-        return Buffer.from(arrayBuffer);
+        const buffer = Buffer.from(arrayBuffer);
+        console.log(
+          `Successfully fetched file: ${url}, size: ${buffer.length} bytes`,
+        );
+        return buffer;
       };
 
       const attachments = await Promise.all([
@@ -795,13 +891,17 @@ export const sendSupervisedTherapyWelcomeEmail = action({
       ]);
 
       console.log("Successfully fetched all PDF files for attachments");
+      console.log("Number of attachments:", attachments.length);
+      console.log(
+        "Attachment filenames:",
+        attachments.map((a) => a.filename),
+      );
 
       // Send email with attachments
       await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
-        subject:
-          "Supervised Therapy Sessions & Training - Payment Confirmation",
+        subject: `Supervised Therapy Sessions & Training - ${args.sessionType.charAt(0).toUpperCase() + args.sessionType.slice(1)} Session - Payment Confirmation`,
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
           <h2 style="color: #4CAF50; margin-bottom: 20px;">Supervised Therapy Sessions & Training - Payment Confirmation</h2>
@@ -813,6 +913,7 @@ export const sendSupervisedTherapyWelcomeEmail = action({
           <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #4CAF50; margin: 20px 0;">
             <p style="margin: 5px 0;"><strong>Course Name:</strong> Supervised Therapy Sessions & Training</p>
             <p style="margin: 5px 0;"><strong>Course Type:</strong> Supervised</p>
+            <p style="margin: 5px 0;"><strong>Session Type:</strong> ${args.sessionType.charAt(0).toUpperCase() + args.sessionType.slice(1)} Session</p>
           </div>
           
           <h3 style="color: #2E86C1; margin-top: 30px; margin-bottom: 15px;">Please Note:</h3>
@@ -822,6 +923,15 @@ export const sendSupervisedTherapyWelcomeEmail = action({
             <li>We only work on business days; hence, if you have registered on a Friday or weekend, we will contact you on the next business day.</li>
             <li>Please do not expect any communication on weekends as per our policy.</li>
             <li>Please provide your WhatsApp number for further communication easily on <strong>+91 9770780086</strong>.</li>
+          </ul>
+          
+          <h3 style="color: #2E86C1; margin-top: 30px; margin-bottom: 15px;">Important Documents Attached:</h3>
+          <p>Please find the following documents attached to this email for your supervised session preparation:</p>
+          <ul style="margin-left: 20px; margin-bottom: 20px;">
+            <li><strong>TMP Client Intake Form</strong> - Please fill this out before your session</li>
+            <li><strong>TMP Consent Form for Live Client Session Observation</strong> - Required consent form</li>
+            <li><strong>TMP Session Preparation Template</strong> - Template for session preparation</li>
+            <li><strong>TMP Supervised Session Self-Preparation Checklist</strong> - Checklist to prepare for your session</li>
           </ul>
           
           <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
