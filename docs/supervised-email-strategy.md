@@ -37,7 +37,8 @@ The following 4 PDF files are automatically attached to supervised course emails
 ## File Locations
 
 - **Source Files**: `public/checklist/`
-- **Email URLs**: `${baseUrl}/checklist/` (where baseUrl is from `NEXT_PUBLIC_SITE_URL` environment variable or defaults to `https://themindpoint.org`)
+- **Email URLs**: `${baseUrl}/checklist/` (where baseUrl is from `NEXT_PUBLIC_SITE_URL` environment variable or defaults to `https://www.themindpoint.org`)
+- **Attachment Method**: Files are fetched from URLs and converted to buffers for email attachment
 
 ## Implementation Details
 
@@ -63,6 +64,13 @@ The following 4 PDF files are automatically attached to supervised course emails
 2. **No Duplication**: Regular courses don't receive unnecessary attachments
 3. **Clear Communication**: Each email type serves its specific purpose
 4. **Scalable**: Works for any combination of course types
+5. **Multiple Enrollments**: Users can enroll multiple times for therapy and supervised sessions
+
+## Enrollment Rules
+
+- **Certificate/Diploma/Internship Courses**: Users can only enroll once per course
+- **Therapy Sessions**: Users can enroll multiple times (book multiple sessions)
+- **Supervised Sessions**: Users can enroll multiple times (book multiple supervision packages)
 
 ## Testing
 

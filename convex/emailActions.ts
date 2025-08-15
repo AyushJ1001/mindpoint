@@ -72,6 +72,39 @@ export const sendTestEmail = action({
   },
 });
 
+// Test supervised email action for debugging
+export const sendTestSupervisedEmail = action({
+  args: {
+    userEmail: v.string(),
+    studentName: v.string(),
+    sessionType: v.union(
+      v.literal("focus"),
+      v.literal("flow"),
+      v.literal("elevate"),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      console.log("Testing supervised email with attachments...");
+
+      // Call the actual supervised email function
+      await ctx.runAction(api.emailActions.sendSupervisedTherapyWelcomeEmail, {
+        userEmail: args.userEmail,
+        studentName: args.studentName,
+        sessionType: args.sessionType,
+      });
+
+      console.log("Test supervised email sent successfully!");
+    } catch (error) {
+      console.error("Test supervised email failed:", error);
+      throw error;
+    }
+
+    return null;
+  },
+});
+
 export const sendCertificateEnrollmentConfirmation = action({
   args: {
     userEmail: v.string(),
@@ -709,68 +742,108 @@ export const sendSupervisedTherapyWelcomeEmail = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Get the base URL for attachments - use environment variable or fallback to production URL
-    const baseUrl =
-      process.env.NEXT_PUBLIC_SITE_URL || "https://themindpoint.org";
+    try {
+      // Get the base URL for attachments - use environment variable or fallback to production URL
+      const baseUrl =
+        process.env.NEXT_PUBLIC_SITE_URL || "https://www.themindpoint.org";
 
-    // Send email with attachments
-    await sendEmailWithCopy({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Welcome to The Mind Point Supervised Sessions Program!",
-      html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
-          <h2 style="color: #4CAF50; margin-bottom: 20px;">Welcome to The Mind Point Supervised Sessions Program!</h2>
-          
-          <p>Dear <strong>${args.studentName}</strong>,</p>
-          
-          <p>Thank you for registering for The Mind Point's Supervised Sessions Program! We're excited to support your growth as a confident, skilled therapist.</p>
-          
-          <p>You have enrolled in the <strong>${args.sessionType.charAt(0).toUpperCase() + args.sessionType.slice(1)}</strong> session package.</p>
-          
-          <h3 style="color: #2E86C1; margin-top: 30px; margin-bottom: 15px;">Here's what happens next:</h3>
-          
-          <h4 style="color: #333; margin-top: 25px; margin-bottom: 10px;">Next Steps:</h4>
-          <ul style="margin-left: 20px; margin-bottom: 20px;">
-            <li>Please review and sign the attached Supervision Agreement and Consent Form.</li>
-            <li>A member of our supervision team will contact you shortly to schedule your first session at a convenient time.</li>
-            <li>Before your session, we will send you a Pre-Supervision Checklist and Session Preparation Templates to help you prepare.</li>
-          </ul>
-          
-          <h4 style="color: #333; margin-top: 25px; margin-bottom: 10px;">Important Notes:</h4>
-          <ul style="margin-left: 20px; margin-bottom: 20px;">
-            <li>All sessions are conducted online via Google Meet, so please ensure you have a quiet, private space with a stable internet connection.</li>
-            <li>For any questions or assistance, feel free to reply to this email or contact us at <strong>+91 97707 80086</strong>.</li>
-          </ul>
-          
-          <p style="margin-top: 30px;">We look forward to supporting your journey toward becoming a skilled therapist!</p>
-          
-          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
-            <p style="margin: 0;"><strong>Warm regards,</strong><br>
-            The Mind Point Team<br>
-            <a href="https://www.themindpoint.org" style="color: #4CAF50; text-decoration: none;">www.themindpoint.org</a></p>
-          </div>
-        </div>
-      `,
-      attachments: [
+      console.log(
+        "Sending supervised therapy welcome email to:",
+        args.userEmail,
+      );
+      console.log("Using base URL for attachments:", baseUrl);
+
+      // Fetch the PDF files and convert them to buffers for attachments
+      const fetchFile = async (url: string): Promise<Buffer> => {
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch file from ${url}: ${response.statusText}`,
+          );
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        return Buffer.from(arrayBuffer);
+      };
+
+      const attachments = await Promise.all([
         {
-          filename: "TMP Client Intake Form.pdf",
-          path: `${baseUrl}/checklist/TMP%20Client%20Intake%20Form%20(1).pdf`,
+          filename: "TMP Client Intake Form (1).pdf",
+          content: await fetchFile(
+            `${baseUrl}/checklist/TMP%20Client%20Intake%20Form%20(1).pdf`,
+          ),
         },
         {
-          filename: "TMP Consent Form for Live Client Session Observation.pdf",
-          path: `${baseUrl}/checklist/TMP%20Consent%20Form%20for%20Live%20Client%20Session%20Observation%20(1).pdf`,
+          filename:
+            "TMP Consent Form for Live Client Session Observation (1).pdf",
+          content: await fetchFile(
+            `${baseUrl}/checklist/TMP%20Consent%20Form%20for%20Live%20Client%20Session%20Observation%20(1).pdf`,
+          ),
         },
         {
           filename: "TMP Session Preparation Template.pdf",
-          path: `${baseUrl}/checklist/TMP%20Session%20Preparation%20Template.pdf`,
+          content: await fetchFile(
+            `${baseUrl}/checklist/TMP%20Session%20Preparation%20Template.pdf`,
+          ),
         },
         {
           filename: "TMP Supervised Session Self-Preparation Checklist.pdf",
-          path: `${baseUrl}/checklist/TMP%20Supervised%20Session%20Self-Preparation%20Checklist.pdf`,
+          content: await fetchFile(
+            `${baseUrl}/checklist/TMP%20Supervised%20Session%20Self-Preparation%20Checklist.pdf`,
+          ),
         },
-      ],
-    });
+      ]);
+
+      console.log("Successfully fetched all PDF files for attachments");
+
+      // Send email with attachments
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject:
+          "Supervised Therapy Sessions & Training - Payment Confirmation",
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+          <h2 style="color: #4CAF50; margin-bottom: 20px;">Supervised Therapy Sessions & Training - Payment Confirmation</h2>
+          
+          <p>Dear <strong>${args.studentName}</strong>,</p>
+          
+          <p>We are happy to confirm that your payment for the following supervised session has been successfully received:</p>
+          
+          <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #4CAF50; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Course Name:</strong> Supervised Therapy Sessions & Training</p>
+            <p style="margin: 5px 0;"><strong>Course Type:</strong> Supervised</p>
+          </div>
+          
+          <h3 style="color: #2E86C1; margin-top: 30px; margin-bottom: 15px;">Please Note:</h3>
+          
+          <ul style="margin-left: 20px; margin-bottom: 20px;">
+            <li>You will be contacted within 24 to 48 hours by one of our team members to book a convenient slot with you.</li>
+            <li>We only work on business days; hence, if you have registered on a Friday or weekend, we will contact you on the next business day.</li>
+            <li>Please do not expect any communication on weekends as per our policy.</li>
+            <li>Please provide your WhatsApp number for further communication easily on <strong>+91 9770780086</strong>.</li>
+          </ul>
+          
+          <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          
+          <p>Thank you for choosing The Mind Point!</p>
+          
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <p style="margin: 0;"><strong>Best regards,</strong><br>
+            The Mind Point Team</p>
+          </div>
+        </div>
+      `,
+        attachments,
+      });
+
+      console.log(
+        "Supervised therapy welcome email sent successfully to:",
+        args.userEmail,
+      );
+    } catch (error) {
+      console.error("Failed to send supervised therapy welcome email:", error);
+      throw error;
+    }
 
     return null;
   },
