@@ -225,32 +225,38 @@ export default function CourseClient({
     (course.type === "therapy" || course.type === "internship") &&
     normalizedVariants.length > 1;
 
-  const variantLabel = (v: CourseVariant) => {
+  const variantLabel = (v: CourseVariant): string => {
     if (course.type === "therapy") {
       const s = (v as TherapyCourse).sessions;
-      if (typeof s === "number" && s > 0)
+      if (typeof s === "number" && s > 0) {
         return `${s} ${s === 1 ? "session" : "sessions"}`;
+      }
     }
     if (course.type === "internship") {
       const d = (v as InternshipCourse).duration;
-      if (d && d.trim()) return d.trim();
+      if (d && d.trim()) {
+        return d.trim();
+      }
       // Fallbacks for internships
       const m =
         v.name.match(/(\d+\s*weeks?)/i) ||
         (v.description ?? "").match(/(\d+\s*weeks?)/i);
-      if (m) return m[1]!;
+      if (m) {
+        return m[1]!;
+      }
     }
     // Generic fallback
     if (
       typeof (v as InternshipCourse).duration === "string" &&
       (v as InternshipCourse).duration
     ) {
-      return (v as InternshipCourse).duration;
+      return (v as InternshipCourse).duration!;
     }
     if (typeof (v as TherapyCourse).sessions === "number") {
       const s = (v as TherapyCourse).sessions;
       return `${s} ${s === 1 ? "session" : "sessions"}`;
     }
+    // Default fallback - ensure we always return a string
     return "Option";
   };
 

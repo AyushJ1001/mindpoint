@@ -97,6 +97,14 @@ export default function CareersClient() {
     setIsDragOver(false);
   }, []);
 
+  const simulateAutoFill = useCallback(() => {
+    const current = form.getValues();
+    if (!current.fullName) form.setValue("fullName", "John Doe");
+    if (!current.email) form.setValue("email", "john.doe@email.com");
+    if (!current.phone) form.setValue("phone", "+1 555 123 4567");
+    if (!current.location) form.setValue("location", "New York, NY");
+  }, [form]);
+
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
       e.preventDefault();
@@ -138,14 +146,6 @@ export default function CareersClient() {
       });
     }
   };
-
-  const simulateAutoFill = useCallback(() => {
-    const current = form.getValues();
-    if (!current.fullName) form.setValue("fullName", "John Doe");
-    if (!current.email) form.setValue("email", "john.doe@email.com");
-    if (!current.phone) form.setValue("phone", "+1 555 123 4567");
-    if (!current.location) form.setValue("location", "New York, NY");
-  }, [form]);
 
   const removeFile = () => {
     setSelectedFile(null);
