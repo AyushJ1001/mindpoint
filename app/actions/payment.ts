@@ -177,7 +177,11 @@ export async function handleSingleCourseEnrollment(
 
     return {
       success: true,
-      enrollment,
+      enrollment: {
+        enrollmentId: enrollment as string,
+        enrollmentNumber: "", // This function doesn't return enrollmentNumber
+        courseName: "", // This function doesn't return courseName
+      },
     };
   } catch (error) {
     console.error("Error handling single course enrollment:", error);
@@ -218,7 +222,11 @@ export async function handleGuestUserSingleEnrollment(
 
     return {
       success: true,
-      enrollment,
+      enrollment: {
+        enrollmentId: enrollment.enrollmentId as string,
+        enrollmentNumber: enrollment.enrollmentNumber,
+        courseName: enrollment.courseName,
+      },
     };
   } catch (error) {
     console.error("Error handling guest user single course enrollment:", error);
@@ -268,7 +276,12 @@ export async function handleSupervisedTherapyEnrollment(
 
     return {
       success: true,
-      enrollment,
+      enrollment: {
+        enrollmentId: enrollment.enrollmentId as string,
+        enrollmentNumber: enrollment.enrollmentNumber,
+        courseName: enrollment.courseName,
+        sessionType: enrollment.sessionType,
+      },
     };
   } catch (error) {
     console.error("Error handling supervised therapy enrollment:", error);

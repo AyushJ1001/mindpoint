@@ -46,6 +46,7 @@ export default defineSchema({
     content: v.string(),
     reviews: v.array(v.id("reviews")),
     duration: v.optional(v.string()),
+    prerequisites: v.optional(v.string()),
     imageUrls: v.optional(v.array(v.string())),
     modules: v.optional(
       v.array(

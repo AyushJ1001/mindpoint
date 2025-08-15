@@ -402,7 +402,7 @@ export default function CourseHero({
             </Card>
 
             {/* Schedule Card - Only show for non-pre-recorded courses */}
-            {course.type !== "pre-recorded" && (
+            {(course.type as string) !== "pre-recorded" && (
               <Card className="border-muted border">
                 <CardHeader className="pb-3">
                   <CardTitle className="flex items-center gap-2 text-lg">
@@ -464,7 +464,7 @@ export default function CourseHero({
                     <div>
                       <div className="text-sm font-medium">Duration</div>
                       <div className="text-muted-foreground text-xs">
-                        {course.type === "pre-recorded"
+                        {(course.type as string) === "pre-recorded"
                           ? "3 months"
                           : course.duration || customDuration || "2 weeks"}
                       </div>

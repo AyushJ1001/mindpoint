@@ -9,13 +9,14 @@ import Script from "next/script";
 const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
 
 type Props = {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
+    const { id } = await params;
     const course = await convex.query(api.courses.getCourseById, {
-      id: params.id as Id<"courses">,
+      id: id as Id<"courses">,
     });
 
     if (!course) {
@@ -47,7 +48,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
         title: `${course.name} - The Mind Point`,
         description,
         type: "website",
-        url: `https://themindpoint.org/courses/${params.id}`,
+        url: `https://themindpoint.org/courses/${id}`,
         images:
           course.imageUrls && course.imageUrls.length > 0
             ? [
@@ -82,8 +83,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CoursePage({ params }: Props) {
   try {
+    const { id } = await params;
     const course = await convex.query(api.courses.getCourseById, {
-      id: params.id as Id<"courses">,
+      id: id as Id<"courses">,
     });
 
     if (!course) {
@@ -101,7 +103,7 @@ export default async function CoursePage({ params }: Props) {
 
     // Prefetch related variants (same name & type) to enable instant switching
     const variants = await convex.query(api.courses.getRelatedVariants, {
-      id: params.id as Id<"courses">,
+      id: id as Id<"courses">,
     });
 
     // Generate structured data for the course
@@ -116,7 +118,7 @@ export default async function CoursePage({ params }: Props) {
         name: "The Mind Point",
         url: "https://themindpoint.org",
       },
-      url: `https://themindpoint.org/courses/${params.id}`,
+      url: `https://themindpoint.org/courses/${id}`,
       image:
         course.imageUrls && course.imageUrls.length > 0
           ? course.imageUrls[0]
@@ -130,7 +132,7 @@ export default async function CoursePage({ params }: Props) {
         price: course.price || 0,
         priceCurrency: "INR",
         availability: "https://schema.org/InStock",
-        url: `https://themindpoint.org/courses/${params.id}`,
+        url: `https://themindpoint.org/courses/${id}`,
       },
       coursePrerequisites: course.prerequisites || "No prerequisites required",
       educationalCredentialAwarded:
