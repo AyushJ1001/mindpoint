@@ -34,6 +34,22 @@ jobs:
         run: npm run lint
 
       - name: Build project
+        env:
+          NEXT_PUBLIC_CONVEX_URL: "https://dummy.convex.cloud"
+          UPSTASH_REDIS_REST_URL: "https://dummy.upstash.io"
+          UPSTASH_REDIS_REST_TOKEN: "dummy_token"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_dummy"
+          CLERK_SECRET_KEY: "sk_test_dummy"
+          CLERK_FRONTEND_API_URL: "https://dummy.clerk.accounts.dev"
+          NEXT_PUBLIC_RAZORPAY_KEY_ID: "rzp_dummy"
+          RAZORPAY_KEY_SECRET: "dummy_secret"
+          RESEND_API_KEY: "re_dummy"
+          FROM_EMAIL: "dummy@example.com"
+          TO_EMAIL: "dummy@example.com"
+          GOOGLE_SHEETS_SPREADSHEET_ID: "dummy_spreadsheet_id"
+          GOOGLE_SHEETS_SHEET_NAME: "Sheet1"
+          GOOGLE_APPLICATION_CREDENTIALS_JSON: "{}"
+          SENTRY_AUTH_TOKEN: "dummy_token"
         run: npm run build
 
       - name: Upload build artifacts
