@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
 import { api } from "./_generated/api";
+import { MutationCtx } from "./_generated/server";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -43,7 +44,7 @@ function extractInternshipPlanFromDuration(
 
 // Helper function to add enrollment to Google Sheets
 async function addEnrollmentToGoogleSheets(
-  ctx: any,
+  ctx: MutationCtx,
   enrollmentData: {
     userId: string;
     userName?: string;
@@ -544,7 +545,7 @@ export const handleCartCheckout = mutation({
       console.log("Sending supervised therapy welcome emails...");
       // Send supervised therapy welcome email for each supervised course
       // This email includes the 4 required checklist PDFs as attachments
-      for (const enrollment of supervisedEnrollments) {
+      supervisedEnrollments.forEach(async () => {
         await ctx.scheduler.runAfter(
           0,
           api.emailActions.sendSupervisedTherapyWelcomeEmail,
@@ -554,7 +555,7 @@ export const handleCartCheckout = mutation({
             sessionType: args.sessionType || "focus", // Default to focus if not provided
           },
         );
-      }
+      });
       console.log("Supervised therapy welcome emails scheduled successfully");
     }
 
@@ -1228,7 +1229,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     if (supervisedEnrollments.length > 0) {
       // Send supervised therapy welcome email for each supervised course
       // This email includes the 4 required checklist PDFs as attachments
-      for (const enrollment of supervisedEnrollments) {
+      supervisedEnrollments.forEach(async () => {
         await ctx.scheduler.runAfter(
           0,
           api.emailActions.sendSupervisedTherapyWelcomeEmail,
@@ -1238,7 +1239,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
             sessionType: args.sessionType || "focus", // Default to focus if not provided
           },
         );
-      }
+      });
     }
 
     if (enrollments.length > 0) {
