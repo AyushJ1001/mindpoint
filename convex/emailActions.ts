@@ -3,6 +3,7 @@
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { Resend } from "resend";
+import { api } from "./_generated/api";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 console.log("Resend API Key configured:", !!resendApiKey);
