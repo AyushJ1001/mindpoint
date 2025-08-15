@@ -417,10 +417,13 @@ export default function CourseClient({
 
             <Separator className="my-8" />
 
-            <CountdownTimer
-              course={activeCourse}
-              customDuration={customDuration}
-            />
+            {/* Only show countdown timer for non-pre-recorded courses */}
+            {course.type !== "pre-recorded" && (
+              <CountdownTimer
+                course={activeCourse}
+                customDuration={customDuration}
+              />
+            )}
 
             <CourseOverview description={course.description ?? ""} />
           </>

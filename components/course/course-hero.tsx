@@ -401,76 +401,78 @@ export default function CourseHero({
               </CardContent>
             </Card>
 
-            {/* Schedule Card */}
-            <Card className="border-muted border">
-              <CardHeader className="pb-3">
-                <CardTitle className="flex items-center gap-2 text-lg">
-                  <Calendar className="text-primary h-5 w-5" />
-                  Schedule & Timing
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+            {/* Schedule Card - Only show for non-pre-recorded courses */}
+            {course.type !== "pre-recorded" && (
+              <Card className="border-muted border">
+                <CardHeader className="pb-3">
+                  <CardTitle className="flex items-center gap-2 text-lg">
                     <Calendar className="text-primary h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Start Date</div>
-                    <div className="text-muted-foreground text-sm">
-                      {formatDateCommon(course.startDate)}
-                    </div>
-                  </div>
-                </div>
-                {course.type === "certificate" && course.endDate && (
+                    Schedule & Timing
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div className="flex items-center gap-3">
                     <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
                       <Calendar className="text-primary h-5 w-5" />
                     </div>
                     <div>
-                      <div className="text-sm font-medium">End Date</div>
+                      <div className="text-sm font-medium">Start Date</div>
                       <div className="text-muted-foreground text-sm">
-                        {formatDateCommon(course.endDate)}
+                        {formatDateCommon(course.startDate)}
                       </div>
                     </div>
                   </div>
-                )}
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                    <Clock className="text-primary h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Time</div>
-                    <div className="text-muted-foreground text-sm">
-                      {course.startTime} - {course.endTime}
+                  {course.type === "certificate" && course.endDate && (
+                    <div className="flex items-center gap-3">
+                      <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                        <Calendar className="text-primary h-5 w-5" />
+                      </div>
+                      <div>
+                        <div className="text-sm font-medium">End Date</div>
+                        <div className="text-muted-foreground text-sm">
+                          {formatDateCommon(course.endDate)}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                      <Clock className="text-primary h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">Time</div>
+                      <div className="text-muted-foreground text-sm">
+                        {course.startTime} - {course.endTime}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                    <MapPin className="text-primary h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Days</div>
-                    <div className="text-muted-foreground text-sm">
-                      {course.daysOfWeek.join(", ")}
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                      <MapPin className="text-primary h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">Days</div>
+                      <div className="text-muted-foreground text-sm">
+                        {course.daysOfWeek.join(", ")}
+                      </div>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                    <TrendingUpIcon className="text-primary h-5 w-5" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium">Duration</div>
-                    <div className="text-muted-foreground text-xs">
-                      {course.type === "pre-recorded"
-                        ? "3 months"
-                        : course.duration || customDuration || "2 weeks"}
+                  <div className="flex items-center gap-3">
+                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                      <TrendingUpIcon className="text-primary h-5 w-5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium">Duration</div>
+                      <div className="text-muted-foreground text-xs">
+                        {course.type === "pre-recorded"
+                          ? "3 months"
+                          : course.duration || customDuration || "2 weeks"}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Benefits */}
             <div className="border-primary/20 from-primary/5 to-accent/5 rounded-xl border-2 bg-gradient-to-r p-6">

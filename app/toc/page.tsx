@@ -158,63 +158,69 @@ export default function TOC() {
         <h3 className="mb-3 text-xl font-semibold text-gray-800">
           Course Timings, Dates, and Schedules
         </h3>
-        <p className="mb-4 leading-relaxed text-gray-700">
-          No adjustments, rescheduling, postponements, or modifications to
-          course timings, dates, or schedules will be made under any
-          circumstances, including but not limited to personal conflicts,
-          technical issues, dissatisfaction with faculty, mismatched
-          expectations, or any other reasons. All schedules are fixed and
-          non-negotiable from the point of registration. If you are unable to
-          attend a scheduled batch due to any reason, you will forfeit your
-          participation in that batch without refund or credit. Transfer to the
-          next available batch may be permitted only under the following strict
-          conditions:
-        </p>
-        <ul className="mb-4 ml-4 list-inside list-disc text-gray-700">
-          <li>The original course batch has not yet started; or</li>
-          <li>
-            Extreme circumstances are demonstrated with verifiable proof, such
-            as medical emergencies supported by official medical bills, doctor's
-            certificates, or other irrefutable evidence of inability to attend
-            (e.g., hospitalization records). Proof must be submitted in writing
-            within 48 hours of the issue arising, and approval is at the sole
-            discretion of The Mind Point. No other circumstances, including work
-            commitments, travel, or personal dissatisfaction, will qualify.
-          </li>
-        </ul>
-        <p className="mb-4 leading-relaxed text-gray-700">
-          Transfers are subject to availability in the next batch, and no
-          guarantees are made regarding the timing, faculty, format, or
-          availability of future batches. If no suitable batch is available
-          within a reasonable timeframe (as determined by The Mind Point), no
-          transfer or refund will be provided.
-        </p>
-        <p className="mb-6 leading-relaxed text-gray-700">
-          Students who attend even one lecture (or partial session) are
-          ineligible for any transfer, regardless of complaints about faculty,
-          timings, content, or other factors. Attendance constitutes full
-          acceptance of the Service as delivered, and no disputes will be
-          entertained thereafter. Repeated requests or complaints after partial
-          attendance may result in immediate termination of access to all
-          Services without refund.
-        </p>
+        <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
+          <p className="mb-4 leading-relaxed text-gray-700">
+            No adjustments, rescheduling, postponements, or modifications to
+            course timings, dates, or schedules will be made under any
+            circumstances, including but not limited to personal conflicts,
+            technical issues, dissatisfaction with faculty, mismatched
+            expectations, or any other reasons. All schedules are fixed and
+            non-negotiable from the point of registration. If you are unable to
+            attend a scheduled batch due to any reason, you will forfeit your
+            participation in that batch without refund or credit. Transfer to
+            the next available batch may be permitted only under the following
+            strict conditions:
+          </p>
+          <ul className="mb-4 ml-4 list-inside list-disc text-gray-700">
+            <li>The original course batch has not yet started; or</li>
+            <li>
+              Extreme circumstances are demonstrated with verifiable proof, such
+              as medical emergencies supported by official medical bills,
+              doctor's certificates, or other irrefutable evidence of inability
+              to attend (e.g., hospitalization records). Proof must be submitted
+              in writing within 48 hours of the issue arising, and approval is
+              at the sole discretion of The Mind Point. No other circumstances,
+              including work commitments, travel, or personal dissatisfaction,
+              will qualify.
+            </li>
+          </ul>
+          <p className="mb-4 leading-relaxed text-gray-700">
+            Transfers are subject to availability in the next batch, and no
+            guarantees are made regarding the timing, faculty, format, or
+            availability of future batches. If no suitable batch is available
+            within a reasonable timeframe (as determined by The Mind Point), no
+            transfer or refund will be provided.
+          </p>
+          <p className="leading-relaxed text-gray-700">
+            Students who attend even one lecture (or partial session) are
+            ineligible for any transfer, regardless of complaints about faculty,
+            timings, content, or other factors. Attendance constitutes full
+            acceptance of the Service as delivered, and no disputes will be
+            entertained thereafter. Repeated requests or complaints after
+            partial attendance may result in immediate termination of access to
+            all Services without refund.
+          </p>
+        </div>
 
         <h3 className="mb-3 text-xl font-semibold text-gray-800">
           Exams and Guidelines
         </h3>
-        <p className="mb-6 leading-relaxed text-gray-700">
-          All exams, assessment patterns, grading criteria, and guidelines set
-          by the respective faculty or The Mind Point must be followed strictly
-          and without exception. No adjustments, accommodations, questions,
-          challenges, or changes to exams, patterns, guidelines, or results will
-          be entertained under any circumstances. Marks will not be changed or
-          adjusted unless the faculty decides to do so at their sole discretion,
-          and no reasons, explanations, complaints, or appeals regarding marks
-          or evaluations will be entertained. Failure to comply may result in
-          disqualification, failure of the Service, or termination of enrollment
-          without refund. You are responsible for ensuring you meet all
-          prerequisites and technical requirements prior to enrollment.
-        </p>
+        <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
+          <p className="leading-relaxed text-gray-700">
+            All exams, assessment patterns, grading criteria, and guidelines set
+            by the respective faculty or The Mind Point must be followed
+            strictly and without exception. No adjustments, accommodations,
+            questions, challenges, or changes to exams, patterns, guidelines, or
+            results will be entertained under any circumstances. Marks will not
+            be changed or adjusted unless the faculty decides to do so at their
+            sole discretion, and no reasons, explanations, complaints, or
+            appeals regarding marks or evaluations will be entertained. Failure
+            to comply may result in disqualification, failure of the Service, or
+            termination of enrollment without refund. You are responsible for
+            ensuring you meet all prerequisites and technical requirements prior
+            to enrollment.
+          </p>
+        </div>
 
         <h3 className="mb-3 text-xl font-semibold text-gray-800">
           Recording Access
@@ -335,17 +341,15 @@ export default function TOC() {
           <li>
             Letters of Recommendation (LOR) are not included as part of any
             Service and may be requested separately, subject to approval and
-            additional fees as determined by The Mind Point (minimum ₹1,000,
-            payable in advance).
+            additional fees as determined by The Mind Point ( ₹500, payable in
+            advance).
           </li>
           <li>
             Remaking or reissuing of certificates, diplomas, or any documents
             (e.g., due to loss, damage, name changes, or errors attributable to
             you) is not included in the Service fee. Such requests will incur
-            additional charges (minimum ₹500 per document, plus any
-            administrative or shipping costs), and processing is at The Mind
-            Point's discretion. No remakes will be provided for free under any
-            circumstances.
+            additional charges (₹500 per document, payable in advance). No
+            remakes will be provided for free under any circumstances.
           </li>
         </ul>
 

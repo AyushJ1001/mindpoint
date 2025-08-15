@@ -20,6 +20,9 @@ export default function HomeClient() {
 
       if (!course.type) return false;
 
+      // Exclude pre-recorded courses as they don't have start dates
+      if (course.type === "pre-recorded") return false;
+
       // Only show courses that haven't started yet
       const startDate = new Date(course.startDate);
       const now = new Date();
