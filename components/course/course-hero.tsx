@@ -34,7 +34,7 @@ import {
 import CourseImageGallery from "@/components/course/gallery";
 import TrustBar from "@/components/course/trust-bar";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { getOfferDetails, getCoursePrice, OfferDetails } from "@/lib/utils";
+import { getCoursePrice } from "@/lib/utils";
 
 interface OfferDetails {
   offerPrice: number;

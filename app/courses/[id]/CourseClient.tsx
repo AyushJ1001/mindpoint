@@ -242,39 +242,6 @@ export default function CourseClient({
     return isValidOffer(displayCourse.offer);
   }, [displayCourse.offer]);
 
-  // Real-time offer countdown timer
-  const [offerTimeLeft, setOfferTimeLeft] = useState({
-    days: 0,
-    hours: 0,
-    minutes: 0,
-  });
-
-  useEffect(() => {
-    if (!hasValidOffer || !displayCourse.offer) return;
-
-    const updateOfferTime = () => {
-      const now = new Date();
-      const endDate = new Date(displayCourse.offer!.endDate);
-      const timeLeft = endDate.getTime() - now.getTime();
-
-      if (timeLeft > 0) {
-        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-        const hours = Math.floor(
-          (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
-        );
-        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-        setOfferTimeLeft({ days, hours, minutes });
-      } else {
-        setOfferTimeLeft({ days: 0, hours: 0, minutes: 0 });
-      }
-    };
-
-    updateOfferTime();
-    const interval = setInterval(updateOfferTime, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, [hasValidOffer, displayCourse.offer]);
-
   // Calculate offer details using utility function
   const offerDetails = useMemo(() => {
     return getOfferDetails(displayCourse);

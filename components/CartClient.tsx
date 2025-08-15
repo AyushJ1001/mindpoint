@@ -8,7 +8,7 @@ import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, ShoppingCart, CreditCard, Plus, Minus } from "lucide-react";
-import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
+import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { useUser } from "@clerk/clerk-react";
 import {
   handlePaymentSuccess,
@@ -47,14 +47,14 @@ const CartContent = () => {
   const { user, isLoaded: isUserLoaded } = useUser();
 
   // State to track offer details for each item
-  const [itemOfferDetails, setItemOfferDetails] = useState<Record<string, any>>(
-    {},
-  );
+  const [itemOfferDetails, setItemOfferDetails] = useState<
+    Record<string, OfferDetails>
+  >({});
 
   // Update offer details for cart items
   useEffect(() => {
     const updateOfferDetails = () => {
-      const newOfferDetails: Record<string, any> = {};
+      const newOfferDetails: Record<string, OfferDetails> = {};
       items.forEach((item) => {
         if (item.offer) {
           // Calculate original price from offer price and discount

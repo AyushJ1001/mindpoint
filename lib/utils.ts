@@ -50,7 +50,12 @@ export interface OfferDetails {
   };
 }
 
-export function isValidOffer(offer: any): boolean {
+export function isValidOffer(
+  offer:
+    | { startDate: string; endDate: string; discount: number }
+    | null
+    | undefined,
+): boolean {
   if (!offer || !offer.startDate || !offer.endDate || !offer.discount) {
     return false;
   }
@@ -93,7 +98,15 @@ export function calculateOfferTimeLeft(endDate: string): {
   return { days, hours, minutes };
 }
 
-export function getOfferDetails(course: any): OfferDetails | null {
+export function getOfferDetails(course: {
+  price?: number;
+  offer?: {
+    startDate: string;
+    endDate: string;
+    discount: number;
+    name: string;
+  };
+}): OfferDetails | null {
   if (!course.offer || !isValidOffer(course.offer)) {
     return null;
   }
@@ -111,7 +124,15 @@ export function getOfferDetails(course: any): OfferDetails | null {
   };
 }
 
-export function getCoursePrice(course: any): number {
+export function getCoursePrice(course: {
+  price?: number;
+  offer?: {
+    startDate: string;
+    endDate: string;
+    discount: number;
+    name: string;
+  };
+}): number {
   const offerDetails = getOfferDetails(course);
   return offerDetails ? offerDetails.offerPrice : course.price || 0;
 }

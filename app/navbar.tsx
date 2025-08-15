@@ -36,7 +36,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { showRupees, getOfferDetails } from "@/lib/utils";
+import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 
@@ -53,15 +53,15 @@ export default function Navbar() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
-  const [itemOfferDetails, setItemOfferDetails] = useState<Record<string, any>>(
-    {},
-  );
+  const [itemOfferDetails, setItemOfferDetails] = useState<
+    Record<string, OfferDetails>
+  >({});
   const pathname = usePathname();
 
   // Update offer details for cart items
   useEffect(() => {
     const updateOfferDetails = () => {
-      const newOfferDetails: Record<string, any> = {};
+      const newOfferDetails: Record<string, OfferDetails> = {};
       items.forEach((item) => {
         if (item.offer) {
           // Calculate original price from offer price and discount
