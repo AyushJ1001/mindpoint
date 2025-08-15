@@ -10,7 +10,6 @@ import { Button } from "../components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from "../components/ui/card";
@@ -23,14 +22,6 @@ import {
   CarouselPrevious,
 } from "../components/ui/carousel";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "../components/ui/dialog";
-import {
   Plus,
   BookOpen,
   Award,
@@ -40,13 +31,20 @@ import {
   Heart,
   Eye,
   FileText,
-  Calendar,
-  Clock,
-  MapPin,
 } from "lucide-react";
 import { showRupees } from "@/lib/utils";
 import { Doc } from "@/convex/_generated/dataModel";
 import { Id } from "@/convex/_generated/dataModel";
+
+// Type for courses with sessions (therapy)
+interface TherapyCourse extends Doc<"courses"> {
+  sessions?: number;
+}
+
+// Type for courses with duration (internship)
+interface InternshipCourse extends Doc<"courses"> {
+  duration?: string;
+}
 import Image from "next/image";
 import {
   Select,
@@ -112,11 +110,11 @@ export const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
 
 // Prefer explicit fields: `sessions` (number) or fallback to `duration` (string)
 const extractVariantLabel = (course: Doc<"courses">): string | null => {
-  if (typeof (course as any).sessions === "number") {
-    const count = (course as any).sessions as number;
+  if (typeof (course as TherapyCourse).sessions === "number") {
+    const count = (course as TherapyCourse).sessions ?? 0;
     return `${count} ${count === 1 ? "session" : "sessions"}`;
   }
-  const duration = (course as any).duration as string | undefined;
+  const duration = (course as InternshipCourse).duration;
   if (typeof duration === "string" && duration.trim().length > 0) {
     return duration.trim();
   }
@@ -139,27 +137,30 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   const sorted = [...courses].sort((a, b) => a.price - b.price);
   // Use sessions-based selection when all variants have a numeric `sessions` field
   const useSessionsMode = sorted.every(
-    (c) => typeof (c as any).sessions === "number",
+    (c) => typeof (c as TherapyCourse).sessions === "number",
   );
   // Otherwise, if all have a non-empty `duration` string, use duration-based select
   const useDurationMode =
     !useSessionsMode &&
     sorted.every(
-      (c) => typeof (c as any).duration === "string" && !!(c as any).duration,
+      (c) =>
+        typeof (c as InternshipCourse).duration === "string" &&
+        !!(c as InternshipCourse).duration,
     );
   const [selectedId, setSelectedId] = React.useState(sorted[0]._id);
   const [selectedSessions, setSelectedSessions] = React.useState<number>(
-    useSessionsMode ? ((sorted[0] as any).sessions as number) : 0,
+    useSessionsMode ? ((sorted[0] as TherapyCourse).sessions ?? 0) : 0,
   );
   const [selectedDuration, setSelectedDuration] = React.useState<string>(
-    useDurationMode ? (((sorted[0] as any).duration as string) ?? "") : "",
+    useDurationMode ? ((sorted[0] as InternshipCourse).duration ?? "") : "",
   );
   const selectedCourse = useSessionsMode
-    ? (sorted.find((c) => (c as any).sessions === selectedSessions) ??
+    ? (sorted.find((c) => (c as TherapyCourse).sessions === selectedSessions) ??
       sorted[0])
     : useDurationMode
-      ? (sorted.find((c) => (c as any).duration === selectedDuration) ??
-        sorted[0])
+      ? (sorted.find(
+          (c) => (c as InternshipCourse).duration === selectedDuration,
+        ) ?? sorted[0])
       : (sorted.find((c) => c._id === selectedId) ?? sorted[0]);
 
   const handleAddToCart = () => {
@@ -186,13 +187,6 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       capacity: selectedCourse.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
     });
-  };
-
-  const handleBuyNow = () => {
-    if (!inCart(selectedCourse._id)) {
-      handleAddToCart();
-    }
-    router.push("/cart");
   };
 
   const handleCardClick = () => {
@@ -232,7 +226,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                 <SelectGroup>
                   <SelectLabel>Sessions</SelectLabel>
                   {sorted.map((variant) => {
-                    const sessions = (variant as any).sessions as number;
+                    const sessions = (variant as TherapyCourse).sessions ?? 0;
                     const label = `${sessions} ${sessions === 1 ? "session" : "sessions"}`;
                     return (
                       <SelectItem key={variant._id} value={String(sessions)}>
@@ -258,7 +252,8 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                 <SelectGroup>
                   <SelectLabel>Duration</SelectLabel>
                   {sorted.map((variant) => {
-                    const duration = (variant as any).duration as string;
+                    const duration =
+                      (variant as InternshipCourse).duration ?? "";
                     const label = duration?.trim() ?? "Duration";
                     return (
                       <SelectItem key={variant._id} value={duration}>
@@ -378,13 +373,6 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       capacity: course.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
     });
-  };
-
-  const handleBuyNow = () => {
-    if (!inCart(course._id)) {
-      handleAddToCart();
-    }
-    router.push("/cart");
   };
 
   const handleCardClick = () => {
@@ -537,8 +525,8 @@ export default function CourseTypePage({
                 No courses available yet
               </h3>
               <p className="text-muted-foreground">
-                We're working on adding new {title.toLowerCase()} courses. Check
-                back soon!
+                We&apos;re working on adding new {title.toLowerCase()} courses.
+                Check back soon!
               </p>
             </div>
           )}

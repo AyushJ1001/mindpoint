@@ -1,8 +1,6 @@
 "use client";
 
 import React, { useState, useMemo } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { CheckCircle } from "lucide-react";
 import { Doc } from "@/convex/_generated/dataModel";
 
@@ -57,9 +55,6 @@ export default function Internship({
       240: variant240,
     };
   }, [variants, internship]);
-
-  // Get the currently selected course data
-  const selectedCourse = courseVariants[selectedHours];
 
   // Handle hour selection and trigger variant selection
   const handleHourSelection = (hours: 120 | 240) => {
@@ -226,7 +221,7 @@ export default function Internship({
               )}
               <div className="mb-8 text-center">
                 <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
-                  THE MIND POINT'S
+                  THE MIND POINT&apos;S
                 </div>
                 <div className="mb-4 text-sm font-medium text-slate-600">
                   <span className="font-semibold text-slate-800">
@@ -257,9 +252,9 @@ export default function Internship({
                   <span className="font-semibold text-blue-600">
                     120-hour program
                   </span>{" "}
-                  if you're new to psychology, currently in high school, or in
-                  your first year of a bachelor's degree and want to build a
-                  strong foundation in the field.
+                  if you&apos;re new to psychology, currently in high school, or
+                  in your first year of a bachelor&apos;s degree and want to
+                  build a strong foundation in the field.
                 </p>
               </div>
             </div>
@@ -280,7 +275,7 @@ export default function Internship({
               )}
               <div className="mb-8 text-center">
                 <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
-                  THE MIND POINT'S
+                  THE MIND POINT&apos;S
                 </div>
                 <div className="mb-4 text-sm font-medium text-slate-600">
                   <span className="font-semibold text-slate-800">
@@ -314,9 +309,9 @@ export default function Internship({
                   <span className="font-semibold text-purple-600">
                     240-hour program
                   </span>{" "}
-                  if you're pursuing a bachelor's or master's in psychology and
-                  want an in-depth experience—this program includes everything
-                  from the 120-hour course and much more.
+                  if you&apos;re pursuing a bachelor&apos;s or master&apos;s in
+                  psychology and want an in-depth experience—this program
+                  includes everything from the 120-hour course and much more.
                 </p>
               </div>
             </div>

@@ -82,19 +82,18 @@ interface ChoosePlanProps {
 }
 
 export default function ChoosePlan({
-  course,
   variants,
   onBook = () => {},
 }: ChoosePlanProps) {
   const { ref, visible } = useInView<HTMLDivElement>();
-  const { addItem, inCart } = useCart();
+  const { addItem } = useCart();
   const router = useRouter();
 
   // Get unique session counts from variants
   const sessionOptions = useMemo(() => {
     const sessionCounts = new Set<number>();
     variants.forEach((variant) => {
-      const sessionCount = (variant as any).sessions;
+      const sessionCount = variant.sessions;
       if (sessionCount && typeof sessionCount === "number") {
         sessionCounts.add(sessionCount);
       }
@@ -168,7 +167,7 @@ export default function ChoosePlan({
     const validityDays: Record<number, number> = {};
 
     variants.forEach((variant) => {
-      const sessionCount = (variant as any).sessions;
+      const sessionCount = variant.sessions;
       if (sessionCount && typeof sessionCount === "number") {
         // Calculate price per session (total price divided by number of sessions)
         const pricePerSession = Math.round(variant.price / sessionCount);
@@ -217,7 +216,7 @@ export default function ChoosePlan({
   ) => {
     // Find the correct course variant based on sessions
     const selectedVariant = variants.find((variant) => {
-      const variantSessions = (variant as any).sessions;
+      const variantSessions = variant.sessions;
       return variantSessions === sessions;
     });
 
@@ -337,7 +336,7 @@ export default function ChoosePlan({
               "transition-all duration-700",
             )}
           >
-            {plans.map((plan, idx) => {
+            {plans.map((plan) => {
               const per = plan.perSession[sessions];
               // Skip rendering if no pricing available for this session count
               if (!per) return null;

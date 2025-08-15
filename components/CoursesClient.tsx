@@ -5,18 +5,23 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useCart } from "react-use-cart";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { Doc } from "@/convex/_generated/dataModel";
 import { Id } from "@/convex/_generated/dataModel";
+
+// Type for courses with sessions (therapy)
+interface TherapyCourse extends Doc<"courses"> {
+  sessions?: number;
+}
+
+// Type for courses with duration (internship)
+interface InternshipCourse extends Doc<"courses"> {
+  duration?: string;
+}
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Carousel,
@@ -91,11 +96,11 @@ const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
 
 // Prefer explicit fields: `sessions` (number) or fallback to `duration` (string) for label
 const extractVariantLabel = (course: Doc<"courses">): string | null => {
-  if (typeof (course as any).sessions === "number") {
-    const count = (course as any).sessions as number;
+  if (typeof (course as TherapyCourse).sessions === "number") {
+    const count = (course as TherapyCourse).sessions ?? 0;
     return `${count} ${count === 1 ? "session" : "sessions"}`;
   }
-  const duration = (course as any).duration as string | undefined;
+  const duration = (course as InternshipCourse).duration;
   if (typeof duration === "string" && duration.trim().length > 0) {
     return duration.trim();
   }
@@ -117,26 +122,29 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   const router = useRouter();
   const sorted = [...courses].sort((a, b) => a.price - b.price);
   const useSessionsMode = sorted.every(
-    (c) => typeof (c as any).sessions === "number",
+    (c) => typeof (c as TherapyCourse).sessions === "number",
   );
   const useDurationMode =
     !useSessionsMode &&
     sorted.every(
-      (c) => typeof (c as any).duration === "string" && !!(c as any).duration,
+      (c) =>
+        typeof (c as InternshipCourse).duration === "string" &&
+        !!(c as InternshipCourse).duration,
     );
   const [selectedId, setSelectedId] = React.useState(sorted[0]._id);
   const [selectedSessions, setSelectedSessions] = React.useState<number>(
-    useSessionsMode ? ((sorted[0] as any).sessions as number) : 0,
+    useSessionsMode ? ((sorted[0] as TherapyCourse).sessions ?? 0) : 0,
   );
   const [selectedDuration, setSelectedDuration] = React.useState<string>(
-    useDurationMode ? (((sorted[0] as any).duration as string) ?? "") : "",
+    useDurationMode ? ((sorted[0] as InternshipCourse).duration ?? "") : "",
   );
   const selectedCourse = useSessionsMode
-    ? (sorted.find((c) => (c as any).sessions === selectedSessions) ??
+    ? (sorted.find((c) => (c as TherapyCourse).sessions === selectedSessions) ??
       sorted[0])
     : useDurationMode
-      ? (sorted.find((c) => (c as any).duration === selectedDuration) ??
-        sorted[0])
+      ? (sorted.find(
+          (c) => (c as InternshipCourse).duration === selectedDuration,
+        ) ?? sorted[0])
       : (sorted.find((c) => c._id === selectedId) ?? sorted[0]);
 
   const handleAddToCart = () => {
@@ -202,7 +210,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                 <SelectGroup>
                   <SelectLabel>Sessions</SelectLabel>
                   {sorted.map((variant) => {
-                    const sessions = (variant as any).sessions as number;
+                    const sessions = (variant as TherapyCourse).sessions ?? 0;
                     const label = `${sessions} ${sessions === 1 ? "session" : "sessions"}`;
                     return (
                       <SelectItem key={variant._id} value={String(sessions)}>
@@ -228,7 +236,8 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                 <SelectGroup>
                   <SelectLabel>Duration</SelectLabel>
                   {sorted.map((variant) => {
-                    const duration = (variant as any).duration as string;
+                    const duration =
+                      (variant as InternshipCourse).duration ?? "";
                     const label = duration?.trim() ?? "Duration";
                     return (
                       <SelectItem key={variant._id} value={duration}>
@@ -443,7 +452,7 @@ export default function CoursesClient() {
 
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {/* Certificate Courses */}
-            <a
+            <Link
               href="/courses/certificate"
               className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg"
             >
@@ -469,10 +478,10 @@ export default function CoursesClient() {
                 Professional certification programs to enhance your skills and
                 credentials
               </p>
-            </a>
+            </Link>
 
             {/* Internship Programs */}
-            <a
+            <Link
               href="/courses/internship"
               className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg"
             >
@@ -497,10 +506,10 @@ export default function CoursesClient() {
               <p className="text-muted-foreground text-sm">
                 Hands-on experience through structured internship opportunities
               </p>
-            </a>
+            </Link>
 
             {/* Diploma Programs */}
-            <a
+            <Link
               href="/courses/diploma"
               className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg"
             >
@@ -526,10 +535,10 @@ export default function CoursesClient() {
                 Comprehensive diploma courses for in-depth knowledge and
                 expertise
               </p>
-            </a>
+            </Link>
 
             {/* Pre-recorded Courses */}
-            <a
+            <Link
               href="/courses/pre-recorded"
               className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg"
             >
@@ -554,10 +563,10 @@ export default function CoursesClient() {
               <p className="text-muted-foreground text-sm">
                 Self-paced learning with pre-recorded video content
               </p>
-            </a>
+            </Link>
 
             {/* Masterclasses */}
-            <a
+            <Link
               href="/courses/masterclass"
               className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg"
             >
@@ -582,10 +591,10 @@ export default function CoursesClient() {
               <p className="text-muted-foreground text-sm">
                 Intensive sessions with industry experts and thought leaders
               </p>
-            </a>
+            </Link>
 
             {/* Therapy Sessions */}
-            <a
+            <Link
               href="/courses/therapy"
               className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg"
             >
@@ -610,10 +619,10 @@ export default function CoursesClient() {
               <p className="text-muted-foreground text-sm">
                 Professional therapy and counseling services for mental wellness
               </p>
-            </a>
+            </Link>
 
             {/* Supervised Programs */}
-            <a
+            <Link
               href="/courses/supervised"
               className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg"
             >
@@ -644,10 +653,10 @@ export default function CoursesClient() {
               <p className="text-muted-foreground text-sm">
                 Guided learning programs with expert supervision and mentorship
               </p>
-            </a>
+            </Link>
 
             {/* Resume Studio */}
-            <a
+            <Link
               href="/courses/resume-studio"
               className="group hover:border-primary cursor-pointer rounded-lg border p-6 transition-all hover:shadow-lg"
             >
@@ -672,7 +681,7 @@ export default function CoursesClient() {
               <p className="text-muted-foreground text-sm">
                 Professional resume building and career development services
               </p>
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -718,7 +727,7 @@ export default function CoursesClient() {
                 No courses available yet
               </h3>
               <p className="text-muted-foreground">
-                We're working on adding new courses. Check back soon!
+                We&apos;re working on adding new courses. Check back soon!
               </p>
             </div>
           )}

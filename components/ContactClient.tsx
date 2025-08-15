@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Phone, Mail, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from "next/link";
+
 import { contactFormSchema } from "@/lib/utils";
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
@@ -52,7 +52,7 @@ export default function ContactClient() {
       } else {
         setStatus("Error sending message.");
       }
-    } catch (error) {
+    } catch {
       setStatus("Error sending message.");
     }
   };

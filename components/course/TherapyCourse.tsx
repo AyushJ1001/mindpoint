@@ -3,12 +3,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Heart,
   MessageCircle,
-  Users,
   Clock,
   Shield,
   Brain,
   Award,
-  CheckCircle,
   Star,
   Zap,
   Globe,
@@ -22,35 +20,6 @@ interface TherapyCourseProps {
   course: Doc<"courses">;
   variants?: Doc<"courses">[];
 }
-
-// Function to generate a concise summary from the course description
-const generateSummary = (description: string | undefined): string => {
-  if (!description) {
-    return "Professional therapy sessions for mental health support and personal growth.";
-  }
-
-  // Remove HTML tags if present
-  const cleanText = description.replace(/<[^>]*>/g, "");
-
-  // Split into sentences and take the first meaningful sentence
-  const sentences = cleanText
-    .split(/[.!?]+/)
-    .filter((s) => s.trim().length > 10);
-
-  if (sentences.length === 0) {
-    return "Professional therapy sessions for mental health support and personal growth.";
-  }
-
-  // Take the first sentence and limit to ~100 characters
-  let summary = sentences[0].trim();
-
-  // If it's too long, truncate it
-  if (summary.length > 100) {
-    summary = summary.substring(0, 97) + "...";
-  }
-
-  return summary;
-};
 
 export default function TherapyCourse({
   course,
@@ -179,9 +148,9 @@ export default function TherapyCourse({
                   </div>
                   <h3 className="mb-3 text-xl font-bold">Affordable Pricing</h3>
                   <p className="text-muted-foreground">
-                    Quality therapy shouldn't break the bank. Our transparent
-                    pricing starts from just ₹600 per session with bulk
-                    discounts available.
+                    Quality therapy shouldn&apos;t break the bank. Our
+                    transparent pricing starts from just ₹600 per session with
+                    bulk discounts available.
                   </p>
                 </div>
               </Card>
@@ -274,7 +243,8 @@ export default function TherapyCourse({
                 <CardContent>
                   <p className="text-muted-foreground">
                     Receive compassionate support and guidance to navigate
-                    life's challenges and improve your emotional well-being.
+                    life&apos;s challenges and improve your emotional
+                    well-being.
                   </p>
                 </CardContent>
               </Card>

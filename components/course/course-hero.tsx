@@ -35,6 +35,18 @@ import CourseImageGallery from "@/components/course/gallery";
 import TrustBar from "@/components/course/trust-bar";
 import type { Doc } from "@/convex/_generated/dataModel";
 
+interface OfferDetails {
+  offerPrice: number;
+  originalPrice: number;
+  offerName: string;
+  discountPercentage: number;
+  timeLeft: {
+    days: number;
+    hours: number;
+    minutes: number;
+  };
+}
+
 const INR = "en-IN";
 
 function formatINR(value: number): string {
@@ -95,9 +107,10 @@ function useScrollAnimation() {
         rootMargin: "0px 0px -50px 0px",
       },
     );
-    if (ref.current) observer.observe(ref.current);
+    const currentRef = ref.current;
+    if (currentRef) observer.observe(currentRef);
     return () => {
-      if (ref.current) observer.unobserve(ref.current);
+      if (currentRef) observer.unobserve(currentRef);
     };
   }, []);
   return { ref, isVisible } as const;
@@ -111,7 +124,7 @@ interface CourseHeroProps {
   activeCourse: Doc<"courses">;
   setActiveCourse: (course: Doc<"courses">) => void;
   hasValidOffer: boolean;
-  offerDetails: any;
+  offerDetails: OfferDetails | null;
   isOutOfStock: boolean;
   seatsLeft: number;
   shouldShowVariantSelect: boolean;

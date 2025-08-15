@@ -2,8 +2,7 @@
 
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "@/components/ui/button";
@@ -27,6 +26,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -39,11 +39,11 @@ const CartContent = () => {
     isEmpty,
     emptyCart,
   } = useCart();
-  const courses = useQuery(api.courses.listCourses, { count: undefined });
+
   const [isProcessing, setIsProcessing] = useState(false);
   const [showGuestModal, setShowGuestModal] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
-  const { Razorpay, error, isLoading } = useRazorpay();
+  const { Razorpay, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
 
   const handleClearCart = () => {
@@ -104,13 +104,6 @@ const CartContent = () => {
         order_id: data.id,
         handler: async (response) => {
           console.log("Payment successful", response);
-
-          // Define cleanup function before using it
-          const clearTimeoutAndCleanup = () => {
-            clearTimeout(timeoutId);
-            if (modalCheckInterval) clearInterval(modalCheckInterval);
-            if (observer) observer.disconnect();
-          };
 
           // Add event handlers for payment modal
 
@@ -272,7 +265,7 @@ const CartContent = () => {
         ];
 
         const checkForRazorpayModal = () => {
-          let foundElements = [];
+          const foundElements = [];
           razorpaySelectors.forEach((selector) => {
             const elements = document.querySelectorAll(selector);
             if (elements.length > 0) {
@@ -461,7 +454,7 @@ const CartContent = () => {
             Add some courses to get started with your learning journey.
           </p>
           <Button asChild>
-            <a href="/courses">Browse Courses</a>
+            <Link href="/courses">Browse Courses</Link>
           </Button>
         </div>
       </div>
@@ -531,10 +524,12 @@ const CartContent = () => {
                   className="flex items-center gap-4 rounded-lg border p-4"
                 >
                   <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
-                    <img
+                    <Image
                       src={item.imageUrls?.[0] || "/placeholder-image.jpg"}
                       alt={item.name}
                       className="h-full w-full object-cover"
+                      width={64}
+                      height={64}
                     />
                   </div>
                   <div className="flex-1">

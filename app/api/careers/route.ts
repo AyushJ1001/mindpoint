@@ -40,7 +40,7 @@ export async function POST(req: Request) {
       }
     })();
 
-    let attachments: {
+    const attachments: {
       filename: string;
       content: Buffer;
       contentType?: string;

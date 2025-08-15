@@ -212,7 +212,15 @@ const typeOptions = [
 function AIQuiz() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [answers, setAnswers] = useState<{ [key: number]: string }>({});
-  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [recommendations, setRecommendations] = useState<
+    {
+      id: string;
+      name: string;
+      desc: string;
+      tags: string[];
+      score: number;
+    }[]
+  >([]);
   const [currentStep, setCurrentStep] = useState<"type" | "quiz" | "results">(
     "type",
   );
@@ -429,9 +437,9 @@ function AIQuiz() {
           </div>
 
           <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
-            {recommendations.map((rec, index) => (
+            {recommendations.map((rec) => (
               <Card
-                key={index}
+                key={rec.id}
                 className="transition-all duration-300 hover:shadow-lg"
               >
                 <CardContent className="p-6">

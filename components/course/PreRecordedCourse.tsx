@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Video, Play, Clock, Download, Repeat, BookOpen } from "lucide-react";
+import { Video, Clock, Download, Repeat } from "lucide-react";
 import CourseModulesSection from "./course-modules-section";
 import type { Doc } from "@/convex/_generated/dataModel";
 

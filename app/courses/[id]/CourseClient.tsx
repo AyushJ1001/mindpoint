@@ -24,6 +24,16 @@ import type { Doc } from "@/convex/_generated/dataModel";
 
 type CourseVariant = Doc<"courses">;
 
+// Type for courses with sessions (therapy)
+interface TherapyCourse extends Doc<"courses"> {
+  sessions?: number;
+}
+
+// Type for courses with duration (internship)
+interface InternshipCourse extends Doc<"courses"> {
+  duration?: string;
+}
+
 export default function CourseClient({
   course,
   variants = [],
@@ -52,8 +62,7 @@ export default function CourseClient({
     }
   }, [activeCourse]);
 
-  const { addItem, inCart, updateItemQuantity, removeItem, items, emptyCart } =
-    useCart();
+  const { addItem, inCart, updateItemQuantity, removeItem, items } = useCart();
 
   // State for buy now dialog
   const [showBuyNowDialog, setShowBuyNowDialog] = useState(false);
@@ -191,8 +200,8 @@ export default function CourseClient({
     // Sort by sessions (therapy) or duration/price
     if (course.type === "therapy") {
       sameGroup.sort((a, b) => {
-        const as = (a as any).sessions ?? 0;
-        const bs = (b as any).sessions ?? 0;
+        const as = (a as TherapyCourse).sessions ?? 0;
+        const bs = (b as TherapyCourse).sessions ?? 0;
         return as - bs || (a.price ?? 0) - (b.price ?? 0);
       });
     } else if (course.type === "internship") {
@@ -203,8 +212,8 @@ export default function CourseClient({
         return m ? Number.parseInt(m[1]!, 10) : Number.MAX_SAFE_INTEGER;
       };
       sameGroup.sort((a, b) => {
-        const aw = parseWeeks((a as any).duration);
-        const bw = parseWeeks((b as any).duration);
+        const aw = parseWeeks((a as InternshipCourse).duration);
+        const bw = parseWeeks((b as InternshipCourse).duration);
         if (aw !== bw) return aw - bw;
         return (a.price ?? 0) - (b.price ?? 0);
       });
@@ -218,12 +227,12 @@ export default function CourseClient({
 
   const variantLabel = (v: CourseVariant) => {
     if (course.type === "therapy") {
-      const s = (v as any).sessions as number | undefined;
+      const s = (v as TherapyCourse).sessions;
       if (typeof s === "number" && s > 0)
         return `${s} ${s === 1 ? "session" : "sessions"}`;
     }
     if (course.type === "internship") {
-      const d = (v as any).duration as string | undefined;
+      const d = (v as InternshipCourse).duration;
       if (d && d.trim()) return d.trim();
       // Fallbacks for internships
       const m =
@@ -232,11 +241,14 @@ export default function CourseClient({
       if (m) return m[1]!;
     }
     // Generic fallback
-    if (typeof (v as any).duration === "string" && (v as any).duration) {
-      return (v as any).duration as string;
+    if (
+      typeof (v as InternshipCourse).duration === "string" &&
+      (v as InternshipCourse).duration
+    ) {
+      return (v as InternshipCourse).duration;
     }
-    if (typeof (v as any).sessions === "number") {
-      const s = (v as any).sessions as number;
+    if (typeof (v as TherapyCourse).sessions === "number") {
+      const s = (v as TherapyCourse).sessions;
       return `${s} ${s === 1 ? "session" : "sessions"}`;
     }
     return "Option";
@@ -324,7 +336,7 @@ export default function CourseClient({
         window.history.replaceState(null, "", `/courses/${val}`);
       }
     } else {
-      router.replace(`/courses/${val}`, { scroll: false } as any);
+      router.replace(`/courses/${val}`, { scroll: false });
     }
   };
 

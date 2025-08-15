@@ -20,15 +20,16 @@ export default function TOC() {
           Terms and Conditions
         </h1>
         <p className="mb-6 leading-relaxed text-gray-700">
-          These Terms and Conditions ("Terms") outline the rules and regulations
-          for the use of The Mind Point's website, located at
-          www.themindpoint.org (the "Website"), and the services provided by The
-          Mind Point, including but not limited to courses, internships,
-          diplomas, workshops, therapy sessions, supervised sessions, and
-          related programs (collectively, the "Services"). By accessing the
-          Website or using any Services, you agree to be bound by these Terms.
-          If you do not agree with any part of these Terms, you must not access
-          the Website or use the Services.
+          These Terms and Conditions (&quot;Terms&quot;) outline the rules and
+          regulations for the use of The Mind Point&apos;s website, located at
+          www.themindpoint.org (the &quot;Website&quot;), and the services
+          provided by The Mind Point, including but not limited to courses,
+          internships, diplomas, workshops, therapy sessions, supervised
+          sessions, and related programs (collectively, the
+          &quot;Services&quot;). By accessing the Website or using any Services,
+          you agree to be bound by these Terms. If you do not agree with any
+          part of these Terms, you must not access the Website or use the
+          Services.
         </p>
         <p className="mb-6 leading-relaxed text-gray-700">
           The Mind Point reserves the right to update or modify these Terms at
@@ -46,21 +47,24 @@ export default function TOC() {
         </p>
         <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
           <li>
-            "Client," "You," and "Your" refer to you, the individual accessing
-            the Website, enrolling in Services, or otherwise engaging with The
-            Mind Point.
+            &quot;Client,&quot; &quot;You,&quot; and &quot;Your&quot; refer to
+            you, the individual accessing the Website, enrolling in Services, or
+            otherwise engaging with The Mind Point.
           </li>
           <li>
-            "The Company," "We," "Our," "Us," and "The Mind Point" refer to The
-            Mind Point, its affiliates, employees, and representatives.
+            &quot;The Company,&quot; &quot;We,&quot; &quot;Our,&quot;
+            &quot;Us,&quot; and &quot;The Mind Point&quot; refer to The Mind
+            Point, its affiliates, employees, and representatives.
           </li>
           <li>
-            "Services" include all educational and professional development
-            offerings such as courses, internships, diplomas, workshops, therapy
-            sessions, supervised sessions, and any pre-recorded materials.
+            &quot;Services&quot; include all educational and professional
+            development offerings such as courses, internships, diplomas,
+            workshops, therapy sessions, supervised sessions, and any
+            pre-recorded materials.
           </li>
           <li>
-            "Party" or "Parties" refers to both the Client and The Mind Point.
+            &quot;Party&quot; or &quot;Parties&quot; refers to both the Client
+            and The Mind Point.
           </li>
         </ul>
         <p className="mb-6 leading-relaxed text-gray-700">
@@ -176,12 +180,12 @@ export default function TOC() {
             <li>
               Extreme circumstances are demonstrated with verifiable proof, such
               as medical emergencies supported by official medical bills,
-              doctor's certificates, or other irrefutable evidence of inability
-              to attend (e.g., hospitalization records). Proof must be submitted
-              in writing within 48 hours of the issue arising, and approval is
-              at the sole discretion of The Mind Point. No other circumstances,
-              including work commitments, travel, or personal dissatisfaction,
-              will qualify.
+              doctor&apos;s certificates, or other irrefutable evidence of
+              inability to attend (e.g., hospitalization records). Proof must be
+              submitted in writing within 48 hours of the issue arising, and
+              approval is at the sole discretion of The Mind Point. No other
+              circumstances, including work commitments, travel, or personal
+              dissatisfaction, will qualify.
             </li>
           </ul>
           <p className="mb-4 leading-relaxed text-gray-700">
@@ -325,7 +329,7 @@ export default function TOC() {
         <p className="mb-6 leading-relaxed text-gray-700">
           Violation of this policy may result in suspension or permanent ban
           from all Services, forfeiture of fees, and potential reporting to
-          relevant authorities if warranted. The Mind Point's decision on
+          relevant authorities if warranted. The Mind Point&apos;s decision on
           conduct violations is final and non-appealable.
         </p>
 
@@ -433,8 +437,8 @@ export default function TOC() {
           incidental, consequential, or special damages arising from use of the
           Website or Services, including but not limited to loss of data,
           profits, opportunities, or emotional distress. All information and
-          Services are provided "as-is" without guarantees of accuracy,
-          completeness, availability, or suitability. Enrollment and
+          Services are provided &quot;as-is&quot; without guarantees of
+          accuracy, completeness, availability, or suitability. Enrollment and
           participation are at your sole risk.
         </p>
 

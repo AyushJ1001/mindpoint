@@ -61,15 +61,6 @@ const ApplicationSchema = z.object({
 
 type FormValues = z.infer<typeof ApplicationSchema>;
 
-interface JobPosition {
-  id: string;
-  title: string;
-  department: string;
-  type: string;
-  location: string;
-  description: string;
-}
-
 export default function CareersClient() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -106,32 +97,36 @@ export default function CareersClient() {
     setIsDragOver(false);
   }, []);
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
+  const handleDrop = useCallback(
+    (e: React.DragEvent) => {
+      e.preventDefault();
+      setIsDragOver(false);
 
-    const files = Array.from(e.dataTransfer.files);
-    const file = files[0];
+      const files = Array.from(e.dataTransfer.files);
+      const file = files[0];
 
-    if (
-      file &&
-      (file.type === "application/pdf" ||
-        file.name.endsWith(".pdf") ||
-        file.name.endsWith(".doc") ||
-        file.name.endsWith(".docx"))
-    ) {
-      setSelectedFile(file);
-      // Simulate auto-fill from resume
-      simulateAutoFill();
-      toast.success("Resume uploaded successfully", {
-        description: "We've auto-filled some fields based on your resume.",
-      });
-    } else {
-      toast.error("Invalid file type", {
-        description: "Please upload a PDF or Word document.",
-      });
-    }
-  }, []);
+      if (
+        file &&
+        (file.type === "application/pdf" ||
+          file.name.endsWith(".pdf") ||
+          file.name.endsWith(".doc") ||
+          file.name.endsWith(".docx"))
+      ) {
+        setSelectedFile(file);
+        // Simulate auto-fill from resume
+        simulateAutoFill();
+        toast.success("Resume uploaded successfully", {
+          description:
+            "We&apos;ve auto-filled some fields based on your resume.",
+        });
+      } else {
+        toast.error("Invalid file type", {
+          description: "Please upload a PDF or Word document.",
+        });
+      }
+    },
+    [simulateAutoFill],
+  );
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -139,24 +134,24 @@ export default function CareersClient() {
       setSelectedFile(file);
       simulateAutoFill();
       toast.success("Resume uploaded successfully", {
-        description: "We've auto-filled some fields based on your resume.",
+        description: "We&apos;ve auto-filled some fields based on your resume.",
       });
     }
   };
 
-  const simulateAutoFill = () => {
+  const simulateAutoFill = useCallback(() => {
     const current = form.getValues();
     if (!current.fullName) form.setValue("fullName", "John Doe");
     if (!current.email) form.setValue("email", "john.doe@email.com");
     if (!current.phone) form.setValue("phone", "+1 555 123 4567");
     if (!current.location) form.setValue("location", "New York, NY");
-  };
+  }, [form]);
 
   const removeFile = () => {
     setSelectedFile(null);
   };
 
-  const onSubmit = async (_data: FormValues) => {
+  const onSubmit = async () => {
     setIsSubmitting(true);
 
     // Simulate form submission
@@ -164,7 +159,7 @@ export default function CareersClient() {
 
     toast.success("Application submitted successfully!", {
       description:
-        "We'll review your application and get back to you within 5-7 business days.",
+        "We&apos;ll review your application and get back to you within 5-7 business days.",
     });
 
     setIsSubmitting(false);
@@ -180,8 +175,8 @@ export default function CareersClient() {
           </h1>
           <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-lg">
             Help us empower minds through comprehensive mental health education
-            and professional development. Be part of a team that's making a real
-            difference in people's lives.
+            and professional development. Be part of a team that&apos;s making a
+            real difference in people&apos;s lives.
           </p>
 
           {/* Values */}
@@ -362,7 +357,7 @@ export default function CareersClient() {
                               placeholder="+1 555 123 4567"
                               international
                               defaultCountry="IN"
-                              inputComponent={PhoneInputField as any}
+                              inputComponent={PhoneInputField}
                               value={field.value}
                               onChange={field.onChange}
                               onBlur={field.onBlur}

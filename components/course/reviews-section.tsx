@@ -60,7 +60,7 @@ export default function ReviewsSection({
               <CardContent className="space-y-8">
                 {reviews.length > 0 ? (
                   <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                    {reviews.map((review, idx) => (
+                    {reviews.map((review) => (
                       <Card
                         key={review.id}
                         className="border-muted border-2 shadow-lg transition-shadow hover:shadow-xl"
@@ -75,7 +75,7 @@ export default function ReviewsSection({
                         </CardHeader>
                         <CardContent>
                           <p className="text-muted-foreground leading-relaxed">
-                            "{review.content}"
+                            &quot;{review.content}&quot;
                           </p>
                         </CardContent>
                       </Card>

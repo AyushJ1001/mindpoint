@@ -33,6 +33,7 @@ export default function SupervisedFAQSection({
         const text = await res.text();
         if (!cancelled) setFaqMarkdown(text);
       } catch (err) {
+        console.error("Error loading FAQ:", err);
         if (!cancelled) setFaqMarkdown(null);
       }
     };

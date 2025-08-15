@@ -4,7 +4,7 @@ import "./globals.css";
 import "react-phone-number-input/style.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { ClerkProvider } from "@clerk/nextjs";
-import { ThemeProvider } from "@/components/theme-provider";
+
 import { CartProvider } from "@/components/CartProvider";
 import Navbar from "./navbar";
 import Footer from "./footer";

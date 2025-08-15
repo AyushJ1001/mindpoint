@@ -1,13 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  GraduationCap,
-  BookOpen,
-  Clock,
-  Users,
-  Award,
-  Target,
-} from "lucide-react";
+import { GraduationCap, Users, Award, Target } from "lucide-react";
 import CourseModulesSection from "./course-modules-section";
 import type { Doc } from "@/convex/_generated/dataModel";
 

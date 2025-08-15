@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, Users, Clock, Target, Award, Zap } from "lucide-react";
+import { Star, Users, Target, Zap } from "lucide-react";
 import CourseModulesSection from "./course-modules-section";
 import type { Doc } from "@/convex/_generated/dataModel";
 

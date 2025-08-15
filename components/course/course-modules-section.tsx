@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -8,9 +7,7 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, BookOpen, Check } from "lucide-react";
+import { BookOpen, Check } from "lucide-react";
 
 export default function CourseModulesSection({
   learningOutcomes,
@@ -32,7 +29,7 @@ export default function CourseModulesSection({
               </span>
             </CardTitle>
             <CardDescription className="text-lg">
-              Essential skills and knowledge you'll gain from this course
+              Essential skills and knowledge you&apos;ll gain from this course
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-8">
