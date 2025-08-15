@@ -36,7 +36,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { showRupees } from "@/lib/utils";
+import { showRupees, getOfferDetails } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 
@@ -53,7 +53,39 @@ export default function Navbar() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [itemOfferDetails, setItemOfferDetails] = useState<Record<string, any>>(
+    {},
+  );
   const pathname = usePathname();
+
+  // Update offer details for cart items
+  useEffect(() => {
+    const updateOfferDetails = () => {
+      const newOfferDetails: Record<string, any> = {};
+      items.forEach((item) => {
+        if (item.offer) {
+          // Calculate original price from offer price and discount
+          const offerPrice = item.price || 0;
+          const discountFraction = item.offer.discount || 0;
+          const originalPrice = offerPrice / (1 - discountFraction);
+
+          const offerDetails = getOfferDetails({
+            price: originalPrice, // Pass original price
+            offer: item.offer,
+          });
+          if (offerDetails) {
+            newOfferDetails[item.id] = offerDetails;
+          }
+        }
+      });
+      setItemOfferDetails(newOfferDetails);
+    };
+
+    updateOfferDetails();
+    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [items]);
 
   const handleClearCart = () => {
     emptyCart();
@@ -356,93 +388,129 @@ export default function Navbar() {
                   ) : (
                     <>
                       <div className="flex-1 space-y-4 overflow-y-auto py-4">
-                        {items.map((item) => (
-                          <Card key={item.id} className="card-shadow">
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between">
-                                <div className="flex-1 pr-4">
-                                  <h3 className="mb-1 text-sm font-semibold">
-                                    {item.name}
-                                  </h3>
-                                  <p className="text-muted-foreground mb-3 line-clamp-2 text-xs">
-                                    {item.description}
-                                  </p>
-                                  <div
-                                    className="flex items-center gap-2"
-                                    aria-label={`Quantity controls for ${item.name}`}
-                                  >
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => {
-                                        const newQuantity =
-                                          (item.quantity || 1) - 1;
-                                        if (newQuantity <= 0) {
-                                          removeItem(item.id);
-                                        } else {
-                                          updateItemQuantity(
-                                            item.id,
-                                            newQuantity,
-                                          );
+                        {items.map((item) => {
+                          const offerDetails = itemOfferDetails[item.id];
+                          const itemTotal =
+                            (item.price || 0) * (item.quantity || 1);
+
+                          return (
+                            <Card key={item.id} className="card-shadow">
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1 pr-4">
+                                    <h3 className="mb-1 text-sm font-semibold">
+                                      {item.name}
+                                    </h3>
+                                    <p className="text-muted-foreground mb-3 line-clamp-2 text-xs">
+                                      {item.description}
+                                    </p>
+                                    {offerDetails && (
+                                      <div className="mb-2 flex items-center gap-2">
+                                        <span className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-800">
+                                          🔥 {offerDetails.discountPercentage}%
+                                          OFF
+                                        </span>
+                                        <span className="text-muted-foreground text-xs">
+                                          {offerDetails.timeLeft.days > 0 &&
+                                            `${offerDetails.timeLeft.days}d `}
+                                          {offerDetails.timeLeft.hours > 0 &&
+                                            `${offerDetails.timeLeft.hours}h `}
+                                          {offerDetails.timeLeft.minutes > 0 &&
+                                            `${offerDetails.timeLeft.minutes}m`}{" "}
+                                          left
+                                        </span>
+                                      </div>
+                                    )}
+                                    <div
+                                      className="flex items-center gap-2"
+                                      aria-label={`Quantity controls for ${item.name}`}
+                                    >
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          const newQuantity =
+                                            (item.quantity || 1) - 1;
+                                          if (newQuantity <= 0) {
+                                            removeItem(item.id);
+                                          } else {
+                                            updateItemQuantity(
+                                              item.id,
+                                              newQuantity,
+                                            );
+                                          }
+                                        }}
+                                        className="transition-smooth h-8 w-8 p-0"
+                                        aria-label={`Decrease quantity of ${item.name}`}
+                                      >
+                                        <Minus className="h-3 w-3" />
+                                      </Button>
+                                      <span
+                                        className="w-8 text-center text-sm font-medium"
+                                        aria-live="polite"
+                                      >
+                                        {item.quantity || 1}
+                                      </span>
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => {
+                                          const currentQuantity =
+                                            item.quantity || 1;
+                                          const maxQuantity =
+                                            item.capacity || 1;
+                                          if (currentQuantity < maxQuantity) {
+                                            updateItemQuantity(
+                                              item.id,
+                                              currentQuantity + 1,
+                                            );
+                                          }
+                                        }}
+                                        disabled={
+                                          (item.quantity || 1) >=
+                                          (item.capacity || 1)
                                         }
-                                      }}
-                                      className="transition-smooth h-8 w-8 p-0"
-                                      aria-label={`Decrease quantity of ${item.name}`}
-                                    >
-                                      <Minus className="h-3 w-3" />
-                                    </Button>
-                                    <span
-                                      className="w-8 text-center text-sm font-medium"
-                                      aria-live="polite"
-                                    >
-                                      {item.quantity || 1}
-                                    </span>
+                                        className="transition-smooth h-8 w-8 p-0"
+                                        aria-label={`Increase quantity of ${item.name}`}
+                                      >
+                                        <Plus className="h-3 w-3" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-col items-end gap-2">
+                                    <div className="text-right">
+                                      <Badge
+                                        variant="secondary"
+                                        className="text-xs"
+                                      >
+                                        {showRupees(itemTotal)}
+                                      </Badge>
+                                      {offerDetails && (
+                                        <div className="text-muted-foreground text-xs">
+                                          <span className="line-through">
+                                            {showRupees(
+                                              (offerDetails.originalPrice ||
+                                                0) * (item.quantity || 1),
+                                            )}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
                                     <Button
-                                      variant="outline"
+                                      variant="ghost"
                                       size="sm"
-                                      onClick={() => {
-                                        const currentQuantity =
-                                          item.quantity || 1;
-                                        const maxQuantity = item.capacity || 1;
-                                        if (currentQuantity < maxQuantity) {
-                                          updateItemQuantity(
-                                            item.id,
-                                            currentQuantity + 1,
-                                          );
-                                        }
-                                      }}
-                                      disabled={
-                                        (item.quantity || 1) >=
-                                        (item.capacity || 1)
-                                      }
-                                      className="transition-smooth h-8 w-8 p-0"
-                                      aria-label={`Increase quantity of ${item.name}`}
+                                      onClick={() => removeItem(item.id)}
+                                      className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-smooth h-8 w-8 p-0"
+                                      aria-label={`Remove ${item.name} from cart`}
                                     >
-                                      <Plus className="h-3 w-3" />
+                                      <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </div>
                                 </div>
-                                <div className="flex flex-col items-end gap-2">
-                                  <Badge
-                                    variant="secondary"
-                                    className="text-xs"
-                                  >
-                                    {showRupees(item.price)}
-                                  </Badge>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => removeItem(item.id)}
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-smooth h-8 w-8 p-0"
-                                    aria-label={`Remove ${item.name} from cart`}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
                       </div>
                       <div className="space-y-4 border-t pt-4">
                         <div className="flex items-center justify-between font-semibold">

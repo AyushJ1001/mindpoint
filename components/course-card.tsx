@@ -7,8 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CourseImageCarousel } from "@/components/CourseTypePage";
-import { showRupees } from "@/lib/utils";
+import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { useEffect, useState } from "react";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -47,6 +48,19 @@ const getTimeUntilStart = (dateString: string) => {
 export function CourseCard({ course }: { course: Doc<"courses"> }) {
   const { addItem, inCart } = useCart();
   const router = useRouter();
+  const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
+
+  // Update offer details every minute for real-time countdown
+  useEffect(() => {
+    const updateOfferDetails = () => {
+      setOfferDetails(getOfferDetails(course));
+    };
+
+    updateOfferDetails();
+    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [course]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -66,16 +80,19 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
       id: course._id,
       name: course.name,
       description: course.description,
-      price: course.price || 100,
+      price: getCoursePrice(course),
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
+      offer: course.offer, // Store offer data in cart item
     });
   };
 
   const handleCardClick = () => {
     router.push(`/courses/${course._id}`);
   };
+
+  const displayPrice = getCoursePrice(course);
 
   return (
     <Card
@@ -85,15 +102,48 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
       {/* Course Image */}
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
+      {/* Offer Badge */}
+      {offerDetails && (
+        <div className="absolute top-3 right-3 z-20">
+          <Badge
+            variant="destructive"
+            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+          >
+            🔥 {offerDetails.discountPercentage}% OFF
+          </Badge>
+        </div>
+      )}
+
       <CardHeader className="pb-3">
         <CardTitle className="group-hover:text-primary text-base font-semibold transition-colors">
           {course.name}
         </CardTitle>
       </CardHeader>
       <CardContent className="flex items-center justify-between pt-0">
-        <Badge variant="secondary" className="px-3 py-1 text-sm font-semibold">
-          {showRupees(course.price || 100)}
-        </Badge>
+        <div className="space-y-1">
+          <Badge
+            variant="secondary"
+            className="px-3 py-1 text-sm font-semibold"
+          >
+            {showRupees(displayPrice)}
+          </Badge>
+          {offerDetails && (
+            <div className="text-muted-foreground text-xs">
+              <span className="line-through">
+                {showRupees(offerDetails.originalPrice)}
+              </span>
+              <span className="ml-2 font-medium text-orange-600">
+                {offerDetails.timeLeft.days > 0 &&
+                  `${offerDetails.timeLeft.days}d `}
+                {offerDetails.timeLeft.hours > 0 &&
+                  `${offerDetails.timeLeft.hours}h `}
+                {offerDetails.timeLeft.minutes > 0 &&
+                  `${offerDetails.timeLeft.minutes}m`}{" "}
+                left
+              </span>
+            </div>
+          )}
+        </div>
         {(() => {
           const seatsLeft = Math.max(
             0,
@@ -124,6 +174,19 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
 export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
   const { addItem, inCart } = useCart();
   const router = useRouter();
+  const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
+
+  // Update offer details every minute for real-time countdown
+  useEffect(() => {
+    const updateOfferDetails = () => {
+      setOfferDetails(getOfferDetails(course));
+    };
+
+    updateOfferDetails();
+    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [course]);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -143,10 +206,11 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
       id: course._id,
       name: course.name,
       description: course.description,
-      price: course.price || 100,
+      price: getCoursePrice(course),
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1,
+      offer: course.offer, // Store offer data in cart item
     });
   };
 
@@ -156,6 +220,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
 
   const timeUntilStart = getTimeUntilStart(course.startDate || "");
   const formattedDate = formatDate(course.startDate || "");
+  const displayPrice = getCoursePrice(course);
 
   return (
     <Card
@@ -172,6 +237,18 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
           Upcoming
         </Badge>
       </div>
+
+      {/* Offer Badge */}
+      {offerDetails && (
+        <div className="pointer-events-none absolute top-3 right-3 z-20">
+          <Badge
+            variant="destructive"
+            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+          >
+            🔥 {offerDetails.discountPercentage}% OFF
+          </Badge>
+        </div>
+      )}
 
       {/* Course Image */}
       <div className="pointer-events-none">
@@ -197,12 +274,30 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
 
       <CardContent className="pt-0">
         <div className="flex items-center justify-between">
-          <Badge
-            variant="secondary"
-            className="px-3 py-1 text-sm font-semibold"
-          >
-            {showRupees(course.price || 100)}
-          </Badge>
+          <div className="relative">
+            <Badge
+              variant="secondary"
+              className="px-3 py-1 text-sm font-semibold"
+            >
+              {showRupees(displayPrice)}
+            </Badge>
+            {offerDetails && (
+              <div className="text-muted-foreground absolute top-full left-0 mt-1 text-xs">
+                <span className="line-through">
+                  {showRupees(offerDetails.originalPrice)}
+                </span>
+                <span className="ml-2 font-medium text-orange-600">
+                  {offerDetails.timeLeft.days > 0 &&
+                    `${offerDetails.timeLeft.days}d `}
+                  {offerDetails.timeLeft.hours > 0 &&
+                    `${offerDetails.timeLeft.hours}h `}
+                  {offerDetails.timeLeft.minutes > 0 &&
+                    `${offerDetails.timeLeft.minutes}m`}{" "}
+                  left
+                </span>
+              </div>
+            )}
+          </div>
           {(() => {
             const seatsLeft = Math.max(
               0,

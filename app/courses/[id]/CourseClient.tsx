@@ -21,6 +21,7 @@ import CourseHero from "@/components/course/course-hero";
 import CountdownTimer from "@/components/course/countdown-timer";
 import CourseOverview from "@/components/course/course-overview";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { getOfferDetails, getCoursePrice, isValidOffer } from "@/lib/utils";
 
 type CourseVariant = Doc<"courses">;
 
@@ -87,22 +88,8 @@ export default function CourseClient({
 
   // Helper function to confirm buy now action
   const handleBuyNowConfirm = (course: Doc<"courses">) => {
-    // Check if this specific course has a valid offer
-    const courseHasValidOffer = (() => {
-      if (!course.offer) return false;
-
-      const now = new Date();
-      const startDate = new Date(course.offer.startDate);
-      const endDate = new Date(course.offer.endDate);
-
-      return now >= startDate && now <= endDate;
-    })();
-
-    // Calculate the price to use (offer price if available, otherwise regular price)
-    const priceToUse =
-      courseHasValidOffer && course.offer
-        ? course.price - (course.price * course.offer.discount) / 100
-        : course.price || 100;
+    // Use utility function to get the correct price
+    const priceToUse = getCoursePrice(course);
 
     // Remove all items from cart except the current course
     items.forEach((item) => {
@@ -121,6 +108,7 @@ export default function CourseClient({
         imageUrls: course.imageUrls || [],
         capacity: course.capacity || 1,
         quantity: 1,
+        offer: course.offer, // Store offer data in cart item
       });
     } else {
       // If it's already in cart, ensure it has the correct price and quantity
@@ -136,22 +124,8 @@ export default function CourseClient({
     const currentQuantity = getCurrentQuantity(course._id);
     const maxQuantity = course.capacity || 1;
 
-    // Check if this specific course has a valid offer
-    const courseHasValidOffer = (() => {
-      if (!course.offer) return false;
-
-      const now = new Date();
-      const startDate = new Date(course.offer.startDate);
-      const endDate = new Date(course.offer.endDate);
-
-      return now >= startDate && now <= endDate;
-    })();
-
-    // Calculate the price to use (offer price if available, otherwise regular price)
-    const priceToUse =
-      courseHasValidOffer && course.offer
-        ? course.price - (course.price * course.offer.discount) / 100
-        : course.price || 100;
+    // Use utility function to get the correct price
+    const priceToUse = getCoursePrice(course);
 
     if (currentQuantity === 0) {
       // Add to cart if not already there
@@ -163,6 +137,7 @@ export default function CourseClient({
         imageUrls: course.imageUrls || [],
         capacity: course.capacity || 1,
         quantity: 1, // Explicitly set initial quantity to 1
+        offer: course.offer, // Store offer data in cart item
       });
     } else if (currentQuantity < maxQuantity) {
       // Increase quantity if below capacity
@@ -262,15 +237,9 @@ export default function CourseClient({
 
   const displayCourse = activeCourse ?? course;
 
-  // Check if course has a valid offer
+  // Check if course has a valid offer using utility function
   const hasValidOffer = useMemo(() => {
-    if (!displayCourse.offer) return false;
-
-    const now = new Date();
-    const startDate = new Date(displayCourse.offer.startDate);
-    const endDate = new Date(displayCourse.offer.endDate);
-
-    return now >= startDate && now <= endDate;
+    return isValidOffer(displayCourse.offer);
   }, [displayCourse.offer]);
 
   // Real-time offer countdown timer
@@ -306,23 +275,10 @@ export default function CourseClient({
     return () => clearInterval(interval);
   }, [hasValidOffer, displayCourse.offer]);
 
-  // Calculate offer price and time left
+  // Calculate offer details using utility function
   const offerDetails = useMemo(() => {
-    if (!hasValidOffer || !displayCourse.offer) return null;
-
-    const originalPrice = displayCourse.price;
-    const discountAmount = (originalPrice * displayCourse.offer.discount) / 100;
-    const offerPrice = originalPrice - discountAmount;
-
-    return {
-      originalPrice,
-      offerPrice,
-      discountAmount,
-      discountPercentage: displayCourse.offer.discount,
-      offerName: displayCourse.offer.name,
-      timeLeft: offerTimeLeft,
-    };
-  }, [hasValidOffer, displayCourse.offer, displayCourse.price, offerTimeLeft]);
+    return getOfferDetails(displayCourse);
+  }, [displayCourse]);
 
   const handleVariantSelect = (val: string) => {
     if (!val) return;

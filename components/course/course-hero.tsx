@@ -34,6 +34,7 @@ import {
 import CourseImageGallery from "@/components/course/gallery";
 import TrustBar from "@/components/course/trust-bar";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { getOfferDetails, getCoursePrice, OfferDetails } from "@/lib/utils";
 
 interface OfferDetails {
   offerPrice: number;
@@ -278,9 +279,7 @@ export default function CourseHero({
                   <div className="space-y-1">
                     <div className="flex items-baseline gap-3">
                       <span className="text-primary text-4xl font-bold">
-                        {hasValidOffer && offerDetails
-                          ? formatINR(offerDetails.offerPrice)
-                          : formatINR(displayCourse.price)}
+                        {formatINR(getCoursePrice(displayCourse))}
                       </span>
                       {hasValidOffer && offerDetails && (
                         <span className="text-muted-foreground text-sm line-through">
@@ -339,7 +338,7 @@ export default function CourseHero({
                                 {variantLabel(v)}
                               </span>{" "}
                               <span className="text-muted-foreground">
-                                — {formatINR(v.price)}
+                                — {formatINR(getCoursePrice(v))}
                               </span>
                             </SelectItem>
                           ))}

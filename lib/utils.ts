@@ -36,3 +36,82 @@ export const careerApplicationSchema = z.object({
   coverLetter: z.string().optional().default(""),
   // Note: Resume is handled as a File in multipart form-data on the server
 });
+
+// Offer validation and calculation utilities
+export interface OfferDetails {
+  offerPrice: number;
+  originalPrice: number;
+  offerName: string;
+  discountPercentage: number;
+  timeLeft: {
+    days: number;
+    hours: number;
+    minutes: number;
+  };
+}
+
+export function isValidOffer(offer: any): boolean {
+  if (!offer || !offer.startDate || !offer.endDate || !offer.discount) {
+    return false;
+  }
+
+  const now = new Date();
+  const startDate = new Date(offer.startDate);
+  const endDate = new Date(offer.endDate);
+
+  return now >= startDate && now <= endDate;
+}
+
+export function calculateOfferPrice(
+  originalPrice: number,
+  discountPercentage: number,
+): number {
+  // discountPercentage is stored as a fraction (0-1), convert to percentage for calculation
+  const discountAmount = originalPrice * discountPercentage;
+  return originalPrice - discountAmount;
+}
+
+export function calculateOfferTimeLeft(endDate: string): {
+  days: number;
+  hours: number;
+  minutes: number;
+} {
+  const now = new Date();
+  const end = new Date(endDate);
+  const timeLeft = end.getTime() - now.getTime();
+
+  if (timeLeft <= 0) {
+    return { days: 0, hours: 0, minutes: 0 };
+  }
+
+  const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+  const hours = Math.floor(
+    (timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60),
+  );
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+
+  return { days, hours, minutes };
+}
+
+export function getOfferDetails(course: any): OfferDetails | null {
+  if (!course.offer || !isValidOffer(course.offer)) {
+    return null;
+  }
+
+  const originalPrice = course.price || 0;
+  const offerPrice = calculateOfferPrice(originalPrice, course.offer.discount);
+  const timeLeft = calculateOfferTimeLeft(course.offer.endDate);
+
+  return {
+    offerPrice,
+    originalPrice,
+    offerName: course.offer.name,
+    discountPercentage: Math.round(course.offer.discount * 100), // Convert fraction to percentage for display
+    timeLeft,
+  };
+}
+
+export function getCoursePrice(course: any): number {
+  const offerDetails = getOfferDetails(course);
+  return offerDetails ? offerDetails.offerPrice : course.price || 0;
+}

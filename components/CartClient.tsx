@@ -8,7 +8,7 @@ import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Trash2, ShoppingCart, CreditCard, Plus, Minus } from "lucide-react";
-import { showRupees } from "@/lib/utils";
+import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import { useUser } from "@clerk/clerk-react";
 import {
   handlePaymentSuccess,
@@ -45,6 +45,40 @@ const CartContent = () => {
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const { Razorpay, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
+
+  // State to track offer details for each item
+  const [itemOfferDetails, setItemOfferDetails] = useState<Record<string, any>>(
+    {},
+  );
+
+  // Update offer details for cart items
+  useEffect(() => {
+    const updateOfferDetails = () => {
+      const newOfferDetails: Record<string, any> = {};
+      items.forEach((item) => {
+        if (item.offer) {
+          // Calculate original price from offer price and discount
+          const offerPrice = item.price || 0;
+          const discountFraction = item.offer.discount || 0;
+          const originalPrice = offerPrice / (1 - discountFraction);
+
+          const offerDetails = getOfferDetails({
+            price: originalPrice, // Pass original price
+            offer: item.offer,
+          });
+          if (offerDetails) {
+            newOfferDetails[item.id] = offerDetails;
+          }
+        }
+      });
+      setItemOfferDetails(newOfferDetails);
+    };
+
+    updateOfferDetails();
+    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [items]);
 
   const handleClearCart = () => {
     emptyCart();
@@ -536,63 +570,100 @@ const CartContent = () => {
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
-              {items.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-4 rounded-lg border p-4"
-                >
-                  <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
-                    <Image
-                      src={item.imageUrls?.[0] || "/placeholder-image.jpg"}
-                      alt={item.name}
-                      className="h-full w-full object-cover"
-                      width={64}
-                      height={64}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{item.name}</h3>
-                    <p className="text-muted-foreground text-sm">
-                      {item.courseType}
-                    </p>
-                    <div className="mt-2 flex items-center gap-2">
+              {items.map((item) => {
+                const offerDetails = itemOfferDetails[item.id];
+                const itemTotal = (item.price || 0) * (item.quantity || 1);
+
+                return (
+                  <div
+                    key={item.id}
+                    className="flex items-center gap-4 rounded-lg border p-4"
+                  >
+                    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
+                      <Image
+                        src={item.imageUrls?.[0] || "/placeholder-image.jpg"}
+                        alt={item.name}
+                        className="h-full w-full object-cover"
+                        width={64}
+                        height={64}
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{item.name}</h3>
+                      <p className="text-muted-foreground text-sm">
+                        {item.courseType}
+                      </p>
+                      {offerDetails && (
+                        <div className="mt-1 flex items-center gap-2">
+                          <span className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-800">
+                            🔥 {offerDetails.discountPercentage}% OFF
+                          </span>
+                          <span className="text-muted-foreground text-xs">
+                            {offerDetails.timeLeft.days > 0 &&
+                              `${offerDetails.timeLeft.days}d `}
+                            {offerDetails.timeLeft.hours > 0 &&
+                              `${offerDetails.timeLeft.hours}h `}
+                            {offerDetails.timeLeft.minutes > 0 &&
+                              `${offerDetails.timeLeft.minutes}m`}{" "}
+                            left
+                          </span>
+                        </div>
+                      )}
+                      <div className="mt-2 flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            updateItemQuantity(
+                              item.id,
+                              (item.quantity || 1) - 1,
+                            )
+                          }
+                          disabled={(item.quantity || 1) <= 1}
+                        >
+                          <Minus className="h-3 w-3" />
+                        </Button>
+                        <span className="w-8 text-center">{item.quantity}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() =>
+                            updateItemQuantity(
+                              item.id,
+                              (item.quantity || 1) + 1,
+                            )
+                          }
+                        >
+                          <Plus className="h-3 w-3" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold">
+                        {showRupees(itemTotal)}
+                      </div>
+                      {offerDetails && (
+                        <div className="text-muted-foreground text-xs">
+                          <span className="line-through">
+                            {showRupees(
+                              (offerDetails.originalPrice || 0) *
+                                (item.quantity || 1),
+                            )}
+                          </span>
+                        </div>
+                      )}
                       <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
-                        onClick={() =>
-                          updateItemQuantity(item.id, (item.quantity || 1) - 1)
-                        }
-                        disabled={(item.quantity || 1) <= 1}
+                        onClick={() => removeItem(item.id)}
+                        className="mt-2 text-red-600 hover:text-red-700"
                       >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-8 text-center">{item.quantity}</span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          updateItemQuantity(item.id, (item.quantity || 1) + 1)
-                        }
-                      >
-                        <Plus className="h-3 w-3" />
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <div className="font-semibold">
-                      {showRupees((item.price || 0) * (item.quantity || 1))}
-                    </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeItem(item.id)}
-                      className="mt-2 text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </CardContent>
           </Card>
         </div>

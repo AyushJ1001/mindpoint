@@ -31,7 +31,7 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Plus } from "lucide-react";
-import { showRupees } from "@/lib/utils";
+import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import {
   Select,
   SelectContent,
@@ -166,10 +166,11 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       id: selectedCourse._id,
       name: label ? `${selectedCourse.name} (${label})` : selectedCourse.name,
       description: selectedCourse.description,
-      price: selectedCourse.price || 100,
+      price: getCoursePrice(selectedCourse),
       imageUrls: selectedCourse.imageUrls || [],
       capacity: selectedCourse.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
+      offer: selectedCourse.offer, // Store offer data in cart item
     });
   };
 
@@ -177,12 +178,27 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     router.push(`/courses/${selectedCourse._id}`);
   };
 
+  const displayPrice = getCoursePrice(selectedCourse);
+  const offerDetails = getOfferDetails(selectedCourse);
+
   return (
     <Card
       className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
+
+      {/* Offer Badge */}
+      {offerDetails && (
+        <div className="absolute top-3 right-3 z-20">
+          <Badge
+            variant="destructive"
+            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+          >
+            🔥 {offerDetails.discountPercentage}% OFF
+          </Badge>
+        </div>
+      )}
 
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -214,7 +230,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                     const label = `${sessions} ${sessions === 1 ? "session" : "sessions"}`;
                     return (
                       <SelectItem key={variant._id} value={String(sessions)}>
-                        {label} — {showRupees(variant.price)}
+                        {label} — {showRupees(getCoursePrice(variant))}
                       </SelectItem>
                     );
                   })}
@@ -241,7 +257,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                     const label = duration?.trim() ?? "Duration";
                     return (
                       <SelectItem key={variant._id} value={duration}>
-                        {label} — {showRupees(variant.price)}
+                        {label} — {showRupees(getCoursePrice(variant))}
                       </SelectItem>
                     );
                   })}
@@ -278,7 +294,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                         key={variant._id}
                         value={variant._id as unknown as string}
                       >
-                        {label} — {showRupees(variant.price)}
+                        {label} — {showRupees(getCoursePrice(variant))}
                       </SelectItem>
                     );
                   })}
@@ -289,12 +305,30 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
         </div>
 
         <div className="flex items-center justify-between">
-          <Badge
-            variant="secondary"
-            className="px-3 py-1 text-base font-semibold"
-          >
-            {showRupees(selectedCourse.price || 100)}
-          </Badge>
+          <div className="space-y-1">
+            <Badge
+              variant="secondary"
+              className="px-3 py-1 text-base font-semibold"
+            >
+              {showRupees(displayPrice)}
+            </Badge>
+            {offerDetails && (
+              <div className="text-muted-foreground text-xs">
+                <span className="line-through">
+                  {showRupees(offerDetails.originalPrice)}
+                </span>
+                <span className="ml-2 font-medium text-orange-600">
+                  {offerDetails.timeLeft.days > 0 &&
+                    `${offerDetails.timeLeft.days}d `}
+                  {offerDetails.timeLeft.hours > 0 &&
+                    `${offerDetails.timeLeft.hours}h `}
+                  {offerDetails.timeLeft.minutes > 0 &&
+                    `${offerDetails.timeLeft.minutes}m`}{" "}
+                  left
+                </span>
+              </div>
+            )}
+          </div>
           {(() => {
             const seatsLeft = Math.max(
               0,
@@ -349,10 +383,11 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       id: course._id,
       name: course.name,
       description: course.description,
-      price: course.price || 100,
+      price: getCoursePrice(course),
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
+      offer: course.offer, // Store offer data in cart item
     });
   };
 
@@ -360,12 +395,27 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     router.push(`/courses/${course._id}`);
   };
 
+  const displayPrice = getCoursePrice(course);
+  const offerDetails = getOfferDetails(course);
+
   return (
     <Card
       className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
+
+      {/* Offer Badge */}
+      {offerDetails && (
+        <div className="absolute top-3 right-3 z-20">
+          <Badge
+            variant="destructive"
+            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+          >
+            🔥 {offerDetails.discountPercentage}% OFF
+          </Badge>
+        </div>
+      )}
 
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
@@ -378,12 +428,30 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       </CardHeader>
       <CardContent className="pt-0">
         <div className="flex items-center justify-between">
-          <Badge
-            variant="secondary"
-            className="px-3 py-1 text-base font-semibold"
-          >
-            {showRupees(course.price || 100)}
-          </Badge>
+          <div className="space-y-1">
+            <Badge
+              variant="secondary"
+              className="px-3 py-1 text-base font-semibold"
+            >
+              {showRupees(displayPrice)}
+            </Badge>
+            {offerDetails && (
+              <div className="text-muted-foreground text-xs">
+                <span className="line-through">
+                  {showRupees(offerDetails.originalPrice)}
+                </span>
+                <span className="ml-2 font-medium text-orange-600">
+                  {offerDetails.timeLeft.days > 0 &&
+                    `${offerDetails.timeLeft.days}d `}
+                  {offerDetails.timeLeft.hours > 0 &&
+                    `${offerDetails.timeLeft.hours}h `}
+                  {offerDetails.timeLeft.minutes > 0 &&
+                    `${offerDetails.timeLeft.minutes}m`}{" "}
+                  left
+                </span>
+              </div>
+            )}
+          </div>
           {(() => {
             const seatsLeft = Math.max(
               0,

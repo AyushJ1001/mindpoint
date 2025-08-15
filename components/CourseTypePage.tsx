@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
@@ -32,7 +32,7 @@ import {
   Eye,
   FileText,
 } from "lucide-react";
-import { showRupees } from "@/lib/utils";
+import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import { Doc } from "@/convex/_generated/dataModel";
 import { Id } from "@/convex/_generated/dataModel";
 
@@ -163,6 +163,22 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
         ) ?? sorted[0])
       : (sorted.find((c) => c._id === selectedId) ?? sorted[0]);
 
+  const [offerDetails, setOfferDetails] = useState(
+    getOfferDetails(selectedCourse),
+  );
+
+  // Update offer details every minute for real-time countdown
+  useEffect(() => {
+    const updateOfferDetails = () => {
+      setOfferDetails(getOfferDetails(selectedCourse));
+    };
+
+    updateOfferDetails();
+    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [selectedCourse]);
+
   const handleAddToCart = () => {
     // Check if course is out of stock
     const seatsLeft = Math.max(
@@ -182,10 +198,11 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       id: selectedCourse._id,
       name: label ? `${selectedCourse.name} (${label})` : selectedCourse.name,
       description: selectedCourse.description,
-      price: selectedCourse.price || 100,
+      price: getCoursePrice(selectedCourse),
       imageUrls: selectedCourse.imageUrls || [],
       capacity: selectedCourse.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
+      offer: selectedCourse.offer, // Store offer data in cart item
     });
   };
 
@@ -193,12 +210,26 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     router.push(`/courses/${selectedCourse._id}`);
   };
 
+  const displayPrice = getCoursePrice(selectedCourse);
+
   return (
     <Card
       className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
+
+      {/* Offer Badge */}
+      {offerDetails && (
+        <div className="absolute top-3 right-3 z-20">
+          <Badge
+            variant="destructive"
+            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+          >
+            🔥 {offerDetails.discountPercentage}% OFF
+          </Badge>
+        </div>
+      )}
 
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -230,7 +261,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                     const label = `${sessions} ${sessions === 1 ? "session" : "sessions"}`;
                     return (
                       <SelectItem key={variant._id} value={String(sessions)}>
-                        {label} — {showRupees(variant.price)}
+                        {label} — {showRupees(getCoursePrice(variant))}
                       </SelectItem>
                     );
                   })}
@@ -257,7 +288,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                     const label = duration?.trim() ?? "Duration";
                     return (
                       <SelectItem key={variant._id} value={duration}>
-                        {label} — {showRupees(variant.price)}
+                        {label} — {showRupees(getCoursePrice(variant))}
                       </SelectItem>
                     );
                   })}
@@ -295,7 +326,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                         key={variant._id}
                         value={variant._id as unknown as string}
                       >
-                        {label} — {showRupees(variant.price)}
+                        {label} — {showRupees(getCoursePrice(variant))}
                       </SelectItem>
                     );
                   })}
@@ -306,12 +337,30 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
         </div>
 
         <div className="flex items-center justify-between">
-          <Badge
-            variant="secondary"
-            className="px-3 py-1 text-base font-semibold"
-          >
-            {showRupees(selectedCourse.price || 100)}
-          </Badge>
+          <div className="relative">
+            <Badge
+              variant="secondary"
+              className="px-3 py-1 text-base font-semibold"
+            >
+              {showRupees(displayPrice)}
+            </Badge>
+            {offerDetails && (
+              <div className="text-muted-foreground absolute top-full left-0 mt-1 text-xs">
+                <span className="line-through">
+                  {showRupees(offerDetails.originalPrice)}
+                </span>
+                <span className="ml-2 font-medium text-orange-600">
+                  {offerDetails.timeLeft.days > 0 &&
+                    `${offerDetails.timeLeft.days}d `}
+                  {offerDetails.timeLeft.hours > 0 &&
+                    `${offerDetails.timeLeft.hours}h `}
+                  {offerDetails.timeLeft.minutes > 0 &&
+                    `${offerDetails.timeLeft.minutes}m`}{" "}
+                  left
+                </span>
+              </div>
+            )}
+          </div>
           <div className="flex gap-2">
             {(() => {
               const seatsLeft = Math.max(
@@ -351,6 +400,19 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
 const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
+  const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
+
+  // Update offer details every minute for real-time countdown
+  useEffect(() => {
+    const updateOfferDetails = () => {
+      setOfferDetails(getOfferDetails(course));
+    };
+
+    updateOfferDetails();
+    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
+
+    return () => clearInterval(interval);
+  }, [course]);
 
   const handleAddToCart = () => {
     // Check if course is out of stock
@@ -368,10 +430,11 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       id: course._id,
       name: course.name,
       description: course.description,
-      price: course.price || 100,
+      price: getCoursePrice(course),
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
+      offer: course.offer, // Store offer data in cart item
     });
   };
 
@@ -379,12 +442,26 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     router.push(`/courses/${course._id}`);
   };
 
+  const displayPrice = getCoursePrice(course);
+
   return (
     <Card
       className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
+
+      {/* Offer Badge */}
+      {offerDetails && (
+        <div className="absolute top-3 right-3 z-20">
+          <Badge
+            variant="destructive"
+            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+          >
+            🔥 {offerDetails.discountPercentage}% OFF
+          </Badge>
+        </div>
+      )}
 
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
@@ -395,13 +472,13 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 pb-6">
         <div className="flex items-center justify-between">
           <Badge
             variant="secondary"
             className="px-3 py-1 text-base font-semibold"
           >
-            {showRupees(course.price || 100)}
+            {showRupees(displayPrice)}
           </Badge>
           <div className="flex gap-2">
             {(() => {
@@ -433,6 +510,22 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
             })()}
           </div>
         </div>
+        {offerDetails && (
+          <div className="text-muted-foreground mt-1 text-xs">
+            <span className="line-through">
+              {showRupees(offerDetails.originalPrice)}
+            </span>
+            <span className="ml-2 font-medium text-orange-600">
+              {offerDetails.timeLeft.days > 0 &&
+                `${offerDetails.timeLeft.days}d `}
+              {offerDetails.timeLeft.hours > 0 &&
+                `${offerDetails.timeLeft.hours}h `}
+              {offerDetails.timeLeft.minutes > 0 &&
+                `${offerDetails.timeLeft.minutes}m`}{" "}
+              left
+            </span>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
