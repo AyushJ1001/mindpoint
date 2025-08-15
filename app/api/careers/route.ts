@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { withRateLimit } from "@/lib/with-rate-limit";
 
-export async function POST(req: Request) {
+async function handleCareersApplication(req: Request) {
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.FROM_EMAIL;
   const toEmail = "admin@themindpoint.org";
@@ -82,3 +83,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }
+
+export const POST = withRateLimit(handleCareersApplication, {
+  errorMessage:
+    "Too many career applications. Please wait before submitting another.",
+});

@@ -1,8 +1,9 @@
 import { contactFormSchema } from "@/lib/utils";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { withStrictRateLimit } from "@/lib/with-rate-limit";
 
-export async function POST(req: Request) {
+async function handleContact(req: Request) {
   const { name, email, message } = contactFormSchema.parse(await req.json());
 
   const apiKey = process.env.RESEND_API_KEY;
@@ -41,3 +42,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error }, { status: 500 });
   }
 }
+
+export const POST = withStrictRateLimit(handleContact);
