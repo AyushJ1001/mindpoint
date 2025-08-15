@@ -13,7 +13,7 @@ Courses can have an optional `offer` field with the following structure:
 ```typescript
 offer: {
   name: string,        // Name of the offer (e.g., "Early Bird Special")
-  discount: number,    // Discount percentage (e.g., 20 for 20% off)
+  discount: number,    // Discount percentage (0-100, e.g., 20 for 20% off)
   startDate: string,   // Start date in YYYY-MM-DD format
   endDate: string      // End date in YYYY-MM-DD format
 }
@@ -29,7 +29,7 @@ A course has a valid offer if:
 ### Price Calculation
 
 - **Original Price**: The course's base price
-- **Discount Amount**: `(originalPrice * discount) / 100`
+- **Discount Amount**: `(originalPrice * discount) / 100` (where discount is 0-100)
 - **Offer Price**: `originalPrice - discountAmount`
 
 ### UI Display

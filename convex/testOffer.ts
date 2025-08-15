@@ -18,7 +18,7 @@ export const createTestCourseWithOffer = mutation({
       price: 5000,
       offer: {
         name: "Early Bird Special",
-        discount: 20, // 20% off
+        discount: 20, // 20% off (0-100 scale)
         startDate: startDate.toISOString().split("T")[0], // YYYY-MM-DD format
         endDate: endDate.toISOString().split("T")[0], // YYYY-MM-DD format
       },
@@ -76,7 +76,7 @@ export const createTestCourseWithExpiredOffer = mutation({
       price: 5000,
       offer: {
         name: "Expired Special",
-        discount: 30, // 30% off (expired)
+        discount: 30, // 30% off (0-100 scale, expired)
         startDate: startDate.toISOString().split("T")[0], // YYYY-MM-DD format
         endDate: endDate.toISOString().split("T")[0], // YYYY-MM-DD format
       },

@@ -59,8 +59,8 @@ const CartContent = () => {
         if (item.offer) {
           // Calculate original price from offer price and discount
           const offerPrice = item.price || 0;
-          const discountFraction = item.offer.discount || 0;
-          const originalPrice = offerPrice / (1 - discountFraction);
+          const discountPercentage = item.offer.discount || 0;
+          const originalPrice = offerPrice / (1 - discountPercentage / 100);
 
           const offerDetails = getOfferDetails({
             price: originalPrice, // Pass original price

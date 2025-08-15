@@ -71,8 +71,8 @@ export function calculateOfferPrice(
   originalPrice: number,
   discountPercentage: number,
 ): number {
-  // discountPercentage is stored as a fraction (0-1), convert to percentage for calculation
-  const discountAmount = originalPrice * discountPercentage;
+  // discountPercentage is stored as percentage (0-100), convert to fraction for calculation
+  const discountAmount = originalPrice * (discountPercentage / 100);
   return originalPrice - discountAmount;
 }
 
@@ -119,7 +119,7 @@ export function getOfferDetails(course: {
     offerPrice,
     originalPrice,
     offerName: course.offer.name,
-    discountPercentage: Math.round(course.offer.discount * 100), // Convert fraction to percentage for display
+    discountPercentage: Math.round(course.offer.discount), // discount is already a percentage
     timeLeft,
   };
 }
