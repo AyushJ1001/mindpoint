@@ -272,9 +272,9 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
         </div>
       </CardHeader>
 
-      <CardContent className="pt-0">
-        <div className="flex items-center justify-between">
-          <div className="relative">
+      <CardContent className="pt-0 pb-4">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1 flex-1 pr-3">
             <Badge
               variant="secondary"
               className="px-3 py-1 text-sm font-semibold"
@@ -282,7 +282,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
               {showRupees(displayPrice)}
             </Badge>
             {offerDetails && (
-              <div className="text-muted-foreground absolute top-full left-0 mt-1 text-xs">
+              <div className="text-muted-foreground text-xs">
                 <span className="line-through">
                   {showRupees(offerDetails.originalPrice)}
                 </span>
@@ -311,7 +311,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
                 onClick={handleAddToCart}
                 disabled={inCart(course._id) || isOutOfStock}
                 size="sm"
-                className="relative z-10 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600"
+                className="relative z-10 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shrink-0"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock
