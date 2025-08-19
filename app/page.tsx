@@ -1,5 +1,7 @@
 import HomeClient from "@/components/HomeClient";
 
+export const dynamic = "force-static";
+
 export const metadata = {
   title: "The Mind Point - Mental Health Education & Professional Development",
   description:

@@ -68,7 +68,7 @@ export default function CommunitiesSection({
               rel="noopener noreferrer"
             >
               <InstagramIcon />
-              Follow on Instagram
+              Join Instagram Community
             </Link>
           </div>
         </div>
