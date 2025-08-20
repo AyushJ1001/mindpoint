@@ -121,7 +121,7 @@ export default function Navbar() {
               className="transition-smooth hover:scale-105"
               priority
             />
-            <span className="text-shadow-black hidden text-xl font-bold text-blue-950 sm:block dark:text-white">
+            <span className="hidden text-xl font-bold text-blue-950 text-shadow-black sm:block dark:text-white">
               The Mind Point
             </span>
           </Link>
@@ -140,14 +140,14 @@ export default function Navbar() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/about"
-                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors ${
+                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
                               isActive("/about") ? "bg-accent" : ""
                             }`}
                             aria-current={
                               isActive("/about") ? "page" : undefined
                             }
                           >
-                            <div className="text-sm font-medium leading-none">
+                            <div className="text-sm leading-none font-medium">
                               About Us
                             </div>
                             <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
@@ -158,12 +158,12 @@ export default function Navbar() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/toc"
-                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors ${
+                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
                               isActive("/toc") ? "bg-accent" : ""
                             }`}
                             aria-current={isActive("/toc") ? "page" : undefined}
                           >
-                            <div className="text-sm font-medium leading-none">
+                            <div className="text-sm leading-none font-medium">
                               Terms and Conditions
                             </div>
                             <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
@@ -174,14 +174,14 @@ export default function Navbar() {
                         <NavigationMenuLink asChild>
                           <Link
                             href="/contact"
-                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block select-none space-y-1 rounded-md p-3 leading-none no-underline outline-none transition-colors ${
+                            className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block space-y-1 rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
                               isActive("/contact") ? "bg-accent" : ""
                             }`}
                             aria-current={
                               isActive("/contact") ? "page" : undefined
                             }
                           >
-                            <div className="text-sm font-medium leading-none">
+                            <div className="text-sm leading-none font-medium">
                               Contact Us
                             </div>
                             <p className="text-muted-foreground line-clamp-2 text-sm leading-snug">
@@ -225,7 +225,7 @@ export default function Navbar() {
                           <NavigationMenuLink asChild key={link}>
                             <Link
                               href={link}
-                              className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors ${
+                              className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
                                 isActive(link) ? "bg-accent" : ""
                               }`}
                               aria-current={isActive(link) ? "page" : undefined}
@@ -262,7 +262,7 @@ export default function Navbar() {
                           <NavigationMenuLink asChild key={link}>
                             <Link
                               href={link}
-                              className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block select-none rounded-md p-3 leading-none no-underline outline-none transition-colors ${
+                              className={`hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
                                 isActive(link) ? "bg-accent" : ""
                               }`}
                               aria-current={isActive(link) ? "page" : undefined}
@@ -313,7 +313,7 @@ export default function Navbar() {
                   {isHydrated && totalItems > 0 && (
                     <Badge
                       variant="default"
-                      className="bg-primary text-primary-foreground absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
+                      className="bg-primary text-primary-foreground absolute -top-2 -right-2 flex h-5 w-5 items-center justify-center rounded-full p-0 text-xs"
                       aria-label={`${totalItems} items in cart`}
                     >
                       {totalItems}
@@ -371,7 +371,7 @@ export default function Navbar() {
                     </div>
                   )}
                 </SheetHeader>
-                <div className="flex h-full flex-col">
+                <div className="flex h-[calc(100vh-8rem)] flex-col">
                   {isEmpty ? (
                     <div className="flex flex-1 flex-col items-center justify-center py-12">
                       <ShoppingCart
@@ -387,7 +387,7 @@ export default function Navbar() {
                     </div>
                   ) : (
                     <>
-                      <div className="flex-1 space-y-4 overflow-y-auto py-4">
+                      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4">
                         {items.map((item) => {
                           const offerDetails = itemOfferDetails[item.id];
                           const itemTotal =
@@ -512,7 +512,7 @@ export default function Navbar() {
                           );
                         })}
                       </div>
-                      <div className="space-y-4 border-t pt-4">
+                      <div className="flex-shrink-0 space-y-4 border-t pt-4">
                         <div className="flex items-center justify-between font-semibold">
                           <span>Total ({totalItems} items)</span>
                           <span className="text-primary">
@@ -547,7 +547,7 @@ export default function Navbar() {
           >
             <div className="space-y-4 py-4">
               <div className="space-y-2">
-                <h3 className="text-muted-foreground px-4 text-sm font-semibold uppercase tracking-wider">
+                <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
                   Home
                 </h3>
                 {[
@@ -570,7 +570,7 @@ export default function Navbar() {
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-muted-foreground px-4 text-sm font-semibold uppercase tracking-wider">
+                <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
                   TMP Academy
                 </h3>
                 {[
@@ -599,7 +599,7 @@ export default function Navbar() {
               </div>
 
               <div className="space-y-2">
-                <h3 className="text-muted-foreground px-4 text-sm font-semibold uppercase tracking-wider">
+                <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
                   Therapy & Career
                 </h3>
                 {[

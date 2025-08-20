@@ -136,7 +136,7 @@ const CartContent = () => {
         name: "The Mind Point",
         description: `Payment for ${items.length} course(s)`,
         order_id: data.id,
-        handler: async (response) => {
+        handler: async () => {
           // Add event handlers for payment modal
 
           if (user?.id) {
@@ -187,7 +187,7 @@ const CartContent = () => {
                   },
                 );
               }
-            } catch (error) {
+            } catch {
               toast.error(
                 "Payment successful but enrollment failed. Please contact support.",
               );

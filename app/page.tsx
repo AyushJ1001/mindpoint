@@ -28,7 +28,15 @@ export const metadata = {
 
 async function getUpcomingCourses() {
   try {
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+    // Skip data fetching during build if CONVEX_URL is not available
+    if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
+      console.warn(
+        "NEXT_PUBLIC_CONVEX_URL not available, returning empty courses array",
+      );
+      return [];
+    }
+
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
     const allCourses = await convex.query(api.courses.listCourses, {
       count: undefined,
     });
@@ -51,6 +59,7 @@ async function getUpcomingCourses() {
 
     return upcomingCourses || [];
   } catch (error) {
+    console.warn("Failed to fetch upcoming courses:", error);
     return [];
   }
 }

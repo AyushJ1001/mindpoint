@@ -119,10 +119,19 @@ const coursesStructuredData = {
 
 async function getAllCourses() {
   try {
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+    // Skip data fetching during build if CONVEX_URL is not available
+    if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
+      console.warn(
+        "NEXT_PUBLIC_CONVEX_URL not available, returning empty courses array",
+      );
+      return [];
+    }
+
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
     const courses = await convex.query(api.courses.listCourses, {});
     return courses || [];
   } catch (error) {
+    console.warn("Failed to fetch courses:", error);
     return [];
   }
 }
