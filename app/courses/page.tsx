@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
 import CoursesClient from "@/components/CoursesClient";
+import CoursesHero from "@/components/CoursesHero";
 import Script from "next/script";
+import { Suspense } from "react";
+
+export const revalidate = 1800; // Revalidate every 30 minutes
 
 export const metadata: Metadata = {
   title: "All Courses - The Mind Point",
@@ -111,7 +117,28 @@ const coursesStructuredData = {
   ],
 };
 
-export default function CoursesPage() {
+async function getAllCourses() {
+  try {
+    // Skip data fetching during build if CONVEX_URL is not available
+    if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
+      console.warn(
+        "NEXT_PUBLIC_CONVEX_URL not available, returning empty courses array",
+      );
+      return [];
+    }
+
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
+    const courses = await convex.query(api.courses.listCourses, {});
+    return courses || [];
+  } catch (error) {
+    console.warn("Failed to fetch courses:", error);
+    return [];
+  }
+}
+
+export default async function CoursesPage() {
+  const courses = await getAllCourses();
+
   return (
     <>
       <Script
@@ -121,7 +148,10 @@ export default function CoursesPage() {
           __html: JSON.stringify(coursesStructuredData),
         }}
       />
-      <CoursesClient />
+      <CoursesHero />
+      <Suspense fallback={<div>Loading courses...</div>}>
+        <CoursesClient coursesData={courses} />
+      </Suspense>
     </>
   );
 }

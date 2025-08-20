@@ -5,9 +5,6 @@ import { api } from "@/convex/_generated/api";
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://themindpoint.org";
 
-  // Create a Convex client for server-side data fetching
-  const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
   // Static pages
   const staticPages = [
     {
@@ -104,6 +101,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   ];
 
   try {
+    // Skip course fetching during build if CONVEX_URL is not available
+    if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
+      console.warn(
+        "NEXT_PUBLIC_CONVEX_URL not available, returning static pages only",
+      );
+      return staticPages;
+    }
+
+    // Create a Convex client for server-side data fetching
+    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
+
     // Fetch all courses for dynamic sitemap entries
     const courses = await convex.query(api.courses.listCourses, {});
 
@@ -117,7 +125,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
     return [...staticPages, ...coursePages];
   } catch (error) {
-    console.error("Error generating sitemap:", error);
+    console.warn("Failed to fetch courses for sitemap:", error);
     // Return static pages only if there's an error fetching courses
     return staticPages;
   }

@@ -2,11 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "react-phone-number-input/style.css";
-import ConvexClientProvider from "@/components/ConvexClientProvider";
-import { ClerkProvider } from "@clerk/nextjs";
-
-import { CartProvider } from "@/components/CartProvider";
-import Navbar from "./navbar";
+import ClientProviders from "@/components/ClientProviders";
+import ClientNavbar from "@/components/ClientNavbar";
 import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
@@ -81,24 +78,23 @@ export default function RootLayout({
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
-        <ClerkProvider>
-          <ConvexClientProvider>
-            <CartProvider>
-              <StructuredData />
-              <Navbar />
-              <main
-                id="main-content"
-                className="flex-grow"
-                role="main"
-                tabIndex={-1}
-              >
-                {children}
-              </main>
-              <Footer />
-              <Toaster />
-            </CartProvider>
-          </ConvexClientProvider>
-        </ClerkProvider>
+
+        <ClientProviders>
+          <StructuredData />
+          <ClientNavbar />
+
+          <main
+            id="main-content"
+            className="flex-grow"
+            role="main"
+            tabIndex={-1}
+          >
+            {children}
+          </main>
+        </ClientProviders>
+
+        <Footer />
+        <Toaster />
       </body>
     </html>
   );

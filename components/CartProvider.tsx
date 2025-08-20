@@ -14,13 +14,10 @@ export function CartProvider({ children }: CartProviderProps) {
     setMounted(true);
   }, []);
 
-  if (!mounted) {
-    return null;
-  }
-
+  // Always render children, but cart functionality will be available after hydration
   return (
     <UseCartProvider>
-      {children}
+      <div suppressHydrationWarning={!mounted}>{children}</div>
     </UseCartProvider>
   );
-} 
+}

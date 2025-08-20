@@ -136,9 +136,7 @@ const CartContent = () => {
         name: "The Mind Point",
         description: `Payment for ${items.length} course(s)`,
         order_id: data.id,
-        handler: async (response) => {
-          console.log("Payment successful", response);
-
+        handler: async () => {
           // Add event handlers for payment modal
 
           if (user?.id) {
@@ -155,7 +153,6 @@ const CartContent = () => {
               );
 
               if (result.success) {
-                console.log("Enrollment successful:", result.enrollments);
                 // Show success message to user
                 if (result.enrollments && result.enrollments.length > 0) {
                   // Filter out enrollment numbers for therapy and supervised courses
@@ -183,7 +180,6 @@ const CartContent = () => {
                   );
                 }
               } else {
-                console.error("Enrollment failed:", result.error);
                 toast.error(
                   "Payment successful but enrollment failed. Please contact support.",
                   {
@@ -191,8 +187,7 @@ const CartContent = () => {
                   },
                 );
               }
-            } catch (error) {
-              console.error("Error handling payment success:", error);
+            } catch {
               toast.error(
                 "Payment successful but enrollment failed. Please contact support.",
               );
