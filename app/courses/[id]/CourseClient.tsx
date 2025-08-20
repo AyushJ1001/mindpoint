@@ -42,7 +42,6 @@ export default function CourseClient({
   course: Doc<"courses">;
   variants?: CourseVariant[];
 }) {
-  console.log(course);
   const router = useRouter();
   const [activeCourse, setActiveCourse] = useState<Doc<"courses">>(course);
   const [customDuration, setCustomDuration] = useState<string | undefined>(
@@ -375,12 +374,6 @@ export default function CourseClient({
           course={course}
           variants={variants}
           onVariantSelect={(hours) => {
-            console.log(
-              "CourseClient onVariantSelect called with hours:",
-              hours,
-            );
-            console.log("CourseClient normalizedVariants:", normalizedVariants);
-
             // Sort variants by price (ascending) - lower price = 120 hours, higher price = 240 hours
             const sortedVariants = [...normalizedVariants].sort(
               (a, b) => (a.price || 0) - (b.price || 0),
@@ -394,8 +387,6 @@ export default function CourseClient({
               // Select the higher-priced variant for 240 hours
               targetVariant = sortedVariants[sortedVariants.length - 1];
             }
-
-            console.log("CourseClient found targetVariant:", targetVariant);
 
             if (targetVariant) {
               // Select the variant using the existing handler
