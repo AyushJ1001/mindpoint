@@ -77,41 +77,41 @@ export default function Footer() {
               </li>
               <li>
                 <Link
+                  href="/careers"
+                  className="text-muted-foreground hover:text-primary transition-smooth"
+                >
+                  Careers - Join Us
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Legal */}
+          <div>
+            <h4 className="mb-4 font-semibold">Legal</h4>
+            <ul className="space-y-2">
+              <li>
+                <Link
                   href="/toc"
                   className="text-muted-foreground hover:text-primary transition-smooth"
                 >
                   Terms & Conditions
                 </Link>
               </li>
-            </ul>
-          </div>
-
-          {/* Services */}
-          <div>
-            <h4 className="mb-4 font-semibold">Services</h4>
-            <ul className="space-y-2">
               <li>
                 <Link
-                  href="/courses/certificate"
+                  href="/privacy"
                   className="text-muted-foreground hover:text-primary transition-smooth"
                 >
-                  Certificate Course
+                  Privacy Policy
                 </Link>
               </li>
               <li>
                 <Link
-                  href="/courses/therapy"
+                  href="/refund"
                   className="text-muted-foreground hover:text-primary transition-smooth"
                 >
-                  Therapy Sessions
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/careers"
-                  className="text-muted-foreground hover:text-primary transition-smooth"
-                >
-                  Careers - Join Us
+                  Refund Policy
                 </Link>
               </li>
             </ul>

@@ -1,12 +1,12 @@
 export const metadata = {
   title: "Terms & Conditions - The Mind Point",
   description:
-    "Read The Mind Point's terms and conditions, privacy policy, and legal information for our mental health education platform.",
+    "Read The Mind Point's terms and conditions for our mental health education platform, courses, therapy sessions, and related services.",
   keywords:
-    "terms and conditions, privacy policy, legal, mental health education, The Mind Point",
+    "terms and conditions, legal, mental health education, courses, The Mind Point",
   openGraph: {
     title: "Terms & Conditions - The Mind Point",
-    description: "Read our terms and conditions and privacy policy.",
+    description: "Read our terms and conditions for using our services.",
     type: "website",
   },
 };
@@ -42,8 +42,8 @@ export default function TOC() {
           1. Terminology and Definitions
         </h2>
         <p className="mb-6 leading-relaxed text-gray-700">
-          The following terminology applies to these Terms, our Privacy Policy,
-          Refund and Payment Policy, and all related agreements:
+          The following terminology applies to these Terms and all related
+          agreements:
         </p>
         <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
           <li>
@@ -73,17 +73,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          2. Cookies
-        </h2>
-        <p className="mb-6 leading-relaxed text-gray-700">
-          We use cookies to enhance your experience on the Website. By accessing
-          the Website, you consent to the use of cookies in accordance with our
-          Privacy Policy. Cookies may enable certain functionalities and could
-          be used by our affiliates or advertising partners.
-        </p>
-
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          3. License and Intellectual Property
+          2. License and Intellectual Property
         </h2>
         <p className="mb-4 leading-relaxed text-gray-700">
           Unless otherwise stated, The Mind Point and/or its licensors own all
@@ -123,7 +113,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          4. Professional Enhancement Disclaimer
+          3. Professional Enhancement Disclaimer
         </h2>
         <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
           <p className="leading-relaxed text-gray-700">
@@ -144,7 +134,7 @@ export default function TOC() {
         </div>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          5. Enrollment, Registration, and Course Policies
+          4. Enrollment, Registration, and Course Policies
         </h2>
 
         <h3 className="mb-3 text-xl font-semibold text-gray-800">
@@ -152,11 +142,9 @@ export default function TOC() {
         </h3>
         <p className="mb-6 leading-relaxed text-gray-700">
           Once you register for any Service, your enrollment is confirmed and
-          final. No refunds, transfers, cancellations, or modifications are
-          permitted except as explicitly outlined in our separate Refund and
-          Payment Policy. By registering, you confirm that you have reviewed and
-          accepted all details, including timings, dates, faculty, and content,
-          and waive any right to dispute them later.
+          final. By registering, you confirm that you have reviewed and accepted
+          all details, including timings, dates, faculty, and content, and waive
+          any right to dispute them later.
         </p>
 
         <h3 className="mb-3 text-xl font-semibold text-gray-800">
@@ -251,7 +239,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          6. Terms for Therapy and Supervised Sessions
+          5. Terms for Therapy and Supervised Sessions
         </h2>
 
         <h3 className="mb-3 text-xl font-semibold text-gray-800">
@@ -263,7 +251,7 @@ export default function TOC() {
           upon booking and confirmation. No adjustments, rescheduling,
           cancellations, or modifications will be permitted under any
           circumstances, except in cases of extreme emergencies (e.g., medical
-          issues with verifiable proof as described in Section 5). Missed
+          issues with verifiable proof as described in Section 4). Missed
           sessions due to non-attendance, tardiness, or any other reason will
           not be rescheduled or refunded. Sessions must be attended in full;
           partial attendance does not entitle you to extensions or credits.
@@ -302,7 +290,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          7. Conduct and Respectful Treatment
+          6. Conduct and Respectful Treatment
         </h2>
         <p className="mb-4 leading-relaxed text-gray-700">
           All participants in Services must treat faculties, staff, fellow
@@ -334,7 +322,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          8. Certificates, Letters of Recommendation (LOR), and Remakes
+          7. Certificates, Letters of Recommendation (LOR), and Remakes
         </h2>
         <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
           <li>
@@ -358,7 +346,7 @@ export default function TOC() {
         </ul>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          9. Hyperlinking to Our Content
+          8. Hyperlinking to Our Content
         </h2>
         <p className="mb-2 leading-relaxed text-gray-700">
           Approved organizations may hyperlink to our Website under the
@@ -378,7 +366,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          10. Content Liability and External Links
+          9. Content Liability and External Links
         </h2>
         <p className="mb-6 leading-relaxed text-gray-700">
           We are not responsible for content on external websites linked to or
@@ -387,7 +375,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          11. Reservation of Rights
+          10. Reservation of Rights
         </h2>
         <p className="mb-4 leading-relaxed text-gray-700">
           We reserve the right to:
@@ -405,7 +393,7 @@ export default function TOC() {
         </ul>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          12. Removal of Links from Our Website
+          11. Removal of Links from Our Website
         </h2>
         <p className="mb-6 leading-relaxed text-gray-700">
           If you identify an offensive link on our Website, contact us at
@@ -414,7 +402,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          13. Disclaimer and Limitation of Liability
+          12. Disclaimer and Limitation of Liability
         </h2>
         <p className="mb-4 leading-relaxed text-gray-700">
           To the fullest extent permitted by law, we exclude all
@@ -443,7 +431,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          14. Governing Law
+          13. Governing Law
         </h2>
         <p className="mb-6 leading-relaxed text-gray-700">
           These Terms shall be governed by and construed in accordance with the
@@ -453,7 +441,7 @@ export default function TOC() {
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-gray-900">
-          15. Contact Information
+          14. Contact Information
         </h2>
         <p className="mb-6 leading-relaxed text-gray-700">
           For questions about these Terms, contact us at:
