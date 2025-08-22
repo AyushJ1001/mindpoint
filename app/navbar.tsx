@@ -12,8 +12,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import Image from "next/image";
-import { Authenticated, Unauthenticated } from "convex/react";
-import { SignInButton, UserButton } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { useCart } from "react-use-cart";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, Trash2, Plus, Minus, Menu, X } from "lucide-react";
@@ -529,12 +528,12 @@ export default function Navbar() {
               </SheetContent>
             </Sheet>
             <div className="hidden items-center gap-2 sm:flex">
-              <Authenticated>
+              <SignedIn>
                 <UserButton />
-              </Authenticated>
-              <Unauthenticated>
+              </SignedIn>
+              <SignedOut>
                 <SignInButton />
-              </Unauthenticated>
+              </SignedOut>
             </div>
           </div>
         </div>
@@ -626,12 +625,12 @@ export default function Navbar() {
               </div>
 
               <div className="border-border flex items-center justify-center gap-4 border-t pt-4 sm:hidden">
-                <Authenticated>
+                <SignedIn>
                   <UserButton />
-                </Authenticated>
-                <Unauthenticated>
+                </SignedIn>
+                <SignedOut>
                   <SignInButton />
-                </Unauthenticated>
+                </SignedOut>
               </div>
             </div>
           </div>
