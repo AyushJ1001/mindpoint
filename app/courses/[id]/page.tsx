@@ -129,7 +129,7 @@ export default async function CoursePage({ params }: Props) {
       isAccessibleForFree: false,
       offers: {
         "@type": "Offer",
-        price: course.price || 0,
+        price: Math.round(course.price || 0),
         priceCurrency: "INR",
         availability: "https://schema.org/InStock",
         url: `https://themindpoint.org/courses/${id}`,

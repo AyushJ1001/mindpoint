@@ -434,11 +434,7 @@ export default function CourseClient({
 
         {/* Sticky CTA */}
         <StickyCTA
-          price={
-            hasValidOffer && offerDetails
-              ? offerDetails.offerPrice
-              : activeCourse.price
-          }
+          price={getCoursePrice(activeCourse)}
           onPrimary={() => handleIncreaseQuantity(activeCourse)}
           onBuyNow={() => handleBuyNow(activeCourse)}
           disabled={

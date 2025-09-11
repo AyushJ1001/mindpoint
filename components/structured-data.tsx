@@ -104,7 +104,7 @@ export default function StructuredData() {
           },
           offers: {
             "@type": "Offer",
-            price: firstCourse.price?.toString() || "0",
+            price: Math.round(firstCourse.price || 0).toString(),
             priceCurrency: "INR",
             availability: "https://schema.org/InStock",
           },

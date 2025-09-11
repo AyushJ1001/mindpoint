@@ -64,9 +64,11 @@ export default function Navbar() {
       items.forEach((item) => {
         if (item.offer) {
           // Calculate original price from offer price and discount
-          const offerPrice = item.price || 0;
+          const offerPrice = Math.round(item.price || 0);
           const discountPercentage = item.offer.discount || 0;
-          const originalPrice = offerPrice / (1 - discountPercentage / 100);
+          const originalPrice = Math.round(
+            offerPrice / (1 - discountPercentage / 100),
+          );
 
           const offerDetails = getOfferDetails({
             price: originalPrice, // Pass original price
@@ -389,8 +391,9 @@ export default function Navbar() {
                       <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4">
                         {items.map((item) => {
                           const offerDetails = itemOfferDetails[item.id];
-                          const itemTotal =
-                            (item.price || 0) * (item.quantity || 1);
+                          const itemTotal = Math.round(
+                            (item.price || 0) * (item.quantity || 1),
+                          );
 
                           return (
                             <Card key={item.id} className="card-shadow">
@@ -515,7 +518,7 @@ export default function Navbar() {
                         <div className="flex items-center justify-between font-semibold">
                           <span>Total ({totalItems} items)</span>
                           <span className="text-primary">
-                            {showRupees(cartTotal)}
+                            {showRupees(Math.round(cartTotal))}
                           </span>
                         </div>
                         <Button className="transition-smooth w-full" asChild>

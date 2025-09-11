@@ -21,11 +21,12 @@ export async function POST(req: Request) {
   });
 
   const { amount } = await req.json();
+  const roundedAmount = Math.round(Number(amount) || 0);
 
-  console.log("amount", amount);
+  console.log("amount", roundedAmount);
 
   const order = await razorpay.orders.create({
-    amount: amount * 100,
+    amount: roundedAmount * 100,
     currency: "INR",
   });
 

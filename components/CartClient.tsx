@@ -124,7 +124,7 @@ const CartContent = () => {
       const response = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: cartTotal }), // API will convert to paise
+        body: JSON.stringify({ amount: Math.round(cartTotal) }), // API will convert to paise
       });
 
       const data = await response.json();
@@ -567,7 +567,7 @@ const CartContent = () => {
             <CardContent className="space-y-4">
               {items.map((item) => {
                 const offerDetails = itemOfferDetails[item.id];
-                const itemTotal = (item.price || 0) * (item.quantity || 1);
+                const itemTotal = Math.round((item.price || 0) * (item.quantity || 1));
 
                 return (
                   <div
@@ -675,7 +675,7 @@ const CartContent = () => {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span>Subtotal ({items.length} items)</span>
-                <span>{showRupees(cartTotal)}</span>
+                <span>{showRupees(Math.round(cartTotal))}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tax</span>
@@ -684,7 +684,7 @@ const CartContent = () => {
               <div className="border-t pt-4">
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
-                  <span>{showRupees(cartTotal)}</span>
+                  <span>{showRupees(Math.round(cartTotal))}</span>
                 </div>
               </div>
               <Button
