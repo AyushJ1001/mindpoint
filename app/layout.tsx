@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import "react-phone-number-input/style.css";
+import { PostHogProvider } from "@/components/PostHogProvider";
 import ClientProviders from "@/components/ClientProviders";
 import ClientNavbar from "@/components/ClientNavbar";
 import Footer from "./footer";
@@ -79,22 +80,24 @@ export default function RootLayout({
           Skip to main content
         </a>
 
-        <ClientProviders>
-          <StructuredData />
-          <ClientNavbar />
+        <PostHogProvider>
+          <ClientProviders>
+            <StructuredData />
+            <ClientNavbar />
 
-          <main
-            id="main-content"
-            className="flex-grow"
-            role="main"
-            tabIndex={-1}
-          >
-            {children}
-          </main>
-        </ClientProviders>
+            <main
+              id="main-content"
+              className="flex-grow"
+              role="main"
+              tabIndex={-1}
+            >
+              {children}
+            </main>
+          </ClientProviders>
 
-        <Footer />
-        <Toaster />
+          <Footer />
+          <Toaster />
+        </PostHogProvider>
       </body>
     </html>
   );
