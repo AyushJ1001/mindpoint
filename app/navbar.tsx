@@ -530,12 +530,20 @@ export default function Navbar() {
                 </div>
               </SheetContent>
             </Sheet>
-            <div className="hidden items-center gap-2 sm:flex">
+            <div className="flex items-center gap-2">
               <SignedIn>
                 <UserButton />
               </SignedIn>
               <SignedOut>
-                <SignInButton />
+                <SignInButton>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="transition-smooth hover:bg-accent/50 cursor-pointer"
+                  >
+                    Sign In
+                  </Button>
+                </SignInButton>
               </SignedOut>
             </div>
           </div>
@@ -625,15 +633,6 @@ export default function Navbar() {
                       ?.replace(/^\w/, (c) => c.toUpperCase())}
                   </Link>
                 ))}
-              </div>
-
-              <div className="border-border flex items-center justify-center gap-4 border-t pt-4 sm:hidden">
-                <SignedIn>
-                  <UserButton />
-                </SignedIn>
-                <SignedOut>
-                  <SignInButton />
-                </SignedOut>
               </div>
             </div>
           </div>
