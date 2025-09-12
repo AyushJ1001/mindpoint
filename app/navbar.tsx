@@ -372,7 +372,7 @@ export default function Navbar() {
                     </div>
                   )}
                 </SheetHeader>
-                <div className="flex h-[calc(100vh-8rem)] flex-col">
+                <div className="flex h-[calc(100vh-8rem)] flex-col overflow-hidden">
                   {isEmpty ? (
                     <div className="flex flex-1 flex-col items-center justify-center py-12">
                       <ShoppingCart
@@ -388,7 +388,7 @@ export default function Navbar() {
                     </div>
                   ) : (
                     <>
-                      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4">
+                      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4 pb-28">
                         {items.map((item) => {
                           const offerDetails = itemOfferDetails[item.id];
                           const itemTotal = Math.round(
@@ -514,7 +514,7 @@ export default function Navbar() {
                           );
                         })}
                       </div>
-                      <div className="flex-shrink-0 space-y-4 border-t pt-4">
+                      <div className="sticky bottom-0 left-0 right-0 space-y-4 border-t bg-background/95 backdrop-blur pt-4">
                         <div className="flex items-center justify-between font-semibold">
                           <span>Total ({totalItems} items)</span>
                           <span className="text-primary">
