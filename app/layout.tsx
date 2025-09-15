@@ -24,7 +24,7 @@ export const metadata: Metadata = {
   title: "The Mind Point",
   description: "A platform for mental health education and support",
   icons: {
-    icon: "/logo.png",
+    icon: "/logo.ico",
   },
   metadataBase: new URL("https://themindpoint.org"),
   alternates: {
