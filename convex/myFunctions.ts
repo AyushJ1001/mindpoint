@@ -412,7 +412,6 @@ export const handleCartCheckout = mutation({
   handler: async (ctx, args) => {
     const enrollments = [];
     const supervisedEnrollments = [];
-    const alreadyEnrolledCourses = [];
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -421,23 +420,7 @@ export const handleCartCheckout = mutation({
         throw new Error(`Course with ID ${courseId} not found`);
       }
 
-      // Check if user is already enrolled (only for non-therapy/non-supervised courses)
-      // Users should be able to enroll multiple times for therapy and supervised sessions
-      if (
-        course.type !== "therapy" &&
-        course.type !== "supervised" &&
-        course.enrolledUsers.includes(args.userId)
-      ) {
-        console.log(
-          `User ${args.userId} is already enrolled in course ${course.name}`,
-        );
-        // Add to already enrolled courses for email notification
-        alreadyEnrolledCourses.push({
-          courseName: course.name,
-          courseType: course.type,
-        });
-        continue;
-      }
+      // Allow multiple enrollments per user for all course types
 
       // Generate enrollment number only for non-therapy and non-supervised courses
       let enrollmentNumber: string;
@@ -685,23 +668,6 @@ export const handleCartCheckout = mutation({
       console.log("Course-specific emails scheduled successfully");
     }
 
-    // If user was already enrolled in all courses, send a notification email
-    if (
-      enrollments.length === 0 &&
-      supervisedEnrollments.length === 0 &&
-      alreadyEnrolledCourses.length > 0
-    ) {
-      await ctx.scheduler.runAfter(
-        0,
-        api.emailActions.sendAlreadyEnrolledNotification,
-        {
-          userEmail: args.userEmail,
-          userName: args.studentName || args.userEmail,
-          alreadyEnrolledCourses: alreadyEnrolledCourses,
-        },
-      );
-    }
-
     return [...enrollments, ...supervisedEnrollments];
   },
 });
@@ -847,7 +813,6 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
     }
 
     const enrollments = [];
-    const alreadyEnrolledCourses = [];
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -856,23 +821,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         throw new Error(`Course with ID ${courseId} not found`);
       }
 
-      // Check if user is already enrolled (only for non-therapy/non-supervised courses)
-      // Users should be able to enroll multiple times for therapy and supervised sessions
-      if (
-        course.type !== "therapy" &&
-        course.type !== "supervised" &&
-        course.enrolledUsers.includes(args.userEmail)
-      ) {
-        console.log(
-          `Guest user ${args.userEmail} is already enrolled in course ${course.name}`,
-        );
-        // Add to already enrolled courses for email notification
-        alreadyEnrolledCourses.push({
-          courseName: course.name,
-          courseType: course.type,
-        });
-        continue;
-      }
+      // Allow multiple enrollments per user for all course types
 
       // Generate enrollment number only for non-therapy and non-supervised courses
       let enrollmentNumber: string;
@@ -1055,17 +1004,6 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
       console.log(
         "Course-specific emails for guest user scheduled successfully",
       );
-    } else if (alreadyEnrolledCourses.length > 0) {
-      // Send notification for already enrolled courses
-      await ctx.scheduler.runAfter(
-        0,
-        api.emailActions.sendAlreadyEnrolledNotification,
-        {
-          userEmail: args.userEmail,
-          userName: guestUser.name,
-          alreadyEnrolledCourses: alreadyEnrolledCourses,
-        },
-      );
     }
 
     return enrollments;
@@ -1115,7 +1053,6 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
     const enrollments = [];
     const supervisedEnrollments = [];
-    const alreadyEnrolledCourses = [];
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -1124,23 +1061,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         throw new Error(`Course with ID ${courseId} not found`);
       }
 
-      // Check if user is already enrolled (only for non-therapy/non-supervised courses)
-      // Users should be able to enroll multiple times for therapy and supervised sessions
-      if (
-        course.type !== "therapy" &&
-        course.type !== "supervised" &&
-        course.enrolledUsers.includes(args.userData.email)
-      ) {
-        console.log(
-          `Guest user ${args.userData.email} is already enrolled in course ${course.name}`,
-        );
-        // Add to already enrolled courses for email notification
-        alreadyEnrolledCourses.push({
-          courseName: course.name,
-          courseType: course.type,
-        });
-        continue;
-      }
+      // Allow multiple enrollments per user for all course types
 
       // Generate enrollment number only for non-therapy and non-supervised courses
       let enrollmentNumber: string;
@@ -1372,19 +1293,6 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       );
     }
 
-    // Send notification for already enrolled courses (independent of new enrollments)
-    if (alreadyEnrolledCourses.length > 0) {
-      await ctx.scheduler.runAfter(
-        0,
-        api.emailActions.sendAlreadyEnrolledNotification,
-        {
-          userEmail: args.userData.email,
-          userName: args.userData.name,
-          alreadyEnrolledCourses: alreadyEnrolledCourses,
-        },
-      );
-    }
-
     return [...enrollments, ...supervisedEnrollments];
   },
 });
@@ -1423,15 +1331,7 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       throw new Error("Course not found");
     }
 
-    // Check if user is already enrolled (only for non-therapy/non-supervised courses)
-    // Users should be able to enroll multiple times for therapy and supervised sessions
-    if (
-      course.type !== "therapy" &&
-      course.type !== "supervised" &&
-      course.enrolledUsers.includes(args.userEmail)
-    ) {
-      throw new Error("User is already enrolled in this course");
-    }
+    // Allow multiple enrollments per user for all course types
 
     // Generate enrollment number only for non-therapy and non-supervised courses
     let enrollmentNumber: string;

@@ -109,6 +109,33 @@ export const sendTestSupervisedEmail = action({
   },
 });
 
+// Simple test email action: sends plain "hi" (or provided body) to a recipient
+export const sendSimpleTestEmail = action({
+  args: {
+    to: v.string(),
+    body: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      console.log("Sending simple test email to:", args.to);
+      const html = args.body ?? "hi";
+      const result = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.to,
+        subject: "Simple Test Email",
+        html,
+      });
+      console.log("Simple test email sent:", result);
+    } catch (error) {
+      console.error("Failed to send simple test email:", error);
+      // Re-throw so callers/scripts can detect failure
+      throw error;
+    }
+    return null;
+  },
+});
+
 // Test email with simple attachment for debugging
 export const sendTestEmailWithAttachment = action({
   args: {

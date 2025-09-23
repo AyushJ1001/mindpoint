@@ -172,11 +172,7 @@ const CartContent = () => {
                   );
                 } else {
                   toast.success(
-                    "Payment successful! You are already enrolled in all selected courses.",
-                    {
-                      description:
-                        "Check your email for enrollment status details.",
-                    },
+                    "Payment successful! Check your email for enrollment confirmation.",
                   );
                 }
               } else {
@@ -222,11 +218,7 @@ const CartContent = () => {
                   );
                 } else {
                   toast.success(
-                    "Payment successful! You are already enrolled in all selected courses.",
-                    {
-                      description:
-                        "Check your email for enrollment status details.",
-                    },
+                    "Payment successful! Check your email for enrollment confirmation.",
                   );
                 }
               } else {

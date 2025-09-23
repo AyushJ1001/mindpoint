@@ -5,7 +5,7 @@ import { withRateLimit } from "@/lib/with-rate-limit";
 async function handleCareersApplication(req: Request) {
   const apiKey = process.env.RESEND_API_KEY;
   const fromEmail = process.env.FROM_EMAIL;
-  const toEmail = "admin@themindpoint.org";
+  const toEmail = "contact.themindpoint@gmail.com";
 
   if (!apiKey || !fromEmail) {
     return NextResponse.json(

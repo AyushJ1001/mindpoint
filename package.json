@@ -10,7 +10,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "test:email": "node test-resend-email.js",
+    "test:email:direct": "node test-resend-direct.js"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.25.0",
