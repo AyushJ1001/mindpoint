@@ -12,6 +12,8 @@ import type { Doc } from "@/convex/_generated/dataModel";
 import { useEffect, useState } from "react";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { Id } from "@/convex/_generated/dataModel";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -53,6 +55,11 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
   const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
   const [showBogoModal, setShowBogoModal] = useState(false);
 
+  // Get available courses for BOGO selection
+  const availableCourses = useQuery(api.courses.getCoursesWithBogoLabel, {
+    bogoLabel: course.bogo?.label || "",
+  });
+
   // Update offer details every minute for real-time countdown
   useEffect(() => {
     const updateOfferDetails = () => {
@@ -80,11 +87,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
     }
 
     // Check if BOGO is active and has a label (indicating course selection is needed)
-    if (
-      offerDetails?.hasBogo &&
-      course.bogo?.label &&
-      !course.bogo?.freeCourseId
-    ) {
+    if (offerDetails?.hasBogo && course.bogo?.label) {
       setShowBogoModal(true);
       return;
     }
@@ -103,8 +106,11 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
   };
 
   const handleBogoSelection = (selectedCourseId: Id<"courses">) => {
-    // For now, we'll add the main course and store the selected free course info
-    // The actual free course will be added during payment processing
+    // Find the selected course from available courses
+    const selectedFreeCourse = availableCourses?.find(
+      (course) => course._id === selectedCourseId,
+    );
+
     addItem({
       id: course._id,
       name: course.name,
@@ -115,13 +121,23 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
       quantity: 1,
       offer: course.offer,
       bogo: course.bogo,
-      selectedFreeCourse: {
-        id: selectedCourseId,
-        name: "Selected Free Course", // This will be populated from the selected course data
-        description: "Free course selected via BOGO offer",
-        price: 0,
-        imageUrls: [],
-      },
+      selectedFreeCourse: selectedFreeCourse
+        ? {
+            id: selectedFreeCourse._id,
+            name: selectedFreeCourse.name,
+            description:
+              selectedFreeCourse.description ||
+              "Free course selected via BOGO offer",
+            price: 0,
+            imageUrls: selectedFreeCourse.imageUrls || [],
+          }
+        : {
+            id: selectedCourseId,
+            name: "Selected Free Course",
+            description: "Free course selected via BOGO offer",
+            price: 0,
+            imageUrls: [],
+          },
     });
   };
 
@@ -243,6 +259,11 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
   const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
   const [showBogoModal, setShowBogoModal] = useState(false);
 
+  // Get available courses for BOGO selection
+  const availableCourses = useQuery(api.courses.getCoursesWithBogoLabel, {
+    bogoLabel: course.bogo?.label || "",
+  });
+
   // Update offer details every minute for real-time countdown
   useEffect(() => {
     const updateOfferDetails = () => {
@@ -270,11 +291,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
     }
 
     // Check if BOGO is active and has a label (indicating course selection is needed)
-    if (
-      offerDetails?.hasBogo &&
-      course.bogo?.label &&
-      !course.bogo?.freeCourseId
-    ) {
+    if (offerDetails?.hasBogo && course.bogo?.label) {
       setShowBogoModal(true);
       return;
     }
@@ -293,6 +310,11 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
   };
 
   const handleBogoSelection = (selectedCourseId: Id<"courses">) => {
+    // Find the selected course from available courses
+    const selectedFreeCourse = availableCourses?.find(
+      (course) => course._id === selectedCourseId,
+    );
+
     addItem({
       id: course._id,
       name: course.name,
@@ -303,13 +325,23 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
       quantity: 1,
       offer: course.offer,
       bogo: course.bogo,
-      selectedFreeCourse: {
-        id: selectedCourseId,
-        name: "Selected Free Course",
-        description: "Free course selected via BOGO offer",
-        price: 0,
-        imageUrls: [],
-      },
+      selectedFreeCourse: selectedFreeCourse
+        ? {
+            id: selectedFreeCourse._id,
+            name: selectedFreeCourse.name,
+            description:
+              selectedFreeCourse.description ||
+              "Free course selected via BOGO offer",
+            price: 0,
+            imageUrls: selectedFreeCourse.imageUrls || [],
+          }
+        : {
+            id: selectedCourseId,
+            name: "Selected Free Course",
+            description: "Free course selected via BOGO offer",
+            price: 0,
+            imageUrls: [],
+          },
     });
   };
 

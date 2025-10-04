@@ -7,6 +7,8 @@ import { BookOpen } from "lucide-react";
 import { Doc } from "@/convex/_generated/dataModel";
 import { Id } from "@/convex/_generated/dataModel";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 // Type for courses with sessions (therapy)
 interface TherapyCourse extends Doc<"courses"> {
@@ -146,6 +148,11 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
         ) ?? sorted[0])
       : (sorted.find((c) => c._id === selectedId) ?? sorted[0]);
 
+  // Get available courses for BOGO selection
+  const availableCourses = useQuery(api.courses.getCoursesWithBogoLabel, {
+    bogoLabel: selectedCourse.bogo?.label || "",
+  });
+
   const handleAddToCart = () => {
     // Check if course is out of stock
     const seatsLeft = Math.max(
@@ -161,11 +168,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     }
 
     // Check if BOGO is active and has a label (indicating course selection is needed)
-    if (
-      offerDetails?.hasBogo &&
-      selectedCourse.bogo?.label &&
-      !selectedCourse.bogo?.freeCourseId
-    ) {
+    if (offerDetails?.hasBogo && selectedCourse.bogo?.label) {
       setShowBogoModal(true);
       return;
     }
@@ -185,6 +188,11 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   };
 
   const handleBogoSelection = (selectedCourseId: Id<"courses">) => {
+    // Find the selected course from available courses
+    const selectedFreeCourse = availableCourses?.find(
+      (course) => course._id === selectedCourseId,
+    );
+
     const label = extractVariantLabel(selectedCourse);
     addItem({
       id: selectedCourse._id,
@@ -196,13 +204,23 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       quantity: 1,
       offer: selectedCourse.offer,
       bogo: selectedCourse.bogo,
-      selectedFreeCourse: {
-        id: selectedCourseId,
-        name: "Selected Free Course",
-        description: "Free course selected via BOGO offer",
-        price: 0,
-        imageUrls: [],
-      },
+      selectedFreeCourse: selectedFreeCourse
+        ? {
+            id: selectedFreeCourse._id,
+            name: selectedFreeCourse.name,
+            description:
+              selectedFreeCourse.description ||
+              "Free course selected via BOGO offer",
+            price: 0,
+            imageUrls: selectedFreeCourse.imageUrls || [],
+          }
+        : {
+            id: selectedCourseId,
+            name: "Selected Free Course",
+            description: "Free course selected via BOGO offer",
+            price: 0,
+            imageUrls: [],
+          },
     });
   };
 
@@ -429,6 +447,11 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const router = useRouter();
   const [showBogoModal, setShowBogoModal] = useState(false);
 
+  // Get available courses for BOGO selection
+  const availableCourses = useQuery(api.courses.getCoursesWithBogoLabel, {
+    bogoLabel: course.bogo?.label || "",
+  });
+
   const handleAddToCart = () => {
     // Check if course is out of stock
     const seatsLeft = Math.max(
@@ -442,11 +465,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     }
 
     // Check if BOGO is active and has a label (indicating course selection is needed)
-    if (
-      offerDetails?.hasBogo &&
-      course.bogo?.label &&
-      !course.bogo?.freeCourseId
-    ) {
+    if (offerDetails?.hasBogo && course.bogo?.label) {
       setShowBogoModal(true);
       return;
     }
@@ -465,6 +484,11 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   };
 
   const handleBogoSelection = (selectedCourseId: Id<"courses">) => {
+    // Find the selected course from available courses
+    const selectedFreeCourse = availableCourses?.find(
+      (course) => course._id === selectedCourseId,
+    );
+
     addItem({
       id: course._id,
       name: course.name,
@@ -475,13 +499,23 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       quantity: 1,
       offer: course.offer,
       bogo: course.bogo,
-      selectedFreeCourse: {
-        id: selectedCourseId,
-        name: "Selected Free Course",
-        description: "Free course selected via BOGO offer",
-        price: 0,
-        imageUrls: [],
-      },
+      selectedFreeCourse: selectedFreeCourse
+        ? {
+            id: selectedFreeCourse._id,
+            name: selectedFreeCourse.name,
+            description:
+              selectedFreeCourse.description ||
+              "Free course selected via BOGO offer",
+            price: 0,
+            imageUrls: selectedFreeCourse.imageUrls || [],
+          }
+        : {
+            id: selectedCourseId,
+            name: "Selected Free Course",
+            description: "Free course selected via BOGO offer",
+            price: 0,
+            imageUrls: [],
+          },
     });
   };
 

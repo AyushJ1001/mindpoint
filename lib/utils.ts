@@ -71,6 +71,11 @@ type CourseBogo = {
 function isWithinWindow(startDate?: string, endDate?: string): boolean {
   const now = new Date();
 
+  // If no date constraints are provided, the promotion is not active
+  if (!startDate && !endDate) {
+    return false;
+  }
+
   if (startDate) {
     const start = new Date(startDate);
     if (Number.isNaN(start.getTime()) || now < start) {
@@ -157,7 +162,7 @@ export function getOfferDetails(course: {
   }
 
   const originalPrice = course.price || 0;
-  const discountPercentage = hasDiscount ? course.offer?.discount ?? 0 : 0;
+  const discountPercentage = hasDiscount ? (course.offer?.discount ?? 0) : 0;
   const offerPrice = hasDiscount
     ? calculateOfferPrice(originalPrice, discountPercentage)
     : originalPrice;
@@ -177,8 +182,8 @@ export function getOfferDetails(course: {
 
   const timeLeft = calculateOfferTimeLeft(nextEndingPromotion ?? null);
   const offerName = hasDiscount
-    ? course.offer?.name ?? "Limited-time Offer"
-    : course.bogo?.label ?? "BOGO Offer";
+    ? (course.offer?.name ?? "Limited-time Offer")
+    : (course.bogo?.label ?? "BOGO Offer");
 
   return {
     offerPrice: Math.round(offerPrice),
