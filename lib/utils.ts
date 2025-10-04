@@ -71,9 +71,9 @@ type CourseBogo = {
 function isWithinWindow(startDate?: string, endDate?: string): boolean {
   const now = new Date();
 
-  // If no date constraints are provided, the promotion is not active
+  // If no date constraints are provided, the promotion is always active
   if (!startDate && !endDate) {
-    return false;
+    return true;
   }
 
   if (startDate) {
