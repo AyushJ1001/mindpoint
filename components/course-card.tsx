@@ -10,6 +10,8 @@ import { CourseImageCarousel } from "@/components/CourseTypePage";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { useEffect, useState } from "react";
+import { BogoSelectionModal } from "@/components/bogo-selection-modal";
+import { Id } from "@/convex/_generated/dataModel";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -49,6 +51,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
+  const [showBogoModal, setShowBogoModal] = useState(false);
 
   // Update offer details every minute for real-time countdown
   useEffect(() => {
@@ -76,6 +79,16 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
       return; // Don't add to cart if out of stock
     }
 
+    // Check if BOGO is active and has a label (indicating course selection is needed)
+    if (
+      offerDetails?.hasBogo &&
+      course.bogo?.label &&
+      !course.bogo?.freeCourseId
+    ) {
+      setShowBogoModal(true);
+      return;
+    }
+
     addItem({
       id: course._id,
       name: course.name,
@@ -86,6 +99,29 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
       quantity: 1, // Explicitly set initial quantity to 1
       offer: course.offer, // Store discount offer data in cart item
       bogo: course.bogo, // Store BOGO data in cart item
+    });
+  };
+
+  const handleBogoSelection = (selectedCourseId: Id<"courses">) => {
+    // For now, we'll add the main course and store the selected free course info
+    // The actual free course will be added during payment processing
+    addItem({
+      id: course._id,
+      name: course.name,
+      description: course.description,
+      price: getCoursePrice(course),
+      imageUrls: course.imageUrls || [],
+      capacity: course.capacity || 1,
+      quantity: 1,
+      offer: course.offer,
+      bogo: course.bogo,
+      selectedFreeCourse: {
+        id: selectedCourseId,
+        name: "Selected Free Course", // This will be populated from the selected course data
+        description: "Free course selected via BOGO offer",
+        price: 0,
+        imageUrls: [],
+      },
     });
   };
 
@@ -114,7 +150,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
             </Badge>
           )}
           {offerDetails?.hasBogo && (
-            <Badge className="bg-emerald-500/90 text-xs font-semibold uppercase text-white shadow-lg">
+            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
               🛍️ {offerDetails.bogoLabel ?? "BOGO"}
             </Badge>
           )}
@@ -157,7 +193,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
             </div>
           )}
           {offerDetails?.hasBogo && (
-            <div className="text-emerald-600 text-xs font-semibold">
+            <div className="text-xs font-semibold text-emerald-600">
               Includes a free bonus enrollment
             </div>
           )}
@@ -185,6 +221,18 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
           );
         })()}
       </CardContent>
+
+      {/* BOGO Selection Modal */}
+      {offerDetails?.hasBogo && course.bogo?.label && (
+        <BogoSelectionModal
+          isOpen={showBogoModal}
+          onClose={() => setShowBogoModal(false)}
+          onSelect={handleBogoSelection}
+          bogoLabel={course.bogo.label}
+          sourceCourseId={course._id}
+          sourceCourseName={course.name}
+        />
+      )}
     </Card>
   );
 }
@@ -193,6 +241,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
+  const [showBogoModal, setShowBogoModal] = useState(false);
 
   // Update offer details every minute for real-time countdown
   useEffect(() => {
@@ -220,6 +269,16 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
       return; // Don't add to cart if out of stock
     }
 
+    // Check if BOGO is active and has a label (indicating course selection is needed)
+    if (
+      offerDetails?.hasBogo &&
+      course.bogo?.label &&
+      !course.bogo?.freeCourseId
+    ) {
+      setShowBogoModal(true);
+      return;
+    }
+
     addItem({
       id: course._id,
       name: course.name,
@@ -230,6 +289,27 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
       quantity: 1,
       offer: course.offer,
       bogo: course.bogo,
+    });
+  };
+
+  const handleBogoSelection = (selectedCourseId: Id<"courses">) => {
+    addItem({
+      id: course._id,
+      name: course.name,
+      description: course.description,
+      price: getCoursePrice(course),
+      imageUrls: course.imageUrls || [],
+      capacity: course.capacity || 1,
+      quantity: 1,
+      offer: course.offer,
+      bogo: course.bogo,
+      selectedFreeCourse: {
+        id: selectedCourseId,
+        name: "Selected Free Course",
+        description: "Free course selected via BOGO offer",
+        price: 0,
+        imageUrls: [],
+      },
     });
   };
 
@@ -268,7 +348,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
             </Badge>
           )}
           {offerDetails?.hasBogo && (
-            <Badge className="bg-emerald-500/90 text-xs font-semibold uppercase text-white shadow-lg">
+            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
               🛍️ {offerDetails.bogoLabel ?? "BOGO"}
             </Badge>
           )}
@@ -299,7 +379,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
 
       <CardContent className="pt-0 pb-4">
         <div className="flex items-start justify-between">
-          <div className="space-y-1 flex-1 pr-3">
+          <div className="flex-1 space-y-1 pr-3">
             <Badge
               variant="secondary"
               className="px-3 py-1 text-sm font-semibold"
@@ -329,7 +409,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
               </div>
             )}
             {offerDetails?.hasBogo && (
-              <div className="text-emerald-600 text-xs font-semibold">
+              <div className="text-xs font-semibold text-emerald-600">
                 Includes a free bonus enrollment
               </div>
             )}
@@ -347,7 +427,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
                 onClick={handleAddToCart}
                 disabled={inCart(course._id) || isOutOfStock}
                 size="sm"
-                className="relative z-10 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 shrink-0"
+                className="relative z-10 shrink-0 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock
@@ -360,6 +440,18 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
           })()}
         </div>
       </CardContent>
+
+      {/* BOGO Selection Modal */}
+      {offerDetails?.hasBogo && course.bogo?.label && (
+        <BogoSelectionModal
+          isOpen={showBogoModal}
+          onClose={() => setShowBogoModal(false)}
+          onSelect={handleBogoSelection}
+          bogoLabel={course.bogo.label}
+          sourceCourseId={course._id}
+          sourceCourseName={course.name}
+        />
+      )}
     </Card>
   );
 }

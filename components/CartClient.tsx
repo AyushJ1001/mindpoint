@@ -91,9 +91,7 @@ const CartContent = () => {
     return () => clearInterval(interval);
   }, [items]);
 
-  const hasBogoItems = items.some(
-    (item) => itemOfferDetails[item.id]?.hasBogo,
-  );
+  const hasBogoItems = items.some((item) => itemOfferDetails[item.id]?.hasBogo);
 
   const activeBogoLabels = useMemo(() => {
     const labels = new Set<string>();
@@ -213,11 +211,23 @@ const CartContent = () => {
               // Get course IDs from cart items
               const courseIds = items.map((item) => item.id as Id<"courses">);
 
+              // Extract BOGO selections from cart items
+              const bogoSelections = items
+                .filter((item) => item.selectedFreeCourse)
+                .map((item) => ({
+                  sourceCourseId: item.id as Id<"courses">,
+                  selectedFreeCourseId: item.selectedFreeCourse!.id,
+                }));
+
               // Call server action to handle enrollment
               const result = await handlePaymentSuccess(
                 user.id,
                 courseIds as Id<"courses">[],
                 user.primaryEmailAddress?.emailAddress || "",
+                undefined, // userPhone
+                undefined, // studentName
+                undefined, // sessionType
+                bogoSelections.length > 0 ? bogoSelections : undefined,
               );
 
               if (result.success) {
@@ -240,9 +250,19 @@ const CartContent = () => {
             try {
               const courseIds = items.map((item) => item.id as Id<"courses">);
 
+              // Extract BOGO selections from cart items
+              const bogoSelections = items
+                .filter((item) => item.selectedFreeCourse)
+                .map((item) => ({
+                  sourceCourseId: item.id as Id<"courses">,
+                  selectedFreeCourseId: item.selectedFreeCourse!.id,
+                }));
+
               const result = await handleGuestUserPaymentSuccessWithData(
                 guestUserData,
                 courseIds as Id<"courses">[],
+                undefined, // sessionType
+                bogoSelections.length > 0 ? bogoSelections : undefined,
               );
 
               if (result.success) {
@@ -586,7 +606,9 @@ const CartContent = () => {
             <CardContent className="space-y-4">
               {items.map((item) => {
                 const offerDetails = itemOfferDetails[item.id];
-                const itemTotal = Math.round((item.price || 0) * (item.quantity || 1));
+                const itemTotal = Math.round(
+                  (item.price || 0) * (item.quantity || 1),
+                );
 
                 return (
                   <div
@@ -630,7 +652,8 @@ const CartContent = () => {
                       {offerDetails?.hasBogo && (
                         <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-600">
                           <Sparkles className="h-3 w-3" />
-                          {offerDetails.bogoLabel ?? "Bonus enrollment included"}
+                          {offerDetails.bogoLabel ??
+                            "Bonus enrollment included"}
                         </div>
                       )}
                       <div className="mt-2 flex items-center gap-2">
@@ -706,8 +729,7 @@ const CartContent = () => {
                 <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
                   <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0" />
                   <span>
-                    BOGO applied:
-                    {" "}
+                    BOGO applied:{" "}
                     {activeBogoLabels.length > 0
                       ? `${activeBogoLabels.join(", ")}`
                       : "complimentary course enrollments"}

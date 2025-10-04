@@ -123,3 +123,22 @@ export const createReview = mutation({
     return reviewId;
   },
 });
+
+// Fetch courses with the same BOGO label for BOGO selection
+export const getCoursesWithBogoLabel = query({
+  args: { bogoLabel: v.string() },
+  handler: async (ctx, args) => {
+    const courses = await ctx.db
+      .query("courses")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("bogo.enabled"), true),
+          q.eq(q.field("bogo.label"), args.bogoLabel),
+        ),
+      )
+      .order("desc")
+      .collect();
+
+    return courses;
+  },
+});
