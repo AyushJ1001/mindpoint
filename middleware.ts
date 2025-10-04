@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/server"]);
 
@@ -14,7 +14,7 @@ const middleware =
 
         if (isProtectedRoute(req)) await auth.protect();
       })
-    : (req: any) => {
+    : (req: NextRequest) => {
         // Fallback middleware when Clerk keys are not available
         if (req.nextUrl.pathname === "/terms") {
           return NextResponse.redirect(new URL("/toc", req.url));

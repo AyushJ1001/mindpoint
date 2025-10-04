@@ -10,11 +10,8 @@ interface ClientProvidersProps {
 }
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
-  // Only use ClerkProvider if keys are available
-  if (
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY &&
-    process.env.CLERK_SECRET_KEY
-  ) {
+  // Only use ClerkProvider if the public key is available
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     return (
       <ClerkProvider>
         <ConvexClientProvider>

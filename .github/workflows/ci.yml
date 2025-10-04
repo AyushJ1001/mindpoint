@@ -39,7 +39,7 @@ jobs:
           NEXT_PUBLIC_CONVEX_URL: "https://dummy.convex.cloud"
           UPSTASH_REDIS_REST_URL: "https://dummy.upstash.io"
           UPSTASH_REDIS_REST_TOKEN: "dummy_token"
-          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_dummy"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_cmVsYXhlZC1zdW5maXNoLTAuY2xlcmsuYWNjb3VudHMuZGV2JA"
           CLERK_SECRET_KEY: "sk_test_dummy"
           CLERK_FRONTEND_API_URL: "https://dummy.clerk.accounts.dev"
           CLERK_JWT_ISSUER_DOMAIN: "dummy.clerk.accounts.dev"
