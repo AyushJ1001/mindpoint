@@ -73,12 +73,21 @@ export default function Navbar() {
         if (item.offer || item.bogo) {
           const offerPrice = Math.round(item.price || 0);
           const discountPercentage = item.offer?.discount ?? 0;
-          const denominator = 1 - discountPercentage / 100;
-          const originalPrice = Math.round(
-            discountPercentage > 0 && Math.abs(denominator) > 1e-6
-              ? offerPrice / denominator
-              : offerPrice,
-          );
+
+          // Handle 100% discount case - we can't calculate original price from offer price
+          let originalPrice = offerPrice;
+          if (discountPercentage > 0 && discountPercentage < 100) {
+            const denominator = 1 - discountPercentage / 100;
+            if (Math.abs(denominator) > 1e-6) {
+              originalPrice = offerPrice / denominator;
+            }
+          } else if (discountPercentage === 100) {
+            // For 100% discount, we need to get the original price from the course data
+            // This should be handled by the backend or we need to store original price separately
+            originalPrice = offerPrice; // Fallback to offer price if original not available
+          }
+
+          originalPrice = Math.round(originalPrice);
 
           const offerDetails = getOfferDetails({
             price: originalPrice,
@@ -99,9 +108,7 @@ export default function Navbar() {
     return () => clearInterval(interval);
   }, [items]);
 
-  const hasBogoItems = items.some(
-    (item) => itemOfferDetails[item.id]?.hasBogo,
-  );
+  const hasBogoItems = items.some((item) => itemOfferDetails[item.id]?.hasBogo);
 
   const handleClearCart = () => {
     emptyCart();
@@ -425,8 +432,8 @@ export default function Navbar() {
                                       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
                                         {offerDetails.hasDiscount && (
                                           <span className="rounded bg-orange-100 px-2 py-1 text-[11px] font-semibold text-orange-800">
-                                            🔥 {offerDetails.discountPercentage}%
-                                            OFF
+                                            🔥 {offerDetails.discountPercentage}
+                                            % OFF
                                           </span>
                                         )}
                                         <span
@@ -445,7 +452,8 @@ export default function Navbar() {
                                     {offerDetails?.hasBogo && (
                                       <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-emerald-600">
                                         <Sparkles className="h-3 w-3" />
-                                        {offerDetails.bogoLabel ?? "Bonus enrollment included"}
+                                        {offerDetails.bogoLabel ??
+                                          "Bonus enrollment included"}
                                       </div>
                                     )}
                                     <div
@@ -539,7 +547,7 @@ export default function Navbar() {
                           );
                         })}
                       </div>
-                      <div className="sticky bottom-0 left-0 right-0 space-y-4 border-t bg-background/95 backdrop-blur pt-4">
+                      <div className="bg-background/95 sticky right-0 bottom-0 left-0 space-y-4 border-t pt-4 backdrop-blur">
                         {hasBogoItems && (
                           <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-medium text-emerald-700">
                             <Sparkles className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />

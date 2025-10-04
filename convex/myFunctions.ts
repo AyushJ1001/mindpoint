@@ -244,6 +244,22 @@ async function grantBogoEnrollments(
     return [];
   }
 
+  return await createBogoEnrollment(ctx, sourceCourse, freeCourse, userContext);
+}
+
+async function createBogoEnrollment(
+  ctx: MutationCtx,
+  sourceCourse: CourseDoc,
+  freeCourse: CourseDoc,
+  userContext: {
+    userId: string;
+    userName?: string;
+    userEmail?: string;
+    userPhone?: string;
+    sessionType?: "focus" | "flow" | "elevate";
+    isGuestUser?: boolean;
+  },
+): Promise<EnrollmentSummary[]> {
   const internshipPlan =
     extractInternshipPlanFromDuration(freeCourse.duration) || undefined;
 
@@ -257,7 +273,7 @@ async function grantBogoEnrollments(
     userName: userContext.userName || userContext.userEmail,
     userEmail: userContext.userEmail,
     userPhone: userContext.userPhone,
-    courseId: freeCourseId,
+    courseId: freeCourse._id as Id<"courses">,
     courseName: freeCourse.name,
     enrollmentNumber,
     sessionType:
@@ -276,7 +292,7 @@ async function grantBogoEnrollments(
     userName: userContext.userName || userContext.userEmail,
     userEmail: userContext.userEmail,
     userPhone: userContext.userPhone,
-    courseId: freeCourseId as unknown as string,
+    courseId: freeCourse._id as unknown as string,
     courseName: freeCourse.name,
     enrollmentNumber,
     sessionType:
@@ -292,7 +308,7 @@ async function grantBogoEnrollments(
 
   const existingUsers = freeCourse.enrolledUsers ?? [];
   if (!existingUsers.includes(userContext.userId)) {
-    await ctx.db.patch(freeCourseId, {
+    await ctx.db.patch(freeCourse._id, {
       enrolledUsers: [...existingUsers, userContext.userId],
     });
   }
@@ -313,7 +329,7 @@ async function grantBogoEnrollments(
       enrollmentId,
       enrollmentNumber,
       courseName: freeCourse.name,
-      courseId: freeCourseId,
+      courseId: freeCourse._id as Id<"courses">,
       courseType: freeCourse.type,
       startDate: freeCourse.startDate,
       endDate: computedEndDate,
@@ -781,50 +797,22 @@ export const handleCartCheckout = mutation({
       let bogoEnrollments: EnrollmentSummary[] = [];
 
       if (bogoSelection) {
-        // Use the selected free course
+        // Use the selected free course with the new helper function
         const freeCourse = await ctx.db.get(bogoSelection.selectedFreeCourseId);
         if (freeCourse) {
-          const internshipPlan =
-            extractInternshipPlanFromDuration(freeCourse.duration) || undefined;
-          const enrollmentNumber =
-            freeCourse.type === "therapy" || freeCourse.type === "supervised"
-              ? "N/A"
-              : generateEnrollmentNumber(freeCourse.code, freeCourse.startDate);
-
-          const enrollmentId = await ctx.db.insert("enrollments", {
-            userId: args.userId,
-            userName: args.studentName || args.userEmail,
-            userEmail: args.userEmail,
-            userPhone: args.userPhone,
-            courseId: bogoSelection.selectedFreeCourseId,
-            courseName: freeCourse.name,
-            enrollmentNumber,
-            sessionType:
-              freeCourse.type === "supervised" ? args.sessionType : undefined,
-            courseType: freeCourse.type,
-            internshipPlan,
-            sessions: freeCourse.sessions,
-            isGuestUser: false,
-            isBogoFree: true,
-            bogoSourceCourseId: courseId,
-            bogoOfferName: course.bogo?.label ?? course.name,
-          });
-
-          bogoEnrollments = [
+          bogoEnrollments = await createBogoEnrollment(
+            ctx,
+            course,
+            freeCourse,
             {
-              enrollmentId,
-              enrollmentNumber,
-              courseName: freeCourse.name,
-              courseId: bogoSelection.selectedFreeCourseId,
-              courseType: freeCourse.type,
-              internshipPlan,
-              sessions: freeCourse.sessions,
-              sessionType:
-                freeCourse.type === "supervised" ? args.sessionType : undefined,
-              isBogoFree: true,
-              bogoOfferName: course.bogo?.label ?? course.name,
+              userId: args.userId,
+              userName: args.studentName || args.userEmail,
+              userEmail: args.userEmail,
+              userPhone: args.userPhone,
+              sessionType: args.sessionType,
+              isGuestUser: false,
             },
-          ];
+          );
         }
       } else {
         // Use the original BOGO logic for courses with predefined free courses
@@ -1507,50 +1495,22 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       let bogoEnrollments: EnrollmentSummary[] = [];
 
       if (bogoSelection) {
-        // Use the selected free course
+        // Use the selected free course with the new helper function
         const freeCourse = await ctx.db.get(bogoSelection.selectedFreeCourseId);
         if (freeCourse) {
-          const internshipPlan =
-            extractInternshipPlanFromDuration(freeCourse.duration) || undefined;
-          const enrollmentNumber =
-            freeCourse.type === "therapy" || freeCourse.type === "supervised"
-              ? "N/A"
-              : generateEnrollmentNumber(freeCourse.code, freeCourse.startDate);
-
-          const enrollmentId = await ctx.db.insert("enrollments", {
-            userId: args.userData.email,
-            userName: args.userData.name,
-            userEmail: args.userData.email,
-            userPhone: args.userData.phone,
-            courseId: bogoSelection.selectedFreeCourseId,
-            courseName: freeCourse.name,
-            enrollmentNumber,
-            sessionType:
-              freeCourse.type === "supervised" ? args.sessionType : undefined,
-            courseType: freeCourse.type,
-            internshipPlan,
-            sessions: freeCourse.sessions,
-            isGuestUser: true,
-            isBogoFree: true,
-            bogoSourceCourseId: courseId,
-            bogoOfferName: course.bogo?.label ?? course.name,
-          });
-
-          bogoEnrollments = [
+          bogoEnrollments = await createBogoEnrollment(
+            ctx,
+            course,
+            freeCourse,
             {
-              enrollmentId,
-              enrollmentNumber,
-              courseName: freeCourse.name,
-              courseId: bogoSelection.selectedFreeCourseId,
-              courseType: freeCourse.type,
-              internshipPlan,
-              sessions: freeCourse.sessions,
-              sessionType:
-                freeCourse.type === "supervised" ? args.sessionType : undefined,
-              isBogoFree: true,
-              bogoOfferName: course.bogo?.label ?? course.name,
+              userId: args.userData.email,
+              userName: args.userData.name,
+              userEmail: args.userData.email,
+              userPhone: args.userData.phone,
+              sessionType: args.sessionType,
+              isGuestUser: true,
             },
-          ];
+          );
         }
       } else {
         // Use the original BOGO logic for courses with predefined free courses

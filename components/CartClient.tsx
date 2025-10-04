@@ -66,11 +66,19 @@ const CartContent = () => {
         if (item.offer || item.bogo) {
           const offerPrice = item.price || 0;
           const discountPercentage = item.offer?.discount ?? 0;
-          const denominator = 1 - discountPercentage / 100;
-          const originalPrice =
-            discountPercentage > 0 && Math.abs(denominator) > 1e-6
-              ? offerPrice / denominator
-              : offerPrice;
+
+          // Handle 100% discount case - we can't calculate original price from offer price
+          let originalPrice = offerPrice;
+          if (discountPercentage > 0 && discountPercentage < 100) {
+            const denominator = 1 - discountPercentage / 100;
+            if (Math.abs(denominator) > 1e-6) {
+              originalPrice = offerPrice / denominator;
+            }
+          } else if (discountPercentage === 100) {
+            // For 100% discount, we need to get the original price from the course data
+            // This should be handled by the backend or we need to store original price separately
+            originalPrice = offerPrice; // Fallback to offer price if original not available
+          }
 
           const offerDetails = getOfferDetails({
             price: originalPrice,
