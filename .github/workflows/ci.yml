@@ -34,6 +34,7 @@ jobs:
         run: npm run lint
 
       - name: Build project
+        # Use dummy environment variables to prevent key validation during CI
         env:
           NEXT_PUBLIC_CONVEX_URL: "https://dummy.convex.cloud"
           UPSTASH_REDIS_REST_URL: "https://dummy.upstash.io"
@@ -41,6 +42,7 @@ jobs:
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "pk_test_dummy"
           CLERK_SECRET_KEY: "sk_test_dummy"
           CLERK_FRONTEND_API_URL: "https://dummy.clerk.accounts.dev"
+          CLERK_JWT_ISSUER_DOMAIN: "dummy.clerk.accounts.dev"
           NEXT_PUBLIC_RAZORPAY_KEY_ID: "rzp_dummy"
           RAZORPAY_KEY_SECRET: "dummy_secret"
           RESEND_API_KEY: "re_dummy"
@@ -50,6 +52,12 @@ jobs:
           GOOGLE_SHEETS_SHEET_NAME: "Sheet1"
           GOOGLE_APPLICATION_CREDENTIALS_JSON: "{}"
           SENTRY_AUTH_TOKEN: "dummy_token"
+          NODE_ENV: "production"
+          NEXT_PUBLIC_CLERK_SIGN_IN_URL: "/sign-in"
+          NEXT_PUBLIC_CLERK_SIGN_UP_URL: "/sign-up"
+          NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL: "/"
+          NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL: "/"
+          CLERK_SKIP_KEY_VALIDATION: "true"
         run: npm run build
 
       - name: Upload build artifacts
