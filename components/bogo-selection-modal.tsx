@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
@@ -13,12 +13,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { showRupees } from "@/lib/utils";
-import { CourseImageCarousel } from "@/components/CourseTypePage";
 import { Gift, Sparkles } from "lucide-react";
 
 interface BogoSelectionModalProps {
@@ -46,8 +45,11 @@ export function BogoSelectionModal({
   });
 
   // Filter out the source course from available options
-  const selectableCourses =
-    availableCourses?.filter((course) => course._id !== sourceCourseId) || [];
+  const selectableCourses = useMemo(
+    () =>
+      availableCourses?.filter((course) => course._id !== sourceCourseId) || [],
+    [availableCourses, sourceCourseId],
+  );
 
   useEffect(() => {
     if (selectableCourses.length > 0 && !selectedCourseId) {
@@ -89,8 +91,8 @@ export function BogoSelectionModal({
           <DialogHeader>
             <DialogTitle>No Free Course Options Available</DialogTitle>
             <DialogDescription>
-              There are no other courses available with the "{bogoLabel}" BOGO
-              offer.
+              There are no other courses available with the &quot;{bogoLabel}
+              &quot; BOGO offer.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -110,9 +112,10 @@ export function BogoSelectionModal({
             Choose Your Free Course
           </DialogTitle>
           <DialogDescription>
-            You're getting <strong>{sourceCourseName}</strong> with the "
-            {bogoLabel}" BOGO offer. Select which course you'd like to get for
-            free:
+            You&apos;re getting <strong>{sourceCourseName}</strong> with the
+            &quot;
+            {bogoLabel}&quot; BOGO offer. Select which course you&apos;d like to
+            get for free:
           </DialogDescription>
         </DialogHeader>
 
