@@ -29,9 +29,18 @@ export default defineSchema({
     offer: v.optional(
       v.object({
         name: v.string(),
-        discount: v.number(),
-        startDate: v.string(),
-        endDate: v.string(),
+        discount: v.optional(v.number()),
+        startDate: v.optional(v.string()),
+        endDate: v.optional(v.string()),
+      }),
+    ),
+    bogo: v.optional(
+      v.object({
+        enabled: v.boolean(),
+        startDate: v.optional(v.string()),
+        endDate: v.optional(v.string()),
+        freeCourseId: v.optional(v.id("courses")),
+        label: v.optional(v.string()),
       }),
     ),
     // Number of sessions for session-based offerings (e.g., therapy)
@@ -105,5 +114,8 @@ export default defineSchema({
     courseType: v.optional(CourseType),
     internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
     sessions: v.optional(v.number()), // Number of sessions for therapy courses
+    isBogoFree: v.optional(v.boolean()),
+    bogoSourceCourseId: v.optional(v.id("courses")),
+    bogoOfferName: v.optional(v.string()),
   }),
 });

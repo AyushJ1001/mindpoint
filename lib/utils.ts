@@ -43,6 +43,9 @@ export interface OfferDetails {
   originalPrice: number;
   offerName: string;
   discountPercentage: number;
+  hasDiscount: boolean;
+  hasBogo: boolean;
+  bogoLabel?: string;
   timeLeft: {
     days: number;
     hours: number;
@@ -50,37 +53,70 @@ export interface OfferDetails {
   };
 }
 
-export function isValidOffer(
-  offer:
-    | { startDate: string; endDate: string; discount: number }
-    | null
-    | undefined,
-): boolean {
-  if (!offer || !offer.startDate || !offer.endDate || !offer.discount) {
-    return false;
+type CourseOffer = {
+  name: string;
+  discount?: number;
+  startDate?: string;
+  endDate?: string;
+} | null;
+
+type CourseBogo = {
+  enabled?: boolean;
+  startDate?: string;
+  endDate?: string;
+  freeCourseId?: string;
+  label?: string;
+} | null;
+
+function isWithinWindow(startDate?: string, endDate?: string): boolean {
+  const now = new Date();
+
+  if (startDate) {
+    const start = new Date(startDate);
+    if (Number.isNaN(start.getTime()) || now < start) {
+      return false;
+    }
   }
 
-  const now = new Date();
-  const startDate = new Date(offer.startDate);
-  const endDate = new Date(offer.endDate);
+  if (endDate) {
+    const end = new Date(endDate);
+    if (Number.isNaN(end.getTime()) || now > end) {
+      return false;
+    }
+  }
 
-  return now >= startDate && now <= endDate;
+  return true;
+}
+
+export function isDiscountActive(offer?: CourseOffer): boolean {
+  if (!offer) return false;
+  const discount = typeof offer.discount === "number" ? offer.discount : 0;
+  if (discount <= 0) return false;
+  return isWithinWindow(offer.startDate, offer.endDate);
+}
+
+export function isBogoActive(bogo?: CourseBogo): boolean {
+  if (!bogo || !bogo.enabled) return false;
+  return isWithinWindow(bogo.startDate, bogo.endDate);
 }
 
 export function calculateOfferPrice(
   originalPrice: number,
   discountPercentage: number,
 ): number {
-  // discountPercentage is stored as percentage (0-100), convert to fraction for calculation
   const discountAmount = originalPrice * (discountPercentage / 100);
   return Math.round(originalPrice - discountAmount);
 }
 
-export function calculateOfferTimeLeft(endDate: string): {
+export function calculateOfferTimeLeft(endDate?: string | null): {
   days: number;
   hours: number;
   minutes: number;
 } {
+  if (!endDate) {
+    return { days: 0, hours: 0, minutes: 0 };
+  }
+
   const now = new Date();
   const end = new Date(endDate);
   const timeLeft = end.getTime() - now.getTime();
@@ -101,25 +137,57 @@ export function calculateOfferTimeLeft(endDate: string): {
 export function getOfferDetails(course: {
   price?: number;
   offer?: {
-    startDate: string;
-    endDate: string;
-    discount: number;
+    startDate?: string;
+    endDate?: string;
+    discount?: number;
     name: string;
-  };
+  } | null;
+  bogo?: {
+    enabled?: boolean;
+    startDate?: string;
+    endDate?: string;
+    label?: string;
+  } | null;
 }): OfferDetails | null {
-  if (!course.offer || !isValidOffer(course.offer)) {
+  const hasDiscount = isDiscountActive(course.offer);
+  const hasBogo = isBogoActive(course.bogo);
+
+  if (!hasDiscount && !hasBogo) {
     return null;
   }
 
   const originalPrice = course.price || 0;
-  const offerPrice = calculateOfferPrice(originalPrice, course.offer.discount);
-  const timeLeft = calculateOfferTimeLeft(course.offer.endDate);
+  const discountPercentage = hasDiscount ? course.offer?.discount ?? 0 : 0;
+  const offerPrice = hasDiscount
+    ? calculateOfferPrice(originalPrice, discountPercentage)
+    : originalPrice;
+
+  const endCandidates: string[] = [];
+  if (hasDiscount && course.offer?.endDate) {
+    endCandidates.push(course.offer.endDate);
+  }
+  if (hasBogo && course.bogo?.endDate) {
+    endCandidates.push(course.bogo.endDate);
+  }
+
+  const nextEndingPromotion = endCandidates
+    .map((date) => ({ date, time: new Date(date).getTime() }))
+    .filter(({ time }) => !Number.isNaN(time))
+    .sort((a, b) => a.time - b.time)[0]?.date;
+
+  const timeLeft = calculateOfferTimeLeft(nextEndingPromotion ?? null);
+  const offerName = hasDiscount
+    ? course.offer?.name ?? "Limited-time Offer"
+    : course.bogo?.label ?? "BOGO Offer";
 
   return {
     offerPrice: Math.round(offerPrice),
     originalPrice: Math.round(originalPrice),
-    offerName: course.offer.name,
-    discountPercentage: Math.round(course.offer.discount), // discount is already a percentage
+    offerName,
+    discountPercentage: Math.round(discountPercentage),
+    hasDiscount,
+    hasBogo,
+    bogoLabel: course.bogo?.label ?? undefined,
     timeLeft,
   };
 }
@@ -127,13 +195,36 @@ export function getOfferDetails(course: {
 export function getCoursePrice(course: {
   price?: number;
   offer?: {
-    startDate: string;
-    endDate: string;
-    discount: number;
+    startDate?: string;
+    endDate?: string;
+    discount?: number;
     name: string;
-  };
+  } | null;
+  bogo?: {
+    enabled?: boolean;
+    startDate?: string;
+    endDate?: string;
+    label?: string;
+  } | null;
 }): number {
   const offerDetails = getOfferDetails(course);
   const price = offerDetails ? offerDetails.offerPrice : course.price || 0;
   return Math.round(price);
+}
+
+export function hasActiveBogo(course: {
+  bogo?: {
+    enabled?: boolean;
+    startDate?: string;
+    endDate?: string;
+  } | null;
+}): boolean {
+  return isBogoActive(course.bogo);
+}
+
+export function hasActivePromotion(course: {
+  offer?: CourseOffer;
+  bogo?: CourseBogo;
+}): boolean {
+  return isDiscountActive(course.offer) || isBogoActive(course.bogo);
 }

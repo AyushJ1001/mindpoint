@@ -202,7 +202,8 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       imageUrls: selectedCourse.imageUrls || [],
       capacity: selectedCourse.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
-      offer: selectedCourse.offer, // Store offer data in cart item
+      offer: selectedCourse.offer,
+      bogo: selectedCourse.bogo,
     });
   };
 
@@ -219,15 +220,21 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
 
-      {/* Offer Badge */}
-      {offerDetails && (
-        <div className="absolute top-3 right-3 z-20">
-          <Badge
-            variant="destructive"
-            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
-          >
-            🔥 {offerDetails.discountPercentage}% OFF
-          </Badge>
+      {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+        <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
+          {offerDetails?.hasDiscount && (
+            <Badge
+              variant="destructive"
+              className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+            >
+              🔥 {offerDetails.discountPercentage}% OFF
+            </Badge>
+          )}
+          {offerDetails?.hasBogo && (
+            <Badge className="bg-emerald-500/90 text-xs font-semibold uppercase text-white shadow-lg">
+              🛍️ {offerDetails.bogoLabel ?? "BOGO"}
+            </Badge>
+          )}
         </div>
       )}
 
@@ -345,11 +352,17 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
               {showRupees(displayPrice)}
             </Badge>
             {offerDetails && (
-              <div className="text-muted-foreground absolute top-full left-0 mt-1 text-xs">
-                <span className="line-through">
-                  {showRupees(offerDetails.originalPrice)}
-                </span>
-                <span className="ml-2 font-medium text-orange-600">
+              <div className="absolute top-full left-0 mt-1 space-y-1 text-xs">
+                {offerDetails.hasDiscount && (
+                  <div className="text-muted-foreground">
+                    <span className="line-through">
+                      {showRupees(offerDetails.originalPrice)}
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
+                >
                   {offerDetails.timeLeft.days > 0 &&
                     `${offerDetails.timeLeft.days}d `}
                   {offerDetails.timeLeft.hours > 0 &&
@@ -357,7 +370,12 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                   {offerDetails.timeLeft.minutes > 0 &&
                     `${offerDetails.timeLeft.minutes}m`}{" "}
                   left
-                </span>
+                </div>
+                {offerDetails.hasBogo && (
+                  <div className="text-emerald-600 font-semibold">
+                    Includes a free bonus enrollment
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -434,7 +452,8 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
-      offer: course.offer, // Store offer data in cart item
+      offer: course.offer,
+      bogo: course.bogo,
     });
   };
 
@@ -451,15 +470,21 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
-      {/* Offer Badge */}
-      {offerDetails && (
-        <div className="absolute top-3 right-3 z-20">
-          <Badge
-            variant="destructive"
-            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
-          >
-            🔥 {offerDetails.discountPercentage}% OFF
-          </Badge>
+      {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+        <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
+          {offerDetails?.hasDiscount && (
+            <Badge
+              variant="destructive"
+              className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+            >
+              🔥 {offerDetails.discountPercentage}% OFF
+            </Badge>
+          )}
+          {offerDetails?.hasBogo && (
+            <Badge className="bg-emerald-500/90 text-xs font-semibold uppercase text-white shadow-lg">
+              🛍️ {offerDetails.bogoLabel ?? "BOGO"}
+            </Badge>
+          )}
         </div>
       )}
 
@@ -511,11 +536,17 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           </div>
         </div>
         {offerDetails && (
-          <div className="text-muted-foreground mt-1 text-xs">
-            <span className="line-through">
-              {showRupees(offerDetails.originalPrice)}
-            </span>
-            <span className="ml-2 font-medium text-orange-600">
+          <div className="mt-1 space-y-1 text-xs">
+            {offerDetails.hasDiscount && (
+              <div className="text-muted-foreground">
+                <span className="line-through">
+                  {showRupees(offerDetails.originalPrice)}
+                </span>
+              </div>
+            )}
+            <div
+              className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
+            >
               {offerDetails.timeLeft.days > 0 &&
                 `${offerDetails.timeLeft.days}d `}
               {offerDetails.timeLeft.hours > 0 &&
@@ -523,7 +554,12 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
               {offerDetails.timeLeft.minutes > 0 &&
                 `${offerDetails.timeLeft.minutes}m`}{" "}
               left
-            </span>
+            </div>
+            {offerDetails.hasBogo && (
+              <div className="text-emerald-600 font-semibold">
+                Includes a free bonus enrollment
+              </div>
+            )}
           </div>
         )}
       </CardContent>

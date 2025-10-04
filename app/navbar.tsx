@@ -15,7 +15,15 @@ import Image from "next/image";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
 import { useCart } from "react-use-cart";
 import { Badge } from "@/components/ui/badge";
-import { ShoppingCart, Trash2, Plus, Minus, Menu, X } from "lucide-react";
+import {
+  ShoppingCart,
+  Trash2,
+  Plus,
+  Minus,
+  Menu,
+  X,
+  Sparkles,
+} from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,17 +70,20 @@ export default function Navbar() {
     const updateOfferDetails = () => {
       const newOfferDetails: Record<string, OfferDetails> = {};
       items.forEach((item) => {
-        if (item.offer) {
-          // Calculate original price from offer price and discount
+        if (item.offer || item.bogo) {
           const offerPrice = Math.round(item.price || 0);
-          const discountPercentage = item.offer.discount || 0;
+          const discountPercentage = item.offer?.discount ?? 0;
+          const denominator = 1 - discountPercentage / 100;
           const originalPrice = Math.round(
-            offerPrice / (1 - discountPercentage / 100),
+            discountPercentage > 0 && Math.abs(denominator) > 1e-6
+              ? offerPrice / denominator
+              : offerPrice,
           );
 
           const offerDetails = getOfferDetails({
-            price: originalPrice, // Pass original price
-            offer: item.offer,
+            price: originalPrice,
+            offer: item.offer ?? null,
+            bogo: item.bogo ?? null,
           });
           if (offerDetails) {
             newOfferDetails[item.id] = offerDetails;
@@ -87,6 +98,10 @@ export default function Navbar() {
 
     return () => clearInterval(interval);
   }, [items]);
+
+  const hasBogoItems = items.some(
+    (item) => itemOfferDetails[item.id]?.hasBogo,
+  );
 
   const handleClearCart = () => {
     emptyCart();
@@ -407,12 +422,16 @@ export default function Navbar() {
                                       {item.description}
                                     </p>
                                     {offerDetails && (
-                                      <div className="mb-2 flex items-center gap-2">
-                                        <span className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-800">
-                                          🔥 {offerDetails.discountPercentage}%
-                                          OFF
-                                        </span>
-                                        <span className="text-muted-foreground text-xs">
+                                      <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
+                                        {offerDetails.hasDiscount && (
+                                          <span className="rounded bg-orange-100 px-2 py-1 text-[11px] font-semibold text-orange-800">
+                                            🔥 {offerDetails.discountPercentage}%
+                                            OFF
+                                          </span>
+                                        )}
+                                        <span
+                                          className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-muted-foreground"}`}
+                                        >
                                           {offerDetails.timeLeft.days > 0 &&
                                             `${offerDetails.timeLeft.days}d `}
                                           {offerDetails.timeLeft.hours > 0 &&
@@ -421,6 +440,12 @@ export default function Navbar() {
                                             `${offerDetails.timeLeft.minutes}m`}{" "}
                                           left
                                         </span>
+                                      </div>
+                                    )}
+                                    {offerDetails?.hasBogo && (
+                                      <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                                        <Sparkles className="h-3 w-3" />
+                                        {offerDetails.bogoLabel ?? "Bonus enrollment included"}
                                       </div>
                                     )}
                                     <div
@@ -487,7 +512,7 @@ export default function Navbar() {
                                       >
                                         {showRupees(itemTotal)}
                                       </Badge>
-                                      {offerDetails && (
+                                      {offerDetails?.hasDiscount && (
                                         <div className="text-muted-foreground text-xs">
                                           <span className="line-through">
                                             {showRupees(
@@ -515,6 +540,15 @@ export default function Navbar() {
                         })}
                       </div>
                       <div className="sticky bottom-0 left-0 right-0 space-y-4 border-t bg-background/95 backdrop-blur pt-4">
+                        {hasBogoItems && (
+                          <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] font-medium text-emerald-700">
+                            <Sparkles className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
+                            <span>
+                              BOGO applied: bonus enrollments are added during
+                              checkout.
+                            </span>
+                          </div>
+                        )}
                         <div className="flex items-center justify-between font-semibold">
                           <span>Total ({totalItems} items)</span>
                           <span className="text-primary">

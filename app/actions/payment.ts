@@ -17,6 +17,7 @@ export async function handlePaymentSuccess(
     enrollmentNumber: string;
     courseName: string;
     courseId: string;
+    isBogoFree?: boolean;
   }>;
   error?: string;
 }> {
@@ -63,6 +64,7 @@ export async function handleGuestUserPaymentSuccess(
     enrollmentNumber: string;
     courseName: string;
     courseId: string;
+    isBogoFree?: boolean;
   }>;
   error?: string;
 }> {
@@ -106,6 +108,7 @@ export async function handleGuestUserPaymentSuccessWithData(
     enrollmentNumber: string;
     courseName: string;
     courseId: string;
+    isBogoFree?: boolean;
   }>;
   error?: string;
 }> {

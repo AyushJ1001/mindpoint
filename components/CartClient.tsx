@@ -3,11 +3,18 @@
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Trash2, ShoppingCart, CreditCard, Plus, Minus } from "lucide-react";
+import {
+  Trash2,
+  ShoppingCart,
+  CreditCard,
+  Plus,
+  Minus,
+  Sparkles,
+} from "lucide-react";
 import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { useUser } from "@clerk/clerk-react";
 import {
@@ -56,15 +63,19 @@ const CartContent = () => {
     const updateOfferDetails = () => {
       const newOfferDetails: Record<string, OfferDetails> = {};
       items.forEach((item) => {
-        if (item.offer) {
-          // Calculate original price from offer price and discount
+        if (item.offer || item.bogo) {
           const offerPrice = item.price || 0;
-          const discountPercentage = item.offer.discount || 0;
-          const originalPrice = offerPrice / (1 - discountPercentage / 100);
+          const discountPercentage = item.offer?.discount ?? 0;
+          const denominator = 1 - discountPercentage / 100;
+          const originalPrice =
+            discountPercentage > 0 && Math.abs(denominator) > 1e-6
+              ? offerPrice / denominator
+              : offerPrice;
 
           const offerDetails = getOfferDetails({
-            price: originalPrice, // Pass original price
-            offer: item.offer,
+            price: originalPrice,
+            offer: item.offer ?? null,
+            bogo: item.bogo ?? null,
           });
           if (offerDetails) {
             newOfferDetails[item.id] = offerDetails;
@@ -79,6 +90,63 @@ const CartContent = () => {
 
     return () => clearInterval(interval);
   }, [items]);
+
+  const hasBogoItems = items.some(
+    (item) => itemOfferDetails[item.id]?.hasBogo,
+  );
+
+  const activeBogoLabels = useMemo(() => {
+    const labels = new Set<string>();
+    items.forEach((item) => {
+      const details = itemOfferDetails[item.id];
+      if (details?.hasBogo && details.bogoLabel) {
+        labels.add(details.bogoLabel);
+      }
+    });
+    return Array.from(labels);
+  }, [items, itemOfferDetails]);
+
+  const showEnrollmentToast = (
+    enrollments:
+      | Array<{
+          enrollmentNumber: string;
+          isBogoFree?: boolean;
+        }>
+      | undefined,
+  ) => {
+    if (!enrollments || enrollments.length === 0) {
+      toast.success(
+        "Payment successful! Check your email for enrollment confirmation.",
+      );
+      return;
+    }
+
+    const bonusCount = enrollments.filter((e) => e.isBogoFree).length;
+    const paidCount = enrollments.length - bonusCount;
+    const parts: string[] = [];
+    if (paidCount > 0) {
+      parts.push(`${paidCount} course${paidCount === 1 ? "" : "s"}`);
+    }
+    if (bonusCount > 0) {
+      parts.push(`${bonusCount} bonus course${bonusCount === 1 ? "" : "s"}`);
+    }
+
+    const message = parts.length
+      ? `Payment successful! ${parts.join(" + ")} added to your account.`
+      : "Payment successful!";
+
+    const enrollmentNumbers = enrollments
+      .filter((e) => e.enrollmentNumber && e.enrollmentNumber !== "N/A")
+      .map((e) => e.enrollmentNumber);
+
+    const hasValidEnrollments = enrollmentNumbers.length > 0;
+
+    toast.success(message, {
+      description: hasValidEnrollments
+        ? `Enrollment numbers: ${enrollmentNumbers.join(", ")}`
+        : "Check your email for enrollment confirmation.",
+    });
+  };
 
   const handleClearCart = () => {
     emptyCart();
@@ -153,28 +221,7 @@ const CartContent = () => {
               );
 
               if (result.success) {
-                // Show success message to user
-                if (result.enrollments && result.enrollments.length > 0) {
-                  // Filter out enrollment numbers for therapy and supervised courses
-                  const enrollmentNumbers = result.enrollments
-                    .filter((e) => e.enrollmentNumber !== "N/A")
-                    .map((e) => e.enrollmentNumber);
-
-                  const hasValidEnrollments = enrollmentNumbers.length > 0;
-
-                  toast.success(
-                    `Payment successful! You have been enrolled in ${result.enrollments.length} course(s).`,
-                    {
-                      description: hasValidEnrollments
-                        ? `Enrollment numbers: ${enrollmentNumbers.join(", ")}`
-                        : "Check your email for enrollment confirmation.",
-                    },
-                  );
-                } else {
-                  toast.success(
-                    "Payment successful! Check your email for enrollment confirmation.",
-                  );
-                }
+                showEnrollmentToast(result.enrollments);
               } else {
                 toast.error(
                   "Payment successful but enrollment failed. Please contact support.",
@@ -200,27 +247,7 @@ const CartContent = () => {
 
               if (result.success) {
                 console.log("Guest enrollment successful:", result.enrollments);
-                if (result.enrollments && result.enrollments.length > 0) {
-                  // Filter out enrollment numbers for therapy and supervised courses
-                  const enrollmentNumbers = result.enrollments
-                    .filter((e) => e.enrollmentNumber !== "N/A")
-                    .map((e) => e.enrollmentNumber);
-
-                  const hasValidEnrollments = enrollmentNumbers.length > 0;
-
-                  toast.success(
-                    `Payment successful! You have been enrolled in ${result.enrollments.length} course(s).`,
-                    {
-                      description: hasValidEnrollments
-                        ? `Enrollment numbers: ${enrollmentNumbers.join(", ")}`
-                        : "Check your email for enrollment confirmation.",
-                    },
-                  );
-                } else {
-                  toast.success(
-                    "Payment successful! Check your email for enrollment confirmation.",
-                  );
-                }
+                showEnrollmentToast(result.enrollments);
               } else {
                 console.error("Guest enrollment failed:", result.error);
                 toast.error(
@@ -581,11 +608,15 @@ const CartContent = () => {
                         {item.courseType}
                       </p>
                       {offerDetails && (
-                        <div className="mt-1 flex items-center gap-2">
-                          <span className="rounded bg-orange-100 px-2 py-1 text-xs text-orange-800">
-                            🔥 {offerDetails.discountPercentage}% OFF
-                          </span>
-                          <span className="text-muted-foreground text-xs">
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+                          {offerDetails.hasDiscount && (
+                            <span className="rounded bg-orange-100 px-2 py-1 text-[11px] font-semibold text-orange-800">
+                              🔥 {offerDetails.discountPercentage}% OFF
+                            </span>
+                          )}
+                          <span
+                            className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-muted-foreground"}`}
+                          >
                             {offerDetails.timeLeft.days > 0 &&
                               `${offerDetails.timeLeft.days}d `}
                             {offerDetails.timeLeft.hours > 0 &&
@@ -594,6 +625,12 @@ const CartContent = () => {
                               `${offerDetails.timeLeft.minutes}m`}{" "}
                             left
                           </span>
+                        </div>
+                      )}
+                      {offerDetails?.hasBogo && (
+                        <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                          <Sparkles className="h-3 w-3" />
+                          {offerDetails.bogoLabel ?? "Bonus enrollment included"}
                         </div>
                       )}
                       <div className="mt-2 flex items-center gap-2">
@@ -629,7 +666,7 @@ const CartContent = () => {
                       <div className="font-semibold">
                         {showRupees(itemTotal)}
                       </div>
-                      {offerDetails && (
+                      {offerDetails?.hasDiscount && (
                         <div className="text-muted-foreground text-xs">
                           <span className="line-through">
                             {showRupees(
@@ -665,6 +702,19 @@ const CartContent = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {hasBogoItems && (
+                <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+                  <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                  <span>
+                    BOGO applied:
+                    {" "}
+                    {activeBogoLabels.length > 0
+                      ? `${activeBogoLabels.join(", ")}`
+                      : "complimentary course enrollments"}
+                    {" will be added automatically during checkout."}
+                  </span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Subtotal ({items.length} items)</span>
                 <span>{showRupees(Math.round(cartTotal))}</span>

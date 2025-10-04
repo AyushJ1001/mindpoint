@@ -21,7 +21,11 @@ import CourseHero from "@/components/course/course-hero";
 import CountdownTimer from "@/components/course/countdown-timer";
 import CourseOverview from "@/components/course/course-overview";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { getOfferDetails, getCoursePrice, isValidOffer } from "@/lib/utils";
+import {
+  getOfferDetails,
+  getCoursePrice,
+  hasActivePromotion,
+} from "@/lib/utils";
 
 type CourseVariant = Doc<"courses">;
 
@@ -107,7 +111,8 @@ export default function CourseClient({
         imageUrls: course.imageUrls || [],
         capacity: course.capacity || 1,
         quantity: 1,
-        offer: course.offer, // Store offer data in cart item
+        offer: course.offer,
+        bogo: course.bogo,
       });
     } else {
       // If it's already in cart, ensure it has the correct price and quantity
@@ -136,7 +141,8 @@ export default function CourseClient({
         imageUrls: course.imageUrls || [],
         capacity: course.capacity || 1,
         quantity: 1, // Explicitly set initial quantity to 1
-        offer: course.offer, // Store offer data in cart item
+        offer: course.offer,
+        bogo: course.bogo,
       });
     } else if (currentQuantity < maxQuantity) {
       // Increase quantity if below capacity
@@ -238,8 +244,11 @@ export default function CourseClient({
 
   // Check if course has a valid offer using utility function
   const hasValidOffer = useMemo(() => {
-    return isValidOffer(displayCourse.offer);
-  }, [displayCourse.offer]);
+    return hasActivePromotion({
+      offer: displayCourse.offer ?? null,
+      bogo: displayCourse.bogo ?? null,
+    });
+  }, [displayCourse.offer, displayCourse.bogo]);
 
   // Calculate offer details using utility function
   const offerDetails = useMemo(() => {
