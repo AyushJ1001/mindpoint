@@ -256,6 +256,7 @@ export default function ChooseSupervisedPlan({
       quantity: 1,
       offer: selectedVariant.offer,
       bogo: selectedVariant.bogo,
+      courseType: selectedVariant.type,
     });
 
     // Call the original onBook callback

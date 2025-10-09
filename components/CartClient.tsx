@@ -67,17 +67,17 @@ const CartContent = () => {
           const offerPrice = item.price || 0;
           const discountPercentage = item.offer?.discount ?? 0;
 
-          // Handle 100% discount case - we can't calculate original price from offer price
-          let originalPrice = offerPrice;
-          if (discountPercentage > 0 && discountPercentage < 100) {
+          // Use stored originalPrice if available, otherwise calculate it
+          let originalPrice = item.originalPrice || offerPrice;
+          if (
+            !item.originalPrice &&
+            discountPercentage > 0 &&
+            discountPercentage < 100
+          ) {
             const denominator = 1 - discountPercentage / 100;
             if (Math.abs(denominator) > 1e-6) {
               originalPrice = offerPrice / denominator;
             }
-          } else if (discountPercentage === 100) {
-            // For 100% discount, we need to get the original price from the course data
-            // This should be handled by the backend or we need to store original price separately
-            originalPrice = offerPrice; // Fallback to offer price if original not available
           }
 
           const offerDetails = getOfferDetails({
@@ -101,15 +101,15 @@ const CartContent = () => {
 
   const hasBogoItems = items.some((item) => itemOfferDetails[item.id]?.hasBogo);
 
-  const activeBogoLabels = useMemo(() => {
-    const labels = new Set<string>();
+  const activeBogoTypes = useMemo(() => {
+    const types = new Set<string>();
     items.forEach((item) => {
       const details = itemOfferDetails[item.id];
-      if (details?.hasBogo && details.bogoLabel) {
-        labels.add(details.bogoLabel);
+      if (details?.hasBogo && item.courseType) {
+        types.add(item.courseType);
       }
     });
-    return Array.from(labels);
+    return Array.from(types);
   }, [items, itemOfferDetails]);
 
   const showEnrollmentToast = (
@@ -660,8 +660,7 @@ const CartContent = () => {
                       {offerDetails?.hasBogo && (
                         <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-600">
                           <Sparkles className="h-3 w-3" />
-                          {offerDetails.bogoLabel ??
-                            "Bonus enrollment included"}
+                          {"Bonus enrollment included"}
                         </div>
                       )}
                       <div className="mt-2 flex items-center gap-2">
@@ -719,6 +718,54 @@ const CartContent = () => {
                   </div>
                 );
               })}
+              {/* Display selected free course if BOGO is applied */}
+              {items
+                .filter((item) => item.selectedFreeCourse)
+                .map((item) => (
+                  <div
+                    key={`bogo-${item.id}`}
+                    className="mt-2 ml-20 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
+                        <Image
+                          src={
+                            item.selectedFreeCourse.imageUrls?.[0] ||
+                            "/placeholder-image.jpg"
+                          }
+                          alt={item.selectedFreeCourse.name}
+                          className="h-full w-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-emerald-600" />
+                          <h4 className="font-semibold text-emerald-800 dark:text-emerald-200">
+                            {item.selectedFreeCourse.name}
+                          </h4>
+                          <span className="rounded bg-emerald-200 px-2 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200">
+                            FREE
+                          </span>
+                        </div>
+                        {item.selectedFreeCourse.description && (
+                          <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                            {item.selectedFreeCourse.description}
+                          </p>
+                        )}
+                        <div className="mt-1 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
+                          <span>BOGO Free Course</span>
+                          <span>•</span>
+                          <span className="line-through">
+                            {showRupees(item.selectedFreeCourse.price)}
+                          </span>
+                          <span className="font-semibold">{showRupees(0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
             </CardContent>
           </Card>
         </div>
@@ -734,15 +781,36 @@ const CartContent = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {hasBogoItems && (
-                <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
-                  <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                  <span>
-                    BOGO applied:{" "}
-                    {activeBogoLabels.length > 0
-                      ? `${activeBogoLabels.join(", ")}`
-                      : "complimentary course enrollments"}
-                    {" will be added automatically during checkout."}
-                  </span>
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+                    <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <span>
+                      BOGO applied:{" "}
+                      {activeBogoTypes.length > 0
+                        ? `${activeBogoTypes.join(", ")}`
+                        : "complimentary course enrollments"}
+                      {" will be added automatically during checkout."}
+                    </span>
+                  </div>
+                  {/* List specific free courses */}
+                  <div className="space-y-1">
+                    {items
+                      .filter((item) => item.selectedFreeCourse)
+                      .map((item) => (
+                        <div
+                          key={`free-${item.id}`}
+                          className="bg-emerald-25 flex items-center gap-2 rounded-md border border-emerald-100 px-2 py-1 text-xs text-emerald-600 dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400"
+                        >
+                          <Sparkles className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            {item.selectedFreeCourse!.name}
+                          </span>
+                          <span className="ml-auto font-semibold text-emerald-700 dark:text-emerald-300">
+                            FREE
+                          </span>
+                        </div>
+                      ))}
+                  </div>
                 </div>
               )}
               <div className="flex justify-between">

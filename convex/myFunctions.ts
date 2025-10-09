@@ -209,6 +209,52 @@ function isBogoActive(bogo?: CourseDoc["bogo"] | null): boolean {
   return true;
 }
 
+/**
+ * Validates that a BOGO selection is legitimate by checking:
+ * 1. The source course has an active BOGO offer
+ * 2. The selected free course exists and is BOGO-enabled
+ * 3. The selected free course is of the same type as the source course
+ */
+function validateBogoSelection(
+  sourceCourse: CourseDoc,
+  selectedFreeCourse: CourseDoc | null,
+  bogoSelection: { sourceCourseId: string; selectedFreeCourseId: string },
+): { isValid: boolean; error?: string } {
+  // Check if source course has an active BOGO
+  if (!sourceCourse.bogo || !isBogoActive(sourceCourse.bogo)) {
+    return {
+      isValid: false,
+      error: `Source course ${sourceCourse.name} does not have an active BOGO offer`,
+    };
+  }
+
+  // Check if selected free course exists
+  if (!selectedFreeCourse) {
+    return {
+      isValid: false,
+      error: `Selected free course with ID ${bogoSelection.selectedFreeCourseId} not found`,
+    };
+  }
+
+  // Check if selected free course is BOGO-enabled
+  if (!selectedFreeCourse.bogo || !isBogoActive(selectedFreeCourse.bogo)) {
+    return {
+      isValid: false,
+      error: `Selected free course ${selectedFreeCourse.name} is not BOGO-enabled or active`,
+    };
+  }
+
+  // Validate that both courses are of the same type
+  if (sourceCourse.type !== selectedFreeCourse.type) {
+    return {
+      isValid: false,
+      error: `Course type mismatch: source course "${sourceCourse.name}" is of type "${sourceCourse.type}" but selected free course "${selectedFreeCourse.name}" is of type "${selectedFreeCourse.type}". BOGO courses must be of the same type.`,
+    };
+  }
+
+  return { isValid: true };
+}
+
 async function grantBogoEnrollments(
   ctx: MutationCtx,
   sourceCourse: CourseDoc,
@@ -260,6 +306,29 @@ async function createBogoEnrollment(
     isGuestUser?: boolean;
   },
 ): Promise<EnrollmentSummary[]> {
+  // Validate that the source course has an active BOGO
+  if (!sourceCourse.bogo || !isBogoActive(sourceCourse.bogo)) {
+    console.warn(
+      `Attempted to create BOGO enrollment for course ${sourceCourse.name} without active BOGO offer`,
+    );
+    return [];
+  }
+
+  // Validate that the free course is BOGO-enabled and active
+  if (!freeCourse.bogo || !isBogoActive(freeCourse.bogo)) {
+    console.warn(
+      `Attempted to create BOGO enrollment for course ${freeCourse.name} which is not BOGO-enabled or active`,
+    );
+    return [];
+  }
+
+  // Validate that both courses are of the same type
+  if (sourceCourse.type !== freeCourse.type) {
+    console.warn(
+      `BOGO type mismatch: source course "${sourceCourse.name}" is of type "${sourceCourse.type}" but free course "${freeCourse.name}" is of type "${freeCourse.type}". BOGO courses must be of the same type.`,
+    );
+    return [];
+  }
   const internshipPlan =
     extractInternshipPlanFromDuration(freeCourse.duration) || undefined;
 
@@ -284,7 +353,7 @@ async function createBogoEnrollment(
     isGuestUser: userContext.isGuestUser,
     isBogoFree: true,
     bogoSourceCourseId: sourceCourse._id as Id<"courses">,
-    bogoOfferName: sourceCourse.bogo?.label ?? sourceCourse.name,
+    bogoOfferName: sourceCourse.name,
   });
 
   await addEnrollmentToGoogleSheets(ctx, {
@@ -303,7 +372,7 @@ async function createBogoEnrollment(
     isGuestUser: userContext.isGuestUser,
     isBogoFree: true,
     bogoSourceCourseId: sourceCourse._id as unknown as string,
-    bogoOfferName: sourceCourse.bogo?.label ?? sourceCourse.name,
+    bogoOfferName: sourceCourse.name,
   });
 
   const existingUsers = freeCourse.enrolledUsers ?? [];
@@ -340,7 +409,7 @@ async function createBogoEnrollment(
       sessionType:
         freeCourse.type === "supervised" ? userContext.sessionType : undefined,
       isBogoFree: true,
-      bogoOfferName: sourceCourse.bogo?.label ?? sourceCourse.name,
+      bogoOfferName: sourceCourse.name,
     },
   ];
 }
@@ -797,13 +866,33 @@ export const handleCartCheckout = mutation({
       let bogoEnrollments: EnrollmentSummary[] = [];
 
       if (bogoSelection) {
-        // Use the selected free course with the new helper function
+        // Validate BOGO selection before proceeding
         const freeCourse = await ctx.db.get(bogoSelection.selectedFreeCourseId);
-        if (freeCourse) {
+        const validation = validateBogoSelection(
+          course,
+          freeCourse,
+          bogoSelection,
+        );
+
+        if (!validation.isValid) {
+          console.warn(
+            `Invalid BOGO selection for course ${course.name}: ${validation.error}. Falling back to predefined free course.`,
+          );
+          // Fall back to the original BOGO logic for courses with predefined free courses
+          bogoEnrollments = await grantBogoEnrollments(ctx, course, {
+            userId: args.userId,
+            userName: args.studentName || args.userEmail,
+            userEmail: args.userEmail,
+            userPhone: args.userPhone,
+            sessionType: args.sessionType,
+            isGuestUser: false,
+          });
+        } else {
+          // Use the selected free course with the new helper function
           bogoEnrollments = await createBogoEnrollment(
             ctx,
             course,
-            freeCourse,
+            freeCourse!,
             {
               userId: args.userId,
               userName: args.studentName || args.userEmail,
@@ -1495,13 +1584,33 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       let bogoEnrollments: EnrollmentSummary[] = [];
 
       if (bogoSelection) {
-        // Use the selected free course with the new helper function
+        // Validate BOGO selection before proceeding
         const freeCourse = await ctx.db.get(bogoSelection.selectedFreeCourseId);
-        if (freeCourse) {
+        const validation = validateBogoSelection(
+          course,
+          freeCourse,
+          bogoSelection,
+        );
+
+        if (!validation.isValid) {
+          console.warn(
+            `Invalid BOGO selection for course ${course.name}: ${validation.error}. Falling back to predefined free course.`,
+          );
+          // Fall back to the original BOGO logic for courses with predefined free courses
+          bogoEnrollments = await grantBogoEnrollments(ctx, course, {
+            userId: args.userData.email,
+            userName: args.userData.name,
+            userEmail: args.userData.email,
+            userPhone: args.userData.phone,
+            sessionType: args.sessionType,
+            isGuestUser: true,
+          });
+        } else {
+          // Use the selected free course with the new helper function
           bogoEnrollments = await createBogoEnrollment(
             ctx,
             course,
-            freeCourse,
+            freeCourse!,
             {
               userId: args.userData.email,
               userName: args.userData.name,

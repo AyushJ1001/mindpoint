@@ -199,11 +199,13 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       name: label ? `${selectedCourse.name} (${label})` : selectedCourse.name,
       description: selectedCourse.description,
       price: getCoursePrice(selectedCourse),
+      originalPrice: selectedCourse.price, // Store original price for discount calculations
       imageUrls: selectedCourse.imageUrls || [],
       capacity: selectedCourse.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
       offer: selectedCourse.offer,
       bogo: selectedCourse.bogo,
+      courseType: selectedCourse.type,
     });
   };
 
@@ -231,8 +233,8 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
             </Badge>
           )}
           {offerDetails?.hasBogo && (
-            <Badge className="bg-emerald-500/90 text-xs font-semibold uppercase text-white shadow-lg">
-              🛍️ {offerDetails.bogoLabel ?? "BOGO"}
+            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
+              🛍️ BOGO
             </Badge>
           )}
         </div>
@@ -372,7 +374,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                   left
                 </div>
                 {offerDetails.hasBogo && (
-                  <div className="text-emerald-600 font-semibold">
+                  <div className="font-semibold text-emerald-600">
                     Includes a free bonus enrollment
                   </div>
                 )}
@@ -454,6 +456,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       quantity: 1, // Explicitly set initial quantity to 1
       offer: course.offer,
       bogo: course.bogo,
+      courseType: course.type,
     });
   };
 
@@ -481,8 +484,8 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
             </Badge>
           )}
           {offerDetails?.hasBogo && (
-            <Badge className="bg-emerald-500/90 text-xs font-semibold uppercase text-white shadow-lg">
-              🛍️ {offerDetails.bogoLabel ?? "BOGO"}
+            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
+              🛍️ BOGO
             </Badge>
           )}
         </div>
@@ -556,7 +559,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
               left
             </div>
             {offerDetails.hasBogo && (
-              <div className="text-emerald-600 font-semibold">
+              <div className="font-semibold text-emerald-600">
                 Includes a free bonus enrollment
               </div>
             )}

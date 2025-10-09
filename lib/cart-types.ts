@@ -6,6 +6,7 @@ export interface ExtendedCartItem {
   name: string;
   description?: string;
   price: number;
+  originalPrice?: number; // Store original price for discount calculations
   imageUrls?: string[];
   capacity?: number;
   quantity: number;
@@ -20,8 +21,8 @@ export interface ExtendedCartItem {
     startDate?: string;
     endDate?: string;
     freeCourseId?: Id<"courses">;
-    label?: string;
   };
+  courseType?: string;
   // New field for selected free course
   selectedFreeCourse?: {
     id: Id<"courses">;

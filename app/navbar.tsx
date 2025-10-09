@@ -74,17 +74,17 @@ export default function Navbar() {
           const offerPrice = Math.round(item.price || 0);
           const discountPercentage = item.offer?.discount ?? 0;
 
-          // Handle 100% discount case - we can't calculate original price from offer price
-          let originalPrice = offerPrice;
-          if (discountPercentage > 0 && discountPercentage < 100) {
+          // Use stored originalPrice if available, otherwise calculate it
+          let originalPrice = item.originalPrice || offerPrice;
+          if (
+            !item.originalPrice &&
+            discountPercentage > 0 &&
+            discountPercentage < 100
+          ) {
             const denominator = 1 - discountPercentage / 100;
             if (Math.abs(denominator) > 1e-6) {
               originalPrice = offerPrice / denominator;
             }
-          } else if (discountPercentage === 100) {
-            // For 100% discount, we need to get the original price from the course data
-            // This should be handled by the backend or we need to store original price separately
-            originalPrice = offerPrice; // Fallback to offer price if original not available
           }
 
           originalPrice = Math.round(originalPrice);
@@ -452,8 +452,7 @@ export default function Navbar() {
                                     {offerDetails?.hasBogo && (
                                       <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-emerald-600">
                                         <Sparkles className="h-3 w-3" />
-                                        {offerDetails.bogoLabel ??
-                                          "Bonus enrollment included"}
+                                        {"Bonus enrollment included"}
                                       </div>
                                     )}
                                     <div

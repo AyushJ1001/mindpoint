@@ -202,8 +202,8 @@ export default function CourseHero({
                 <Badge variant="secondary">📋 Waitlist Available</Badge>
               )}
               {offerDetails?.hasBogo && (
-                <Badge className="bg-emerald-500/90 text-xs font-semibold uppercase text-white">
-                  🛍️ {offerDetails.bogoLabel ?? "BOGO Bonus"}
+                <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase">
+                  🛍️ BOGO Bonus
                 </Badge>
               )}
               <Badge
@@ -312,7 +312,7 @@ export default function CourseHero({
                     {offerDetails?.hasBogo && (
                       <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
                         <Sparkles className="h-3 w-3" />
-                        {offerDetails.bogoLabel ?? "BOGO: Buy one, get one free"}
+                        {"BOGO: Buy one, get one free"}
                       </div>
                     )}
                   </div>

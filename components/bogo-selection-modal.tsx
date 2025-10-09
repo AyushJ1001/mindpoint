@@ -24,7 +24,7 @@ interface BogoSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (courseId: Id<"courses">) => void;
-  bogoLabel: string;
+  courseType: string;
   sourceCourseId: Id<"courses">;
   sourceCourseName: string;
 }
@@ -33,15 +33,15 @@ export function BogoSelectionModal({
   isOpen,
   onClose,
   onSelect,
-  bogoLabel,
+  courseType,
   sourceCourseId,
   sourceCourseName,
 }: BogoSelectionModalProps) {
   const [selectedCourseId, setSelectedCourseId] =
     useState<Id<"courses"> | null>(null);
 
-  const availableCourses = useQuery(api.courses.getCoursesWithBogoLabel, {
-    bogoLabel,
+  const availableCourses = useQuery(api.courses.getBogoCoursesByType, {
+    courseType: courseType as any,
   });
 
   // Filter out the source course from available options
@@ -91,8 +91,8 @@ export function BogoSelectionModal({
           <DialogHeader>
             <DialogTitle>No Free Course Options Available</DialogTitle>
             <DialogDescription>
-              There are no other courses available with the &quot;{bogoLabel}
-              &quot; BOGO offer.
+              There are no other {courseType} courses available with BOGO
+              offers.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -112,10 +112,9 @@ export function BogoSelectionModal({
             Choose Your Free Course
           </DialogTitle>
           <DialogDescription>
-            You&apos;re getting <strong>{sourceCourseName}</strong> with the
-            &quot;
-            {bogoLabel}&quot; BOGO offer. Select which course you&apos;d like to
-            get for free:
+            You&apos;re getting a free {courseType} course with your purchase of{" "}
+            <strong>{sourceCourseName}</strong>! Select which {courseType}{" "}
+            course you&apos;d like to get for free:
           </DialogDescription>
         </DialogHeader>
 

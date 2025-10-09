@@ -124,21 +124,30 @@ export const createReview = mutation({
   },
 });
 
-// Fetch courses with the same BOGO label for BOGO selection
-export const getCoursesWithBogoLabel = query({
-  args: { bogoLabel: v.string() },
+// Fetch courses with BOGO enabled for a specific course type
+export const getBogoCoursesByType = query({
+  args: { courseType: CourseType },
   handler: async (ctx, args) => {
     const courses = await ctx.db
       .query("courses")
       .filter((q) =>
         q.and(
+          q.eq(q.field("type"), args.courseType),
           q.eq(q.field("bogo.enabled"), true),
-          q.eq(q.field("bogo.label"), args.bogoLabel),
         ),
       )
       .order("desc")
       .collect();
 
     return courses;
+  },
+});
+
+// Legacy query for backward compatibility - returns empty array since labels are no longer used
+export const getCoursesWithBogoLabel = query({
+  args: { bogoLabel: v.string() },
+  handler: async () => {
+    // Return empty array since we no longer use BOGO labels
+    return [];
   },
 });

@@ -3,6 +3,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "react-use-cart";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -20,6 +23,7 @@ import CourseTypeRenderer from "@/components/course/CourseTypeRenderer";
 import CourseHero from "@/components/course/course-hero";
 import CountdownTimer from "@/components/course/countdown-timer";
 import CourseOverview from "@/components/course/course-overview";
+import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import type { Doc } from "@/convex/_generated/dataModel";
 import {
   getOfferDetails,
@@ -71,6 +75,58 @@ export default function CourseClient({
   // State for buy now dialog
   const [showBuyNowDialog, setShowBuyNowDialog] = useState(false);
 
+  // State for BOGO modal
+  const [showBogoModal, setShowBogoModal] = useState(false);
+
+  // Get available courses for BOGO selection
+  const availableCourses = useQuery(
+    api.courses.getBogoCoursesByType,
+    course.bogo?.enabled && course.type ? { courseType: course.type } : "skip",
+  );
+
+  // Handle BOGO selection
+  const handleBogoSelection = (selectedCourseId: Id<"courses">) => {
+    // Find the selected course from available courses
+    const selectedFreeCourse = availableCourses?.find(
+      (course) => course._id === selectedCourseId,
+    );
+
+    // Validate that the selected course exists
+    if (!selectedFreeCourse) {
+      console.error(
+        "Selected course not found in available courses:",
+        selectedCourseId,
+      );
+      return; // Don't add to cart if course doesn't exist
+    }
+
+    addItem({
+      id: course._id,
+      name: course.name,
+      description: course.description,
+      price: getCoursePrice(course),
+      originalPrice: course.price,
+      imageUrls: course.imageUrls || [],
+      capacity: course.capacity || 1,
+      quantity: 1,
+      offer: course.offer,
+      bogo: course.bogo,
+      courseType: course.type,
+      selectedFreeCourse: {
+        id: selectedFreeCourse._id,
+        name: selectedFreeCourse.name,
+        description:
+          selectedFreeCourse.description ||
+          "Free course selected via BOGO offer",
+        price: 0,
+        imageUrls: selectedFreeCourse.imageUrls || [],
+      },
+    });
+
+    // Close the modal after successful selection
+    setShowBogoModal(false);
+  };
+
   // Helper function to get current quantity of a course in cart
   const getCurrentQuantity = (courseId: string) => {
     const cartItem = items.find((item) => item.id === courseId);
@@ -108,6 +164,7 @@ export default function CourseClient({
         name: course.name,
         description: course.description,
         price: priceToUse,
+        originalPrice: course.price, // Store original price for discount calculations
         imageUrls: course.imageUrls || [],
         capacity: course.capacity || 1,
         quantity: 1,
@@ -131,6 +188,17 @@ export default function CourseClient({
     // Use utility function to get the correct price
     const priceToUse = getCoursePrice(course);
 
+    // Check if BOGO is active and there are other courses of the same type
+    if (offerDetails?.hasBogo && course.bogo?.enabled) {
+      // Check if there are other courses of the same type with BOGO enabled
+      if (availableCourses && availableCourses.length > 1) {
+        // There are other courses available, show BOGO modal
+        setShowBogoModal(true);
+        return;
+      }
+      // No other courses of same type with BOGO, proceed normally without BOGO
+    }
+
     if (currentQuantity === 0) {
       // Add to cart if not already there
       addItem({
@@ -138,11 +206,13 @@ export default function CourseClient({
         name: course.name,
         description: course.description,
         price: priceToUse,
+        originalPrice: course.price, // Store original price for discount calculations
         imageUrls: course.imageUrls || [],
         capacity: course.capacity || 1,
         quantity: 1, // Explicitly set initial quantity to 1
         offer: course.offer,
         bogo: course.bogo,
+        courseType: course.type,
       });
     } else if (currentQuantity < maxQuantity) {
       // Increase quantity if below capacity
@@ -440,6 +510,18 @@ export default function CourseClient({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+
+        {/* BOGO Selection Modal */}
+        {course.bogo?.enabled && course.type && (
+          <BogoSelectionModal
+            isOpen={showBogoModal}
+            onClose={() => setShowBogoModal(false)}
+            onSelect={handleBogoSelection}
+            courseType={course.type}
+            sourceCourseId={course._id}
+            sourceCourseName={course.name}
+          />
+        )}
 
         {/* Sticky CTA */}
         <StickyCTA

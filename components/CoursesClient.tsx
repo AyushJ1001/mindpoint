@@ -149,9 +149,12 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       : (sorted.find((c) => c._id === selectedId) ?? sorted[0]);
 
   // Get available courses for BOGO selection
-  const availableCourses = useQuery(api.courses.getCoursesWithBogoLabel, {
-    bogoLabel: selectedCourse.bogo?.label || "",
-  });
+  const availableCourses = useQuery(
+    api.courses.getBogoCoursesByType,
+    selectedCourse.bogo?.enabled && selectedCourse.type
+      ? { courseType: selectedCourse.type }
+      : "skip",
+  );
 
   const handleAddToCart = () => {
     // Check if course is out of stock
@@ -167,10 +170,15 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       return; // Don't add to cart if out of stock
     }
 
-    // Check if BOGO is active and has a label (indicating course selection is needed)
-    if (offerDetails?.hasBogo && selectedCourse.bogo?.label) {
-      setShowBogoModal(true);
-      return;
+    // Check if BOGO is active and there are other courses of the same type
+    if (offerDetails?.hasBogo && selectedCourse.bogo?.enabled) {
+      // Check if there are other courses of the same type with BOGO enabled
+      if (availableCourses && availableCourses.length > 1) {
+        // There are other courses available, show BOGO modal
+        setShowBogoModal(true);
+        return;
+      }
+      // No other courses of same type with BOGO, proceed normally without BOGO
     }
 
     const label = extractVariantLabel(selectedCourse);
@@ -179,11 +187,13 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       name: label ? `${selectedCourse.name} (${label})` : selectedCourse.name,
       description: selectedCourse.description,
       price: getCoursePrice(selectedCourse),
+      originalPrice: selectedCourse.price, // Store original price for discount calculations
       imageUrls: selectedCourse.imageUrls || [],
       capacity: selectedCourse.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
       offer: selectedCourse.offer,
       bogo: selectedCourse.bogo,
+      courseType: selectedCourse.type,
     });
   };
 
@@ -192,6 +202,15 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     const selectedFreeCourse = availableCourses?.find(
       (course) => course._id === selectedCourseId,
     );
+
+    // Validate that the selected course exists
+    if (!selectedFreeCourse) {
+      console.error(
+        "Selected course not found in available courses:",
+        selectedCourseId,
+      );
+      return; // Don't add to cart if course doesn't exist
+    }
 
     const label = extractVariantLabel(selectedCourse);
     addItem({
@@ -204,24 +223,19 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       quantity: 1,
       offer: selectedCourse.offer,
       bogo: selectedCourse.bogo,
-      selectedFreeCourse: selectedFreeCourse
-        ? {
-            id: selectedFreeCourse._id,
-            name: selectedFreeCourse.name,
-            description:
-              selectedFreeCourse.description ||
-              "Free course selected via BOGO offer",
-            price: 0,
-            imageUrls: selectedFreeCourse.imageUrls || [],
-          }
-        : {
-            id: selectedCourseId,
-            name: "Selected Free Course",
-            description: "Free course selected via BOGO offer",
-            price: 0,
-            imageUrls: [],
-          },
+      selectedFreeCourse: {
+        id: selectedFreeCourse._id,
+        name: selectedFreeCourse.name,
+        description:
+          selectedFreeCourse.description ||
+          "Free course selected via BOGO offer",
+        price: 0,
+        imageUrls: selectedFreeCourse.imageUrls || [],
+      },
     });
+
+    // Close the modal after successful selection
+    setShowBogoModal(false);
   };
 
   const handleCardClick = () => {
@@ -250,7 +264,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
           )}
           {offerDetails?.hasBogo && (
             <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
-              🛍️ {offerDetails.bogoLabel ?? "BOGO"}
+              🛍️ BOGO
             </Badge>
           )}
         </div>
@@ -428,16 +442,18 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       </CardContent>
 
       {/* BOGO Selection Modal */}
-      {offerDetails?.hasBogo && selectedCourse.bogo?.label && (
-        <BogoSelectionModal
-          isOpen={showBogoModal}
-          onClose={() => setShowBogoModal(false)}
-          onSelect={handleBogoSelection}
-          bogoLabel={selectedCourse.bogo.label}
-          sourceCourseId={selectedCourse._id}
-          sourceCourseName={selectedCourse.name}
-        />
-      )}
+      {offerDetails?.hasBogo &&
+        selectedCourse.bogo?.enabled &&
+        selectedCourse.type && (
+          <BogoSelectionModal
+            isOpen={showBogoModal}
+            onClose={() => setShowBogoModal(false)}
+            onSelect={handleBogoSelection}
+            courseType={selectedCourse.type}
+            sourceCourseId={selectedCourse._id}
+            sourceCourseName={selectedCourse.name}
+          />
+        )}
     </Card>
   );
 };
@@ -448,9 +464,10 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const [showBogoModal, setShowBogoModal] = useState(false);
 
   // Get available courses for BOGO selection
-  const availableCourses = useQuery(api.courses.getCoursesWithBogoLabel, {
-    bogoLabel: course.bogo?.label || "",
-  });
+  const availableCourses = useQuery(
+    api.courses.getBogoCoursesByType,
+    course.bogo?.enabled && course.type ? { courseType: course.type } : "skip",
+  );
 
   const handleAddToCart = () => {
     // Check if course is out of stock
@@ -464,10 +481,15 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       return; // Don't add to cart if out of stock
     }
 
-    // Check if BOGO is active and has a label (indicating course selection is needed)
-    if (offerDetails?.hasBogo && course.bogo?.label) {
-      setShowBogoModal(true);
-      return;
+    // Check if BOGO is active and there are other courses of the same type
+    if (offerDetails?.hasBogo && course.bogo?.enabled) {
+      // Check if there are other courses of the same type with BOGO enabled
+      if (availableCourses && availableCourses.length > 1) {
+        // There are other courses available, show BOGO modal
+        setShowBogoModal(true);
+        return;
+      }
+      // No other courses of same type with BOGO, proceed normally without BOGO
     }
 
     addItem({
@@ -480,6 +502,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       quantity: 1, // Explicitly set initial quantity to 1
       offer: course.offer,
       bogo: course.bogo,
+      courseType: course.type,
     });
   };
 
@@ -488,6 +511,15 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     const selectedFreeCourse = availableCourses?.find(
       (course) => course._id === selectedCourseId,
     );
+
+    // Validate that the selected course exists
+    if (!selectedFreeCourse) {
+      console.error(
+        "Selected course not found in available courses:",
+        selectedCourseId,
+      );
+      return; // Don't add to cart if course doesn't exist
+    }
 
     addItem({
       id: course._id,
@@ -499,24 +531,19 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       quantity: 1,
       offer: course.offer,
       bogo: course.bogo,
-      selectedFreeCourse: selectedFreeCourse
-        ? {
-            id: selectedFreeCourse._id,
-            name: selectedFreeCourse.name,
-            description:
-              selectedFreeCourse.description ||
-              "Free course selected via BOGO offer",
-            price: 0,
-            imageUrls: selectedFreeCourse.imageUrls || [],
-          }
-        : {
-            id: selectedCourseId,
-            name: "Selected Free Course",
-            description: "Free course selected via BOGO offer",
-            price: 0,
-            imageUrls: [],
-          },
+      selectedFreeCourse: {
+        id: selectedFreeCourse._id,
+        name: selectedFreeCourse.name,
+        description:
+          selectedFreeCourse.description ||
+          "Free course selected via BOGO offer",
+        price: 0,
+        imageUrls: selectedFreeCourse.imageUrls || [],
+      },
     });
+
+    // Close the modal after successful selection
+    setShowBogoModal(false);
   };
 
   const handleCardClick = () => {
@@ -545,7 +572,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           )}
           {offerDetails?.hasBogo && (
             <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
-              🛍️ {offerDetails.bogoLabel ?? "BOGO"}
+              🛍️ BOGO
             </Badge>
           )}
         </div>
@@ -628,12 +655,12 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       </CardContent>
 
       {/* BOGO Selection Modal */}
-      {offerDetails?.hasBogo && course.bogo?.label && (
+      {offerDetails?.hasBogo && course.bogo?.enabled && course.type && (
         <BogoSelectionModal
           isOpen={showBogoModal}
           onClose={() => setShowBogoModal(false)}
           onSelect={handleBogoSelection}
-          bogoLabel={course.bogo.label}
+          courseType={course.type}
           sourceCourseId={course._id}
           sourceCourseName={course.name}
         />

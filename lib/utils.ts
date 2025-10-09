@@ -175,15 +175,20 @@ export function getOfferDetails(course: {
     endCandidates.push(course.bogo.endDate);
   }
 
-  const nextEndingPromotion = endCandidates
+  const latestEndingPromotion = endCandidates
     .map((date) => ({ date, time: new Date(date).getTime() }))
     .filter(({ time }) => !Number.isNaN(time))
-    .sort((a, b) => a.time - b.time)[0]?.date;
+    .sort((a, b) => b.time - a.time)[0]?.date;
 
-  const timeLeft = calculateOfferTimeLeft(nextEndingPromotion ?? null);
-  const offerName = hasDiscount
-    ? (course.offer?.name ?? "Limited-time Offer")
-    : (course.bogo?.label ?? "BOGO Offer");
+  const timeLeft = calculateOfferTimeLeft(latestEndingPromotion ?? null);
+
+  // When both offers are active, show a combined offer name
+  const offerName =
+    hasDiscount && hasBogo
+      ? `${course.offer?.name ?? "Limited-time Offer"} + BOGO`
+      : hasDiscount
+        ? (course.offer?.name ?? "Limited-time Offer")
+        : "BOGO Offer";
 
   return {
     offerPrice: Math.round(offerPrice),
@@ -192,7 +197,7 @@ export function getOfferDetails(course: {
     discountPercentage: Math.round(discountPercentage),
     hasDiscount,
     hasBogo,
-    bogoLabel: course.bogo?.label ?? undefined,
+    bogoLabel: undefined, // No longer using labels
     timeLeft,
   };
 }
