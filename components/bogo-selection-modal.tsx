@@ -24,7 +24,15 @@ interface BogoSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (courseId: Id<"courses">) => void;
-  courseType: string;
+  courseType:
+    | "certificate"
+    | "internship"
+    | "diploma"
+    | "pre-recorded"
+    | "masterclass"
+    | "therapy"
+    | "supervised"
+    | "resume-studio";
   sourceCourseId: Id<"courses">;
   sourceCourseName: string;
 }
@@ -41,8 +49,28 @@ export function BogoSelectionModal({
     useState<Id<"courses"> | null>(null);
 
   const availableCourses = useQuery(api.courses.getBogoCoursesByType, {
-    courseType: courseType as any,
-  });
+    courseType: courseType as
+      | "certificate"
+      | "internship"
+      | "diploma"
+      | "pre-recorded"
+      | "masterclass"
+      | "therapy"
+      | "supervised"
+      | "resume-studio",
+  } as
+    | {
+        courseType:
+          | "certificate"
+          | "internship"
+          | "diploma"
+          | "pre-recorded"
+          | "masterclass"
+          | "therapy"
+          | "supervised"
+          | "resume-studio";
+      }
+    | "skip");
 
   // Filter out the source course from available options
   const selectableCourses = useMemo(
