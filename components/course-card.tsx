@@ -97,7 +97,9 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
     // Only check BOGO if availableCourses has loaded and there are selectable courses
     if (offerDetails?.hasBogo && availableCourses) {
       // Filter out the source course to get only selectable courses
-      const selectableCourses = availableCourses.filter((c) => c._id !== course._id);
+      const selectableCourses = availableCourses.filter(
+        (c) => c._id !== course._id,
+      );
       if (selectableCourses.length > 0) {
         // There are other courses available, show BOGO modal
         setShowBogoModal(true);
@@ -238,7 +240,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
           )}
           {offerDetails?.hasBogo && (
             <div className="text-xs font-semibold text-emerald-600">
-              Includes a free bonus enrollment
+              Includes a free bonus course
             </div>
           )}
         </div>
@@ -332,7 +334,9 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
     // Only check BOGO if availableCourses has loaded and there are selectable courses
     if (offerDetails?.hasBogo && availableCourses) {
       // Filter out the source course to get only selectable courses
-      const selectableCourses = availableCourses.filter((c) => c._id !== course._id);
+      const selectableCourses = availableCourses.filter(
+        (c) => c._id !== course._id,
+      );
       if (selectableCourses.length > 0) {
         // There are other courses available, show BOGO modal
         setShowBogoModal(true);
@@ -501,7 +505,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
             )}
             {offerDetails?.hasBogo && (
               <div className="text-xs font-semibold text-emerald-600">
-                Includes a free bonus enrollment
+                Includes a free bonus course
               </div>
             )}
           </div>

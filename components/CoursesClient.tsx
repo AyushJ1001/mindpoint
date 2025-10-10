@@ -420,7 +420,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
             )}
             {offerDetails?.hasBogo && (
               <div className="text-xs font-semibold text-emerald-600">
-                Includes a free bonus enrollment
+                Includes a free bonus course
               </div>
             )}
           </div>
@@ -650,7 +650,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
             )}
             {offerDetails?.hasBogo && (
               <div className="text-xs font-semibold text-emerald-600">
-                Includes a free bonus enrollment
+                Includes a free bonus course
               </div>
             )}
           </div>
