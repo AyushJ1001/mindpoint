@@ -212,7 +212,7 @@ function isBogoActive(bogo?: CourseDoc["bogo"] | null): boolean {
 /**
  * Validates that a BOGO selection is legitimate by checking:
  * 1. The source course has an active BOGO offer
- * 2. The selected free course exists and is BOGO-enabled
+ * 2. The selected free course exists
  * 3. The selected free course is of the same type as the source course
  */
 function validateBogoSelection(
@@ -236,13 +236,7 @@ function validateBogoSelection(
     };
   }
 
-  // Check if selected free course is BOGO-enabled
-  if (!selectedFreeCourse.bogo || !isBogoActive(selectedFreeCourse.bogo)) {
-    return {
-      isValid: false,
-      error: `Selected free course ${selectedFreeCourse.name} is not BOGO-enabled or active`,
-    };
-  }
+  // Note: Free course doesn't need to have its own BOGO offer - it's being given away for free
 
   // Validate that both courses are of the same type
   if (sourceCourse.type !== selectedFreeCourse.type) {
@@ -274,9 +268,6 @@ async function grantBogoEnrollments(
   if (!isBogoActive(sourceCourse.bogo)) {
     return [];
   }
-
-  // Check if a free course is explicitly configured
-  const freeCourseId = sourceCourse.bogo?.freeCourseId;
 
   // If there's a BOGO selection provided, use that instead of the predefined free course
   if (bogoSelection) {
@@ -315,11 +306,12 @@ async function grantBogoEnrollments(
   }
 
   // Fall back to predefined free course if no selection is provided
+  const freeCourseId = sourceCourse.bogo?.freeCourseId;
   if (!freeCourseId) {
     console.warn(
-      "BOGO offer is active but no free course is configured for source course",
+      "BOGO offer is active but no free course is configured and no BOGO selection provided for source course",
       sourceCourse._id,
-      "- skipping BOGO enrollment to prevent duplicate enrollments",
+      "- skipping BOGO enrollment",
     );
     return [];
   }
@@ -360,13 +352,7 @@ async function createBogoEnrollment(
     return [];
   }
 
-  // Validate that the free course is BOGO-enabled and active
-  if (!freeCourse.bogo || !isBogoActive(freeCourse.bogo)) {
-    console.warn(
-      `Attempted to create BOGO enrollment for course ${freeCourse.name} which is not BOGO-enabled or active`,
-    );
-    return [];
-  }
+  // Note: Free course doesn't need to have its own BOGO offer - it's being given away for free
 
   // Validate that both courses are of the same type
   if (sourceCourse.type !== freeCourse.type) {

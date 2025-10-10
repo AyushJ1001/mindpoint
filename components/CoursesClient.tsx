@@ -162,6 +162,9 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     setMounted(true);
   }, []);
 
+  const displayPrice = getCoursePrice(selectedCourse);
+  const offerDetails = getOfferDetails(selectedCourse);
+
   const handleAddToCart = () => {
     // Check if course is out of stock
     const seatsLeft = Math.max(
@@ -253,9 +256,6 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   const handleCardClick = () => {
     router.push(`/courses/${selectedCourse._id}`);
   };
-
-  const displayPrice = getCoursePrice(selectedCourse);
-  const offerDetails = getOfferDetails(selectedCourse);
 
   return (
     <Card
@@ -490,6 +490,9 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     setMounted(true);
   }, []);
 
+  const displayPrice = getCoursePrice(course);
+  const offerDetails = getOfferDetails(course);
+
   const handleAddToCart = () => {
     // Check if course is out of stock
     const seatsLeft = Math.max(
@@ -577,9 +580,6 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const handleCardClick = () => {
     router.push(`/courses/${course._id}`);
   };
-
-  const displayPrice = getCoursePrice(course);
-  const offerDetails = getOfferDetails(course);
 
   return (
     <Card
