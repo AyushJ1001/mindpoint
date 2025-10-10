@@ -766,9 +766,7 @@ const CartContent = () => {
                           <span>•</span>
                           <span className="line-through">
                             {showRupees(
-                              item.selectedFreeCourse?.originalPrice ||
-                                item.selectedFreeCourse?.price ||
-                                0,
+                              item.selectedFreeCourse?.originalPrice || 0,
                             )}
                           </span>
                           <span className="font-semibold">{showRupees(0)}</span>

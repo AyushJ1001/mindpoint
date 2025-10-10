@@ -129,7 +129,9 @@ export default function CourseClient({
           selectedFreeCourse.description ||
           "Free course selected via BOGO offer",
         price: 0,
+        originalPrice: selectedFreeCourse.price, // Store original price for the free course
         imageUrls: selectedFreeCourse.imageUrls || [],
+        courseType: selectedFreeCourse.type,
       },
     });
 
