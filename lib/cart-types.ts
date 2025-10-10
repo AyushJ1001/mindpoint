@@ -29,6 +29,8 @@ export interface ExtendedCartItem {
     name: string;
     description?: string;
     price: number;
+    originalPrice?: number; // Store original price for discount calculations
     imageUrls?: string[];
+    courseType?: string;
   };
 }

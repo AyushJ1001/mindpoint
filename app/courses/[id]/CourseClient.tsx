@@ -78,10 +78,14 @@ export default function CourseClient({
   // State for BOGO modal
   const [showBogoModal, setShowBogoModal] = useState(false);
 
+  const displayCourse = activeCourse ?? course;
+
   // Get available courses for BOGO selection
   const availableCourses = useQuery(
     api.courses.getBogoCoursesByType,
-    course.bogo?.enabled && course.type ? { courseType: course.type } : "skip",
+    displayCourse.bogo?.enabled && displayCourse.type
+      ? { courseType: displayCourse.type }
+      : "skip",
   );
 
   // Handle BOGO selection
@@ -101,17 +105,17 @@ export default function CourseClient({
     }
 
     addItem({
-      id: course._id,
-      name: course.name,
-      description: course.description,
-      price: getCoursePrice(course),
-      originalPrice: course.price,
-      imageUrls: course.imageUrls || [],
-      capacity: course.capacity || 1,
+      id: displayCourse._id,
+      name: displayCourse.name,
+      description: displayCourse.description,
+      price: getCoursePrice(displayCourse),
+      originalPrice: displayCourse.price,
+      imageUrls: displayCourse.imageUrls || [],
+      capacity: displayCourse.capacity || 1,
       quantity: 1,
-      offer: course.offer,
-      bogo: course.bogo,
-      courseType: course.type,
+      offer: displayCourse.offer,
+      bogo: displayCourse.bogo,
+      courseType: displayCourse.type,
       selectedFreeCourse: {
         id: selectedFreeCourse._id,
         name: selectedFreeCourse.name,
@@ -152,28 +156,28 @@ export default function CourseClient({
 
     // Remove all items from cart except the current course
     items.forEach((item) => {
-      if (item.id !== course._id) {
+      if (item.id !== displayCourse._id) {
         removeItem(item.id);
       }
     });
 
     // If the current course is not in cart, add it
-    if (!inCart(course._id)) {
+    if (!inCart(displayCourse._id)) {
       addItem({
-        id: course._id,
-        name: course.name,
-        description: course.description,
+        id: displayCourse._id,
+        name: displayCourse.name,
+        description: displayCourse.description,
         price: priceToUse,
-        originalPrice: course.price, // Store original price for discount calculations
-        imageUrls: course.imageUrls || [],
-        capacity: course.capacity || 1,
+        originalPrice: displayCourse.price, // Store original price for discount calculations
+        imageUrls: displayCourse.imageUrls || [],
+        capacity: displayCourse.capacity || 1,
         quantity: 1,
-        offer: course.offer,
-        bogo: course.bogo,
+        offer: displayCourse.offer,
+        bogo: displayCourse.bogo,
       });
     } else {
       // If it's already in cart, ensure it has the correct price and quantity
-      updateItemQuantity(course._id, 1);
+      updateItemQuantity(displayCourse._id, 1);
     }
 
     // Navigate to cart
@@ -189,9 +193,11 @@ export default function CourseClient({
     const priceToUse = getCoursePrice(course);
 
     // Check if BOGO is active and there are other courses of the same type
-    if (offerDetails?.hasBogo && course.bogo?.enabled) {
-      // Check if there are other courses of the same type with BOGO enabled
-      if (availableCourses && availableCourses.length > 1) {
+    if (offerDetails?.hasBogo && displayCourse.bogo?.enabled) {
+      // Filter out the source course to get only selectable courses
+      const selectableCourses =
+        availableCourses?.filter((c) => c._id !== displayCourse._id) || [];
+      if (selectableCourses.length > 0) {
         // There are other courses available, show BOGO modal
         setShowBogoModal(true);
         return;
@@ -242,19 +248,21 @@ export default function CourseClient({
   // Build variant options only for internship or therapy
   const normalizedVariants: CourseVariant[] = useMemo(() => {
     const sameGroup = variants
-      .filter((v) => v.name === course.name && v.type === course.type)
+      .filter(
+        (v) => v.name === displayCourse.name && v.type === displayCourse.type,
+      )
       .concat([]);
     // Ensure current course is included
-    const present = sameGroup.some((v) => v._id === course._id);
-    if (!present) sameGroup.push(course);
+    const present = sameGroup.some((v) => v._id === displayCourse._id);
+    if (!present) sameGroup.push(displayCourse);
     // Sort by sessions (therapy) or duration/price
-    if (course.type === "therapy") {
+    if (displayCourse.type === "therapy") {
       sameGroup.sort((a, b) => {
         const as = (a as TherapyCourse).sessions ?? 0;
         const bs = (b as TherapyCourse).sessions ?? 0;
         return as - bs || (a.price ?? 0) - (b.price ?? 0);
       });
-    } else if (course.type === "internship") {
+    } else if (displayCourse.type === "internship") {
       // Try to sort by duration if present, else by price
       const parseWeeks = (d?: string) => {
         if (!d) return Number.MAX_SAFE_INTEGER;
@@ -269,20 +277,20 @@ export default function CourseClient({
       });
     }
     return sameGroup;
-  }, [variants, course]);
+  }, [variants, displayCourse]);
 
   const shouldShowVariantSelect =
-    (course.type === "therapy" || course.type === "internship") &&
+    (displayCourse.type === "therapy" || displayCourse.type === "internship") &&
     normalizedVariants.length > 1;
 
   const variantLabel = (v: CourseVariant): string => {
-    if (course.type === "therapy") {
+    if (displayCourse.type === "therapy") {
       const s = (v as TherapyCourse).sessions;
       if (typeof s === "number" && s > 0) {
         return `${s} ${s === 1 ? "session" : "sessions"}`;
       }
     }
-    if (course.type === "internship") {
+    if (displayCourse.type === "internship") {
       const d = (v as InternshipCourse).duration;
       if (d && d.trim()) {
         return d.trim();
@@ -309,8 +317,6 @@ export default function CourseClient({
     // Default fallback - ensure we always return a string
     return "Option";
   };
-
-  const displayCourse = activeCourse ?? course;
 
   // Check if course has a valid offer using utility function
   const hasValidOffer = useMemo(() => {
@@ -399,7 +405,7 @@ export default function CourseClient({
     <>
       {/* Background gradient that covers the entire courses area */}
       <div
-        className={`fixed inset-0 ${getCourseTypeGradient(course.type || "certificate")} -z-10`}
+        className={`fixed inset-0 ${getCourseTypeGradient(displayCourse.type || "certificate")} -z-10`}
         style={{
           top: "64px", // Below navbar
           bottom: "80px", // Above footer
@@ -410,43 +416,44 @@ export default function CourseClient({
 
       <div className="relative z-10">
         {/* Conditionally render hero section for course types that use it */}
-        {course.type !== "therapy" && course.type !== "supervised" && (
-          <>
-            <CourseHero
-              course={activeCourse}
-              variants={variants}
-              activeCourse={activeCourse}
-              setActiveCourse={setActiveCourse}
-              hasValidOffer={hasValidOffer}
-              offerDetails={offerDetails}
-              isOutOfStock={isOutOfStock}
-              seatsLeft={seatsLeft}
-              shouldShowVariantSelect={shouldShowVariantSelect}
-              normalizedVariants={normalizedVariants}
-              variantLabel={variantLabel}
-              handleVariantSelect={handleVariantSelect}
-              handleIncreaseQuantity={handleIncreaseQuantity}
-              handleDecreaseQuantity={handleDecreaseQuantity}
-              handleBuyNow={handleBuyNow}
-              getCurrentQuantity={getCurrentQuantity}
-              inCart={inCart}
-              removeItem={removeItem}
-              customDuration={customDuration}
-            />
-
-            <Separator className="my-8" />
-
-            {/* Only show countdown timer for non-pre-recorded courses */}
-            {course.type !== "pre-recorded" && (
-              <CountdownTimer
+        {displayCourse.type !== "therapy" &&
+          displayCourse.type !== "supervised" && (
+            <>
+              <CourseHero
                 course={activeCourse}
+                variants={variants}
+                activeCourse={activeCourse}
+                setActiveCourse={setActiveCourse}
+                hasValidOffer={hasValidOffer}
+                offerDetails={offerDetails}
+                isOutOfStock={isOutOfStock}
+                seatsLeft={seatsLeft}
+                shouldShowVariantSelect={shouldShowVariantSelect}
+                normalizedVariants={normalizedVariants}
+                variantLabel={variantLabel}
+                handleVariantSelect={handleVariantSelect}
+                handleIncreaseQuantity={handleIncreaseQuantity}
+                handleDecreaseQuantity={handleDecreaseQuantity}
+                handleBuyNow={handleBuyNow}
+                getCurrentQuantity={getCurrentQuantity}
+                inCart={inCart}
+                removeItem={removeItem}
                 customDuration={customDuration}
               />
-            )}
 
-            <CourseOverview description={course.description ?? ""} />
-          </>
-        )}
+              <Separator className="my-8" />
+
+              {/* Only show countdown timer for non-pre-recorded courses */}
+              {displayCourse.type !== "pre-recorded" && (
+                <CountdownTimer
+                  course={activeCourse}
+                  customDuration={customDuration}
+                />
+              )}
+
+              <CourseOverview description={course.description ?? ""} />
+            </>
+          )}
 
         {/* Course Type Specific Sections */}
         <CourseTypeRenderer
@@ -512,14 +519,14 @@ export default function CourseClient({
         </Dialog>
 
         {/* BOGO Selection Modal */}
-        {course.bogo?.enabled && course.type && (
+        {displayCourse.bogo?.enabled && displayCourse.type && (
           <BogoSelectionModal
             isOpen={showBogoModal}
             onClose={() => setShowBogoModal(false)}
             onSelect={handleBogoSelection}
-            courseType={course.type}
-            sourceCourseId={course._id}
-            sourceCourseName={course.name}
+            courseType={displayCourse.type}
+            sourceCourseId={displayCourse._id}
+            sourceCourseName={displayCourse.name}
           />
         )}
 

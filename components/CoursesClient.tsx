@@ -172,8 +172,10 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
 
     // Check if BOGO is active and there are other courses of the same type
     if (offerDetails?.hasBogo && selectedCourse.bogo?.enabled) {
-      // Check if there are other courses of the same type with BOGO enabled
-      if (availableCourses && availableCourses.length > 1) {
+      // Filter out the source course to get only selectable courses
+      const selectableCourses =
+        availableCourses?.filter((c) => c._id !== selectedCourse._id) || [];
+      if (selectableCourses.length > 0) {
         // There are other courses available, show BOGO modal
         setShowBogoModal(true);
         return;
@@ -218,11 +220,13 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       name: label ? `${selectedCourse.name} (${label})` : selectedCourse.name,
       description: selectedCourse.description,
       price: getCoursePrice(selectedCourse),
+      originalPrice: selectedCourse.price ?? getCoursePrice(selectedCourse),
       imageUrls: selectedCourse.imageUrls || [],
       capacity: selectedCourse.capacity || 1,
       quantity: 1,
       offer: selectedCourse.offer,
       bogo: selectedCourse.bogo,
+      courseType: selectedCourse.type,
       selectedFreeCourse: {
         id: selectedFreeCourse._id,
         name: selectedFreeCourse.name,
@@ -230,7 +234,9 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
           selectedFreeCourse.description ||
           "Free course selected via BOGO offer",
         price: 0,
+        originalPrice: selectedFreeCourse.price ?? 0,
         imageUrls: selectedFreeCourse.imageUrls || [],
+        courseType: selectedFreeCourse.type,
       },
     });
 
@@ -483,8 +489,10 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
 
     // Check if BOGO is active and there are other courses of the same type
     if (offerDetails?.hasBogo && course.bogo?.enabled) {
-      // Check if there are other courses of the same type with BOGO enabled
-      if (availableCourses && availableCourses.length > 1) {
+      // Filter out the source course to get only selectable courses
+      const selectableCourses =
+        availableCourses?.filter((c) => c._id !== course._id) || [];
+      if (selectableCourses.length > 0) {
         // There are other courses available, show BOGO modal
         setShowBogoModal(true);
         return;
@@ -497,6 +505,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       name: course.name,
       description: course.description,
       price: getCoursePrice(course),
+      originalPrice: course.price ?? getCoursePrice(course),
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
@@ -526,11 +535,13 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       name: course.name,
       description: course.description,
       price: getCoursePrice(course),
+      originalPrice: course.price ?? getCoursePrice(course),
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1,
       offer: course.offer,
       bogo: course.bogo,
+      courseType: course.type,
       selectedFreeCourse: {
         id: selectedFreeCourse._id,
         name: selectedFreeCourse.name,
@@ -538,7 +549,10 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           selectedFreeCourse.description ||
           "Free course selected via BOGO offer",
         price: 0,
+        originalPrice:
+          selectedFreeCourse.price ?? getCoursePrice(selectedFreeCourse),
         imageUrls: selectedFreeCourse.imageUrls || [],
+        courseType: selectedFreeCourse.type,
       },
     });
 

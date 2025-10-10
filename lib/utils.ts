@@ -45,7 +45,6 @@ export interface OfferDetails {
   discountPercentage: number;
   hasDiscount: boolean;
   hasBogo: boolean;
-  bogoLabel?: string;
   timeLeft: {
     days: number;
     hours: number;
@@ -197,7 +196,6 @@ export function getOfferDetails(course: {
     discountPercentage: Math.round(discountPercentage),
     hasDiscount,
     hasBogo,
-    bogoLabel: undefined, // No longer using labels
     timeLeft,
   };
 }

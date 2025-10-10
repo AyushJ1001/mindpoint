@@ -271,14 +271,19 @@ async function grantBogoEnrollments(
     return [];
   }
 
-  const freeCourseId =
-    (sourceCourse.bogo?.freeCourseId as Id<"courses"> | undefined) ??
-    (sourceCourse._id as Id<"courses">);
+  // Check if a free course is explicitly configured
+  const freeCourseId = sourceCourse.bogo?.freeCourseId;
 
-  const freeCourse =
-    freeCourseId === (sourceCourse._id as Id<"courses">)
-      ? sourceCourse
-      : await ctx.db.get(freeCourseId);
+  if (!freeCourseId) {
+    console.warn(
+      "BOGO offer is active but no free course is configured for source course",
+      sourceCourse._id,
+      "- skipping BOGO enrollment to prevent duplicate enrollments",
+    );
+    return [];
+  }
+
+  const freeCourse = await ctx.db.get(freeCourseId);
 
   if (!freeCourse) {
     console.warn(

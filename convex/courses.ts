@@ -142,12 +142,3 @@ export const getBogoCoursesByType = query({
     return courses;
   },
 });
-
-// Legacy query for backward compatibility - returns empty array since labels are no longer used
-export const getCoursesWithBogoLabel = query({
-  args: { bogoLabel: v.string() },
-  handler: async () => {
-    // Return empty array since we no longer use BOGO labels
-    return [];
-  },
-});
