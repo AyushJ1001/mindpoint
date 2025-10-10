@@ -139,6 +139,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   const [selectedDuration, setSelectedDuration] = React.useState<string>(
     useDurationMode ? ((sorted[0] as InternshipCourse).duration ?? "") : "",
   );
+  const [mounted, setMounted] = useState(false);
   const selectedCourse = useSessionsMode
     ? (sorted.find((c) => (c as TherapyCourse).sessions === selectedSessions) ??
       sorted[0])
@@ -155,6 +156,11 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       ? { courseType: selectedCourse.type }
       : "skip",
   );
+
+  // Set mounted state after hydration
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddToCart = () => {
     // Check if course is out of stock
@@ -220,7 +226,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       name: label ? `${selectedCourse.name} (${label})` : selectedCourse.name,
       description: selectedCourse.description,
       price: getCoursePrice(selectedCourse),
-      originalPrice: selectedCourse.price ?? getCoursePrice(selectedCourse),
+      originalPrice: selectedCourse.price,
       imageUrls: selectedCourse.imageUrls || [],
       capacity: selectedCourse.capacity || 1,
       quantity: 1,
@@ -425,20 +431,23 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
             const isOutOfStock =
               (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
+            // Use mounted state to prevent hydration mismatch
+            const isInCart = mounted ? inCart(selectedCourse._id) : false;
+
             return (
               <Button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAddToCart();
                 }}
-                disabled={inCart(selectedCourse._id) || isOutOfStock}
+                disabled={isInCart || isOutOfStock}
                 size="sm"
                 className="transition-smooth"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock
                   ? "Out of Stock"
-                  : inCart(selectedCourse._id)
+                  : isInCart
                     ? "Added"
                     : "Add to Cart"}
               </Button>
@@ -468,12 +477,18 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const [showBogoModal, setShowBogoModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Get available courses for BOGO selection
   const availableCourses = useQuery(
     api.courses.getBogoCoursesByType,
     course.bogo?.enabled && course.type ? { courseType: course.type } : "skip",
   );
+
+  // Set mounted state after hydration
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddToCart = () => {
     // Check if course is out of stock
@@ -505,7 +520,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       name: course.name,
       description: course.description,
       price: getCoursePrice(course),
-      originalPrice: course.price ?? getCoursePrice(course),
+      originalPrice: course.price,
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
@@ -535,7 +550,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       name: course.name,
       description: course.description,
       price: getCoursePrice(course),
-      originalPrice: course.price ?? getCoursePrice(course),
+      originalPrice: course.price,
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1,
@@ -549,8 +564,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           selectedFreeCourse.description ||
           "Free course selected via BOGO offer",
         price: 0,
-        originalPrice:
-          selectedFreeCourse.price ?? getCoursePrice(selectedFreeCourse),
+        originalPrice: selectedFreeCourse.price,
         imageUrls: selectedFreeCourse.imageUrls || [],
         courseType: selectedFreeCourse.type,
       },
@@ -646,20 +660,23 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
             const isOutOfStock =
               (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
+            // Use mounted state to prevent hydration mismatch
+            const isInCart = mounted ? inCart(course._id) : false;
+
             return (
               <Button
                 onClick={(e) => {
                   e.stopPropagation();
                   handleAddToCart();
                 }}
-                disabled={inCart(course._id) || isOutOfStock}
+                disabled={isInCart || isOutOfStock}
                 size="sm"
                 className="transition-smooth"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock
                   ? "Out of Stock"
-                  : inCart(course._id)
+                  : isInCart
                     ? "Added"
                     : "Add to Cart"}
               </Button>

@@ -266,6 +266,10 @@ async function grantBogoEnrollments(
     sessionType?: "focus" | "flow" | "elevate";
     isGuestUser?: boolean;
   },
+  bogoSelection?: {
+    sourceCourseId: Id<"courses">;
+    selectedFreeCourseId: Id<"courses">;
+  },
 ): Promise<EnrollmentSummary[]> {
   if (!isBogoActive(sourceCourse.bogo)) {
     return [];
@@ -274,6 +278,43 @@ async function grantBogoEnrollments(
   // Check if a free course is explicitly configured
   const freeCourseId = sourceCourse.bogo?.freeCourseId;
 
+  // If there's a BOGO selection provided, use that instead of the predefined free course
+  if (bogoSelection) {
+    const freeCourse = await ctx.db.get(bogoSelection.selectedFreeCourseId);
+
+    if (!freeCourse) {
+      console.warn(
+        "BOGO selection references missing free course",
+        bogoSelection.selectedFreeCourseId,
+        "for source course",
+        sourceCourse._id,
+      );
+      return [];
+    }
+
+    // Validate the BOGO selection
+    const validation = validateBogoSelection(
+      sourceCourse,
+      freeCourse,
+      bogoSelection,
+    );
+
+    if (!validation.isValid) {
+      console.warn(
+        `Invalid BOGO selection for course ${sourceCourse.name}: ${validation.error}`,
+      );
+      return [];
+    }
+
+    return await createBogoEnrollment(
+      ctx,
+      sourceCourse,
+      freeCourse,
+      userContext,
+    );
+  }
+
+  // Fall back to predefined free course if no selection is provided
   if (!freeCourseId) {
     console.warn(
       "BOGO offer is active but no free course is configured for source course",
@@ -893,11 +934,10 @@ export const handleCartCheckout = mutation({
             isGuestUser: false,
           });
         } else {
-          // Use the selected free course with the new helper function
-          bogoEnrollments = await createBogoEnrollment(
+          // Use the selected free course with the updated grantBogoEnrollments function
+          bogoEnrollments = await grantBogoEnrollments(
             ctx,
             course,
-            freeCourse!,
             {
               userId: args.userId,
               userName: args.studentName || args.userEmail,
@@ -906,6 +946,7 @@ export const handleCartCheckout = mutation({
               sessionType: args.sessionType,
               isGuestUser: false,
             },
+            bogoSelection,
           );
         }
       } else {
@@ -921,7 +962,9 @@ export const handleCartCheckout = mutation({
       }
 
       for (const bonus of bogoEnrollments) {
-        if (bonus.courseType === "supervised") {
+        // Fetch the course to get the actual course type, as bonus.courseType might be undefined
+        const bonusCourse = await ctx.db.get(bonus.courseId);
+        if (bonusCourse?.type === "supervised") {
           supervisedEnrollments.push(bonus);
         } else {
           enrollments.push(bonus);
@@ -1611,11 +1654,10 @@ export const handleGuestUserCartCheckoutWithData = mutation({
             isGuestUser: true,
           });
         } else {
-          // Use the selected free course with the new helper function
-          bogoEnrollments = await createBogoEnrollment(
+          // Use the selected free course with the updated grantBogoEnrollments function
+          bogoEnrollments = await grantBogoEnrollments(
             ctx,
             course,
-            freeCourse!,
             {
               userId: args.userData.email,
               userName: args.userData.name,
@@ -1624,6 +1666,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
               sessionType: args.sessionType,
               isGuestUser: true,
             },
+            bogoSelection,
           );
         }
       } else {
@@ -1639,7 +1682,9 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       }
 
       for (const bonus of bogoEnrollments) {
-        if (bonus.courseType === "supervised") {
+        // Fetch the course to get the actual course type, as bonus.courseType might be undefined
+        const bonusCourse = await ctx.db.get(bonus.courseId);
+        if (bonusCourse?.type === "supervised") {
           supervisedEnrollments.push(bonus);
         } else {
           enrollments.push(bonus);

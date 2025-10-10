@@ -22,6 +22,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   }
 
   // Fallback when Clerk keys are not available
+  // ConvexClientProvider will handle the fallback internally
   return (
     <ConvexClientProvider>
       <CartProvider>{children}</CartProvider>

@@ -55,10 +55,16 @@ export default function CourseClient({
   const [customDuration, setCustomDuration] = useState<string | undefined>(
     undefined,
   );
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setActiveCourse(course);
   }, [course]);
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Update customDuration when activeCourse changes (for live updates)
   useEffect(() => {
@@ -436,7 +442,7 @@ export default function CourseClient({
                 handleDecreaseQuantity={handleDecreaseQuantity}
                 handleBuyNow={handleBuyNow}
                 getCurrentQuantity={getCurrentQuantity}
-                inCart={inCart}
+                inCart={(id) => (mounted ? inCart(id) : false)}
                 removeItem={removeItem}
                 customDuration={customDuration}
               />

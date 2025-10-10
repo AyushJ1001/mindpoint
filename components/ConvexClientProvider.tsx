@@ -1,28 +1,34 @@
 "use client";
 
 import { ReactNode } from "react";
-import { ConvexReactClient } from "convex/react";
+import { ConvexReactClient, ConvexProvider } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { useAuth } from "@clerk/nextjs";
-
-// Only create Convex client if the URL is available
-const convex = process.env.NEXT_PUBLIC_CONVEX_URL
-  ? new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL)
-  : null;
 
 export default function ConvexClientProvider({
   children,
 }: {
   children: ReactNode;
 }) {
-  // If convex client is not available, just return children without Convex provider
+  // Only create Convex client if the URL is available
+  const convex = process.env.NEXT_PUBLIC_CONVEX_URL
+    ? new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL)
+    : null;
+
+  // If no Convex URL is available, render children without Convex providers
   if (!convex) {
     return <>{children}</>;
   }
 
-  return (
-    <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
-      {children}
-    </ConvexProviderWithClerk>
-  );
+  // If Clerk keys are available, use ConvexProviderWithClerk for authentication
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return (
+      <ConvexProviderWithClerk client={convex} useAuth={useAuth}>
+        {children}
+      </ConvexProviderWithClerk>
+    );
+  }
+
+  // Fallback to regular ConvexProvider when Clerk keys are not available
+  return <ConvexProvider client={convex}>{children}</ConvexProvider>;
 }

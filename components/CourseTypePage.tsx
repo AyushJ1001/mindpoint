@@ -154,6 +154,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   const [selectedDuration, setSelectedDuration] = React.useState<string>(
     useDurationMode ? ((sorted[0] as InternshipCourse).duration ?? "") : "",
   );
+  const [mounted, setMounted] = useState(false);
   const selectedCourse = useSessionsMode
     ? (sorted.find((c) => (c as TherapyCourse).sessions === selectedSessions) ??
       sorted[0])
@@ -178,6 +179,11 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
 
     return () => clearInterval(interval);
   }, [selectedCourse]);
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddToCart = () => {
     // Check if course is out of stock
@@ -391,20 +397,23 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
               const isOutOfStock =
                 (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
+              // Use mounted state to prevent hydration mismatch
+              const isInCart = mounted ? inCart(selectedCourse._id) : false;
+
               return (
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAddToCart();
                   }}
-                  disabled={inCart(selectedCourse._id) || isOutOfStock}
+                  disabled={isInCart || isOutOfStock}
                   size="sm"
                   className="transition-smooth"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   {isOutOfStock
                     ? "Out of Stock"
-                    : inCart(selectedCourse._id)
+                    : isInCart
                       ? "Added"
                       : "Add to Cart"}
                 </Button>
@@ -421,6 +430,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
+  const [mounted, setMounted] = useState(false);
 
   // Update offer details every minute for real-time countdown
   useEffect(() => {
@@ -433,6 +443,11 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
 
     return () => clearInterval(interval);
   }, [course]);
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddToCart = () => {
     // Check if course is out of stock
@@ -517,20 +532,23 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
               const isOutOfStock =
                 (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
+              // Use mounted state to prevent hydration mismatch
+              const isInCart = mounted ? inCart(course._id) : false;
+
               return (
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAddToCart();
                   }}
-                  disabled={inCart(course._id) || isOutOfStock}
+                  disabled={isInCart || isOutOfStock}
                   size="sm"
                   className="transition-smooth"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   {isOutOfStock
                     ? "Out of Stock"
-                    : inCart(course._id)
+                    : isInCart
                       ? "Added"
                       : "Add to Cart"}
                 </Button>
