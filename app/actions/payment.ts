@@ -10,6 +10,10 @@ export async function handlePaymentSuccess(
   userPhone?: string,
   studentName?: string,
   sessionType?: "focus" | "flow" | "elevate",
+  bogoSelections?: Array<{
+    sourceCourseId: Id<"courses">;
+    selectedFreeCourseId: Id<"courses">;
+  }>,
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -17,6 +21,7 @@ export async function handlePaymentSuccess(
     enrollmentNumber: string;
     courseName: string;
     courseId: string;
+    isBogoFree?: boolean;
   }>;
   error?: string;
 }> {
@@ -37,6 +42,7 @@ export async function handlePaymentSuccess(
         userPhone: userPhone,
         studentName: studentName,
         sessionType: sessionType,
+        bogoSelections: bogoSelections,
       },
     );
 
@@ -63,6 +69,7 @@ export async function handleGuestUserPaymentSuccess(
     enrollmentNumber: string;
     courseName: string;
     courseId: string;
+    isBogoFree?: boolean;
   }>;
   error?: string;
 }> {
@@ -99,6 +106,10 @@ export async function handleGuestUserPaymentSuccessWithData(
   userData: { name: string; email: string; phone: string },
   courseIds: Id<"courses">[],
   sessionType?: "focus" | "flow" | "elevate",
+  bogoSelections?: Array<{
+    sourceCourseId: Id<"courses">;
+    selectedFreeCourseId: Id<"courses">;
+  }>,
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -106,6 +117,7 @@ export async function handleGuestUserPaymentSuccessWithData(
     enrollmentNumber: string;
     courseName: string;
     courseId: string;
+    isBogoFree?: boolean;
   }>;
   error?: string;
 }> {
@@ -123,6 +135,7 @@ export async function handleGuestUserPaymentSuccessWithData(
         userData,
         courseIds: courseIds,
         sessionType: sessionType,
+        bogoSelections: bogoSelections,
       },
     );
 

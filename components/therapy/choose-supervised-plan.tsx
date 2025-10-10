@@ -254,7 +254,9 @@ export default function ChooseSupervisedPlan({
       imageUrls: selectedVariant.imageUrls || [],
       capacity: selectedVariant.capacity || 1,
       quantity: 1,
-      offer: selectedVariant.offer, // Store offer data in cart item
+      offer: selectedVariant.offer,
+      bogo: selectedVariant.bogo,
+      courseType: selectedVariant.type,
     });
 
     // Call the original onBook callback

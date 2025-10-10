@@ -10,11 +10,22 @@ interface ClientProvidersProps {
 }
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
+  // Only use ClerkProvider if the public key is available
+  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+    return (
+      <ClerkProvider>
+        <ConvexClientProvider>
+          <CartProvider>{children}</CartProvider>
+        </ConvexClientProvider>
+      </ClerkProvider>
+    );
+  }
+
+  // Fallback when Clerk keys are not available
+  // ConvexClientProvider will handle the fallback internally
   return (
-    <ClerkProvider>
-      <ConvexClientProvider>
-        <CartProvider>{children}</CartProvider>
-      </ConvexClientProvider>
-    </ClerkProvider>
+    <ConvexClientProvider>
+      <CartProvider>{children}</CartProvider>
+    </ConvexClientProvider>
   );
 }

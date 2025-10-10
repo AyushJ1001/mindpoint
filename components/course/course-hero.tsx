@@ -34,19 +34,7 @@ import {
 import CourseImageGallery from "@/components/course/gallery";
 import TrustBar from "@/components/course/trust-bar";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { getCoursePrice } from "@/lib/utils";
-
-interface OfferDetails {
-  offerPrice: number;
-  originalPrice: number;
-  offerName: string;
-  discountPercentage: number;
-  timeLeft: {
-    days: number;
-    hours: number;
-    minutes: number;
-  };
-}
+import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 
 const INR = "en-IN";
 
@@ -213,6 +201,11 @@ export default function CourseHero({
               {seatsLeft === 0 && (
                 <Badge variant="secondary">📋 Waitlist Available</Badge>
               )}
+              {offerDetails?.hasBogo && (
+                <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase">
+                  🛍️ BOGO Bonus
+                </Badge>
+              )}
               <Badge
                 variant="outline"
                 className="border-primary/50 text-primary"
@@ -281,7 +274,7 @@ export default function CourseHero({
                       <span className="text-primary text-4xl font-bold">
                         {formatINR(getCoursePrice(displayCourse))}
                       </span>
-                      {hasValidOffer && offerDetails && (
+                      {offerDetails?.hasDiscount && (
                         <span className="text-muted-foreground text-sm line-through">
                           {formatINR(offerDetails.originalPrice)}
                         </span>
@@ -296,11 +289,16 @@ export default function CourseHero({
                         </span>
                       )}
                     </p>
-                    {hasValidOffer && offerDetails && (
-                      <div className="flex items-center gap-2 text-xs font-medium text-orange-600">
-                        <span>🔥 {offerDetails.discountPercentage}% OFF</span>
-                        <span>•</span>
-                        <span>
+                    {offerDetails && (
+                      <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+                        {offerDetails.hasDiscount && (
+                          <span className="text-orange-600">
+                            🔥 {offerDetails.discountPercentage}% OFF
+                          </span>
+                        )}
+                        <span
+                          className={`${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
+                        >
                           {offerDetails.timeLeft.days > 0 &&
                             `${offerDetails.timeLeft.days}d `}
                           {offerDetails.timeLeft.hours > 0 &&
@@ -309,6 +307,12 @@ export default function CourseHero({
                             `${offerDetails.timeLeft.minutes}m`}{" "}
                           left
                         </span>
+                      </div>
+                    )}
+                    {offerDetails?.hasBogo && (
+                      <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
+                        <Sparkles className="h-3 w-3" />
+                        {"BOGO: Buy one, get one free"}
                       </div>
                     )}
                   </div>

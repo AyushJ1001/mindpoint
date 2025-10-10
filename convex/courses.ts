@@ -123,3 +123,22 @@ export const createReview = mutation({
     return reviewId;
   },
 });
+
+// Fetch courses with BOGO enabled for a specific course type
+export const getBogoCoursesByType = query({
+  args: { courseType: CourseType },
+  handler: async (ctx, args) => {
+    const courses = await ctx.db
+      .query("courses")
+      .filter((q) =>
+        q.and(
+          q.eq(q.field("type"), args.courseType),
+          q.eq(q.field("bogo.enabled"), true),
+        ),
+      )
+      .order("desc")
+      .collect();
+
+    return courses;
+  },
+});

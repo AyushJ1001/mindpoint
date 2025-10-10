@@ -8,6 +8,10 @@ const nextConfig: NextConfig = {
   eslint: {
     ignoreDuringBuilds: true,
   },
+  // Disable Clerk key validation during build if keys are dummy
+  env: {
+    CLERK_SKIP_KEY_VALIDATION: process.env.CLERK_SKIP_KEY_VALIDATION || "false",
+  },
   // Remove console logs in production builds
   compiler: {
     removeConsole:

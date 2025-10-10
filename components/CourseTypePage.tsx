@@ -154,6 +154,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   const [selectedDuration, setSelectedDuration] = React.useState<string>(
     useDurationMode ? ((sorted[0] as InternshipCourse).duration ?? "") : "",
   );
+  const [mounted, setMounted] = useState(false);
   const selectedCourse = useSessionsMode
     ? (sorted.find((c) => (c as TherapyCourse).sessions === selectedSessions) ??
       sorted[0])
@@ -179,6 +180,11 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     return () => clearInterval(interval);
   }, [selectedCourse]);
 
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const handleAddToCart = () => {
     // Check if course is out of stock
     const seatsLeft = Math.max(
@@ -199,10 +205,13 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
       name: label ? `${selectedCourse.name} (${label})` : selectedCourse.name,
       description: selectedCourse.description,
       price: getCoursePrice(selectedCourse),
+      originalPrice: selectedCourse.price, // Store original price for discount calculations
       imageUrls: selectedCourse.imageUrls || [],
       capacity: selectedCourse.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
-      offer: selectedCourse.offer, // Store offer data in cart item
+      offer: selectedCourse.offer,
+      bogo: selectedCourse.bogo,
+      courseType: selectedCourse.type,
     });
   };
 
@@ -219,15 +228,21 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
 
-      {/* Offer Badge */}
-      {offerDetails && (
-        <div className="absolute top-3 right-3 z-20">
-          <Badge
-            variant="destructive"
-            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
-          >
-            🔥 {offerDetails.discountPercentage}% OFF
-          </Badge>
+      {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+        <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
+          {offerDetails?.hasDiscount && (
+            <Badge
+              variant="destructive"
+              className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+            >
+              🔥 {offerDetails.discountPercentage}% OFF
+            </Badge>
+          )}
+          {offerDetails?.hasBogo && (
+            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
+              🛍️ BOGO
+            </Badge>
+          )}
         </div>
       )}
 
@@ -345,11 +360,17 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
               {showRupees(displayPrice)}
             </Badge>
             {offerDetails && (
-              <div className="text-muted-foreground absolute top-full left-0 mt-1 text-xs">
-                <span className="line-through">
-                  {showRupees(offerDetails.originalPrice)}
-                </span>
-                <span className="ml-2 font-medium text-orange-600">
+              <div className="absolute top-full left-0 mt-1 space-y-1 text-xs">
+                {offerDetails.hasDiscount && (
+                  <div className="text-muted-foreground">
+                    <span className="line-through">
+                      {showRupees(offerDetails.originalPrice)}
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
+                >
                   {offerDetails.timeLeft.days > 0 &&
                     `${offerDetails.timeLeft.days}d `}
                   {offerDetails.timeLeft.hours > 0 &&
@@ -357,7 +378,12 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
                   {offerDetails.timeLeft.minutes > 0 &&
                     `${offerDetails.timeLeft.minutes}m`}{" "}
                   left
-                </span>
+                </div>
+                {offerDetails.hasBogo && (
+                  <div className="font-semibold text-emerald-600">
+                    Includes a free bonus enrollment
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -371,20 +397,23 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
               const isOutOfStock =
                 (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
+              // Use mounted state to prevent hydration mismatch
+              const isInCart = mounted ? inCart(selectedCourse._id) : false;
+
               return (
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAddToCart();
                   }}
-                  disabled={inCart(selectedCourse._id) || isOutOfStock}
+                  disabled={isInCart || isOutOfStock}
                   size="sm"
                   className="transition-smooth"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   {isOutOfStock
                     ? "Out of Stock"
-                    : inCart(selectedCourse._id)
+                    : isInCart
                       ? "Added"
                       : "Add to Cart"}
                 </Button>
@@ -401,6 +430,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
+  const [mounted, setMounted] = useState(false);
 
   // Update offer details every minute for real-time countdown
   useEffect(() => {
@@ -413,6 +443,11 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
 
     return () => clearInterval(interval);
   }, [course]);
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleAddToCart = () => {
     // Check if course is out of stock
@@ -434,7 +469,9 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       imageUrls: course.imageUrls || [],
       capacity: course.capacity || 1,
       quantity: 1, // Explicitly set initial quantity to 1
-      offer: course.offer, // Store offer data in cart item
+      offer: course.offer,
+      bogo: course.bogo,
+      courseType: course.type,
     });
   };
 
@@ -451,15 +488,21 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
-      {/* Offer Badge */}
-      {offerDetails && (
-        <div className="absolute top-3 right-3 z-20">
-          <Badge
-            variant="destructive"
-            className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
-          >
-            🔥 {offerDetails.discountPercentage}% OFF
-          </Badge>
+      {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+        <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
+          {offerDetails?.hasDiscount && (
+            <Badge
+              variant="destructive"
+              className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+            >
+              🔥 {offerDetails.discountPercentage}% OFF
+            </Badge>
+          )}
+          {offerDetails?.hasBogo && (
+            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
+              🛍️ BOGO
+            </Badge>
+          )}
         </div>
       )}
 
@@ -489,20 +532,23 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
               const isOutOfStock =
                 (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
+              // Use mounted state to prevent hydration mismatch
+              const isInCart = mounted ? inCart(course._id) : false;
+
               return (
                 <Button
                   onClick={(e) => {
                     e.stopPropagation();
                     handleAddToCart();
                   }}
-                  disabled={inCart(course._id) || isOutOfStock}
+                  disabled={isInCart || isOutOfStock}
                   size="sm"
                   className="transition-smooth"
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   {isOutOfStock
                     ? "Out of Stock"
-                    : inCart(course._id)
+                    : isInCart
                       ? "Added"
                       : "Add to Cart"}
                 </Button>
@@ -511,11 +557,17 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           </div>
         </div>
         {offerDetails && (
-          <div className="text-muted-foreground mt-1 text-xs">
-            <span className="line-through">
-              {showRupees(offerDetails.originalPrice)}
-            </span>
-            <span className="ml-2 font-medium text-orange-600">
+          <div className="mt-1 space-y-1 text-xs">
+            {offerDetails.hasDiscount && (
+              <div className="text-muted-foreground">
+                <span className="line-through">
+                  {showRupees(offerDetails.originalPrice)}
+                </span>
+              </div>
+            )}
+            <div
+              className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
+            >
               {offerDetails.timeLeft.days > 0 &&
                 `${offerDetails.timeLeft.days}d `}
               {offerDetails.timeLeft.hours > 0 &&
@@ -523,7 +575,12 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
               {offerDetails.timeLeft.minutes > 0 &&
                 `${offerDetails.timeLeft.minutes}m`}{" "}
               left
-            </span>
+            </div>
+            {offerDetails.hasBogo && (
+              <div className="font-semibold text-emerald-600">
+                Includes a free bonus enrollment
+              </div>
+            )}
           </div>
         )}
       </CardContent>
