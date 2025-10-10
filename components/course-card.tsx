@@ -166,6 +166,10 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
   };
 
   const handleCardClick = () => {
+    // Don't navigate if BOGO modal is open
+    if (showBogoModal) {
+      return;
+    }
     router.push(`/courses/${course._id}`);
   };
 
@@ -397,6 +401,10 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
   };
 
   const handleCardClick = () => {
+    // Don't navigate if BOGO modal is open
+    if (showBogoModal) {
+      return;
+    }
     router.push(`/courses/${course._id}`);
   };
 

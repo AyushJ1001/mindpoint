@@ -626,7 +626,7 @@ const CartContent = () => {
                     <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
                       <Image
                         src={item.imageUrls?.[0] || "/placeholder-image.jpg"}
-                        alt={item.name}
+                        alt={item.name || "Course"}
                         className="h-full w-full object-cover"
                         width={64}
                         height={64}
@@ -730,10 +730,10 @@ const CartContent = () => {
                       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
                         <Image
                           src={
-                            item.selectedFreeCourse.imageUrls?.[0] ||
+                            item.selectedFreeCourse?.imageUrls?.[0] ||
                             "/placeholder-image.jpg"
                           }
-                          alt={item.selectedFreeCourse.name}
+                          alt={item.selectedFreeCourse?.name || "Free Course"}
                           className="h-full w-full object-cover"
                           width={48}
                           height={48}
@@ -743,22 +743,22 @@ const CartContent = () => {
                         <div className="flex items-center gap-2">
                           <Sparkles className="h-4 w-4 text-emerald-600" />
                           <h4 className="font-semibold text-emerald-800 dark:text-emerald-200">
-                            {item.selectedFreeCourse.name}
+                            {item.selectedFreeCourse?.name || "Free Course"}
                           </h4>
                           <span className="rounded bg-emerald-200 px-2 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200">
                             FREE
                           </span>
                         </div>
-                        {item.selectedFreeCourse.description && (
-                          <p className="text-sm text-emerald-700 dark:text-emerald-300">
-                            {item.selectedFreeCourse.description}
-                          </p>
-                        )}
+
                         <div className="mt-1 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
                           <span>BOGO Free Course</span>
                           <span>•</span>
                           <span className="line-through">
-                            {showRupees(item.selectedFreeCourse.price)}
+                            {showRupees(
+                              item.selectedFreeCourse?.originalPrice ||
+                                item.selectedFreeCourse?.price ||
+                                0,
+                            )}
                           </span>
                           <span className="font-semibold">{showRupees(0)}</span>
                         </div>
