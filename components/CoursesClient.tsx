@@ -181,11 +181,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
 
     // Check if BOGO is active and there are other courses of the same type
     // Only check BOGO if availableCourses has loaded and there are selectable courses
-    if (
-      offerDetails?.hasBogo &&
-      availableCourses &&
-      availableCourses.length > 0
-    ) {
+    if (offerDetails?.hasBogo && availableCourses) {
       // Filter out the source course to get only selectable courses
       const selectableCourses = availableCourses.filter(
         (c) => c._id !== selectedCourse._id,
@@ -511,11 +507,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
 
     // Check if BOGO is active and there are other courses of the same type
     // Only check BOGO if availableCourses has loaded and there are selectable courses
-    if (
-      offerDetails?.hasBogo &&
-      availableCourses &&
-      availableCourses.length > 0
-    ) {
+    if (offerDetails?.hasBogo && availableCourses) {
       // Filter out the source course to get only selectable courses
       const selectableCourses = availableCourses.filter(
         (c) => c._id !== course._id,

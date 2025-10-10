@@ -945,11 +945,14 @@ export const handleCartCheckout = mutation({
       let bogoEnrollments: EnrollmentSummary[] = [];
 
       // Only process BOGO if this source course hasn't been processed yet
-      // Differentiate between undefined (use predefined BOGO) and empty array (no BOGO)
+      // Differentiate between undefined/null/empty array (use predefined BOGO) and array with selections (use specific selections)
       const shouldProcessBogo =
         !processedBogoSourceCourses.has(courseId) &&
         (bogoSelection || // User made a specific BOGO selection
-          (args.bogoSelections === undefined && isBogoActive(course.bogo))); // No selections provided but course has active BOGO
+          ((args.bogoSelections === undefined ||
+            args.bogoSelections === null ||
+            args.bogoSelections.length === 0) &&
+            isBogoActive(course.bogo))); // No selections provided but course has active BOGO
 
       if (shouldProcessBogo) {
         processedBogoSourceCourses.add(courseId); // Mark as processed
@@ -1683,11 +1686,14 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       let bogoEnrollments: EnrollmentSummary[] = [];
 
       // Only process BOGO if this source course hasn't been processed yet
-      // Differentiate between undefined (use predefined BOGO) and empty array (no BOGO)
+      // Differentiate between undefined/null/empty array (use predefined BOGO) and array with selections (use specific selections)
       const shouldProcessBogo =
         !processedBogoSourceCourses.has(courseId) &&
         (bogoSelection || // User made a specific BOGO selection
-          (args.bogoSelections === undefined && isBogoActive(course.bogo))); // No selections provided but course has active BOGO
+          ((args.bogoSelections === undefined ||
+            args.bogoSelections === null ||
+            args.bogoSelections.length === 0) &&
+            isBogoActive(course.bogo))); // No selections provided but course has active BOGO
 
       if (shouldProcessBogo) {
         processedBogoSourceCourses.add(courseId); // Mark as processed
