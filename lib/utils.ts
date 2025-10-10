@@ -166,20 +166,34 @@ export function getOfferDetails(course: {
     ? calculateOfferPrice(originalPrice, discountPercentage)
     : originalPrice;
 
-  const endCandidates: string[] = [];
+  // Only consider end dates from offers that are currently active
+  const activeEndDates: string[] = [];
   if (hasDiscount && course.offer?.endDate) {
-    endCandidates.push(course.offer.endDate);
+    const endDate = new Date(course.offer.endDate);
+    const now = new Date();
+    // Only include if the offer hasn't expired yet
+    if (!Number.isNaN(endDate.getTime()) && endDate > now) {
+      activeEndDates.push(course.offer.endDate);
+    }
   }
   if (hasBogo && course.bogo?.endDate) {
-    endCandidates.push(course.bogo.endDate);
+    const endDate = new Date(course.bogo.endDate);
+    const now = new Date();
+    // Only include if the BOGO offer hasn't expired yet
+    if (!Number.isNaN(endDate.getTime()) && endDate > now) {
+      activeEndDates.push(course.bogo.endDate);
+    }
   }
 
-  const latestEndingPromotion = endCandidates
+  // Use the earliest ending active promotion for countdown
+  const earliestEndingActivePromotion = activeEndDates
     .map((date) => ({ date, time: new Date(date).getTime() }))
     .filter(({ time }) => !Number.isNaN(time))
-    .sort((a, b) => b.time - a.time)[0]?.date;
+    .sort((a, b) => a.time - b.time)[0]?.date;
 
-  const timeLeft = calculateOfferTimeLeft(latestEndingPromotion ?? null);
+  const timeLeft = calculateOfferTimeLeft(
+    earliestEndingActivePromotion ?? null,
+  );
 
   // When both offers are active, show a combined offer name
   const offerName =
