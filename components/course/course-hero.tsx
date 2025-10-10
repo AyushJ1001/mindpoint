@@ -312,7 +312,7 @@ export default function CourseHero({
                     {offerDetails?.hasBogo && (
                       <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
                         <Sparkles className="h-3 w-3" />
-                        {"BOGO: Buy one, get one free"}
+                        {`${offerDetails.bogoLabel || "BOGO"}: Buy one, get one free`}
                       </div>
                     )}
                   </div>

@@ -278,7 +278,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
           )}
           {offerDetails?.hasBogo && (
             <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
-              🛍️ BOGO
+              🛍️ {offerDetails.bogoLabel || "BOGO"}
             </Badge>
           )}
         </div>
@@ -602,7 +602,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
           )}
           {offerDetails?.hasBogo && (
             <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
-              🛍️ BOGO
+              🛍️ {offerDetails.bogoLabel || "BOGO"}
             </Badge>
           )}
         </div>

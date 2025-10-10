@@ -112,6 +112,17 @@ const CartContent = () => {
     return Array.from(types);
   }, [items, itemOfferDetails]);
 
+  const bogoLabels = useMemo(() => {
+    const labels = new Set<string>();
+    items.forEach((item) => {
+      const details = itemOfferDetails[item.id];
+      if (details?.hasBogo && details.bogoLabel) {
+        labels.add(details.bogoLabel);
+      }
+    });
+    return Array.from(labels);
+  }, [items, itemOfferDetails]);
+
   const showEnrollmentToast = (
     enrollments:
       | Array<{
@@ -785,7 +796,8 @@ const CartContent = () => {
                   <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
                     <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0" />
                     <span>
-                      BOGO applied:{" "}
+                      {bogoLabels.length > 0 ? bogoLabels.join(", ") : "BOGO"}{" "}
+                      applied:{" "}
                       {activeBogoTypes.length > 0
                         ? `${activeBogoTypes.join(", ")}`
                         : "complimentary course enrollments"}

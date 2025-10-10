@@ -20,7 +20,7 @@ export interface ExtendedCartItem {
     enabled: boolean;
     startDate?: string;
     endDate?: string;
-    freeCourseId?: Id<"courses">;
+    label?: string;
   };
   courseType?: string;
   // New field for selected free course

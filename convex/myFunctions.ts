@@ -327,6 +327,8 @@ async function grantBogoEnrollments(
 }
 
 // Helper function to attempt BOGO fallback to predefined free course
+// Note: This function is deprecated since freeCourseId field has been removed from schema
+// BOGO now requires user selection via the BOGO modal
 async function attemptBogoFallback(
   ctx: MutationCtx,
   sourceCourse: CourseDoc,
@@ -339,42 +341,11 @@ async function attemptBogoFallback(
     isGuestUser?: boolean;
   },
 ): Promise<EnrollmentSummary[]> {
-  const freeCourseId = sourceCourse.bogo?.freeCourseId;
-  if (!freeCourseId) {
-    console.warn(
-      "BOGO offer is active but no free course is configured for source course",
-      sourceCourse._id,
-      "- skipping BOGO enrollment",
-    );
-    return [];
-  }
-
-  const freeCourse = await ctx.db.get(freeCourseId);
-
-  if (!freeCourse) {
-    console.warn(
-      "BOGO configured with missing free course",
-      freeCourseId,
-      "for source course",
-      sourceCourse._id,
-    );
-    return [];
-  }
-
-  // Validate that the predefined free course is also valid
-  const validation = validateBogoSelection(sourceCourse, freeCourse, {
-    sourceCourseId: sourceCourse._id,
-    selectedFreeCourseId: freeCourseId,
-  });
-
-  if (!validation.isValid) {
-    console.error(
-      `Predefined BOGO free course is invalid for source course ${sourceCourse.name}: ${validation.error}`,
-    );
-    return [];
-  }
-
-  return await createBogoEnrollment(ctx, sourceCourse, freeCourse, userContext);
+  console.warn(
+    "BOGO fallback attempted but freeCourseId field has been removed from schema. BOGO now requires user selection.",
+    sourceCourse._id,
+  );
+  return [];
 }
 
 async function createBogoEnrollment(

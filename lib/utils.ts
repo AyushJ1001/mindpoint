@@ -45,6 +45,7 @@ export interface OfferDetails {
   discountPercentage: number;
   hasDiscount: boolean;
   hasBogo: boolean;
+  bogoLabel?: string;
   timeLeft: {
     days: number;
     hours: number;
@@ -63,7 +64,6 @@ type CourseBogo = {
   enabled?: boolean;
   startDate?: string;
   endDate?: string;
-  freeCourseId?: string;
   label?: string;
 } | null;
 
@@ -196,12 +196,13 @@ export function getOfferDetails(course: {
   );
 
   // When both offers are active, show a combined offer name
+  const bogoLabel = course.bogo?.label || "BOGO";
   const offerName =
     hasDiscount && hasBogo
-      ? `${course.offer?.name ?? "Limited-time Offer"} + BOGO`
+      ? `${course.offer?.name ?? "Limited-time Offer"} + ${bogoLabel}`
       : hasDiscount
         ? (course.offer?.name ?? "Limited-time Offer")
-        : "BOGO Offer";
+        : `${bogoLabel} Offer`;
 
   return {
     offerPrice: Math.round(offerPrice),
@@ -210,6 +211,7 @@ export function getOfferDetails(course: {
     discountPercentage: Math.round(discountPercentage),
     hasDiscount,
     hasBogo,
+    bogoLabel,
     timeLeft,
   };
 }

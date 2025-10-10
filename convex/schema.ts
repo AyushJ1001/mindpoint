@@ -39,7 +39,7 @@ export default defineSchema({
         enabled: v.boolean(),
         startDate: v.optional(v.string()),
         endDate: v.optional(v.string()),
-        freeCourseId: v.optional(v.id("courses")),
+        label: v.optional(v.string()),
       }),
     ),
     // Number of sessions for session-based offerings (e.g., therapy)

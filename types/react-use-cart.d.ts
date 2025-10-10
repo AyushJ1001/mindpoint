@@ -17,7 +17,7 @@ declare module "react-use-cart" {
       enabled: boolean;
       startDate?: string;
       endDate?: string;
-      freeCourseId?: Id<"courses">;
+      label?: string;
     };
     courseType?: string;
     selectedFreeCourse?: {
