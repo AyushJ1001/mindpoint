@@ -95,9 +95,15 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
 
     // Check if BOGO is active and there are other courses of the same type
     // Only check BOGO if availableCourses has loaded and there are selectable courses
-    if (offerDetails?.hasBogo && availableCourses && availableCourses.length > 0) {
+    if (
+      offerDetails?.hasBogo &&
+      availableCourses &&
+      availableCourses.length > 0
+    ) {
       // Filter out the source course to get only selectable courses
-      const selectableCourses = availableCourses.filter((c) => c._id !== course._id);
+      const selectableCourses = availableCourses.filter(
+        (c) => c._id !== course._id,
+      );
       if (selectableCourses.length > 0) {
         // There are other courses available, show BOGO modal
         setShowBogoModal(true);
@@ -330,9 +336,15 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
 
     // Check if BOGO is active and there are other courses of the same type
     // Only check BOGO if availableCourses has loaded and there are selectable courses
-    if (offerDetails?.hasBogo && availableCourses && availableCourses.length > 0) {
+    if (
+      offerDetails?.hasBogo &&
+      availableCourses &&
+      availableCourses.length > 0
+    ) {
       // Filter out the source course to get only selectable courses
-      const selectableCourses = availableCourses.filter((c) => c._id !== course._id);
+      const selectableCourses = availableCourses.filter(
+        (c) => c._id !== course._id,
+      );
       if (selectableCourses.length > 0) {
         // There are other courses available, show BOGO modal
         setShowBogoModal(true);

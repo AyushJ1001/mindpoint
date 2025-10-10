@@ -292,9 +292,26 @@ async function grantBogoEnrollments(
 
     if (!validation.isValid) {
       console.warn(
-        `Invalid BOGO selection for course ${sourceCourse.name}: ${validation.error}`,
+        `Invalid BOGO selection for course ${sourceCourse.name}: ${validation.error}. Attempting fallback to predefined free course.`,
       );
-      return [];
+
+      // Attempt fallback to predefined free course
+      const fallbackResult = await attemptBogoFallback(
+        ctx,
+        sourceCourse,
+        userContext,
+      );
+      if (fallbackResult.length > 0) {
+        console.log(
+          `Successfully fell back to predefined free course for ${sourceCourse.name}`,
+        );
+        return fallbackResult;
+      } else {
+        console.error(
+          `BOGO enrollment failed for ${sourceCourse.name}: both user selection and predefined fallback failed`,
+        );
+        return [];
+      }
     }
 
     return await createBogoEnrollment(
@@ -305,11 +322,27 @@ async function grantBogoEnrollments(
     );
   }
 
-  // Fall back to predefined free course if no selection is provided
+  // Use predefined free course if no selection is provided
+  return await attemptBogoFallback(ctx, sourceCourse, userContext);
+}
+
+// Helper function to attempt BOGO fallback to predefined free course
+async function attemptBogoFallback(
+  ctx: MutationCtx,
+  sourceCourse: CourseDoc,
+  userContext: {
+    userId: string;
+    userName?: string;
+    userEmail?: string;
+    userPhone?: string;
+    sessionType?: "focus" | "flow" | "elevate";
+    isGuestUser?: boolean;
+  },
+): Promise<EnrollmentSummary[]> {
   const freeCourseId = sourceCourse.bogo?.freeCourseId;
   if (!freeCourseId) {
     console.warn(
-      "BOGO offer is active but no free course is configured and no BOGO selection provided for source course",
+      "BOGO offer is active but no free course is configured for source course",
       sourceCourse._id,
       "- skipping BOGO enrollment",
     );
@@ -324,6 +357,19 @@ async function grantBogoEnrollments(
       freeCourseId,
       "for source course",
       sourceCourse._id,
+    );
+    return [];
+  }
+
+  // Validate that the predefined free course is also valid
+  const validation = validateBogoSelection(sourceCourse, freeCourse, {
+    sourceCourseId: sourceCourse._id,
+    selectedFreeCourseId: freeCourseId,
+  });
+
+  if (!validation.isValid) {
+    console.error(
+      `Predefined BOGO free course is invalid for source course ${sourceCourse.name}: ${validation.error}`,
     );
     return [];
   }
@@ -791,6 +837,7 @@ export const handleCartCheckout = mutation({
   handler: async (ctx, args) => {
     const enrollments = [];
     const supervisedEnrollments = [];
+    const processedBogoSourceCourses = new Set<string>(); // Track processed BOGO source courses
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -890,27 +937,65 @@ export const handleCartCheckout = mutation({
         enrollments.push(enrollmentData);
       }
 
-      // Check if this course has a BOGO selection
+      // Check if this course has a BOGO selection and hasn't been processed yet
       const bogoSelection = args.bogoSelections?.find(
         (selection) => selection.sourceCourseId === courseId,
       );
 
       let bogoEnrollments: EnrollmentSummary[] = [];
 
-      if (bogoSelection) {
-        // Validate BOGO selection before proceeding
-        const freeCourse = await ctx.db.get(bogoSelection.selectedFreeCourseId);
-        const validation = validateBogoSelection(
-          course,
-          freeCourse,
-          bogoSelection,
-        );
+      // Only process BOGO if this source course hasn't been processed yet
+      // Differentiate between undefined (use predefined BOGO) and empty array (no BOGO)
+      const shouldProcessBogo =
+        !processedBogoSourceCourses.has(courseId) &&
+        (bogoSelection || // User made a specific BOGO selection
+          (args.bogoSelections === undefined && isBogoActive(course.bogo))); // No selections provided but course has active BOGO
 
-        if (!validation.isValid) {
-          console.warn(
-            `Invalid BOGO selection for course ${course.name}: ${validation.error}. Falling back to predefined free course.`,
+      if (shouldProcessBogo) {
+        processedBogoSourceCourses.add(courseId); // Mark as processed
+
+        if (bogoSelection) {
+          // Validate BOGO selection before proceeding
+          const freeCourse = await ctx.db.get(
+            bogoSelection.selectedFreeCourseId,
           );
-          // Fall back to the original BOGO logic for courses with predefined free courses
+          const validation = validateBogoSelection(
+            course,
+            freeCourse,
+            bogoSelection,
+          );
+
+          if (!validation.isValid) {
+            console.warn(
+              `Invalid BOGO selection for course ${course.name}: ${validation.error}. Attempting fallback to predefined free course.`,
+            );
+            // Fall back to the original BOGO logic for courses with predefined free courses
+            bogoEnrollments = await grantBogoEnrollments(ctx, course, {
+              userId: args.userId,
+              userName: args.studentName || args.userEmail,
+              userEmail: args.userEmail,
+              userPhone: args.userPhone,
+              sessionType: args.sessionType,
+              isGuestUser: false,
+            });
+          } else {
+            // Use the selected free course with the updated grantBogoEnrollments function
+            bogoEnrollments = await grantBogoEnrollments(
+              ctx,
+              course,
+              {
+                userId: args.userId,
+                userName: args.studentName || args.userEmail,
+                userEmail: args.userEmail,
+                userPhone: args.userPhone,
+                sessionType: args.sessionType,
+                isGuestUser: false,
+              },
+              bogoSelection,
+            );
+          }
+        } else {
+          // Use the original BOGO logic for courses with predefined free courses
           bogoEnrollments = await grantBogoEnrollments(ctx, course, {
             userId: args.userId,
             userName: args.studentName || args.userEmail,
@@ -919,32 +1004,11 @@ export const handleCartCheckout = mutation({
             sessionType: args.sessionType,
             isGuestUser: false,
           });
-        } else {
-          // Use the selected free course with the updated grantBogoEnrollments function
-          bogoEnrollments = await grantBogoEnrollments(
-            ctx,
-            course,
-            {
-              userId: args.userId,
-              userName: args.studentName || args.userEmail,
-              userEmail: args.userEmail,
-              userPhone: args.userPhone,
-              sessionType: args.sessionType,
-              isGuestUser: false,
-            },
-            bogoSelection,
-          );
         }
-      } else {
-        // Use the original BOGO logic for courses with predefined free courses
-        bogoEnrollments = await grantBogoEnrollments(ctx, course, {
-          userId: args.userId,
-          userName: args.studentName || args.userEmail,
-          userEmail: args.userEmail,
-          userPhone: args.userPhone,
-          sessionType: args.sessionType,
-          isGuestUser: false,
-        });
+      } else if (processedBogoSourceCourses.has(courseId)) {
+        console.log(
+          `Skipping BOGO enrollment for course ${course.name} - already processed in this checkout`,
+        );
       }
 
       for (const bonus of bogoEnrollments) {
@@ -1520,6 +1584,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
     const enrollments = [];
     const supervisedEnrollments = [];
+    const processedBogoSourceCourses = new Set<string>(); // Track processed BOGO source courses
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -1610,27 +1675,65 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         enrollments.push(enrollmentData);
       }
 
-      // Check if this course has a BOGO selection
+      // Check if this course has a BOGO selection and hasn't been processed yet
       const bogoSelection = args.bogoSelections?.find(
         (selection) => selection.sourceCourseId === courseId,
       );
 
       let bogoEnrollments: EnrollmentSummary[] = [];
 
-      if (bogoSelection) {
-        // Validate BOGO selection before proceeding
-        const freeCourse = await ctx.db.get(bogoSelection.selectedFreeCourseId);
-        const validation = validateBogoSelection(
-          course,
-          freeCourse,
-          bogoSelection,
-        );
+      // Only process BOGO if this source course hasn't been processed yet
+      // Differentiate between undefined (use predefined BOGO) and empty array (no BOGO)
+      const shouldProcessBogo =
+        !processedBogoSourceCourses.has(courseId) &&
+        (bogoSelection || // User made a specific BOGO selection
+          (args.bogoSelections === undefined && isBogoActive(course.bogo))); // No selections provided but course has active BOGO
 
-        if (!validation.isValid) {
-          console.warn(
-            `Invalid BOGO selection for course ${course.name}: ${validation.error}. Falling back to predefined free course.`,
+      if (shouldProcessBogo) {
+        processedBogoSourceCourses.add(courseId); // Mark as processed
+
+        if (bogoSelection) {
+          // Validate BOGO selection before proceeding
+          const freeCourse = await ctx.db.get(
+            bogoSelection.selectedFreeCourseId,
           );
-          // Fall back to the original BOGO logic for courses with predefined free courses
+          const validation = validateBogoSelection(
+            course,
+            freeCourse,
+            bogoSelection,
+          );
+
+          if (!validation.isValid) {
+            console.warn(
+              `Invalid BOGO selection for course ${course.name}: ${validation.error}. Attempting fallback to predefined free course.`,
+            );
+            // Fall back to the original BOGO logic for courses with predefined free courses
+            bogoEnrollments = await grantBogoEnrollments(ctx, course, {
+              userId: args.userData.email,
+              userName: args.userData.name,
+              userEmail: args.userData.email,
+              userPhone: args.userData.phone,
+              sessionType: args.sessionType,
+              isGuestUser: true,
+            });
+          } else {
+            // Use the selected free course with the updated grantBogoEnrollments function
+            bogoEnrollments = await grantBogoEnrollments(
+              ctx,
+              course,
+              {
+                userId: args.userData.email,
+                userName: args.userData.name,
+                userEmail: args.userData.email,
+                userPhone: args.userData.phone,
+                sessionType: args.sessionType,
+                isGuestUser: true,
+              },
+              bogoSelection,
+            );
+          }
+        } else {
+          // Use the original BOGO logic for courses with predefined free courses
           bogoEnrollments = await grantBogoEnrollments(ctx, course, {
             userId: args.userData.email,
             userName: args.userData.name,
@@ -1639,32 +1742,11 @@ export const handleGuestUserCartCheckoutWithData = mutation({
             sessionType: args.sessionType,
             isGuestUser: true,
           });
-        } else {
-          // Use the selected free course with the updated grantBogoEnrollments function
-          bogoEnrollments = await grantBogoEnrollments(
-            ctx,
-            course,
-            {
-              userId: args.userData.email,
-              userName: args.userData.name,
-              userEmail: args.userData.email,
-              userPhone: args.userData.phone,
-              sessionType: args.sessionType,
-              isGuestUser: true,
-            },
-            bogoSelection,
-          );
         }
-      } else {
-        // Use the original BOGO logic for courses with predefined free courses
-        bogoEnrollments = await grantBogoEnrollments(ctx, course, {
-          userId: args.userData.email,
-          userName: args.userData.name,
-          userEmail: args.userData.email,
-          userPhone: args.userData.phone,
-          sessionType: args.sessionType,
-          isGuestUser: true,
-        });
+      } else if (processedBogoSourceCourses.has(courseId)) {
+        console.log(
+          `Skipping BOGO enrollment for course ${course.name} - already processed in this checkout`,
+        );
       }
 
       for (const bonus of bogoEnrollments) {

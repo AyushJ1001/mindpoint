@@ -199,10 +199,16 @@ export default function CourseClient({
     const priceToUse = getCoursePrice(course);
 
     // Check if BOGO is active and there are other courses of the same type
-    if (offerDetails?.hasBogo && displayCourse.bogo?.enabled) {
+    // Only check BOGO if availableCourses has loaded and there are selectable courses
+    if (
+      offerDetails?.hasBogo &&
+      availableCourses &&
+      availableCourses.length > 0
+    ) {
       // Filter out the source course to get only selectable courses
-      const selectableCourses =
-        availableCourses?.filter((c) => c._id !== displayCourse._id) || [];
+      const selectableCourses = availableCourses.filter(
+        (c) => c._id !== displayCourse._id,
+      );
       if (selectableCourses.length > 0) {
         // There are other courses available, show BOGO modal
         setShowBogoModal(true);
@@ -525,7 +531,7 @@ export default function CourseClient({
         </Dialog>
 
         {/* BOGO Selection Modal */}
-        {displayCourse.bogo?.enabled && displayCourse.type && (
+        {offerDetails?.hasBogo && displayCourse.type && (
           <BogoSelectionModal
             isOpen={showBogoModal}
             onClose={() => setShowBogoModal(false)}
