@@ -71,7 +71,7 @@ export default function CourseTypeRenderer({
           {renderCourseTypeContent()}
 
           {/* Common sections for therapy and supervised */}
-          <ReviewsSection />
+          <ReviewsSection courseId={course._id} courseType={course.type} />
           {courseType === "supervised" ? (
             <SupervisedFAQSection />
           ) : (
@@ -92,7 +92,7 @@ export default function CourseTypeRenderer({
         <WhoShouldDo />
         <WhyChoose />
         <Certification courseType={course.type} />
-        <ReviewsSection courseType={course.type} />
+        <ReviewsSection courseId={course._id} courseType={course.type} />
         <FAQSection />
         <CommunitiesSection />
       </>

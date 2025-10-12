@@ -80,13 +80,24 @@ export const getRelatedVariants = query({
 
 // List reviews for a given course
 export const listReviewsForCourse = query({
-  args: { courseId: v.id("courses"), count: v.optional(v.number()) },
+  args: {
+    courseId: v.id("courses"),
+    count: v.optional(v.number()),
+    sortBy: v.optional(v.union(v.literal("date"), v.literal("rating"))),
+  },
   handler: async (ctx, args) => {
     const rows = await ctx.db
       .query("reviews")
       .withIndex("by_course", (q) => q.eq("course", args.courseId))
       .order("desc")
       .collect();
+
+    // Sort by rating if requested
+    if (args.sortBy === "rating") {
+      rows.sort((a, b) => b.rating - a.rating);
+    }
+    // Default is already sorted by date (desc)
+
     return args.count ? rows.slice(0, args.count) : rows;
   },
 });
@@ -115,12 +126,72 @@ export const createReview = mutation({
       userName,
       rating,
       content: args.content.trim(),
+      isEdited: false,
     });
 
     // Optionally attach to course document if needed in the future
     // await ctx.db.patch(args.courseId, { reviews: [...(course.reviews ?? []), reviewId] });
 
     return reviewId;
+  },
+});
+
+// Update an existing review
+export const updateReview = mutation({
+  args: {
+    reviewId: v.id("reviews"),
+    rating: v.number(),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    // Basic validation
+    const rating = Math.max(1, Math.min(5, Math.round(args.rating)));
+
+    // Get the review
+    const review = await ctx.db.get(args.reviewId);
+    if (!review) throw new Error("Review not found");
+
+    // Check if user owns this review
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject ?? "anonymous";
+
+    if (review.userId !== userId) {
+      throw new Error("You can only edit your own reviews");
+    }
+
+    // Update the review
+    await ctx.db.patch(args.reviewId, {
+      rating,
+      content: args.content.trim(),
+      isEdited: true,
+    });
+
+    return args.reviewId;
+  },
+});
+
+// Delete a review
+export const deleteReview = mutation({
+  args: {
+    reviewId: v.id("reviews"),
+  },
+  handler: async (ctx, args) => {
+    // Get the review
+    const review = await ctx.db.get(args.reviewId);
+    if (!review) throw new Error("Review not found");
+
+    // Check if user owns this review
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject ?? "anonymous";
+
+    if (review.userId !== userId) {
+      throw new Error("You can only delete your own reviews");
+    }
+
+    // Delete the review
+    await ctx.db.delete(args.reviewId);
+
+    return args.reviewId;
   },
 });
 

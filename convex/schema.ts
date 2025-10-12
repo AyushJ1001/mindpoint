@@ -90,6 +90,7 @@ export default defineSchema({
     rating: v.number(),
     content: v.string(),
     course: v.id("courses"),
+    isEdited: v.optional(v.boolean()),
   }).index("by_course", ["course"]),
 
   guestUsers: defineTable({
