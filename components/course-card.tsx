@@ -185,6 +185,15 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
       {/* Course Image */}
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
+      {/* Offer name badge (top-left) */}
+      {offerDetails && (
+        <div className="absolute top-3 left-3 z-20">
+          <Badge variant="secondary" className="text-xs font-semibold">
+            {offerDetails.offerName}
+          </Badge>
+        </div>
+      )}
+
       {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
         <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
           {offerDetails?.hasDiscount && (
@@ -421,8 +430,13 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
       className="group ring-border/60 dark:ring-oklch(0.2_0.02_240) relative h-full cursor-pointer overflow-hidden border-0 shadow-sm ring-1 transition-all hover:scale-[1.02] hover:shadow-lg dark:shadow-lg dark:shadow-black/30 dark:hover:shadow-xl dark:hover:shadow-black/40"
       onClick={handleCardClick}
     >
-      {/* Upcoming badge */}
-      <div className="pointer-events-none absolute top-3 left-3 z-20">
+      {/* Left badges: Offer name and Upcoming */}
+      <div className="pointer-events-none absolute top-3 left-3 z-20 flex flex-col gap-2">
+        {offerDetails && (
+          <Badge variant="secondary" className="text-xs font-semibold">
+            {offerDetails.offerName}
+          </Badge>
+        )}
         <Badge
           variant="default"
           className="bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"

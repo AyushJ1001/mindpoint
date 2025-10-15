@@ -266,6 +266,15 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
 
+      {/* Offer name badge (top-left) */}
+      {offerDetails && (
+        <div className="absolute top-3 left-3 z-20">
+          <Badge variant="secondary" className="text-xs font-semibold">
+            {offerDetails.offerName}
+          </Badge>
+        </div>
+      )}
+
       {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
         <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
           {offerDetails?.hasDiscount && (
@@ -589,6 +598,15 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
+
+      {/* Offer name badge (top-left) */}
+      {offerDetails && (
+        <div className="absolute top-3 left-3 z-20">
+          <Badge variant="secondary" className="text-xs font-semibold">
+            {offerDetails.offerName}
+          </Badge>
+        </div>
+      )}
 
       {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
         <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">

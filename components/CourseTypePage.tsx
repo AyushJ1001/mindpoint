@@ -298,10 +298,19 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
 
   return (
     <Card
-      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
+      className="card-shadow hover:card-shadow-lg transition-smooth group relative h-full cursor-pointer overflow-hidden"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
+
+      {/* Offer name badge (top-left) */}
+      {offerDetails && (
+        <div className="absolute top-3 left-3 z-20">
+          <Badge variant="secondary" className="text-xs font-semibold">
+            {offerDetails.offerName}
+          </Badge>
+        </div>
+      )}
 
       {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
         <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
@@ -641,10 +650,19 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
 
   return (
     <Card
-      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
+      className="card-shadow hover:card-shadow-lg transition-smooth group relative h-full cursor-pointer overflow-hidden"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
+
+      {/* Offer name badge (top-left) */}
+      {offerDetails && (
+        <div className="absolute top-3 left-3 z-20">
+          <Badge variant="secondary" className="text-xs font-semibold">
+            {offerDetails.offerName}
+          </Badge>
+        </div>
+      )}
 
       {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
         <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
@@ -837,6 +855,23 @@ export default function CourseTypePage({
                   ),
                 );
               })()}
+            </div>
+          ) : courses === undefined ? (
+            // Loading state while useQuery resolves
+            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <div
+                  key={idx}
+                  className="card-shadow h-full overflow-hidden rounded-lg border p-4"
+                >
+                  <div className="bg-muted mb-4 h-72 w-full animate-pulse rounded" />
+                  <div className="space-y-3">
+                    <div className="bg-muted h-4 w-3/4 animate-pulse rounded" />
+                    <div className="bg-muted h-4 w-1/2 animate-pulse rounded" />
+                    <div className="bg-muted h-10 w-24 animate-pulse rounded" />
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
             <div className="py-12 text-center">
