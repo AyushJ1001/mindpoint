@@ -59,7 +59,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
   // Get available courses for BOGO selection
   const availableCourses = useQuery(
     api.courses.getBogoCoursesByType,
-    course.bogo?.enabled && course.type ? { courseType: course.type } : "skip",
+    course.bogo && course.type ? { courseType: course.type } : "skip",
   );
 
   // Set mounted state after hydration
@@ -296,7 +296,7 @@ export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
   // Get available courses for BOGO selection
   const availableCourses = useQuery(
     api.courses.getBogoCoursesByType,
-    course.bogo?.enabled && course.type ? { courseType: course.type } : "skip",
+    course.bogo && course.type ? { courseType: course.type } : "skip",
   );
 
   // Set mounted state after hydration

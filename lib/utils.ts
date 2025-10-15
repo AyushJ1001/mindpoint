@@ -100,7 +100,10 @@ export function isDiscountActive(offer?: CourseOffer): boolean {
 }
 
 export function isBogoActive(bogo?: CourseBogo): boolean {
-  if (!bogo || !bogo.enabled) return false;
+  // If a bogo object exists but `enabled` is undefined, treat it as enabled by default
+  if (!bogo) return false;
+  const isEnabled = bogo.enabled ?? true;
+  if (!isEnabled) return false;
   return isWithinWindow(bogo.startDate, bogo.endDate);
 }
 

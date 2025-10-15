@@ -173,7 +173,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   // Get available courses for BOGO selection
   const availableCourses = useQuery(
     api.courses.getBogoCoursesByType,
-    selectedCourse.bogo?.enabled && selectedCourse.type
+    selectedCourse.bogo && selectedCourse.type
       ? { courseType: selectedCourse.type }
       : "skip",
   );
@@ -523,7 +523,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   // Get available courses for BOGO selection
   const availableCourses = useQuery(
     api.courses.getBogoCoursesByType,
-    course.bogo?.enabled && course.type ? { courseType: course.type } : "skip",
+    course.bogo && course.type ? { courseType: course.type } : "skip",
   );
 
   // Update offer details every minute for real-time countdown
