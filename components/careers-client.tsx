@@ -65,6 +65,7 @@ export default function CareersClient() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(ApplicationSchema),
@@ -151,18 +152,52 @@ export default function CareersClient() {
     setSelectedFile(null);
   };
 
-  const onSubmit = async () => {
+  const onSubmit = async (formData: FormValues) => {
+    if (!selectedFile) {
+      toast.error("Please upload your resume");
+      return;
+    }
+
     setIsSubmitting(true);
 
-    // Simulate form submission
-    await new Promise((resolve) => setTimeout(resolve, 2000));
+    try {
+      const data = new FormData();
+      data.append("fullName", formData.fullName);
+      data.append("email", formData.email);
+      data.append("phone", formData.phone);
+      data.append("location", formData.location);
+      data.append("linkedIn", formData.linkedIn || "");
+      data.append("coverLetter", formData.coverLetter || "");
+      data.append("roles", JSON.stringify(selectedRoles));
+      data.append("resume", selectedFile);
 
-    toast.success("Application submitted successfully!", {
-      description:
-        "We&apos;ll review your application and get back to you within 5-7 business days.",
-    });
+      const response = await fetch("/api/careers", {
+        method: "POST",
+        body: data,
+      });
 
-    setIsSubmitting(false);
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to submit application");
+      }
+
+      toast.success("Application submitted successfully!", {
+        description:
+          "We&apos;ll review your application and get back to you within 5-7 business days.",
+      });
+
+      // Reset form
+      form.reset();
+      setSelectedFile(null);
+      setSelectedRoles([]);
+    } catch (error: any) {
+      toast.error("Failed to submit application", {
+        description: error.message || "Please try again later.",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -418,7 +453,17 @@ export default function CareersClient() {
                       "Social Media Intern",
                     ].map((role, idx) => (
                       <div className="flex items-center gap-2" key={idx}>
-                        <Checkbox id={role} />
+                        <Checkbox
+                          id={role}
+                          checked={selectedRoles.includes(role)}
+                          onCheckedChange={(checked) => {
+                            setSelectedRoles((prev) =>
+                              checked
+                                ? [...prev, role]
+                                : prev.filter((r) => r !== role),
+                            );
+                          }}
+                        />
                         <Label htmlFor={role}>{role}</Label>
                       </div>
                     ))}
