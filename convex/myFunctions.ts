@@ -1143,7 +1143,7 @@ export const handleCartCheckout = mutation({
       console.log("Sending supervised therapy welcome emails...");
       // Send supervised therapy welcome email for each supervised course
       // This email includes the 4 required checklist PDFs as attachments
-      supervisedEnrollments.forEach(async () => {
+      for (const enrollment of supervisedEnrollments) {
         await ctx.scheduler.runAfter(
           0,
           api.emailActions.sendSupervisedTherapyWelcomeEmail,
@@ -1153,7 +1153,7 @@ export const handleCartCheckout = mutation({
             sessionType: args.sessionType || "focus", // Default to focus if not provided
           },
         );
-      });
+      }
       console.log("Supervised therapy welcome emails scheduled successfully");
     }
 
@@ -1874,7 +1874,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     if (supervisedEnrollments.length > 0) {
       // Send supervised therapy welcome email for each supervised course
       // This email includes the 4 required checklist PDFs as attachments
-      supervisedEnrollments.forEach(async () => {
+      for (const enrollment of supervisedEnrollments) {
         await ctx.scheduler.runAfter(
           0,
           api.emailActions.sendSupervisedTherapyWelcomeEmail,
@@ -1884,7 +1884,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
             sessionType: args.sessionType || "focus", // Default to focus if not provided
           },
         );
-      });
+      }
     }
 
     if (enrollments.length > 0) {

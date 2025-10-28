@@ -231,12 +231,13 @@ export const sendCertificateEnrollmentConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Send email
-    await sendEmailWithCopy({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Certificate Course Enrollment Confirmation",
-      html: `
+    try {
+      // Send email
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Certificate Course Enrollment Confirmation",
+        html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Certificate Course Enrollment Confirmation</h2>
           <p>Dear ${args.userName},</p>
@@ -281,9 +282,18 @@ export const sendCertificateEnrollmentConfirmation = action({
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
       `,
-    });
+      });
 
-    return null;
+      return null;
+    } catch (error) {
+      console.error("Failed to send certificate enrollment confirmation:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        enrollmentNumber: args.enrollmentNumber,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });
 
@@ -302,17 +312,18 @@ export const sendInternshipEnrollmentConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    const planText =
-      args.internshipPlan === "120"
-        ? "2 week (120 hours)"
-        : "4 week (240 hours)";
+    try {
+      const planText =
+        args.internshipPlan === "120"
+          ? "2 week (120 hours)"
+          : "4 week (240 hours)";
 
-    // Send email
-    await sendEmailWithCopy({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Internship Program Enrollment Confirmation",
-      html: `
+      // Send email
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Internship Program Enrollment Confirmation",
+        html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Internship Program Enrollment Confirmation</h2>
           <p>Dear ${args.userName},</p>
@@ -361,9 +372,18 @@ export const sendInternshipEnrollmentConfirmation = action({
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
       `,
-    });
+      });
 
-    return null;
+      return null;
+    } catch (error) {
+      console.error("Failed to send internship enrollment confirmation:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        enrollmentNumber: args.enrollmentNumber,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });
 
@@ -381,11 +401,12 @@ export const sendDiplomaEnrollmentConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Send email
-    await sendEmailWithCopy({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Diploma Course Enrollment Confirmation",
+    try {
+      // Send email
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Diploma Course Enrollment Confirmation",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Diploma Course Enrollment Confirmation</h2>
@@ -431,9 +452,18 @@ export const sendDiplomaEnrollmentConfirmation = action({
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
       `,
-    });
+      });
 
-    return null;
+      return null;
+    } catch (error) {
+      console.error("Failed to send diploma enrollment confirmation:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        enrollmentNumber: args.enrollmentNumber,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });
 
@@ -447,11 +477,12 @@ export const sendPreRecordedEnrollmentConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Send email
-    await sendEmailWithCopy({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Pre-Recorded Course Enrollment Confirmation",
+    try {
+      // Send email
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Pre-Recorded Course Enrollment Confirmation",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Pre-Recorded Course Enrollment Confirmation</h2>
@@ -485,9 +516,18 @@ export const sendPreRecordedEnrollmentConfirmation = action({
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
       `,
-    });
+      });
 
-    return null;
+      return null;
+    } catch (error) {
+      console.error("Failed to send pre-recorded enrollment confirmation:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        enrollmentNumber: args.enrollmentNumber,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });
 
@@ -505,11 +545,12 @@ export const sendMasterclassEnrollmentConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Send email
-    await sendEmailWithCopy({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Masterclass Enrollment Confirmation",
+    try {
+      // Send email
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Masterclass Enrollment Confirmation",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Masterclass Enrollment Confirmation</h2>
@@ -555,9 +596,18 @@ export const sendMasterclassEnrollmentConfirmation = action({
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
       `,
-    });
+      });
 
-    return null;
+      return null;
+    } catch (error) {
+      console.error("Failed to send masterclass enrollment confirmation:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        enrollmentNumber: args.enrollmentNumber,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });
 
@@ -575,11 +625,12 @@ export const sendEnrollmentConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Send email
-    await sendEmailWithCopy({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Enrollment Confirmation",
+    try {
+      // Send email
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Enrollment Confirmation",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
@@ -625,9 +676,18 @@ export const sendEnrollmentConfirmation = action({
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
       `,
-    });
+      });
 
-    return null;
+      return null;
+    } catch (error) {
+      console.error("Failed to send enrollment confirmation:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        enrollmentNumber: args.enrollmentNumber,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });
 
@@ -794,11 +854,12 @@ export const sendTherapyEnrollmentConfirmation = action({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    // Send email
-    await sendEmailWithCopy({
-      from: "The Mind Point <no-reply@themindpoint.org>",
-      to: args.userEmail,
-      subject: "Therapy Session Enrollment Confirmation",
+    try {
+      // Send email
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Therapy Session Enrollment Confirmation",
       html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Therapy Session Enrollment Confirmation</h2>
@@ -833,9 +894,18 @@ export const sendTherapyEnrollmentConfirmation = action({
           <p>Best regards,<br>The Mind Point Therapy Team</p>
         </div>
       `,
-    });
+      });
 
-    return null;
+      return null;
+    } catch (error) {
+      console.error("Failed to send therapy enrollment confirmation:", {
+        userEmail: args.userEmail,
+        therapyType: args.therapyType,
+        enrollmentNumber: args.enrollmentNumber,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
   },
 });
 
