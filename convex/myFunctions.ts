@@ -246,6 +246,25 @@ function validateBogoSelection(
     };
   }
 
+  // Prevent selecting the same course as free
+  if (sourceCourse._id === selectedFreeCourse._id) {
+    return {
+      isValid: false,
+      error: "Selected free course cannot be the same as the source course",
+    };
+  }
+
+  // Capacity check on the free course if capacity is enforced
+  const capacity = selectedFreeCourse.capacity ?? 0;
+  const enrolled = (selectedFreeCourse.enrolledUsers ?? []).length;
+  const seatsLeft = Math.max(0, capacity - enrolled);
+  if (capacity > 0 && seatsLeft === 0) {
+    return {
+      isValid: false,
+      error: `Selected free course \"${selectedFreeCourse.name}\" is out of stock`,
+    };
+  }
+
   return { isValid: true };
 }
 
@@ -341,11 +360,46 @@ async function attemptBogoFallback(
     isGuestUser?: boolean;
   },
 ): Promise<EnrollmentSummary[]> {
-  console.warn(
-    "BOGO fallback attempted but freeCourseId field has been removed from schema. BOGO now requires user selection.",
-    sourceCourse._id,
-  );
-  return [];
+  // If BOGO isn't active, do nothing
+  if (!isBogoActive(sourceCourse.bogo)) {
+    return [];
+  }
+
+  // Gather candidate courses of the same type, excluding the source course
+  // Note: We don't have a direct index by type here, so we scan and filter.
+  // Consider adding an index if this becomes hot.
+  const candidates: Array<CourseDoc> = [];
+  for await (const c of ctx.db.query("courses")) {
+    if (!c) continue;
+    if (c._id === sourceCourse._id) continue;
+    if (c.type !== sourceCourse.type) continue;
+    const capacity = c.capacity ?? 0;
+    const enrolled = (c.enrolledUsers ?? []).length;
+    const seatsLeft = Math.max(0, capacity - enrolled);
+    if (capacity > 0 && seatsLeft === 0) continue;
+    candidates.push(c);
+  }
+
+  if (candidates.length === 0) {
+    console.warn(
+      "BOGO fallback: no suitable same-type free course candidates found",
+      sourceCourse._id,
+    );
+    return [];
+  }
+
+  // Choose by earliest start date, then lower price
+  candidates.sort((a, b) => {
+    const aStart = new Date(a.startDate).getTime();
+    const bStart = new Date(b.startDate).getTime();
+    if (aStart !== bStart) return aStart - bStart;
+    const aPrice = a.price ?? 0;
+    const bPrice = b.price ?? 0;
+    return aPrice - bPrice;
+  });
+
+  const freeCourse = candidates[0];
+  return await createBogoEnrollment(ctx, sourceCourse, freeCourse, userContext);
 }
 
 async function createBogoEnrollment(
@@ -380,6 +434,68 @@ async function createBogoEnrollment(
   }
   const internshipPlan =
     extractInternshipPlanFromDuration(freeCourse.duration) || undefined;
+
+  // Idempotency: Check if a BOGO enrollment already exists for this user & course
+  const existingEnrollment = await ctx.db
+    .query("enrollments")
+    .filter((q) =>
+      q.and(
+        q.eq(q.field("userId"), userContext.userId),
+        q.eq(q.field("courseId"), freeCourse._id),
+      ),
+    )
+    .collect();
+  const existingBogo = existingEnrollment.find((e) => e.isBogoFree === true);
+
+  if (existingBogo) {
+    console.warn("BOGO enrollment already exists; ensuring roster only", {
+      userId: userContext.userId,
+      courseId: freeCourse._id,
+      enrollmentId: existingBogo._id,
+    });
+    // Ensure enrolledUsers contains user
+    const latestFree = await ctx.db.get(freeCourse._id);
+    if (latestFree) {
+      const latestUsers = latestFree.enrolledUsers ?? [];
+      if (!latestUsers.includes(userContext.userId)) {
+        await ctx.db.patch(latestFree._id, {
+          enrolledUsers: [...latestUsers, userContext.userId],
+        });
+      }
+    }
+    // Build summary using existing enrollment
+    let computedEndDate = freeCourse.endDate;
+    if (
+      freeCourse.type === "internship" &&
+      (internshipPlan === "120" || internshipPlan === "240")
+    ) {
+      computedEndDate = calculateInternshipEndDate(
+        freeCourse.startDate,
+        internshipPlan,
+      );
+    }
+    return [
+      {
+        enrollmentId: existingBogo._id as Id<"enrollments">,
+        enrollmentNumber: existingBogo.enrollmentNumber,
+        courseName: freeCourse.name,
+        courseId: freeCourse._id as Id<"courses">,
+        courseType: freeCourse.type,
+        startDate: freeCourse.startDate,
+        endDate: computedEndDate,
+        startTime: freeCourse.startTime,
+        endTime: freeCourse.endTime,
+        internshipPlan,
+        sessions: freeCourse.sessions,
+        sessionType:
+          freeCourse.type === "supervised"
+            ? userContext.sessionType
+            : undefined,
+        isBogoFree: true,
+        bogoOfferName: sourceCourse.name,
+      },
+    ];
+  }
 
   const enrollmentNumber =
     freeCourse.type === "therapy" || freeCourse.type === "supervised"
@@ -424,11 +540,24 @@ async function createBogoEnrollment(
     bogoOfferName: sourceCourse.name,
   });
 
-  const existingUsers = freeCourse.enrolledUsers ?? [];
-  if (!existingUsers.includes(userContext.userId)) {
+  // Robust roster patch: re-read, set-union, verify, retry once if needed
+  const latest = await ctx.db.get(freeCourse._id);
+  const latestUsers = latest?.enrolledUsers ?? [];
+  if (!latestUsers.includes(userContext.userId)) {
     await ctx.db.patch(freeCourse._id, {
-      enrolledUsers: [...existingUsers, userContext.userId],
+      enrolledUsers: [...latestUsers, userContext.userId],
     });
+    const verify = await ctx.db.get(freeCourse._id);
+    const verifyUsers = verify?.enrolledUsers ?? [];
+    if (!verifyUsers.includes(userContext.userId)) {
+      console.warn("Retrying enrolledUsers patch for BOGO", {
+        userId: userContext.userId,
+        courseId: freeCourse._id,
+      });
+      await ctx.db.patch(freeCourse._id, {
+        enrolledUsers: [...verifyUsers, userContext.userId],
+      });
+    }
   }
 
   let computedEndDate = freeCourse.endDate;
