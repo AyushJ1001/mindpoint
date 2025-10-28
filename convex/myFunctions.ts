@@ -390,8 +390,10 @@ async function attemptBogoFallback(
 
   // Choose by earliest start date, then lower price
   candidates.sort((a, b) => {
-    const aStart = new Date(a.startDate).getTime();
-    const bStart = new Date(b.startDate).getTime();
+    const aParsed = Date.parse(a.startDate ?? "");
+    const bParsed = Date.parse(b.startDate ?? "");
+    const aStart = Number.isNaN(aParsed) ? Number.POSITIVE_INFINITY : aParsed;
+    const bStart = Number.isNaN(bParsed) ? Number.POSITIVE_INFINITY : bParsed;
     if (aStart !== bStart) return aStart - bStart;
     const aPrice = a.price ?? 0;
     const bPrice = b.price ?? 0;
