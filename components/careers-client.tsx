@@ -191,9 +191,10 @@ export default function CareersClient() {
       form.reset();
       setSelectedFile(null);
       setSelectedRoles([]);
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Please try again later.";
       toast.error("Failed to submit application", {
-        description: error.message || "Please try again later.",
+        description: message,
       });
     } finally {
       setIsSubmitting(false);
