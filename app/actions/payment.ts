@@ -2,6 +2,7 @@
 
 import { api } from "../../convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
+import { executeConvexMutationWithRetry } from "@/lib/convex-client-utils";
 
 export async function handlePaymentSuccess(
   userId: string,
@@ -26,14 +27,8 @@ export async function handlePaymentSuccess(
   error?: string;
 }> {
   try {
-    // Import the Convex client for server-side usage
-    const { ConvexHttpClient } = await import("convex/browser");
-
-    // Create a Convex client for server-side operations
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-    // Call the mutation to handle cart checkout
-    const enrollments = await convex.mutation(
+    // Call the mutation with retry logic to handle transient failures
+    const enrollments = await executeConvexMutationWithRetry(
       api.myFunctions.handleCartCheckout,
       {
         userId,
@@ -44,6 +39,12 @@ export async function handlePaymentSuccess(
         sessionType: sessionType,
         bogoSelections: bogoSelections,
       },
+      {
+        userId,
+        userEmail,
+        courseIds: courseIds.map((id) => id),
+        operationType: "handleCartCheckout",
+      },
     );
 
     return {
@@ -51,7 +52,13 @@ export async function handlePaymentSuccess(
       enrollments,
     };
   } catch (error) {
-    console.error("Error handling payment success:", error);
+    console.error("Error handling payment success (all retries exhausted):", {
+      error: error instanceof Error ? error.message : String(error),
+      userId,
+      userEmail,
+      courseIds: courseIds.map((id) => id),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
@@ -74,18 +81,17 @@ export async function handleGuestUserPaymentSuccess(
   error?: string;
 }> {
   try {
-    // Import the Convex client for server-side usage
-    const { ConvexHttpClient } = await import("convex/browser");
-
-    // Create a Convex client for server-side operations
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-    // Call the mutation to handle guest user cart checkout
-    const enrollments = await convex.mutation(
+    // Call the mutation with retry logic to handle transient failures
+    const enrollments = await executeConvexMutationWithRetry(
       api.myFunctions.handleGuestUserCartCheckoutByEmail,
       {
         userEmail,
         courseIds: courseIds,
+      },
+      {
+        userEmail,
+        courseIds: courseIds.map((id) => id),
+        operationType: "handleGuestUserCartCheckoutByEmail",
       },
     );
 
@@ -94,7 +100,15 @@ export async function handleGuestUserPaymentSuccess(
       enrollments,
     };
   } catch (error) {
-    console.error("Error handling guest user payment success:", error);
+    console.error(
+      "Error handling guest user payment success (all retries exhausted):",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        userEmail,
+        courseIds: courseIds.map((id) => id),
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
@@ -122,20 +136,19 @@ export async function handleGuestUserPaymentSuccessWithData(
   error?: string;
 }> {
   try {
-    // Import the Convex client for server-side usage
-    const { ConvexHttpClient } = await import("convex/browser");
-
-    // Create a Convex client for server-side operations
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-    // Call the mutation to handle guest user cart checkout with complete data
-    const enrollments = await convex.mutation(
+    // Call the mutation with retry logic to handle transient failures
+    const enrollments = await executeConvexMutationWithRetry(
       api.myFunctions.handleGuestUserCartCheckoutWithData,
       {
         userData,
         courseIds: courseIds,
         sessionType: sessionType,
         bogoSelections: bogoSelections,
+      },
+      {
+        userEmail: userData.email,
+        courseIds: courseIds.map((id) => id),
+        operationType: "handleGuestUserCartCheckoutWithData",
       },
     );
 
@@ -144,7 +157,15 @@ export async function handleGuestUserPaymentSuccessWithData(
       enrollments,
     };
   } catch (error) {
-    console.error("Error handling guest user payment success:", error);
+    console.error(
+      "Error handling guest user payment success with data (all retries exhausted):",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        userEmail: userData.email,
+        courseIds: courseIds.map((id) => id),
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
@@ -169,14 +190,8 @@ export async function handleSingleCourseEnrollment(
   error?: string;
 }> {
   try {
-    // Import the Convex client for server-side usage
-    const { ConvexHttpClient } = await import("convex/browser");
-
-    // Create a Convex client for server-side operations
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-    // Call the mutation to handle single course enrollment
-    const enrollment = await convex.mutation(
+    // Call the mutation with retry logic to handle transient failures
+    const enrollment = await executeConvexMutationWithRetry(
       api.myFunctions.handleSuccessfulPayment,
       {
         userId,
@@ -185,6 +200,12 @@ export async function handleSingleCourseEnrollment(
         userPhone: userPhone,
         studentName: studentName,
         sessionType: sessionType,
+      },
+      {
+        userId,
+        userEmail,
+        courseIds: [courseId],
+        operationType: "handleSuccessfulPayment",
       },
     );
 
@@ -197,7 +218,16 @@ export async function handleSingleCourseEnrollment(
       },
     };
   } catch (error) {
-    console.error("Error handling single course enrollment:", error);
+    console.error(
+      "Error handling single course enrollment (all retries exhausted):",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        userId,
+        userEmail,
+        courseId,
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
@@ -218,18 +248,17 @@ export async function handleGuestUserSingleEnrollment(
   error?: string;
 }> {
   try {
-    // Import the Convex client for server-side usage
-    const { ConvexHttpClient } = await import("convex/browser");
-
-    // Create a Convex client for server-side operations
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-    // Call the mutation to handle guest user single course enrollment
-    const enrollment = await convex.mutation(
+    // Call the mutation with retry logic to handle transient failures
+    const enrollment = await executeConvexMutationWithRetry(
       api.myFunctions.handleGuestUserSingleEnrollmentByEmail,
       {
         userEmail,
         courseId: courseId,
+      },
+      {
+        userEmail,
+        courseIds: [courseId],
+        operationType: "handleGuestUserSingleEnrollmentByEmail",
       },
     );
 
@@ -242,7 +271,15 @@ export async function handleGuestUserSingleEnrollment(
       },
     };
   } catch (error) {
-    console.error("Error handling guest user single course enrollment:", error);
+    console.error(
+      "Error handling guest user single course enrollment (all retries exhausted):",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        userEmail,
+        courseId,
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
@@ -268,14 +305,8 @@ export async function handleSupervisedTherapyEnrollment(
   error?: string;
 }> {
   try {
-    // Import the Convex client for server-side usage
-    const { ConvexHttpClient } = await import("convex/browser");
-
-    // Create a Convex client for server-side operations
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-    // Call the mutation to handle supervised therapy enrollment
-    const enrollment = await convex.mutation(
+    // Call the mutation with retry logic to handle transient failures
+    const enrollment = await executeConvexMutationWithRetry(
       api.myFunctions.handleSupervisedTherapyEnrollment,
       {
         userId,
@@ -284,6 +315,12 @@ export async function handleSupervisedTherapyEnrollment(
         userPhone: userPhone,
         studentName: studentName,
         sessionType: sessionType,
+      },
+      {
+        userId,
+        userEmail,
+        courseIds: [courseId],
+        operationType: "handleSupervisedTherapyEnrollment",
       },
     );
 
@@ -297,7 +334,17 @@ export async function handleSupervisedTherapyEnrollment(
       },
     };
   } catch (error) {
-    console.error("Error handling supervised therapy enrollment:", error);
+    console.error(
+      "Error handling supervised therapy enrollment (all retries exhausted):",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        userId,
+        userEmail,
+        courseId,
+        sessionType,
+        stack: error instanceof Error ? error.stack : undefined,
+      },
+    );
     return {
       success: false,
       error: error instanceof Error ? error.message : "Unknown error occurred",
@@ -322,14 +369,8 @@ export async function handleGuestUserSupervisedTherapyEnrollment(
   error?: string;
 }> {
   try {
-    // Import the Convex client for server-side usage
-    const { ConvexHttpClient } = await import("convex/browser");
-
-    // Create a Convex client for server-side operations
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
-
-    // Call the mutation to handle guest user supervised therapy enrollment
-    const enrollment = await convex.mutation(
+    // Call the mutation with retry logic to handle transient failures
+    const enrollment = await executeConvexMutationWithRetry(
       api.myFunctions.handleGuestUserSupervisedTherapyEnrollment,
       {
         userEmail,
@@ -337,6 +378,11 @@ export async function handleGuestUserSupervisedTherapyEnrollment(
         courseId: courseId,
         studentName: studentName,
         sessionType: sessionType,
+      },
+      {
+        userEmail,
+        courseIds: [courseId],
+        operationType: "handleGuestUserSupervisedTherapyEnrollment",
       },
     );
 
@@ -346,8 +392,14 @@ export async function handleGuestUserSupervisedTherapyEnrollment(
     };
   } catch (error) {
     console.error(
-      "Error handling guest user supervised therapy enrollment:",
-      error,
+      "Error handling guest user supervised therapy enrollment (all retries exhausted):",
+      {
+        error: error instanceof Error ? error.message : String(error),
+        userEmail,
+        courseId,
+        sessionType,
+        stack: error instanceof Error ? error.stack : undefined,
+      },
     );
     return {
       success: false,
