@@ -8,6 +8,7 @@ import PreRecordedCourse from "./PreRecordedCourse";
 import MasterclassCourse from "./MasterclassCourse";
 import SupervisedCourse from "./SupervisedCourse";
 import ResumeStudioCourse from "./ResumeStudioCourse";
+import WorksheetCourse from "./WorksheetCourse";
 import WhoShouldDo from "./who-should-do";
 import WhyChoose from "./why-choose";
 import Certification from "./certification";
@@ -55,6 +56,8 @@ export default function CourseTypeRenderer({
         return <SupervisedCourse course={course} variants={variants} />;
       case "resume-studio":
         return <ResumeStudioCourse course={course} />;
+      case "worksheet":
+        return <WorksheetCourse course={course} />;
       default:
         // Fallback to certificate course for unknown types
         return <CertificateCourse course={course} />;
@@ -63,6 +66,12 @@ export default function CourseTypeRenderer({
 
   // Render common sections based on course type
   const renderCommonSections = () => {
+    // For worksheets, the WorksheetCourse component handles everything
+    // including hero, pricing, description, target audience, reviews, and sticky CTA
+    if (courseType === "worksheet") {
+      return <>{renderCourseTypeContent()}</>;
+    }
+
     // For therapy and supervised courses, skip the hero section and start directly with plan selection
     if (courseType === "therapy" || courseType === "supervised") {
       return (

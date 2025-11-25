@@ -407,7 +407,7 @@ export const sendDiplomaEnrollmentConfirmation = action({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Diploma Course Enrollment Confirmation",
-      html: `
+        html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Diploma Course Enrollment Confirmation</h2>
           <p>Dear ${args.userName},</p>
@@ -483,7 +483,7 @@ export const sendPreRecordedEnrollmentConfirmation = action({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Pre-Recorded Course Enrollment Confirmation",
-      html: `
+        html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Pre-Recorded Course Enrollment Confirmation</h2>
           <p>Dear ${args.userName},</p>
@@ -551,7 +551,7 @@ export const sendMasterclassEnrollmentConfirmation = action({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Masterclass Enrollment Confirmation",
-      html: `
+        html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Masterclass Enrollment Confirmation</h2>
           <p>Dear ${args.userName},</p>
@@ -631,7 +631,7 @@ export const sendEnrollmentConfirmation = action({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Enrollment Confirmation",
-      html: `
+        html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
           <p>Dear Learner,</p>
@@ -860,7 +860,7 @@ export const sendTherapyEnrollmentConfirmation = action({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Therapy Session Enrollment Confirmation",
-      html: `
+        html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Therapy Session Enrollment Confirmation</h2>
           <p>Dear ${args.userName},</p>
@@ -1050,6 +1050,156 @@ export const sendSupervisedTherapyWelcomeEmail = action({
       );
     } catch (error) {
       console.error("Failed to send supervised therapy welcome email:", error);
+      throw error;
+    }
+
+    return null;
+  },
+});
+
+export const sendWorksheetPurchaseConfirmation = action({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    userPhone: v.optional(v.string()),
+    worksheets: v.array(
+      v.object({
+        name: v.string(),
+        fileUrl: v.string(),
+      }),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      console.log(
+        "Sending worksheet purchase confirmation email to:",
+        args.userEmail,
+      );
+      console.log("Number of worksheets:", args.worksheets.length);
+
+      // Fetch the PDF files and convert them to buffers for attachments
+      const fetchFile = async (
+        url: string,
+        filename: string,
+      ): Promise<Buffer> => {
+        console.log(`Fetching worksheet file from: ${url}`);
+        const response = await fetch(url);
+        console.log(
+          `Response status: ${response.status} ${response.statusText}`,
+        );
+        if (!response.ok) {
+          throw new Error(
+            `Failed to fetch worksheet file from ${url}: ${response.status} ${response.statusText}`,
+          );
+        }
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        console.log(
+          `Successfully fetched worksheet: ${filename}, size: ${buffer.length} bytes`,
+        );
+        return buffer;
+      };
+
+      // Fetch all worksheet PDFs
+      const attachments = await Promise.all(
+        args.worksheets.map(async (worksheet) => {
+          // Extract filename from URL or use worksheet name
+          const urlParts = worksheet.fileUrl.split("/");
+          const urlFilename = urlParts[urlParts.length - 1] || "worksheet.pdf";
+          // Ensure .pdf extension
+          const filename = urlFilename.endsWith(".pdf")
+            ? urlFilename
+            : `${worksheet.name.replace(/[^a-z0-9]/gi, "_")}.pdf`;
+
+          return {
+            filename: filename,
+            content: await fetchFile(worksheet.fileUrl, filename),
+          };
+        }),
+      );
+
+      console.log(
+        "Successfully fetched all worksheet PDF files for attachments",
+      );
+      console.log("Number of attachments:", attachments.length);
+      console.log(
+        "Attachment filenames:",
+        attachments.map((a) => a.filename),
+      );
+
+      // Generate worksheet list HTML
+      const worksheetListHtml = args.worksheets
+        .map(
+          (worksheet, index) => `
+        <tr>
+          <td style="padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${worksheet.name}</td>
+        </tr>
+      `,
+        )
+        .join("");
+
+      // Send email with attachments
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Worksheet Purchase Confirmation",
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
+          <h2 style="color: #4CAF50; margin-bottom: 20px;">Worksheet Purchase Confirmation</h2>
+          
+          <p>Dear <strong>${args.userName}</strong>,</p>
+          
+          <p>We are happy to confirm that your payment for the following worksheet${args.worksheets.length > 1 ? "s" : ""} has been successfully received:</p>
+          
+          <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #4CAF50; margin: 20px 0;">
+            <p style="margin: 5px 0;"><strong>Number of Worksheets:</strong> ${args.worksheets.length}</p>
+          </div>
+          
+          <h3 style="color: #2E86C1; margin-top: 30px; margin-bottom: 15px;">Purchased Worksheets:</h3>
+          
+          <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
+            <thead>
+              <tr>
+                <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd; width: 50px;">#</th>
+                <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Worksheet Name</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${worksheetListHtml}
+            </tbody>
+          </table>
+          
+          <h3 style="color: #2E86C1; margin-top: 30px; margin-bottom: 15px;">Important Information:</h3>
+          
+          <ul style="margin-left: 20px; margin-bottom: 20px;">
+            <li>All purchased worksheet${args.worksheets.length > 1 ? "s are" : " is"} attached to this email as PDF file${args.worksheets.length > 1 ? "s" : ""}.</li>
+            <li>You can download and save these worksheets to your device for future reference.</li>
+            <li>These worksheets are yours to keep and use as many times as you need.</li>
+            <li>If you have any questions or need assistance, please contact us at <strong>+91 9770780086</strong>.</li>
+          </ul>
+          
+          <p>Thank you for choosing The Mind Point!</p>
+          
+          <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <p style="margin: 0;"><strong>Best regards,</strong><br>
+            The Mind Point Team</p>
+          </div>
+        </div>
+      `,
+        attachments,
+      });
+
+      console.log(
+        "Worksheet purchase confirmation email sent successfully to:",
+        args.userEmail,
+      );
+    } catch (error) {
+      console.error(
+        "Failed to send worksheet purchase confirmation email:",
+        error,
+      );
       throw error;
     }
 

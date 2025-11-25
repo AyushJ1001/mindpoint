@@ -244,6 +244,10 @@ export default function Navbar() {
                             name: "Masterclass/Workshop",
                             link: "/courses/masterclass",
                           },
+                          {
+                            name: "Worksheets",
+                            link: "/courses/worksheet",
+                          },
                         ].map(({ name, link }) => (
                           <NavigationMenuLink asChild key={link}>
                             <Link
@@ -630,6 +634,7 @@ export default function Navbar() {
                   "/courses/diploma",
                   "/courses/pre-recorded",
                   "/courses/masterclass",
+                  "/courses/worksheet",
                 ].map((href) => (
                   <Link
                     key={href}

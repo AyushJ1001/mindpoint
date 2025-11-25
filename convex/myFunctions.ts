@@ -939,6 +939,7 @@ export const handleCartCheckout = mutation({
   handler: async (ctx, args) => {
     const enrollments = [];
     const supervisedEnrollments = [];
+    const worksheetEnrollments = [];
     const processedBogoSourceCourses = new Set<string>(); // Track processed BOGO source courses
 
     for (const courseId of args.courseIds) {
@@ -950,10 +951,14 @@ export const handleCartCheckout = mutation({
 
       // Allow multiple enrollments per user for all course types
 
-      // Generate enrollment number only for non-therapy and non-supervised courses
+      // Generate enrollment number only for non-therapy, non-supervised, and non-worksheet courses
       let enrollmentNumber: string;
-      if (course.type === "therapy" || course.type === "supervised") {
-        enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
+      if (
+        course.type === "therapy" ||
+        course.type === "supervised" ||
+        course.type === "worksheet"
+      ) {
+        enrollmentNumber = "N/A"; // No enrollment number for therapy, supervised, or worksheet courses
       } else {
         enrollmentNumber = generateEnrollmentNumber(
           course.code,
@@ -1021,19 +1026,23 @@ export const handleCartCheckout = mutation({
         sessionType: args.sessionType, // Include session type for supervised courses
       };
 
-      // Check if this is a supervised therapy course
+      // Check if this is a supervised therapy course or worksheet
       console.log("Course name:", course.name);
       console.log("Course type:", course.type);
       console.log(
         "Checking if course is supervised:",
         course.type === "supervised",
       );
+      console.log("Checking if course is worksheet:", course.type === "worksheet");
       console.log("Session type provided:", !!args.sessionType);
       console.log("Student name provided:", !!args.studentName);
 
       if (course.type === "supervised") {
         console.log("Adding to supervised enrollments");
         supervisedEnrollments.push(enrollmentData);
+      } else if (course.type === "worksheet") {
+        console.log("Adding to worksheet enrollments");
+        worksheetEnrollments.push(enrollmentData);
       } else {
         console.log("Adding to regular enrollments");
         enrollments.push(enrollmentData);
@@ -1129,15 +1138,57 @@ export const handleCartCheckout = mutation({
 
     // Send appropriate emails based on course types
     // For supervised courses: Send separate welcome email with checklist PDFs attached
+    // For worksheets: Send single email with all PDFs attached
     // For other courses: Send regular cart checkout confirmation
     console.log("Email sending logic:");
     console.log(
       "- Supervised enrollments count:",
       supervisedEnrollments.length,
     );
+    console.log("- Worksheet enrollments count:", worksheetEnrollments.length);
     console.log("- Session type exists:", !!args.sessionType);
     console.log("- Student name exists:", !!args.studentName);
     console.log("- Regular enrollments count:", enrollments.length);
+
+    // Handle worksheet purchases - send single email with all PDFs
+    if (worksheetEnrollments.length > 0) {
+      console.log("Sending worksheet purchase confirmation email...");
+      // Collect all worksheet details with file URLs
+      const worksheets = await Promise.all(
+        worksheetEnrollments.map(async (enrollment) => {
+          const course = await ctx.db.get(enrollment.courseId);
+          if (!course || !course.fileUrl) {
+            console.warn(
+              `Worksheet ${enrollment.courseName} missing fileUrl, skipping`,
+            );
+            return null;
+          }
+          return {
+            name: enrollment.courseName,
+            fileUrl: course.fileUrl,
+          };
+        }),
+      );
+
+      // Filter out any null entries
+      const validWorksheets = worksheets.filter(
+        (w): w is { name: string; fileUrl: string } => w !== null,
+      );
+
+      if (validWorksheets.length > 0) {
+        await ctx.scheduler.runAfter(
+          0,
+          api.emailActions.sendWorksheetPurchaseConfirmation,
+          {
+            userEmail: args.userEmail,
+            userName: args.studentName || args.userEmail,
+            userPhone: args.userPhone,
+            worksheets: validWorksheets,
+          },
+        );
+        console.log("Worksheet purchase confirmation email scheduled successfully");
+      }
+    }
 
     if (supervisedEnrollments.length > 0) {
       console.log("Sending supervised therapy welcome emails...");
@@ -1283,7 +1334,7 @@ export const handleCartCheckout = mutation({
       console.log("Course-specific emails scheduled successfully");
     }
 
-    return [...enrollments, ...supervisedEnrollments];
+    return [...enrollments, ...supervisedEnrollments, ...worksheetEnrollments];
   },
 });
 
@@ -1689,6 +1740,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
     const enrollments = [];
     const supervisedEnrollments = [];
+    const worksheetEnrollments = [];
     const processedBogoSourceCourses = new Set<string>(); // Track processed BOGO source courses
 
     for (const courseId of args.courseIds) {
@@ -1700,10 +1752,14 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
       // Allow multiple enrollments per user for all course types
 
-      // Generate enrollment number only for non-therapy and non-supervised courses
+      // Generate enrollment number only for non-therapy, non-supervised, and non-worksheet courses
       let enrollmentNumber: string;
-      if (course.type === "therapy" || course.type === "supervised") {
-        enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
+      if (
+        course.type === "therapy" ||
+        course.type === "supervised" ||
+        course.type === "worksheet"
+      ) {
+        enrollmentNumber = "N/A"; // No enrollment number for therapy, supervised, or worksheet courses
       } else {
         enrollmentNumber = generateEnrollmentNumber(
           course.code,
@@ -1862,6 +1918,8 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         const bonusCourse = await ctx.db.get(bonus.courseId);
         if (bonusCourse?.type === "supervised") {
           supervisedEnrollments.push(bonus);
+        } else if (bonusCourse?.type === "worksheet") {
+          worksheetEnrollments.push(bonus);
         } else {
           enrollments.push(bonus);
         }
@@ -1870,7 +1928,48 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
     // Send appropriate emails based on course types
     // For supervised courses: Send separate welcome email with checklist PDFs attached
+    // For worksheets: Send single email with all PDFs attached
     // For other courses: Send regular cart checkout confirmation
+    // Handle worksheet purchases - send single email with all PDFs
+    if (worksheetEnrollments.length > 0) {
+      console.log("Sending worksheet purchase confirmation email...");
+      // Collect all worksheet details with file URLs
+      const worksheets = await Promise.all(
+        worksheetEnrollments.map(async (enrollment) => {
+          const course = await ctx.db.get(enrollment.courseId);
+          if (!course || !course.fileUrl) {
+            console.warn(
+              `Worksheet ${enrollment.courseName} missing fileUrl, skipping`,
+            );
+            return null;
+          }
+          return {
+            name: enrollment.courseName,
+            fileUrl: course.fileUrl,
+          };
+        }),
+      );
+
+      // Filter out any null entries
+      const validWorksheets = worksheets.filter(
+        (w): w is { name: string; fileUrl: string } => w !== null,
+      );
+
+      if (validWorksheets.length > 0) {
+        await ctx.scheduler.runAfter(
+          0,
+          api.emailActions.sendWorksheetPurchaseConfirmation,
+          {
+            userEmail: args.userData.email,
+            userName: args.userData.name,
+            userPhone: args.userData.phone,
+            worksheets: validWorksheets,
+          },
+        );
+        console.log("Worksheet purchase confirmation email scheduled successfully");
+      }
+    }
+
     if (supervisedEnrollments.length > 0) {
       // Send supervised therapy welcome email for each supervised course
       // This email includes the 4 required checklist PDFs as attachments
@@ -2017,7 +2116,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       );
     }
 
-    return [...enrollments, ...supervisedEnrollments];
+    return [...enrollments, ...supervisedEnrollments, ...worksheetEnrollments];
   },
 });
 
@@ -2548,5 +2647,63 @@ export const setupEnrollmentGoogleSheet = action({
       console.error("Error setting up Google Sheets:", error);
       throw error;
     }
+  },
+});
+
+// ==========================================
+// User Profile Functions (for WhatsApp number collection)
+// ==========================================
+
+// Get user profile by Clerk user ID
+export const getUserProfile = query({
+  args: {
+    clerkUserId: v.string(),
+  },
+  returns: v.union(
+    v.object({
+      _id: v.id("userProfiles"),
+      _creationTime: v.number(),
+      clerkUserId: v.string(),
+      whatsappNumber: v.optional(v.string()),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const profile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .first();
+
+    return profile;
+  },
+});
+
+// Save or update user WhatsApp number
+export const saveUserWhatsappNumber = mutation({
+  args: {
+    clerkUserId: v.string(),
+    whatsappNumber: v.string(),
+  },
+  returns: v.id("userProfiles"),
+  handler: async (ctx, args) => {
+    // Check if user profile already exists
+    const existingProfile = await ctx.db
+      .query("userProfiles")
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .first();
+
+    if (existingProfile) {
+      // Update existing profile with new WhatsApp number
+      await ctx.db.patch(existingProfile._id, {
+        whatsappNumber: args.whatsappNumber,
+      });
+      return existingProfile._id;
+    }
+
+    // Create new user profile
+    return await ctx.db.insert("userProfiles", {
+      clerkUserId: args.clerkUserId,
+      whatsappNumber: args.whatsappNumber,
+    });
   },
 });

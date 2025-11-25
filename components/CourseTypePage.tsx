@@ -796,7 +796,8 @@ interface CourseTypePageProps {
     | "masterclass"
     | "therapy"
     | "supervised"
-    | "resume-studio";
+    | "resume-studio"
+    | "worksheet";
   title: string;
   description: string;
   iconName: keyof typeof iconMap;

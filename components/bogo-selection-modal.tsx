@@ -32,7 +32,8 @@ interface BogoSelectionModalProps {
     | "masterclass"
     | "therapy"
     | "supervised"
-    | "resume-studio";
+    | "resume-studio"
+    | "worksheet";
   sourceCourseId: Id<"courses">;
   sourceCourseName: string;
 }

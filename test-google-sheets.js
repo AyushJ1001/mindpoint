@@ -31,7 +31,7 @@ async function testGoogleSheetsIntegration() {
     console.log("\n1. Setting up sheet headers...");
     await convex.action(api.myFunctions.setupEnrollmentGoogleSheet, {
       spreadsheetId: process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
-      sheetName: "Sheet1" // Use the default sheet name
+      sheetName: "NEW ENROLLMENT" // Use the default sheet name
     });
     console.log("✅ Sheet headers setup completed");
     

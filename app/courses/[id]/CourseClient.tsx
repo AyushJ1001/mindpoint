@@ -431,7 +431,8 @@ export default function CourseClient({
       <div className="relative z-10">
         {/* Conditionally render hero section for course types that use it */}
         {displayCourse.type !== "therapy" &&
-          displayCourse.type !== "supervised" && (
+          displayCourse.type !== "supervised" &&
+          displayCourse.type !== "worksheet" && (
             <>
               <CourseHero
                 course={activeCourse}
@@ -544,22 +545,26 @@ export default function CourseClient({
           />
         )}
 
-        {/* Sticky CTA */}
-        <StickyCTA
-          price={getCoursePrice(activeCourse)}
-          onPrimary={() => handleIncreaseQuantity(activeCourse)}
-          onBuyNow={() => handleBuyNow(activeCourse)}
-          disabled={
-            isOutOfStock ||
-            (inCart(activeCourse._id) &&
-              getCurrentQuantity(activeCourse._id) >=
-                (activeCourse.capacity || 1))
-          }
-          inCart={inCart(activeCourse._id)}
-          quantity={getCurrentQuantity(activeCourse._id)}
-          isOutOfStock={isOutOfStock}
-          gradientClass={getStickyGradient(activeCourse.type || "certificate")}
-        />
+        {/* Sticky CTA - worksheets handle their own CTA internally */}
+        {displayCourse.type !== "worksheet" && (
+          <StickyCTA
+            price={getCoursePrice(activeCourse)}
+            onPrimary={() => handleIncreaseQuantity(activeCourse)}
+            onBuyNow={() => handleBuyNow(activeCourse)}
+            disabled={
+              isOutOfStock ||
+              (inCart(activeCourse._id) &&
+                getCurrentQuantity(activeCourse._id) >=
+                  (activeCourse.capacity || 1))
+            }
+            inCart={inCart(activeCourse._id)}
+            quantity={getCurrentQuantity(activeCourse._id)}
+            isOutOfStock={isOutOfStock}
+            gradientClass={getStickyGradient(
+              activeCourse.type || "certificate",
+            )}
+          />
+        )}
       </div>
     </>
   );

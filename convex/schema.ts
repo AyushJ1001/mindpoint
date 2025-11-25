@@ -10,6 +10,7 @@ export const CourseType = v.union(
   v.literal("therapy"),
   v.literal("supervised"),
   v.literal("resume-studio"),
+  v.literal("worksheet"),
 );
 
 // The schema is entirely optional.
@@ -80,6 +81,10 @@ export default defineSchema({
         }),
       ),
     ),
+    // Worksheet-specific fields
+    fileUrl: v.optional(v.string()), // UploadThing public URL for the PDF
+    worksheetDescription: v.optional(v.string()), // Detailed worksheet description
+    targetAudience: v.optional(v.array(v.string())), // "who is this worksheet for"
   })
     .index("by_name_and_type", ["name", "type"])
     .index("by_startDate", ["startDate"]),
@@ -98,6 +103,12 @@ export default defineSchema({
     email: v.string(),
     phone: v.string(),
   }).index("by_email", ["email"]),
+
+  // User profiles for storing additional user data (e.g., WhatsApp number)
+  userProfiles: defineTable({
+    clerkUserId: v.string(), // Clerk user ID
+    whatsappNumber: v.optional(v.string()), // WhatsApp phone number for manual communications
+  }).index("by_clerkUserId", ["clerkUserId"]),
 
   enrollments: defineTable({
     userId: v.string(),

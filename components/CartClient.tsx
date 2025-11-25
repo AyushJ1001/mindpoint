@@ -3,7 +3,7 @@
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import Image from "next/image";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,14 +16,13 @@ import {
   Sparkles,
 } from "lucide-react";
 import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
-import { useUser } from "@clerk/clerk-react";
-import {
-  handlePaymentSuccess,
-  handleGuestUserPaymentSuccessWithData,
-} from "@/app/actions/payment";
+import { useUser, useClerk } from "@clerk/clerk-react";
+import { handlePaymentSuccess } from "@/app/actions/payment";
 import { toast } from "sonner";
 import { Id } from "@/convex/_generated/dataModel";
-import { GuestCheckoutModal } from "@/components/guest-checkout-modal";
+import { WhatsAppModal } from "@/components/whatsapp-modal";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import {
   Dialog,
   DialogContent,
@@ -48,10 +47,18 @@ const CartContent = () => {
   } = useCart();
 
   const [isProcessing, setIsProcessing] = useState(false);
-  const [showGuestModal, setShowGuestModal] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [pendingCheckout, setPendingCheckout] = useState(false);
   const { Razorpay, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
+  const { openSignIn } = useClerk();
+
+  // Query user profile to check if WhatsApp number exists
+  const userProfile = useQuery(
+    api.myFunctions.getUserProfile,
+    user?.id ? { clerkUserId: user.id } : "skip",
+  );
 
   // State to track offer details for each item
   const [itemOfferDetails, setItemOfferDetails] = useState<
@@ -196,12 +203,8 @@ const CartContent = () => {
     };
   }, []);
 
-  const handlePayment = async (guestUserData?: {
-    name: string;
-    email: string;
-    phone: string;
-  }) => {
-    if (isEmpty) return;
+  const handlePayment = async (whatsappNumber?: string) => {
+    if (isEmpty || !user?.id) return;
 
     setIsProcessing(true);
 
@@ -222,86 +225,48 @@ const CartContent = () => {
         description: `Payment for ${items.length} course(s)`,
         order_id: data.id,
         handler: async () => {
-          // Add event handlers for payment modal
+          // Handle signed-in user
+          try {
+            // Get course IDs from cart items
+            const courseIds = items.map((item) => item.id as Id<"courses">);
 
-          if (user?.id) {
-            // Handle signed-in user
-            try {
-              // Get course IDs from cart items
-              const courseIds = items.map((item) => item.id as Id<"courses">);
+            // Extract BOGO selections from cart items
+            const bogoSelections = items
+              .filter((item) => item.selectedFreeCourse)
+              .map((item) => ({
+                sourceCourseId: item.id as Id<"courses">,
+                selectedFreeCourseId: item.selectedFreeCourse!.id,
+              }));
 
-              // Extract BOGO selections from cart items
-              const bogoSelections = items
-                .filter((item) => item.selectedFreeCourse)
-                .map((item) => ({
-                  sourceCourseId: item.id as Id<"courses">,
-                  selectedFreeCourseId: item.selectedFreeCourse!.id,
-                }));
+            // Use the WhatsApp number from user profile or the one just collected
+            const userPhone =
+              whatsappNumber || userProfile?.whatsappNumber || undefined;
 
-              // Call server action to handle enrollment
-              const result = await handlePaymentSuccess(
-                user.id,
-                courseIds as Id<"courses">[],
-                user.primaryEmailAddress?.emailAddress || "",
-                undefined, // userPhone
-                undefined, // studentName
-                undefined, // sessionType
-                bogoSelections.length > 0 ? bogoSelections : undefined,
-              );
+            // Call server action to handle enrollment
+            const result = await handlePaymentSuccess(
+              user.id,
+              courseIds as Id<"courses">[],
+              user.primaryEmailAddress?.emailAddress || "",
+              userPhone,
+              user.fullName || undefined, // studentName
+              undefined, // sessionType
+              bogoSelections.length > 0 ? bogoSelections : undefined,
+            );
 
-              if (result.success) {
-                showEnrollmentToast(result.enrollments);
-              } else {
-                toast.error(
-                  "Payment successful but enrollment failed. Please contact support.",
-                  {
-                    description: result.error,
-                  },
-                );
-              }
-            } catch {
+            if (result.success) {
+              showEnrollmentToast(result.enrollments);
+            } else {
               toast.error(
                 "Payment successful but enrollment failed. Please contact support.",
+                {
+                  description: result.error,
+                },
               );
             }
-          } else if (guestUserData) {
-            // Handle guest user
-            try {
-              const courseIds = items.map((item) => item.id as Id<"courses">);
-
-              // Extract BOGO selections from cart items
-              const bogoSelections = items
-                .filter((item) => item.selectedFreeCourse)
-                .map((item) => ({
-                  sourceCourseId: item.id as Id<"courses">,
-                  selectedFreeCourseId: item.selectedFreeCourse!.id,
-                }));
-
-              const result = await handleGuestUserPaymentSuccessWithData(
-                guestUserData,
-                courseIds as Id<"courses">[],
-                undefined, // sessionType
-                bogoSelections.length > 0 ? bogoSelections : undefined,
-              );
-
-              if (result.success) {
-                console.log("Guest enrollment successful:", result.enrollments);
-                showEnrollmentToast(result.enrollments);
-              } else {
-                console.error("Guest enrollment failed:", result.error);
-                toast.error(
-                  "Payment successful but enrollment failed. Please contact support.",
-                  {
-                    description: result.error,
-                  },
-                );
-              }
-            } catch (error) {
-              console.error("Error handling guest payment success:", error);
-              toast.error(
-                "Payment successful but enrollment failed. Please contact support.",
-              );
-            }
+          } catch {
+            toast.error(
+              "Payment successful but enrollment failed. Please contact support.",
+            );
           }
 
           // Clear cart after successful payment
@@ -309,12 +274,10 @@ const CartContent = () => {
           setIsProcessing(false);
         },
         prefill: {
-          name: user?.fullName || guestUserData?.name || "",
-          email:
-            user?.primaryEmailAddress?.emailAddress ||
-            guestUserData?.email ||
-            "",
-          contact: guestUserData?.phone || "",
+          name: user?.fullName || "",
+          email: user?.primaryEmailAddress?.emailAddress || "",
+          contact:
+            whatsappNumber || userProfile?.whatsappNumber || "",
         },
         theme: {
           color: "#3B82F6",
@@ -525,6 +488,30 @@ const CartContent = () => {
     }
   };
 
+  // Check for WhatsApp number after sign-in and proceed with checkout
+  const proceedWithCheckoutAfterAuth = useCallback(() => {
+    if (!user?.id) return;
+
+    // Check if user has WhatsApp number
+    if (!userProfile?.whatsappNumber) {
+      // Show WhatsApp modal to collect the number
+      setShowWhatsAppModal(true);
+    } else {
+      // User has WhatsApp number, proceed with payment
+      // Note: handlePayment is stable as it only depends on state/props that are already tracked
+      handlePayment();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, userProfile?.whatsappNumber]);
+
+  // Effect to handle checkout after sign-in
+  useEffect(() => {
+    if (pendingCheckout && user?.id && userProfile !== undefined) {
+      setPendingCheckout(false);
+      proceedWithCheckoutAfterAuth();
+    }
+  }, [pendingCheckout, user?.id, userProfile, proceedWithCheckoutAfterAuth]);
+
   const handleCheckoutClick = () => {
     if (!isUserLoaded) {
       // Still loading user state
@@ -532,21 +519,27 @@ const CartContent = () => {
     }
 
     if (user) {
-      // User is signed in, proceed with payment
-      handlePayment();
+      // User is signed in, check for WhatsApp number
+      proceedWithCheckoutAfterAuth();
     } else {
-      // User is not signed in, show guest modal
-      setShowGuestModal(true);
+      // User is not signed in, show Clerk sign-in modal
+      setPendingCheckout(true);
+      openSignIn({
+        afterSignInUrl: window.location.href,
+        afterSignUpUrl: window.location.href,
+      });
     }
   };
 
-  const handleGuestProceed = (userData: {
-    name: string;
-    email: string;
-    phone: string;
-  }) => {
-    setShowGuestModal(false);
-    handlePayment(userData);
+  const handleWhatsAppComplete = (whatsappNumber: string) => {
+    setShowWhatsAppModal(false);
+    handlePayment(whatsappNumber);
+  };
+
+  const handleWhatsAppSkip = () => {
+    setShowWhatsAppModal(false);
+    // Proceed with payment even without WhatsApp number
+    handlePayment();
   };
 
   if (isEmpty) {
@@ -849,11 +842,14 @@ const CartContent = () => {
         </div>
       </div>
 
-      <GuestCheckoutModal
-        isOpen={showGuestModal}
-        onClose={() => setShowGuestModal(false)}
-        onProceed={handleGuestProceed}
-      />
+      {user?.id && (
+        <WhatsAppModal
+          isOpen={showWhatsAppModal}
+          onClose={handleWhatsAppSkip}
+          onComplete={handleWhatsAppComplete}
+          clerkUserId={user.id}
+        />
+      )}
     </div>
   );
 };
