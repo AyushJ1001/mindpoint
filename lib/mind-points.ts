@@ -25,9 +25,7 @@ export const POINTS_REDEEM_CONFIG = {
 /**
  * Calculate points earned for a course based on its type
  */
-export function calculatePointsEarned(
-  course: Doc<"courses">,
-): number {
+export function calculatePointsEarned(course: Doc<"courses">): number {
   if (!course.type) return 0;
 
   // Handle internship courses based on duration
@@ -65,6 +63,15 @@ export function getPointsRequiredForRedemption(
   courseType: string,
   internshipPlan?: "120" | "240",
 ): number {
+  // Handle direct internship_120/internship_240 courseType matches
+  if (courseType === "internship_120") {
+    return POINTS_REDEEM_CONFIG.internship_120;
+  }
+  if (courseType === "internship_240") {
+    return POINTS_REDEEM_CONFIG.internship_240;
+  }
+
+  // Handle "internship" courseType with plan parameter
   if (courseType === "internship") {
     if (internshipPlan === "120") {
       return POINTS_REDEEM_CONFIG.internship_120;
@@ -136,4 +143,3 @@ export function getRedemptionOptions(): Array<{
     },
   ];
 }
-

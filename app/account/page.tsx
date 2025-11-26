@@ -1,6 +1,5 @@
 "use client";
 
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { EnrollmentsTab } from "@/components/account/enrollments-tab";
 import { MindPointsTab } from "@/components/account/mind-points-tab";
 import { useSearchParams } from "next/navigation";
@@ -14,18 +13,10 @@ function AccountContent() {
     | "points";
 
   return (
-    <>
-      <SignedIn>
-        {/* Main Content - Sidebar is in layout.tsx */}
-        <div>
-          {activeTab === "enrollments" && <EnrollmentsTab />}
-          {activeTab === "points" && <MindPointsTab />}
-        </div>
-      </SignedIn>
-      <SignedOut>
-        <RedirectToSignIn />
-      </SignedOut>
-    </>
+    <div>
+      {activeTab === "enrollments" && <EnrollmentsTab />}
+      {activeTab === "points" && <MindPointsTab />}
+    </div>
   );
 }
 

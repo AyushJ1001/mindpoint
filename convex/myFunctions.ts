@@ -43,48 +43,10 @@ function extractInternshipPlanFromDuration(
   return null;
 }
 
-// Points earned per course type
-const POINTS_EARN_CONFIG = {
-  certificate: 120,
-  diploma: 200,
-  internship_120: 60,
-  internship_240: 80,
-  worksheet: 20,
-  masterclass: 20, // Workshop
-  "pre-recorded": 100,
-} as const;
-
-// Helper function to calculate points earned for a course
-function calculatePointsEarned(course: Doc<"courses">): number {
-  if (!course.type) return 0;
-
-  // Handle internship courses based on duration
-  if (course.type === "internship") {
-    const duration = course.duration?.toLowerCase() || "";
-    if (duration.includes("120") || duration.includes("2 week")) {
-      return POINTS_EARN_CONFIG.internship_120;
-    }
-    if (duration.includes("240") || duration.includes("4 week")) {
-      return POINTS_EARN_CONFIG.internship_240;
-    }
-    // Default to 120hr if unclear
-    return POINTS_EARN_CONFIG.internship_120;
-  }
-
-  // Map course type to points config key
-  const typeMap: Record<string, keyof typeof POINTS_EARN_CONFIG> = {
-    certificate: "certificate",
-    diploma: "diploma",
-    worksheet: "worksheet",
-    masterclass: "masterclass",
-    "pre-recorded": "pre-recorded",
-  };
-
-  const configKey = typeMap[course.type];
-  if (!configKey) return 0;
-
-  return POINTS_EARN_CONFIG[configKey];
-}
+// Import the canonical points calculation function from lib/mind-points.ts
+// This ensures we use a single source of truth for points logic
+// Note: POINTS_EARN_CONFIG is also available from lib/mind-points.ts if needed
+import { calculatePointsEarned } from "../lib/mind-points";
 
 // Helper function to award Mind Points after successful payment
 // Only awards points for authenticated users (not guest users) and paid purchases (not BOGO free items)
@@ -1121,7 +1083,10 @@ export const handleCartCheckout = mutation({
         "Checking if course is supervised:",
         course.type === "supervised",
       );
-      console.log("Checking if course is worksheet:", course.type === "worksheet");
+      console.log(
+        "Checking if course is worksheet:",
+        course.type === "worksheet",
+      );
       console.log("Session type provided:", !!args.sessionType);
       console.log("Student name provided:", !!args.studentName);
 
@@ -1274,7 +1239,9 @@ export const handleCartCheckout = mutation({
             worksheets: validWorksheets,
           },
         );
-        console.log("Worksheet purchase confirmation email scheduled successfully");
+        console.log(
+          "Worksheet purchase confirmation email scheduled successfully",
+        );
       }
     }
 
@@ -2054,7 +2021,9 @@ export const handleGuestUserCartCheckoutWithData = mutation({
             worksheets: validWorksheets,
           },
         );
-        console.log("Worksheet purchase confirmation email scheduled successfully");
+        console.log(
+          "Worksheet purchase confirmation email scheduled successfully",
+        );
       }
     }
 

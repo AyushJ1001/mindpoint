@@ -183,6 +183,13 @@ const CartContent = () => {
     }, 0);
   }, [items, user?.id]);
 
+  // Calculate discounted total when coupon is applied
+  const discountedTotal = useMemo(() => {
+    if (!appliedCoupon) return Math.round(cartTotal);
+    const discountMultiplier = 1 - appliedCoupon.discount / 100;
+    return Math.round(cartTotal * discountMultiplier);
+  }, [cartTotal, appliedCoupon]);
+
   const showEnrollmentToast = (
     enrollments:
       | Array<{
@@ -265,7 +272,7 @@ const CartContent = () => {
       const response = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: Math.round(cartTotal) }), // API will convert to paise
+        body: JSON.stringify({ amount: discountedTotal }), // API will convert to paise
       });
 
       const data = await response.json();
@@ -1006,16 +1013,14 @@ const CartContent = () => {
               <div className="space-y-2 border-t pt-4">
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
-                  <span>
-                    {appliedCoupon && appliedCoupon.discount === 100
-                      ? showRupees(0)
-                      : showRupees(Math.round(cartTotal))}
-                  </span>
+                  <span>{showRupees(discountedTotal)}</span>
                 </div>
-                {appliedCoupon && appliedCoupon.discount === 100 && (
+                {appliedCoupon && (
                   <div className="text-sm text-green-600">
                     <Check className="mr-1 inline h-4 w-4" />
-                    Coupon applied - Free!
+                    {appliedCoupon.discount === 100
+                      ? "Coupon applied - Free!"
+                      : `Coupon applied - ${appliedCoupon.discount}% off`}
                   </div>
                 )}
                 {user?.id && totalPointsEarned > 0 && (
