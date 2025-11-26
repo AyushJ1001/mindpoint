@@ -14,6 +14,8 @@ import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { Id } from "@/convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { calculatePointsEarned } from "@/lib/mind-points";
+import { Gift } from "lucide-react";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -252,6 +254,10 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
               Includes a free bonus course
             </div>
           )}
+          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+            <Gift className="h-3 w-3" />
+            <span>Earn {calculatePointsEarned(course)} Mind Points</span>
+          </div>
         </div>
         {(() => {
           const seatsLeft = Math.max(

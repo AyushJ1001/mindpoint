@@ -43,6 +43,79 @@ function extractInternshipPlanFromDuration(
   return null;
 }
 
+// Points earned per course type
+const POINTS_EARN_CONFIG = {
+  certificate: 120,
+  diploma: 200,
+  internship_120: 60,
+  internship_240: 80,
+  worksheet: 20,
+  masterclass: 20, // Workshop
+  "pre-recorded": 100,
+} as const;
+
+// Helper function to calculate points earned for a course
+function calculatePointsEarned(course: Doc<"courses">): number {
+  if (!course.type) return 0;
+
+  // Handle internship courses based on duration
+  if (course.type === "internship") {
+    const duration = course.duration?.toLowerCase() || "";
+    if (duration.includes("120") || duration.includes("2 week")) {
+      return POINTS_EARN_CONFIG.internship_120;
+    }
+    if (duration.includes("240") || duration.includes("4 week")) {
+      return POINTS_EARN_CONFIG.internship_240;
+    }
+    // Default to 120hr if unclear
+    return POINTS_EARN_CONFIG.internship_120;
+  }
+
+  // Map course type to points config key
+  const typeMap: Record<string, keyof typeof POINTS_EARN_CONFIG> = {
+    certificate: "certificate",
+    diploma: "diploma",
+    worksheet: "worksheet",
+    masterclass: "masterclass",
+    "pre-recorded": "pre-recorded",
+  };
+
+  const configKey = typeMap[course.type];
+  if (!configKey) return 0;
+
+  return POINTS_EARN_CONFIG[configKey];
+}
+
+// Helper function to award Mind Points after successful payment
+// Only awards points for authenticated users (not guest users) and paid purchases (not BOGO free items)
+async function awardMindPoints(
+  ctx: MutationCtx,
+  clerkUserId: string,
+  course: Doc<"courses">,
+  enrollmentId: Id<"enrollments">,
+  isBogoFree?: boolean,
+) {
+  // Don't award points for guest users or BOGO free items
+  if (isBogoFree) {
+    return;
+  }
+
+  try {
+    const pointsEarned = calculatePointsEarned(course);
+    if (pointsEarned > 0) {
+      await ctx.runMutation(api.mindPoints.awardPoints, {
+        clerkUserId,
+        points: pointsEarned,
+        description: `Earned ${pointsEarned} points for purchasing ${course.name}`,
+        enrollmentId,
+      });
+    }
+  } catch (error) {
+    // Log error but don't fail the enrollment process
+    console.error("Error awarding Mind Points:", error);
+  }
+}
+
 // Helper function to add enrollment to Google Sheets
 async function addEnrollmentToGoogleSheets(
   ctx: MutationCtx,
@@ -673,6 +746,14 @@ export const handleSuccessfulPayment = mutation({
       enrolledUsers: [...course.enrolledUsers, args.userId],
     });
 
+    // Award Mind Points for authenticated users only (not guest users)
+    // Check if user is authenticated by checking if userId is a Clerk ID (not an email)
+    // For authenticated users, userId is the Clerk user ID; for guests, it's the email
+    const isAuthenticatedUser = !args.userId.includes("@");
+    if (isAuthenticatedUser) {
+      await awardMindPoints(ctx, args.userId, course, enrollmentId, false);
+    }
+
     const userName = args.studentName || args.userEmail;
 
     const bogoEnrollments = await grantBogoEnrollments(ctx, course, {
@@ -1004,6 +1085,13 @@ export const handleCartCheckout = mutation({
       await ctx.db.patch(courseId, {
         enrolledUsers: [...course.enrolledUsers, args.userId],
       });
+
+      // Award Mind Points for authenticated users only (not guest users)
+      // Check if user is authenticated by checking if userId is a Clerk ID (not an email)
+      const isAuthenticatedUser = !args.userId.includes("@");
+      if (isAuthenticatedUser) {
+        await awardMindPoints(ctx, args.userId, course, enrollmentId, false);
+      }
 
       // Calculate end date for internship courses
       let endDate = course.endDate;

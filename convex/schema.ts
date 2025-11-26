@@ -129,4 +129,37 @@ export default defineSchema({
     bogoSourceCourseId: v.optional(v.id("courses")),
     bogoOfferName: v.optional(v.string()),
   }),
+
+  // User Mind Points balance
+  mindPoints: defineTable({
+    clerkUserId: v.string(),
+    balance: v.number(),
+    totalEarned: v.number(),
+    totalRedeemed: v.number(),
+  }).index("by_clerkUserId", ["clerkUserId"]),
+
+  // Points transaction history
+  pointsTransactions: defineTable({
+    clerkUserId: v.string(),
+    type: v.union(v.literal("earn"), v.literal("redeem")),
+    points: v.number(),
+    description: v.string(),
+    enrollmentId: v.optional(v.id("enrollments")),
+    couponId: v.optional(v.id("coupons")),
+    createdAt: v.number(),
+  }).index("by_clerkUserId", ["clerkUserId"]),
+
+  // Redemption coupons
+  coupons: defineTable({
+    code: v.string(),
+    clerkUserId: v.string(),
+    courseType: v.string(), // Which category can be redeemed
+    discount: v.number(), // 100 for 100% off
+    isUsed: v.boolean(),
+    pointsCost: v.number(),
+    createdAt: v.number(),
+    usedAt: v.optional(v.number()),
+  })
+    .index("by_code", ["code"])
+    .index("by_clerkUserId", ["clerkUserId"]),
 });

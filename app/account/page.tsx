@@ -1,0 +1,29 @@
+"use client";
+
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { EnrollmentsTab } from "@/components/account/enrollments-tab";
+import { MindPointsTab } from "@/components/account/mind-points-tab";
+import { useSearchParams } from "next/navigation";
+
+export default function AccountPage() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const activeTab = (tabParam === "points" ? "points" : "enrollments") as
+    | "enrollments"
+    | "points";
+
+  return (
+    <>
+      <SignedIn>
+        {/* Main Content - Sidebar is in layout.tsx */}
+        <div>
+          {activeTab === "enrollments" && <EnrollmentsTab />}
+          {activeTab === "points" && <MindPointsTab />}
+        </div>
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
+    </>
+  );
+}

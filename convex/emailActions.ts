@@ -277,6 +277,12 @@ export const sendCertificateEnrollmentConfirmation = action({
           </ul>
 
           <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          
+          <div style="background-color: #E8F5E9; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #2E7D32;">🎁 Mind Points Earned!</p>
+            <p style="margin: 5px 0 0 0;">You've earned <strong>120 Mind Points</strong> for this purchase! Points are automatically added to your account. Visit your account page to view your balance and redeem points for free courses.</p>
+          </div>
+          
           <p>Thank you for choosing us. We wish you a great learning experience!</p>
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
@@ -367,6 +373,12 @@ export const sendInternshipEnrollmentConfirmation = action({
           </ul>
 
           <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          
+          <div style="background-color: #E8F5E9; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #2E7D32;">🎁 Mind Points Earned!</p>
+            <p style="margin: 5px 0 0 0;">You've earned <strong>${args.internshipPlan === "120" ? "60" : "80"} Mind Points</strong> for this purchase! Points are automatically added to your account. Visit your account page to view your balance and redeem points for free courses.</p>
+          </div>
+          
           <p>Thank you for choosing us. We wish you a great learning experience!</p>
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
@@ -447,6 +459,12 @@ export const sendDiplomaEnrollmentConfirmation = action({
           </ul>
 
           <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          
+          <div style="background-color: #E8F5E9; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #2E7D32;">🎁 Mind Points Earned!</p>
+            <p style="margin: 5px 0 0 0;">You've earned <strong>200 Mind Points</strong> for this purchase! Points are automatically added to your account. Visit your account page to view your balance and redeem points for free courses.</p>
+          </div>
+          
           <p>Thank you for choosing us. We wish you a great learning experience!</p>
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
@@ -511,6 +529,12 @@ export const sendPreRecordedEnrollmentConfirmation = action({
           </ul>
 
           <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          
+          <div style="background-color: #E8F5E9; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #2E7D32;">🎁 Mind Points Earned!</p>
+            <p style="margin: 5px 0 0 0;">You've earned <strong>100 Mind Points</strong> for this purchase! Points are automatically added to your account. Visit your account page to view your balance and redeem points for free courses.</p>
+          </div>
+          
           <p>Thank you for choosing us. We wish you a great learning experience!</p>
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
@@ -591,6 +615,12 @@ export const sendMasterclassEnrollmentConfirmation = action({
           </ul>
 
           <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
+          
+          <div style="background-color: #E8F5E9; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #2E7D32;">🎁 Mind Points Earned!</p>
+            <p style="margin: 5px 0 0 0;">You've earned <strong>20 Mind Points</strong> for this purchase! Points are automatically added to your account. Visit your account page to view your balance and redeem points for free courses.</p>
+          </div>
+          
           <p>Thank you for choosing us. We wish you a great learning experience!</p>
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
@@ -1179,6 +1209,11 @@ export const sendWorksheetPurchaseConfirmation = action({
             <li>These worksheets are yours to keep and use as many times as you need.</li>
             <li>If you have any questions or need assistance, please contact us at <strong>+91 9770780086</strong>.</li>
           </ul>
+          
+          <div style="background-color: #E8F5E9; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
+            <p style="margin: 0; font-weight: bold; color: #2E7D32;">🎁 Mind Points Earned!</p>
+            <p style="margin: 5px 0 0 0;">You've earned <strong>${args.worksheets.length * 20} Mind Points</strong> for this purchase! Points are automatically added to your account. Visit your account page to view your balance and redeem points for free courses.</p>
+          </div>
           
           <p>Thank you for choosing The Mind Point!</p>
           
