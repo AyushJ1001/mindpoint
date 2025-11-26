@@ -1,17 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { SignedIn } from "@clerk/nextjs";
 import { useSearchParams, useRouter } from "next/navigation";
 import { BookOpen, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-export default function AccountLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+function AccountLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get("tab");
@@ -80,5 +76,17 @@ export default function AccountLayout({
         </div>
       </div>
     </SignedIn>
+  );
+}
+
+export default function AccountLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AccountLayoutContent>{children}</AccountLayoutContent>
+    </Suspense>
   );
 }

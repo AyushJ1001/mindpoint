@@ -4,8 +4,9 @@ import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { EnrollmentsTab } from "@/components/account/enrollments-tab";
 import { MindPointsTab } from "@/components/account/mind-points-tab";
 import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 
-export default function AccountPage() {
+function AccountContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const activeTab = (tabParam === "points" ? "points" : "enrollments") as
@@ -25,5 +26,13 @@ export default function AccountPage() {
         <RedirectToSignIn />
       </SignedOut>
     </>
+  );
+}
+
+export default function AccountPage() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <AccountContent />
+    </Suspense>
   );
 }
