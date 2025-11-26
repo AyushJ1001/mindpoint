@@ -1,4 +1,4 @@
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "../convex/_generated/dataModel";
 
 // Points earned per course type
 export const POINTS_EARN_CONFIG = {
