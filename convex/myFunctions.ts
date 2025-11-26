@@ -401,18 +401,20 @@ async function attemptBogoFallback(
   }
 
   // Gather candidate courses of the same type, excluding the source course
-  // Note: We don't have a direct index by type here, so we scan and filter.
-  // Consider adding an index if this becomes hot.
+  // Optimized to use index instead of scanning all courses
   const candidates: Array<CourseDoc> = [];
-  for await (const c of ctx.db.query("courses")) {
-    if (!c) continue;
-    if (c._id === sourceCourse._id) continue;
-    if (c.type !== sourceCourse.type) continue;
-    const capacity = c.capacity ?? 0;
-    const enrolled = (c.enrolledUsers ?? []).length;
-    const seatsLeft = Math.max(0, capacity - enrolled);
-    if (capacity > 0 && seatsLeft === 0) continue;
-    candidates.push(c);
+  if (sourceCourse.type) {
+    for await (const c of ctx.db
+      .query("courses")
+      .withIndex("by_type", (q) => q.eq("type", sourceCourse.type!))) {
+      if (!c) continue;
+      if (c._id === sourceCourse._id) continue;
+      const capacity = c.capacity ?? 0;
+      const enrolled = (c.enrolledUsers ?? []).length;
+      const seatsLeft = Math.max(0, capacity - enrolled);
+      if (capacity > 0 && seatsLeft === 0) continue;
+      candidates.push(c);
+    }
   }
 
   if (candidates.length === 0) {
@@ -473,16 +475,13 @@ async function createBogoEnrollment(
     extractInternshipPlanFromDuration(freeCourse.duration) || undefined;
 
   // Idempotency: Check if a BOGO enrollment already exists for this user & course
-  const existingEnrollment = await ctx.db
+  // Optimized to use index for userId, then filter by courseId
+  const existingEnrollments = await ctx.db
     .query("enrollments")
-    .filter((q) =>
-      q.and(
-        q.eq(q.field("userId"), userContext.userId),
-        q.eq(q.field("courseId"), freeCourse._id),
-      ),
-    )
+    .withIndex("by_userId", (q) => q.eq("userId", userContext.userId))
+    .filter((q) => q.eq(q.field("courseId"), freeCourse._id))
     .collect();
-  const existingBogo = existingEnrollment.find((e) => e.isBogoFree === true);
+  const existingBogo = existingEnrollments.find((e) => e.isBogoFree === true);
 
   if (existingBogo) {
     console.warn("BOGO enrollment already exists; ensuring roster only", {
@@ -1249,7 +1248,7 @@ export const handleCartCheckout = mutation({
       console.log("Sending supervised therapy welcome emails...");
       // Send supervised therapy welcome email for each supervised course
       // This email includes the 4 required checklist PDFs as attachments
-      for (const enrollment of supervisedEnrollments) {
+      for (let i = 0; i < supervisedEnrollments.length; i++) {
         await ctx.scheduler.runAfter(
           0,
           api.emailActions.sendSupervisedTherapyWelcomeEmail,
@@ -1394,6 +1393,7 @@ export const handleCartCheckout = mutation({
 });
 
 // Get enrollments for a specific user
+// Optimized to use index and batch course fetches
 export const getUserEnrollments = query({
   args: {
     userId: v.string(),
@@ -1402,25 +1402,34 @@ export const getUserEnrollments = query({
   handler: async (ctx, args) => {
     const enrollments = await ctx.db
       .query("enrollments")
-      .filter((q) => q.eq(q.field("userId"), args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
       .collect();
 
-    // Get course details for each enrollment
-    const enrollmentsWithCourses = await Promise.all(
-      enrollments.map(async (enrollment) => {
-        const course = await ctx.db.get(enrollment.courseId);
-        return {
-          ...enrollment,
-          course: course,
-        };
-      }),
+    // Batch fetch all courses at once to avoid N+1 queries
+    const courseIds = enrollments.map((e) => e.courseId);
+    const courses = await Promise.all(
+      courseIds.map((courseId) => ctx.db.get(courseId)),
     );
+
+    // Create a map for O(1) lookup
+    const courseMap = new Map(
+      courses
+        .filter((c): c is NonNullable<typeof c> => c !== null)
+        .map((c) => [c._id, c]),
+    );
+
+    // Combine enrollments with courses
+    const enrollmentsWithCourses = enrollments.map((enrollment) => ({
+      ...enrollment,
+      course: courseMap.get(enrollment.courseId) ?? null,
+    }));
 
     return enrollmentsWithCourses;
   },
 });
 
 // Get enrollment by enrollment number
+// Optimized to use index
 export const getEnrollmentByNumber = query({
   args: {
     enrollmentNumber: v.string(),
@@ -1429,7 +1438,9 @@ export const getEnrollmentByNumber = query({
   handler: async (ctx, args) => {
     const enrollment = await ctx.db
       .query("enrollments")
-      .filter((q) => q.eq(q.field("enrollmentNumber"), args.enrollmentNumber))
+      .withIndex("by_enrollmentNumber", (q) =>
+        q.eq("enrollmentNumber", args.enrollmentNumber),
+      )
       .first();
 
     if (!enrollment) {
@@ -2030,7 +2041,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     if (supervisedEnrollments.length > 0) {
       // Send supervised therapy welcome email for each supervised course
       // This email includes the 4 required checklist PDFs as attachments
-      for (const enrollment of supervisedEnrollments) {
+      for (let i = 0; i < supervisedEnrollments.length; i++) {
         await ctx.scheduler.runAfter(
           0,
           api.emailActions.sendSupervisedTherapyWelcomeEmail,

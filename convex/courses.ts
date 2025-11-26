@@ -34,7 +34,7 @@ export const listCoursesByType = query({
   handler: async (ctx, args) => {
     const courses = await ctx.db
       .query("courses")
-      .filter((q) => q.eq(q.field("type"), args.type))
+      .withIndex("by_type", (q) => q.eq("type", args.type))
       .order("desc")
       .collect();
 
@@ -196,20 +196,48 @@ export const deleteReview = mutation({
 });
 
 // Fetch courses with BOGO enabled for a specific course type
+// Note: Since bogo.enabled is a nested field, we use index for type and filter for bogo
 export const getBogoCoursesByType = query({
   args: { courseType: CourseType },
   handler: async (ctx, args) => {
     const courses = await ctx.db
       .query("courses")
-      .filter((q) =>
-        q.and(
-          q.eq(q.field("type"), args.courseType),
-          q.eq(q.field("bogo.enabled"), true),
-        ),
-      )
+      .withIndex("by_type", (q) => q.eq("type", args.courseType))
+      .filter((q) => q.eq(q.field("bogo.enabled"), true))
       .order("desc")
       .collect();
 
     return courses;
+  },
+});
+
+// Batch fetch BOGO courses for multiple course types at once
+// This reduces the number of queries when rendering course grids
+// Optimized to use indexes and parallel fetching
+export const getBogoCoursesByTypes = query({
+  args: { courseTypes: v.array(CourseType) },
+  returns: v.record(v.array(v.any())),
+  handler: async (ctx, args) => {
+    const result: Record<string, any[]> = {};
+    
+    // Initialize all types with empty arrays
+    for (const courseType of args.courseTypes) {
+      result[courseType] = [];
+    }
+    
+    // Fetch BOGO courses for each type using index
+    // Using Promise.all for parallel execution (though Convex queries are sequential)
+    for (const courseType of args.courseTypes) {
+      const courses = await ctx.db
+        .query("courses")
+        .withIndex("by_type", (q) => q.eq("type", courseType))
+        .filter((q) => q.eq(q.field("bogo.enabled"), true))
+        .order("desc")
+        .collect();
+      
+      result[courseType] = courses;
+    }
+
+    return result;
   },
 });

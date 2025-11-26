@@ -12,8 +12,6 @@ import type { Doc } from "@/convex/_generated/dataModel";
 import { useEffect, useState } from "react";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { Id } from "@/convex/_generated/dataModel";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import { Gift } from "lucide-react";
 
@@ -51,35 +49,32 @@ const getTimeUntilStart = (dateString: string) => {
   }
 };
 
-export function CourseCard({ course }: { course: Doc<"courses"> }) {
+export function CourseCard({
+  course,
+  bogoCoursesByType,
+}: {
+  course: Doc<"courses">;
+  bogoCoursesByType?: Record<string, Doc<"courses">[]>;
+}) {
   const { addItem, inCart } = useCart();
   const router = useRouter();
-  const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
   const [showBogoModal, setShowBogoModal] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Get available courses for BOGO selection
-  const availableCourses = useQuery(
-    api.courses.getBogoCoursesByType,
-    course.bogo && course.type ? { courseType: course.type } : "skip",
-  );
+  // Get available courses for BOGO selection from props
+  const availableCourses =
+    course.bogo && course.type && bogoCoursesByType
+      ? (bogoCoursesByType[course.type] ?? undefined)
+      : undefined;
 
   // Set mounted state after hydration
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Update offer details every minute for real-time countdown
-  useEffect(() => {
-    const updateOfferDetails = () => {
-      setOfferDetails(getOfferDetails(course));
-    };
-
-    updateOfferDetails();
-    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, [course]);
+  // Use shared time for offer details - updates automatically via useNow hook
+  // now triggers re-renders every minute, getOfferDetails uses Date.now() internally
+  const offerDetails = getOfferDetails(course);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -181,7 +176,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
 
   return (
     <Card
-      className="group ring-border/60 dark:ring-oklch(0.2_0.02_240) h-full cursor-pointer overflow-hidden border-0 shadow-sm ring-1 transition-all hover:shadow-md dark:shadow-lg dark:shadow-black/30 dark:hover:shadow-xl dark:hover:shadow-black/40"
+      className="group ring-border/60 dark:ring-oklch(0.2_0.02_240) relative h-full cursor-pointer overflow-hidden border-0 shadow-sm ring-1 transition-all hover:shadow-md dark:shadow-lg dark:shadow-black/30 dark:hover:shadow-xl dark:hover:shadow-black/40"
       onClick={handleCardClick}
     >
       {/* Course Image */}
@@ -215,12 +210,12 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
       )}
 
       <CardHeader className="pb-3">
-        <CardTitle className="group-hover:text-primary text-base font-semibold transition-colors">
+        <CardTitle className="group-hover:text-primary line-clamp-2 text-base font-semibold transition-colors">
           {course.name}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex items-center justify-between pt-0">
-        <div className="space-y-1">
+      <CardContent className="flex items-start justify-between gap-3 pt-0 pb-4">
+        <div className="min-w-0 flex-1 space-y-1">
           <Badge
             variant="secondary"
             className="px-3 py-1 text-sm font-semibold"
@@ -254,9 +249,11 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
               Includes a free bonus course
             </div>
           )}
-          <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <Gift className="h-3 w-3" />
-            <span>Earn {calculatePointsEarned(course)} Mind Points</span>
+          <div className="text-muted-foreground flex items-center gap-1 text-xs">
+            <Gift className="h-3 w-3 shrink-0" />
+            <span className="truncate">
+              Earn {calculatePointsEarned(course)} Mind Points
+            </span>
           </div>
         </div>
         {(() => {
@@ -274,6 +271,7 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
               onClick={handleAddToCart}
               disabled={isInCart || isOutOfStock}
               size="sm"
+              className="shrink-0"
             >
               <Plus className="mr-2 h-4 w-4" />
               {isOutOfStock
@@ -301,35 +299,32 @@ export function CourseCard({ course }: { course: Doc<"courses"> }) {
   );
 }
 
-export function UpcomingCourseCard({ course }: { course: Doc<"courses"> }) {
+export function UpcomingCourseCard({
+  course,
+  bogoCoursesByType,
+}: {
+  course: Doc<"courses">;
+  bogoCoursesByType?: Record<string, Doc<"courses">[]>;
+}) {
   const { addItem, inCart } = useCart();
   const router = useRouter();
-  const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
   const [showBogoModal, setShowBogoModal] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Get available courses for BOGO selection
-  const availableCourses = useQuery(
-    api.courses.getBogoCoursesByType,
-    course.bogo && course.type ? { courseType: course.type } : "skip",
-  );
+  // Get available courses for BOGO selection from props
+  const availableCourses =
+    course.bogo && course.type && bogoCoursesByType
+      ? (bogoCoursesByType[course.type] ?? undefined)
+      : undefined;
 
   // Set mounted state after hydration
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Update offer details every minute for real-time countdown
-  useEffect(() => {
-    const updateOfferDetails = () => {
-      setOfferDetails(getOfferDetails(course));
-    };
-
-    updateOfferDetails();
-    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, [course]);
+  // Use shared time for offer details - updates automatically via useNow hook
+  // now triggers re-renders every minute, getOfferDetails uses Date.now() internally
+  const offerDetails = getOfferDetails(course);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();

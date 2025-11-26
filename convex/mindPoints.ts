@@ -89,10 +89,12 @@ export const getUserCoupons = query({
     }),
   ),
   handler: async (ctx, args) => {
+    // Use composite index for better performance
     const coupons = await ctx.db
       .query("coupons")
-      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
-      .filter((q) => q.eq(q.field("isUsed"), false))
+      .withIndex("by_clerkUserId_and_isUsed", (q) =>
+        q.eq("clerkUserId", args.clerkUserId).eq("isUsed", false),
+      )
       .order("desc")
       .collect();
 

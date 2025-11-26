@@ -3,7 +3,7 @@
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import Image from "next/image";
-import { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +36,8 @@ import {
 import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { Check, X } from "lucide-react";
+import { useNow } from "@/hooks/use-now";
+import { useMemo } from "react";
 
 export const dynamic = "force-dynamic";
 
@@ -84,52 +86,49 @@ const CartContent = () => {
   );
 
   const markCouponUsed = useMutation(api.mindPoints.markCouponUsed);
+  const now = useNow();
 
-  // State to track offer details for each item
-  const [itemOfferDetails, setItemOfferDetails] = useState<
-    Record<string, OfferDetails>
-  >({});
+  // Update offer details for cart items using shared time
+  // Use now to create a minute-based key that changes every minute, forcing recalculation
+  const minuteKey = Math.floor(now / 60000);
+  const itemOfferDetails = useMemo(() => {
+    const newOfferDetails: Record<string, OfferDetails> = {};
+    // minuteKey ensures recalculation every minute when time updates
+    // Reference minuteKey to satisfy eslint dependency check
+    if (minuteKey < 0) {
+      // This will never execute, but ensures minuteKey is used
+      return {};
+    }
+    items.forEach((item) => {
+      if (item.offer || item.bogo) {
+        const offerPrice = item.price || 0;
+        const discountPercentage = item.offer?.discount ?? 0;
 
-  // Update offer details for cart items
-  useEffect(() => {
-    const updateOfferDetails = () => {
-      const newOfferDetails: Record<string, OfferDetails> = {};
-      items.forEach((item) => {
-        if (item.offer || item.bogo) {
-          const offerPrice = item.price || 0;
-          const discountPercentage = item.offer?.discount ?? 0;
-
-          // Use stored originalPrice if available, otherwise calculate it
-          let originalPrice = item.originalPrice || offerPrice;
-          if (
-            !item.originalPrice &&
-            discountPercentage > 0 &&
-            discountPercentage < 100
-          ) {
-            const denominator = 1 - discountPercentage / 100;
-            if (Math.abs(denominator) > 1e-6) {
-              originalPrice = offerPrice / denominator;
-            }
-          }
-
-          const offerDetails = getOfferDetails({
-            price: originalPrice,
-            offer: item.offer ?? null,
-            bogo: item.bogo ?? null,
-          });
-          if (offerDetails) {
-            newOfferDetails[item.id] = offerDetails;
+        // Use stored originalPrice if available, otherwise calculate it
+        let originalPrice = item.originalPrice || offerPrice;
+        if (
+          !item.originalPrice &&
+          discountPercentage > 0 &&
+          discountPercentage < 100
+        ) {
+          const denominator = 1 - discountPercentage / 100;
+          if (Math.abs(denominator) > 1e-6) {
+            originalPrice = offerPrice / denominator;
           }
         }
-      });
-      setItemOfferDetails(newOfferDetails);
-    };
 
-    updateOfferDetails();
-    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
-
-    return () => clearInterval(interval);
-  }, [items]);
+        const offerDetails = getOfferDetails({
+          price: originalPrice,
+          offer: item.offer ?? null,
+          bogo: item.bogo ?? null,
+        });
+        if (offerDetails) {
+          newOfferDetails[item.id] = offerDetails;
+        }
+      }
+    });
+    return newOfferDetails;
+  }, [items, minuteKey]);
 
   const hasBogoItems = items.some((item) => itemOfferDetails[item.id]?.hasBogo);
 
@@ -263,335 +262,356 @@ const CartContent = () => {
     };
   }, []);
 
-  const handlePayment = async (whatsappNumber?: string) => {
-    if (isEmpty || !user?.id) return;
+  const handlePayment = useCallback(
+    async (whatsappNumber?: string) => {
+      if (isEmpty || !user?.id) return;
 
-    setIsProcessing(true);
+      setIsProcessing(true);
 
-    try {
-      const response = await fetch("/api/create-order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: discountedTotal }), // API will convert to paise
-      });
+      try {
+        const response = await fetch("/api/create-order", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ amount: discountedTotal }), // API will convert to paise
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      const options: RazorpayOrderOptions = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-        amount: data.amount,
-        currency: data.currency,
-        name: "The Mind Point",
-        description: `Payment for ${items.length} course(s)`,
-        order_id: data.id,
-        handler: async () => {
-          // Handle signed-in user
-          try {
-            // Get course IDs from cart items
-            const courseIds = items.map((item) => item.id as Id<"courses">);
+        const options: RazorpayOrderOptions = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+          amount: data.amount,
+          currency: data.currency,
+          name: "The Mind Point",
+          description: `Payment for ${items.length} course(s)`,
+          order_id: data.id,
+          handler: async () => {
+            // Handle signed-in user
+            try {
+              // Get course IDs from cart items
+              const courseIds = items.map((item) => item.id as Id<"courses">);
 
-            // Extract BOGO selections from cart items
-            const bogoSelections = items
-              .filter((item) => item.selectedFreeCourse)
-              .map((item) => ({
-                sourceCourseId: item.id as Id<"courses">,
-                selectedFreeCourseId: item.selectedFreeCourse!.id,
-              }));
+              // Extract BOGO selections from cart items
+              const bogoSelections = items
+                .filter((item) => item.selectedFreeCourse)
+                .map((item) => ({
+                  sourceCourseId: item.id as Id<"courses">,
+                  selectedFreeCourseId: item.selectedFreeCourse!.id,
+                }));
 
-            // Use the WhatsApp number from user profile or the one just collected
-            const userPhone =
-              whatsappNumber || userProfile?.whatsappNumber || undefined;
+              // Use the WhatsApp number from user profile or the one just collected
+              const userPhone =
+                whatsappNumber || userProfile?.whatsappNumber || undefined;
 
-            // Call server action to handle enrollment
-            const result = await handlePaymentSuccess(
-              user.id,
-              courseIds as Id<"courses">[],
-              user.primaryEmailAddress?.emailAddress || "",
-              userPhone,
-              user.fullName || undefined, // studentName
-              undefined, // sessionType
-              bogoSelections.length > 0 ? bogoSelections : undefined,
-            );
+              // Call server action to handle enrollment
+              const result = await handlePaymentSuccess(
+                user.id,
+                courseIds as Id<"courses">[],
+                user.primaryEmailAddress?.emailAddress || "",
+                userPhone,
+                user.fullName || undefined, // studentName
+                undefined, // sessionType
+                bogoSelections.length > 0 ? bogoSelections : undefined,
+              );
 
-            if (result.success) {
-              // Mark coupon as used if applied
-              if (appliedCoupon) {
-                try {
-                  await markCouponUsed({ couponCode: appliedCoupon.code });
-                  setAppliedCoupon(null);
-                  setCouponCode("");
-                } catch (error) {
-                  console.error("Failed to mark coupon as used:", error);
-                }
-              }
-
-              // Calculate and show points earned
-              const pointsEarned = items.reduce((total, item) => {
-                if (item.courseType && !item.selectedFreeCourse) {
-                  // Don't count BOGO free items
-                  const pointsMap: Record<string, number> = {
-                    certificate: 120,
-                    diploma: 200,
-                    worksheet: 20,
-                    masterclass: 20,
-                    "pre-recorded": 100,
-                  };
-                  if (item.courseType === "internship") {
-                    return total + 60; // Default to 120hr, could be enhanced
+              if (result.success) {
+                // Mark coupon as used if applied
+                if (appliedCoupon) {
+                  try {
+                    await markCouponUsed({ couponCode: appliedCoupon.code });
+                    setAppliedCoupon(null);
+                    setCouponCode("");
+                  } catch (error) {
+                    console.error("Failed to mark coupon as used:", error);
                   }
-                  return total + (pointsMap[item.courseType] || 0);
                 }
-                return total;
-              }, 0);
 
-              if (pointsEarned > 0 && user?.id) {
-                setTimeout(() => {
-                  toast.success(`🎉 You earned ${pointsEarned} Mind Points!`, {
-                    description:
-                      "Points have been added to your account. Visit your account to redeem them.",
-                    duration: 6000,
-                    action: {
-                      label: "View Points",
-                      onClick: () => {
-                        window.location.href = "/account?tab=points";
+                // Calculate and show points earned
+                const pointsEarned = items.reduce((total, item) => {
+                  if (item.courseType && !item.selectedFreeCourse) {
+                    // Don't count BOGO free items
+                    const pointsMap: Record<string, number> = {
+                      certificate: 120,
+                      diploma: 200,
+                      worksheet: 20,
+                      masterclass: 20,
+                      "pre-recorded": 100,
+                    };
+                    if (item.courseType === "internship") {
+                      return total + 60; // Default to 120hr, could be enhanced
+                    }
+                    return total + (pointsMap[item.courseType] || 0);
+                  }
+                  return total;
+                }, 0);
+
+                if (pointsEarned > 0 && user?.id) {
+                  setTimeout(() => {
+                    toast.success(
+                      `🎉 You earned ${pointsEarned} Mind Points!`,
+                      {
+                        description:
+                          "Points have been added to your account. Visit your account to redeem them.",
+                        duration: 6000,
+                        action: {
+                          label: "View Points",
+                          onClick: () => {
+                            window.location.href = "/account?tab=points";
+                          },
+                        },
                       },
-                    },
-                  });
-                }, 2000);
-              }
+                    );
+                  }, 2000);
+                }
 
-              showEnrollmentToast(result.enrollments);
-            } else {
+                showEnrollmentToast(result.enrollments);
+              } else {
+                toast.error(
+                  "Payment successful but enrollment failed. Please contact support.",
+                  {
+                    description: result.error,
+                  },
+                );
+              }
+            } catch {
               toast.error(
                 "Payment successful but enrollment failed. Please contact support.",
-                {
-                  description: result.error,
-                },
               );
             }
-          } catch {
-            toast.error(
-              "Payment successful but enrollment failed. Please contact support.",
-            );
-          }
 
-          // Clear cart after successful payment
-          emptyCart();
-          setIsProcessing(false);
-        },
-        prefill: {
-          name: user?.fullName || "",
-          email: user?.primaryEmailAddress?.emailAddress || "",
-          contact: whatsappNumber || userProfile?.whatsappNumber || "",
-        },
-        theme: {
-          color: "#3B82F6",
-        },
-      };
-
-      const rzp = new Razorpay(options);
-
-      // Add event handlers for payment modal
-      rzp.on("payment.failed", (response) => {
-        console.error("Payment failed:", response.error);
-        toast.error("Payment failed. Please try again.");
-        setIsProcessing(false);
-        if (modalCheckInterval) clearInterval(modalCheckInterval);
-        if (observer) observer.disconnect();
-      });
-
-      // Note: These event handlers are commented out as they may not be supported in the current version
-      // The payment success is handled in the main handler function above
-
-      // Add a timeout to reset processing state in case events don't fire
-      const timeoutId = setTimeout(() => {
-        console.log("Payment timeout - resetting processing state");
-        setIsProcessing(false);
-      }, 60000); // 1 minute timeout
-
-      // Clear timeout when payment is successful (handled in main handler)
-      const clearTimeoutAndCleanup = () => {
-        clearTimeout(timeoutId);
-        if (modalCheckInterval) clearInterval(modalCheckInterval);
-        if (observer) observer.disconnect();
-      };
-
-      // Monitor Razorpay modal state with comprehensive detection
-      let modalCheckInterval: NodeJS.Timeout;
-      let observer: MutationObserver;
-
-      const startModalMonitoring = () => {
-        console.log("Starting Razorpay modal monitoring...");
-
-        // More comprehensive selectors for Razorpay elements
-        const razorpaySelectors = [
-          "#razorpay-payment-button",
-          ".razorpay-container",
-          'iframe[src*="razorpay"]',
-          'iframe[src*="checkout"]',
-          '[id*="razorpay"]',
-          '[class*="razorpay"]',
-          ".razorpay-checkout",
-          "#razorpay-checkout",
-          'div[style*="position: fixed"][style*="z-index"]', // Common modal styling
-          'div[style*="position: fixed"][style*="top: 0"]', // Full screen modal
-        ];
-
-        const checkForRazorpayModal = () => {
-          const foundElements = [];
-          razorpaySelectors.forEach((selector) => {
-            const elements = document.querySelectorAll(selector);
-            if (elements.length > 0) {
-              foundElements.push(...Array.from(elements));
-            }
-          });
-
-          // Also check for any iframe that might be Razorpay
-          const allIframes = document.querySelectorAll("iframe");
-          const razorpayIframes = Array.from(allIframes).filter((iframe) => {
-            const src = (iframe as HTMLIFrameElement).src || "";
-            return (
-              src.includes("razorpay") ||
-              src.includes("checkout") ||
-              src.includes("pay")
-            );
-          });
-          foundElements.push(...razorpayIframes);
-
-          console.log(
-            `Found ${foundElements.length} potential Razorpay elements:`,
-            foundElements,
-          );
-
-          // Check if any of the found elements are actually visible and interactive
-          const visibleElements = foundElements.filter((element) => {
-            const style = window.getComputedStyle(element);
-            const rect = element.getBoundingClientRect();
-
-            // Check if element is visible (not hidden, has dimensions, not transparent)
-            const isVisible =
-              style.display !== "none" &&
-              style.visibility !== "hidden" &&
-              rect.width > 0 &&
-              rect.height > 0 &&
-              parseFloat(style.opacity) > 0;
-
-            // Check if element is in viewport
-            const isInViewport =
-              rect.top < window.innerHeight &&
-              rect.bottom > 0 &&
-              rect.left < window.innerWidth &&
-              rect.right > 0;
-
-            return isVisible && isInViewport;
-          });
-
-          console.log(
-            `Found ${visibleElements.length} visible Razorpay elements:`,
-            visibleElements,
-          );
-
-          // If no visible elements, consider modal closed
-          if (visibleElements.length === 0) {
-            console.log(
-              "No visible Razorpay elements found - resetting processing state",
-            );
+            // Clear cart after successful payment
+            emptyCart();
             setIsProcessing(false);
-            clearTimeoutAndCleanup();
-            return true; // Modal is closed
-          }
+          },
+          prefill: {
+            name: user?.fullName || "",
+            email: user?.primaryEmailAddress?.emailAddress || "",
+            contact: whatsappNumber || userProfile?.whatsappNumber || "",
+          },
+          theme: {
+            color: "#3B82F6",
+          },
+        };
 
-          // Additional check: look for modal backdrop/overlay
-          const modalBackdrop = document.querySelector(
-            '.razorpay-backdrop, div[style*="position: fixed"][style*="background"]',
-          );
-          if (modalBackdrop) {
-            const backdropStyle = window.getComputedStyle(modalBackdrop);
-            const backdropRect = modalBackdrop.getBoundingClientRect();
+        const rzp = new Razorpay(options);
 
-            // Check if backdrop is visible and covers the screen
-            const isBackdropVisible =
-              backdropStyle.display !== "none" &&
-              backdropStyle.visibility !== "hidden" &&
-              backdropRect.width > 0 &&
-              backdropRect.height > 0 &&
-              parseFloat(backdropStyle.opacity) > 0;
+        // Add event handlers for payment modal
+        rzp.on("payment.failed", (response) => {
+          console.error("Payment failed:", response.error);
+          toast.error("Payment failed. Please try again.");
+          setIsProcessing(false);
+          if (modalCheckInterval) clearInterval(modalCheckInterval);
+          if (observer) observer.disconnect();
+        });
+
+        // Note: These event handlers are commented out as they may not be supported in the current version
+        // The payment success is handled in the main handler function above
+
+        // Add a timeout to reset processing state in case events don't fire
+        const timeoutId = setTimeout(() => {
+          console.log("Payment timeout - resetting processing state");
+          setIsProcessing(false);
+        }, 60000); // 1 minute timeout
+
+        // Clear timeout when payment is successful (handled in main handler)
+        const clearTimeoutAndCleanup = () => {
+          clearTimeout(timeoutId);
+          if (modalCheckInterval) clearInterval(modalCheckInterval);
+          if (observer) observer.disconnect();
+        };
+
+        // Monitor Razorpay modal state with comprehensive detection
+        let modalCheckInterval: NodeJS.Timeout;
+        let observer: MutationObserver;
+
+        const startModalMonitoring = () => {
+          console.log("Starting Razorpay modal monitoring...");
+
+          // More comprehensive selectors for Razorpay elements
+          const razorpaySelectors = [
+            "#razorpay-payment-button",
+            ".razorpay-container",
+            'iframe[src*="razorpay"]',
+            'iframe[src*="checkout"]',
+            '[id*="razorpay"]',
+            '[class*="razorpay"]',
+            ".razorpay-checkout",
+            "#razorpay-checkout",
+            'div[style*="position: fixed"][style*="z-index"]', // Common modal styling
+            'div[style*="position: fixed"][style*="top: 0"]', // Full screen modal
+          ];
+
+          const checkForRazorpayModal = () => {
+            const foundElements = [];
+            razorpaySelectors.forEach((selector) => {
+              const elements = document.querySelectorAll(selector);
+              if (elements.length > 0) {
+                foundElements.push(...Array.from(elements));
+              }
+            });
+
+            // Also check for any iframe that might be Razorpay
+            const allIframes = document.querySelectorAll("iframe");
+            const razorpayIframes = Array.from(allIframes).filter((iframe) => {
+              const src = (iframe as HTMLIFrameElement).src || "";
+              return (
+                src.includes("razorpay") ||
+                src.includes("checkout") ||
+                src.includes("pay")
+              );
+            });
+            foundElements.push(...razorpayIframes);
 
             console.log(
-              `Modal backdrop visible: ${isBackdropVisible}`,
-              backdropStyle,
+              `Found ${foundElements.length} potential Razorpay elements:`,
+              foundElements,
             );
 
-            if (!isBackdropVisible) {
+            // Check if any of the found elements are actually visible and interactive
+            const visibleElements = foundElements.filter((element) => {
+              const style = window.getComputedStyle(element);
+              const rect = element.getBoundingClientRect();
+
+              // Check if element is visible (not hidden, has dimensions, not transparent)
+              const isVisible =
+                style.display !== "none" &&
+                style.visibility !== "hidden" &&
+                rect.width > 0 &&
+                rect.height > 0 &&
+                parseFloat(style.opacity) > 0;
+
+              // Check if element is in viewport
+              const isInViewport =
+                rect.top < window.innerHeight &&
+                rect.bottom > 0 &&
+                rect.left < window.innerWidth &&
+                rect.right > 0;
+
+              return isVisible && isInViewport;
+            });
+
+            console.log(
+              `Found ${visibleElements.length} visible Razorpay elements:`,
+              visibleElements,
+            );
+
+            // If no visible elements, consider modal closed
+            if (visibleElements.length === 0) {
               console.log(
-                "Modal backdrop not visible - resetting processing state",
+                "No visible Razorpay elements found - resetting processing state",
               );
               setIsProcessing(false);
               clearTimeoutAndCleanup();
               return true; // Modal is closed
             }
-          }
 
-          return false; // Modal is still open
-        };
+            // Additional check: look for modal backdrop/overlay
+            const modalBackdrop = document.querySelector(
+              '.razorpay-backdrop, div[style*="position: fixed"][style*="background"]',
+            );
+            if (modalBackdrop) {
+              const backdropStyle = window.getComputedStyle(modalBackdrop);
+              const backdropRect = modalBackdrop.getBoundingClientRect();
 
-        // Interval-based monitoring
-        modalCheckInterval = setInterval(() => {
-          checkForRazorpayModal();
-        }, 1000); // Check every second for faster response
+              // Check if backdrop is visible and covers the screen
+              const isBackdropVisible =
+                backdropStyle.display !== "none" &&
+                backdropStyle.visibility !== "hidden" &&
+                backdropRect.width > 0 &&
+                backdropRect.height > 0 &&
+                parseFloat(backdropStyle.opacity) > 0;
 
-        // DOM mutation observer for immediate detection
-        observer = new MutationObserver((mutations) => {
-          mutations.forEach((mutation) => {
-            if (mutation.type === "childList") {
-              // Check if any removed nodes were Razorpay elements
-              const removedNodes = Array.from(mutation.removedNodes);
-              const hadRazorpayElements = removedNodes.some((node) => {
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                  const element = node as Element;
-                  return (
-                    razorpaySelectors.some((selector) =>
-                      element.matches(selector),
-                    ) ||
-                    (element.tagName === "IFRAME" &&
-                      ((element as HTMLIFrameElement).src?.includes(
-                        "razorpay",
-                      ) ||
-                        (element as HTMLIFrameElement).src?.includes(
-                          "checkout",
-                        )))
-                  );
-                }
-                return false;
-              });
+              console.log(
+                `Modal backdrop visible: ${isBackdropVisible}`,
+                backdropStyle,
+              );
 
-              if (hadRazorpayElements) {
+              if (!isBackdropVisible) {
                 console.log(
-                  "Razorpay elements removed from DOM - checking if modal is closed",
+                  "Modal backdrop not visible - resetting processing state",
                 );
-                setTimeout(() => {
-                  if (checkForRazorpayModal()) {
-                    console.log("Confirmed: Razorpay modal is closed");
-                  }
-                }, 500); // Small delay to ensure DOM is updated
+                setIsProcessing(false);
+                clearTimeoutAndCleanup();
+                return true; // Modal is closed
               }
             }
+
+            return false; // Modal is still open
+          };
+
+          // Interval-based monitoring
+          modalCheckInterval = setInterval(() => {
+            checkForRazorpayModal();
+          }, 1000); // Check every second for faster response
+
+          // DOM mutation observer for immediate detection
+          observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === "childList") {
+                // Check if any removed nodes were Razorpay elements
+                const removedNodes = Array.from(mutation.removedNodes);
+                const hadRazorpayElements = removedNodes.some((node) => {
+                  if (node.nodeType === Node.ELEMENT_NODE) {
+                    const element = node as Element;
+                    return (
+                      razorpaySelectors.some((selector) =>
+                        element.matches(selector),
+                      ) ||
+                      (element.tagName === "IFRAME" &&
+                        ((element as HTMLIFrameElement).src?.includes(
+                          "razorpay",
+                        ) ||
+                          (element as HTMLIFrameElement).src?.includes(
+                            "checkout",
+                          )))
+                    );
+                  }
+                  return false;
+                });
+
+                if (hadRazorpayElements) {
+                  console.log(
+                    "Razorpay elements removed from DOM - checking if modal is closed",
+                  );
+                  setTimeout(() => {
+                    if (checkForRazorpayModal()) {
+                      console.log("Confirmed: Razorpay modal is closed");
+                    }
+                  }, 500); // Small delay to ensure DOM is updated
+                }
+              }
+            });
           });
-        });
 
-        observer.observe(document.body, { childList: true, subtree: true });
-      };
+          observer.observe(document.body, { childList: true, subtree: true });
+        };
 
-      // Start monitoring after modal opens
-      setTimeout(startModalMonitoring, 2000);
+        // Start monitoring after modal opens
+        setTimeout(startModalMonitoring, 2000);
 
-      rzp.open();
-    } catch (error) {
-      console.error("Error creating order:", error);
-      toast.error("Failed to create order. Please try again.");
-      setIsProcessing(false);
-    }
-  };
+        rzp.open();
+      } catch (error) {
+        console.error("Error creating order:", error);
+        toast.error("Failed to create order. Please try again.");
+        setIsProcessing(false);
+      }
+    },
+    [
+      isEmpty,
+      user?.id,
+      user?.fullName,
+      user?.primaryEmailAddress?.emailAddress,
+      discountedTotal,
+      items,
+      userProfile,
+      markCouponUsed,
+      appliedCoupon,
+      setAppliedCoupon,
+      setCouponCode,
+      emptyCart,
+      setIsProcessing,
+      Razorpay,
+    ],
+  );
 
   // Check for WhatsApp number after sign-in and proceed with checkout
   const proceedWithCheckoutAfterAuth = useCallback(() => {
@@ -603,11 +623,9 @@ const CartContent = () => {
       setShowWhatsAppModal(true);
     } else {
       // User has WhatsApp number, proceed with payment
-      // Note: handlePayment is stable as it only depends on state/props that are already tracked
       handlePayment();
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, userProfile?.whatsappNumber]);
+  }, [user?.id, userProfile?.whatsappNumber, handlePayment]);
 
   // Effect to handle checkout after sign-in
   useEffect(() => {

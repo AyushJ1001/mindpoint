@@ -87,7 +87,8 @@ export default defineSchema({
     targetAudience: v.optional(v.array(v.string())), // "who is this worksheet for"
   })
     .index("by_name_and_type", ["name", "type"])
-    .index("by_startDate", ["startDate"]),
+    .index("by_startDate", ["startDate"])
+    .index("by_type", ["type"]),
 
   reviews: defineTable({
     userId: v.string(),
@@ -128,7 +129,10 @@ export default defineSchema({
     isBogoFree: v.optional(v.boolean()),
     bogoSourceCourseId: v.optional(v.id("courses")),
     bogoOfferName: v.optional(v.string()),
-  }),
+  })
+    .index("by_userId", ["userId"])
+    .index("by_enrollmentNumber", ["enrollmentNumber"])
+    .index("by_courseId", ["courseId"]),
 
   // User Mind Points balance
   mindPoints: defineTable({
@@ -161,5 +165,6 @@ export default defineSchema({
     usedAt: v.optional(v.number()),
   })
     .index("by_code", ["code"])
-    .index("by_clerkUserId", ["clerkUserId"]),
+    .index("by_clerkUserId", ["clerkUserId"])
+    .index("by_clerkUserId_and_isUsed", ["clerkUserId", "isUsed"]),
 });

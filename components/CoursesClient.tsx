@@ -9,6 +9,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
+import { useNow } from "@/hooks/use-now";
 
 // Type for courses with sessions (therapy)
 interface TherapyCourse extends Doc<"courses"> {
@@ -117,10 +118,17 @@ const extractVariantLabel = (course: Doc<"courses">): string | null => {
   return null;
 };
 
-const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
+const CourseGroupCard = ({
+  courses,
+  bogoCoursesByType,
+}: {
+  courses: Array<Doc<"courses">>;
+  bogoCoursesByType?: Record<string, Doc<"courses">[]>;
+}) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const [showBogoModal, setShowBogoModal] = useState(false);
+  const now = useNow();
   const sorted = [...courses].sort((a, b) => a.price - b.price);
   const useSessionsMode = sorted.every(
     (c) => typeof (c as TherapyCourse).sessions === "number",
@@ -149,13 +157,11 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
         ) ?? sorted[0])
       : (sorted.find((c) => c._id === selectedId) ?? sorted[0]);
 
-  // Get available courses for BOGO selection
-  const availableCourses = useQuery(
-    api.courses.getBogoCoursesByType,
-    selectedCourse.bogo && selectedCourse.type
-      ? { courseType: selectedCourse.type }
-      : "skip",
-  );
+  // Get available courses for BOGO selection from props
+  const availableCourses =
+    selectedCourse.bogo && selectedCourse.type && bogoCoursesByType
+      ? bogoCoursesByType[selectedCourse.type] ?? undefined
+      : undefined;
 
   // Set mounted state after hydration
   React.useEffect(() => {
@@ -163,6 +169,8 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   }, []);
 
   const displayPrice = getCoursePrice(selectedCourse);
+  // Use shared time for offer details - updates automatically via useNow hook
+  // now is used to trigger re-renders every minute, getOfferDetails uses Date.now() internally
   const offerDetails = getOfferDetails(selectedCourse);
 
   const handleAddToCart = () => {
@@ -261,7 +269,7 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
 
   return (
     <Card
-      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
+      className="card-shadow hover:card-shadow-lg transition-smooth group relative h-full cursor-pointer overflow-hidden"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
@@ -295,14 +303,14 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
 
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="group-hover:text-primary transition-smooth text-lg">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="group-hover:text-primary line-clamp-2 transition-smooth text-lg">
               {sorted[0].name}
             </CardTitle>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0 pb-4">
         <div className="mb-3">
           {useSessionsMode ? (
             <Select
@@ -482,17 +490,24 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   );
 };
 
-const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
+const CourseCard = ({
+  course,
+  bogoCoursesByType,
+}: {
+  course: Doc<"courses">;
+  bogoCoursesByType?: Record<string, Doc<"courses">[]>;
+}) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const [showBogoModal, setShowBogoModal] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const now = useNow();
 
-  // Get available courses for BOGO selection
-  const availableCourses = useQuery(
-    api.courses.getBogoCoursesByType,
-    course.bogo && course.type ? { courseType: course.type } : "skip",
-  );
+  // Get available courses for BOGO selection from props
+  const availableCourses =
+    course.bogo && course.type && bogoCoursesByType
+      ? bogoCoursesByType[course.type] ?? undefined
+      : undefined;
 
   // Set mounted state after hydration
   React.useEffect(() => {
@@ -500,6 +515,8 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
   }, []);
 
   const displayPrice = getCoursePrice(course);
+  // Use shared time for offer details - updates automatically via useNow hook
+  // now is used to trigger re-renders every minute, getOfferDetails uses Date.now() internally
   const offerDetails = getOfferDetails(course);
 
   const handleAddToCart = () => {
@@ -594,7 +611,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
 
   return (
     <Card
-      className="card-shadow hover:card-shadow-lg transition-smooth group h-full cursor-pointer overflow-hidden"
+      className="card-shadow hover:card-shadow-lg transition-smooth group relative h-full cursor-pointer overflow-hidden"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
@@ -626,18 +643,18 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
         </div>
       )}
 
-      <CardHeader className="pb-4">
+      <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="group-hover:text-primary transition-smooth text-lg">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="group-hover:text-primary line-clamp-2 transition-smooth text-lg">
               {course.name}
             </CardTitle>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
-        <div className="flex items-center justify-between">
-          <div className="space-y-1">
+      <CardContent className="pt-0 pb-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0 space-y-1">
             <Badge
               variant="secondary"
               className="px-3 py-1 text-base font-semibold"
@@ -691,7 +708,7 @@ const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
                 }}
                 disabled={isInCart || isOutOfStock}
                 size="sm"
-                className="transition-smooth"
+                className="shrink-0 transition-smooth"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock
@@ -725,6 +742,23 @@ interface CoursesClientProps {
 }
 
 export default function CoursesClient({ coursesData }: CoursesClientProps) {
+  // Collect unique course types that have BOGO enabled
+  const bogoCourseTypes = React.useMemo(() => {
+    const types = new Set<string>();
+    coursesData.forEach((course) => {
+      if (course.bogo?.enabled && course.type) {
+        types.add(course.type);
+      }
+    });
+    return Array.from(types);
+  }, [coursesData]);
+
+  // Batch fetch BOGO courses for all types at once
+  const bogoCoursesByType = useQuery(
+    api.courses.getBogoCoursesByTypes,
+    bogoCourseTypes.length > 0 ? { courseTypes: bogoCourseTypes as any[] } : "skip",
+  );
+
   return (
     <div className="min-h-screen">
       {/* All Courses Section */}
@@ -742,9 +776,17 @@ export default function CoursesClient({ coursesData }: CoursesClientProps) {
                 const groups = Array.from(nameToCourses.values());
                 return groups.map((group) =>
                   group.length > 1 ? (
-                    <CourseGroupCard key={group[0]._id} courses={group} />
+                    <CourseGroupCard
+                      key={group[0]._id}
+                      courses={group}
+                      bogoCoursesByType={bogoCoursesByType}
+                    />
                   ) : (
-                    <CourseCard key={group[0]._id} course={group[0]} />
+                    <CourseCard
+                      key={group[0]._id}
+                      course={group[0]}
+                      bogoCoursesByType={bogoCoursesByType}
+                    />
                   ),
                 );
               })()}

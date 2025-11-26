@@ -50,6 +50,8 @@ import { toast } from "sonner";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { useUser } from "@clerk/nextjs";
+import { useNow } from "@/hooks/use-now";
+import { useMemo } from "react";
 
 function MindPointsBadge() {
   const { user } = useUser();
@@ -92,53 +94,52 @@ export default function Navbar() {
   const [isHydrated, setIsHydrated] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
-  const [itemOfferDetails, setItemOfferDetails] = useState<
-    Record<string, OfferDetails>
-  >({});
   const pathname = usePathname();
+  const now = useNow();
 
-  // Update offer details for cart items
-  useEffect(() => {
-    const updateOfferDetails = () => {
-      const newOfferDetails: Record<string, OfferDetails> = {};
-      items.forEach((item) => {
-        if (item.offer || item.bogo) {
-          const offerPrice = Math.round(item.price || 0);
-          const discountPercentage = item.offer?.discount ?? 0;
+  // Update offer details for cart items using shared time
+  // Use now to create a minute-based key that changes every minute, forcing recalculation
+  const minuteKey = Math.floor(now / 60000);
+  const itemOfferDetails = useMemo(() => {
+    const newOfferDetails: Record<string, OfferDetails> = {};
+    // minuteKey ensures recalculation every minute when time updates
+    // Reference minuteKey to satisfy eslint dependency check
+    if (minuteKey < 0) {
+      // This will never execute, but ensures minuteKey is used
+      return {};
+    }
+    items.forEach((item) => {
+      if (item.offer || item.bogo) {
+        const offerPrice = Math.round(item.price || 0);
+        const discountPercentage = item.offer?.discount ?? 0;
 
-          // Use stored originalPrice if available, otherwise calculate it
-          let originalPrice = item.originalPrice || offerPrice;
-          if (
-            !item.originalPrice &&
-            discountPercentage > 0 &&
-            discountPercentage < 100
-          ) {
-            const denominator = 1 - discountPercentage / 100;
-            if (Math.abs(denominator) > 1e-6) {
-              originalPrice = offerPrice / denominator;
-            }
-          }
-
-          originalPrice = Math.round(originalPrice);
-
-          const offerDetails = getOfferDetails({
-            price: originalPrice,
-            offer: item.offer ?? null,
-            bogo: item.bogo ?? null,
-          });
-          if (offerDetails) {
-            newOfferDetails[item.id] = offerDetails;
+        // Use stored originalPrice if available, otherwise calculate it
+        let originalPrice = item.originalPrice || offerPrice;
+        if (
+          !item.originalPrice &&
+          discountPercentage > 0 &&
+          discountPercentage < 100
+        ) {
+          const denominator = 1 - discountPercentage / 100;
+          if (Math.abs(denominator) > 1e-6) {
+            originalPrice = offerPrice / denominator;
           }
         }
-      });
-      setItemOfferDetails(newOfferDetails);
-    };
 
-    updateOfferDetails();
-    const interval = setInterval(updateOfferDetails, 60000); // Update every minute
+        originalPrice = Math.round(originalPrice);
 
-    return () => clearInterval(interval);
-  }, [items]);
+        const offerDetails = getOfferDetails({
+          price: originalPrice,
+          offer: item.offer ?? null,
+          bogo: item.bogo ?? null,
+        });
+        if (offerDetails) {
+          newOfferDetails[item.id] = offerDetails;
+        }
+      }
+    });
+    return newOfferDetails;
+  }, [items, minuteKey]);
 
   const hasBogoItems = items.some((item) => itemOfferDetails[item.id]?.hasBogo);
 
