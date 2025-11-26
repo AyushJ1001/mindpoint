@@ -65,11 +65,8 @@ export async function executeConvexMutationWithRetry<
   Args extends object,
   Return,
 >(
-  mutation: FunctionReference<
-    "mutation",
-    "public",
-    { _returnType: Return; _argsType: Args }
-  >,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  mutation: FunctionReference<"mutation", "public", any>,
   args: Args,
   context: {
     userId?: string;

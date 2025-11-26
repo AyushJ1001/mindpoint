@@ -47,24 +47,24 @@ export function RedemptionModal({
         </DialogHeader>
 
         <div className="space-y-4 py-4">
-          <div className="p-4 border rounded-lg">
-            <div className="text-sm text-muted-foreground mb-1">
+          <div className="rounded-lg border p-4">
+            <div className="text-muted-foreground mb-1 text-sm">
               Redemption Details
             </div>
-            <div className="font-semibold text-lg">{courseTypeLabel}</div>
-            <div className="text-sm text-muted-foreground">
+            <div className="text-lg font-semibold">{courseTypeLabel}</div>
+            <div className="text-muted-foreground text-sm">
               Cost: {pointsRequired} Mind Points
             </div>
           </div>
 
-          <div className="p-4 border rounded-lg bg-muted/50">
-            <div className="text-sm text-muted-foreground mb-1">
+          <div className="bg-muted/50 rounded-lg border p-4">
+            <div className="text-muted-foreground mb-1 text-sm">
               Your Balance
             </div>
-            <div className="font-semibold text-lg">
+            <div className="text-lg font-semibold">
               {currentBalance.toLocaleString()} points
             </div>
-            <div className="text-sm text-muted-foreground mt-2">
+            <div className="text-muted-foreground mt-2 text-sm">
               After redemption:{" "}
               <span className="font-medium">
                 {(currentBalance - pointsRequired).toLocaleString()} points
@@ -76,17 +76,17 @@ export function RedemptionModal({
             <Alert variant="destructive">
               <AlertTriangle className="h-4 w-4" />
               <AlertDescription>
-                You don't have enough points. You need {pointsRequired} points
-                but only have {currentBalance}.
+                You don&apos;t have enough points. You need {pointsRequired}{" "}
+                points but only have {currentBalance}.
               </AlertDescription>
             </Alert>
           )}
 
           <Alert>
             <AlertDescription>
-              After redemption, you'll receive a unique coupon code via email
-              that can be used during checkout for a 100% discount on any course
-              of this type.
+              After redemption, you&apos;ll receive a unique coupon code via
+              email that can be used during checkout for a 100% discount on any
+              course of this type.
             </AlertDescription>
           </Alert>
         </div>
@@ -108,4 +108,3 @@ export function RedemptionModal({
     </Dialog>
   );
 }
-

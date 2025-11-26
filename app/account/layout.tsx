@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { SignedIn } from "@clerk/nextjs";
 import { useSearchParams, useRouter } from "next/navigation";
 import { BookOpen, Gift } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,9 @@ export default function AccountLayout({
   const router = useRouter();
   const tabParam = searchParams.get("tab");
   const [activeTab, setActiveTab] = useState<"enrollments" | "points">(
-    (tabParam === "points" ? "points" : "enrollments") as "enrollments" | "points",
+    (tabParam === "points" ? "points" : "enrollments") as
+      | "enrollments"
+      | "points",
   );
 
   useEffect(() => {
@@ -34,7 +36,7 @@ export default function AccountLayout({
 
   return (
     <SignedIn>
-      <div className="container mx-auto py-8 px-4">
+      <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold">My Account</h1>
           <p className="text-muted-foreground mt-2">
@@ -42,15 +44,16 @@ export default function AccountLayout({
           </p>
         </div>
 
-        <div className="flex flex-col md:flex-row gap-6">
+        <div className="flex flex-col gap-6 md:flex-row">
           {/* Sidebar Navigation */}
-          <aside className="w-full md:w-64 shrink-0">
+          <aside className="w-full shrink-0 md:w-64">
             <nav className="space-y-2">
               <Button
                 variant={activeTab === "enrollments" ? "default" : "ghost"}
                 className={cn(
                   "w-full justify-start",
-                  activeTab === "enrollments" && "bg-primary text-primary-foreground",
+                  activeTab === "enrollments" &&
+                    "bg-primary text-primary-foreground",
                 )}
                 onClick={() => handleTabChange("enrollments")}
               >
@@ -61,7 +64,8 @@ export default function AccountLayout({
                 variant={activeTab === "points" ? "default" : "ghost"}
                 className={cn(
                   "w-full justify-start",
-                  activeTab === "points" && "bg-primary text-primary-foreground",
+                  activeTab === "points" &&
+                    "bg-primary text-primary-foreground",
                 )}
                 onClick={() => handleTabChange("points")}
               >
@@ -78,4 +82,3 @@ export default function AccountLayout({
     </SignedIn>
   );
 }
-

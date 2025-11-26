@@ -28,7 +28,7 @@ export function EnrollmentsTab() {
         <CardContent className="py-12 text-center">
           <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
           <p className="text-muted-foreground">
-            You haven't enrolled in any courses yet.
+            You haven&apos;t enrolled in any courses yet.
           </p>
         </CardContent>
       </Card>
