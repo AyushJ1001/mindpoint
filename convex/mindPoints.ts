@@ -1,6 +1,5 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
-import { Id } from "./_generated/dataModel";
 
 /**
  * Get user's current Mind Points balance and summary
@@ -17,9 +16,7 @@ export const getUserPoints = query({
   handler: async (ctx, args) => {
     const pointsRecord = await ctx.db
       .query("mindPoints")
-      .withIndex("by_clerkUserId", (q) =>
-        q.eq("clerkUserId", args.clerkUserId),
-      )
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
       .first();
 
     if (!pointsRecord) {
@@ -62,9 +59,7 @@ export const getPointsHistory = query({
   handler: async (ctx, args) => {
     const transactions = await ctx.db
       .query("pointsTransactions")
-      .withIndex("by_clerkUserId", (q) =>
-        q.eq("clerkUserId", args.clerkUserId),
-      )
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
       .order("desc")
       .take(args.limit || 50);
 
@@ -96,9 +91,7 @@ export const getUserCoupons = query({
   handler: async (ctx, args) => {
     const coupons = await ctx.db
       .query("coupons")
-      .withIndex("by_clerkUserId", (q) =>
-        q.eq("clerkUserId", args.clerkUserId),
-      )
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
       .filter((q) => q.eq(q.field("isUsed"), false))
       .order("desc")
       .collect();
@@ -129,16 +122,14 @@ export const awardPoints = mutation({
     }
 
     // Get or create points record
-    let pointsRecord = await ctx.db
+    const pointsRecord = await ctx.db
       .query("mindPoints")
-      .withIndex("by_clerkUserId", (q) =>
-        q.eq("clerkUserId", args.clerkUserId),
-      )
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
       .first();
 
     if (!pointsRecord) {
       // Create new points record
-      const newRecordId = await ctx.db.insert("mindPoints", {
+      await ctx.db.insert("mindPoints", {
         clerkUserId: args.clerkUserId,
         balance: args.points,
         totalEarned: args.points,
@@ -210,9 +201,7 @@ export const redeemPoints = mutation({
     // Get user's points balance - reload immediately before checking to prevent race conditions
     const pointsRecord = await ctx.db
       .query("mindPoints")
-      .withIndex("by_clerkUserId", (q) =>
-        q.eq("clerkUserId", args.clerkUserId),
-      )
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
       .first();
 
     if (!pointsRecord) {
@@ -307,23 +296,26 @@ export const validateCoupon = query({
       .first();
 
     if (!coupon) {
-      return { valid: false, error: "Invalid coupon code" };
+      return { valid: false as const, error: "Invalid coupon code" };
     }
 
     if (coupon.isUsed) {
-      return { valid: false, error: "This coupon has already been used" };
+      return {
+        valid: false as const,
+        error: "This coupon has already been used",
+      };
     }
 
     // If clerkUserId is provided, verify it matches
     if (args.clerkUserId && coupon.clerkUserId !== args.clerkUserId) {
       return {
-        valid: false,
+        valid: false as const,
         error: "This coupon does not belong to your account",
       };
     }
 
     return {
-      valid: true,
+      valid: true as const,
       coupon: {
         code: coupon.code,
         courseType: coupon.courseType,
@@ -367,4 +359,3 @@ export const markCouponUsed = mutation({
     return { success: true };
   },
 });
-
