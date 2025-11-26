@@ -43,6 +43,41 @@ function extractInternshipPlanFromDuration(
   return null;
 }
 
+// Import the canonical points calculation function from lib/mind-points.ts
+// This ensures we use a single source of truth for points logic
+// Note: POINTS_EARN_CONFIG is also available from lib/mind-points.ts if needed
+import { calculatePointsEarned } from "../lib/mind-points";
+
+// Helper function to award Mind Points after successful payment
+// Only awards points for authenticated users (not guest users) and paid purchases (not BOGO free items)
+async function awardMindPoints(
+  ctx: MutationCtx,
+  clerkUserId: string,
+  course: Doc<"courses">,
+  enrollmentId: Id<"enrollments">,
+  isBogoFree?: boolean,
+) {
+  // Don't award points for guest users or BOGO free items
+  if (isBogoFree) {
+    return;
+  }
+
+  try {
+    const pointsEarned = calculatePointsEarned(course);
+    if (pointsEarned > 0) {
+      await ctx.runMutation(api.mindPoints.awardPoints, {
+        clerkUserId,
+        points: pointsEarned,
+        description: `Earned ${pointsEarned} points for purchasing ${course.name}`,
+        enrollmentId,
+      });
+    }
+  } catch (error) {
+    // Log error but don't fail the enrollment process
+    console.error("Error awarding Mind Points:", error);
+  }
+}
+
 // Helper function to add enrollment to Google Sheets
 async function addEnrollmentToGoogleSheets(
   ctx: MutationCtx,
@@ -673,6 +708,14 @@ export const handleSuccessfulPayment = mutation({
       enrolledUsers: [...course.enrolledUsers, args.userId],
     });
 
+    // Award Mind Points for authenticated users only (not guest users)
+    // Check if user is authenticated by checking if userId is a Clerk ID (not an email)
+    // For authenticated users, userId is the Clerk user ID; for guests, it's the email
+    const isAuthenticatedUser = !args.userId.includes("@");
+    if (isAuthenticatedUser) {
+      await awardMindPoints(ctx, args.userId, course, enrollmentId, false);
+    }
+
     const userName = args.studentName || args.userEmail;
 
     const bogoEnrollments = await grantBogoEnrollments(ctx, course, {
@@ -1005,6 +1048,13 @@ export const handleCartCheckout = mutation({
         enrolledUsers: [...course.enrolledUsers, args.userId],
       });
 
+      // Award Mind Points for authenticated users only (not guest users)
+      // Check if user is authenticated by checking if userId is a Clerk ID (not an email)
+      const isAuthenticatedUser = !args.userId.includes("@");
+      if (isAuthenticatedUser) {
+        await awardMindPoints(ctx, args.userId, course, enrollmentId, false);
+      }
+
       // Calculate end date for internship courses
       let endDate = course.endDate;
       if (course.type === "internship" && internshipPlan) {
@@ -1033,7 +1083,10 @@ export const handleCartCheckout = mutation({
         "Checking if course is supervised:",
         course.type === "supervised",
       );
-      console.log("Checking if course is worksheet:", course.type === "worksheet");
+      console.log(
+        "Checking if course is worksheet:",
+        course.type === "worksheet",
+      );
       console.log("Session type provided:", !!args.sessionType);
       console.log("Student name provided:", !!args.studentName);
 
@@ -1186,7 +1239,9 @@ export const handleCartCheckout = mutation({
             worksheets: validWorksheets,
           },
         );
-        console.log("Worksheet purchase confirmation email scheduled successfully");
+        console.log(
+          "Worksheet purchase confirmation email scheduled successfully",
+        );
       }
     }
 
@@ -1966,7 +2021,9 @@ export const handleGuestUserCartCheckoutWithData = mutation({
             worksheets: validWorksheets,
           },
         );
-        console.log("Worksheet purchase confirmation email scheduled successfully");
+        console.log(
+          "Worksheet purchase confirmation email scheduled successfully",
+        );
       }
     }
 

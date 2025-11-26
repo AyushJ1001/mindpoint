@@ -14,6 +14,7 @@ import {
   Plus,
   Minus,
   Sparkles,
+  Gift,
 } from "lucide-react";
 import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/clerk-react";
@@ -21,7 +22,7 @@ import { handlePaymentSuccess } from "@/app/actions/payment";
 import { toast } from "sonner";
 import { Id } from "@/convex/_generated/dataModel";
 import { WhatsAppModal } from "@/components/whatsapp-modal";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import {
   Dialog,
@@ -32,7 +33,9 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import Link from "next/link";
+import { Check, X } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -46,19 +49,41 @@ const CartContent = () => {
     emptyCart,
   } = useCart();
 
+  const [isMounted, setIsMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const [pendingCheckout, setPendingCheckout] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount: number;
+    courseType: string;
+  } | null>(null);
   const { Razorpay, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
   const { openSignIn } = useClerk();
+
+  // Ensure hydration matches server render
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Query user profile to check if WhatsApp number exists
   const userProfile = useQuery(
     api.myFunctions.getUserProfile,
     user?.id ? { clerkUserId: user.id } : "skip",
   );
+
+  // Validate coupon code
+  const couponValidation = useQuery(
+    api.mindPoints.validateCoupon,
+    couponCode && user?.id
+      ? { code: couponCode, clerkUserId: user.id }
+      : "skip",
+  );
+
+  const markCouponUsed = useMutation(api.mindPoints.markCouponUsed);
 
   // State to track offer details for each item
   const [itemOfferDetails, setItemOfferDetails] = useState<
@@ -129,6 +154,41 @@ const CartContent = () => {
     });
     return Array.from(labels);
   }, [items, itemOfferDetails]);
+
+  // Calculate total points that will be earned (only for authenticated users and paid items)
+  const totalPointsEarned = useMemo(() => {
+    if (!user?.id) return 0; // Guest users don't earn points
+
+    return items.reduce((total, item) => {
+      // Don't count BOGO free items
+      if (item.selectedFreeCourse) return total;
+
+      if (!item.courseType) return total;
+
+      const pointsMap: Record<string, number> = {
+        certificate: 120,
+        diploma: 200,
+        worksheet: 20,
+        masterclass: 20,
+        "pre-recorded": 100,
+      };
+
+      // Handle internship - default to 120hr (60 points)
+      // Could be enhanced to check course duration if needed
+      if (item.courseType === "internship") {
+        return total + 60; // Default to 120hr points
+      }
+
+      return total + (pointsMap[item.courseType] || 0);
+    }, 0);
+  }, [items, user?.id]);
+
+  // Calculate discounted total when coupon is applied
+  const discountedTotal = useMemo(() => {
+    if (!appliedCoupon) return Math.round(cartTotal);
+    const discountMultiplier = 1 - appliedCoupon.discount / 100;
+    return Math.round(cartTotal * discountMultiplier);
+  }, [cartTotal, appliedCoupon]);
 
   const showEnrollmentToast = (
     enrollments:
@@ -212,7 +272,7 @@ const CartContent = () => {
       const response = await fetch("/api/create-order", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount: Math.round(cartTotal) }), // API will convert to paise
+        body: JSON.stringify({ amount: discountedTotal }), // API will convert to paise
       });
 
       const data = await response.json();
@@ -254,6 +314,52 @@ const CartContent = () => {
             );
 
             if (result.success) {
+              // Mark coupon as used if applied
+              if (appliedCoupon) {
+                try {
+                  await markCouponUsed({ couponCode: appliedCoupon.code });
+                  setAppliedCoupon(null);
+                  setCouponCode("");
+                } catch (error) {
+                  console.error("Failed to mark coupon as used:", error);
+                }
+              }
+
+              // Calculate and show points earned
+              const pointsEarned = items.reduce((total, item) => {
+                if (item.courseType && !item.selectedFreeCourse) {
+                  // Don't count BOGO free items
+                  const pointsMap: Record<string, number> = {
+                    certificate: 120,
+                    diploma: 200,
+                    worksheet: 20,
+                    masterclass: 20,
+                    "pre-recorded": 100,
+                  };
+                  if (item.courseType === "internship") {
+                    return total + 60; // Default to 120hr, could be enhanced
+                  }
+                  return total + (pointsMap[item.courseType] || 0);
+                }
+                return total;
+              }, 0);
+
+              if (pointsEarned > 0 && user?.id) {
+                setTimeout(() => {
+                  toast.success(`🎉 You earned ${pointsEarned} Mind Points!`, {
+                    description:
+                      "Points have been added to your account. Visit your account to redeem them.",
+                    duration: 6000,
+                    action: {
+                      label: "View Points",
+                      onClick: () => {
+                        window.location.href = "/account?tab=points";
+                      },
+                    },
+                  });
+                }, 2000);
+              }
+
               showEnrollmentToast(result.enrollments);
             } else {
               toast.error(
@@ -276,8 +382,7 @@ const CartContent = () => {
         prefill: {
           name: user?.fullName || "",
           email: user?.primaryEmailAddress?.emailAddress || "",
-          contact:
-            whatsappNumber || userProfile?.whatsappNumber || "",
+          contact: whatsappNumber || userProfile?.whatsappNumber || "",
         },
         theme: {
           color: "#3B82F6",
@@ -541,6 +646,18 @@ const CartContent = () => {
     // Proceed with payment even without WhatsApp number
     handlePayment();
   };
+
+  // Show loading state during hydration to prevent mismatch
+  if (!isMounted) {
+    return (
+      <div className="container mx-auto py-16 dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+        <div className="text-center">
+          <ShoppingCart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+          <h2 className="mb-2 text-2xl font-semibold">Loading cart...</h2>
+        </div>
+      </div>
+    );
+  }
 
   if (isEmpty) {
     return (
@@ -824,11 +941,96 @@ const CartContent = () => {
                 <span>Tax</span>
                 <span>₹0.00</span>
               </div>
-              <div className="border-t pt-4">
+
+              {/* Coupon Code Input */}
+              <div className="space-y-2 border-t pt-4">
+                {!appliedCoupon ? (
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) =>
+                        setCouponCode(e.target.value.toUpperCase())
+                      }
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (!couponCode.trim()) return;
+                        if (
+                          couponValidation?.valid &&
+                          couponValidation.coupon
+                        ) {
+                          setAppliedCoupon({
+                            code: couponCode,
+                            discount: couponValidation.coupon.discount,
+                            courseType: couponValidation.coupon.courseType,
+                          });
+                          toast.success("Coupon applied successfully!");
+                        } else if (couponValidation?.error) {
+                          toast.error(couponValidation.error);
+                        }
+                      }}
+                      disabled={
+                        !couponCode.trim() || couponValidation === undefined
+                      }
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2 dark:border-green-800 dark:bg-green-950/30">
+                    <div className="flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-green-600" />
+                      <span className="font-mono text-sm font-semibold">
+                        {appliedCoupon.code}
+                      </span>
+                      <span className="text-xs text-green-600">
+                        {appliedCoupon.discount}% off
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setAppliedCoupon(null);
+                        setCouponCode("");
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                {couponValidation && !couponValidation.valid && couponCode && (
+                  <p className="text-xs text-red-600">
+                    {couponValidation.error}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 border-t pt-4">
                 <div className="flex justify-between font-semibold">
                   <span>Total</span>
-                  <span>{showRupees(Math.round(cartTotal))}</span>
+                  <span>{showRupees(discountedTotal)}</span>
                 </div>
+                {appliedCoupon && (
+                  <div className="text-sm text-green-600">
+                    <Check className="mr-1 inline h-4 w-4" />
+                    {appliedCoupon.discount === 100
+                      ? "Coupon applied - Free!"
+                      : `Coupon applied - ${appliedCoupon.discount}% off`}
+                  </div>
+                )}
+                {user?.id && totalPointsEarned > 0 && (
+                  <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400">
+                    <Gift className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium">
+                      You&apos;ll earn {totalPointsEarned} Mind Points
+                    </span>
+                  </div>
+                )}
               </div>
               <Button
                 onClick={handleCheckoutClick}

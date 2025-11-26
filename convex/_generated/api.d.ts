@@ -18,6 +18,7 @@ import type * as emailActions from "../emailActions.js";
 import type * as emailActionsWithRateLimit from "../emailActionsWithRateLimit.js";
 import type * as googleSheets from "../googleSheets.js";
 import type * as image from "../image.js";
+import type * as mindPoints from "../mindPoints.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as testOffer from "../testOffer.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   emailActionsWithRateLimit: typeof emailActionsWithRateLimit;
   googleSheets: typeof googleSheets;
   image: typeof image;
+  mindPoints: typeof mindPoints;
   myFunctions: typeof myFunctions;
   rateLimit: typeof rateLimit;
   testOffer: typeof testOffer;

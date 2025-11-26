@@ -28,7 +28,7 @@ export async function handlePaymentSuccess(
 }> {
   try {
     // Call the mutation with retry logic to handle transient failures
-    const enrollments = await executeConvexMutationWithRetry(
+    const enrollments = (await executeConvexMutationWithRetry(
       api.myFunctions.handleCartCheckout,
       {
         userId,
@@ -45,7 +45,13 @@ export async function handlePaymentSuccess(
         courseIds: courseIds.map((id) => id),
         operationType: "handleCartCheckout",
       },
-    );
+    )) as Array<{
+      enrollmentId: string;
+      enrollmentNumber: string;
+      courseName: string;
+      courseId: string;
+      isBogoFree?: boolean;
+    }>;
 
     return {
       success: true,
@@ -82,7 +88,7 @@ export async function handleGuestUserPaymentSuccess(
 }> {
   try {
     // Call the mutation with retry logic to handle transient failures
-    const enrollments = await executeConvexMutationWithRetry(
+    const enrollments = (await executeConvexMutationWithRetry(
       api.myFunctions.handleGuestUserCartCheckoutByEmail,
       {
         userEmail,
@@ -93,7 +99,13 @@ export async function handleGuestUserPaymentSuccess(
         courseIds: courseIds.map((id) => id),
         operationType: "handleGuestUserCartCheckoutByEmail",
       },
-    );
+    )) as Array<{
+      enrollmentId: string;
+      enrollmentNumber: string;
+      courseName: string;
+      courseId: string;
+      isBogoFree?: boolean;
+    }>;
 
     return {
       success: true,
@@ -137,7 +149,7 @@ export async function handleGuestUserPaymentSuccessWithData(
 }> {
   try {
     // Call the mutation with retry logic to handle transient failures
-    const enrollments = await executeConvexMutationWithRetry(
+    const enrollments = (await executeConvexMutationWithRetry(
       api.myFunctions.handleGuestUserCartCheckoutWithData,
       {
         userData,
@@ -150,7 +162,13 @@ export async function handleGuestUserPaymentSuccessWithData(
         courseIds: courseIds.map((id) => id),
         operationType: "handleGuestUserCartCheckoutWithData",
       },
-    );
+    )) as Array<{
+      enrollmentId: string;
+      enrollmentNumber: string;
+      courseName: string;
+      courseId: string;
+      isBogoFree?: boolean;
+    }>;
 
     return {
       success: true,
@@ -191,7 +209,7 @@ export async function handleSingleCourseEnrollment(
 }> {
   try {
     // Call the mutation with retry logic to handle transient failures
-    const enrollment = await executeConvexMutationWithRetry(
+    const enrollmentId = (await executeConvexMutationWithRetry(
       api.myFunctions.handleSuccessfulPayment,
       {
         userId,
@@ -207,12 +225,12 @@ export async function handleSingleCourseEnrollment(
         courseIds: [courseId],
         operationType: "handleSuccessfulPayment",
       },
-    );
+    )) as string;
 
     return {
       success: true,
       enrollment: {
-        enrollmentId: enrollment as string,
+        enrollmentId: enrollmentId,
         enrollmentNumber: "", // This function doesn't return enrollmentNumber
         courseName: "", // This function doesn't return courseName
       },
@@ -249,7 +267,7 @@ export async function handleGuestUserSingleEnrollment(
 }> {
   try {
     // Call the mutation with retry logic to handle transient failures
-    const enrollment = await executeConvexMutationWithRetry(
+    const enrollment = (await executeConvexMutationWithRetry(
       api.myFunctions.handleGuestUserSingleEnrollmentByEmail,
       {
         userEmail,
@@ -260,7 +278,11 @@ export async function handleGuestUserSingleEnrollment(
         courseIds: [courseId],
         operationType: "handleGuestUserSingleEnrollmentByEmail",
       },
-    );
+    )) as {
+      enrollmentId: Id<"enrollments">;
+      enrollmentNumber: string;
+      courseName: string;
+    };
 
     return {
       success: true,
@@ -306,7 +328,7 @@ export async function handleSupervisedTherapyEnrollment(
 }> {
   try {
     // Call the mutation with retry logic to handle transient failures
-    const enrollment = await executeConvexMutationWithRetry(
+    const enrollment = (await executeConvexMutationWithRetry(
       api.myFunctions.handleSupervisedTherapyEnrollment,
       {
         userId,
@@ -322,7 +344,12 @@ export async function handleSupervisedTherapyEnrollment(
         courseIds: [courseId],
         operationType: "handleSupervisedTherapyEnrollment",
       },
-    );
+    )) as {
+      enrollmentId: Id<"enrollments">;
+      enrollmentNumber: string;
+      courseName: string;
+      sessionType: "focus" | "flow" | "elevate";
+    };
 
     return {
       success: true,
@@ -370,7 +397,7 @@ export async function handleGuestUserSupervisedTherapyEnrollment(
 }> {
   try {
     // Call the mutation with retry logic to handle transient failures
-    const enrollment = await executeConvexMutationWithRetry(
+    const enrollment = (await executeConvexMutationWithRetry(
       api.myFunctions.handleGuestUserSupervisedTherapyEnrollment,
       {
         userEmail,
@@ -384,11 +411,21 @@ export async function handleGuestUserSupervisedTherapyEnrollment(
         courseIds: [courseId],
         operationType: "handleGuestUserSupervisedTherapyEnrollment",
       },
-    );
+    )) as {
+      enrollmentId: Id<"enrollments">;
+      enrollmentNumber: string;
+      courseName: string;
+      sessionType: "focus" | "flow" | "elevate";
+    };
 
     return {
       success: true,
-      enrollment,
+      enrollment: {
+        enrollmentId: enrollment.enrollmentId as string,
+        enrollmentNumber: enrollment.enrollmentNumber,
+        courseName: enrollment.courseName,
+        sessionType: enrollment.sessionType,
+      },
     };
   } catch (error) {
     console.error(

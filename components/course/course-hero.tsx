@@ -35,6 +35,8 @@ import CourseImageGallery from "@/components/course/gallery";
 import TrustBar from "@/components/course/trust-bar";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { getCoursePrice, type OfferDetails } from "@/lib/utils";
+import { calculatePointsEarned } from "@/lib/mind-points";
+import { Gift } from "lucide-react";
 
 const INR = "en-IN";
 
@@ -413,6 +415,25 @@ export default function CourseHero({
                     <ShoppingCart className="mr-2 h-5 w-5" />
                     Buy Now
                   </Button>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Mind Points Banner */}
+            <Card className="border-primary/20 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
+                    <Gift className="text-primary h-5 w-5" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="font-semibold text-green-700 dark:text-green-400">
+                      Buy this and earn {calculatePointsEarned(displayCourse)} Mind Points!
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Points are automatically added to your account after purchase
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>

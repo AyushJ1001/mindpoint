@@ -23,6 +23,7 @@ import {
   Menu,
   X,
   Sparkles,
+  Gift,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -46,6 +47,37 @@ import {
 import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { useUser } from "@clerk/nextjs";
+
+function MindPointsBadge() {
+  const { user } = useUser();
+  const pointsData = useQuery(
+    api.mindPoints.getUserPoints,
+    user?.id ? { clerkUserId: user.id } : "skip",
+  );
+
+  if (!user || pointsData === undefined) {
+    return null;
+  }
+
+  const balance = pointsData.balance || 0;
+
+  return (
+    <Link href="/account?tab=points">
+      <Button
+        variant="outline"
+        size="sm"
+        className="transition-smooth hover:bg-accent/50 cursor-pointer"
+      >
+        <Gift className="mr-2 h-4 w-4" />
+        <span className="font-semibold">{balance}</span>
+        <span className="text-muted-foreground ml-1">Points</span>
+      </Button>
+    </Link>
+  );
+}
 
 export default function Navbar() {
   const {
@@ -577,7 +609,11 @@ export default function Navbar() {
             </Sheet>
             <div className="flex items-center gap-2">
               <SignedIn>
-                <UserButton />
+                <MindPointsBadge />
+                <UserButton
+                  userProfileMode="navigation"
+                  userProfileUrl="/account"
+                />
               </SignedIn>
               <SignedOut>
                 <SignInButton>
