@@ -9,7 +9,6 @@ import { Id } from "@/convex/_generated/dataModel";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useNow } from "@/hooks/use-now";
 
 // Type for courses with sessions (therapy)
 interface TherapyCourse extends Doc<"courses"> {
@@ -128,7 +127,6 @@ const CourseGroupCard = ({
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const [showBogoModal, setShowBogoModal] = useState(false);
-  const now = useNow();
   const sorted = [...courses].sort((a, b) => a.price - b.price);
   const useSessionsMode = sorted.every(
     (c) => typeof (c as TherapyCourse).sessions === "number",
@@ -501,7 +499,6 @@ const CourseCard = ({
   const router = useRouter();
   const [showBogoModal, setShowBogoModal] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const now = useNow();
 
   // Get available courses for BOGO selection from props
   const availableCourses =
@@ -744,19 +741,21 @@ interface CoursesClientProps {
 export default function CoursesClient({ coursesData }: CoursesClientProps) {
   // Collect unique course types that have BOGO enabled
   const bogoCourseTypes = React.useMemo(() => {
-    const types = new Set<string>();
+    const types = new Set<Doc<"courses">["type"]>();
     coursesData.forEach((course) => {
       if (course.bogo?.enabled && course.type) {
         types.add(course.type);
       }
     });
-    return Array.from(types);
+    return Array.from(types).filter(
+      (type): type is NonNullable<typeof type> => type !== undefined,
+    );
   }, [coursesData]);
 
   // Batch fetch BOGO courses for all types at once
   const bogoCoursesByType = useQuery(
     api.courses.getBogoCoursesByTypes,
-    bogoCourseTypes.length > 0 ? { courseTypes: bogoCourseTypes as any[] } : "skip",
+    bogoCourseTypes.length > 0 ? { courseTypes: bogoCourseTypes } : "skip",
   );
 
   return (

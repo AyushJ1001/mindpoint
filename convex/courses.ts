@@ -216,7 +216,7 @@ export const getBogoCoursesByType = query({
 // Optimized to use indexes and parallel fetching
 export const getBogoCoursesByTypes = query({
   args: { courseTypes: v.array(CourseType) },
-  returns: v.record(v.array(v.any())),
+  returns: v.record(v.string(), v.array(v.any())),
   handler: async (ctx, args) => {
     const result: Record<string, any[]> = {};
     
