@@ -15,6 +15,7 @@ export async function handlePaymentSuccess(
     sourceCourseId: Id<"courses">;
     selectedFreeCourseId: Id<"courses">;
   }>,
+  referrerClerkUserId?: string,
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -38,12 +39,14 @@ export async function handlePaymentSuccess(
         studentName: studentName,
         sessionType: sessionType,
         bogoSelections: bogoSelections,
+        referrerClerkUserId,
       },
       {
         userId,
         userEmail,
         courseIds: courseIds.map((id) => id),
         operationType: "handleCartCheckout",
+        referrerClerkUserId,
       },
     )) as Array<{
       enrollmentId: string;

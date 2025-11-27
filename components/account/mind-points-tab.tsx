@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -12,6 +12,7 @@ import { Gift, TrendingUp, TrendingDown, Copy, Check } from "lucide-react";
 import { getRedemptionOptions } from "@/lib/mind-points";
 import { RedemptionModal } from "./redemption-modal";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
 
 export function MindPointsTab() {
   const { user } = useUser();
@@ -19,6 +20,8 @@ export function MindPointsTab() {
     null,
   );
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [referralLink, setReferralLink] = useState("");
+  const [copiedReferral, setCopiedReferral] = useState(false);
 
   const pointsData = useQuery(
     api.mindPoints.getUserPoints,
@@ -36,6 +39,12 @@ export function MindPointsTab() {
   );
 
   const redeemPoints = useMutation(api.mindPoints.redeemPoints);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    if (!user?.id) return;
+    setReferralLink(`${window.location.origin}/?ref=${user.id}`);
+  }, [user?.id]);
 
   if (!user) {
     return <div>Please sign in to view your Mind Points.</div>;
@@ -81,6 +90,14 @@ export function MindPointsTab() {
     setCopiedCode(code);
     toast.success("Coupon code copied to clipboard!");
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const copyReferralLink = () => {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopiedReferral(true);
+    toast.success("Referral link copied to clipboard!");
+    setTimeout(() => setCopiedReferral(false), 2000);
   };
 
   // Calculate progress to next redemption (using the cheapest option)
@@ -152,6 +169,50 @@ export function MindPointsTab() {
               <Progress value={progressPercentage} className="h-2" />
             </div>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Referral Program */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Refer &amp; Earn</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Share your personal link. When a friend signs in, places their{" "}
+            <span className="font-medium">first order</span> within 30 days, and
+            earns Mind Points, you instantly receive the same amount.
+          </p>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            <Input
+              readOnly
+              value={referralLink}
+              className="font-mono text-xs"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              onClick={copyReferralLink}
+              disabled={!referralLink}
+            >
+              {copiedReferral ? (
+                <>
+                  <Check className="mr-2 h-4 w-4" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy
+                </>
+              )}
+            </Button>
+          </div>
+          <ul className="text-sm text-muted-foreground space-y-1">
+            <li>- First click wins: we track the first referral link for 30 days.</li>
+            <li>- Referral rewards only apply to MindPoint accounts (not guest checkouts).</li>
+            <li>- Self referrals are ignored.</li>
+          </ul>
         </CardContent>
       </Card>
 

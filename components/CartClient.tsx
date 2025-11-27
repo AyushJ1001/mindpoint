@@ -41,6 +41,18 @@ import { useMemo } from "react";
 
 export const dynamic = "force-dynamic";
 
+const REFERRAL_COOKIE_KEY = "mp_ref";
+
+const getReferralCookie = () => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${REFERRAL_COOKIE_KEY}=`));
+  if (!match) return null;
+  const value = match.split("=")[1];
+  return value ? decodeURIComponent(value) : null;
+};
+
 const CartContent = () => {
   const {
     items,
@@ -302,6 +314,12 @@ const CartContent = () => {
               const userPhone =
                 whatsappNumber || userProfile?.whatsappNumber || undefined;
 
+              const referralCookie = getReferralCookie();
+              const referrerClerkUserId =
+                referralCookie && referralCookie !== user.id
+                  ? referralCookie
+                  : undefined;
+
               // Call server action to handle enrollment
               const result = await handlePaymentSuccess(
                 user.id,
@@ -311,6 +329,7 @@ const CartContent = () => {
                 user.fullName || undefined, // studentName
                 undefined, // sessionType
                 bogoSelections.length > 0 ? bogoSelections : undefined,
+                referrerClerkUserId,
               );
 
               if (result.success) {

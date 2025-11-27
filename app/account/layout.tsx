@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
 import { useSearchParams, useRouter } from "next/navigation";
-import { BookOpen, Gift } from "lucide-react";
+import { BookOpen, Gift, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -11,21 +11,25 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get("tab");
-  const [activeTab, setActiveTab] = useState<"enrollments" | "points">(
-    (tabParam === "points" ? "points" : "enrollments") as
-      | "enrollments"
-      | "points",
+  const [activeTab, setActiveTab] = useState<"enrollments" | "points" | "referrals">(
+    (tabParam === "points"
+      ? "points"
+      : tabParam === "referrals"
+        ? "referrals"
+        : "enrollments") as "enrollments" | "points" | "referrals",
   );
 
   useEffect(() => {
     if (tabParam === "points") {
       setActiveTab("points");
+    } else if (tabParam === "referrals") {
+      setActiveTab("referrals");
     } else {
       setActiveTab("enrollments");
     }
   }, [tabParam]);
 
-  const handleTabChange = (tab: "enrollments" | "points") => {
+  const handleTabChange = (tab: "enrollments" | "points" | "referrals") => {
     setActiveTab(tab);
     router.push(`/account?tab=${tab}`);
   };
@@ -68,6 +72,18 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
                 >
                   <Gift className="mr-2 h-4 w-4" />
                   Mind Points
+                </Button>
+                <Button
+                  variant={activeTab === "referrals" ? "default" : "ghost"}
+                  className={cn(
+                    "w-full justify-start",
+                    activeTab === "referrals" &&
+                      "bg-primary text-primary-foreground",
+                  )}
+                  onClick={() => handleTabChange("referrals")}
+                >
+                  <Users className="mr-2 h-4 w-4" />
+                  Referrals
                 </Button>
               </nav>
             </aside>
