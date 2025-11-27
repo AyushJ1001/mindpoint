@@ -73,6 +73,7 @@ export async function executeConvexMutationWithRetry<
     userEmail?: string;
     courseIds?: string[];
     operationType: string;
+    referrerClerkUserId?: string;
   },
 ): Promise<Return> {
   // Validate environment variable

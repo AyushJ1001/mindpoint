@@ -49,6 +49,7 @@ function extractInternshipPlanFromDuration(
 import { calculatePointsEarned } from "../lib/mind-points";
 
 // Helper function to award Mind Points after successful payment
+// Returns the number of points awarded (0 when no award occurs)
 // Only awards points for authenticated users (not guest users) and paid purchases (not BOGO free items)
 async function awardMindPoints(
   ctx: MutationCtx,
@@ -56,10 +57,10 @@ async function awardMindPoints(
   course: Doc<"courses">,
   enrollmentId: Id<"enrollments">,
   isBogoFree?: boolean,
-) {
+): Promise<number> {
   // Don't award points for guest users or BOGO free items
   if (isBogoFree) {
-    return;
+    return 0;
   }
 
   try {
@@ -72,9 +73,11 @@ async function awardMindPoints(
         enrollmentId,
       });
     }
+    return pointsEarned;
   } catch (error) {
     // Log error but don't fail the enrollment process
     console.error("Error awarding Mind Points:", error);
+    return 0;
   }
 }
 
@@ -968,6 +971,7 @@ export const handleCartCheckout = mutation({
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
+    referrerClerkUserId: v.optional(v.string()),
     bogoSelections: v.optional(
       v.array(
         v.object({
@@ -983,6 +987,8 @@ export const handleCartCheckout = mutation({
     const supervisedEnrollments = [];
     const worksheetEnrollments = [];
     const processedBogoSourceCourses = new Set<string>(); // Track processed BOGO source courses
+    let totalPointsEarnedForOrder = 0;
+    let firstPaidEnrollmentId: Id<"enrollments"> | null = null;
 
     for (const courseId of args.courseIds) {
       // Get the course details
@@ -1051,7 +1057,19 @@ export const handleCartCheckout = mutation({
       // Check if user is authenticated by checking if userId is a Clerk ID (not an email)
       const isAuthenticatedUser = !args.userId.includes("@");
       if (isAuthenticatedUser) {
-        await awardMindPoints(ctx, args.userId, course, enrollmentId, false);
+        const pointsAwarded = await awardMindPoints(
+          ctx,
+          args.userId,
+          course,
+          enrollmentId,
+          false,
+        );
+        if (pointsAwarded > 0) {
+          totalPointsEarnedForOrder += pointsAwarded;
+          if (!firstPaidEnrollmentId) {
+            firstPaidEnrollmentId = enrollmentId;
+          }
+        }
       }
 
       // Calculate end date for internship courses
@@ -1185,6 +1203,49 @@ export const handleCartCheckout = mutation({
         } else {
           enrollments.push(bonus);
         }
+      }
+    }
+
+    const shouldConsiderReferral =
+      !!args.referrerClerkUserId &&
+      !args.userId.includes("@") &&
+      args.referrerClerkUserId !== args.userId &&
+      totalPointsEarnedForOrder > 0;
+
+    if (shouldConsiderReferral) {
+      try {
+        const existingReward = await ctx.db
+          .query("referralRewards")
+          .withIndex("by_referredClerkUserId", (q) =>
+            q.eq("referredClerkUserId", args.userId),
+          )
+          .first();
+
+        if (!existingReward) {
+          const referralRecordId = await ctx.db.insert("referralRewards", {
+            referrerClerkUserId: args.referrerClerkUserId!,
+            referredClerkUserId: args.userId,
+            awardedPoints: totalPointsEarnedForOrder,
+            createdAt: Date.now(),
+            firstEnrollmentId: firstPaidEnrollmentId ?? undefined,
+          });
+
+          await ctx.runMutation(api.mindPoints.awardPoints, {
+            clerkUserId: args.referrerClerkUserId!,
+            points: totalPointsEarnedForOrder,
+            description: `Referral bonus: your friend earned ${totalPointsEarnedForOrder} Mind Points`,
+            enrollmentId: firstPaidEnrollmentId ?? undefined,
+          });
+
+          console.log("Referral reward granted", {
+            referralRecordId,
+            referrer: args.referrerClerkUserId,
+            referred: args.userId,
+            points: totalPointsEarnedForOrder,
+          });
+        }
+      } catch (error) {
+        console.error("Error processing referral reward:", error);
       }
     }
 
@@ -2773,5 +2834,62 @@ export const saveUserWhatsappNumber = mutation({
       clerkUserId: args.clerkUserId,
       whatsappNumber: args.whatsappNumber,
     });
+  },
+});
+
+// Get referral rewards for a referrer (people who used their referral link)
+export const getReferralRewards = query({
+  args: {
+    referrerClerkUserId: v.string(),
+  },
+  returns: v.array(
+    v.object({
+      _id: v.id("referralRewards"),
+      _creationTime: v.number(),
+      referrerClerkUserId: v.string(),
+      referredClerkUserId: v.string(),
+      awardedPoints: v.number(),
+      createdAt: v.number(),
+      firstEnrollmentId: v.optional(v.id("enrollments")),
+      referredUserName: v.optional(v.string()),
+      referredUserEmail: v.optional(v.string()),
+      firstCourseName: v.optional(v.string()),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const rewards = await ctx.db
+      .query("referralRewards")
+      .withIndex("by_referrerClerkUserId", (q) =>
+        q.eq("referrerClerkUserId", args.referrerClerkUserId),
+      )
+      .order("desc")
+      .collect();
+
+    // Enrich with user info from first enrollment
+    const enrichedRewards = await Promise.all(
+      rewards.map(async (reward) => {
+        let referredUserName: string | undefined;
+        let referredUserEmail: string | undefined;
+        let firstCourseName: string | undefined;
+
+        if (reward.firstEnrollmentId) {
+          const enrollment = await ctx.db.get(reward.firstEnrollmentId);
+          if (enrollment) {
+            referredUserName = enrollment.userName;
+            referredUserEmail = enrollment.userEmail;
+            firstCourseName = enrollment.courseName;
+          }
+        }
+
+        return {
+          ...reward,
+          referredUserName,
+          referredUserEmail,
+          firstCourseName,
+        };
+      }),
+    );
+
+    return enrichedRewards;
   },
 });

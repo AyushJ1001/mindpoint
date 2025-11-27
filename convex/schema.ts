@@ -167,4 +167,14 @@ export default defineSchema({
     .index("by_code", ["code"])
     .index("by_clerkUserId", ["clerkUserId"])
     .index("by_clerkUserId_and_isUsed", ["clerkUserId", "isUsed"]),
+
+  referralRewards: defineTable({
+    referrerClerkUserId: v.string(),
+    referredClerkUserId: v.string(),
+    awardedPoints: v.number(),
+    createdAt: v.number(),
+    firstEnrollmentId: v.optional(v.id("enrollments")),
+  })
+    .index("by_referredClerkUserId", ["referredClerkUserId"])
+    .index("by_referrerClerkUserId", ["referrerClerkUserId"]),
 });
