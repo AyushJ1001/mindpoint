@@ -2,6 +2,7 @@ import Link from "next/link";
 import { BookOpen, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import AnimatedCounter from "@/components/animated-counter";
+import VideoTestimonialsSection from "@/components/VideoTestimonialsSection";
 
 export default function HomeHero() {
   return (
@@ -108,6 +109,9 @@ export default function HomeHero() {
           </div>
         </div>
       </section>
+
+      {/* Student Video Testimonials */}
+      <VideoTestimonialsSection />
 
       {/* Why Choose Us Section */}
       <section className="section-padding bg-muted/50">
