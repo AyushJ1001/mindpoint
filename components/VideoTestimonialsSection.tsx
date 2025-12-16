@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Image from "next/image";
 import { Play } from "lucide-react";
 import {
   Dialog,
@@ -105,14 +106,14 @@ function VideoCard({
               showThumbnail();
             });
           });
-        } catch (playError) {
+        } catch {
           // Autoplay blocked - try showing frame anyway
           // Some browsers show frames even when paused
           setTimeout(() => {
             showThumbnail();
           }, 300);
         }
-      } catch (error) {
+      } catch {
         // Retry if failed
         if (retryCount < maxRetries) {
           retryCount++;
@@ -184,10 +185,11 @@ function VideoCard({
     >
       {/* Use poster image if available, otherwise try video thumbnail */}
       {testimonial.posterUrl ? (
-        <img
+        <Image
           src={testimonial.posterUrl}
           alt={testimonial.name || "Student testimonial thumbnail"}
-          className="absolute inset-0 z-0 h-full w-full object-cover"
+          fill
+          className="object-cover"
         />
       ) : (
         <>
