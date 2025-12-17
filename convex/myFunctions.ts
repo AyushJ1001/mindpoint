@@ -1100,6 +1100,7 @@ export const handleCartCheckout = mutation({
         internshipPlan: internshipPlan,
         sessions: course.sessions, // Include sessions for therapy courses
         sessionType: args.sessionType, // Include session type for supervised courses
+        isBogoFree: false,
       };
 
       // Check if this is a supervised therapy course or worksheet
@@ -1989,6 +1990,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         internshipPlan: internshipPlan,
         sessions: course.sessions, // Include sessions for therapy courses
         sessionType: args.sessionType, // Include session type for supervised courses
+        isBogoFree: false,
       };
 
       // Check if this is a supervised therapy course
