@@ -1,0 +1,1 @@
+Please run `bun type-check` and `bun lint` to fix the type issues and lint issues, without modifying any of the business logic. Do not lazily add ignore comments, make sure you actually fix the issues.
