@@ -318,7 +318,7 @@ export default function VideoTestimonialsSection() {
         </div>
 
         {/* Grid for desktop, horizontal scroll for mobile */}
-        <div className="scrollbar-hide -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 lg:grid-cols-6">
+        <div className="scrollbar-hide -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 lg:grid-cols-5">
           {VIDEO_TESTIMONIALS.map((testimonial) => (
             <div
               key={testimonial.id}
