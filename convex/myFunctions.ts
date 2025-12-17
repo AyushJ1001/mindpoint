@@ -114,10 +114,19 @@ async function addEnrollmentToGoogleSheets(
       return;
     }
 
+    // Strip BOGO-specific fields that aren't in the Google Sheets action schema
+    // Convex validators are strict - extra fields cause validation errors
+    const {
+      isBogoFree: _isBogoFree,
+      bogoSourceCourseId: _bogoSourceCourseId,
+      bogoOfferName: _bogoOfferName,
+      ...sheetsData
+    } = enrollmentData;
+
     // Schedule the Google Sheets action
     await ctx.scheduler.runAfter(0, api.googleSheets.addEnrollmentToSheet, {
       enrollmentData: {
-        ...enrollmentData,
+        ...sheetsData,
         enrollmentDate: new Date().toISOString(),
       },
       spreadsheetId,
@@ -1195,9 +1204,17 @@ export const handleCartCheckout = mutation({
         );
       }
 
+      // Log BOGO enrollment processing
+      console.log(
+        `BOGO: Processing ${bogoEnrollments.length} BOGO enrollments for course ${course.name}`,
+      );
+
       for (const bonus of bogoEnrollments) {
         // Fetch the course to get the actual course type, as bonus.courseType might be undefined
         const bonusCourse = await ctx.db.get(bonus.courseId);
+        console.log(
+          `BOGO: Adding enrollment for ${bonus.courseName} (type: ${bonusCourse?.type}) to arrays`,
+        );
         if (bonusCourse?.type === "supervised") {
           supervisedEnrollments.push(bonus);
         } else {
@@ -1262,6 +1279,15 @@ export const handleCartCheckout = mutation({
     console.log("- Session type exists:", !!args.sessionType);
     console.log("- Student name exists:", !!args.studentName);
     console.log("- Regular enrollments count:", enrollments.length);
+    // Log details of all enrollments to be emailed
+    console.log(
+      "- Regular enrollments details:",
+      enrollments.map((e) => ({
+        courseName: e.courseName,
+        courseId: e.courseId,
+        isBogoFree: e.isBogoFree,
+      })),
+    );
 
     // Handle worksheet purchases - send single email with all PDFs
     if (worksheetEnrollments.length > 0) {
@@ -1328,7 +1354,16 @@ export const handleCartCheckout = mutation({
       // Send course-specific emails for each enrollment
       for (const enrollment of enrollments) {
         const course = await ctx.db.get(enrollment.courseId);
-        if (!course) continue;
+        if (!course) {
+          console.warn(
+            `Email: Course not found for enrollment ${enrollment.courseName} (courseId: ${enrollment.courseId}), skipping email`,
+          );
+          continue;
+        }
+
+        console.log(
+          `Email: Sending email for enrollment ${enrollment.courseName} (type: ${course.type}, isBogoFree: ${enrollment.isBogoFree})`,
+        );
 
         const userName = args.studentName || args.userEmail;
         const enrollmentNumber = enrollment.enrollmentNumber;
@@ -2040,9 +2075,17 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         );
       }
 
+      // Log BOGO enrollment processing
+      console.log(
+        `BOGO: Processing ${bogoEnrollments.length} BOGO enrollments for course ${course.name}`,
+      );
+
       for (const bonus of bogoEnrollments) {
         // Fetch the course to get the actual course type, as bonus.courseType might be undefined
         const bonusCourse = await ctx.db.get(bonus.courseId);
+        console.log(
+          `BOGO: Adding enrollment for ${bonus.courseName} (type: ${bonusCourse?.type}) to arrays`,
+        );
         if (bonusCourse?.type === "supervised") {
           supervisedEnrollments.push(bonus);
         } else if (bonusCourse?.type === "worksheet") {
@@ -2057,6 +2100,22 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     // For supervised courses: Send separate welcome email with checklist PDFs attached
     // For worksheets: Send single email with all PDFs attached
     // For other courses: Send regular cart checkout confirmation
+    console.log("Email sending logic (guest checkout):");
+    console.log(
+      "- Supervised enrollments count:",
+      supervisedEnrollments.length,
+    );
+    console.log("- Worksheet enrollments count:", worksheetEnrollments.length);
+    console.log("- Regular enrollments count:", enrollments.length);
+    console.log(
+      "- Regular enrollments details:",
+      enrollments.map((e) => ({
+        courseName: e.courseName,
+        courseId: e.courseId,
+        isBogoFree: e.isBogoFree,
+      })),
+    );
+
     // Handle worksheet purchases - send single email with all PDFs
     if (worksheetEnrollments.length > 0) {
       console.log("Sending worksheet purchase confirmation email...");
@@ -2122,7 +2181,16 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       // Send course-specific emails for each enrollment
       for (const enrollment of enrollments) {
         const course = await ctx.db.get(enrollment.courseId);
-        if (!course) continue;
+        if (!course) {
+          console.warn(
+            `Email: Course not found for enrollment ${enrollment.courseName} (courseId: ${enrollment.courseId}), skipping email`,
+          );
+          continue;
+        }
+
+        console.log(
+          `Email: Sending email for enrollment ${enrollment.courseName} (type: ${course.type}, isBogoFree: ${enrollment.isBogoFree})`,
+        );
 
         const userName = args.userData.name;
         const enrollmentNumber = enrollment.enrollmentNumber;
