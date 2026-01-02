@@ -47,20 +47,14 @@ import {
 import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { toast } from "sonner";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { useUser } from "@clerk/nextjs";
 import { useNow } from "@/hooks/use-now";
 import { useMemo } from "react";
+import { useMindPoints } from "@/contexts/MindPointsContext";
 
 function MindPointsBadge() {
-  const { user } = useUser();
-  const pointsData = useQuery(
-    api.mindPoints.getUserPoints,
-    user?.id ? { clerkUserId: user.id } : "skip",
-  );
+  const { pointsData, isLoading } = useMindPoints();
 
-  if (!user || pointsData === undefined) {
+  if (isLoading || pointsData === undefined) {
     return null;
   }
 

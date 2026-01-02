@@ -23,19 +23,10 @@ export function MindPointsTab() {
   const [referralLink, setReferralLink] = useState("");
   const [copiedReferral, setCopiedReferral] = useState(false);
 
-  const pointsData = useQuery(
-    api.mindPoints.getUserPoints,
-    user?.id ? { clerkUserId: user.id } : "skip",
-  );
-
-  const pointsHistory = useQuery(
-    api.mindPoints.getPointsHistory,
-    user?.id ? { clerkUserId: user.id, limit: 20 } : "skip",
-  );
-
-  const coupons = useQuery(
-    api.mindPoints.getUserCoupons,
-    user?.id ? { clerkUserId: user.id } : "skip",
+  // Single batch query instead of 3 separate queries
+  const accountSummary = useQuery(
+    api.mindPoints.getUserAccountSummary,
+    user?.id ? { clerkUserId: user.id, historyLimit: 20 } : "skip",
   );
 
   const redeemPoints = useMutation(api.mindPoints.redeemPoints);
@@ -50,12 +41,13 @@ export function MindPointsTab() {
     return <div>Please sign in to view your Mind Points.</div>;
   }
 
-  if (pointsData === undefined || pointsHistory === undefined) {
+  if (accountSummary === undefined) {
     return (
       <div className="text-muted-foreground">Loading Mind Points...</div>
     );
   }
 
+  const { points: pointsData, history: pointsHistory, coupons } = accountSummary;
   const balance = pointsData.balance || 0;
   const totalEarned = pointsData.totalEarned || 0;
   const totalRedeemed = pointsData.totalRedeemed || 0;

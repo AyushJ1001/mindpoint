@@ -2935,30 +2935,44 @@ export const getReferralRewards = query({
       .order("desc")
       .collect();
 
-    // Enrich with user info from first enrollment
-    const enrichedRewards = await Promise.all(
-      rewards.map(async (reward) => {
-        let referredUserName: string | undefined;
-        let referredUserEmail: string | undefined;
-        let firstCourseName: string | undefined;
+    // Batch fetch all enrollments first to avoid N+1 queries
+    const enrollmentIds = rewards
+      .map((r) => r.firstEnrollmentId)
+      .filter((id): id is Id<"enrollments"> => id !== undefined);
 
-        if (reward.firstEnrollmentId) {
-          const enrollment = await ctx.db.get(reward.firstEnrollmentId);
-          if (enrollment) {
-            referredUserName = enrollment.userName;
-            referredUserEmail = enrollment.userEmail;
-            firstCourseName = enrollment.courseName;
-          }
-        }
-
-        return {
-          ...reward,
-          referredUserName,
-          referredUserEmail,
-          firstCourseName,
-        };
-      }),
+    const enrollments = await Promise.all(
+      enrollmentIds.map((id) => ctx.db.get(id))
     );
+
+    // Create a map for O(1) lookup
+    const enrollmentMap = new Map(
+      enrollments
+        .filter((e): e is NonNullable<typeof e> => e !== null)
+        .map((e) => [e._id, e])
+    );
+
+    // Enrich with user info from pre-fetched enrollments
+    const enrichedRewards = rewards.map((reward) => {
+      let referredUserName: string | undefined;
+      let referredUserEmail: string | undefined;
+      let firstCourseName: string | undefined;
+
+      if (reward.firstEnrollmentId) {
+        const enrollment = enrollmentMap.get(reward.firstEnrollmentId);
+        if (enrollment) {
+          referredUserName = enrollment.userName;
+          referredUserEmail = enrollment.userEmail;
+          firstCourseName = enrollment.courseName;
+        }
+      }
+
+      return {
+        ...reward,
+        referredUserName,
+        referredUserEmail,
+        firstCourseName,
+      };
+    });
 
     return enrichedRewards;
   },

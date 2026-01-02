@@ -361,3 +361,81 @@ export const markCouponUsed = mutation({
     return { success: true };
   },
 });
+
+/**
+ * Batch query for account summary - fetches points, history, and coupons in parallel
+ * Reduces 3 separate subscriptions to 1
+ */
+export const getUserAccountSummary = query({
+  args: {
+    clerkUserId: v.string(),
+    historyLimit: v.optional(v.number()),
+  },
+  returns: v.object({
+    points: v.object({
+      balance: v.number(),
+      totalEarned: v.number(),
+      totalRedeemed: v.number(),
+    }),
+    history: v.array(
+      v.object({
+        _id: v.id("pointsTransactions"),
+        _creationTime: v.number(),
+        clerkUserId: v.string(),
+        type: v.union(v.literal("earn"), v.literal("redeem")),
+        points: v.number(),
+        description: v.string(),
+        enrollmentId: v.optional(v.id("enrollments")),
+        couponId: v.optional(v.id("coupons")),
+        createdAt: v.number(),
+      })
+    ),
+    coupons: v.array(
+      v.object({
+        _id: v.id("coupons"),
+        _creationTime: v.number(),
+        code: v.string(),
+        clerkUserId: v.string(),
+        courseType: v.string(),
+        discount: v.number(),
+        isUsed: v.boolean(),
+        pointsCost: v.number(),
+        createdAt: v.number(),
+        usedAt: v.optional(v.number()),
+      })
+    ),
+  }),
+  handler: async (ctx, args) => {
+    // Run all queries in parallel
+    const [pointsRecord, history, coupons] = await Promise.all([
+      ctx.db
+        .query("mindPoints")
+        .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+        .first(),
+      ctx.db
+        .query("pointsTransactions")
+        .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+        .order("desc")
+        .take(args.historyLimit || 20),
+      ctx.db
+        .query("coupons")
+        .withIndex("by_clerkUserId_and_isUsed", (q) =>
+          q.eq("clerkUserId", args.clerkUserId).eq("isUsed", false)
+        )
+        .order("desc")
+        .collect(),
+    ]);
+
+    return {
+      points: pointsRecord
+        ? {
+            balance: pointsRecord.balance,
+            totalEarned: pointsRecord.totalEarned,
+            totalRedeemed: pointsRecord.totalRedeemed,
+          }
+        : { balance: 0, totalEarned: 0, totalRedeemed: 0 },
+      history,
+      coupons,
+    };
+  },
+});

@@ -2,8 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
 import { useCart } from "react-use-cart";
 
 import { Button } from "../components/ui/button";
@@ -132,7 +130,13 @@ const extractVariantLabel = (course: Doc<"courses">): string | null => {
   return null;
 };
 
-const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
+const CourseGroupCard = ({
+  courses,
+  bogoCourses,
+}: {
+  courses: Array<Doc<"courses">>;
+  bogoCourses?: Array<Doc<"courses">>;
+}) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const sorted = [...courses].sort((a, b) => a.price - b.price);
@@ -170,13 +174,8 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
     getOfferDetails(selectedCourse),
   );
 
-  // Get available courses for BOGO selection
-  const availableCourses = useQuery(
-    api.courses.getBogoCoursesByType,
-    selectedCourse.bogo && selectedCourse.type
-      ? { courseType: selectedCourse.type }
-      : "skip",
-  );
+  // Use pre-fetched BOGO courses from props
+  const availableCourses = bogoCourses;
 
   // Update offer details every minute for real-time countdown
   useEffect(() => {
@@ -522,18 +521,21 @@ const CourseGroupCard = ({ courses }: { courses: Array<Doc<"courses">> }) => {
   );
 };
 
-const CourseCard = ({ course }: { course: Doc<"courses"> }) => {
+const CourseCard = ({
+  course,
+  bogoCourses,
+}: {
+  course: Doc<"courses">;
+  bogoCourses?: Array<Doc<"courses">>;
+}) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
   const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
   const [mounted, setMounted] = useState(false);
   const [showBogoModal, setShowBogoModal] = useState(false);
 
-  // Get available courses for BOGO selection
-  const availableCourses = useQuery(
-    api.courses.getBogoCoursesByType,
-    course.bogo && course.type ? { courseType: course.type } : "skip",
-  );
+  // Use pre-fetched BOGO courses from props
+  const availableCourses = bogoCourses;
 
   // Update offer details every minute for real-time countdown
   useEffect(() => {
@@ -788,29 +790,24 @@ const iconMap = {
 };
 
 interface CourseTypePageProps {
-  courseType:
-    | "certificate"
-    | "internship"
-    | "diploma"
-    | "pre-recorded"
-    | "masterclass"
-    | "therapy"
-    | "supervised"
-    | "resume-studio"
-    | "worksheet";
   title: string;
   description: string;
   iconName: keyof typeof iconMap;
+  coursesData: {
+    viewer: string | null;
+    courses: Array<Doc<"courses">>;
+  };
+  bogoCourses?: Array<Doc<"courses">>;
 }
 
 export default function CourseTypePage({
-  courseType,
   title,
   description,
   iconName,
+  coursesData,
+  bogoCourses,
 }: CourseTypePageProps) {
   const Icon = iconMap[iconName];
-  const courses = useQuery(api.courses.listCoursesByType, { type: courseType });
 
   return (
     <div className="min-h-screen">
@@ -837,12 +834,12 @@ export default function CourseTypePage({
       {/* Courses Section */}
       <section>
         <div className="container">
-          {courses?.courses && courses.courses.length > 0 ? (
+          {coursesData.courses && coursesData.courses.length > 0 ? (
             <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
               {(() => {
                 // Group courses by name; if multiple with same name, render a grouped card with select
                 const nameToCourses = new Map<string, Array<Doc<"courses">>>();
-                for (const course of courses.courses) {
+                for (const course of coursesData.courses) {
                   const list = nameToCourses.get(course.name) ?? [];
                   list.push(course);
                   nameToCourses.set(course.name, list);
@@ -850,29 +847,20 @@ export default function CourseTypePage({
                 const groups = Array.from(nameToCourses.values());
                 return groups.map((group) =>
                   group.length > 1 ? (
-                    <CourseGroupCard key={group[0]._id} courses={group} />
+                    <CourseGroupCard
+                      key={group[0]._id}
+                      courses={group}
+                      bogoCourses={bogoCourses}
+                    />
                   ) : (
-                    <CourseCard key={group[0]._id} course={group[0]} />
+                    <CourseCard
+                      key={group[0]._id}
+                      course={group[0]}
+                      bogoCourses={bogoCourses}
+                    />
                   ),
                 );
               })()}
-            </div>
-          ) : courses === undefined ? (
-            // Loading state while useQuery resolves
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-              {Array.from({ length: 6 }).map((_, idx) => (
-                <div
-                  key={idx}
-                  className="card-shadow h-full overflow-hidden rounded-lg border p-4"
-                >
-                  <div className="bg-muted mb-4 h-72 w-full animate-pulse rounded" />
-                  <div className="space-y-3">
-                    <div className="bg-muted h-4 w-3/4 animate-pulse rounded" />
-                    <div className="bg-muted h-4 w-1/2 animate-pulse rounded" />
-                    <div className="bg-muted h-10 w-24 animate-pulse rounded" />
-                  </div>
-                </div>
-              ))}
             </div>
           ) : (
             <div className="py-12 text-center">
