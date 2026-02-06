@@ -105,7 +105,7 @@ async function addEnrollmentToGoogleSheets(
   try {
     // Get Google Sheets configuration from environment variables
     const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
-    const sheetName = process.env.GOOGLE_SHEETS_SHEET_NAME || "Sheet1";
+    const sheetName = process.env.GOOGLE_SHEETS_SHEET_NAME || "Enrollments";
 
     if (!spreadsheetId) {
       console.warn(
@@ -2831,7 +2831,7 @@ export const setupEnrollmentGoogleSheet = action({
   returns: v.null(),
   handler: async (ctx, args) => {
     try {
-      const sheetName = args.sheetName || "Sheet1";
+      const sheetName = args.sheetName || "Enrollments";
 
       await ctx.runAction(api.googleSheets.setupEnrollmentSheet, {
         spreadsheetId: args.spreadsheetId,
