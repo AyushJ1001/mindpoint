@@ -58,7 +58,7 @@ import {
 export const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   if (!imageUrls || imageUrls.length === 0) {
     return (
-      <div className="bg-muted relative flex h-72 items-center justify-center rounded-t-lg">
+      <div className="bg-muted relative flex h-56 items-center justify-center rounded-t-2xl sm:h-72">
         <BookOpen className="text-muted-foreground h-12 w-12" />
       </div>
     );
@@ -66,7 +66,7 @@ export const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
 
   if (imageUrls.length === 1) {
     return (
-      <div className="bg-muted relative flex h-72 items-center justify-center overflow-hidden rounded-t-lg">
+      <div className="bg-muted relative flex h-56 items-center justify-center overflow-hidden rounded-t-2xl sm:h-72">
         <Image
           src={
             imageUrls[0] ??
@@ -82,13 +82,13 @@ export const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   }
 
   return (
-    <div className="bg-muted relative h-72 overflow-hidden rounded-t-lg">
+    <div className="bg-muted relative h-56 overflow-hidden rounded-t-2xl sm:h-72">
       <Carousel className="h-full w-full">
         <CarouselContent>
           {imageUrls.map((imageUrl, index) => (
             <CarouselItem
               key={index}
-              className="flex h-72 items-center justify-center"
+              className="flex h-56 items-center justify-center sm:h-72"
             >
               <Image
                 src={imageUrl || ""}
@@ -297,42 +297,54 @@ const CourseGroupCard = ({
 
   return (
     <Card
-      className="card-shadow hover:card-shadow-lg transition-smooth group relative h-full cursor-pointer overflow-hidden"
+      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-blue-200/80 bg-gradient-to-b from-white via-blue-50/55 to-white/95 shadow-[0_14px_35px_-24px_rgba(37,99,235,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(37,99,235,0.95)] dark:border-blue-900/50 dark:bg-gradient-to-b dark:from-slate-950/80 dark:via-blue-950/35 dark:to-slate-950/90"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
 
-      {/* Offer name badge (top-left) */}
       {offerDetails && (
-        <div className="absolute top-3 left-3 z-20">
-          <Badge variant="secondary" className="text-xs font-semibold">
-            {offerDetails.offerName}
-          </Badge>
-        </div>
-      )}
-
-      {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
-        <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
-          {offerDetails?.hasDiscount && (
+        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
+          {offerDetails && (
             <Badge
-              variant="destructive"
-              className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+              variant="secondary"
+              className="max-w-[52%] truncate whitespace-nowrap bg-white/95 text-[11px] font-semibold shadow-sm"
             >
-              🔥 {offerDetails.discountPercentage}% OFF
+              <span className="sm:hidden">Special Offer</span>
+              <span className="hidden sm:inline">{offerDetails.offerName}</span>
             </Badge>
           )}
-          {offerDetails?.hasBogo && (
-            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
-              🛍️ {offerDetails.bogoLabel || "BOGO"}
-            </Badge>
+          {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+            <div className="flex max-w-[46%] flex-col items-end gap-1">
+              {offerDetails?.hasDiscount && (
+                <Badge
+                  variant="destructive"
+                  className="max-w-full animate-pulse whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+                >
+                  <span className="sm:hidden">
+                    {offerDetails.discountPercentage}% OFF
+                  </span>
+                  <span className="hidden sm:inline">
+                    🔥 {offerDetails.discountPercentage}% OFF
+                  </span>
+                </Badge>
+              )}
+              {offerDetails?.hasBogo && (
+                <Badge className="max-w-full whitespace-nowrap bg-emerald-500/90 text-[11px] font-semibold text-white uppercase shadow-lg">
+                  <span className="sm:hidden">BOGO</span>
+                  <span className="hidden sm:inline">
+                    🛍️ {offerDetails.bogoLabel || "BOGO"}
+                  </span>
+                </Badge>
+              )}
+            </div>
           )}
         </div>
       )}
 
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="group-hover:text-primary transition-smooth text-lg">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="group-hover:text-primary transition-smooth line-clamp-2 text-base sm:text-lg">
               {sorted[0].name}
             </CardTitle>
           </div>
@@ -434,8 +446,8 @@ const CourseGroupCard = ({
           )}
         </div>
 
-        <div className="flex items-center justify-between">
-          <div className="relative">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 space-y-1">
             <Badge
               variant="secondary"
               className="px-3 py-1 text-base font-semibold"
@@ -443,7 +455,7 @@ const CourseGroupCard = ({
               {showRupees(displayPrice)}
             </Badge>
             {offerDetails && (
-              <div className="absolute top-full left-0 mt-1 space-y-1 text-xs">
+              <div className="space-y-1 text-xs">
                 {offerDetails.hasDiscount && (
                   <div className="text-muted-foreground">
                     <span className="line-through">
@@ -470,39 +482,37 @@ const CourseGroupCard = ({
               </div>
             )}
           </div>
-          <div className="flex gap-2">
-            {(() => {
-              const seatsLeft = Math.max(
-                0,
-                (selectedCourse.capacity ?? 0) -
-                  (selectedCourse.enrolledUsers?.length ?? 0),
-              );
-              const isOutOfStock =
-                (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
+          {(() => {
+            const seatsLeft = Math.max(
+              0,
+              (selectedCourse.capacity ?? 0) -
+                (selectedCourse.enrolledUsers?.length ?? 0),
+            );
+            const isOutOfStock =
+              (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
-              // Use mounted state to prevent hydration mismatch
-              const isInCart = mounted ? inCart(selectedCourse._id) : false;
+            // Use mounted state to prevent hydration mismatch
+            const isInCart = mounted ? inCart(selectedCourse._id) : false;
 
-              return (
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToCart();
-                  }}
-                  disabled={isInCart || isOutOfStock}
-                  size="sm"
-                  className="transition-smooth"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {isOutOfStock
-                    ? "Out of Stock"
-                    : isInCart
-                      ? "Added"
-                      : "Add to Cart"}
-                </Button>
-              );
-            })()}
-          </div>
+            return (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart();
+                }}
+                disabled={isInCart || isOutOfStock}
+                size="sm"
+                className="transition-smooth w-full sm:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : isInCart
+                    ? "Added"
+                    : "Add to Cart"}
+              </Button>
+            );
+          })()}
         </div>
       </CardContent>
 
@@ -652,87 +662,97 @@ const CourseCard = ({
 
   return (
     <Card
-      className="card-shadow hover:card-shadow-lg transition-smooth group relative h-full cursor-pointer overflow-hidden"
+      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-blue-200/80 bg-gradient-to-b from-white via-blue-50/55 to-white/95 shadow-[0_14px_35px_-24px_rgba(37,99,235,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(37,99,235,0.95)] dark:border-blue-900/50 dark:bg-gradient-to-b dark:from-slate-950/80 dark:via-blue-950/35 dark:to-slate-950/90"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
-      {/* Offer name badge (top-left) */}
       {offerDetails && (
-        <div className="absolute top-3 left-3 z-20">
-          <Badge variant="secondary" className="text-xs font-semibold">
-            {offerDetails.offerName}
-          </Badge>
-        </div>
-      )}
-
-      {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
-        <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
-          {offerDetails?.hasDiscount && (
+        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
+          {offerDetails && (
             <Badge
-              variant="destructive"
-              className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+              variant="secondary"
+              className="max-w-[52%] truncate whitespace-nowrap bg-white/95 text-[11px] font-semibold shadow-sm"
             >
-              🔥 {offerDetails.discountPercentage}% OFF
+              <span className="sm:hidden">Special Offer</span>
+              <span className="hidden sm:inline">{offerDetails.offerName}</span>
             </Badge>
           )}
-          {offerDetails?.hasBogo && (
-            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
-              🛍️ {offerDetails.bogoLabel || "BOGO"}
-            </Badge>
+          {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+            <div className="flex max-w-[46%] flex-col items-end gap-1">
+              {offerDetails?.hasDiscount && (
+                <Badge
+                  variant="destructive"
+                  className="max-w-full animate-pulse whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+                >
+                  <span className="sm:hidden">
+                    {offerDetails.discountPercentage}% OFF
+                  </span>
+                  <span className="hidden sm:inline">
+                    🔥 {offerDetails.discountPercentage}% OFF
+                  </span>
+                </Badge>
+              )}
+              {offerDetails?.hasBogo && (
+                <Badge className="max-w-full whitespace-nowrap bg-emerald-500/90 text-[11px] font-semibold text-white uppercase shadow-lg">
+                  <span className="sm:hidden">BOGO</span>
+                  <span className="hidden sm:inline">
+                    🛍️ {offerDetails.bogoLabel || "BOGO"}
+                  </span>
+                </Badge>
+              )}
+            </div>
           )}
         </div>
       )}
 
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <CardTitle className="group-hover:text-primary transition-smooth text-lg">
+          <div className="min-w-0 flex-1">
+            <CardTitle className="group-hover:text-primary transition-smooth line-clamp-2 text-base sm:text-lg">
               {course.name}
             </CardTitle>
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-0 pb-6">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <Badge
             variant="secondary"
-            className="px-3 py-1 text-base font-semibold"
+            className="w-fit px-3 py-1 text-base font-semibold"
           >
             {showRupees(displayPrice)}
           </Badge>
-          <div className="flex gap-2">
-            {(() => {
-              const seatsLeft = Math.max(
-                0,
-                (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
-              );
-              const isOutOfStock =
-                (course.capacity ?? 0) === 0 || seatsLeft === 0;
+          {(() => {
+            const seatsLeft = Math.max(
+              0,
+              (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+            );
+            const isOutOfStock =
+              (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
-              // Use mounted state to prevent hydration mismatch
-              const isInCart = mounted ? inCart(course._id) : false;
+            // Use mounted state to prevent hydration mismatch
+            const isInCart = mounted ? inCart(course._id) : false;
 
-              return (
-                <Button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleAddToCart();
-                  }}
-                  disabled={isInCart || isOutOfStock}
-                  size="sm"
-                  className="transition-smooth"
-                >
-                  <Plus className="mr-2 h-4 w-4" />
-                  {isOutOfStock
-                    ? "Out of Stock"
-                    : isInCart
-                      ? "Added"
-                      : "Add to Cart"}
-                </Button>
-              );
-            })()}
-          </div>
+            return (
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleAddToCart();
+                }}
+                disabled={isInCart || isOutOfStock}
+                size="sm"
+                className="transition-smooth w-full sm:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : isInCart
+                    ? "Added"
+                    : "Add to Cart"}
+              </Button>
+            );
+          })()}
         </div>
         {offerDetails && (
           <div className="mt-1 space-y-1 text-xs">
@@ -810,9 +830,8 @@ export default function CourseTypePage({
   const Icon = iconMap[iconName];
 
   return (
-    <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50/80 via-white to-blue-50/60 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950">
+      <section className="section-padding from-primary/5 via-background to-accent/5 relative bg-gradient-to-br dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
         <div className="bg-[url('data:image/svg+xml;utf8,<svg ...>')] pointer-events-none absolute inset-0 bg-repeat opacity-20"></div>
         <div className="container text-center">
           <div className="mx-auto max-w-4xl">
@@ -820,10 +839,10 @@ export default function CourseTypePage({
               {Icon && <Icon className="text-primary h-10 w-10" />}
             </div>
             <div>
-              <h1 className="from-foreground to-foreground/70 bg-gradient-to-b bg-clip-text font-serif text-4xl font-bold text-transparent uppercase">
+              <h1 className="from-foreground to-foreground/70 bg-gradient-to-b bg-clip-text font-serif text-3xl font-bold text-transparent uppercase sm:text-4xl">
                 {title}
               </h1>
-              <p className="text-muted-foreground mb-8 font-serif text-lg leading-relaxed">
+              <p className="text-muted-foreground mb-8 font-serif text-base leading-relaxed sm:text-lg">
                 {description}
               </p>
             </div>
@@ -832,10 +851,10 @@ export default function CourseTypePage({
       </section>
 
       {/* Courses Section */}
-      <section>
+      <section className="pb-16">
         <div className="container">
           {coursesData.courses && coursesData.courses.length > 0 ? (
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
               {(() => {
                 // Group courses by name; if multiple with same name, render a grouped card with select
                 const nameToCourses = new Map<string, Array<Doc<"courses">>>();

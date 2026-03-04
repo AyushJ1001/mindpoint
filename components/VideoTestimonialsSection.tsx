@@ -181,7 +181,7 @@ function VideoCard({
     <button
       ref={containerRef}
       onClick={onClick}
-      className="group relative aspect-[9/16] w-full overflow-hidden rounded-xl border-2 border-transparent bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-blue-300 hover:shadow-xl dark:from-blue-900/30 dark:to-indigo-900/30 dark:hover:border-blue-500"
+      className="group relative aspect-[4/5] w-full overflow-hidden rounded-xl border-2 border-transparent bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-blue-300 hover:shadow-xl sm:aspect-[9/16] dark:from-blue-900/30 dark:to-indigo-900/30 dark:hover:border-blue-500"
     >
       {/* Use poster image if available, otherwise try video thumbnail */}
       {testimonial.posterUrl ? (
@@ -317,13 +317,9 @@ export default function VideoTestimonialsSection() {
           </p>
         </div>
 
-        {/* Grid for desktop, horizontal scroll for mobile */}
-        <div className="scrollbar-hide -mx-4 flex gap-4 overflow-x-auto px-4 pb-4 md:mx-0 md:grid md:grid-cols-3 md:gap-6 md:overflow-visible md:px-0 lg:grid-cols-5">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 md:gap-6 lg:grid-cols-5">
           {VIDEO_TESTIMONIALS.map((testimonial) => (
-            <div
-              key={testimonial.id}
-              className="w-[200px] flex-shrink-0 md:w-auto"
-            >
+            <div key={testimonial.id}>
               <VideoCard
                 testimonial={testimonial}
                 onClick={() => handleCardClick(testimonial)}
