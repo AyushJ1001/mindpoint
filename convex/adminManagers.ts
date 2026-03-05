@@ -274,6 +274,17 @@ export const removeAdmin = mutation({
       throw new Error("You cannot remove your own admin access.");
     }
 
+    const activeAdmins = await ctx.db
+      .query("adminManagers")
+      .withIndex("by_isActive", (q) => q.eq("isActive", true))
+      .take(2);
+
+    if (activeAdmins.length <= 1) {
+      throw new Error(
+        "Cannot remove the last active admin. Add another admin first.",
+      );
+    }
+
     const now = Date.now();
     await ctx.db.patch(existing._id, {
       isActive: false,

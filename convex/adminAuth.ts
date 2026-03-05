@@ -61,5 +61,5 @@ export function normalizeEnrollmentStatus(
 }
 
 export function isAuthenticatedUserId(userId: string): boolean {
-  return !userId.includes("@");
+  return userId.startsWith("user_");
 }

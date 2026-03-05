@@ -5,80 +5,14 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 
 const AUTH_TIMEOUT_MS = 10_000;
-const ADMIN_CACHE_KEY = "admin-convex-gate:is-admin";
-const ADMIN_CACHE_TTL_MS = 30_000;
 
 export function AdminConvexGate({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const [timedOut, setTimedOut] = useState(false);
-  const [cachedIsAdmin, setCachedIsAdmin] = useState<boolean | null>(null);
-  const [hasLoadedCache, setHasLoadedCache] = useState(false);
-  const shouldQueryAdmin =
-    isAuthenticated && (!hasLoadedCache || cachedIsAdmin === null);
   const isAdmin = useQuery(
     api.adminManagers.isUserAdmin,
-    shouldQueryAdmin ? {} : "skip",
+    isAuthenticated ? {} : "skip",
   );
-
-  useEffect(() => {
-    if (typeof window === "undefined") {
-      return;
-    }
-
-    if (!isAuthenticated) {
-      window.sessionStorage.removeItem(ADMIN_CACHE_KEY);
-      setCachedIsAdmin(null);
-      setHasLoadedCache(true);
-      return;
-    }
-
-    const raw = window.sessionStorage.getItem(ADMIN_CACHE_KEY);
-    if (!raw) {
-      setCachedIsAdmin(null);
-      setHasLoadedCache(true);
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(raw) as {
-        value: boolean;
-        expiresAt: number;
-      };
-
-      if (parsed.expiresAt <= Date.now()) {
-        window.sessionStorage.removeItem(ADMIN_CACHE_KEY);
-        setCachedIsAdmin(null);
-      } else {
-        setCachedIsAdmin(parsed.value);
-      }
-    } catch {
-      window.sessionStorage.removeItem(ADMIN_CACHE_KEY);
-      setCachedIsAdmin(null);
-    }
-
-    setHasLoadedCache(true);
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    if (
-      typeof window === "undefined" ||
-      !isAuthenticated ||
-      isAdmin === undefined
-    ) {
-      return;
-    }
-
-    setCachedIsAdmin(isAdmin);
-    window.sessionStorage.setItem(
-      ADMIN_CACHE_KEY,
-      JSON.stringify({
-        value: isAdmin,
-        expiresAt: Date.now() + ADMIN_CACHE_TTL_MS,
-      }),
-    );
-  }, [isAuthenticated, isAdmin]);
-
-  const resolvedIsAdmin = cachedIsAdmin ?? isAdmin;
 
   useEffect(() => {
     if (!isLoading) {
@@ -99,11 +33,7 @@ export function AdminConvexGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (
-    isLoading ||
-    (isAuthenticated && !hasLoadedCache) ||
-    (shouldQueryAdmin && isAdmin === undefined)
-  ) {
+  if (isLoading || (isAuthenticated && isAdmin === undefined)) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <p className="text-sm text-slate-600">Authorizing admin session...</p>
@@ -121,7 +51,7 @@ export function AdminConvexGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!resolvedIsAdmin) {
+  if (!isAdmin) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <p className="text-sm text-slate-600">
