@@ -250,10 +250,12 @@ export const listCourses = query({
     const scanLimit = Math.min(Math.max(limit * 5, 500), 2000);
     const useLifecycleIndexes =
       !!args.lifecycleStatus && args.lifecycleStatus !== "published";
+    let isTypeScopedQuery = false;
 
     let courses: any[];
 
     if (args.lifecycleStatus === "published") {
+      const publishedScanLimit = Math.min(limit * 2, scanLimit);
       const publishedIndexQuery = args.type
         ? ctx.db
             .query("courses")
@@ -265,21 +267,25 @@ export const listCourses = query({
             .withIndex("by_lifecycleStatus", (q) =>
               q.eq("lifecycleStatus", "published"),
             );
+      isTypeScopedQuery = !!args.type;
 
       const [publishedViaIndex, publishedLegacy] = await Promise.all([
-        publishedIndexQuery.order("desc").take(scanLimit),
+        publishedIndexQuery.order("desc").take(publishedScanLimit),
         ctx.db
           .query("courses")
           .filter((q) => q.eq(q.field("lifecycleStatus"), undefined))
           .order("desc")
-          .take(scanLimit),
+          .take(publishedScanLimit),
       ]);
       const mergedMap = new Map<string, any>();
       for (const c of publishedViaIndex) {
         mergedMap.set(String(c._id), c);
       }
       for (const c of publishedLegacy) {
-        if (!mergedMap.has(String(c._id))) {
+        if (
+          (!args.type || c.type === args.type) &&
+          !mergedMap.has(String(c._id))
+        ) {
           mergedMap.set(String(c._id), c);
         }
       }
@@ -305,6 +311,7 @@ export const listCourses = query({
                   .query("courses")
                   .withIndex("by_type", (q) => q.eq("type", args.type!))
               : ctx.db.query("courses");
+      isTypeScopedQuery = !!args.type;
 
       courses = await baseQuery.order("desc").take(scanLimit);
     }
@@ -322,7 +329,7 @@ export const listCourses = query({
       });
     }
 
-    if (args.type && !useLifecycleIndexes) {
+    if (args.type && !isTypeScopedQuery) {
       courses = courses.filter((course) => course.type === args.type);
     }
 

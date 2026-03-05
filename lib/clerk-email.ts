@@ -1,6 +1,9 @@
 import "server-only";
 
 import { currentUser } from "@clerk/nextjs/server";
+import { cache } from "react";
+
+const getCachedCurrentUser = cache(async () => currentUser());
 
 function normalizeEmail(email?: string | null): string | undefined {
   const normalized = (email || "").trim().toLowerCase();
@@ -29,7 +32,7 @@ export async function resolveAuthEmail(
     return claimEmail;
   }
 
-  const user = await currentUser();
+  const user = await getCachedCurrentUser();
   if (!user) {
     return undefined;
   }

@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 import { forbidden, redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
@@ -33,6 +34,20 @@ export default async function AdminLayout({
             The admin access check could not be completed. Please refresh and
             try again in a moment.
           </p>
+          <div className="mt-5 flex justify-center gap-3">
+            <Link
+              href="/admin"
+              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
+            >
+              Try Again
+            </Link>
+            <Link
+              href="/"
+              className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"
+            >
+              Back to Home
+            </Link>
+          </div>
         </div>
       </div>
     );
