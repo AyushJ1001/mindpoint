@@ -9,6 +9,14 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export default function AdminEnrollmentDetailPage() {
@@ -16,13 +24,19 @@ export default function AdminEnrollmentDetailPage() {
   const enrollmentId = params.enrollmentId as Id<"enrollments">;
 
   const [targetCourseId, setTargetCourseId] = useState("");
+  const [pendingAction, setPendingAction] = useState<
+    "transfer" | "cancel" | null
+  >(null);
+  const [actionReason, setActionReason] = useState("Cancelled by admin");
 
   const detail = useQuery(api.adminEnrollments.getEnrollmentDetail, {
     enrollmentId,
   });
   const courses = useQuery(api.adminCourses.listCourses, { limit: 500 });
 
-  const transferEnrollment = useMutation(api.adminEnrollments.transferEnrollment);
+  const transferEnrollment = useMutation(
+    api.adminEnrollments.transferEnrollment,
+  );
   const cancelEnrollment = useMutation(api.adminEnrollments.cancelEnrollment);
 
   const transferableCourses = useMemo(() => {
@@ -30,36 +44,44 @@ export default function AdminEnrollmentDetailPage() {
     return courses.filter((course) => course._id !== detail.courseId);
   }, [detail, courses]);
 
-  const handleTransfer = async () => {
+  const handleTransfer = () => {
     if (!targetCourseId) {
       toast.error("Select a target course");
       return;
     }
-
-    const reason = window.prompt("Transfer reason:", "Transferred by admin");
-    if (!reason) return;
-
-    try {
-      await transferEnrollment({
-        enrollmentId,
-        targetCourseId: targetCourseId as Id<"courses">,
-        reason,
-      });
-      toast.success("Enrollment transferred");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Transfer failed");
-    }
+    setActionReason("Transferred by admin");
+    setPendingAction("transfer");
   };
 
-  const handleCancel = async () => {
-    const reason = window.prompt("Cancellation reason:", "Cancelled by admin");
-    if (!reason) return;
+  const handleCancel = () => {
+    setActionReason("Cancelled by admin");
+    setPendingAction("cancel");
+  };
 
+  const handleConfirmAction = async () => {
+    if (!pendingAction || !actionReason.trim()) return;
     try {
-      await cancelEnrollment({ enrollmentId, reason });
-      toast.success("Enrollment cancelled");
+      if (pendingAction === "transfer") {
+        await transferEnrollment({
+          enrollmentId,
+          targetCourseId: targetCourseId as Id<"courses">,
+          reason: actionReason.trim(),
+        });
+        toast.success("Enrollment transferred");
+      } else {
+        await cancelEnrollment({ enrollmentId, reason: actionReason.trim() });
+        toast.success("Enrollment cancelled");
+      }
+      setPendingAction(null);
+      setActionReason("Cancelled by admin");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Cancellation failed");
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : pendingAction === "transfer"
+            ? "Transfer failed"
+            : "Cancellation failed",
+      );
     }
   };
 
@@ -83,12 +105,26 @@ export default function AdminEnrollmentDetailPage() {
           <CardTitle>Enrollment Snapshot</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-2 text-sm md:grid-cols-2">
-          <p><strong>User:</strong> {detail.userName || detail.userId}</p>
-          <p><strong>Email:</strong> {detail.userEmail || "-"}</p>
-          <p><strong>Course:</strong> {detail.courseName || "-"}</p>
-          <p><strong>Status:</strong> <Badge variant="outline">{detail.status}</Badge></p>
-          <p><strong>Type:</strong> {detail.courseType || "-"}</p>
-          <p><strong>Created:</strong> {new Date(detail._creationTime).toLocaleString()}</p>
+          <p>
+            <strong>User:</strong> {detail.userName || detail.userId}
+          </p>
+          <p>
+            <strong>Email:</strong> {detail.userEmail || "-"}
+          </p>
+          <p>
+            <strong>Course:</strong> {detail.courseName || "-"}
+          </p>
+          <p>
+            <strong>Status:</strong>{" "}
+            <Badge variant="outline">{detail.status}</Badge>
+          </p>
+          <p>
+            <strong>Type:</strong> {detail.courseType || "-"}
+          </p>
+          <p>
+            <strong>Created:</strong>{" "}
+            {new Date(detail._creationTime).toLocaleString()}
+          </p>
         </CardContent>
       </Card>
 
@@ -110,7 +146,10 @@ export default function AdminEnrollmentDetailPage() {
                 </option>
               ))}
             </select>
-            <Button onClick={handleTransfer} disabled={detail.status !== "active"}>
+            <Button
+              onClick={handleTransfer}
+              disabled={detail.status !== "active"}
+            >
               Transfer Enrollment
             </Button>
             <Button
@@ -123,7 +162,8 @@ export default function AdminEnrollmentDetailPage() {
           </div>
           {detail.status !== "active" ? (
             <p className="text-xs text-slate-600">
-              This enrollment is {detail.status}. Transfer/cancel actions are only available for active enrollments.
+              This enrollment is {detail.status}. Transfer/cancel actions are
+              only available for active enrollments.
             </p>
           ) : null}
         </CardContent>
@@ -146,6 +186,62 @@ export default function AdminEnrollmentDetailPage() {
           </div>
         </CardContent>
       </Card>
+
+      <Dialog
+        open={!!pendingAction}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPendingAction(null);
+            setActionReason("Cancelled by admin");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {pendingAction === "transfer"
+                ? "Transfer Enrollment"
+                : "Cancel Enrollment"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-slate-600">
+              {pendingAction === "transfer"
+                ? "Provide a reason for transferring this enrollment."
+                : "Provide a reason for cancelling this enrollment."}
+            </p>
+            <Input
+              placeholder="Reason"
+              value={actionReason}
+              onChange={(e) => setActionReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setPendingAction(null);
+                setActionReason("Cancelled by admin");
+              }}
+            >
+              Back
+            </Button>
+            <Button
+              variant={pendingAction === "transfer" ? "default" : "destructive"}
+              disabled={
+                !pendingAction ||
+                !actionReason.trim() ||
+                (pendingAction === "transfer" && !targetCourseId)
+              }
+              onClick={handleConfirmAction}
+            >
+              {pendingAction === "transfer"
+                ? "Confirm Transfer"
+                : "Confirm Cancel"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

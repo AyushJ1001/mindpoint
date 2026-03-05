@@ -9,6 +9,13 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { downloadCsv, toCsv } from "@/lib/csv";
 
@@ -20,6 +27,10 @@ export default function AdminEnrollmentsPage() {
   const [resendingEnrollmentId, setResendingEnrollmentId] = useState<
     string | null
   >(null);
+  const [cancelEnrollmentId, setCancelEnrollmentId] = useState<string | null>(
+    null,
+  );
+  const [cancelReason, setCancelReason] = useState("Cancelled by admin");
 
   const [manualUserId, setManualUserId] = useState("");
   const [manualEmail, setManualEmail] = useState("");
@@ -86,19 +97,16 @@ export default function AdminEnrollmentsPage() {
     }
   };
 
-  const handleCancel = async (enrollmentId: string) => {
-    const reason = window.prompt(
-      "Reason for cancellation:",
-      "Cancelled by admin",
-    );
-    if (!reason) return;
-
+  const handleCancel = async () => {
+    if (!cancelEnrollmentId) return;
     try {
       await cancelEnrollment({
-        enrollmentId: enrollmentId as Id<"enrollments">,
-        reason,
+        enrollmentId: cancelEnrollmentId as Id<"enrollments">,
+        reason: cancelReason.trim(),
       });
       toast.success("Enrollment cancelled");
+      setCancelEnrollmentId(null);
+      setCancelReason("Cancelled by admin");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to cancel enrollment",
@@ -276,7 +284,7 @@ export default function AdminEnrollmentsPage() {
                         <Button
                           variant="destructive"
                           size="sm"
-                          onClick={() => handleCancel(String(row._id))}
+                          onClick={() => setCancelEnrollmentId(String(row._id))}
                         >
                           Cancel
                         </Button>
@@ -289,6 +297,50 @@ export default function AdminEnrollmentsPage() {
           </tbody>
         </table>
       </div>
+
+      <Dialog
+        open={!!cancelEnrollmentId}
+        onOpenChange={(open) => {
+          if (!open) {
+            setCancelEnrollmentId(null);
+            setCancelReason("Cancelled by admin");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel Enrollment</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-slate-600">
+              Enter a cancellation reason for this enrollment.
+            </p>
+            <Input
+              placeholder="Cancellation reason"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCancelEnrollmentId(null);
+                setCancelReason("Cancelled by admin");
+              }}
+            >
+              Keep Enrollment
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={!cancelEnrollmentId || !cancelReason.trim()}
+              onClick={handleCancel}
+            >
+              Confirm Cancel
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

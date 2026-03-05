@@ -22,13 +22,17 @@ function deriveNameFromEmail(email: string): string {
 }
 
 export const isUserAdmin = query({
-  args: {
-    userId: v.optional(v.string()),
-    email: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const userId = args.userId ? normalizeClerkUserId(args.userId) : "";
-    const email = normalizeEmail(args.email);
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject
+      ? normalizeClerkUserId(identity.subject)
+      : "";
+    const email = normalizeEmail(identity?.email);
+
+    if (!userId && !email) {
+      return false;
+    }
 
     if (userId) {
       const managedAdminById = await ctx.db

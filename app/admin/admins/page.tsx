@@ -7,6 +7,13 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 
 export default function AdminManagersPage() {
@@ -15,6 +22,10 @@ export default function AdminManagersPage() {
   const [newAdminName, setNewAdminName] = useState("");
   const [newAdminNote, setNewAdminNote] = useState("");
   const [loadingEmail, setLoadingEmail] = useState<string | null>(null);
+  const [removeTargetEmail, setRemoveTargetEmail] = useState<string | null>(
+    null,
+  );
+  const [removeReason, setRemoveReason] = useState("Access no longer required");
 
   const data = useQuery(api.adminManagers.listAdmins, {
     search: search || undefined,
@@ -54,20 +65,17 @@ export default function AdminManagersPage() {
     }
   };
 
-  const handleRemoveAdmin = async (email: string) => {
-    const reason = window.prompt(
-      "Reason for removing admin access:",
-      "Access no longer required",
-    );
-    if (reason === null) return;
-
-    setLoadingEmail(email);
+  const handleRemoveAdmin = async () => {
+    if (!removeTargetEmail) return;
+    setLoadingEmail(removeTargetEmail);
     try {
       await removeAdmin({
-        email,
-        reason: reason.trim() || undefined,
+        email: removeTargetEmail,
+        reason: removeReason.trim() || undefined,
       });
       toast.success("Admin access removed");
+      setRemoveTargetEmail(null);
+      setRemoveReason("Access no longer required");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to remove admin",
@@ -184,7 +192,7 @@ export default function AdminManagersPage() {
                           variant="destructive"
                           size="sm"
                           disabled={isBusy}
-                          onClick={() => handleRemoveAdmin(rowEmail!)}
+                          onClick={() => setRemoveTargetEmail(rowEmail!)}
                         >
                           {isBusy ? "Removing..." : "Remove"}
                         </Button>
@@ -209,6 +217,57 @@ export default function AdminManagersPage() {
           </tbody>
         </table>
       </div>
+
+      <Dialog
+        open={!!removeTargetEmail}
+        onOpenChange={(open) => {
+          if (!open) {
+            setRemoveTargetEmail(null);
+            setRemoveReason("Access no longer required");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Remove Admin Access</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-2">
+            <p className="text-sm text-slate-600">
+              Provide a reason for removing admin access from{" "}
+              <strong>{removeTargetEmail}</strong>.
+            </p>
+            <Input
+              placeholder="Reason"
+              value={removeReason}
+              onChange={(e) => setRemoveReason(e.target.value)}
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setRemoveTargetEmail(null);
+                setRemoveReason("Access no longer required");
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              disabled={
+                !removeTargetEmail ||
+                loadingEmail === removeTargetEmail ||
+                !removeReason.trim()
+              }
+              onClick={handleRemoveAdmin}
+            >
+              {removeTargetEmail && loadingEmail === removeTargetEmail
+                ? "Removing..."
+                : "Confirm Remove"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

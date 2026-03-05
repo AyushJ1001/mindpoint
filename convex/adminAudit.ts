@@ -40,18 +40,33 @@ export const listAuditLogs = query({
     await requireAdmin(ctx);
 
     const limit = Math.min(args.limit ?? 200, 500);
+    const scanLimit = Math.min(Math.max(limit * 5, 500), 2000);
 
-    let rows = await ctx.db
-      .query("adminAuditLogs")
-      .withIndex("by_createdAt")
-      .order("desc")
-      .take(limit);
+    const baseQuery = args.entityType
+      ? ctx.db
+          .query("adminAuditLogs")
+          .withIndex("by_entityType", (q) =>
+            q.eq("entityType", args.entityType!),
+          )
+      : args.actorAdminId
+        ? ctx.db
+            .query("adminAuditLogs")
+            .withIndex("by_actorAdminId", (q) =>
+              q.eq("actorAdminId", args.actorAdminId!),
+            )
+        : ctx.db.query("adminAuditLogs").withIndex("by_createdAt");
 
-    if (args.entityType) {
+    let rows = await baseQuery.order("desc").take(scanLimit);
+
+    if (args.entityType && !args.actorAdminId) {
+      // already filtered by index
+    } else if (args.entityType) {
       rows = rows.filter((row) => row.entityType === args.entityType);
     }
 
-    if (args.actorAdminId) {
+    if (args.actorAdminId && !args.entityType) {
+      // already filtered by index
+    } else if (args.actorAdminId) {
       rows = rows.filter((row) => row.actorAdminId === args.actorAdminId);
     }
 
@@ -69,7 +84,7 @@ export const listAuditLogs = query({
       });
     }
 
-    return rows;
+    return rows.slice(0, limit);
   },
 });
 

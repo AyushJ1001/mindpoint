@@ -10,14 +10,19 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { userId, sessionClaims } = await auth();
+  const { userId, sessionClaims, getToken } = await auth();
 
   if (!userId) {
     redirect("/");
   }
 
   const sessionEmail = await resolveAuthEmail(sessionClaims);
-  const canAccessAdmin = await hasAdminAccess(userId, sessionEmail);
+  const convexToken = await getToken({ template: "convex" });
+  const canAccessAdmin = await hasAdminAccess(
+    userId,
+    sessionEmail,
+    convexToken,
+  );
 
   if (!canAccessAdmin) {
     return (

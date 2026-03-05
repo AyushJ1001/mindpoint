@@ -68,11 +68,12 @@ async function getUpcomingCourses() {
 }
 
 export default async function Home() {
-  const { userId, sessionClaims } = await auth();
+  const { userId, sessionClaims, getToken } = await auth();
   const sessionEmail = await resolveAuthEmail(sessionClaims);
+  const convexToken = await getToken({ template: "convex" });
   const [upcomingCourses, canAccessAdmin] = await Promise.all([
     getUpcomingCourses(),
-    hasAdminAccess(userId, sessionEmail),
+    hasAdminAccess(userId, sessionEmail, convexToken),
   ]);
 
   return (

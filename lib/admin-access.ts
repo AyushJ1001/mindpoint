@@ -11,6 +11,7 @@ function normalizeEmail(email?: string | null): string | undefined {
 export async function hasAdminAccess(
   userId?: string | null,
   email?: string | null,
+  convexToken?: string | null,
 ): Promise<boolean> {
   const normalizedEmail = normalizeEmail(email);
 
@@ -23,12 +24,14 @@ export async function hasAdminAccess(
     return false;
   }
 
+  if (!convexToken) {
+    return false;
+  }
+
   try {
     const convex = new ConvexHttpClient(convexUrl);
-    return await convex.query(api.adminManagers.isUserAdmin, {
-      userId: userId || undefined,
-      email: normalizedEmail,
-    });
+    convex.setAuth(convexToken);
+    return await convex.query(api.adminManagers.isUserAdmin, {});
   } catch (error) {
     console.warn("Failed to check admin access via Convex:", error);
     return false;

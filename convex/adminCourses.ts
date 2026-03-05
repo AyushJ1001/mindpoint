@@ -240,7 +240,32 @@ export const listCourses = query({
     await requireAdmin(ctx);
 
     const limit = Math.min(args.limit ?? 200, 500);
-    let courses = await ctx.db.query("courses").collect();
+    const scanLimit = Math.min(Math.max(limit * 5, 500), 2000);
+    const useLifecycleIndexes =
+      !!args.lifecycleStatus && args.lifecycleStatus !== "published";
+
+    const baseQuery =
+      args.type && useLifecycleIndexes
+        ? ctx.db
+            .query("courses")
+            .withIndex("by_type_and_lifecycleStatus", (q) =>
+              q
+                .eq("type", args.type!)
+                .eq("lifecycleStatus", args.lifecycleStatus!),
+            )
+        : useLifecycleIndexes
+          ? ctx.db
+              .query("courses")
+              .withIndex("by_lifecycleStatus", (q) =>
+                q.eq("lifecycleStatus", args.lifecycleStatus!),
+              )
+          : args.type
+            ? ctx.db
+                .query("courses")
+                .withIndex("by_type", (q) => q.eq("type", args.type!))
+            : ctx.db.query("courses");
+
+    let courses = await baseQuery.order("desc").take(scanLimit);
 
     if (args.search) {
       const search = args.search.toLowerCase();
@@ -255,11 +280,11 @@ export const listCourses = query({
       });
     }
 
-    if (args.type) {
+    if (args.type && !useLifecycleIndexes) {
       courses = courses.filter((course) => course.type === args.type);
     }
 
-    if (args.lifecycleStatus) {
+    if (args.lifecycleStatus && !useLifecycleIndexes) {
       courses = courses.filter(
         (course) =>
           normalizeCourseLifecycleStatus(course.lifecycleStatus) ===

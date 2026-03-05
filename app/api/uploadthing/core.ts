@@ -7,10 +7,11 @@ import { resolveAuthEmail } from "@/lib/clerk-email";
 const f = createUploadthing();
 
 async function adminMiddleware() {
-  const { userId, sessionClaims } = await auth();
+  const { userId, sessionClaims, getToken } = await auth();
   const sessionEmail = await resolveAuthEmail(sessionClaims);
+  const convexToken = await getToken({ template: "convex" });
 
-  if (!(await hasAdminAccess(userId, sessionEmail))) {
+  if (!(await hasAdminAccess(userId, sessionEmail, convexToken))) {
     throw new UploadThingError("Unauthorized");
   }
 
