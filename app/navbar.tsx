@@ -69,7 +69,9 @@ function MindPointsBadge() {
       >
         <Gift className="mr-2 h-4 w-4" />
         <span className="font-semibold">{balance}</span>
-        <span className="text-muted-foreground ml-1">Points</span>
+        <span className="text-muted-foreground ml-1 hidden sm:inline">
+          Points
+        </span>
       </Button>
     </Link>
   );
@@ -87,6 +89,7 @@ export default function Navbar() {
   } = useCart();
   const [isHydrated, setIsHydrated] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const pathname = usePathname();
   const now = useNow();
@@ -147,6 +150,11 @@ export default function Navbar() {
     setIsHydrated(true);
   }, []);
 
+  // Ensure cart sheet closes when route changes so destination pages stay visible.
+  useEffect(() => {
+    setIsCartOpen(false);
+  }, [pathname]);
+
   const isActive = (href: string) => pathname === href;
 
   return (
@@ -157,22 +165,18 @@ export default function Navbar() {
       aria-label="Primary"
     >
       <div className="container">
-        <div className="flex items-center justify-between py-4">
+        <div className="flex items-center justify-between py-2.5 sm:py-3">
           {/* Logo */}
-          <Link
-            href="/"
-            className="flex items-center space-x-2"
-            aria-label="Home"
-          >
+          <Link href="/" className="flex items-center gap-2.5" aria-label="Home">
             <Image
               src="/logo.png"
               alt="The Mind Point"
-              width={40}
-              height={40}
-              className="transition-smooth hover:scale-105"
+              width={36}
+              height={36}
+              className="transition-smooth h-8 w-8 rounded-xl ring-1 ring-blue-200/70 hover:scale-105 sm:h-9 sm:w-9 dark:ring-blue-800/70"
               priority
             />
-            <span className="hidden text-xl font-bold text-blue-950 text-shadow-black sm:block dark:text-white">
+            <span className="bg-gradient-to-r from-blue-950 via-blue-800 to-indigo-700 bg-clip-text text-base font-extrabold tracking-tight text-transparent sm:text-xl dark:from-blue-100 dark:via-blue-200 dark:to-indigo-200">
               The Mind Point
             </span>
           </Link>
@@ -182,7 +186,7 @@ export default function Navbar() {
             <NavigationMenu viewport={false} aria-label="Site sections">
               <NavigationMenuList className="space-x-2">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="hover:bg-accent/50 data-[state=open]:bg-accent/50 transition-smooth bg-transparent">
+                  <NavigationMenuTrigger className="transition-smooth rounded-full border border-transparent bg-transparent px-4 hover:border-blue-200/70 hover:bg-blue-100/70 data-[state=open]:border-blue-200/80 data-[state=open]:bg-blue-100/85 dark:hover:border-blue-800/70 dark:hover:bg-blue-950/60 dark:data-[state=open]:border-blue-800/80 dark:data-[state=open]:bg-blue-950/65">
                     Home
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -245,7 +249,7 @@ export default function Navbar() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="hover:bg-accent/50 data-[state=open]:bg-accent/50 transition-smooth bg-transparent">
+                  <NavigationMenuTrigger className="transition-smooth rounded-full border border-transparent bg-transparent px-4 hover:border-blue-200/70 hover:bg-blue-100/70 data-[state=open]:border-blue-200/80 data-[state=open]:bg-blue-100/85 dark:hover:border-blue-800/70 dark:hover:bg-blue-950/60 dark:data-[state=open]:border-blue-800/80 dark:data-[state=open]:bg-blue-950/65">
                     TMP Academy
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -294,7 +298,7 @@ export default function Navbar() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="hover:bg-accent/50 data-[state=open]:bg-accent/50 transition-smooth bg-transparent">
+                  <NavigationMenuTrigger className="transition-smooth rounded-full border border-transparent bg-transparent px-4 hover:border-blue-200/70 hover:bg-blue-100/70 data-[state=open]:border-blue-200/80 data-[state=open]:bg-blue-100/85 dark:hover:border-blue-800/70 dark:hover:bg-blue-950/60 dark:data-[state=open]:border-blue-800/80 dark:data-[state=open]:bg-blue-950/65">
                     Therapy & Career
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -340,7 +344,7 @@ export default function Navbar() {
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="p-2"
+              className="rounded-xl border border-transparent p-2 hover:border-blue-200/80 hover:bg-blue-100/70 dark:hover:border-blue-800/80 dark:hover:bg-blue-950/70"
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-menu"
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
@@ -354,13 +358,13 @@ export default function Navbar() {
           </div>
 
           {/* Right side actions */}
-          <div className="flex items-center gap-2 sm:gap-4">
-            <Sheet>
+          <div className="flex items-center gap-1 sm:gap-3">
+            <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
               <SheetTrigger asChild>
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="transition-smooth hover:bg-accent/50 relative"
+                  className="transition-smooth relative rounded-xl border border-transparent hover:border-blue-200/80 hover:bg-blue-100/70 dark:hover:border-blue-800/70 dark:hover:bg-blue-950/70"
                   aria-label="Open cart"
                 >
                   <ShoppingCart className="h-5 w-5" />
@@ -378,11 +382,14 @@ export default function Navbar() {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-full p-4 sm:w-[400px]"
+                className="w-[min(24rem,calc(100vw-1rem))] rounded-l-2xl border-l border-blue-100/70 bg-white/98 p-3 sm:p-4 dark:border-blue-900/40 dark:bg-slate-950/98"
                 aria-label="Shopping cart panel"
               >
                 <SheetHeader className="pb-4">
                   <SheetTitle>Shopping Cart</SheetTitle>
+                  <p className="text-muted-foreground text-xs">
+                    Continue browsing while this panel stays open.
+                  </p>
                   {!isEmpty && (
                     <div className="flex justify-end">
                       <Dialog
@@ -426,7 +433,7 @@ export default function Navbar() {
                     </div>
                   )}
                 </SheetHeader>
-                <div className="flex h-[calc(100vh-8rem)] flex-col overflow-hidden">
+                <div className="flex h-[calc(100vh-9rem)] flex-col overflow-hidden">
                   {isEmpty ? (
                     <div className="flex flex-1 flex-col items-center justify-center py-12">
                       <ShoppingCart
@@ -442,7 +449,7 @@ export default function Navbar() {
                     </div>
                   ) : (
                     <>
-                      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto py-4 pb-28">
+                      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto py-3 pb-28">
                         {items.map((item) => {
                           const offerDetails = itemOfferDetails[item.id];
                           const itemTotal = Math.round(
@@ -595,7 +602,12 @@ export default function Navbar() {
                           </span>
                         </div>
                         <Button className="transition-smooth w-full" asChild>
-                          <Link href="/cart">Proceed to Checkout</Link>
+                          <Link
+                            href="/cart"
+                            onClick={() => setIsCartOpen(false)}
+                          >
+                            Proceed to Checkout
+                          </Link>
                         </Button>
                       </div>
                     </>
@@ -618,7 +630,8 @@ export default function Navbar() {
                     size="sm"
                     className="transition-smooth hover:bg-accent/50 cursor-pointer"
                   >
-                    Sign In
+                    <span className="hidden sm:inline">Sign In</span>
+                    <span className="sm:hidden">Sign in</span>
                   </Button>
                 </SignInButton>
               </SignedOut>
@@ -629,10 +642,10 @@ export default function Navbar() {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div
-            className="border-border bg-background/95 border-t backdrop-blur-sm lg:hidden"
+            className="border-border bg-background/92 border-t shadow-inner backdrop-blur-md lg:hidden"
             id="mobile-menu"
           >
-            <div className="space-y-4 py-4">
+            <div className="space-y-4 py-3">
               <div className="space-y-2">
                 <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
                   Home

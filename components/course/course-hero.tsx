@@ -154,13 +154,13 @@ export default function CourseHero({
   const displayCourse = activeCourse ?? course;
 
   return (
-    <section className="relative overflow-hidden py-12 md:py-20 dark:text-white">
+    <section className="relative overflow-hidden py-8 sm:py-12 md:py-20 dark:text-white">
       <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950" />
-      <div className="bg-primary/10 absolute top-0 right-0 h-96 w-96 rounded-full blur-3xl" />
-      <div className="bg-accent/10 absolute bottom-0 left-0 h-96 w-96 rounded-full blur-3xl" />
+      <div className="bg-primary/10 absolute top-0 right-0 h-64 w-64 rounded-full blur-3xl sm:h-96 sm:w-96" />
+      <div className="bg-accent/10 absolute bottom-0 left-0 h-64 w-64 rounded-full blur-3xl sm:h-96 sm:w-96" />
 
-      <div className="relative z-10 container">
-        <div className="text-muted-foreground mb-6 text-sm">
+      <div className="relative z-10 container px-0 sm:px-2">
+        <div className="text-muted-foreground mb-5 text-xs leading-relaxed break-words sm:mb-6 sm:text-sm">
           <Link
             href="/courses"
             className="hover:text-foreground transition-colors"
@@ -168,19 +168,21 @@ export default function CourseHero({
             Courses
           </Link>
           <span className="mx-2">/</span>
-          <span className="text-foreground font-medium">{course.name}</span>
+          <span className="text-foreground font-medium break-words">
+            {course.name}
+          </span>
         </div>
 
         <div
           ref={heroAnimation.ref}
-          className={`grid grid-cols-1 gap-12 transition-all duration-1000 ease-out lg:grid-cols-2 ${
+          className={`grid grid-cols-1 gap-8 transition-all duration-1000 ease-out lg:grid-cols-2 lg:gap-12 ${
             heroAnimation.isVisible
               ? "translate-y-0 opacity-100"
               : "translate-y-8 opacity-0"
           }`}
         >
           {/* Left Column - Course Image */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             <div className="border-primary/20 from-primary/5 to-accent/5 relative overflow-hidden rounded-2xl border-2 bg-gradient-to-br p-2 shadow-2xl">
               <div className="bg-primary/20 absolute top-0 left-0 h-32 w-32 rounded-full blur-2xl" />
               <div className="bg-accent/20 absolute right-0 bottom-0 h-32 w-32 rounded-full blur-2xl" />
@@ -192,7 +194,7 @@ export default function CourseHero({
           </div>
 
           {/* Right Column - Course Details */}
-          <div className="flex flex-col gap-8">
+          <div className="flex min-w-0 flex-col gap-6 sm:gap-8">
             {/* Status Badges */}
             <div className="flex flex-wrap gap-3">
               {seatsLeft > 0 && seatsLeft <= 5 && (
@@ -218,12 +220,12 @@ export default function CourseHero({
 
             {/* Course Title & Description */}
             <div className="space-y-4">
-              <h1 className="text-4xl leading-tight font-bold tracking-tight md:text-5xl lg:text-6xl">
+              <h1 className="text-3xl leading-tight font-bold tracking-tight break-words sm:text-4xl md:text-5xl lg:text-6xl">
                 <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
                   {displayCourse.name}
                 </span>
               </h1>
-              <p className="text-muted-foreground text-lg leading-relaxed">
+              <p className="text-muted-foreground text-base leading-relaxed sm:text-lg">
                 Guided, interactive classes with recordings and lifetime
                 support.
               </p>
@@ -259,10 +261,12 @@ export default function CourseHero({
                   <div className="bg-primary/10 mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
                     <stat.icon className="text-primary h-6 w-6" />
                   </div>
-                  <div className="text-muted-foreground text-sm font-medium">
+                  <div className="text-muted-foreground text-[11px] leading-tight font-medium sm:text-sm">
                     {stat.label}
                   </div>
-                  <div className="text-sm font-bold">{stat.value}</div>
+                  <div className="text-xs font-bold sm:text-sm">
+                    {stat.value}
+                  </div>
                 </div>
               ))}
             </div>
@@ -325,7 +329,7 @@ export default function CourseHero({
                       value={displayCourse._id as unknown as string}
                       onValueChange={handleVariantSelect}
                     >
-                      <SelectTrigger className="w-48">
+                      <SelectTrigger className="w-full sm:w-48">
                         <SelectValue placeholder="Choose option" />
                       </SelectTrigger>
                       <SelectContent>

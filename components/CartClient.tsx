@@ -714,24 +714,26 @@ const CartContent = () => {
   }
 
   return (
-    <div className="container mx-auto py-8 dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
-      <div className="mb-8">
-        <h1 className="mb-2 text-3xl font-bold">Shopping Cart</h1>
+    <div className="container py-6 sm:py-8 dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="mb-2 text-4xl font-bold tracking-tight sm:text-5xl">
+          Shopping Cart
+        </h1>
         <p className="text-muted-foreground">
           Review your selected courses and proceed to checkout.
         </p>
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-3">
+      <div className="grid gap-5 lg:grid-cols-3 lg:gap-8">
         {/* Cart Items */}
-        <div className="lg:col-span-2">
-          <Card>
+        <div className="min-w-0 lg:col-span-2">
+          <Card className="overflow-hidden">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-5 w-5" />
-                Cart Items ({items.length})
-              </CardTitle>
-              <div className="flex justify-end">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5" />
+                  Cart Items ({items.length})
+                </CardTitle>
                 <Dialog
                   open={showClearCartDialog}
                   onOpenChange={setShowClearCartDialog}
@@ -740,7 +742,7 @@ const CartContent = () => {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="text-destructive hover:text-destructive hover:bg-destructive/10"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 w-full sm:w-auto"
                     >
                       <Trash2 className="mr-2 h-4 w-4" />
                       Clear Cart
@@ -779,98 +781,97 @@ const CartContent = () => {
                 return (
                   <div
                     key={item.id}
-                    className="flex items-center gap-4 rounded-lg border p-4"
+                    className="rounded-xl border border-blue-200/70 bg-white/75 p-3 shadow-[0_10px_22px_-18px_rgba(37,99,235,0.7)] dark:border-blue-900/40 dark:bg-slate-950/55"
                   >
-                    <div className="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md">
-                      <Image
-                        src={item.imageUrls?.[0] || "/placeholder-image.jpg"}
-                        alt={item.name || "Course"}
-                        className="h-full w-full object-cover"
-                        width={64}
-                        height={64}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <h3 className="font-semibold">{item.name}</h3>
-                      <p className="text-muted-foreground text-sm">
-                        {item.courseType}
-                      </p>
-                      {offerDetails && (
-                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
-                          {offerDetails.hasDiscount && (
-                            <span className="rounded bg-orange-100 px-2 py-1 text-[11px] font-semibold text-orange-800">
-                              🔥 {offerDetails.discountPercentage}% OFF
-                            </span>
-                          )}
-                          <span
-                            className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-muted-foreground"}`}
-                          >
-                            {offerDetails.timeLeft.days > 0 &&
-                              `${offerDetails.timeLeft.days}d `}
-                            {offerDetails.timeLeft.hours > 0 &&
-                              `${offerDetails.timeLeft.hours}h `}
-                            {offerDetails.timeLeft.minutes > 0 &&
-                              `${offerDetails.timeLeft.minutes}m`}{" "}
-                            left
-                          </span>
-                        </div>
-                      )}
-                      {offerDetails?.hasBogo && (
-                        <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-600">
-                          <Sparkles className="h-3 w-3" />
-                          {"Bonus enrollment included"}
-                        </div>
-                      )}
-                      <div className="mt-2 flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            updateItemQuantity(
-                              item.id,
-                              (item.quantity || 1) - 1,
-                            )
-                          }
-                          disabled={(item.quantity || 1) <= 1}
-                        >
-                          <Minus className="h-3 w-3" />
-                        </Button>
-                        <span className="w-8 text-center">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() =>
-                            updateItemQuantity(
-                              item.id,
-                              (item.quantity || 1) + 1,
-                            )
-                          }
-                        >
-                          <Plus className="h-3 w-3" />
-                        </Button>
+                    <div className="flex items-start gap-3">
+                      <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md sm:h-16 sm:w-16">
+                        <Image
+                          src={item.imageUrls?.[0] || "/placeholder-image.jpg"}
+                          alt={item.name || "Course"}
+                          className="h-full w-full object-cover"
+                          width={64}
+                          height={64}
+                        />
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-semibold">
-                        {showRupees(itemTotal)}
-                      </div>
-                      {offerDetails?.hasDiscount && (
-                        <div className="text-muted-foreground text-xs">
-                          <span className="line-through">
-                            {showRupees(
-                              (offerDetails.originalPrice || 0) *
-                                (item.quantity || 1),
+                      <div className="min-w-0 flex-1">
+                        <h3 className="line-clamp-3 text-base font-semibold tracking-tight sm:line-clamp-2 sm:text-xl">
+                          {item.name}
+                        </h3>
+                        <p className="text-muted-foreground text-sm capitalize">
+                          {item.courseType}
+                        </p>
+                        {offerDetails && (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                            {offerDetails.hasDiscount && (
+                              <span className="rounded bg-orange-100 px-2 py-1 text-[11px] font-semibold text-orange-800">
+                                🔥 {offerDetails.discountPercentage}% OFF
+                              </span>
                             )}
-                          </span>
-                        </div>
-                      )}
+                            <span
+                              className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-muted-foreground"}`}
+                            >
+                              {offerDetails.timeLeft.days > 0 &&
+                                `${offerDetails.timeLeft.days}d `}
+                              {offerDetails.timeLeft.hours > 0 &&
+                                `${offerDetails.timeLeft.hours}h `}
+                              {offerDetails.timeLeft.minutes > 0 &&
+                                `${offerDetails.timeLeft.minutes}m`}{" "}
+                              left
+                            </span>
+                          </div>
+                        )}
+                        {offerDetails?.hasBogo && (
+                          <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                            <Sparkles className="h-3 w-3" />
+                            {"Bonus enrollment included"}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-shrink-0 flex-col items-end gap-2 text-right">
+                        <div className="font-semibold">{showRupees(itemTotal)}</div>
+                        {offerDetails?.hasDiscount && (
+                          <div className="text-muted-foreground text-xs">
+                            <span className="line-through">
+                              {showRupees(
+                                (offerDetails.originalPrice || 0) *
+                                  (item.quantity || 1),
+                              )}
+                            </span>
+                          </div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeItem(item.id)}
+                          className="text-red-600 hover:text-red-700 h-8 w-8 p-0"
+                          aria-label={`Remove ${item.name} from cart`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-center gap-2 sm:justify-start">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() => removeItem(item.id)}
-                        className="mt-2 text-red-600 hover:text-red-700"
+                        onClick={() =>
+                          updateItemQuantity(item.id, (item.quantity || 1) - 1)
+                        }
+                        disabled={(item.quantity || 1) <= 1}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center font-medium">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          updateItemQuantity(item.id, (item.quantity || 1) + 1)
+                        }
+                      >
+                        <Plus className="h-3 w-3" />
                       </Button>
                     </div>
                   </div>
@@ -882,7 +883,7 @@ const CartContent = () => {
                 .map((item) => (
                   <div
                     key={`bogo-${item.id}`}
-                    className="mt-2 ml-20 rounded-lg border border-emerald-200 bg-emerald-50 p-3 dark:border-emerald-800 dark:bg-emerald-950/30"
+                    className="mt-2 ml-0 rounded-lg border border-emerald-200 bg-emerald-50 p-3 sm:ml-20 dark:border-emerald-800 dark:bg-emerald-950/30"
                   >
                     <div className="flex items-center gap-3">
                       <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
@@ -897,10 +898,10 @@ const CartContent = () => {
                           height={48}
                         />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
                           <Sparkles className="h-4 w-4 text-emerald-600" />
-                          <h4 className="font-semibold text-emerald-800 dark:text-emerald-200">
+                          <h4 className="line-clamp-2 font-semibold text-emerald-800 dark:text-emerald-200">
                             {item.selectedFreeCourse?.name || "Free Course"}
                           </h4>
                           <span className="rounded bg-emerald-200 px-2 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200">
@@ -908,7 +909,7 @@ const CartContent = () => {
                           </span>
                         </div>
 
-                        <div className="mt-1 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
                           <span>BOGO Free Course</span>
                           <span>•</span>
                           <span className="line-through">
@@ -927,7 +928,7 @@ const CartContent = () => {
         </div>
 
         {/* Order Summary */}
-        <div className="lg:col-span-1">
+        <div className="min-w-0 lg:col-span-1">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -940,10 +941,10 @@ const CartContent = () => {
                 <div className="space-y-2">
                   <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
                     <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                    <span>
-                      {bogoLabels.length > 0 ? bogoLabels.join(", ") : "BOGO"}{" "}
-                      applied:{" "}
-                      {activeBogoTypes.length > 0
+                      <span className="break-words">
+                        {bogoLabels.length > 0 ? bogoLabels.join(", ") : "BOGO"}{" "}
+                        applied:{" "}
+                        {activeBogoTypes.length > 0
                         ? `${activeBogoTypes.join(", ")}`
                         : "complimentary course enrollments"}
                       {" will be added automatically during checkout."}
@@ -982,7 +983,7 @@ const CartContent = () => {
               {/* Coupon Code Input */}
               <div className="space-y-2 border-t pt-4">
                 {!appliedCoupon ? (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     <Input
                       placeholder="Enter coupon code"
                       value={couponCode}
@@ -1013,6 +1014,7 @@ const CartContent = () => {
                       disabled={
                         !couponCode.trim() || couponValidation === undefined
                       }
+                      className="w-full sm:w-auto"
                     >
                       Apply
                     </Button>

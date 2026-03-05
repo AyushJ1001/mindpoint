@@ -4,18 +4,20 @@ import { Menu } from "lucide-react";
 
 export default function ServerNavbar() {
   return (
-    <nav className="bg-background/95 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50 w-full border-b backdrop-blur">
+    <nav className="bg-background/95 border-border sticky top-0 z-50 w-full border-b bg-gradient-to-br from-10% via-blue-100 to-blue-300 shadow-sm backdrop-blur-sm dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:shadow-lg dark:shadow-black/20">
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex">
-          <Link href="/" className="mr-6 flex items-center space-x-2">
+          <Link href="/" className="mr-6 flex items-center gap-2.5">
             <Image
               src="/logo.png"
               alt="The Mind Point"
-              width={32}
-              height={32}
-              className="h-8 w-8"
+              width={36}
+              height={36}
+              className="h-8 w-8 rounded-xl ring-1 ring-blue-200/70 sm:h-9 sm:w-9 dark:ring-blue-800/70"
             />
-            <span className="text-xl font-bold">The Mind Point</span>
+            <span className="bg-gradient-to-r from-blue-950 via-blue-800 to-indigo-700 bg-clip-text text-base font-extrabold tracking-tight text-transparent sm:text-xl dark:from-blue-100 dark:via-blue-200 dark:to-indigo-200">
+              The Mind Point
+            </span>
           </Link>
         </div>
 
@@ -25,25 +27,25 @@ export default function ServerNavbar() {
               <nav className="flex items-center space-x-6 text-sm font-medium">
                 <Link
                   href="/courses"
-                  className="text-foreground/60 hover:text-foreground/80 transition-colors"
+                  className="text-foreground/70 transition-colors hover:text-blue-700 dark:hover:text-blue-200"
                 >
                   Courses
                 </Link>
                 <Link
                   href="/about"
-                  className="text-foreground/60 hover:text-foreground/80 transition-colors"
+                  className="text-foreground/70 transition-colors hover:text-blue-700 dark:hover:text-blue-200"
                 >
                   About
                 </Link>
                 <Link
                   href="/contact"
-                  className="text-foreground/60 hover:text-foreground/80 transition-colors"
+                  className="text-foreground/70 transition-colors hover:text-blue-700 dark:hover:text-blue-200"
                 >
                   Contact
                 </Link>
                 <Link
                   href="/careers"
-                  className="text-foreground/60 hover:text-foreground/80 transition-colors"
+                  className="text-foreground/70 transition-colors hover:text-blue-700 dark:hover:text-blue-200"
                 >
                   Careers
                 </Link>

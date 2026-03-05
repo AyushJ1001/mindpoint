@@ -176,35 +176,47 @@ export function CourseCard({
 
   return (
     <Card
-      className="group ring-border/60 dark:ring-oklch(0.2_0.02_240) relative h-full cursor-pointer overflow-hidden border-0 shadow-sm ring-1 transition-all hover:shadow-md dark:shadow-lg dark:shadow-black/30 dark:hover:shadow-xl dark:hover:shadow-black/40"
+      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-blue-200/80 bg-gradient-to-b from-white via-blue-50/55 to-white/95 shadow-[0_14px_35px_-24px_rgba(37,99,235,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(37,99,235,0.95)] dark:border-blue-900/50 dark:bg-gradient-to-b dark:from-slate-950/80 dark:via-blue-950/35 dark:to-slate-950/90"
       onClick={handleCardClick}
     >
       {/* Course Image */}
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
-      {/* Offer name badge (top-left) */}
       {offerDetails && (
-        <div className="absolute top-3 left-3 z-20">
-          <Badge variant="secondary" className="text-xs font-semibold">
-            {offerDetails.offerName}
-          </Badge>
-        </div>
-      )}
-
-      {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
-        <div className="absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
-          {offerDetails?.hasDiscount && (
+        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
+          {offerDetails && (
             <Badge
-              variant="destructive"
-              className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+              variant="secondary"
+              className="max-w-[52%] truncate whitespace-nowrap bg-white/95 text-[11px] font-semibold shadow-sm"
             >
-              🔥 {offerDetails.discountPercentage}% OFF
+              <span className="sm:hidden">Special Offer</span>
+              <span className="hidden sm:inline">{offerDetails.offerName}</span>
             </Badge>
           )}
-          {offerDetails?.hasBogo && (
-            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
-              🛍️ {offerDetails.bogoLabel || "BOGO"}
-            </Badge>
+          {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+            <div className="flex max-w-[46%] flex-col items-end gap-1">
+              {offerDetails?.hasDiscount && (
+                <Badge
+                  variant="destructive"
+                  className="max-w-full animate-pulse whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+                >
+                  <span className="sm:hidden">
+                    {offerDetails.discountPercentage}% OFF
+                  </span>
+                  <span className="hidden sm:inline">
+                    🔥 {offerDetails.discountPercentage}% OFF
+                  </span>
+                </Badge>
+              )}
+              {offerDetails?.hasBogo && (
+                <Badge className="max-w-full whitespace-nowrap bg-emerald-500/90 text-[11px] font-semibold text-white uppercase shadow-lg">
+                  <span className="sm:hidden">BOGO</span>
+                  <span className="hidden sm:inline">
+                    🛍️ {offerDetails.bogoLabel || "BOGO"}
+                  </span>
+                </Badge>
+              )}
+            </div>
           )}
         </div>
       )}
@@ -214,7 +226,7 @@ export function CourseCard({
           {course.name}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex items-start justify-between gap-3 pt-0 pb-4">
+      <CardContent className="flex flex-col gap-3 pt-0 pb-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0 flex-1 space-y-1">
           <Badge
             variant="secondary"
@@ -271,7 +283,7 @@ export function CourseCard({
               onClick={handleAddToCart}
               disabled={isInCart || isOutOfStock}
               size="sm"
-              className="shrink-0"
+              className="w-full shrink-0 sm:w-auto"
             >
               <Plus className="mr-2 h-4 w-4" />
               {isOutOfStock
@@ -428,42 +440,55 @@ export function UpcomingCourseCard({
 
   return (
     <Card
-      className="group ring-border/60 dark:ring-oklch(0.2_0.02_240) relative h-full cursor-pointer overflow-hidden border-0 shadow-sm ring-1 transition-all hover:scale-[1.02] hover:shadow-lg dark:shadow-lg dark:shadow-black/30 dark:hover:shadow-xl dark:hover:shadow-black/40"
+      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-blue-200/80 bg-gradient-to-b from-white via-blue-50/55 to-white/95 shadow-[0_14px_35px_-24px_rgba(37,99,235,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(37,99,235,0.95)] dark:border-blue-900/50 dark:bg-gradient-to-b dark:from-slate-950/80 dark:via-blue-950/35 dark:to-slate-950/90"
       onClick={handleCardClick}
     >
-      {/* Left badges: Offer name and Upcoming */}
-      <div className="pointer-events-none absolute top-3 left-3 z-20 flex flex-col gap-2">
-        {offerDetails && (
-          <Badge variant="secondary" className="text-xs font-semibold">
-            {offerDetails.offerName}
-          </Badge>
-        )}
-        <Badge
-          variant="default"
-          className="bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
-        >
-          <Clock className="mr-1 h-3 w-3" />
-          Upcoming
-        </Badge>
-      </div>
-
-      {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
-        <div className="pointer-events-none absolute top-3 right-3 z-20 flex flex-col items-end gap-2">
-          {offerDetails?.hasDiscount && (
+      <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
+        <div className="flex max-w-[56%] flex-col gap-1">
+          {offerDetails && (
             <Badge
-              variant="destructive"
-              className="animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg"
+              variant="secondary"
+              className="max-w-full truncate whitespace-nowrap bg-white/95 text-[11px] font-semibold shadow-sm"
             >
-              🔥 {offerDetails.discountPercentage}% OFF
+              <span className="sm:hidden">Special Offer</span>
+              <span className="hidden sm:inline">{offerDetails.offerName}</span>
             </Badge>
           )}
-          {offerDetails?.hasBogo && (
-            <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase shadow-lg">
-              🛍️ {offerDetails.bogoLabel || "BOGO"}
-            </Badge>
-          )}
+          <Badge
+            variant="default"
+            className="w-fit max-w-full whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+          >
+            <Clock className="mr-1 h-3 w-3" />
+            Upcoming
+          </Badge>
         </div>
-      )}
+
+        {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+          <div className="flex max-w-[46%] flex-col items-end gap-1">
+            {offerDetails?.hasDiscount && (
+              <Badge
+                variant="destructive"
+                className="max-w-full animate-pulse whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+              >
+                <span className="sm:hidden">
+                  {offerDetails.discountPercentage}% OFF
+                </span>
+                <span className="hidden sm:inline">
+                  🔥 {offerDetails.discountPercentage}% OFF
+                </span>
+              </Badge>
+            )}
+            {offerDetails?.hasBogo && (
+              <Badge className="max-w-full whitespace-nowrap bg-emerald-500/90 text-[11px] font-semibold text-white uppercase shadow-lg">
+                <span className="sm:hidden">BOGO</span>
+                <span className="hidden sm:inline">
+                  🛍️ {offerDetails.bogoLabel || "BOGO"}
+                </span>
+              </Badge>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Course Image */}
       <div className="pointer-events-none">
@@ -488,8 +513,8 @@ export function UpcomingCourseCard({
       </CardHeader>
 
       <CardContent className="pt-0 pb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1 space-y-1 pr-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="min-w-0 flex-1 space-y-1 sm:pr-3">
             <Badge
               variant="secondary"
               className="px-3 py-1 text-sm font-semibold"
@@ -540,7 +565,7 @@ export function UpcomingCourseCard({
                 onClick={handleAddToCart}
                 disabled={isInCart || isOutOfStock}
                 size="sm"
-                className="relative z-10 shrink-0 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600"
+                className="relative z-10 w-full shrink-0 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 sm:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock
