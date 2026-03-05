@@ -393,10 +393,21 @@ export const resendEnrollmentConfirmationEmail = mutation({
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
+    const RESEND_COOLDOWN_MS = 5 * 60 * 1000;
 
     const enrollment = await ctx.db.get(args.enrollmentId);
     if (!enrollment) {
       throw new Error("Enrollment not found");
+    }
+
+    const now = Date.now();
+    const lastSentAt = enrollment.lastConfirmationSentAt ?? 0;
+    if (now - lastSentAt < RESEND_COOLDOWN_MS) {
+      throw new Error(
+        `A confirmation email was already sent ${Math.round(
+          (now - lastSentAt) / 1000,
+        )}s ago. Please wait before resending.`,
+      );
     }
 
     const course = await ctx.db.get(enrollment.courseId);
@@ -584,19 +595,26 @@ export const resendEnrollmentConfirmationEmail = mutation({
       usedFallback = courseType === "worksheet";
     }
 
+    await ctx.db.patch(args.enrollmentId, {
+      lastConfirmationSentAt: now,
+    });
+
+    const updatedEnrollment = await ctx.db.get(args.enrollmentId);
+
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
       actorEmail: admin.email,
       action: "enrollment.resend_email",
       entityType: "enrollment",
       entityId: String(args.enrollmentId),
-      after: enrollment,
+      after: updatedEnrollment,
       metadata: {
         recipientEmail,
         courseType,
         emailAction,
         usedFallback,
         status: normalizeEnrollmentStatus(enrollment.status),
+        lastConfirmationSentAt: now,
       },
     });
 

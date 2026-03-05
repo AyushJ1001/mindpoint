@@ -156,6 +156,7 @@ export default defineSchema({
     transferredAt: v.optional(v.number()),
     transferredByAdminId: v.optional(v.string()),
     transferredToCourseId: v.optional(v.id("courses")),
+    lastConfirmationSentAt: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
     .index("by_enrollmentNumber", ["enrollmentNumber"])

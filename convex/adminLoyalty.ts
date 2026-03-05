@@ -23,7 +23,16 @@ export const listLoyaltyAccounts = query({
       .query("mindPoints")
       .order("desc")
       .take(scanLimit);
-    let visiblePointsRows = pointsRows.slice(0, limit);
+    let filteredPointsRows = pointsRows;
+
+    if (args.search) {
+      const search = args.search.toLowerCase();
+      filteredPointsRows = pointsRows.filter((row) =>
+        row.clerkUserId.toLowerCase().includes(search),
+      );
+    }
+
+    const visiblePointsRows = filteredPointsRows.slice(0, limit);
 
     const visibleProfiles = await Promise.all(
       visiblePointsRows.map((row) =>

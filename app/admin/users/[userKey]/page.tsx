@@ -13,7 +13,10 @@ import { toast } from "sonner";
 
 export default function AdminUserDetailPage() {
   const params = useParams<{ userKey: string }>();
-  const userKey = useMemo(() => decodeURIComponent(params.userKey), [params.userKey]);
+  const userKey = useMemo(
+    () => decodeURIComponent(params.userKey),
+    [params.userKey],
+  );
 
   const detail = useQuery(api.adminUsers.getUserDetail, { userKey });
   const updateUser = useMutation(api.adminUsers.updateUserAppData);
@@ -24,16 +27,20 @@ export default function AdminUserDetailPage() {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
+    setInitialized(false);
+  }, [userKey]);
+
+  useEffect(() => {
     if (!detail || initialized) return;
     setDisplayName(
       detail.kind === "guest"
-        ? detail.guestUser?.name ?? ""
-        : detail.enrollments[0]?.userName ?? "",
+        ? (detail.guestUser?.name ?? "")
+        : (detail.enrollments[0]?.userName ?? ""),
     );
     setPhone(
       detail.kind === "guest"
-        ? detail.guestUser?.phone ?? ""
-        : detail.enrollments[0]?.userPhone ?? "",
+        ? (detail.guestUser?.phone ?? "")
+        : (detail.enrollments[0]?.userPhone ?? ""),
     );
     setWhatsappNumber(detail.userProfile?.whatsappNumber ?? "");
     setInitialized(true);
@@ -49,7 +56,9 @@ export default function AdminUserDetailPage() {
       });
       toast.success("User app data updated");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to update user");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to update user",
+      );
     }
   };
 
@@ -101,11 +110,23 @@ export default function AdminUserDetailPage() {
         <CardContent className="text-sm">
           {detail.kind === "clerk" ? (
             <div className="grid gap-2 md:grid-cols-3">
-              <p><strong>Balance:</strong> {detail.mindPoints?.balance ?? 0}</p>
-              <p><strong>Total Earned:</strong> {detail.mindPoints?.totalEarned ?? 0}</p>
-              <p><strong>Total Redeemed:</strong> {detail.mindPoints?.totalRedeemed ?? 0}</p>
-              <p><strong>Coupons:</strong> {detail.coupons.length}</p>
-              <p><strong>Referrals:</strong> {detail.referralRewards.length}</p>
+              <p>
+                <strong>Balance:</strong> {detail.mindPoints?.balance ?? 0}
+              </p>
+              <p>
+                <strong>Total Earned:</strong>{" "}
+                {detail.mindPoints?.totalEarned ?? 0}
+              </p>
+              <p>
+                <strong>Total Redeemed:</strong>{" "}
+                {detail.mindPoints?.totalRedeemed ?? 0}
+              </p>
+              <p>
+                <strong>Coupons:</strong> {detail.coupons.length}
+              </p>
+              <p>
+                <strong>Referrals:</strong> {detail.referralRewards.length}
+              </p>
             </div>
           ) : (
             <p>Guest users do not have loyalty accounts.</p>
@@ -125,10 +146,14 @@ export default function AdminUserDetailPage() {
               detail.enrollments.map((row) => (
                 <div key={row._id} className="rounded-md border p-2 text-sm">
                   <div className="flex items-center justify-between">
-                    <p className="font-medium">{row.courseName || row.courseId}</p>
+                    <p className="font-medium">
+                      {row.courseName || row.courseId}
+                    </p>
                     <Badge variant="outline">{row.status}</Badge>
                   </div>
-                  <p className="text-xs text-slate-600">{row.enrollmentNumber}</p>
+                  <p className="text-xs text-slate-600">
+                    {row.enrollmentNumber}
+                  </p>
                 </div>
               ))
             )}
