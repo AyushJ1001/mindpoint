@@ -44,33 +44,30 @@ export const listAuditLogs = query({
     const limit = Math.min(args.limit ?? 200, 500);
     const scanLimit = Math.min(Math.max(limit * 5, 500), 2000);
 
-    const baseQuery = args.entityType
-      ? ctx.db
-          .query("adminAuditLogs")
-          .withIndex("by_entityType", (q) =>
-            q.eq("entityType", args.entityType!),
-          )
-      : args.actorAdminId
+    const baseQuery =
+      args.entityType && args.actorAdminId
         ? ctx.db
             .query("adminAuditLogs")
-            .withIndex("by_actorAdminId", (q) =>
-              q.eq("actorAdminId", args.actorAdminId!),
+            .withIndex("by_entityType_and_actorAdminId", (q) =>
+              q
+                .eq("entityType", args.entityType!)
+                .eq("actorAdminId", args.actorAdminId!),
             )
-        : ctx.db.query("adminAuditLogs").withIndex("by_createdAt");
+        : args.entityType
+          ? ctx.db
+              .query("adminAuditLogs")
+              .withIndex("by_entityType", (q) =>
+                q.eq("entityType", args.entityType!),
+              )
+          : args.actorAdminId
+            ? ctx.db
+                .query("adminAuditLogs")
+                .withIndex("by_actorAdminId", (q) =>
+                  q.eq("actorAdminId", args.actorAdminId!),
+                )
+            : ctx.db.query("adminAuditLogs").withIndex("by_createdAt");
 
     let rows = await baseQuery.order("desc").take(scanLimit);
-
-    if (args.entityType && !args.actorAdminId) {
-      // already filtered by index
-    } else if (args.entityType) {
-      rows = rows.filter((row) => row.entityType === args.entityType);
-    }
-
-    if (args.actorAdminId && !args.entityType) {
-      // already filtered by index
-    } else if (args.actorAdminId) {
-      rows = rows.filter((row) => row.actorAdminId === args.actorAdminId);
-    }
 
     if (args.search) {
       const search = args.search.toLowerCase();

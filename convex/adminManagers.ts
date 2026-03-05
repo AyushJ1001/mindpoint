@@ -101,14 +101,16 @@ export const listAdmins = query({
           ? `email:${normalizedEmail}`
           : `db:${row._id}`;
 
-      const existing = merged.get(mergeKey);
+      if (merged.has(mergeKey)) {
+        continue;
+      }
+
       const next = {
         key: mergeKey,
         clerkUserId: row.clerkUserId,
         adminEmail: normalizedEmail || undefined,
         adminName:
           row.adminName ||
-          existing?.adminName ||
           (normalizedEmail
             ? deriveNameFromEmail(normalizedEmail)
             : row.clerkUserId || "Unknown Admin"),

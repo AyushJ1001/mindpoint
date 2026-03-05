@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { forbidden, redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminConvexGate } from "@/components/admin/AdminConvexGate";
+import { AdminRetryButton } from "@/components/admin/AdminRetryButton";
 import { hasAdminAccess } from "@/lib/admin-access";
 import { resolveAuthEmail } from "@/lib/clerk-email";
 
@@ -35,12 +36,7 @@ export default async function AdminLayout({
             try again in a moment.
           </p>
           <div className="mt-5 flex justify-center gap-3">
-            <Link
-              href="/admin"
-              className="rounded-full border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-50"
-            >
-              Try Again
-            </Link>
+            <AdminRetryButton />
             <Link
               href="/"
               className="rounded-full bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800"

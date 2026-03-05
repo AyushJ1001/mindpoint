@@ -47,13 +47,11 @@ export const listUsers = query({
     await requireAdmin(ctx);
 
     const limit = Math.min(args.limit ?? 200, 500);
-    const userScanLimit = 3000;
-    const enrollmentScanLimit = 3000;
-    const pointsScanLimit = 3000;
+    const scanLimit = Math.min(Math.max(limit * 5, 500), 1000);
     const [guestUsers, enrollments, pointsRows] = await Promise.all([
-      ctx.db.query("guestUsers").order("desc").take(userScanLimit),
-      ctx.db.query("enrollments").order("desc").take(enrollmentScanLimit),
-      ctx.db.query("mindPoints").order("desc").take(pointsScanLimit),
+      ctx.db.query("guestUsers").order("desc").take(scanLimit),
+      ctx.db.query("enrollments").order("desc").take(scanLimit),
+      ctx.db.query("mindPoints").order("desc").take(scanLimit),
     ]);
 
     const pointsMap = new Map(pointsRows.map((row) => [row.clerkUserId, row]));
@@ -128,6 +126,27 @@ export const listUsers = query({
         next.displayName = enrollment.userName;
 
       rows.set(userKey, next);
+    }
+
+    for (const pointsRow of pointsRows) {
+      const userKey = `clerk:${pointsRow.clerkUserId}`;
+      if (rows.has(userKey)) {
+        continue;
+      }
+
+      rows.set(userKey, {
+        userKey,
+        userId: pointsRow.clerkUserId,
+        kind: "clerk",
+        displayName:
+          pointsRow.userName || pointsRow.userEmail || pointsRow.clerkUserId,
+        email: pointsRow.userEmail,
+        phone: pointsRow.userPhone,
+        enrollmentCount: 0,
+        activeEnrollmentCount: 0,
+        latestEnrollmentAt: pointsRow._creationTime,
+        mindPointsBalance: pointsRow.balance,
+      });
     }
 
     let users = Array.from(rows.values());

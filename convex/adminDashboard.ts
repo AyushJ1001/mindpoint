@@ -6,9 +6,9 @@ export const getDashboardSummary = query({
   args: {},
   handler: async (ctx) => {
     await requireAdmin(ctx);
-    const COURSE_SCAN_LIMIT = 5000;
-    const ENROLLMENT_SCAN_LIMIT = 5000;
-    const COUPON_SCAN_LIMIT = 5000;
+    const COURSE_SCAN_LIMIT = 1000;
+    const ENROLLMENT_SCAN_LIMIT = 1000;
+    const COUPON_SCAN_LIMIT = 1000;
 
     const [
       draftCourses,

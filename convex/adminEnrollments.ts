@@ -76,10 +76,12 @@ async function removeUserFromCourseIfNoActiveEnrollment(
 ) {
   const activeEnrollment = await ctx.db
     .query("enrollments")
-    .withIndex("by_courseId_and_status", (q) =>
-      q.eq("courseId", args.courseId).eq("status", "active"),
+    .withIndex("by_courseId_and_status_and_userId", (q) =>
+      q
+        .eq("courseId", args.courseId)
+        .eq("status", "active")
+        .eq("userId", args.userId),
     )
-    .filter((q) => q.eq(q.field("userId"), args.userId))
     .first();
 
   if (!activeEnrollment) {
@@ -106,80 +108,144 @@ export const listEnrollments = query({
     await requireAdmin(ctx);
     const limit = Math.min(args.limit ?? 250, 500);
     const scanLimit = Math.min(Math.max(limit * 5, 500), 2000);
+    const enrollments: Doc<"enrollments">[] = [];
+    const seenEnrollmentIds = new Set<string>();
+    const appendRows = (rows: Doc<"enrollments">[]) => {
+      for (const row of rows) {
+        const rowKey = String(row._id);
+        if (seenEnrollmentIds.has(rowKey)) {
+          continue;
+        }
+        seenEnrollmentIds.add(rowKey);
+        enrollments.push(row);
+      }
+    };
+    const remainingSlots = () => Math.max(0, scanLimit - enrollments.length);
 
-    const baseQuery =
-      args.courseId && args.status
-        ? ctx.db
-            .query("enrollments")
-            .withIndex("by_courseId_and_status", (q) =>
-              q.eq("courseId", args.courseId!).eq("status", args.status!),
-            )
-        : args.userId
-          ? ctx.db
+    if (args.userId && args.courseId && args.status) {
+      appendRows(
+        await ctx.db
+          .query("enrollments")
+          .withIndex("by_courseId_and_status_and_userId", (q) =>
+            q
+              .eq("courseId", args.courseId!)
+              .eq("status", args.status!)
+              .eq("userId", args.userId!),
+          )
+          .order("desc")
+          .take(scanLimit),
+      );
+
+      if (args.status === "active" && remainingSlots() > 0) {
+        appendRows(
+          (
+            await ctx.db
+              .query("enrollments")
+              .withIndex("by_userId_and_courseId", (q) =>
+                q.eq("userId", args.userId!).eq("courseId", args.courseId!),
+              )
+              .order("desc")
+              .take(remainingSlots())
+          ).filter((row) => row.status === undefined),
+        );
+      }
+    } else if (args.userId && args.status) {
+      appendRows(
+        await ctx.db
+          .query("enrollments")
+          .withIndex("by_userId_and_status", (q) =>
+            q.eq("userId", args.userId!).eq("status", args.status!),
+          )
+          .order("desc")
+          .take(scanLimit),
+      );
+
+      if (args.status === "active" && remainingSlots() > 0) {
+        appendRows(
+          (
+            await ctx.db
               .query("enrollments")
               .withIndex("by_userId", (q) => q.eq("userId", args.userId!))
-          : args.courseId
-            ? ctx.db
-                .query("enrollments")
-                .withIndex("by_courseId", (q) =>
-                  q.eq("courseId", args.courseId!),
-                )
-            : args.status
-              ? ctx.db
-                  .query("enrollments")
-                  .withIndex("by_status", (q) => q.eq("status", args.status!))
-              : ctx.db.query("enrollments");
-
-    const usedCourseAndStatusIndex = Boolean(args.courseId && args.status);
-    const usedUserIdIndex = Boolean(!usedCourseAndStatusIndex && args.userId);
-    const usedCourseIdIndex = Boolean(
-      !usedCourseAndStatusIndex && !usedUserIdIndex && args.courseId,
-    );
-    const usedStatusIndex = Boolean(
-      !usedCourseAndStatusIndex &&
-        !usedUserIdIndex &&
-        !usedCourseIdIndex &&
-        args.status,
-    );
-
-    let enrollments = await baseQuery.order("desc").take(scanLimit);
-
-    // When filtering by "active", also fetch legacy enrollments (status undefined)
-    // since normalizeEnrollmentStatus treats undefined as "active"
-    if (args.status === "active" && !args.courseId && !args.userId) {
-      const remaining = Math.max(0, scanLimit - enrollments.length);
-      if (remaining > 0) {
-        const legacyEnrollments = await ctx.db
-          .query("enrollments")
-          .filter((q) => q.eq(q.field("status"), undefined))
-          .order("desc")
-          .take(remaining);
-        const seen = new Set(enrollments.map((e) => String(e._id)));
-        for (const e of legacyEnrollments) {
-          if (!seen.has(String(e._id))) {
-            enrollments.push(e);
-          }
-        }
+              .order("desc")
+              .take(remainingSlots())
+          ).filter((row) => row.status === undefined),
+        );
       }
-    }
+    } else if (args.courseId && args.status) {
+      appendRows(
+        await ctx.db
+          .query("enrollments")
+          .withIndex("by_courseId_and_status", (q) =>
+            q.eq("courseId", args.courseId!).eq("status", args.status!),
+          )
+          .order("desc")
+          .take(scanLimit),
+      );
 
-    if (args.userId && !usedUserIdIndex) {
-      enrollments = enrollments.filter((row) => row.userId === args.userId);
-    }
+      if (args.status === "active" && remainingSlots() > 0) {
+        appendRows(
+          (
+            await ctx.db
+              .query("enrollments")
+              .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId!))
+              .order("desc")
+              .take(remainingSlots())
+          ).filter((row) => row.status === undefined),
+        );
+      }
+    } else if (args.userId && args.courseId) {
+      appendRows(
+        await ctx.db
+          .query("enrollments")
+          .withIndex("by_userId_and_courseId", (q) =>
+            q.eq("userId", args.userId!).eq("courseId", args.courseId!),
+          )
+          .order("desc")
+          .take(scanLimit),
+      );
+    } else if (args.userId) {
+      appendRows(
+        await ctx.db
+          .query("enrollments")
+          .withIndex("by_userId", (q) => q.eq("userId", args.userId!))
+          .order("desc")
+          .take(scanLimit),
+      );
+    } else if (args.courseId) {
+      appendRows(
+        await ctx.db
+          .query("enrollments")
+          .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId!))
+          .order("desc")
+          .take(scanLimit),
+      );
+    } else if (args.status) {
+      appendRows(
+        await ctx.db
+          .query("enrollments")
+          .withIndex("by_status", (q) => q.eq("status", args.status!))
+          .order("desc")
+          .take(scanLimit),
+      );
 
-    if (args.courseId && !usedCourseAndStatusIndex && !usedCourseIdIndex) {
-      enrollments = enrollments.filter((row) => row.courseId === args.courseId);
-    }
-
-    if (args.status && !usedCourseAndStatusIndex && !usedStatusIndex) {
-      enrollments = enrollments.filter(
-        (row) => normalizeEnrollmentStatus(row.status) === args.status,
+      if (args.status === "active" && remainingSlots() > 0) {
+        appendRows(
+          await ctx.db
+            .query("enrollments")
+            .filter((q) => q.eq(q.field("status"), undefined))
+            .order("desc")
+            .take(remainingSlots()),
+        );
+      }
+    } else {
+      appendRows(
+        await ctx.db.query("enrollments").order("desc").take(scanLimit),
       );
     }
 
     if (args.search) {
       const search = args.search.toLowerCase();
-      enrollments = enrollments.filter((row) => {
+      const matchingRows = enrollments.filter((row) => {
         const fields = [
           row.userId,
           row.userName ?? "",
@@ -190,6 +256,8 @@ export const listEnrollments = query({
 
         return fields.some((field) => field.toLowerCase().includes(search));
       });
+      enrollments.length = 0;
+      enrollments.push(...matchingRows);
     }
 
     const courseIds = Array.from(
@@ -318,12 +386,23 @@ export const createManualEnrollment = mutation({
         },
       )) as GuestCheckoutResult;
 
-      const matching = enrollments.find(
-        (row) => row.courseId === args.courseId,
-      );
-      if (matching) {
-        enrollmentId = matching.enrollmentId;
+      if (enrollments.length === 0) {
+        throw new Error(
+          `handleGuestUserCartCheckoutWithData returned no enrollments for course ${args.courseId}.`,
+        );
       }
+
+      const matching = enrollments.find(
+        (row) => String(row.courseId) === String(args.courseId),
+      );
+      if (!matching) {
+        throw new Error(
+          `handleGuestUserCartCheckoutWithData returned enrollments for [${enrollments
+            .map((row) => String(row.courseId))
+            .join(", ")}], but none matched course ${args.courseId}.`,
+        );
+      }
+      enrollmentId = matching.enrollmentId;
     } else {
       try {
         const created: SuccessfulPaymentResult = await ctx.runMutation(
@@ -353,20 +432,33 @@ export const createManualEnrollment = mutation({
       throw new Error("Failed to create enrollment");
     }
 
-    const createdEnrollment = await ctx.db.get(enrollmentId);
+    try {
+      await createAdminAuditLog(ctx, {
+        actorAdminId: admin.userId,
+        actorEmail: admin.email,
+        action: "enrollment.create_manual",
+        entityType: "enrollment",
+        entityId: String(enrollmentId),
+        after: { enrollmentId: String(enrollmentId) },
+        metadata: {
+          source: "admin",
+          isGuestUser,
+        },
+      });
+    } catch (error) {
+      throw new Error(
+        `Enrollment ${enrollmentId} was created, but audit logging failed. Confirm the record before retrying: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
+      );
+    }
 
-    await createAdminAuditLog(ctx, {
-      actorAdminId: admin.userId,
-      actorEmail: admin.email,
-      action: "enrollment.create_manual",
-      entityType: "enrollment",
-      entityId: String(enrollmentId),
-      after: createdEnrollment,
-      metadata: {
-        source: "admin",
-        isGuestUser,
-      },
-    });
+    const createdEnrollment = await ctx.db.get(enrollmentId);
+    if (!createdEnrollment) {
+      throw new Error(
+        `Enrollment ${enrollmentId} was created, but it could not be reloaded. Confirm the record before retrying.`,
+      );
+    }
 
     return createdEnrollment;
   },
@@ -386,7 +478,7 @@ export const cancelEnrollment = mutation({
     }
 
     const currentStatus = normalizeEnrollmentStatus(enrollment.status);
-    if (currentStatus === "cancelled") {
+    if (currentStatus === "cancelled" || currentStatus === "transferred") {
       return enrollment;
     }
 

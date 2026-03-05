@@ -159,10 +159,17 @@ export default defineSchema({
     lastConfirmationSentAt: v.optional(v.number()),
   })
     .index("by_userId", ["userId"])
+    .index("by_userId_and_status", ["userId", "status"])
+    .index("by_userId_and_courseId", ["userId", "courseId"])
     .index("by_enrollmentNumber", ["enrollmentNumber"])
     .index("by_courseId", ["courseId"])
     .index("by_status", ["status"])
-    .index("by_courseId_and_status", ["courseId", "status"]),
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_courseId_and_status_and_userId", [
+      "courseId",
+      "status",
+      "userId",
+    ]),
 
   // User Mind Points balance
   mindPoints: defineTable({
@@ -226,6 +233,7 @@ export default defineSchema({
   })
     .index("by_createdAt", ["createdAt"])
     .index("by_entityType", ["entityType"])
+    .index("by_entityType_and_actorAdminId", ["entityType", "actorAdminId"])
     .index("by_actorAdminId", ["actorAdminId"]),
 
   adminManagers: defineTable({
