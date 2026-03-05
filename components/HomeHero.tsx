@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import AnimatedCounter from "@/components/animated-counter";
 import VideoTestimonialsSection from "@/components/VideoTestimonialsSection";
+import HomeAdminButton from "@/components/HomeAdminButton";
 
 const HIGHLIGHTS = [
   {
@@ -102,6 +103,8 @@ export default function HomeHero({
                 >
                   <Link href="/admin">Admin</Link>
                 </Button>
+              ) : process.env.NEXT_PUBLIC_CONVEX_URL ? (
+                <HomeAdminButton />
               ) : null}
             </div>
 

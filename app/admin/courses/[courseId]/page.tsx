@@ -33,6 +33,8 @@ export default function AdminEditCoursePage() {
     return <p className="text-sm text-slate-600">Course not found.</p>;
   }
 
+  const editorKey = `${course._id}:${course.updatedAt ?? course._creationTime}`;
+
   return (
     <div>
       <AdminPageHeader
@@ -43,17 +45,23 @@ export default function AdminEditCoursePage() {
             <Button variant="outline" onClick={() => runTransition("draft")}>
               Move to Draft
             </Button>
-            <Button variant="outline" onClick={() => runTransition("published")}>
+            <Button
+              variant="outline"
+              onClick={() => runTransition("published")}
+            >
               Publish
             </Button>
-            <Button variant="destructive" onClick={() => runTransition("archived")}>
+            <Button
+              variant="destructive"
+              onClick={() => runTransition("archived")}
+            >
               Archive
             </Button>
           </>
         }
       />
 
-      <CourseEditor course={course} />
+      <CourseEditor key={editorKey} course={course} />
     </div>
   );
 }
