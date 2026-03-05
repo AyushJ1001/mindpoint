@@ -66,13 +66,12 @@ export const listAdmins = query({
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
     const limit = Math.min(args.limit ?? 200, 500);
-    const scanLimit = Math.min(Math.max(limit * 5, 500), 2000);
 
     const dbRows = await ctx.db
       .query("adminManagers")
       .withIndex("by_addedAt")
       .order("desc")
-      .take(scanLimit);
+      .collect();
 
     const merged = new Map<
       string,

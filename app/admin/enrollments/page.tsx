@@ -37,7 +37,7 @@ export default function AdminEnrollmentsPage() {
   const [manualName, setManualName] = useState("");
   const [manualPhone, setManualPhone] = useState("");
   const [manualCourseId, setManualCourseId] = useState("");
-  const [manualIsGuest, setManualIsGuest] = useState(false);
+  const manualUserIdLooksLikeEmail = manualUserId.includes("@");
 
   const enrollments = useQuery(api.adminEnrollments.listEnrollments, {
     search: search || undefined,
@@ -85,7 +85,7 @@ export default function AdminEnrollmentsPage() {
         userName: manualName || undefined,
         userPhone: manualPhone || undefined,
         courseId: manualCourseId as Id<"courses">,
-        isGuestUser: manualIsGuest,
+        isGuestUser: manualUserIdLooksLikeEmail,
       });
       toast.success("Manual enrollment created");
       setManualUserId("");
@@ -93,7 +93,6 @@ export default function AdminEnrollmentsPage() {
       setManualName("");
       setManualPhone("");
       setManualCourseId("");
-      setManualIsGuest(false);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to create enrollment",
@@ -167,13 +166,16 @@ export default function AdminEnrollmentsPage() {
             onChange={(e) => {
               const val = e.target.value;
               setManualUserId(val);
-              setManualIsGuest(val.includes("@"));
+              if (val.includes("@")) {
+                setManualEmail(val);
+              }
             }}
           />
           <Input
             placeholder="User Email"
             value={manualEmail}
             onChange={(e) => setManualEmail(e.target.value)}
+            disabled={manualUserIdLooksLikeEmail}
           />
           <Input
             placeholder="User Name"
@@ -200,8 +202,9 @@ export default function AdminEnrollmentsPage() {
           <label className="flex items-center gap-2 text-sm text-slate-700">
             <input
               type="checkbox"
-              checked={manualIsGuest}
-              onChange={(e) => setManualIsGuest(e.target.checked)}
+              checked={manualUserIdLooksLikeEmail}
+              disabled
+              readOnly
             />
             Treat as guest user
           </label>

@@ -9,16 +9,6 @@ export default function AdminSettingsPage() {
       note: "Convex endpoint for admin queries/mutations",
     },
     {
-      key: "CLERK_SECRET_KEY",
-      configured: !!process.env.CLERK_SECRET_KEY,
-      note: "Required for authenticated admin sessions",
-    },
-    {
-      key: "UPLOADTHING_SECRET",
-      configured: !!process.env.UPLOADTHING_SECRET,
-      note: "Required for secure admin media/file uploads",
-    },
-    {
       key: "GOOGLE_SHEETS_SPREADSHEET_ID",
       configured: !!process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
       note: "Enrollment sync side effects for manual admin enrollments",
@@ -37,6 +27,10 @@ export default function AdminSettingsPage() {
           <CardTitle>Environment Health</CardTitle>
         </CardHeader>
         <CardContent>
+          <p className="mb-3 text-xs text-slate-600">
+            Sensitive server-secret checks are intentionally omitted from this
+            page.
+          </p>
           <div className="space-y-2 text-sm">
             {settingsRows.map((row) => (
               <div

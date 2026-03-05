@@ -62,6 +62,10 @@ type GuestCheckoutResult = FunctionReturnType<
   typeof api.myFunctions.handleGuestUserCartCheckoutWithData
 >;
 
+function normalizeEmail(value: string): string {
+  return value.trim().toLowerCase();
+}
+
 async function removeUserFromCourseIfNoActiveEnrollment(
   ctx: MutationCtx,
   args: { userId: string; courseId: Id<"courses"> },
@@ -280,6 +284,15 @@ export const createManualEnrollment = mutation({
     if (args.isGuestUser === false && args.userId.includes("@")) {
       throw new Error(
         "An email-based user ID must be enrolled as a guest user.",
+      );
+    }
+
+    if (
+      args.userId.includes("@") &&
+      normalizeEmail(args.userId) !== normalizeEmail(args.userEmail)
+    ) {
+      throw new Error(
+        "When using an email as the user ID, the user email must match exactly.",
       );
     }
 

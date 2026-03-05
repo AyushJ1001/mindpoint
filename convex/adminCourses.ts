@@ -389,12 +389,17 @@ export const createCourse = mutation({
     const today = new Date().toISOString().split("T")[0];
 
     const lifecycleStatus = args.lifecycleStatus ?? "draft";
+    const generatedCode = `CRS-${now.toString(36).toUpperCase()}-${crypto
+      .randomUUID()
+      .replace(/-/g, "")
+      .slice(0, 6)
+      .toUpperCase()}`;
 
     const payload = {
       ...args.data,
       name: args.name,
       type: args.type ?? args.data?.type ?? "certificate",
-      code: args.data?.code || `TMP-${now}`,
+      code: args.data?.code || generatedCode,
       price: args.data?.price ?? 0,
       capacity: args.data?.capacity ?? 1,
       enrolledUsers: [],
