@@ -13,6 +13,13 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as adminAudit from "../adminAudit.js";
+import type * as adminAuth from "../adminAuth.js";
+import type * as adminCourses from "../adminCourses.js";
+import type * as adminDashboard from "../adminDashboard.js";
+import type * as adminEnrollments from "../adminEnrollments.js";
+import type * as adminLoyalty from "../adminLoyalty.js";
+import type * as adminUsers from "../adminUsers.js";
 import type * as courses from "../courses.js";
 import type * as emailActions from "../emailActions.js";
 import type * as emailActionsWithRateLimit from "../emailActionsWithRateLimit.js";
@@ -32,6 +39,13 @@ import type * as testOffer from "../testOffer.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  adminAudit: typeof adminAudit;
+  adminAuth: typeof adminAuth;
+  adminCourses: typeof adminCourses;
+  adminDashboard: typeof adminDashboard;
+  adminEnrollments: typeof adminEnrollments;
+  adminLoyalty: typeof adminLoyalty;
+  adminUsers: typeof adminUsers;
   courses: typeof courses;
   emailActions: typeof emailActions;
   emailActionsWithRateLimit: typeof emailActionsWithRateLimit;

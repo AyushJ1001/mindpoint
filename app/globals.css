@@ -427,6 +427,11 @@
   }
 }
 
+body[data-route-mode="admin"] [data-app-navbar],
+body[data-route-mode="admin"] [data-app-footer] {
+  display: none !important;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -470,4 +475,3 @@
   font-style: normal;
   font-display: swap;
 }
-

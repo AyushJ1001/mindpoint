@@ -9,6 +9,7 @@ import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import StructuredData from "@/components/structured-data";
+import RouteBodyClass from "@/components/RouteBodyClass";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -82,6 +83,7 @@ export default function RootLayout({
 
         <PostHogProvider>
           <ClientProviders>
+            <RouteBodyClass />
             <StructuredData />
             <ClientNavbar />
 

@@ -3,6 +3,7 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer
+      data-app-footer
       className="bg-card border-border z-10 mt-auto border-t"
       role="contentinfo"
       aria-label="Footer"

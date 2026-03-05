@@ -236,6 +236,7 @@ Create a `.env.local` file with the following variables:
 | `NEXT_PUBLIC_RAZORPAY_KEY_ID`       | Razorpay key ID            |
 | `RAZORPAY_KEY_SECRET`               | Razorpay secret key        |
 | `RESEND_API_KEY`                    | Resend API key for emails  |
+| `ADMIN_CLERK_USER_IDS`              | Comma-separated Clerk user IDs allowed into `/admin` |
 
 ### Optional Variables
 
@@ -247,6 +248,8 @@ Create a `.env.local` file with the following variables:
 | `NEXT_PUBLIC_POSTHOG_KEY`             | PostHog project API key                     |
 | `NEXT_PUBLIC_POSTHOG_HOST`            | PostHog host URL                            |
 | `CLERK_SKIP_KEY_VALIDATION`           | Set to `true` for builds without Clerk keys |
+| `UPLOADTHING_SECRET`                  | UploadThing server secret for admin uploads |
+| `UPLOADTHING_TOKEN`                   | UploadThing token (if required by your setup) |
 
 ### Convex Environment Variables
 

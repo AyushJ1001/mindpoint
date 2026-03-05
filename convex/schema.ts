@@ -13,6 +13,18 @@ export const CourseType = v.union(
   v.literal("worksheet"),
 );
 
+export const CourseLifecycleStatus = v.union(
+  v.literal("draft"),
+  v.literal("published"),
+  v.literal("archived"),
+);
+
+export const EnrollmentStatus = v.union(
+  v.literal("active"),
+  v.literal("cancelled"),
+  v.literal("transferred"),
+);
+
 // The schema is entirely optional.
 // You can delete this file (schema.ts) and the
 // app will continue to work.
@@ -85,10 +97,18 @@ export default defineSchema({
     fileUrl: v.optional(v.string()), // UploadThing public URL for the PDF
     worksheetDescription: v.optional(v.string()), // Detailed worksheet description
     targetAudience: v.optional(v.array(v.string())), // "who is this worksheet for"
+    lifecycleStatus: v.optional(CourseLifecycleStatus),
+    createdByAdminId: v.optional(v.string()),
+    updatedByAdminId: v.optional(v.string()),
+    updatedAt: v.optional(v.number()),
+    publishedAt: v.optional(v.number()),
+    archivedAt: v.optional(v.number()),
   })
     .index("by_name_and_type", ["name", "type"])
     .index("by_startDate", ["startDate"])
-    .index("by_type", ["type"]),
+    .index("by_type", ["type"])
+    .index("by_lifecycleStatus", ["lifecycleStatus"])
+    .index("by_type_and_lifecycleStatus", ["type", "lifecycleStatus"]),
 
   reviews: defineTable({
     userId: v.string(),
@@ -129,10 +149,19 @@ export default defineSchema({
     isBogoFree: v.optional(v.boolean()),
     bogoSourceCourseId: v.optional(v.id("courses")),
     bogoOfferName: v.optional(v.string()),
+    status: v.optional(EnrollmentStatus),
+    statusReason: v.optional(v.string()),
+    cancelledAt: v.optional(v.number()),
+    cancelledByAdminId: v.optional(v.string()),
+    transferredAt: v.optional(v.number()),
+    transferredByAdminId: v.optional(v.string()),
+    transferredToCourseId: v.optional(v.id("courses")),
   })
     .index("by_userId", ["userId"])
     .index("by_enrollmentNumber", ["enrollmentNumber"])
-    .index("by_courseId", ["courseId"]),
+    .index("by_courseId", ["courseId"])
+    .index("by_status", ["status"])
+    .index("by_courseId_and_status", ["courseId", "status"]),
 
   // User Mind Points balance
   mindPoints: defineTable({
@@ -177,4 +206,19 @@ export default defineSchema({
   })
     .index("by_referredClerkUserId", ["referredClerkUserId"])
     .index("by_referrerClerkUserId", ["referrerClerkUserId"]),
+
+  adminAuditLogs: defineTable({
+    actorAdminId: v.string(),
+    actorEmail: v.optional(v.string()),
+    action: v.string(),
+    entityType: v.string(),
+    entityId: v.string(),
+    before: v.optional(v.any()),
+    after: v.optional(v.any()),
+    metadata: v.optional(v.any()),
+    createdAt: v.number(),
+  })
+    .index("by_createdAt", ["createdAt"])
+    .index("by_entityType", ["entityType"])
+    .index("by_actorAdminId", ["actorAdminId"]),
 });

@@ -2,6 +2,7 @@ import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { NextResponse, NextRequest } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/server"]);
+const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
 // Only use Clerk middleware if keys are available
 const middleware =
@@ -13,11 +14,15 @@ const middleware =
         }
 
         if (isProtectedRoute(req)) await auth.protect();
+        if (isAdminRoute(req)) await auth.protect();
       })
     : (req: NextRequest) => {
         // Fallback middleware when Clerk keys are not available
         if (req.nextUrl.pathname === "/terms") {
           return NextResponse.redirect(new URL("/toc", req.url));
+        }
+        if (req.nextUrl.pathname.startsWith("/admin")) {
+          return NextResponse.redirect(new URL("/", req.url));
         }
         return NextResponse.next();
       };
