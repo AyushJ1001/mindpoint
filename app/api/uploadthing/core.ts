@@ -15,7 +15,12 @@ async function adminMiddleware() {
     throw new UploadThingError("Unauthorized");
   }
 
-  return { userId };
+  const uploaderId = userId ?? sessionEmail;
+  if (!uploaderId) {
+    throw new UploadThingError("Unauthorized");
+  }
+
+  return { userId: uploaderId };
 }
 
 export const ourFileRouter = {

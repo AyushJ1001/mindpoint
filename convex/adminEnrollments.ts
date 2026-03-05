@@ -18,9 +18,14 @@ function generateEnrollmentNumber(
   const date = new Date(startDate);
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const year = date.getFullYear().toString().slice(-2);
-  const randomNumber = Math.floor(100000 + Math.random() * 900000).toString();
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const entropy = crypto
+    .randomUUID()
+    .replace(/-/g, "")
+    .slice(0, 8)
+    .toUpperCase();
 
-  return `TMP-${courseCode}-${month}${year}-${randomNumber}`;
+  return `TMP-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
 }
 
 function extractInternshipPlanFromDuration(

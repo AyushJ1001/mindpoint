@@ -12,9 +12,9 @@ import { downloadCsv, toCsv } from "@/lib/csv";
 
 export default function AdminCoursesPage() {
   const [search, setSearch] = useState("");
-  const [lifecycle, setLifecycle] = useState<"all" | "draft" | "published" | "archived">(
-    "all",
-  );
+  const [lifecycle, setLifecycle] = useState<
+    "all" | "draft" | "published" | "archived"
+  >("all");
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -34,7 +34,7 @@ export default function AdminCoursesPage() {
         code: course.code,
         price: course.price,
         capacity: course.capacity,
-        enrolledUsers: course.enrolledUsers.length,
+        enrolledUsers: (course.enrolledUsers ?? []).length,
         startDate: course.startDate,
         endDate: course.endDate,
       })),
@@ -91,7 +91,7 @@ export default function AdminCoursesPage() {
 
       <div className="overflow-hidden rounded-lg border bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+          <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
             <tr>
               <th className="px-3 py-2">Name</th>
               <th className="px-3 py-2">Type</th>
@@ -118,7 +118,9 @@ export default function AdminCoursesPage() {
             ) : (
               rows.map((course) => (
                 <tr key={course._id} className="border-t">
-                  <td className="px-3 py-2 font-medium text-slate-900">{course.name}</td>
+                  <td className="px-3 py-2 font-medium text-slate-900">
+                    {course.name}
+                  </td>
                   <td className="px-3 py-2">{course.type || "-"}</td>
                   <td className="px-3 py-2">
                     <Badge variant="outline">

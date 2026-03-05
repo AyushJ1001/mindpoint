@@ -11,7 +11,8 @@ export const getDashboardSummary = query({
 
     const [
       draftCourses,
-      publishedCourses,
+      publishedViaIndex,
+      publishedLegacy,
       archivedCourses,
       enrollments,
       auditLogs,
@@ -33,6 +34,11 @@ export const getDashboardSummary = query({
         .take(COURSE_SCAN_LIMIT),
       ctx.db
         .query("courses")
+        .filter((q) => q.eq(q.field("lifecycleStatus"), undefined))
+        .order("desc")
+        .take(COURSE_SCAN_LIMIT),
+      ctx.db
+        .query("courses")
         .withIndex("by_lifecycleStatus", (q) =>
           q.eq("lifecycleStatus", "archived"),
         )
@@ -46,6 +52,17 @@ export const getDashboardSummary = query({
         .take(15),
       ctx.db.query("coupons").order("desc").take(COUPON_SCAN_LIMIT),
     ]);
+
+    const publishedMap = new Map<string, (typeof publishedViaIndex)[number]>();
+    for (const course of publishedViaIndex) {
+      publishedMap.set(String(course._id), course);
+    }
+    for (const course of publishedLegacy) {
+      if (!publishedMap.has(String(course._id))) {
+        publishedMap.set(String(course._id), course);
+      }
+    }
+    const publishedCourses = Array.from(publishedMap.values());
 
     const now = Date.now();
     const sevenDaysFromNow = now + 7 * 24 * 60 * 60 * 1000;

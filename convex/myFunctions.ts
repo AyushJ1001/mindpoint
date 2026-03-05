@@ -192,11 +192,16 @@ function generateEnrollmentNumber(
   const month = (date.getMonth() + 1).toString().padStart(2, "0"); // +1 because getMonth() returns 0-11
   const year = date.getFullYear().toString().slice(-2); // Get last 2 digits of year
 
-  // Generate a random 6-digit number
-  const randomNumber = Math.floor(100000 + Math.random() * 900000).toString();
+  // Use timestamp + UUID entropy to make collisions practically impossible
+  const timestamp = Date.now().toString(36).toUpperCase();
+  const entropy = crypto
+    .randomUUID()
+    .replace(/-/g, "")
+    .slice(0, 8)
+    .toUpperCase();
 
-  // Format: COURSECODE-MMYY-RANDOM
-  return `TMP-${courseCode}-${month}${year}-${randomNumber}`;
+  // Format: COURSECODE-MMYY-TIMESTAMP-ENTROPY
+  return `TMP-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
 }
 
 // Calculate end date based on internship plan
@@ -2941,14 +2946,14 @@ export const getReferralRewards = query({
       .filter((id): id is Id<"enrollments"> => id !== undefined);
 
     const enrollments = await Promise.all(
-      enrollmentIds.map((id) => ctx.db.get(id))
+      enrollmentIds.map((id) => ctx.db.get(id)),
     );
 
     // Create a map for O(1) lookup
     const enrollmentMap = new Map(
       enrollments
         .filter((e): e is NonNullable<typeof e> => e !== null)
-        .map((e) => [e._id, e])
+        .map((e) => [e._id, e]),
     );
 
     // Enrich with user info from pre-fetched enrollments
