@@ -13,15 +13,16 @@ export function AdminConvexGate({ children }: { children: React.ReactNode }) {
     api.adminManagers.isUserAdmin,
     isAuthenticated ? {} : "skip",
   );
+  const isAdminQueryPending = isAuthenticated && isAdmin === undefined;
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLoading && !isAdminQueryPending) {
       setTimedOut(false);
       return;
     }
     const id = setTimeout(() => setTimedOut(true), AUTH_TIMEOUT_MS);
     return () => clearTimeout(id);
-  }, [isLoading]);
+  }, [isLoading, isAdminQueryPending]);
 
   if (timedOut) {
     return (

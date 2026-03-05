@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { requireAdmin, normalizeEnrollmentStatus } from "./adminAuth";
+import { requireAdmin } from "./adminAuth";
+import { normalizeEnrollmentStatus } from "./adminUtils";
 import { createAdminAuditLog } from "./adminAudit";
 import {
   buildLoyaltySearchFields,

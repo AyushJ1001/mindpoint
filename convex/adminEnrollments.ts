@@ -3,10 +3,8 @@ import { mutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
 import { EnrollmentStatus } from "./schema";
 import type { FunctionReturnType } from "convex/server";
-import {
-  requireAdmin,
-  normalizeEnrollmentStatus,
-} from "./adminAuth";
+import { requireAdmin } from "./adminAuth";
+import { normalizeEnrollmentStatus } from "./adminUtils";
 import { createAdminAuditLog } from "./adminAudit";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
@@ -695,6 +693,20 @@ export const transferEnrollment = mutation({
     const currentStatus = normalizeEnrollmentStatus(sourceEnrollment.status);
     if (currentStatus !== "active") {
       throw new Error("Only active enrollments can be transferred");
+    }
+
+    const existingActiveInTarget = await ctx.db
+      .query("enrollments")
+      .withIndex("by_courseId_and_status", (q) =>
+        q.eq("courseId", args.targetCourseId).eq("status", "active"),
+      )
+      .filter((q) => q.eq(q.field("userId"), sourceEnrollment.userId))
+      .first();
+
+    if (existingActiveInTarget) {
+      throw new Error(
+        `User is already actively enrolled in "${targetCourse.name}". Cannot transfer to the same course.`,
+      );
     }
 
     const currentEnrolled = (targetCourse.enrolledUsers ?? []).length;

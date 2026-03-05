@@ -1,5 +1,6 @@
 import { query } from "./_generated/server";
-import { requireAdmin, normalizeEnrollmentStatus } from "./adminAuth";
+import { requireAdmin } from "./adminAuth";
+import { normalizeEnrollmentStatus } from "./adminUtils";
 
 export const getDashboardSummary = query({
   args: {},

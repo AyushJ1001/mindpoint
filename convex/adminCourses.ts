@@ -1,7 +1,8 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { CourseLifecycleStatus, CourseType } from "./schema";
-import { requireAdmin, normalizeCourseLifecycleStatus } from "./adminAuth";
+import { requireAdmin } from "./adminAuth";
+import { normalizeCourseLifecycleStatus } from "./adminUtils";
 import { createAdminAuditLog } from "./adminAudit";
 
 const coursePatchValidator = {

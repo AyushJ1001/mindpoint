@@ -50,12 +50,13 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
                 <SidebarMenu>
                   {items.map((item) => {
                     const Icon = item.icon;
+                    const isActive =
+                      item.href === "/admin"
+                        ? pathname === "/admin"
+                        : pathname.startsWith(item.href);
                     return (
                       <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton
-                          asChild
-                          isActive={pathname === item.href}
-                        >
+                        <SidebarMenuButton asChild isActive={isActive}>
                           <Link href={item.href}>
                             <Icon className="h-4 w-4" />
                             <span>{item.label}</span>
