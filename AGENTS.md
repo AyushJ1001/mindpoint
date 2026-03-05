@@ -11,15 +11,15 @@
 
 ## Build, Test, and Development Commands
 
-- Install dependencies with `npm install` after syncing `.env.local` (see `setup-env.sh` for required keys).
-- `npm run dev` launches Next.js and Convex dev servers in parallel; open <http://localhost:3000>.
-- `npm run build` compiles the production bundle; `npm start` serves it.
-- `npm run lint` applies ESLint’s Next.js rules; `npm run type-check` runs `tsc --noEmit`.
-- Email-related smoke tests run via `npm run test:email` or `npm run test:email:direct` against a configured Resend sandbox.
+- Install dependencies with `bun install` after syncing `.env.local` (see `setup-env.sh` for required keys).
+- `bun dev` launches Next.js and Convex dev servers in parallel; open <http://localhost:3000>.
+- `bun build` compiles the production bundle; `bun start` serves it.
+- `bun lint` applies ESLint’s Next.js rules; `bun type-check` runs `tsc --noEmit`.
+- Email-related smoke tests run via `bun test:email` or `bun test:email:direct` against a configured Resend sandbox.
 
 ## Coding Style & Naming Conventions
 
-- TypeScript-first codebase with 2-space indentation and Prettier + `prettier-plugin-tailwindcss`; run `npx prettier --write` on touched files.
+- TypeScript-first codebase with 2-space indentation and Prettier + `prettier-plugin-tailwindcss`; run `bunx prettier --write` on touched files.
 - Favor PascalCase for React components/files, camelCase for hooks/utilities, and snake_case only inside Convex table names.
 - Keep Tailwind utility groupings logical (layout → spacing → color) and prefer shared variants via `class-variance-authority`.
 - Guard network calls with environment checks (see `app/page.tsx` for `NEXT_PUBLIC_CONVEX_URL` pattern).

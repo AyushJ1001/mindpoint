@@ -15,18 +15,18 @@ import { Analytics } from "@vercel/analytics/next";
 import StructuredData from "@/components/structured-data";
 
 const manrope = Manrope({
-  variable: "--font-geist-sans",
+  variable: "--font-manrope",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-geist-mono",
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
 const syneDisplay = Syne({
-  variable: "--font-sora",
+  variable: "--font-syne",
   subsets: ["latin"],
   weight: ["500", "600", "700", "800"],
 });

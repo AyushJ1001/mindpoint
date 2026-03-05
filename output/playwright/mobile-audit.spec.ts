@@ -1,4 +1,4 @@
-import { test } from 'playwright/test';
+import { test } from '@playwright/test';
 
 function describeElement(el: Element): string {
   const tag = el.tagName.toLowerCase();
