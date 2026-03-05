@@ -23,10 +23,6 @@ function generateEnrollmentNumber(
   return `TMP-${courseCode}-${month}${year}-${randomNumber}`;
 }
 
-function isActiveEnrollmentStatus(status?: string): boolean {
-  return normalizeEnrollmentStatus(status) === "active";
-}
-
 function extractInternshipPlanFromDuration(
   duration?: string,
 ): "120" | "240" | null {
@@ -59,17 +55,15 @@ async function removeUserFromCourseIfNoActiveEnrollment(
   ctx: MutationCtx,
   args: { userId: string; courseId: Id<"courses"> },
 ) {
-  const allUserEnrollments = await ctx.db
+  const activeEnrollment = await ctx.db
     .query("enrollments")
-    .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-    .collect();
+    .withIndex("by_courseId_and_status", (q) =>
+      q.eq("courseId", args.courseId).eq("status", "active"),
+    )
+    .filter((q) => q.eq(q.field("userId"), args.userId))
+    .first();
 
-  const hasActiveEnrollment = allUserEnrollments.some(
-    (row: any) =>
-      row.courseId === args.courseId && isActiveEnrollmentStatus(row.status),
-  );
-
-  if (!hasActiveEnrollment) {
+  if (!activeEnrollment) {
     const course = await ctx.db.get(args.courseId);
     if (!course) return;
 

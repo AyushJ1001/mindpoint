@@ -31,6 +31,8 @@ function parseUserKey(
   return { kind: "clerk", id: userKey };
 }
 
+const USER_DETAIL_LIMIT = 500;
+
 export const listUsers = query({
   args: {
     search: v.optional(v.string()),
@@ -163,7 +165,7 @@ export const getUserDetail = query({
           .query("enrollments")
           .withIndex("by_userId", (q) => q.eq("userId", parsed.id))
           .order("desc")
-          .collect(),
+          .take(USER_DETAIL_LIMIT),
       ]);
 
       return {
@@ -188,7 +190,7 @@ export const getUserDetail = query({
           .query("enrollments")
           .withIndex("by_userId", (q) => q.eq("userId", parsed.id))
           .order("desc")
-          .collect(),
+          .take(USER_DETAIL_LIMIT),
         ctx.db
           .query("userProfiles")
           .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", parsed.id))
@@ -208,7 +210,7 @@ export const getUserDetail = query({
             q.eq("referrerClerkUserId", parsed.id),
           )
           .order("desc")
-          .collect(),
+          .take(USER_DETAIL_LIMIT),
       ]);
 
     return {
@@ -300,19 +302,34 @@ export const updateUserAppData = mutation({
       });
     }
 
-    const enrollments = await ctx.db
-      .query("enrollments")
-      .withIndex("by_userId", (q) => q.eq("userId", parsed.id))
-      .collect();
+    const ENROLLMENT_PATCH_LIMIT = 500;
+    let updatedEnrollments = 0;
 
-    for (const enrollment of enrollments) {
-      await ctx.db.patch(enrollment._id, {
-        userName:
-          args.displayName !== undefined
-            ? args.displayName
-            : enrollment.userName,
-        userPhone: args.phone !== undefined ? args.phone : enrollment.userPhone,
-      });
+    if (args.displayName !== undefined || args.phone !== undefined) {
+      const enrollments = await ctx.db
+        .query("enrollments")
+        .withIndex("by_userId", (q) => q.eq("userId", parsed.id))
+        .order("desc")
+        .take(ENROLLMENT_PATCH_LIMIT);
+
+      for (const enrollment of enrollments) {
+        const patch: { userName?: string; userPhone?: string } = {};
+
+        if (
+          args.displayName !== undefined &&
+          enrollment.userName !== args.displayName
+        ) {
+          patch.userName = args.displayName;
+        }
+        if (args.phone !== undefined && enrollment.userPhone !== args.phone) {
+          patch.userPhone = args.phone;
+        }
+
+        if (Object.keys(patch).length > 0) {
+          await ctx.db.patch(enrollment._id, patch);
+          updatedEnrollments += 1;
+        }
+      }
     }
 
     const afterProfile = await ctx.db
@@ -336,7 +353,7 @@ export const updateUserAppData = mutation({
 
     return {
       userProfile: afterProfile,
-      updatedEnrollments: enrollments.length,
+      updatedEnrollments,
     };
   },
 });
