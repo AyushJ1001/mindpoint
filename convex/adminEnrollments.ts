@@ -61,6 +61,9 @@ function calculateInternshipEndDate(
 type GuestCheckoutResult = FunctionReturnType<
   typeof api.myFunctions.handleGuestUserCartCheckoutWithData
 >;
+type SuccessfulPaymentResult = FunctionReturnType<
+  typeof api.myFunctions.handleSuccessfulPayment
+>;
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
@@ -322,7 +325,7 @@ export const createManualEnrollment = mutation({
       }
     } else {
       try {
-        const created: Id<"enrollments"> = await ctx.runMutation(
+        const created: SuccessfulPaymentResult = await ctx.runMutation(
           api.myFunctions.handleSuccessfulPayment,
           {
             userId: args.userId,
@@ -452,10 +455,6 @@ export const resendEnrollmentConfirmationEmail = mutation({
     if (!recipientEmail) {
       throw new Error("Cannot send email: enrollment has no recipient email");
     }
-
-    await ctx.db.patch(args.enrollmentId, {
-      lastConfirmationSentAt: now,
-    });
 
     const userName = enrollment.userName || recipientEmail;
     const courseName = enrollment.courseName || course.name;
@@ -631,6 +630,10 @@ export const resendEnrollmentConfirmationEmail = mutation({
       emailAction = "generic";
       usedFallback = courseType === "worksheet";
     }
+
+    await ctx.db.patch(args.enrollmentId, {
+      lastConfirmationSentAt: now,
+    });
 
     const updatedEnrollment = await ctx.db.get(args.enrollmentId);
 
