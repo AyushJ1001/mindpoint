@@ -14,7 +14,10 @@ export const getDashboardSummary = query({
       publishedViaIndex,
       publishedLegacy,
       archivedCourses,
-      enrollments,
+      activeEnrollments,
+      activeLegacyEnrollments,
+      cancelledEnrollments,
+      transferredEnrollments,
       auditLogs,
       coupons,
     ] = await Promise.all([
@@ -44,7 +47,26 @@ export const getDashboardSummary = query({
         )
         .order("desc")
         .take(COURSE_SCAN_LIMIT),
-      ctx.db.query("enrollments").order("desc").take(ENROLLMENT_SCAN_LIMIT),
+      ctx.db
+        .query("enrollments")
+        .withIndex("by_status", (q) => q.eq("status", "active"))
+        .order("desc")
+        .take(ENROLLMENT_SCAN_LIMIT),
+      ctx.db
+        .query("enrollments")
+        .filter((q) => q.eq(q.field("status"), undefined))
+        .order("desc")
+        .take(500),
+      ctx.db
+        .query("enrollments")
+        .withIndex("by_status", (q) => q.eq("status", "cancelled"))
+        .order("desc")
+        .take(ENROLLMENT_SCAN_LIMIT),
+      ctx.db
+        .query("enrollments")
+        .withIndex("by_status", (q) => q.eq("status", "transferred"))
+        .order("desc")
+        .take(ENROLLMENT_SCAN_LIMIT),
       ctx.db
         .query("adminAuditLogs")
         .withIndex("by_createdAt")
@@ -73,15 +95,27 @@ export const getDashboardSummary = query({
       archived: archivedCourses.length,
     };
 
-    const statusCounts = {
-      active: 0,
-      cancelled: 0,
-      transferred: 0,
-    };
-
-    for (const enrollment of enrollments) {
-      statusCounts[normalizeEnrollmentStatus(enrollment.status)] += 1;
+    const activeMap = new Map<string, (typeof activeEnrollments)[number]>();
+    for (const enrollment of activeEnrollments) {
+      activeMap.set(String(enrollment._id), enrollment);
     }
+    for (const enrollment of activeLegacyEnrollments) {
+      if (!activeMap.has(String(enrollment._id))) {
+        activeMap.set(String(enrollment._id), enrollment);
+      }
+    }
+    const mergedActiveEnrollments = Array.from(activeMap.values());
+    const allEnrollmentRows = [
+      ...mergedActiveEnrollments,
+      ...cancelledEnrollments,
+      ...transferredEnrollments,
+    ];
+
+    const statusCounts = {
+      active: mergedActiveEnrollments.length,
+      cancelled: cancelledEnrollments.length,
+      transferred: transferredEnrollments.length,
+    };
 
     const urgentCourses = publishedCourses
       .map((course) => {
@@ -107,7 +141,8 @@ export const getDashboardSummary = query({
     return {
       lifecycleCounts,
       statusCounts,
-      totalUsersApprox: new Set(enrollments.map((row) => row.userId)).size,
+      totalUsersApprox: new Set(allEnrollmentRows.map((row) => row.userId))
+        .size,
       activeCoupons: coupons.filter((coupon) => !coupon.isUsed).length,
       urgentCourses,
       recentAuditLogs: auditLogs,

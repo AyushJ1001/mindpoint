@@ -201,7 +201,7 @@ function generateEnrollmentNumber(
     .toUpperCase();
 
   // Format: COURSECODE-MMYY-TIMESTAMP-ENTROPY
-  return `TMP-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
+  return `EN-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
 }
 
 // Calculate end date based on internship plan

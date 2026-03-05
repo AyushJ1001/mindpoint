@@ -2,6 +2,10 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin, normalizeEnrollmentStatus } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
+import {
+  buildLoyaltySearchFields,
+  loyaltySearchFieldsChanged,
+} from "./loyaltySearch";
 
 function toUserKey(row: {
   userId: string;
@@ -285,6 +289,10 @@ export const updateUserAppData = mutation({
       .query("userProfiles")
       .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", parsed.id))
       .first();
+    const existingPoints = await ctx.db
+      .query("mindPoints")
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", parsed.id))
+      .first();
 
     const beforeProfile = existingProfile;
 
@@ -328,6 +336,23 @@ export const updateUserAppData = mutation({
         if (Object.keys(patch).length > 0) {
           await ctx.db.patch(enrollment._id, patch);
           updatedEnrollments += 1;
+        }
+      }
+
+      if (existingPoints) {
+        const pointsPatch = buildLoyaltySearchFields({
+          clerkUserId: parsed.id,
+          userName:
+            args.displayName !== undefined
+              ? args.displayName
+              : existingPoints.userName,
+          userEmail: existingPoints.userEmail,
+          userPhone:
+            args.phone !== undefined ? args.phone : existingPoints.userPhone,
+        });
+
+        if (loyaltySearchFieldsChanged(existingPoints, pointsPatch)) {
+          await ctx.db.patch(existingPoints._id, pointsPatch);
         }
       }
     }

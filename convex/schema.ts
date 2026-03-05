@@ -170,6 +170,10 @@ export default defineSchema({
     balance: v.number(),
     totalEarned: v.number(),
     totalRedeemed: v.number(),
+    userName: v.optional(v.string()),
+    userEmail: v.optional(v.string()),
+    userPhone: v.optional(v.string()),
+    searchText: v.optional(v.string()),
   }).index("by_clerkUserId", ["clerkUserId"]),
 
   // Points transaction history

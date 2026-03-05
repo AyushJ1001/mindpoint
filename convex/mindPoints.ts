@@ -1,5 +1,9 @@
 import { v } from "convex/values";
 import { query, mutation } from "./_generated/server";
+import {
+  buildLoyaltySearchFields,
+  loyaltySearchFieldsChanged,
+} from "./loyaltySearch";
 
 /**
  * Get user's current Mind Points balance and summary
@@ -123,6 +127,25 @@ export const awardPoints = mutation({
       return { success: false, error: "Points must be greater than 0" };
     }
 
+    const enrollment = args.enrollmentId
+      ? await ctx.db.get(args.enrollmentId)
+      : null;
+    const latestEnrollment =
+      enrollment && enrollment.userId === args.clerkUserId
+        ? enrollment
+        : await ctx.db
+            .query("enrollments")
+            .withIndex("by_userId", (q) => q.eq("userId", args.clerkUserId))
+            .order("desc")
+            .first();
+    const enrollmentProfile = latestEnrollment
+      ? {
+          userName: latestEnrollment.userName,
+          userEmail: latestEnrollment.userEmail,
+          userPhone: latestEnrollment.userPhone,
+        }
+      : null;
+
     // Get or create points record
     const pointsRecord = await ctx.db
       .query("mindPoints")
@@ -131,11 +154,19 @@ export const awardPoints = mutation({
 
     if (!pointsRecord) {
       // Create new points record
+      const profileFields = buildLoyaltySearchFields({
+        clerkUserId: args.clerkUserId,
+        userName: enrollmentProfile?.userName,
+        userEmail: enrollmentProfile?.userEmail,
+        userPhone: enrollmentProfile?.userPhone,
+      });
+
       await ctx.db.insert("mindPoints", {
         clerkUserId: args.clerkUserId,
         balance: args.points,
         totalEarned: args.points,
         totalRedeemed: 0,
+        ...profileFields,
       });
 
       // Create transaction record
@@ -159,10 +190,19 @@ export const awardPoints = mutation({
 
     const newBalance = currentRecord.balance + args.points;
     const newTotalEarned = currentRecord.totalEarned + args.points;
+    const profileFields = buildLoyaltySearchFields({
+      clerkUserId: args.clerkUserId,
+      userName: enrollmentProfile?.userName ?? currentRecord.userName,
+      userEmail: enrollmentProfile?.userEmail ?? currentRecord.userEmail,
+      userPhone: enrollmentProfile?.userPhone ?? currentRecord.userPhone,
+    });
 
     await ctx.db.patch(pointsRecord._id, {
       balance: newBalance,
       totalEarned: newTotalEarned,
+      ...(loyaltySearchFieldsChanged(currentRecord, profileFields)
+        ? profileFields
+        : {}),
     });
 
     // Create transaction record
@@ -388,7 +428,7 @@ export const getUserAccountSummary = query({
         enrollmentId: v.optional(v.id("enrollments")),
         couponId: v.optional(v.id("coupons")),
         createdAt: v.number(),
-      })
+      }),
     ),
     coupons: v.array(
       v.object({
@@ -402,7 +442,7 @@ export const getUserAccountSummary = query({
         pointsCost: v.number(),
         createdAt: v.number(),
         usedAt: v.optional(v.number()),
-      })
+      }),
     ),
   }),
   handler: async (ctx, args) => {
@@ -410,17 +450,21 @@ export const getUserAccountSummary = query({
     const [pointsRecord, history, coupons] = await Promise.all([
       ctx.db
         .query("mindPoints")
-        .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+        .withIndex("by_clerkUserId", (q) =>
+          q.eq("clerkUserId", args.clerkUserId),
+        )
         .first(),
       ctx.db
         .query("pointsTransactions")
-        .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+        .withIndex("by_clerkUserId", (q) =>
+          q.eq("clerkUserId", args.clerkUserId),
+        )
         .order("desc")
         .take(args.historyLimit || 20),
       ctx.db
         .query("coupons")
         .withIndex("by_clerkUserId_and_isUsed", (q) =>
-          q.eq("clerkUserId", args.clerkUserId).eq("isUsed", false)
+          q.eq("clerkUserId", args.clerkUserId).eq("isUsed", false),
         )
         .order("desc")
         .collect(),

@@ -2,6 +2,11 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
+import {
+  buildLoyaltySearchFields,
+  loyaltySearchFieldsChanged,
+  loyaltySearchMatches,
+} from "./loyaltySearch";
 
 function generateCouponCode() {
   const uuid = crypto.randomUUID().replace(/-/g, "").toUpperCase();
@@ -23,48 +28,70 @@ export const listLoyaltyAccounts = query({
       .query("mindPoints")
       .order("desc")
       .take(scanLimit);
-    const visiblePointsRows = pointsRows.slice(0, limit);
+    const filteredRows = args.search
+      ? pointsRows.filter((row) => loyaltySearchMatches(row, args.search))
+      : pointsRows;
+    const visiblePointsRows = filteredRows.slice(0, limit);
 
-    const visibleProfiles = await Promise.all(
-      visiblePointsRows.map((row) =>
-        ctx.db
-          .query("enrollments")
-          .withIndex("by_userId", (q) => q.eq("userId", row.clerkUserId))
-          .order("desc")
-          .first()
-          .then((enrollment) =>
-            enrollment
-              ? {
-                  userName: enrollment.userName,
-                  userEmail: enrollment.userEmail,
-                  userPhone: enrollment.userPhone,
-                  latestAt: enrollment._creationTime,
-                }
-              : null,
-          ),
-      ),
-    );
-
-    let rows = visiblePointsRows.map((row, index) => ({
+    return visiblePointsRows.map((row) => ({
       ...row,
-      profile: visibleProfiles[index],
+      profile:
+        row.userName || row.userEmail || row.userPhone
+          ? {
+              userName: row.userName,
+              userEmail: row.userEmail,
+              userPhone: row.userPhone,
+              latestAt: row._creationTime,
+            }
+          : null,
     }));
+  },
+});
 
-    if (args.search) {
-      const search = args.search.toLowerCase();
-      rows = rows.filter((row) => {
-        const fields = [
-          row.clerkUserId,
-          row.profile?.userName ?? "",
-          row.profile?.userEmail ?? "",
-          row.profile?.userPhone ?? "",
-        ];
+export const backfillLoyaltySearchFields = mutation({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
 
-        return fields.some((field) => field.toLowerCase().includes(search));
+    const limit = Math.min(args.limit ?? 100, 100);
+    const pointsRows = await ctx.db
+      .query("mindPoints")
+      .order("desc")
+      .take(limit);
+    let updated = 0;
+
+    for (const row of pointsRows) {
+      const latestEnrollment = await ctx.db
+        .query("enrollments")
+        .withIndex("by_userId", (q) => q.eq("userId", row.clerkUserId))
+        .order("desc")
+        .first();
+
+      if (!latestEnrollment) {
+        continue;
+      }
+
+      const patch = buildLoyaltySearchFields({
+        clerkUserId: row.clerkUserId,
+        userName: row.userName ?? latestEnrollment.userName,
+        userEmail: row.userEmail ?? latestEnrollment.userEmail,
+        userPhone: row.userPhone ?? latestEnrollment.userPhone,
       });
+
+      if (!loyaltySearchFieldsChanged(row, patch)) {
+        continue;
+      }
+
+      await ctx.db.patch(row._id, patch);
+      updated += 1;
     }
 
-    return rows;
+    return {
+      scanned: pointsRows.length,
+      updated,
+    };
   },
 });
 
@@ -156,11 +183,24 @@ export const adjustPoints = mutation({
         );
       }
 
+      const latestEnrollment = await ctx.db
+        .query("enrollments")
+        .withIndex("by_userId", (q) => q.eq("userId", args.clerkUserId))
+        .order("desc")
+        .first();
+      const profileFields = buildLoyaltySearchFields({
+        clerkUserId: args.clerkUserId,
+        userName: latestEnrollment?.userName,
+        userEmail: latestEnrollment?.userEmail,
+        userPhone: latestEnrollment?.userPhone,
+      });
+
       await ctx.db.insert("mindPoints", {
         clerkUserId: args.clerkUserId,
         balance: args.delta,
         totalEarned: args.delta,
         totalRedeemed: 0,
+        ...profileFields,
       });
 
       await ctx.db.insert("pointsTransactions", {
@@ -176,6 +216,18 @@ export const adjustPoints = mutation({
         throw new Error("Point balance cannot become negative");
       }
 
+      const latestEnrollment = await ctx.db
+        .query("enrollments")
+        .withIndex("by_userId", (q) => q.eq("userId", args.clerkUserId))
+        .order("desc")
+        .first();
+      const profileFields = buildLoyaltySearchFields({
+        clerkUserId: args.clerkUserId,
+        userName: latestEnrollment?.userName ?? existing.userName,
+        userEmail: latestEnrollment?.userEmail ?? existing.userEmail,
+        userPhone: latestEnrollment?.userPhone ?? existing.userPhone,
+      });
+
       await ctx.db.patch(existing._id, {
         balance: newBalance,
         totalEarned:
@@ -186,6 +238,9 @@ export const adjustPoints = mutation({
           args.delta < 0
             ? existing.totalRedeemed + Math.abs(args.delta)
             : existing.totalRedeemed,
+        ...(loyaltySearchFieldsChanged(existing, profileFields)
+          ? profileFields
+          : {}),
       });
 
       await ctx.db.insert("pointsTransactions", {

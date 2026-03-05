@@ -3,6 +3,8 @@ import type { MutationCtx } from "./_generated/server";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 
+const auditPayloadValidator = v.record(v.string(), v.any());
+
 export async function createAdminAuditLog(
   ctx: MutationCtx,
   args: {
@@ -93,9 +95,9 @@ export const logAuditEvent = mutation({
     action: v.string(),
     entityType: v.string(),
     entityId: v.string(),
-    before: v.optional(v.any()),
-    after: v.optional(v.any()),
-    metadata: v.optional(v.any()),
+    before: v.optional(auditPayloadValidator),
+    after: v.optional(auditPayloadValidator),
+    metadata: v.optional(auditPayloadValidator),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);

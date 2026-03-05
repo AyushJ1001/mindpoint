@@ -10,7 +10,7 @@ export function toCsv<T extends Record<string, unknown>>(rows: T[]): string {
       }
       return set;
     }, new Set<string>()),
-  );
+  ).sort();
 
   const escapeCsvCell = (value: unknown) => {
     if (value === null || value === undefined) return "";

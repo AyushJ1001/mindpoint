@@ -17,6 +17,7 @@ export default function AdminLoyaltyPage() {
   const [reason, setReason] = useState("");
   const [couponType, setCouponType] = useState("certificate");
   const [couponPointsCost, setCouponPointsCost] = useState(0);
+  const [isBackfilling, setIsBackfilling] = useState(false);
 
   const rows = useQuery(api.adminLoyalty.listLoyaltyAccounts, {
     search: search || undefined,
@@ -25,6 +26,9 @@ export default function AdminLoyaltyPage() {
 
   const adjustPoints = useMutation(api.adminLoyalty.adjustPoints);
   const createManualCoupon = useMutation(api.adminLoyalty.createManualCoupon);
+  const backfillLoyaltySearchFields = useMutation(
+    api.adminLoyalty.backfillLoyaltySearchFields,
+  );
 
   const exportRows = useMemo(
     () =>
@@ -53,7 +57,9 @@ export default function AdminLoyaltyPage() {
       });
       toast.success("Points adjusted");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to adjust points");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to adjust points",
+      );
     }
   };
 
@@ -72,7 +78,27 @@ export default function AdminLoyaltyPage() {
       });
       toast.success("Manual coupon created");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create coupon");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create coupon",
+      );
+    }
+  };
+
+  const handleBackfillSearchData = async () => {
+    setIsBackfilling(true);
+    try {
+      const result = await backfillLoyaltySearchFields({ limit: 100 });
+      toast.success(
+        `Backfill complete: updated ${result.updated} of ${result.scanned} loyalty accounts`,
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to backfill search data",
+      );
+    } finally {
+      setIsBackfilling(false);
     }
   };
 
@@ -82,17 +108,26 @@ export default function AdminLoyaltyPage() {
         title="Loyalty & Referrals"
         description="Inspect points/coupons/referrals and perform controlled admin adjustments."
         actions={
-          <Button
-            variant="outline"
-            onClick={() =>
-              downloadCsv(
-                `admin-loyalty-${new Date().toISOString().slice(0, 10)}.csv`,
-                toCsv(exportRows),
-              )
-            }
-          >
-            Export CSV
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              onClick={handleBackfillSearchData}
+              disabled={isBackfilling}
+            >
+              {isBackfilling ? "Backfilling..." : "Backfill Search Data"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() =>
+                downloadCsv(
+                  `admin-loyalty-${new Date().toISOString().slice(0, 10)}.csv`,
+                  toCsv(exportRows),
+                )
+              }
+            >
+              Export CSV
+            </Button>
+          </div>
         }
       />
 
@@ -155,7 +190,7 @@ export default function AdminLoyaltyPage() {
 
       <div className="overflow-hidden rounded-lg border bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+          <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
             <tr>
               <th className="px-3 py-2">User</th>
               <th className="px-3 py-2">Balance</th>
@@ -183,7 +218,9 @@ export default function AdminLoyaltyPage() {
                     <p className="font-medium text-slate-900">
                       {row.profile?.userName || row.clerkUserId}
                     </p>
-                    <p className="text-xs text-slate-600">{row.profile?.userEmail || "-"}</p>
+                    <p className="text-xs text-slate-600">
+                      {row.profile?.userEmail || "-"}
+                    </p>
                   </td>
                   <td className="px-3 py-2">{row.balance}</td>
                   <td className="px-3 py-2">{row.totalEarned}</td>

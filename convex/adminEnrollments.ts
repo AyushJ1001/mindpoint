@@ -25,7 +25,7 @@ function generateEnrollmentNumber(
     .slice(0, 8)
     .toUpperCase();
 
-  return `TMP-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
+  return `EN-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
 }
 
 function extractInternshipPlanFromDuration(
@@ -133,15 +133,18 @@ export const listEnrollments = query({
     // When filtering by "active", also fetch legacy enrollments (status undefined)
     // since normalizeEnrollmentStatus treats undefined as "active"
     if (args.status === "active" && !args.courseId && !args.userId) {
-      const legacyEnrollments = await ctx.db
-        .query("enrollments")
-        .filter((q) => q.eq(q.field("status"), undefined))
-        .order("desc")
-        .take(scanLimit);
-      const seen = new Set(enrollments.map((e) => String(e._id)));
-      for (const e of legacyEnrollments) {
-        if (!seen.has(String(e._id))) {
-          enrollments.push(e);
+      const remaining = Math.max(0, scanLimit - enrollments.length);
+      if (remaining > 0) {
+        const legacyEnrollments = await ctx.db
+          .query("enrollments")
+          .filter((q) => q.eq(q.field("status"), undefined))
+          .order("desc")
+          .take(remaining);
+        const seen = new Set(enrollments.map((e) => String(e._id)));
+        for (const e of legacyEnrollments) {
+          if (!seen.has(String(e._id))) {
+            enrollments.push(e);
+          }
         }
       }
     }
