@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import {
+  Manrope,
+  JetBrains_Mono,
+  Syne,
+} from "next/font/google";
 import "./globals.css";
 import "react-phone-number-input/style.css";
 import { PostHogProvider } from "@/components/PostHogProvider";
@@ -10,14 +14,21 @@ import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import StructuredData from "@/components/structured-data";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const manrope = Manrope({
+  variable: "--font-manrope",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  variable: "--font-jetbrains-mono",
   subsets: ["latin"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const syneDisplay = Syne({
+  variable: "--font-syne",
   subsets: ["latin"],
+  weight: ["500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -73,7 +84,7 @@ export default function RootLayout({
         <Analytics />
       </head>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} flex min-h-screen flex-col antialiased`}
+        className={`${manrope.variable} ${jetbrainsMono.variable} ${syneDisplay.variable} flex min-h-screen flex-col antialiased`}
       >
         {/* Skip link for keyboard users */}
         <a href="#main-content" className="skip-link">
