@@ -272,6 +272,17 @@ export const createManualEnrollment = mutation({
   },
   handler: async (ctx, args): Promise<Doc<"enrollments"> | null> => {
     const admin = await requireAdmin(ctx);
+
+    if (args.isGuestUser && isAuthenticatedUserId(args.userId)) {
+      throw new Error("A Clerk user ID cannot be enrolled as a guest user.");
+    }
+
+    if (args.isGuestUser === false && args.userId.includes("@")) {
+      throw new Error(
+        "An email-based user ID must be enrolled as a guest user.",
+      );
+    }
+
     const isGuestUser = args.isGuestUser ?? !isAuthenticatedUserId(args.userId);
 
     let enrollmentId: Id<"enrollments"> | null = null;

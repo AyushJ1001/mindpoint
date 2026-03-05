@@ -19,7 +19,7 @@ export const getDashboardSummary = query({
       cancelledEnrollments,
       transferredEnrollments,
       auditLogs,
-      coupons,
+      activeCoupons,
     ] = await Promise.all([
       ctx.db
         .query("courses")
@@ -72,7 +72,11 @@ export const getDashboardSummary = query({
         .withIndex("by_createdAt")
         .order("desc")
         .take(15),
-      ctx.db.query("coupons").order("desc").take(COUPON_SCAN_LIMIT),
+      ctx.db
+        .query("coupons")
+        .withIndex("by_isUsed", (q) => q.eq("isUsed", false))
+        .order("desc")
+        .take(COUPON_SCAN_LIMIT),
     ]);
 
     const publishedMap = new Map<string, (typeof publishedViaIndex)[number]>();
@@ -143,7 +147,7 @@ export const getDashboardSummary = query({
       statusCounts,
       totalUsersApprox: new Set(allEnrollmentRows.map((row) => row.userId))
         .size,
-      activeCoupons: coupons.filter((coupon) => !coupon.isUsed).length,
+      activeCoupons: activeCoupons.length,
       urgentCourses,
       recentAuditLogs: auditLogs,
     };

@@ -291,7 +291,7 @@ export const removeAdmin = mutation({
       removedAt: now,
       removedByAdminId: admin.userId,
       removedByEmail: admin.email,
-      note: args.reason ?? existing.note,
+      removalNote: args.reason,
     });
 
     const after = await ctx.db.get(existing._id);

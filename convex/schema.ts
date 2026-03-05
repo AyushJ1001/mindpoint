@@ -199,6 +199,7 @@ export default defineSchema({
     usedAt: v.optional(v.number()),
   })
     .index("by_code", ["code"])
+    .index("by_isUsed", ["isUsed"])
     .index("by_clerkUserId", ["clerkUserId"])
     .index("by_clerkUserId_and_isUsed", ["clerkUserId", "isUsed"]),
 
@@ -233,6 +234,7 @@ export default defineSchema({
     adminName: v.optional(v.string()),
     isActive: v.boolean(),
     note: v.optional(v.string()),
+    removalNote: v.optional(v.string()),
     addedAt: v.number(),
     addedByAdminId: v.string(),
     addedByEmail: v.optional(v.string()),
