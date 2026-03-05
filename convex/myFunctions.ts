@@ -206,10 +206,11 @@ function generateEnrollmentNumber(
 
 // Calculate end date based on internship plan
 function calculateInternshipEndDate(
-  startDate: string,
+  startDate: string | undefined,
   internshipPlan: "120" | "240",
 ): string {
-  const start = new Date(startDate);
+  const parsedStart = startDate ? new Date(startDate) : new Date();
+  const start = Number.isNaN(parsedStart.getTime()) ? new Date() : parsedStart;
   const weeks = internshipPlan === "120" ? 2 : 4; // 2 weeks for 120 hours, 4 weeks for 240 hours
 
   const endDate = new Date(start);

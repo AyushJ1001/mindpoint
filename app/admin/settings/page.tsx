@@ -1,30 +1,30 @@
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-const settingsRows = [
-  {
-    key: "NEXT_PUBLIC_CONVEX_URL",
-    configured: !!process.env.NEXT_PUBLIC_CONVEX_URL,
-    note: "Convex endpoint for admin queries/mutations",
-  },
-  {
-    key: "CLERK_SECRET_KEY",
-    configured: !!process.env.CLERK_SECRET_KEY,
-    note: "Required for authenticated admin sessions",
-  },
-  {
-    key: "UPLOADTHING_SECRET",
-    configured: !!process.env.UPLOADTHING_SECRET,
-    note: "Required for secure admin media/file uploads",
-  },
-  {
-    key: "GOOGLE_SHEETS_SPREADSHEET_ID",
-    configured: !!process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
-    note: "Enrollment sync side effects for manual admin enrollments",
-  },
-];
-
 export default function AdminSettingsPage() {
+  const settingsRows = [
+    {
+      key: "NEXT_PUBLIC_CONVEX_URL",
+      configured: !!process.env.NEXT_PUBLIC_CONVEX_URL,
+      note: "Convex endpoint for admin queries/mutations",
+    },
+    {
+      key: "CLERK_SECRET_KEY",
+      configured: !!process.env.CLERK_SECRET_KEY,
+      note: "Required for authenticated admin sessions",
+    },
+    {
+      key: "UPLOADTHING_SECRET",
+      configured: !!process.env.UPLOADTHING_SECRET,
+      note: "Required for secure admin media/file uploads",
+    },
+    {
+      key: "GOOGLE_SHEETS_SPREADSHEET_ID",
+      configured: !!process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
+      note: "Enrollment sync side effects for manual admin enrollments",
+    },
+  ];
+
   return (
     <div>
       <AdminPageHeader

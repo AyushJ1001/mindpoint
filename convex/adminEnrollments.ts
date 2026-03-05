@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { api } from "./_generated/api";
 import { EnrollmentStatus } from "./schema";
+import type { FunctionReturnType } from "convex/server";
 import {
   requireAdmin,
   normalizeEnrollmentStatus,
@@ -45,16 +46,21 @@ function extractInternshipPlanFromDuration(
 }
 
 function calculateInternshipEndDate(
-  startDate: string,
+  startDate: string | undefined,
   internshipPlan: "120" | "240",
 ): string {
-  const start = new Date(startDate);
+  const parsedStart = startDate ? new Date(startDate) : new Date();
+  const start = Number.isNaN(parsedStart.getTime()) ? new Date() : parsedStart;
   const weeks = internshipPlan === "120" ? 2 : 4;
   const endDate = new Date(start);
   endDate.setDate(start.getDate() + weeks * 7);
 
   return endDate.toISOString().split("T")[0];
 }
+
+type GuestCheckoutResult = FunctionReturnType<
+  typeof api.myFunctions.handleGuestUserCartCheckoutWithData
+>;
 
 async function removeUserFromCourseIfNoActiveEnrollment(
   ctx: MutationCtx,
@@ -271,10 +277,7 @@ export const createManualEnrollment = mutation({
     let enrollmentId: Id<"enrollments"> | null = null;
 
     if (isGuestUser) {
-      const enrollments: Array<{
-        enrollmentId: Id<"enrollments">;
-        courseId: Id<"courses">;
-      }> = await ctx.runMutation(
+      const enrollments = (await ctx.runMutation(
         api.myFunctions.handleGuestUserCartCheckoutWithData,
         {
           userData: {
@@ -285,7 +288,7 @@ export const createManualEnrollment = mutation({
           courseIds: [args.courseId],
           sessionType: args.sessionType,
         },
-      );
+      )) as GuestCheckoutResult;
 
       const matching = enrollments.find(
         (row) => row.courseId === args.courseId,
@@ -425,6 +428,10 @@ export const resendEnrollmentConfirmationEmail = mutation({
     if (!recipientEmail) {
       throw new Error("Cannot send email: enrollment has no recipient email");
     }
+
+    await ctx.db.patch(args.enrollmentId, {
+      lastConfirmationSentAt: now,
+    });
 
     const userName = enrollment.userName || recipientEmail;
     const courseName = enrollment.courseName || course.name;
@@ -597,10 +604,6 @@ export const resendEnrollmentConfirmationEmail = mutation({
       emailAction = "generic";
       usedFallback = courseType === "worksheet";
     }
-
-    await ctx.db.patch(args.enrollmentId, {
-      lastConfirmationSentAt: now,
-    });
 
     const updatedEnrollment = await ctx.db.get(args.enrollmentId);
 
