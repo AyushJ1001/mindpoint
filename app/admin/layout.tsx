@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminConvexGate } from "@/components/admin/AdminConvexGate";
 import { hasAdminAccess } from "@/lib/admin-access";
@@ -25,16 +25,7 @@ export default async function AdminLayout({
   );
 
   if (!canAccessAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
-        <div className="w-full max-w-lg rounded-xl border bg-white p-8 shadow-sm">
-          <h1 className="text-2xl font-semibold text-slate-900">Forbidden</h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Your account does not have permission to access the admin panel.
-          </p>
-        </div>
-      </div>
-    );
+    forbidden();
   }
 
   return (

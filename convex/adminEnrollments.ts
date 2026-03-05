@@ -521,7 +521,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
         },
       );
       emailAction = "internship_confirmation";
-    } else if (courseType === "certificate") {
+    } else if (courseType === "certificate" || courseType === "resume-studio") {
       await ctx.scheduler.runAfter(
         0,
         api.emailActions.sendCertificateEnrollmentConfirmation,
@@ -537,7 +537,10 @@ export const resendEnrollmentConfirmationEmail = mutation({
           endTime,
         },
       );
-      emailAction = "certificate_confirmation";
+      emailAction =
+        courseType === "resume-studio"
+          ? "resume_studio_confirmation"
+          : "certificate_confirmation";
     } else if (courseType === "diploma") {
       await ctx.scheduler.runAfter(
         0,
