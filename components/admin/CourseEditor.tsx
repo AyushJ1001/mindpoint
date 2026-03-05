@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
@@ -232,10 +232,17 @@ export function CourseEditor({
     toInitialState(course),
   );
   const [isSaving, setIsSaving] = useState(false);
+  const courseVersion = course
+    ? `${course._id}:${course.updatedAt ?? course._creationTime}`
+    : "new";
 
   const createCourse = useMutation(api.adminCourses.createCourse);
   const deleteCourse = useMutation(api.adminCourses.deleteCourse);
   const updateCourse = useMutation(api.adminCourses.updateCourse);
+
+  useEffect(() => {
+    setState(toInitialState(course));
+  }, [course, courseVersion]);
 
   const isWorksheet = state.type === "worksheet";
   const isInternship = state.type === "internship";

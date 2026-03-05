@@ -2,11 +2,14 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
+import { CourseType } from "./schema";
 import {
   buildLoyaltySearchFields,
   loyaltySearchFieldsChanged,
   loyaltySearchMatches,
 } from "./loyaltySearch";
+
+const MAX_POINTS_DELTA = 100_000;
 
 function generateCouponCode() {
   const uuid = crypto.randomUUID().replace(/-/g, "").toUpperCase();
@@ -168,6 +171,12 @@ export const adjustPoints = mutation({
       throw new Error("Delta cannot be 0");
     }
 
+    if (Math.abs(args.delta) > MAX_POINTS_DELTA) {
+      throw new Error(
+        `Adjustment exceeds maximum allowed delta of ${MAX_POINTS_DELTA}`,
+      );
+    }
+
     const existing = await ctx.db
       .query("mindPoints")
       .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
@@ -275,7 +284,7 @@ export const adjustPoints = mutation({
 export const createManualCoupon = mutation({
   args: {
     clerkUserId: v.string(),
-    courseType: v.string(),
+    courseType: CourseType,
     pointsCost: v.number(),
     reason: v.string(),
   },

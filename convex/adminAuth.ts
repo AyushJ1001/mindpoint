@@ -59,7 +59,3 @@ export function normalizeEnrollmentStatus(
   }
   return "active";
 }
-
-export function isAuthenticatedUserId(userId: string): boolean {
-  return userId.startsWith("user_");
-}

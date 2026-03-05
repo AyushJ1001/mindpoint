@@ -6,7 +6,6 @@ import type { FunctionReturnType } from "convex/server";
 import {
   requireAdmin,
   normalizeEnrollmentStatus,
-  isAuthenticatedUserId,
 } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -67,6 +66,10 @@ type SuccessfulPaymentResult = FunctionReturnType<
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
+}
+
+function isAuthenticatedUserId(userId: string): boolean {
+  return userId.startsWith("user_");
 }
 
 async function removeUserFromCourseIfNoActiveEnrollment(

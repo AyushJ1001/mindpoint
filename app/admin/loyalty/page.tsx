@@ -10,12 +10,36 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { downloadCsv, toCsv } from "@/lib/csv";
 
+type CouponCourseType =
+  | "certificate"
+  | "internship"
+  | "diploma"
+  | "pre-recorded"
+  | "masterclass"
+  | "therapy"
+  | "supervised"
+  | "resume-studio"
+  | "worksheet";
+
+const couponCourseTypes: CouponCourseType[] = [
+  "certificate",
+  "diploma",
+  "internship",
+  "worksheet",
+  "masterclass",
+  "pre-recorded",
+  "resume-studio",
+  "therapy",
+  "supervised",
+];
+
 export default function AdminLoyaltyPage() {
   const [search, setSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState("");
   const [delta, setDelta] = useState(0);
   const [reason, setReason] = useState("");
-  const [couponType, setCouponType] = useState("certificate");
+  const [couponType, setCouponType] =
+    useState<CouponCourseType>("certificate");
   const [couponPointsCost, setCouponPointsCost] = useState(0);
   const [isBackfilling, setIsBackfilling] = useState(false);
 
@@ -157,15 +181,15 @@ export default function AdminLoyaltyPage() {
             <select
               className="h-10 rounded-md border bg-white px-3 text-sm"
               value={couponType}
-              onChange={(e) => setCouponType(e.target.value)}
+              onChange={(e) =>
+                setCouponType(e.target.value as CouponCourseType)
+              }
             >
-              <option value="certificate">certificate</option>
-              <option value="diploma">diploma</option>
-              <option value="internship_120">internship_120</option>
-              <option value="internship_240">internship_240</option>
-              <option value="worksheet">worksheet</option>
-              <option value="masterclass">masterclass</option>
-              <option value="pre-recorded">pre-recorded</option>
+              {couponCourseTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
             </select>
             <Input
               type="number"

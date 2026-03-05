@@ -18,11 +18,25 @@ export default async function AdminLayout({
   }
 
   const convexToken = await getToken({ template: "convex" });
-  const canAccessAdmin = await hasAdminAccess(
-    userId,
-    sessionEmail,
-    convexToken,
-  );
+  let canAccessAdmin = false;
+  try {
+    canAccessAdmin = await hasAdminAccess(userId, sessionEmail, convexToken);
+  } catch (error) {
+    console.error("Admin access check failed:", error);
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-lg items-center justify-center px-6">
+        <div className="rounded-3xl border border-amber-200 bg-white p-8 text-center shadow-sm">
+          <h1 className="text-xl font-semibold text-slate-900">
+            Admin access is temporarily unavailable
+          </h1>
+          <p className="mt-3 text-sm text-slate-600">
+            The admin access check could not be completed. Please refresh and
+            try again in a moment.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (!canAccessAdmin) {
     forbidden();
