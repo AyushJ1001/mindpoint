@@ -159,7 +159,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="sticky top-0 z-50 border-b border-blue-200/60 bg-gradient-to-r from-blue-100/85 via-white/80 to-indigo-100/85 shadow-[0_14px_30px_-24px_rgba(37,99,235,0.95)] backdrop-blur-xl dark:border-blue-900/45 dark:from-slate-950/92 dark:via-blue-950/90 dark:to-slate-950/92 dark:text-white"
+      className="bg-background/95 border-border sticky top-0 z-50 border-b bg-gradient-to-br from-10% via-blue-100 to-blue-300 shadow-sm backdrop-blur-sm dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white dark:shadow-lg dark:shadow-black/20"
       role="navigation"
       aria-label="Primary"
     >
