@@ -22,7 +22,7 @@ export default function AdminManagersPage() {
   const [newAdminName, setNewAdminName] = useState("");
   const [newAdminNote, setNewAdminNote] = useState("");
   const [loadingEmail, setLoadingEmail] = useState<string | null>(null);
-  const [removeTargetEmail, setRemoveTargetEmail] = useState<string | null>(
+  const [removeTargetKey, setRemoveTargetKey] = useState<string | null>(
     null,
   );
   const [removeReason, setRemoveReason] = useState("Access no longer required");
@@ -66,15 +66,15 @@ export default function AdminManagersPage() {
   };
 
   const handleRemoveAdmin = async () => {
-    if (!removeTargetEmail) return;
-    setLoadingEmail(removeTargetEmail);
+    if (!removeTargetKey) return;
+    setLoadingEmail(removeTargetKey);
     try {
       await removeAdmin({
-        email: removeTargetEmail,
+        email: removeTargetKey,
         reason: removeReason.trim() || undefined,
       });
       toast.success("Admin access removed");
-      setRemoveTargetEmail(null);
+      setRemoveTargetKey(null);
       setRemoveReason("Access no longer required");
     } catch (error) {
       toast.error(
@@ -162,13 +162,14 @@ export default function AdminManagersPage() {
             ) : (
               rows.map((row) => {
                 const rowEmail = row.adminEmail?.toLowerCase();
+                const rowRemovalKey = rowEmail ?? row.clerkUserId ?? row.key;
                 const isSelf =
                   (viewerAdminEmail && rowEmail
                     ? viewerAdminEmail === rowEmail
                     : false) ||
                   (!!row.clerkUserId && viewerAdminId === row.clerkUserId);
-                const canRemove = row.isDatabaseAdmin && !!rowEmail && !isSelf;
-                const isBusy = rowEmail ? loadingEmail === rowEmail : false;
+                const canRemove = row.isDatabaseAdmin && !isSelf;
+                const isBusy = loadingEmail === rowRemovalKey;
 
                 return (
                   <tr key={row.key} className="border-t">
@@ -192,17 +193,13 @@ export default function AdminManagersPage() {
                           variant="destructive"
                           size="sm"
                           disabled={isBusy}
-                          onClick={() => setRemoveTargetEmail(rowEmail!)}
+                          onClick={() => setRemoveTargetKey(rowRemovalKey)}
                         >
                           {isBusy ? "Removing..." : "Remove"}
                         </Button>
                       ) : isSelf ? (
                         <p className="text-xs text-slate-500">
                           Current session admin
-                        </p>
-                      ) : !row.adminEmail ? (
-                        <p className="text-xs text-slate-500">
-                          Missing email on legacy record
                         </p>
                       ) : (
                         <p className="text-xs text-slate-500">
@@ -219,10 +216,10 @@ export default function AdminManagersPage() {
       </div>
 
       <Dialog
-        open={!!removeTargetEmail}
+        open={!!removeTargetKey}
         onOpenChange={(open) => {
           if (!open) {
-            setRemoveTargetEmail(null);
+            setRemoveTargetKey(null);
             setRemoveReason("Access no longer required");
           }
         }}
@@ -234,7 +231,7 @@ export default function AdminManagersPage() {
           <div className="space-y-2">
             <p className="text-sm text-slate-600">
               Provide a reason for removing admin access from{" "}
-              <strong>{removeTargetEmail}</strong>.
+              <strong>{removeTargetKey}</strong>.
             </p>
             <Input
               placeholder="Reason"
@@ -246,7 +243,7 @@ export default function AdminManagersPage() {
             <Button
               variant="outline"
               onClick={() => {
-                setRemoveTargetEmail(null);
+                setRemoveTargetKey(null);
                 setRemoveReason("Access no longer required");
               }}
             >
@@ -255,13 +252,13 @@ export default function AdminManagersPage() {
             <Button
               variant="destructive"
               disabled={
-                !removeTargetEmail ||
-                loadingEmail === removeTargetEmail ||
+                !removeTargetKey ||
+                loadingEmail === removeTargetKey ||
                 !removeReason.trim()
               }
               onClick={handleRemoveAdmin}
             >
-              {removeTargetEmail && loadingEmail === removeTargetEmail
+              {removeTargetKey && loadingEmail === removeTargetKey
                 ? "Removing..."
                 : "Confirm Remove"}
             </Button>

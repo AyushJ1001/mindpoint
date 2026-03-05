@@ -230,7 +230,7 @@ export default defineSchema({
 
   adminManagers: defineTable({
     clerkUserId: v.optional(v.string()),
-    adminEmail: v.string(),
+    adminEmail: v.optional(v.string()),
     adminName: v.optional(v.string()),
     isActive: v.boolean(),
     note: v.optional(v.string()),
