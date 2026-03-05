@@ -1,9 +1,5 @@
 import { query } from "./_generated/server";
-import {
-  requireAdmin,
-  normalizeCourseLifecycleStatus,
-  normalizeEnrollmentStatus,
-} from "./adminAuth";
+import { requireAdmin, normalizeEnrollmentStatus } from "./adminAuth";
 
 export const getDashboardSummary = query({
   args: {},
@@ -13,38 +9,52 @@ export const getDashboardSummary = query({
     const ENROLLMENT_SCAN_LIMIT = 5000;
     const COUPON_SCAN_LIMIT = 5000;
 
-    const [courses, publishedCourses, enrollments, auditLogs, coupons] =
-      await Promise.all([
-        ctx.db.query("courses").order("desc").take(COURSE_SCAN_LIMIT),
-        ctx.db
-          .query("courses")
-          .withIndex("by_lifecycleStatus", (q) =>
-            q.eq("lifecycleStatus", "published"),
-          )
-          .order("desc")
-          .take(COURSE_SCAN_LIMIT),
-        ctx.db.query("enrollments").order("desc").take(ENROLLMENT_SCAN_LIMIT),
-        ctx.db
-          .query("adminAuditLogs")
-          .withIndex("by_createdAt")
-          .order("desc")
-          .take(15),
-        ctx.db.query("coupons").order("desc").take(COUPON_SCAN_LIMIT),
-      ]);
+    const [
+      draftCourses,
+      publishedCourses,
+      archivedCourses,
+      enrollments,
+      auditLogs,
+      coupons,
+    ] = await Promise.all([
+      ctx.db
+        .query("courses")
+        .withIndex("by_lifecycleStatus", (q) =>
+          q.eq("lifecycleStatus", "draft"),
+        )
+        .order("desc")
+        .take(COURSE_SCAN_LIMIT),
+      ctx.db
+        .query("courses")
+        .withIndex("by_lifecycleStatus", (q) =>
+          q.eq("lifecycleStatus", "published"),
+        )
+        .order("desc")
+        .take(COURSE_SCAN_LIMIT),
+      ctx.db
+        .query("courses")
+        .withIndex("by_lifecycleStatus", (q) =>
+          q.eq("lifecycleStatus", "archived"),
+        )
+        .order("desc")
+        .take(COURSE_SCAN_LIMIT),
+      ctx.db.query("enrollments").order("desc").take(ENROLLMENT_SCAN_LIMIT),
+      ctx.db
+        .query("adminAuditLogs")
+        .withIndex("by_createdAt")
+        .order("desc")
+        .take(15),
+      ctx.db.query("coupons").order("desc").take(COUPON_SCAN_LIMIT),
+    ]);
 
     const now = Date.now();
     const sevenDaysFromNow = now + 7 * 24 * 60 * 60 * 1000;
 
     const lifecycleCounts = {
-      draft: 0,
-      published: 0,
-      archived: 0,
+      draft: draftCourses.length,
+      published: publishedCourses.length,
+      archived: archivedCourses.length,
     };
-
-    for (const course of courses) {
-      lifecycleCounts[normalizeCourseLifecycleStatus(course.lifecycleStatus)] +=
-        1;
-    }
 
     const statusCounts = {
       active: 0,

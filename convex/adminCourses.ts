@@ -244,28 +244,57 @@ export const listCourses = query({
     const useLifecycleIndexes =
       !!args.lifecycleStatus && args.lifecycleStatus !== "published";
 
-    const baseQuery =
-      args.type && useLifecycleIndexes
-        ? ctx.db
-            .query("courses")
-            .withIndex("by_type_and_lifecycleStatus", (q) =>
-              q
-                .eq("type", args.type!)
-                .eq("lifecycleStatus", args.lifecycleStatus!),
-            )
-        : useLifecycleIndexes
+    let courses: any[];
+
+    if (args.lifecycleStatus === "published") {
+      const [publishedViaIndex, publishedLegacy] = await Promise.all([
+        ctx.db
+          .query("courses")
+          .withIndex("by_lifecycleStatus", (q) =>
+            q.eq("lifecycleStatus", "published"),
+          )
+          .order("desc")
+          .take(scanLimit),
+        ctx.db
+          .query("courses")
+          .filter((q) => q.eq(q.field("lifecycleStatus"), undefined))
+          .order("desc")
+          .take(scanLimit),
+      ]);
+      const mergedMap = new Map<string, any>();
+      for (const c of publishedViaIndex) {
+        mergedMap.set(String(c._id), c);
+      }
+      for (const c of publishedLegacy) {
+        if (!mergedMap.has(String(c._id))) {
+          mergedMap.set(String(c._id), c);
+        }
+      }
+      courses = Array.from(mergedMap.values());
+    } else {
+      const baseQuery =
+        args.type && useLifecycleIndexes
           ? ctx.db
               .query("courses")
-              .withIndex("by_lifecycleStatus", (q) =>
-                q.eq("lifecycleStatus", args.lifecycleStatus!),
+              .withIndex("by_type_and_lifecycleStatus", (q) =>
+                q
+                  .eq("type", args.type!)
+                  .eq("lifecycleStatus", args.lifecycleStatus!),
               )
-          : args.type
+          : useLifecycleIndexes
             ? ctx.db
                 .query("courses")
-                .withIndex("by_type", (q) => q.eq("type", args.type!))
-            : ctx.db.query("courses");
+                .withIndex("by_lifecycleStatus", (q) =>
+                  q.eq("lifecycleStatus", args.lifecycleStatus!),
+                )
+            : args.type
+              ? ctx.db
+                  .query("courses")
+                  .withIndex("by_type", (q) => q.eq("type", args.type!))
+              : ctx.db.query("courses");
 
-    let courses = await baseQuery.order("desc").take(scanLimit);
+      courses = await baseQuery.order("desc").take(scanLimit);
+    }
 
     if (args.search) {
       const search = args.search.toLowerCase();
@@ -305,10 +334,9 @@ export const listCourses = query({
         return ((a.price ?? 0) - (b.price ?? 0)) * multiplier;
       }
       if (sortBy === "startDate") {
-        return (
-          (new Date(a.startDate).getTime() - new Date(b.startDate).getTime()) *
-          multiplier
-        );
+        const aTime = a.startDate ? new Date(a.startDate).getTime() : 0;
+        const bTime = b.startDate ? new Date(b.startDate).getTime() : 0;
+        return (aTime - bTime) * multiplier;
       }
       if (sortBy === "updatedAt") {
         return (
@@ -353,7 +381,7 @@ export const createCourse = mutation({
     const payload = {
       ...args.data,
       name: args.name,
-      type: args.type ?? args.data?.type,
+      type: args.type ?? args.data?.type ?? "certificate",
       code: args.data?.code || `TMP-${now}`,
       price: args.data?.price ?? 0,
       capacity: args.data?.capacity ?? 1,

@@ -24,12 +24,9 @@ export const listLoyaltyAccounts = query({
       .order("desc")
       .take(scanLimit);
 
-    const enrollments = await ctx.db
-      .query("enrollments")
-      .order("desc")
-      .take(5000);
+    const uniqueUserIds = [...new Set(pointsRows.map((r) => r.clerkUserId))];
 
-    const profileByUserId = new Map<
+    const enrollmentProfileMap = new Map<
       string,
       {
         userName?: string;
@@ -39,21 +36,34 @@ export const listLoyaltyAccounts = query({
       }
     >();
 
-    for (const enrollment of enrollments) {
-      if (!profileByUserId.has(enrollment.userId)) {
-        profileByUserId.set(enrollment.userId, {
-          userName: enrollment.userName,
-          userEmail: enrollment.userEmail,
-          userPhone: enrollment.userPhone,
-          latestAt: enrollment._creationTime,
-        });
+    if (uniqueUserIds.length > 0) {
+      const enrollmentResults = await Promise.all(
+        uniqueUserIds.map((userId) =>
+          ctx.db
+            .query("enrollments")
+            .withIndex("by_userId", (q) => q.eq("userId", userId))
+            .order("desc")
+            .first(),
+        ),
+      );
+
+      for (let i = 0; i < uniqueUserIds.length; i++) {
+        const enrollment = enrollmentResults[i];
+        if (enrollment) {
+          enrollmentProfileMap.set(uniqueUserIds[i], {
+            userName: enrollment.userName,
+            userEmail: enrollment.userEmail,
+            userPhone: enrollment.userPhone,
+            latestAt: enrollment._creationTime,
+          });
+        }
       }
     }
 
     if (args.search) {
       const search = args.search.toLowerCase();
       pointsRows = pointsRows.filter((row) => {
-        const profile = profileByUserId.get(row.clerkUserId);
+        const profile = enrollmentProfileMap.get(row.clerkUserId);
         const fields = [
           row.clerkUserId,
           profile?.userName || "",
@@ -68,7 +78,7 @@ export const listLoyaltyAccounts = query({
     const rows = pointsRows
       .map((row) => ({
         ...row,
-        profile: profileByUserId.get(row.clerkUserId) ?? null,
+        profile: enrollmentProfileMap.get(row.clerkUserId) ?? null,
       }))
       .sort((a, b) => b._creationTime - a._creationTime)
       .slice(0, limit);
