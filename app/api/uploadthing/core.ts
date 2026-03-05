@@ -1,14 +1,16 @@
 import { auth } from "@clerk/nextjs/server";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
-import { isAdminUserId } from "@/lib/admin";
+import { hasAdminAccess } from "@/lib/admin-access";
+import { resolveAuthEmail } from "@/lib/clerk-email";
 
 const f = createUploadthing();
 
 async function adminMiddleware() {
-  const { userId } = await auth();
+  const { userId, sessionClaims } = await auth();
+  const sessionEmail = await resolveAuthEmail(sessionClaims);
 
-  if (!userId || !isAdminUserId(userId)) {
+  if (!(await hasAdminAccess(userId, sessionEmail))) {
     throw new UploadThingError("Unauthorized");
   }
 

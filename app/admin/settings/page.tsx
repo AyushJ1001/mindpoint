@@ -3,11 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const settingsRows = [
   {
-    key: "ADMIN_CLERK_USER_IDS",
-    configured: !!process.env.ADMIN_CLERK_USER_IDS,
-    note: "Controls admin access allowlist",
-  },
-  {
     key: "NEXT_PUBLIC_CONVEX_URL",
     configured: !!process.env.NEXT_PUBLIC_CONVEX_URL,
     note: "Convex endpoint for admin queries/mutations",

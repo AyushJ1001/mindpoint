@@ -2,20 +2,24 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminConvexGate } from "@/components/admin/AdminConvexGate";
-import { isAdminUserId } from "@/lib/admin";
+import { hasAdminAccess } from "@/lib/admin-access";
+import { resolveAuthEmail } from "@/lib/clerk-email";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { userId } = await auth();
+  const { userId, sessionClaims } = await auth();
 
   if (!userId) {
     redirect("/");
   }
 
-  if (!isAdminUserId(userId)) {
+  const sessionEmail = await resolveAuthEmail(sessionClaims);
+  const canAccessAdmin = await hasAdminAccess(userId, sessionEmail);
+
+  if (!canAccessAdmin) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-100 px-4">
         <div className="w-full max-w-lg rounded-xl border bg-white p-8 shadow-sm">

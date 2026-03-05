@@ -221,4 +221,22 @@ export default defineSchema({
     .index("by_createdAt", ["createdAt"])
     .index("by_entityType", ["entityType"])
     .index("by_actorAdminId", ["actorAdminId"]),
+
+  adminManagers: defineTable({
+    clerkUserId: v.optional(v.string()),
+    adminEmail: v.optional(v.string()),
+    adminName: v.optional(v.string()),
+    isActive: v.boolean(),
+    note: v.optional(v.string()),
+    addedAt: v.number(),
+    addedByAdminId: v.string(),
+    addedByEmail: v.optional(v.string()),
+    removedAt: v.optional(v.number()),
+    removedByAdminId: v.optional(v.string()),
+    removedByEmail: v.optional(v.string()),
+  })
+    .index("by_clerkUserId", ["clerkUserId"])
+    .index("by_adminEmail", ["adminEmail"])
+    .index("by_isActive", ["isActive"])
+    .index("by_addedAt", ["addedAt"]),
 });

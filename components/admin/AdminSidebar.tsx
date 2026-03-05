@@ -22,6 +22,7 @@ import {
   Gift,
   ClipboardList,
   Settings,
+  Shield,
 } from "lucide-react";
 
 const items = [
@@ -30,6 +31,7 @@ const items = [
   { href: "/admin/enrollments", label: "Enrollments", icon: GraduationCap },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/loyalty", label: "Loyalty", icon: Gift },
+  { href: "/admin/admins", label: "Admin Manager", icon: Shield },
   { href: "/admin/audit-log", label: "Audit Log", icon: ClipboardList },
   { href: "/admin/settings", label: "Settings", icon: Settings },
 ];
@@ -40,7 +42,7 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-[radial-gradient(circle_at_top_left,oklch(0.96_0.02_220),transparent_45%),radial-gradient(circle_at_top_right,oklch(0.93_0.03_160),transparent_40%)]">
-        <Sidebar>
+        <Sidebar className="top-16 h-[calc(100svh-4rem)]">
           <SidebarContent>
             <SidebarGroup>
               <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
@@ -50,7 +52,10 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
                     const Icon = item.icon;
                     return (
                       <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton asChild isActive={pathname === item.href}>
+                        <SidebarMenuButton
+                          asChild
+                          isActive={pathname === item.href}
+                        >
                           <Link href={item.href}>
                             <Icon className="h-4 w-4" />
                             <span>{item.label}</span>

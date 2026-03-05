@@ -1,8 +1,11 @@
 import { ConvexHttpClient } from "convex/browser";
+import { auth } from "@clerk/nextjs/server";
 import { api } from "@/convex/_generated/api";
 import HomeClient from "@/components/HomeClient";
 import HomeHero from "@/components/HomeHero";
 import { Suspense } from "react";
+import { hasAdminAccess } from "@/lib/admin-access";
+import { resolveAuthEmail } from "@/lib/clerk-email";
 
 // Remove force-static as we need to fetch dynamic data
 export const revalidate = 3600; // Revalidate every hour
@@ -65,11 +68,16 @@ async function getUpcomingCourses() {
 }
 
 export default async function Home() {
-  const upcomingCourses = await getUpcomingCourses();
+  const { userId, sessionClaims } = await auth();
+  const sessionEmail = await resolveAuthEmail(sessionClaims);
+  const [upcomingCourses, canAccessAdmin] = await Promise.all([
+    getUpcomingCourses(),
+    hasAdminAccess(userId, sessionEmail),
+  ]);
 
   return (
     <>
-      <HomeHero />
+      <HomeHero canAccessAdmin={canAccessAdmin} />
       <Suspense fallback={<div>Loading courses...</div>}>
         <HomeClient upcomingCourses={upcomingCourses} />
       </Suspense>

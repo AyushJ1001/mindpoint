@@ -8,50 +8,52 @@ export type AdminIdentity = {
 
 type AuthCtx = QueryCtx | MutationCtx;
 
-function getAllowedAdminIds(): Set<string> {
-  const raw = process.env.ADMIN_CLERK_USER_IDS || "";
-  return new Set(
-    raw
-      .split(",")
-      .map((value) => value.trim())
-      .filter(Boolean),
-  );
-}
-
 export async function requireAdmin(ctx: AuthCtx): Promise<AdminIdentity> {
   const identity = await ctx.auth.getUserIdentity();
   const userId = identity?.subject;
+  const userEmail = identity?.email?.trim().toLowerCase();
 
   if (!userId) {
     throw new Error("Unauthorized: sign in required");
   }
 
-  const allowedAdmins = getAllowedAdminIds();
-  if (!allowedAdmins.has(userId)) {
+  const dbAdmin = await ctx.db
+    .query("adminManagers")
+    .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", userId))
+    .first();
+  let isDbAdmin = !!dbAdmin?.isActive;
+
+  if (!isDbAdmin && userEmail) {
+    const emailAdmin = await ctx.db
+      .query("adminManagers")
+      .withIndex("by_adminEmail", (q) => q.eq("adminEmail", userEmail))
+      .first();
+    isDbAdmin = !!emailAdmin?.isActive;
+  }
+
+  if (!isDbAdmin) {
     throw new Error("Forbidden: admin access required");
   }
 
   return {
     userId,
-    email: identity?.email,
+    email: userEmail,
     name: identity?.name,
   };
 }
 
-export function normalizeCourseLifecycleStatus(status?: string):
-  | "draft"
-  | "published"
-  | "archived" {
+export function normalizeCourseLifecycleStatus(
+  status?: string,
+): "draft" | "published" | "archived" {
   if (status === "draft" || status === "archived") {
     return status;
   }
   return "published";
 }
 
-export function normalizeEnrollmentStatus(status?: string):
-  | "active"
-  | "cancelled"
-  | "transferred" {
+export function normalizeEnrollmentStatus(
+  status?: string,
+): "active" | "cancelled" | "transferred" {
   if (status === "cancelled" || status === "transferred") {
     return status;
   }

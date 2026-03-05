@@ -14,7 +14,12 @@ import { downloadCsv, toCsv } from "@/lib/csv";
 
 export default function AdminEnrollmentsPage() {
   const [search, setSearch] = useState("");
-  const [status, setStatus] = useState<"all" | "active" | "cancelled" | "transferred">("all");
+  const [status, setStatus] = useState<
+    "all" | "active" | "cancelled" | "transferred"
+  >("all");
+  const [resendingEnrollmentId, setResendingEnrollmentId] = useState<
+    string | null
+  >(null);
 
   const [manualUserId, setManualUserId] = useState("");
   const [manualEmail, setManualEmail] = useState("");
@@ -31,8 +36,13 @@ export default function AdminEnrollmentsPage() {
 
   const courses = useQuery(api.adminCourses.listCourses, { limit: 500 });
 
-  const createManualEnrollment = useMutation(api.adminEnrollments.createManualEnrollment);
+  const createManualEnrollment = useMutation(
+    api.adminEnrollments.createManualEnrollment,
+  );
   const cancelEnrollment = useMutation(api.adminEnrollments.cancelEnrollment);
+  const resendEnrollmentEmail = useMutation(
+    api.adminEnrollments.resendEnrollmentConfirmationEmail,
+  );
 
   const rows = useMemo(() => enrollments ?? [], [enrollments]);
 
@@ -70,12 +80,17 @@ export default function AdminEnrollmentsPage() {
       setManualName("");
       setManualPhone("");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to create enrollment");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to create enrollment",
+      );
     }
   };
 
   const handleCancel = async (enrollmentId: string) => {
-    const reason = window.prompt("Reason for cancellation:", "Cancelled by admin");
+    const reason = window.prompt(
+      "Reason for cancellation:",
+      "Cancelled by admin",
+    );
     if (!reason) return;
 
     try {
@@ -85,7 +100,27 @@ export default function AdminEnrollmentsPage() {
       });
       toast.success("Enrollment cancelled");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Failed to cancel enrollment");
+      toast.error(
+        error instanceof Error ? error.message : "Failed to cancel enrollment",
+      );
+    }
+  };
+
+  const handleResendEmail = async (enrollmentId: string) => {
+    setResendingEnrollmentId(enrollmentId);
+    try {
+      await resendEnrollmentEmail({
+        enrollmentId: enrollmentId as Id<"enrollments">,
+      });
+      toast.success("Enrollment email sent");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to send enrollment email",
+      );
+    } finally {
+      setResendingEnrollmentId(null);
     }
   };
 
@@ -110,7 +145,9 @@ export default function AdminEnrollmentsPage() {
       />
 
       <div className="mb-6 rounded-lg border bg-white p-4">
-        <h2 className="mb-3 text-sm font-semibold text-slate-800">Manual Enrollment</h2>
+        <h2 className="mb-3 text-sm font-semibold text-slate-800">
+          Manual Enrollment
+        </h2>
         <div className="grid gap-3 md:grid-cols-3">
           <Input
             placeholder="User ID (Clerk ID or email)"
@@ -182,7 +219,7 @@ export default function AdminEnrollmentsPage() {
 
       <div className="overflow-hidden rounded-lg border bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+          <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
             <tr>
               <th className="px-3 py-2">User</th>
               <th className="px-3 py-2">Course</th>
@@ -208,8 +245,12 @@ export default function AdminEnrollmentsPage() {
               rows.map((row) => (
                 <tr key={row._id} className="border-t">
                   <td className="px-3 py-2">
-                    <p className="font-medium text-slate-900">{row.userName || row.userId}</p>
-                    <p className="text-xs text-slate-600">{row.userEmail || row.userId}</p>
+                    <p className="font-medium text-slate-900">
+                      {row.userName || row.userId}
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      {row.userEmail || row.userId}
+                    </p>
                   </td>
                   <td className="px-3 py-2">{row.courseName || "-"}</td>
                   <td className="px-3 py-2">{row.enrollmentNumber}</td>
@@ -220,6 +261,16 @@ export default function AdminEnrollmentsPage() {
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" asChild>
                         <Link href={`/admin/enrollments/${row._id}`}>View</Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        disabled={resendingEnrollmentId === String(row._id)}
+                        onClick={() => handleResendEmail(String(row._id))}
+                      >
+                        {resendingEnrollmentId === String(row._id)
+                          ? "Sending..."
+                          : "Resend Email"}
                       </Button>
                       {row.status === "active" ? (
                         <Button

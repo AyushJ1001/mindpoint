@@ -252,9 +252,10 @@
 }
 
 @keyframes float-slow {
-  0%,
+  0% {
+    transform: translateY(-16px) translateX(9px) rotate(1.25deg);
+  }
   100% {
-  33% {
     transform: translateY(-16px) translateX(9px) rotate(1.25deg);
   }
   66% {
@@ -263,7 +264,9 @@
 }
 
 @keyframes float-slower {
-  0%,
+  0% {
+    transform: translateY(0px) translateX(0px) rotate(0deg);
+  }
   100% {
     transform: translateY(0px) translateX(0px) rotate(0deg);
   }
@@ -273,7 +276,9 @@
 }
 
 @keyframes float-medium {
-  0%,
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+  }
   100% {
     transform: translate(-50%, -50%) scale(1);
   }
@@ -283,7 +288,9 @@
 }
 
 @keyframes gradient {
-  0%,
+  0% {
+    background-position: 0% 50%;
+  }
   100% {
     background-position: 0% 50%;
   }

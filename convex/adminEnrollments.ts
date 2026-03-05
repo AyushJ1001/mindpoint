@@ -11,7 +11,10 @@ import { createAdminAuditLog } from "./adminAudit";
 import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 
-function generateEnrollmentNumber(courseCode: string, startDate: string): string {
+function generateEnrollmentNumber(
+  courseCode: string,
+  startDate: string,
+): string {
   const date = new Date(startDate);
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const year = date.getFullYear().toString().slice(-2);
@@ -24,6 +27,34 @@ function isActiveEnrollmentStatus(status?: string): boolean {
   return normalizeEnrollmentStatus(status) === "active";
 }
 
+function extractInternshipPlanFromDuration(
+  duration?: string,
+): "120" | "240" | null {
+  if (!duration) return null;
+
+  const durationLower = duration.toLowerCase().trim();
+  if (durationLower.includes("120") || durationLower.includes("2 week")) {
+    return "120";
+  }
+  if (durationLower.includes("240") || durationLower.includes("4 week")) {
+    return "240";
+  }
+
+  return null;
+}
+
+function calculateInternshipEndDate(
+  startDate: string,
+  internshipPlan: "120" | "240",
+): string {
+  const start = new Date(startDate);
+  const weeks = internshipPlan === "120" ? 2 : 4;
+  const endDate = new Date(start);
+  endDate.setDate(start.getDate() + weeks * 7);
+
+  return endDate.toISOString().split("T")[0];
+}
+
 async function removeUserFromCourseIfNoActiveEnrollment(
   ctx: MutationCtx,
   args: { userId: string; courseId: Id<"courses"> },
@@ -34,7 +65,8 @@ async function removeUserFromCourseIfNoActiveEnrollment(
     .collect();
 
   const hasActiveEnrollment = allUserEnrollments.some(
-    (row: any) => row.courseId === args.courseId && isActiveEnrollmentStatus(row.status),
+    (row: any) =>
+      row.courseId === args.courseId && isActiveEnrollmentStatus(row.status),
   );
 
   if (!hasActiveEnrollment) {
@@ -61,7 +93,10 @@ export const listEnrollments = query({
     await requireAdmin(ctx);
     const limit = Math.min(args.limit ?? 250, 500);
 
-    let enrollments = await ctx.db.query("enrollments").order("desc").take(limit);
+    let enrollments = await ctx.db
+      .query("enrollments")
+      .order("desc")
+      .take(limit);
 
     if (args.userId) {
       enrollments = enrollments.filter((row) => row.userId === args.userId);
@@ -92,11 +127,17 @@ export const listEnrollments = query({
       });
     }
 
-    const courseIds = Array.from(new Set(enrollments.map((row) => row.courseId)));
-    const courses = await Promise.all(courseIds.map((courseId) => ctx.db.get(courseId)));
+    const courseIds = Array.from(
+      new Set(enrollments.map((row) => row.courseId)),
+    );
+    const courses = await Promise.all(
+      courseIds.map((courseId) => ctx.db.get(courseId)),
+    );
     const courseMap = new Map(
       courses
-        .filter((course): course is NonNullable<typeof course> => course !== null)
+        .filter(
+          (course): course is NonNullable<typeof course> => course !== null,
+        )
         .map((course) => [course._id, course]),
     );
 
@@ -120,26 +161,31 @@ export const getEnrollmentDetail = query({
       return null;
     }
 
-    const [course, userProfile, mindPoints, relatedEnrollments] = await Promise.all([
-      ctx.db.get(enrollment.courseId),
-      isAuthenticatedUserId(enrollment.userId)
-        ? ctx.db
-            .query("userProfiles")
-            .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", enrollment.userId))
-            .first()
-        : null,
-      isAuthenticatedUserId(enrollment.userId)
-        ? ctx.db
-            .query("mindPoints")
-            .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", enrollment.userId))
-            .first()
-        : null,
-      ctx.db
-        .query("enrollments")
-        .withIndex("by_userId", (q) => q.eq("userId", enrollment.userId))
-        .order("desc")
-        .take(25),
-    ]);
+    const [course, userProfile, mindPoints, relatedEnrollments] =
+      await Promise.all([
+        ctx.db.get(enrollment.courseId),
+        isAuthenticatedUserId(enrollment.userId)
+          ? ctx.db
+              .query("userProfiles")
+              .withIndex("by_clerkUserId", (q) =>
+                q.eq("clerkUserId", enrollment.userId),
+              )
+              .first()
+          : null,
+        isAuthenticatedUserId(enrollment.userId)
+          ? ctx.db
+              .query("mindPoints")
+              .withIndex("by_clerkUserId", (q) =>
+                q.eq("clerkUserId", enrollment.userId),
+              )
+              .first()
+          : null,
+        ctx.db
+          .query("enrollments")
+          .withIndex("by_userId", (q) => q.eq("userId", enrollment.userId))
+          .order("desc")
+          .take(25),
+      ]);
 
     return {
       ...enrollment,
@@ -190,7 +236,9 @@ export const createManualEnrollment = mutation({
         courseId: Id<"courses">;
       }>;
 
-      const matching = enrollments.find((row) => row.courseId === args.courseId);
+      const matching = enrollments.find(
+        (row) => row.courseId === args.courseId,
+      );
       if (matching) {
         enrollmentId = matching.enrollmentId;
       }
@@ -281,6 +329,228 @@ export const cancelEnrollment = mutation({
   },
 });
 
+export const resendEnrollmentConfirmationEmail = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+
+    const enrollment = await ctx.db.get(args.enrollmentId);
+    if (!enrollment) {
+      throw new Error("Enrollment not found");
+    }
+
+    const course = await ctx.db.get(enrollment.courseId);
+    if (!course) {
+      throw new Error("Course not found for this enrollment");
+    }
+
+    const recipientEmail =
+      enrollment.userEmail ||
+      (enrollment.userId.includes("@") ? enrollment.userId : null);
+
+    if (!recipientEmail) {
+      throw new Error("Cannot send email: enrollment has no recipient email");
+    }
+
+    const userName = enrollment.userName || recipientEmail;
+    const courseName = enrollment.courseName || course.name;
+    const courseType = course.type || enrollment.courseType;
+    const startDate = course.startDate;
+    const endDate = course.endDate;
+    const startTime = course.startTime;
+    const endTime = course.endTime;
+
+    let emailAction = "generic";
+    let usedFallback = false;
+
+    if (courseType === "supervised") {
+      if (enrollment.sessionType) {
+        await ctx.scheduler.runAfter(
+          0,
+          api.emailActions.sendSupervisedTherapyWelcomeEmail,
+          {
+            userEmail: recipientEmail,
+            studentName: userName,
+            sessionType: enrollment.sessionType,
+          },
+        );
+        emailAction = "supervised_welcome";
+      } else {
+        await ctx.scheduler.runAfter(
+          0,
+          api.emailActions.sendEnrollmentConfirmation,
+          {
+            userEmail: recipientEmail,
+            userPhone: enrollment.userPhone,
+            courseName,
+            enrollmentNumber: enrollment.enrollmentNumber,
+            startDate,
+            endDate,
+            startTime,
+            endTime,
+          },
+        );
+        emailAction = "generic";
+        usedFallback = true;
+      }
+    } else if (courseType === "therapy") {
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendTherapyEnrollmentConfirmation,
+        {
+          userEmail: recipientEmail,
+          userName,
+          userPhone: enrollment.userPhone,
+          therapyType: course.name,
+          sessionCount: enrollment.sessions || course.sessions || 1,
+          enrollmentNumber: enrollment.enrollmentNumber,
+        },
+      );
+      emailAction = "therapy_confirmation";
+    } else if (courseType === "internship") {
+      const internshipPlan =
+        enrollment.internshipPlan ||
+        extractInternshipPlanFromDuration(course.duration) ||
+        "120";
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendInternshipEnrollmentConfirmation,
+        {
+          userEmail: recipientEmail,
+          userName,
+          userPhone: enrollment.userPhone,
+          courseName,
+          enrollmentNumber: enrollment.enrollmentNumber,
+          startDate,
+          endDate: calculateInternshipEndDate(startDate, internshipPlan),
+          startTime,
+          endTime,
+          internshipPlan,
+        },
+      );
+      emailAction = "internship_confirmation";
+    } else if (courseType === "certificate") {
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendCertificateEnrollmentConfirmation,
+        {
+          userEmail: recipientEmail,
+          userName,
+          userPhone: enrollment.userPhone,
+          courseName,
+          enrollmentNumber: enrollment.enrollmentNumber,
+          startDate,
+          endDate,
+          startTime,
+          endTime,
+        },
+      );
+      emailAction = "certificate_confirmation";
+    } else if (courseType === "diploma") {
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendDiplomaEnrollmentConfirmation,
+        {
+          userEmail: recipientEmail,
+          userName,
+          userPhone: enrollment.userPhone,
+          courseName,
+          enrollmentNumber: enrollment.enrollmentNumber,
+          startDate,
+          endDate,
+          startTime,
+          endTime,
+        },
+      );
+      emailAction = "diploma_confirmation";
+    } else if (courseType === "pre-recorded") {
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendPreRecordedEnrollmentConfirmation,
+        {
+          userEmail: recipientEmail,
+          userName,
+          userPhone: enrollment.userPhone,
+          courseName,
+          enrollmentNumber: enrollment.enrollmentNumber,
+        },
+      );
+      emailAction = "pre_recorded_confirmation";
+    } else if (courseType === "masterclass") {
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendMasterclassEnrollmentConfirmation,
+        {
+          userEmail: recipientEmail,
+          userName,
+          userPhone: enrollment.userPhone,
+          courseName,
+          enrollmentNumber: enrollment.enrollmentNumber,
+          startDate,
+          endDate,
+          startTime,
+          endTime,
+        },
+      );
+      emailAction = "masterclass_confirmation";
+    } else if (courseType === "worksheet" && course.fileUrl) {
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendWorksheetPurchaseConfirmation,
+        {
+          userEmail: recipientEmail,
+          userName,
+          userPhone: enrollment.userPhone,
+          worksheets: [{ name: courseName, fileUrl: course.fileUrl }],
+        },
+      );
+      emailAction = "worksheet_confirmation";
+    } else {
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendEnrollmentConfirmation,
+        {
+          userEmail: recipientEmail,
+          userPhone: enrollment.userPhone,
+          courseName,
+          enrollmentNumber: enrollment.enrollmentNumber,
+          startDate,
+          endDate,
+          startTime,
+          endTime,
+        },
+      );
+      emailAction = "generic";
+      usedFallback = courseType === "worksheet";
+    }
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "enrollment.resend_email",
+      entityType: "enrollment",
+      entityId: String(args.enrollmentId),
+      after: enrollment,
+      metadata: {
+        recipientEmail,
+        courseType,
+        emailAction,
+        usedFallback,
+        status: normalizeEnrollmentStatus(enrollment.status),
+      },
+    });
+
+    return {
+      enrollmentId: args.enrollmentId,
+      recipientEmail,
+      emailAction,
+      usedFallback,
+    };
+  },
+});
+
 export const transferEnrollment = mutation({
   args: {
     enrollmentId: v.id("enrollments"),
@@ -356,7 +626,10 @@ export const transferEnrollment = mutation({
 
     if (!(targetCourse.enrolledUsers ?? []).includes(sourceEnrollment.userId)) {
       await ctx.db.patch(args.targetCourseId, {
-        enrolledUsers: [...(targetCourse.enrolledUsers ?? []), sourceEnrollment.userId],
+        enrolledUsers: [
+          ...(targetCourse.enrolledUsers ?? []),
+          sourceEnrollment.userId,
+        ],
       });
     }
 
