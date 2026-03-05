@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -21,14 +21,31 @@ export default function AdminUserDetailPage() {
   const [displayName, setDisplayName] = useState("");
   const [phone, setPhone] = useState("");
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [initialized, setInitialized] = useState(false);
+
+  useEffect(() => {
+    if (!detail || initialized) return;
+    setDisplayName(
+      detail.kind === "guest"
+        ? detail.guestUser?.name ?? ""
+        : detail.enrollments[0]?.userName ?? "",
+    );
+    setPhone(
+      detail.kind === "guest"
+        ? detail.guestUser?.phone ?? ""
+        : detail.enrollments[0]?.userPhone ?? "",
+    );
+    setWhatsappNumber(detail.userProfile?.whatsappNumber ?? "");
+    setInitialized(true);
+  }, [detail, initialized]);
 
   const handleSave = async () => {
     try {
       await updateUser({
         userKey,
-        displayName: displayName || undefined,
-        phone: phone || undefined,
-        whatsappNumber: whatsappNumber || undefined,
+        displayName,
+        phone,
+        whatsappNumber,
       });
       toast.success("User app data updated");
     } catch (error) {
@@ -58,25 +75,17 @@ export default function AdminUserDetailPage() {
         <CardContent className="grid gap-3 md:grid-cols-3">
           <Input
             placeholder="Display Name"
-            defaultValue={
-              detail.kind === "guest"
-                ? detail.guestUser?.name || ""
-                : detail.enrollments[0]?.userName || ""
-            }
+            value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
           />
           <Input
             placeholder="Phone"
-            defaultValue={
-              detail.kind === "guest"
-                ? detail.guestUser?.phone || ""
-                : detail.enrollments[0]?.userPhone || ""
-            }
+            value={phone}
             onChange={(e) => setPhone(e.target.value)}
           />
           <Input
             placeholder="WhatsApp Number"
-            defaultValue={detail.userProfile?.whatsappNumber || ""}
+            value={whatsappNumber}
             onChange={(e) => setWhatsappNumber(e.target.value)}
           />
           <div className="md:col-span-3">

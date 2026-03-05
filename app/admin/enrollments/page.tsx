@@ -160,7 +160,11 @@ export default function AdminEnrollmentsPage() {
           <Input
             placeholder="User ID (Clerk ID or email)"
             value={manualUserId}
-            onChange={(e) => setManualUserId(e.target.value)}
+            onChange={(e) => {
+              const val = e.target.value;
+              setManualUserId(val);
+              if (val.includes("@")) setManualIsGuest(true);
+            }}
           />
           <Input
             placeholder="User Email"
