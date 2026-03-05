@@ -19,69 +19,89 @@ export const listLoyaltyAccounts = query({
 
     const limit = Math.min(args.limit ?? 200, 500);
     const scanLimit = Math.min(Math.max(limit * 5, 500), 5000);
-    let pointsRows = await ctx.db
+    const pointsRows = await ctx.db
       .query("mindPoints")
       .order("desc")
       .take(scanLimit);
 
-    const uniqueUserIds = [...new Set(pointsRows.map((r) => r.clerkUserId))];
-
-    const enrollmentProfileMap = new Map<
+    const enrollmentProfilePromises = new Map<
       string,
-      {
+      Promise<{
         userName?: string;
         userEmail?: string;
         userPhone?: string;
         latestAt: number;
-      }
+      } | null>
     >();
 
-    if (uniqueUserIds.length > 0) {
-      const enrollmentResults = await Promise.all(
-        uniqueUserIds.map((userId) =>
-          ctx.db
-            .query("enrollments")
-            .withIndex("by_userId", (q) => q.eq("userId", userId))
-            .order("desc")
-            .first(),
-        ),
-      );
+    const getEnrollmentProfile = (
+      userId: string,
+    ): Promise<{
+      userName?: string;
+      userEmail?: string;
+      userPhone?: string;
+      latestAt: number;
+    } | null> => {
+      const existing = enrollmentProfilePromises.get(userId);
+      if (existing) return existing;
 
-      for (let i = 0; i < uniqueUserIds.length; i++) {
-        const enrollment = enrollmentResults[i];
-        if (enrollment) {
-          enrollmentProfileMap.set(uniqueUserIds[i], {
-            userName: enrollment.userName,
-            userEmail: enrollment.userEmail,
-            userPhone: enrollment.userPhone,
-            latestAt: enrollment._creationTime,
-          });
-        }
-      }
-    }
+      const next = ctx.db
+        .query("enrollments")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .order("desc")
+        .first()
+        .then((enrollment) =>
+          enrollment
+            ? {
+                userName: enrollment.userName,
+                userEmail: enrollment.userEmail,
+                userPhone: enrollment.userPhone,
+                latestAt: enrollment._creationTime,
+              }
+            : null,
+        );
+
+      enrollmentProfilePromises.set(userId, next);
+      return next;
+    };
+
+    let visiblePointsRows = pointsRows.slice(0, limit);
 
     if (args.search) {
       const search = args.search.toLowerCase();
-      pointsRows = pointsRows.filter((row) => {
-        const profile = enrollmentProfileMap.get(row.clerkUserId);
+      const matchedRows: typeof pointsRows = [];
+
+      for (const row of pointsRows) {
+        if (row.clerkUserId.toLowerCase().includes(search)) {
+          matchedRows.push(row);
+          if (matchedRows.length >= limit) break;
+          continue;
+        }
+
+        const profile = await getEnrollmentProfile(row.clerkUserId);
         const fields = [
-          row.clerkUserId,
-          profile?.userName || "",
-          profile?.userEmail || "",
-          profile?.userPhone || "",
+          profile?.userName ?? "",
+          profile?.userEmail ?? "",
+          profile?.userPhone ?? "",
         ];
 
-        return fields.some((field) => field.toLowerCase().includes(search));
-      });
+        if (fields.some((field) => field.toLowerCase().includes(search))) {
+          matchedRows.push(row);
+          if (matchedRows.length >= limit) break;
+        }
+      }
+
+      visiblePointsRows = matchedRows;
     }
 
-    const rows = pointsRows
-      .map((row) => ({
-        ...row,
-        profile: enrollmentProfileMap.get(row.clerkUserId) ?? null,
-      }))
-      .sort((a, b) => b._creationTime - a._creationTime)
-      .slice(0, limit);
+    const visibleProfiles = await Promise.all(
+      visiblePointsRows.map((row) => getEnrollmentProfile(row.clerkUserId)),
+    );
+
+    const rows = visiblePointsRows.map((row, index) => ({
+      ...row,
+      profile: visibleProfiles[index],
+    }));
 
     return rows;
   },

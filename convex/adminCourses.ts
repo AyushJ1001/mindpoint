@@ -77,6 +77,12 @@ function hasText(value: string | undefined | null) {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function toSortableTimestamp(value?: string): number {
+  if (!value) return 0;
+  const timestamp = new Date(value).getTime();
+  return Number.isFinite(timestamp) ? timestamp : 0;
+}
+
 function hasRequiredSchedule(course: {
   startDate?: string;
   endDate?: string;
@@ -247,14 +253,20 @@ export const listCourses = query({
     let courses: any[];
 
     if (args.lifecycleStatus === "published") {
+      const publishedIndexQuery = args.type
+        ? ctx.db
+            .query("courses")
+            .withIndex("by_type_and_lifecycleStatus", (q) =>
+              q.eq("type", args.type!).eq("lifecycleStatus", "published"),
+            )
+        : ctx.db
+            .query("courses")
+            .withIndex("by_lifecycleStatus", (q) =>
+              q.eq("lifecycleStatus", "published"),
+            );
+
       const [publishedViaIndex, publishedLegacy] = await Promise.all([
-        ctx.db
-          .query("courses")
-          .withIndex("by_lifecycleStatus", (q) =>
-            q.eq("lifecycleStatus", "published"),
-          )
-          .order("desc")
-          .take(scanLimit),
+        publishedIndexQuery.order("desc").take(scanLimit),
         ctx.db
           .query("courses")
           .filter((q) => q.eq(q.field("lifecycleStatus"), undefined))
@@ -334,8 +346,8 @@ export const listCourses = query({
         return ((a.price ?? 0) - (b.price ?? 0)) * multiplier;
       }
       if (sortBy === "startDate") {
-        const aTime = a.startDate ? new Date(a.startDate).getTime() : 0;
-        const bTime = b.startDate ? new Date(b.startDate).getTime() : 0;
+        const aTime = toSortableTimestamp(a.startDate);
+        const bTime = toSortableTimestamp(b.startDate);
         return (aTime - bTime) * multiplier;
       }
       if (sortBy === "updatedAt") {

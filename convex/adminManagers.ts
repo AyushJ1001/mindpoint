@@ -231,19 +231,39 @@ export const removeAdmin = mutation({
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
-    const email = normalizeEmail(args.email);
-    if (!email || !email.includes("@")) {
-      throw new Error("Valid email is required");
+    const targetInput = args.email.trim();
+    if (!targetInput) {
+      throw new Error("Valid email or Clerk user ID is required");
     }
 
-    if (normalizeEmail(admin.email) === email) {
+    const targetIsEmail = targetInput.includes("@");
+    const targetEmail = targetIsEmail ? normalizeEmail(targetInput) : "";
+    const targetClerkUserId = targetIsEmail
+      ? ""
+      : normalizeClerkUserId(targetInput);
+
+    if (
+      (targetIsEmail && normalizeEmail(admin.email) === targetEmail) ||
+      (!targetIsEmail && admin.userId === targetClerkUserId)
+    ) {
       throw new Error("You cannot remove your own admin access.");
     }
 
-    const existing = await ctx.db
-      .query("adminManagers")
-      .withIndex("by_adminEmail", (q) => q.eq("adminEmail", email))
-      .first();
+    let existing = targetIsEmail
+      ? await ctx.db
+          .query("adminManagers")
+          .withIndex("by_adminEmail", (q) => q.eq("adminEmail", targetEmail))
+          .first()
+      : null;
+
+    if ((!existing || !existing.isActive) && targetClerkUserId) {
+      existing = await ctx.db
+        .query("adminManagers")
+        .withIndex("by_clerkUserId", (q) =>
+          q.eq("clerkUserId", targetClerkUserId),
+        )
+        .first();
+    }
 
     if (!existing || !existing.isActive) {
       throw new Error("Admin access is not active for this user.");
@@ -262,17 +282,15 @@ export const removeAdmin = mutation({
       note: args.reason ?? existing.note,
     });
 
-    const after = await ctx.db
-      .query("adminManagers")
-      .withIndex("by_adminEmail", (q) => q.eq("adminEmail", email))
-      .first();
+    const after = await ctx.db.get(existing._id);
+    const entityId = existing.adminEmail ?? existing.clerkUserId ?? targetInput;
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
       actorEmail: admin.email,
       action: "admin_access.revoke",
       entityType: "admin",
-      entityId: email,
+      entityId,
       before: existing,
       after,
       metadata: {
