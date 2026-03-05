@@ -23,85 +23,46 @@ export const listLoyaltyAccounts = query({
       .query("mindPoints")
       .order("desc")
       .take(scanLimit);
-
-    const enrollmentProfilePromises = new Map<
-      string,
-      Promise<{
-        userName?: string;
-        userEmail?: string;
-        userPhone?: string;
-        latestAt: number;
-      } | null>
-    >();
-
-    const getEnrollmentProfile = (
-      userId: string,
-    ): Promise<{
-      userName?: string;
-      userEmail?: string;
-      userPhone?: string;
-      latestAt: number;
-    } | null> => {
-      const existing = enrollmentProfilePromises.get(userId);
-      if (existing) return existing;
-
-      const next = ctx.db
-        .query("enrollments")
-        .withIndex("by_userId", (q) => q.eq("userId", userId))
-        .order("desc")
-        .first()
-        .then((enrollment) =>
-          enrollment
-            ? {
-                userName: enrollment.userName,
-                userEmail: enrollment.userEmail,
-                userPhone: enrollment.userPhone,
-                latestAt: enrollment._creationTime,
-              }
-            : null,
-        );
-
-      enrollmentProfilePromises.set(userId, next);
-      return next;
-    };
-
     let visiblePointsRows = pointsRows.slice(0, limit);
 
-    if (args.search) {
-      const search = args.search.toLowerCase();
-      const matchedRows: typeof pointsRows = [];
-
-      for (const row of pointsRows) {
-        if (row.clerkUserId.toLowerCase().includes(search)) {
-          matchedRows.push(row);
-          if (matchedRows.length >= limit) break;
-          continue;
-        }
-
-        const profile = await getEnrollmentProfile(row.clerkUserId);
-        const fields = [
-          profile?.userName ?? "",
-          profile?.userEmail ?? "",
-          profile?.userPhone ?? "",
-        ];
-
-        if (fields.some((field) => field.toLowerCase().includes(search))) {
-          matchedRows.push(row);
-          if (matchedRows.length >= limit) break;
-        }
-      }
-
-      visiblePointsRows = matchedRows;
-    }
-
     const visibleProfiles = await Promise.all(
-      visiblePointsRows.map((row) => getEnrollmentProfile(row.clerkUserId)),
+      visiblePointsRows.map((row) =>
+        ctx.db
+          .query("enrollments")
+          .withIndex("by_userId", (q) => q.eq("userId", row.clerkUserId))
+          .order("desc")
+          .first()
+          .then((enrollment) =>
+            enrollment
+              ? {
+                  userName: enrollment.userName,
+                  userEmail: enrollment.userEmail,
+                  userPhone: enrollment.userPhone,
+                  latestAt: enrollment._creationTime,
+                }
+              : null,
+          ),
+      ),
     );
 
-    const rows = visiblePointsRows.map((row, index) => ({
+    let rows = visiblePointsRows.map((row, index) => ({
       ...row,
       profile: visibleProfiles[index],
     }));
+
+    if (args.search) {
+      const search = args.search.toLowerCase();
+      rows = rows.filter((row) => {
+        const fields = [
+          row.clerkUserId,
+          row.profile?.userName ?? "",
+          row.profile?.userEmail ?? "",
+          row.profile?.userPhone ?? "",
+        ];
+
+        return fields.some((field) => field.toLowerCase().includes(search));
+      });
+    }
 
     return rows;
   },
@@ -270,6 +231,44 @@ export const createManualCoupon = mutation({
       throw new Error("pointsCost cannot be negative");
     }
 
+    let beforePoints = null;
+    let afterPoints = null;
+
+    if (args.pointsCost > 0) {
+      const existingPoints = await ctx.db
+        .query("mindPoints")
+        .withIndex("by_clerkUserId", (q) =>
+          q.eq("clerkUserId", args.clerkUserId),
+        )
+        .first();
+
+      if (!existingPoints || existingPoints.balance < args.pointsCost) {
+        throw new Error("User does not have enough points for this coupon");
+      }
+
+      beforePoints = existingPoints;
+
+      await ctx.db.patch(existingPoints._id, {
+        balance: existingPoints.balance - args.pointsCost,
+        totalRedeemed: existingPoints.totalRedeemed + args.pointsCost,
+      });
+
+      await ctx.db.insert("pointsTransactions", {
+        clerkUserId: args.clerkUserId,
+        type: "redeem",
+        points: -args.pointsCost,
+        description: `Admin coupon redemption: ${args.reason}`,
+        createdAt: Date.now(),
+      });
+
+      afterPoints = await ctx.db
+        .query("mindPoints")
+        .withIndex("by_clerkUserId", (q) =>
+          q.eq("clerkUserId", args.clerkUserId),
+        )
+        .first();
+    }
+
     const couponId = await ctx.db.insert("coupons", {
       code: generateCouponCode(),
       clerkUserId: args.clerkUserId,
@@ -289,7 +288,12 @@ export const createManualCoupon = mutation({
       entityType: "coupon",
       entityId: String(couponId),
       after: created,
-      metadata: { reason: args.reason },
+      metadata: {
+        reason: args.reason,
+        pointsCost: args.pointsCost,
+        pointsBefore: beforePoints,
+        pointsAfter: afterPoints,
+      },
     });
 
     return created;

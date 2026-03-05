@@ -291,18 +291,28 @@ export const createManualEnrollment = mutation({
         enrollmentId = matching.enrollmentId;
       }
     } else {
-      const created: Id<"enrollments"> = await ctx.runMutation(
-        api.myFunctions.handleSuccessfulPayment,
-        {
-          userId: args.userId,
-          userEmail: args.userEmail,
-          userPhone: args.userPhone,
-          studentName: args.userName,
-          courseId: args.courseId,
-          sessionType: args.sessionType,
-        },
-      );
-      enrollmentId = created;
+      try {
+        const created: Id<"enrollments"> = await ctx.runMutation(
+          api.myFunctions.handleSuccessfulPayment,
+          {
+            userId: args.userId,
+            userEmail: args.userEmail,
+            userPhone: args.userPhone,
+            studentName: args.userName,
+            courseId: args.courseId,
+            sessionType: args.sessionType,
+          },
+        );
+        enrollmentId = created;
+      } catch (innerError) {
+        throw new Error(
+          `handleSuccessfulPayment failed: ${
+            innerError instanceof Error
+              ? innerError.message
+              : String(innerError)
+          }`,
+        );
+      }
     }
 
     if (!enrollmentId) {
@@ -645,12 +655,18 @@ export const transferEnrollment = mutation({
       courseId: sourceEnrollment.courseId,
     });
 
+    const courseCode =
+      targetCourse.code?.trim() ||
+      targetCourse.name.slice(0, 8).toUpperCase().replace(/\s+/g, "") ||
+      "COURSE";
+    const courseStartDate =
+      targetCourse.startDate ?? new Date().toISOString().split("T")[0];
     const enrollmentNumber =
       targetCourse.type === "therapy" ||
       targetCourse.type === "supervised" ||
       targetCourse.type === "worksheet"
         ? "N/A"
-        : generateEnrollmentNumber(targetCourse.code, targetCourse.startDate);
+        : generateEnrollmentNumber(courseCode, courseStartDate);
 
     const newEnrollmentId = await ctx.db.insert("enrollments", {
       userId: sourceEnrollment.userId,
