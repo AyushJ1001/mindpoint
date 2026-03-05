@@ -28,10 +28,20 @@ export function AdminConvexGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (isLoading || !isAuthenticated) {
+  if (isLoading) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
         <p className="text-sm text-slate-600">Authorizing admin session...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <p className="text-sm text-slate-600">
+          Admin session expired. Please refresh the page.
+        </p>
       </div>
     );
   }

@@ -658,6 +658,18 @@ export const transferEnrollment = mutation({
       throw new Error("Only active enrollments can be transferred");
     }
 
+    const currentEnrolled = (targetCourse.enrolledUsers ?? []).length;
+    const capacity = targetCourse.capacity ?? 0;
+    if (
+      capacity > 0 &&
+      currentEnrolled >= capacity &&
+      !(targetCourse.enrolledUsers ?? []).includes(sourceEnrollment.userId)
+    ) {
+      throw new Error(
+        `Target course "${targetCourse.name}" is at full capacity (${currentEnrolled}/${capacity}).`,
+      );
+    }
+
     const now = Date.now();
 
     await ctx.db.patch(args.enrollmentId, {
