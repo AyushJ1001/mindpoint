@@ -284,7 +284,10 @@ export default function AdminEnrollmentsPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={resendingEnrollmentId === String(row._id)}
+                        disabled={
+                          row.status !== "active" ||
+                          resendingEnrollmentId === String(row._id)
+                        }
                         onClick={() => handleResendEmail(String(row._id))}
                       >
                         {resendingEnrollmentId === String(row._id)

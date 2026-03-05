@@ -434,6 +434,13 @@ export const resendEnrollmentConfirmationEmail = mutation({
       throw new Error("Enrollment not found");
     }
 
+    const currentStatus = normalizeEnrollmentStatus(enrollment.status);
+    if (currentStatus !== "active") {
+      throw new Error(
+        `Cannot resend confirmation for a ${currentStatus} enrollment.`,
+      );
+    }
+
     const now = Date.now();
     const lastSentAt = enrollment.lastConfirmationSentAt ?? 0;
     if (now - lastSentAt < RESEND_COOLDOWN_MS) {
@@ -695,13 +702,24 @@ export const transferEnrollment = mutation({
       throw new Error("Only active enrollments can be transferred");
     }
 
-    const existingActiveInTarget = await ctx.db
-      .query("enrollments")
-      .withIndex("by_courseId_and_status", (q) =>
-        q.eq("courseId", args.targetCourseId).eq("status", "active"),
-      )
-      .filter((q) => q.eq(q.field("userId"), sourceEnrollment.userId))
-      .first();
+    const existingActiveInTarget =
+      (await ctx.db
+        .query("enrollments")
+        .withIndex("by_courseId_and_status", (q) =>
+          q.eq("courseId", args.targetCourseId).eq("status", "active"),
+        )
+        .filter((q) => q.eq(q.field("userId"), sourceEnrollment.userId))
+        .first()) ??
+      (await ctx.db
+        .query("enrollments")
+        .withIndex("by_courseId", (q) => q.eq("courseId", args.targetCourseId))
+        .filter((q) =>
+          q.and(
+            q.eq(q.field("userId"), sourceEnrollment.userId),
+            q.eq(q.field("status"), undefined),
+          ),
+        )
+        .first());
 
     if (existingActiveInTarget) {
       throw new Error(
