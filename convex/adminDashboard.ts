@@ -36,7 +36,7 @@ export const getDashboardSummary = query({
         .query("courses")
         .filter((q) => q.eq(q.field("lifecycleStatus"), undefined))
         .order("desc")
-        .take(COURSE_SCAN_LIMIT),
+        .take(500), // small bounded scan; unindexed legacy docs only
       ctx.db
         .query("courses")
         .withIndex("by_lifecycleStatus", (q) =>

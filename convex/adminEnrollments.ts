@@ -130,6 +130,22 @@ export const listEnrollments = query({
 
     let enrollments = await baseQuery.order("desc").take(scanLimit);
 
+    // When filtering by "active", also fetch legacy enrollments (status undefined)
+    // since normalizeEnrollmentStatus treats undefined as "active"
+    if (args.status === "active" && !args.courseId && !args.userId) {
+      const legacyEnrollments = await ctx.db
+        .query("enrollments")
+        .filter((q) => q.eq(q.field("status"), undefined))
+        .order("desc")
+        .take(scanLimit);
+      const seen = new Set(enrollments.map((e) => String(e._id)));
+      for (const e of legacyEnrollments) {
+        if (!seen.has(String(e._id))) {
+          enrollments.push(e);
+        }
+      }
+    }
+
     if (args.userId && !usedUserIdIndex) {
       enrollments = enrollments.filter((row) => row.userId === args.userId);
     }

@@ -32,7 +32,8 @@ export function toCsv<T extends Record<string, unknown>>(rows: T[]): string {
 }
 
 export function downloadCsv(fileName: string, csv: string) {
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const BOM = "\uFEFF";
+  const blob = new Blob([BOM + csv], { type: "text/csv;charset=utf-8;" });
   const url = URL.createObjectURL(blob);
 
   const link = document.createElement("a");

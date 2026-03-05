@@ -33,7 +33,17 @@ export async function hasAdminAccess(
     convex.setAuth(convexToken);
     return await convex.query(api.adminManagers.isUserAdmin, {});
   } catch (error) {
-    console.warn("Failed to check admin access via Convex:", error);
-    return false;
+    // Only treat auth/permission errors as "no access";
+    // re-throw infrastructure errors so Next.js error boundary can handle them
+    if (
+      error instanceof Error &&
+      (error.message.includes("Not authenticated") ||
+        error.message.includes("Forbidden") ||
+        error.message.includes("not an admin"))
+    ) {
+      return false;
+    }
+    console.error("Admin access check failed due to infrastructure error:", error);
+    throw error;
   }
 }
