@@ -12,7 +12,8 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "test:email": "node test-resend-email.js",
-    "test:email:direct": "node test-resend-direct.js"
+    "test:email:direct": "node test-resend-direct.js",
+    "test:admin-route-protection": "node scripts/test-admin-route-protection.js"
   },
   "dependencies": {
     "@clerk/clerk-react": "^5.25.0",

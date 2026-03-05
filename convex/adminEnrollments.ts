@@ -8,7 +8,7 @@ import {
   isAuthenticatedUserId,
 } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 
 function generateEnrollmentNumber(
@@ -92,21 +92,54 @@ export const listEnrollments = query({
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
     const limit = Math.min(args.limit ?? 250, 500);
+    const scanLimit = Math.min(Math.max(limit * 5, 500), 2000);
 
-    let enrollments = await ctx.db
-      .query("enrollments")
-      .order("desc")
-      .take(limit);
+    const baseQuery =
+      args.courseId && args.status
+        ? ctx.db
+            .query("enrollments")
+            .withIndex("by_courseId_and_status", (q) =>
+              q.eq("courseId", args.courseId!).eq("status", args.status!),
+            )
+        : args.userId
+          ? ctx.db
+              .query("enrollments")
+              .withIndex("by_userId", (q) => q.eq("userId", args.userId!))
+          : args.courseId
+            ? ctx.db
+                .query("enrollments")
+                .withIndex("by_courseId", (q) =>
+                  q.eq("courseId", args.courseId!),
+                )
+            : args.status
+              ? ctx.db
+                  .query("enrollments")
+                  .withIndex("by_status", (q) => q.eq("status", args.status!))
+              : ctx.db.query("enrollments");
 
-    if (args.userId) {
+    const usedCourseAndStatusIndex = Boolean(args.courseId && args.status);
+    const usedUserIdIndex = Boolean(!usedCourseAndStatusIndex && args.userId);
+    const usedCourseIdIndex = Boolean(
+      !usedCourseAndStatusIndex && !usedUserIdIndex && args.courseId,
+    );
+    const usedStatusIndex = Boolean(
+      !usedCourseAndStatusIndex &&
+        !usedUserIdIndex &&
+        !usedCourseIdIndex &&
+        args.status,
+    );
+
+    let enrollments = await baseQuery.order("desc").take(scanLimit);
+
+    if (args.userId && !usedUserIdIndex) {
       enrollments = enrollments.filter((row) => row.userId === args.userId);
     }
 
-    if (args.courseId) {
+    if (args.courseId && !usedCourseAndStatusIndex && !usedCourseIdIndex) {
       enrollments = enrollments.filter((row) => row.courseId === args.courseId);
     }
 
-    if (args.status) {
+    if (args.status && !usedCourseAndStatusIndex && !usedStatusIndex) {
       enrollments = enrollments.filter(
         (row) => normalizeEnrollmentStatus(row.status) === args.status,
       );
@@ -141,7 +174,7 @@ export const listEnrollments = query({
         .map((course) => [course._id, course]),
     );
 
-    return enrollments.map((enrollment) => ({
+    return enrollments.slice(0, limit).map((enrollment) => ({
       ...enrollment,
       status: normalizeEnrollmentStatus(enrollment.status),
       course: courseMap.get(enrollment.courseId) ?? null,
@@ -213,15 +246,18 @@ export const createManualEnrollment = mutation({
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
   },
-  handler: async (ctx, args) => {
+  handler: async (ctx, args): Promise<Doc<"enrollments"> | null> => {
     const admin = await requireAdmin(ctx);
     const isGuestUser = args.isGuestUser ?? !isAuthenticatedUserId(args.userId);
 
     let enrollmentId: Id<"enrollments"> | null = null;
 
     if (isGuestUser) {
-      const enrollments = (await ctx.runMutation(
-        api.myFunctions.handleGuestUserCartCheckoutWithData as any,
+      const enrollments: Array<{
+        enrollmentId: Id<"enrollments">;
+        courseId: Id<"courses">;
+      }> = await ctx.runMutation(
+        api.myFunctions.handleGuestUserCartCheckoutWithData,
         {
           userData: {
             name: args.userName || args.userEmail,
@@ -231,10 +267,7 @@ export const createManualEnrollment = mutation({
           courseIds: [args.courseId],
           sessionType: args.sessionType,
         },
-      )) as Array<{
-        enrollmentId: Id<"enrollments">;
-        courseId: Id<"courses">;
-      }>;
+      );
 
       const matching = enrollments.find(
         (row) => row.courseId === args.courseId,
@@ -243,8 +276,8 @@ export const createManualEnrollment = mutation({
         enrollmentId = matching.enrollmentId;
       }
     } else {
-      const created = (await ctx.runMutation(
-        api.myFunctions.handleSuccessfulPayment as any,
+      const created: Id<"enrollments"> = await ctx.runMutation(
+        api.myFunctions.handleSuccessfulPayment,
         {
           userId: args.userId,
           userEmail: args.userEmail,
@@ -253,7 +286,7 @@ export const createManualEnrollment = mutation({
           courseId: args.courseId,
           sessionType: args.sessionType,
         },
-      )) as Id<"enrollments">;
+      );
       enrollmentId = created;
     }
 

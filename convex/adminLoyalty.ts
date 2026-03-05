@@ -18,13 +18,25 @@ export const listLoyaltyAccounts = query({
     await requireAdmin(ctx);
 
     const limit = Math.min(args.limit ?? 200, 500);
-    let pointsRows = await ctx.db.query("mindPoints").collect();
+    const scanLimit = Math.min(Math.max(limit * 5, 500), 5000);
+    let pointsRows = await ctx.db
+      .query("mindPoints")
+      .order("desc")
+      .take(scanLimit);
 
-    const enrollments = await ctx.db.query("enrollments").order("desc").take(5000);
+    const enrollments = await ctx.db
+      .query("enrollments")
+      .order("desc")
+      .take(5000);
 
     const profileByUserId = new Map<
       string,
-      { userName?: string; userEmail?: string; userPhone?: string; latestAt: number }
+      {
+        userName?: string;
+        userEmail?: string;
+        userPhone?: string;
+        latestAt: number;
+      }
     >();
 
     for (const enrollment of enrollments) {
@@ -72,33 +84,48 @@ export const getLoyaltyDetail = query({
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
-    const [points, transactions, coupons, referralsAsReferrer, referralsAsReferred] =
-      await Promise.all([
-        ctx.db
-          .query("mindPoints")
-          .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
-          .first(),
-        ctx.db
-          .query("pointsTransactions")
-          .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
-          .order("desc")
-          .take(200),
-        ctx.db
-          .query("coupons")
-          .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
-          .order("desc")
-          .take(200),
-        ctx.db
-          .query("referralRewards")
-          .withIndex("by_referrerClerkUserId", (q) => q.eq("referrerClerkUserId", args.clerkUserId))
-          .order("desc")
-          .collect(),
-        ctx.db
-          .query("referralRewards")
-          .withIndex("by_referredClerkUserId", (q) => q.eq("referredClerkUserId", args.clerkUserId))
-          .order("desc")
-          .collect(),
-      ]);
+    const [
+      points,
+      transactions,
+      coupons,
+      referralsAsReferrer,
+      referralsAsReferred,
+    ] = await Promise.all([
+      ctx.db
+        .query("mindPoints")
+        .withIndex("by_clerkUserId", (q) =>
+          q.eq("clerkUserId", args.clerkUserId),
+        )
+        .first(),
+      ctx.db
+        .query("pointsTransactions")
+        .withIndex("by_clerkUserId", (q) =>
+          q.eq("clerkUserId", args.clerkUserId),
+        )
+        .order("desc")
+        .take(200),
+      ctx.db
+        .query("coupons")
+        .withIndex("by_clerkUserId", (q) =>
+          q.eq("clerkUserId", args.clerkUserId),
+        )
+        .order("desc")
+        .take(200),
+      ctx.db
+        .query("referralRewards")
+        .withIndex("by_referrerClerkUserId", (q) =>
+          q.eq("referrerClerkUserId", args.clerkUserId),
+        )
+        .order("desc")
+        .take(200),
+      ctx.db
+        .query("referralRewards")
+        .withIndex("by_referredClerkUserId", (q) =>
+          q.eq("referredClerkUserId", args.clerkUserId),
+        )
+        .order("desc")
+        .take(200),
+    ]);
 
     return {
       points,
@@ -133,7 +160,9 @@ export const adjustPoints = mutation({
 
     if (!existing) {
       if (args.delta < 0) {
-        throw new Error("Cannot deduct points from a user with no points record");
+        throw new Error(
+          "Cannot deduct points from a user with no points record",
+        );
       }
 
       await ctx.db.insert("mindPoints", {
@@ -159,7 +188,9 @@ export const adjustPoints = mutation({
       await ctx.db.patch(existing._id, {
         balance: newBalance,
         totalEarned:
-          args.delta > 0 ? existing.totalEarned + args.delta : existing.totalEarned,
+          args.delta > 0
+            ? existing.totalEarned + args.delta
+            : existing.totalEarned,
         totalRedeemed:
           args.delta < 0
             ? existing.totalRedeemed + Math.abs(args.delta)

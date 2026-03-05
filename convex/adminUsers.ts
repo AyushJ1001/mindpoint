@@ -3,16 +3,20 @@ import { mutation, query } from "./_generated/server";
 import { requireAdmin, normalizeEnrollmentStatus } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
 
-function toUserKey(row: { userId: string; isGuestUser?: boolean; userEmail?: string }) {
+function toUserKey(row: {
+  userId: string;
+  isGuestUser?: boolean;
+  userEmail?: string;
+}) {
   if (row.isGuestUser || row.userId.includes("@")) {
     return `guest:${(row.userEmail || row.userId).toLowerCase()}`;
   }
   return `clerk:${row.userId}`;
 }
 
-function parseUserKey(userKey: string):
-  | { kind: "guest"; id: string }
-  | { kind: "clerk"; id: string } {
+function parseUserKey(
+  userKey: string,
+): { kind: "guest"; id: string } | { kind: "clerk"; id: string } {
   if (userKey.startsWith("guest:")) {
     return { kind: "guest", id: userKey.slice("guest:".length) };
   }
@@ -36,10 +40,13 @@ export const listUsers = query({
     await requireAdmin(ctx);
 
     const limit = Math.min(args.limit ?? 200, 500);
+    const userScanLimit = 3000;
+    const enrollmentScanLimit = 3000;
+    const pointsScanLimit = 3000;
     const [guestUsers, enrollments, pointsRows] = await Promise.all([
-      ctx.db.query("guestUsers").collect(),
-      ctx.db.query("enrollments").order("desc").take(5000),
-      ctx.db.query("mindPoints").collect(),
+      ctx.db.query("guestUsers").order("desc").take(userScanLimit),
+      ctx.db.query("enrollments").order("desc").take(enrollmentScanLimit),
+      ctx.db.query("mindPoints").order("desc").take(pointsScanLimit),
     ]);
 
     const pointsMap = new Map(pointsRows.map((row) => [row.clerkUserId, row]));
@@ -84,25 +91,34 @@ export const listUsers = query({
         userKey,
         userId: parsed.id,
         kind: parsed.kind,
-        displayName: enrollment.userName || enrollment.userEmail || enrollment.userId,
+        displayName:
+          enrollment.userName || enrollment.userEmail || enrollment.userId,
         email: enrollment.userEmail,
         phone: enrollment.userPhone,
         enrollmentCount: 0,
         activeEnrollmentCount: 0,
         latestEnrollmentAt: 0,
         mindPointsBalance:
-          parsed.kind === "clerk" ? pointsMap.get(parsed.id)?.balance ?? 0 : undefined,
+          parsed.kind === "clerk"
+            ? (pointsMap.get(parsed.id)?.balance ?? 0)
+            : undefined,
       };
 
       next.enrollmentCount += 1;
       if (normalizeEnrollmentStatus(enrollment.status) === "active") {
         next.activeEnrollmentCount += 1;
       }
-      next.latestEnrollmentAt = Math.max(next.latestEnrollmentAt, enrollment._creationTime);
+      next.latestEnrollmentAt = Math.max(
+        next.latestEnrollmentAt,
+        enrollment._creationTime,
+      );
 
-      if (!next.email && enrollment.userEmail) next.email = enrollment.userEmail;
-      if (!next.phone && enrollment.userPhone) next.phone = enrollment.userPhone;
-      if (!next.displayName && enrollment.userName) next.displayName = enrollment.userName;
+      if (!next.email && enrollment.userEmail)
+        next.email = enrollment.userEmail;
+      if (!next.phone && enrollment.userPhone)
+        next.phone = enrollment.userPhone;
+      if (!next.displayName && enrollment.userName)
+        next.displayName = enrollment.userName;
 
       rows.set(userKey, next);
     }
@@ -166,31 +182,34 @@ export const getUserDetail = query({
       };
     }
 
-    const [enrollments, userProfile, mindPoints, coupons, referralRewards] = await Promise.all([
-      ctx.db
-        .query("enrollments")
-        .withIndex("by_userId", (q) => q.eq("userId", parsed.id))
-        .order("desc")
-        .collect(),
-      ctx.db
-        .query("userProfiles")
-        .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", parsed.id))
-        .first(),
-      ctx.db
-        .query("mindPoints")
-        .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", parsed.id))
-        .first(),
-      ctx.db
-        .query("coupons")
-        .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", parsed.id))
-        .order("desc")
-        .take(100),
-      ctx.db
-        .query("referralRewards")
-        .withIndex("by_referrerClerkUserId", (q) => q.eq("referrerClerkUserId", parsed.id))
-        .order("desc")
-        .collect(),
-    ]);
+    const [enrollments, userProfile, mindPoints, coupons, referralRewards] =
+      await Promise.all([
+        ctx.db
+          .query("enrollments")
+          .withIndex("by_userId", (q) => q.eq("userId", parsed.id))
+          .order("desc")
+          .collect(),
+        ctx.db
+          .query("userProfiles")
+          .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", parsed.id))
+          .first(),
+        ctx.db
+          .query("mindPoints")
+          .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", parsed.id))
+          .first(),
+        ctx.db
+          .query("coupons")
+          .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", parsed.id))
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("referralRewards")
+          .withIndex("by_referrerClerkUserId", (q) =>
+            q.eq("referrerClerkUserId", parsed.id),
+          )
+          .order("desc")
+          .collect(),
+      ]);
 
     return {
       userKey: args.userKey,
@@ -289,7 +308,9 @@ export const updateUserAppData = mutation({
     for (const enrollment of enrollments) {
       await ctx.db.patch(enrollment._id, {
         userName:
-          args.displayName !== undefined ? args.displayName : enrollment.userName,
+          args.displayName !== undefined
+            ? args.displayName
+            : enrollment.userName,
         userPhone: args.phone !== undefined ? args.phone : enrollment.userPhone,
       });
     }

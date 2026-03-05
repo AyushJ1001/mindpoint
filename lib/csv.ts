@@ -16,7 +16,8 @@ export function toCsv<T extends Record<string, unknown>>(rows: T[]): string {
     if (value === null || value === undefined) return "";
     const normalized =
       typeof value === "object" ? JSON.stringify(value) : String(value);
-    const escaped = normalized.replace(/"/g, '""');
+    const safe = /^[=+\-@\t]/.test(normalized) ? `'${normalized}` : normalized;
+    const escaped = safe.replace(/"/g, '""');
     return /[",\n]/.test(escaped) ? `"${escaped}"` : escaped;
   };
 
