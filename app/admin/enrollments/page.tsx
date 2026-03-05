@@ -88,8 +88,12 @@ export default function AdminEnrollmentsPage() {
         isGuestUser: manualIsGuest,
       });
       toast.success("Manual enrollment created");
+      setManualUserId("");
+      setManualEmail("");
       setManualName("");
       setManualPhone("");
+      setManualCourseId("");
+      setManualIsGuest(false);
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to create enrollment",
@@ -163,7 +167,7 @@ export default function AdminEnrollmentsPage() {
             onChange={(e) => {
               const val = e.target.value;
               setManualUserId(val);
-              if (val.includes("@")) setManualIsGuest(true);
+              setManualIsGuest(val.includes("@"));
             }}
           />
           <Input

@@ -498,6 +498,46 @@ export const updateCourse = mutation({
   },
 });
 
+export const deleteCourse = mutation({
+  args: {
+    courseId: v.id("courses"),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const existing = await ctx.db.get(args.courseId);
+
+    if (!existing) {
+      throw new Error("Course not found");
+    }
+
+    const linkedEnrollment = await ctx.db
+      .query("enrollments")
+      .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId))
+      .first();
+
+    if (linkedEnrollment) {
+      throw new Error("Cannot delete a course with enrollments");
+    }
+
+    if ((existing.reviews ?? []).length > 0) {
+      throw new Error("Cannot delete a course with reviews");
+    }
+
+    await ctx.db.delete(args.courseId);
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "course.delete",
+      entityType: "course",
+      entityId: String(args.courseId),
+      before: existing,
+    });
+
+    return { success: true };
+  },
+});
+
 export const transitionCourseLifecycle = mutation({
   args: {
     courseId: v.id("courses"),

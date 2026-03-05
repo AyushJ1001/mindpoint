@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -234,6 +234,7 @@ export function CourseEditor({
   const [isSaving, setIsSaving] = useState(false);
 
   const createCourse = useMutation(api.adminCourses.createCourse);
+  const deleteCourse = useMutation(api.adminCourses.deleteCourse);
   const updateCourse = useMutation(api.adminCourses.updateCourse);
 
   const isWorksheet = state.type === "worksheet";
@@ -577,21 +578,39 @@ export function CourseEditor({
           }
         }
 
-        const createdIds: string[] = [];
+        const createdIds: Id<"courses">[] = [];
 
-        for (const variant of parsedVariants) {
-          const courseId = await createCourse({
-            name: state.name,
-            type: state.type,
-            lifecycleStatus: state.lifecycleStatus,
-            data: buildPatch({
-              code: variant.code,
-              price: variant.price,
-              capacity: variant.capacity,
-              sessions: variant.sessions,
-            }),
-          });
-          createdIds.push(courseId);
+        try {
+          for (const variant of parsedVariants) {
+            const courseId = await createCourse({
+              name: state.name,
+              type: state.type,
+              lifecycleStatus: state.lifecycleStatus,
+              data: buildPatch({
+                code: variant.code,
+                price: variant.price,
+                capacity: variant.capacity,
+                sessions: variant.sessions,
+              }),
+            });
+            createdIds.push(courseId);
+          }
+        } catch (error) {
+          const rollbackResults = await Promise.allSettled(
+            createdIds.map((courseId) => deleteCourse({ courseId })),
+          );
+          const rollbackFailures = rollbackResults.filter(
+            (result) => result.status === "rejected",
+          ).length;
+
+          if (rollbackFailures > 0) {
+            console.error("Failed to fully roll back course variants", {
+              rollbackFailures,
+              createdIds,
+            });
+          }
+
+          throw error;
         }
 
         toast.success(`Created ${createdIds.length} course variants`);
