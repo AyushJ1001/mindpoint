@@ -239,14 +239,16 @@ Create a `.env.local` file with the following variables:
 
 ### Optional Variables
 
-| Variable                              | Description                                 |
-| ------------------------------------- | ------------------------------------------- |
-| `GOOGLE_APPLICATION_CREDENTIALS_JSON` | Google service account JSON (stringified)   |
-| `GOOGLE_SHEETS_SPREADSHEET_ID`        | Target Google Sheets spreadsheet ID         |
-| `GOOGLE_SHEETS_SHEET_NAME`            | Sheet name (defaults to "Sheet1")           |
-| `NEXT_PUBLIC_POSTHOG_KEY`             | PostHog project API key                     |
-| `NEXT_PUBLIC_POSTHOG_HOST`            | PostHog host URL                            |
-| `CLERK_SKIP_KEY_VALIDATION`           | Set to `true` for builds without Clerk keys |
+| Variable                              | Description                                   |
+| ------------------------------------- | --------------------------------------------- |
+| `GOOGLE_APPLICATION_CREDENTIALS_JSON` | Google service account JSON (stringified)     |
+| `GOOGLE_SHEETS_SPREADSHEET_ID`        | Target Google Sheets spreadsheet ID           |
+| `GOOGLE_SHEETS_SHEET_NAME`            | Sheet name (defaults to "Sheet1")             |
+| `NEXT_PUBLIC_POSTHOG_KEY`             | PostHog project API key                       |
+| `NEXT_PUBLIC_POSTHOG_HOST`            | PostHog host URL                              |
+| `CLERK_SKIP_KEY_VALIDATION`           | Set to `true` for builds without Clerk keys   |
+| `UPLOADTHING_SECRET`                  | UploadThing server secret for admin uploads   |
+| `UPLOADTHING_TOKEN`                   | UploadThing token (if required by your setup) |
 
 ### Convex Environment Variables
 
@@ -256,6 +258,19 @@ Set these in the Convex dashboard under **Settings > Environment Variables**:
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON`
 - `GOOGLE_SHEETS_SPREADSHEET_ID`
 - `GOOGLE_SHEETS_SHEET_NAME`
+
+### Admin Access Bootstrap
+
+Admin access is database-driven via the `adminManagers` table.
+
+Before anyone can use `/admin`, seed at least one active admin record in production:
+
+1. In Convex Dashboard, insert a document into `adminManagers` with:
+   - `adminEmail` (lowercase email),
+   - `adminName`,
+   - `isActive: true`,
+   - `addedAt`, `addedByAdminId`, and `addedByEmail`.
+2. Sign in with that email, then manage additional admins from `/admin/admins`.
 
 ---
 

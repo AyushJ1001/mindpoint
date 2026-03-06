@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import AnimatedCounter from "@/components/animated-counter";
 import VideoTestimonialsSection from "@/components/VideoTestimonialsSection";
+import HomeAdminButton from "@/components/HomeAdminButton";
 
 const HIGHLIGHTS = [
   {
@@ -44,7 +45,7 @@ export default function HomeHero() {
       <section className="relative overflow-hidden py-12 sm:py-16 lg:py-24">
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-100/70 via-white to-indigo-100/70 dark:from-slate-950 dark:via-blue-950/80 dark:to-slate-950" />
         <div className="pointer-events-none absolute -top-32 -left-16 h-72 w-72 rounded-full bg-blue-300/40 blur-3xl dark:bg-blue-500/20" />
-        <div className="pointer-events-none absolute -right-14 top-10 h-80 w-80 rounded-full bg-indigo-300/35 blur-3xl dark:bg-indigo-500/20" />
+        <div className="pointer-events-none absolute top-10 -right-14 h-80 w-80 rounded-full bg-indigo-300/35 blur-3xl dark:bg-indigo-500/20" />
 
         <div className="relative z-10 container grid gap-10 md:grid-cols-[1.05fr_0.95fr] md:items-center lg:gap-14">
           <div className="space-y-7">
@@ -68,18 +69,30 @@ export default function HomeHero() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg" className="btn-video-harmony w-full sm:w-auto">
+              <Button
+                asChild
+                size="lg"
+                className="btn-video-harmony w-full sm:w-auto"
+              >
                 <Link href="/courses">
                   <BookOpen className="h-5 w-5" />
                   Explore Courses
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="w-full sm:w-auto"
+              >
                 <Link href="/about">
                   Learn More
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
+              {process.env.NEXT_PUBLIC_CONVEX_URL ? (
+                <HomeAdminButton />
+              ) : null}
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:max-w-[520px] sm:gap-4">
@@ -151,7 +164,7 @@ export default function HomeHero() {
                 <div className="mb-4 inline-flex rounded-2xl border border-blue-200/70 bg-blue-100/75 p-3 text-blue-700 dark:border-blue-800/70 dark:bg-blue-950/60 dark:text-blue-200">
                   <item.icon className="h-5 w-5" />
                 </div>
-                <h3 className="mb-2 text-2xl font-semibold leading-tight tracking-tight">
+                <h3 className="mb-2 text-2xl leading-tight font-semibold tracking-tight">
                   {item.title}
                 </h3>
                 <p className="text-muted-foreground text-sm leading-relaxed">

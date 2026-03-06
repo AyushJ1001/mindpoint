@@ -3,9 +3,17 @@
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import Script from "next/script";
+import { usePathname } from "next/navigation";
 
 export default function StructuredData() {
-  const allCourses = useQuery(api.courses.listCourses, { count: undefined });
+  const pathname = usePathname();
+  const isAdminRoute = pathname.startsWith("/admin");
+  const allCourses = useQuery(
+    api.courses.listCourses,
+    isAdminRoute ? "skip" : { count: undefined },
+  );
+
+  if (isAdminRoute) return null;
 
   if (!allCourses) return null;
 

@@ -38,7 +38,7 @@ function AppSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar>
+    <Sidebar className="top-16 h-[calc(100svh-4rem)]">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Course Types</SidebarGroupLabel>

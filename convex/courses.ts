@@ -2,6 +2,10 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { CourseType } from "./schema";
 
+function isPublishedCourse(course: { lifecycleStatus?: "draft" | "published" | "archived" }) {
+  return !course.lifecycleStatus || course.lifecycleStatus === "published";
+}
+
 export const listCourses = query({
   // Validators for arguments.
   args: {
@@ -12,14 +16,14 @@ export const listCourses = query({
   handler: async (ctx, args) => {
     //// Read the database as many times as you need here.
     //// See https://docs.convex.dev/database/reading-data.
-    const courses = args.count
+    const allCourses = args.count
       ? await ctx.db
           .query("courses")
           // Ordered by _creationTime, return most recent
           .order("desc")
           .take(args.count)
       : await ctx.db.query("courses").order("desc").collect();
-    return courses;
+    return allCourses.filter((course) => isPublishedCourse(course));
   },
 });
 
@@ -38,7 +42,10 @@ export const listCoursesByType = query({
       .order("desc")
       .collect();
 
-    const filteredCourses = args.count ? courses.slice(0, args.count) : courses;
+    const publishedCourses = courses.filter((course) => isPublishedCourse(course));
+    const filteredCourses = args.count
+      ? publishedCourses.slice(0, args.count)
+      : publishedCourses;
 
     return {
       viewer: (await ctx.auth.getUserIdentity())?.name ?? null,
@@ -52,6 +59,7 @@ export const getCourseById = query({
   args: { id: v.id("courses") },
   handler: async (ctx, args) => {
     const course = await ctx.db.get(args.id);
+    if (!course || !isPublishedCourse(course)) return null;
     return course;
   },
 });
@@ -69,12 +77,13 @@ export const getRelatedVariants = query({
       .query("courses")
       .withIndex("by_name_and_type", (q) => q.eq("name", name).eq("type", type))
       .collect();
+    const publishedVariants = variants.filter((course) => isPublishedCourse(course));
     // Ensure stable order by price ascending, then _creationTime
-    variants.sort(
+    publishedVariants.sort(
       (a, b) =>
         (a.price ?? 0) - (b.price ?? 0) || a._creationTime - b._creationTime,
     );
-    return variants;
+    return publishedVariants;
   },
 });
 
@@ -207,7 +216,7 @@ export const getBogoCoursesByType = query({
       .order("desc")
       .collect();
 
-    return courses;
+    return courses.filter((course) => isPublishedCourse(course));
   },
 });
 
@@ -235,7 +244,7 @@ export const getBogoCoursesByTypes = query({
         .order("desc")
         .collect();
       
-      result[courseType] = courses;
+      result[courseType] = courses.filter((course) => isPublishedCourse(course));
     }
 
     return result;

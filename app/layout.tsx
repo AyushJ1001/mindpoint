@@ -13,6 +13,7 @@ import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import StructuredData from "@/components/structured-data";
+import RouteBodyClass from "@/components/RouteBodyClass";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -93,6 +94,7 @@ export default function RootLayout({
 
         <PostHogProvider>
           <ClientProviders>
+            <RouteBodyClass />
             <StructuredData />
             <ClientNavbar />
 

@@ -4,7 +4,6 @@ import HomeClient from "@/components/HomeClient";
 import HomeHero from "@/components/HomeHero";
 import { Suspense } from "react";
 
-// Remove force-static as we need to fetch dynamic data
 export const revalidate = 3600; // Revalidate every hour
 
 export const metadata = {

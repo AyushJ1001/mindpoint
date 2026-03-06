@@ -159,6 +159,7 @@ export default function Navbar() {
 
   return (
     <nav
+      data-app-navbar
       className="bg-background/95 border-border sticky top-0 z-50 border-b bg-gradient-to-br from-10% via-blue-100 to-blue-300 shadow-sm backdrop-blur-sm dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white dark:shadow-lg dark:shadow-black/20"
       role="navigation"
       aria-label="Primary"
