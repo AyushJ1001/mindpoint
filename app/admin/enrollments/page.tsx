@@ -37,6 +37,7 @@ export default function AdminEnrollmentsPage() {
   const [manualName, setManualName] = useState("");
   const [manualPhone, setManualPhone] = useState("");
   const [manualCourseId, setManualCourseId] = useState("");
+  const [isCreatingEnrollment, setIsCreatingEnrollment] = useState(false);
   const manualUserIdLooksLikeEmail = manualUserId.includes("@");
 
   const enrollments = useQuery(api.adminEnrollments.listEnrollments, {
@@ -73,11 +74,16 @@ export default function AdminEnrollmentsPage() {
   );
 
   const handleManualCreate = async () => {
+    if (isCreatingEnrollment) {
+      return;
+    }
+
     if (!manualCourseId || !manualEmail || !manualUserId) {
       toast.error("userId, email and course are required");
       return;
     }
 
+    setIsCreatingEnrollment(true);
     try {
       await createManualEnrollment({
         userId: manualUserId,
@@ -97,6 +103,8 @@ export default function AdminEnrollmentsPage() {
       toast.error(
         error instanceof Error ? error.message : "Failed to create enrollment",
       );
+    } finally {
+      setIsCreatingEnrollment(false);
     }
   };
 
@@ -210,7 +218,17 @@ export default function AdminEnrollmentsPage() {
           </label>
         </div>
         <div className="mt-3">
-          <Button onClick={handleManualCreate}>Create Enrollment</Button>
+          <Button
+            onClick={handleManualCreate}
+            disabled={
+              isCreatingEnrollment ||
+              !manualCourseId ||
+              !manualEmail ||
+              !manualUserId
+            }
+          >
+            {isCreatingEnrollment ? "Creating..." : "Create Enrollment"}
+          </Button>
         </div>
       </div>
 

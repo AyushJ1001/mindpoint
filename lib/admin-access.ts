@@ -43,7 +43,10 @@ export async function hasAdminAccess(
     ) {
       return false;
     }
-    console.error("Admin access check failed due to infrastructure error:", error);
+    console.error(
+      "Admin access check failed due to infrastructure error:",
+      error,
+    );
     throw error;
   }
 }

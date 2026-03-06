@@ -4,6 +4,50 @@ import { mutation, query } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 
 const auditPayloadValidator = v.record(v.string(), v.any());
+const MAX_AUDIT_DEPTH = 4;
+const MAX_AUDIT_KEYS = 50;
+const MAX_AUDIT_ARRAY_LENGTH = 50;
+const MAX_AUDIT_STRING_LENGTH = 2000;
+
+function sanitizeAuditValue(value: unknown, depth = 0): unknown {
+  if (
+    value === null ||
+    value === undefined ||
+    typeof value === "boolean" ||
+    typeof value === "number"
+  ) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    return value.length > MAX_AUDIT_STRING_LENGTH
+      ? `${value.slice(0, MAX_AUDIT_STRING_LENGTH)}...[truncated]`
+      : value;
+  }
+
+  if (depth >= MAX_AUDIT_DEPTH) {
+    return "[truncated]";
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .slice(0, MAX_AUDIT_ARRAY_LENGTH)
+      .map((item) => sanitizeAuditValue(item, depth + 1));
+  }
+
+  if (typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>)
+        .slice(0, MAX_AUDIT_KEYS)
+        .map(([key, nestedValue]) => [
+          key,
+          sanitizeAuditValue(nestedValue, depth + 1),
+        ]),
+    );
+  }
+
+  return String(value);
+}
 
 export async function createAdminAuditLog(
   ctx: MutationCtx,
@@ -24,9 +68,9 @@ export async function createAdminAuditLog(
     action: args.action,
     entityType: args.entityType,
     entityId: args.entityId,
-    before: args.before,
-    after: args.after,
-    metadata: args.metadata,
+    before: sanitizeAuditValue(args.before),
+    after: sanitizeAuditValue(args.after),
+    metadata: sanitizeAuditValue(args.metadata),
     createdAt: Date.now(),
   });
 }
@@ -42,7 +86,9 @@ export const listAuditLogs = query({
     await requireAdmin(ctx);
 
     const limit = Math.min(args.limit ?? 200, 500);
-    const scanLimit = Math.min(Math.max(limit * 5, 500), 2000);
+    const scanLimit = args.search
+      ? Math.min(Math.max(limit * 12, 1500), 5000)
+      : Math.min(Math.max(limit * 5, 500), 2000);
 
     const baseQuery =
       args.entityType && args.actorAdminId

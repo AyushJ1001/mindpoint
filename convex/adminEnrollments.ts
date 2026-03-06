@@ -108,6 +108,9 @@ export const listEnrollments = query({
     await requireAdmin(ctx);
     const limit = Math.min(args.limit ?? 250, 500);
     const scanLimit = Math.min(Math.max(limit * 5, 500), 2000);
+    const effectiveScanLimit = args.search
+      ? Math.min(Math.max(limit * 12, 1500), 5000)
+      : scanLimit;
     const enrollments: Doc<"enrollments">[] = [];
     const seenEnrollmentIds = new Set<string>();
     const appendRows = (rows: Doc<"enrollments">[]) => {
@@ -120,7 +123,8 @@ export const listEnrollments = query({
         enrollments.push(row);
       }
     };
-    const remainingSlots = () => Math.max(0, scanLimit - enrollments.length);
+    const remainingSlots = () =>
+      Math.max(0, effectiveScanLimit - enrollments.length);
 
     if (args.userId && args.courseId && args.status) {
       appendRows(
@@ -133,7 +137,7 @@ export const listEnrollments = query({
               .eq("userId", args.userId!),
           )
           .order("desc")
-          .take(scanLimit),
+          .take(effectiveScanLimit),
       );
 
       if (args.status === "active" && remainingSlots() > 0) {
@@ -157,7 +161,7 @@ export const listEnrollments = query({
             q.eq("userId", args.userId!).eq("status", args.status!),
           )
           .order("desc")
-          .take(scanLimit),
+          .take(effectiveScanLimit),
       );
 
       if (args.status === "active" && remainingSlots() > 0) {
@@ -179,7 +183,7 @@ export const listEnrollments = query({
             q.eq("courseId", args.courseId!).eq("status", args.status!),
           )
           .order("desc")
-          .take(scanLimit),
+          .take(effectiveScanLimit),
       );
 
       if (args.status === "active" && remainingSlots() > 0) {
@@ -201,7 +205,7 @@ export const listEnrollments = query({
             q.eq("userId", args.userId!).eq("courseId", args.courseId!),
           )
           .order("desc")
-          .take(scanLimit),
+          .take(effectiveScanLimit),
       );
     } else if (args.userId) {
       appendRows(
@@ -209,7 +213,7 @@ export const listEnrollments = query({
           .query("enrollments")
           .withIndex("by_userId", (q) => q.eq("userId", args.userId!))
           .order("desc")
-          .take(scanLimit),
+          .take(effectiveScanLimit),
       );
     } else if (args.courseId) {
       appendRows(
@@ -217,7 +221,7 @@ export const listEnrollments = query({
           .query("enrollments")
           .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId!))
           .order("desc")
-          .take(scanLimit),
+          .take(effectiveScanLimit),
       );
     } else if (args.status) {
       appendRows(
@@ -225,7 +229,7 @@ export const listEnrollments = query({
           .query("enrollments")
           .withIndex("by_status", (q) => q.eq("status", args.status!))
           .order("desc")
-          .take(scanLimit),
+          .take(effectiveScanLimit),
       );
 
       if (args.status === "active" && remainingSlots() > 0) {
@@ -239,7 +243,10 @@ export const listEnrollments = query({
       }
     } else {
       appendRows(
-        await ctx.db.query("enrollments").order("desc").take(scanLimit),
+        await ctx.db
+          .query("enrollments")
+          .order("desc")
+          .take(effectiveScanLimit),
       );
     }
 
