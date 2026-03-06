@@ -26,6 +26,29 @@ function generateEnrollmentNumber(
   return `EN-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
 }
 
+async function generateUniqueEnrollmentNumber(
+  ctx: MutationCtx,
+  courseCode: string,
+  startDate: string,
+): Promise<string> {
+  const MAX_ATTEMPTS = 5;
+
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+    const enrollmentNumber = generateEnrollmentNumber(courseCode, startDate);
+    const existing = await ctx.db
+      .query("enrollments")
+      .withIndex("by_enrollmentNumber", (q) =>
+        q.eq("enrollmentNumber", enrollmentNumber),
+      )
+      .first();
+
+    if (!existing) {
+      return enrollmentNumber;
+    }
+  }
+
+  throw new Error("Enrollment number collision. Please retry.");
+}
 function extractInternshipPlanFromDuration(
   duration?: string,
 ): "120" | "240" | null {
@@ -864,7 +887,11 @@ export const transferEnrollment = mutation({
       targetCourse.type === "supervised" ||
       targetCourse.type === "worksheet"
         ? "N/A"
-        : generateEnrollmentNumber(courseCode, courseStartDate);
+        : await generateUniqueEnrollmentNumber(
+            ctx,
+            courseCode,
+            courseStartDate,
+          );
 
     const newEnrollmentId = await ctx.db.insert("enrollments", {
       userId: sourceEnrollment.userId,

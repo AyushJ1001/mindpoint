@@ -39,7 +39,11 @@ const HIGHLIGHTS = [
   },
 ];
 
-export default function HomeHero() {
+export default function HomeHero({
+  canAccessAdmin = false,
+}: {
+  canAccessAdmin?: boolean;
+}) {
   return (
     <main className="flex-1">
       <section className="relative overflow-hidden py-12 sm:py-16 lg:py-24">
@@ -90,7 +94,16 @@ export default function HomeHero() {
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               </Button>
-              {process.env.NEXT_PUBLIC_CONVEX_URL ? (
+              {canAccessAdmin ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="lg"
+                  className="w-full sm:w-auto"
+                >
+                  <Link href="/admin">Admin</Link>
+                </Button>
+              ) : process.env.NEXT_PUBLIC_CONVEX_URL ? (
                 <HomeAdminButton />
               ) : null}
             </div>

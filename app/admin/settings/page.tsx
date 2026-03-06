@@ -5,13 +5,15 @@ export default function AdminSettingsPage() {
   const settingsRows = [
     {
       key: "NEXT_PUBLIC_CONVEX_URL",
+      label: "Convex Admin Backend",
       configured: !!process.env.NEXT_PUBLIC_CONVEX_URL,
-      note: "Convex endpoint for admin queries/mutations",
+      note: "Admin queries and mutations can reach the Convex backend.",
     },
     {
       key: "GOOGLE_SHEETS_SPREADSHEET_ID",
+      label: "Enrollment Sync",
       configured: !!process.env.GOOGLE_SHEETS_SPREADSHEET_ID,
-      note: "Enrollment sync side effects for manual admin enrollments",
+      note: "Manual enrollment side effects can sync to the configured sheet.",
     },
   ];
 
@@ -38,7 +40,10 @@ export default function AdminSettingsPage() {
                 className="flex items-center justify-between rounded-md border p-2"
               >
                 <div>
-                  <p className="font-medium text-slate-900">{row.key}</p>
+                  <p className="font-medium text-slate-900">{row.label}</p>
+                  <p className="font-mono text-[11px] text-slate-500">
+                    {row.key}
+                  </p>
                   <p className="text-xs text-slate-600">{row.note}</p>
                 </div>
                 <span

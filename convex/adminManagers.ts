@@ -66,7 +66,9 @@ export const listAdmins = query({
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
     const limit = Math.min(args.limit ?? 200, 500);
-    const scanLimit = Math.min(Math.max(limit * 5, 500), 1000);
+    const scanLimit = args.search
+      ? Math.min(Math.max(limit * 12, 1000), 2000)
+      : Math.min(Math.max(limit * 5, 500), 1000);
 
     const dbRows = await ctx.db
       .query("adminManagers")
@@ -272,7 +274,10 @@ export const removeAdmin = mutation({
       throw new Error("Admin access is not active for this user.");
     }
 
-    if (admin.userId === existing.clerkUserId) {
+    if (
+      admin.userId === existing.clerkUserId ||
+      (!!admin.email && normalizeEmail(admin.email) === existing.adminEmail)
+    ) {
       throw new Error("You cannot remove your own admin access.");
     }
 

@@ -83,6 +83,15 @@ export default function AdminEnrollmentsPage() {
       return;
     }
 
+    if (
+      manualUserIdLooksLikeEmail &&
+      manualUserId.trim().toLowerCase() !== manualEmail.trim().toLowerCase()
+    ) {
+      toast.error(
+        "For guest users, the User ID and User Email fields must match.",
+      );
+      return;
+    }
     setIsCreatingEnrollment(true);
     try {
       await createManualEnrollment({
@@ -169,7 +178,7 @@ export default function AdminEnrollmentsPage() {
         </h2>
         <div className="grid gap-3 md:grid-cols-3">
           <Input
-            placeholder="User ID (Clerk ID or email)"
+            placeholder="User ID (Clerk ID or guest email)"
             value={manualUserId}
             onChange={(e) => {
               const val = e.target.value;

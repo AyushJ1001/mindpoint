@@ -1,8 +1,11 @@
 import { ConvexHttpClient } from "convex/browser";
+import { auth } from "@clerk/nextjs/server";
 import { api } from "@/convex/_generated/api";
 import HomeClient from "@/components/HomeClient";
 import HomeHero from "@/components/HomeHero";
 import { Suspense } from "react";
+import { hasAdminAccess } from "@/lib/admin-access";
+import { resolveAuthEmail } from "@/lib/clerk-email";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -64,11 +67,23 @@ async function getUpcomingCourses() {
 }
 
 export default async function Home() {
-  const upcomingCourses = await getUpcomingCourses();
+  const [{ userId, sessionClaims, getToken }, upcomingCourses] =
+    await Promise.all([auth(), getUpcomingCourses()]);
+  const sessionEmail = await resolveAuthEmail(sessionClaims);
+
+  let canAccessAdmin = false;
+  if (userId || sessionEmail) {
+    try {
+      const convexToken = await getToken({ template: "convex" });
+      canAccessAdmin = await hasAdminAccess(userId, sessionEmail, convexToken);
+    } catch (error) {
+      console.warn("Failed to resolve home-page admin access:", error);
+    }
+  }
 
   return (
     <>
-      <HomeHero />
+      <HomeHero canAccessAdmin={canAccessAdmin} />
       <Suspense fallback={<div>Loading courses...</div>}>
         <HomeClient upcomingCourses={upcomingCourses} />
       </Suspense>
