@@ -161,9 +161,10 @@ export default function AdminOffersPage() {
     if (
       offerDiscount.trim() !== "" &&
       (!Number.isFinite(discountValue) ||
-        (discountValue !== undefined && discountValue < 0))
+        (discountValue !== undefined &&
+          (discountValue < 0 || discountValue > 100)))
     ) {
-      throw new Error("Discount must be a valid non-negative number");
+      throw new Error("Discount must be a number between 0 and 100");
     }
 
     const offer =
