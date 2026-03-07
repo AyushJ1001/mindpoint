@@ -8,6 +8,16 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { downloadCsv, toCsv } from "@/lib/csv";
 
@@ -60,6 +70,7 @@ export default function AdminLoyaltyPage() {
     null,
   );
   const [isSendingBulkReminders, setIsSendingBulkReminders] = useState(false);
+  const [showBulkReminderConfirm, setShowBulkReminderConfirm] = useState(false);
 
   const exportRows = useMemo(
     () =>
@@ -204,7 +215,7 @@ export default function AdminLoyaltyPage() {
               Export CSV
             </Button>
             <Button
-              onClick={() => handleSendReminderEmails(reminderUserIds)}
+              onClick={() => setShowBulkReminderConfirm(true)}
               disabled={isSendingBulkReminders || reminderUserIds.length === 0}
             >
               {isSendingBulkReminders
@@ -263,6 +274,39 @@ export default function AdminLoyaltyPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={showBulkReminderConfirm}
+        onOpenChange={(open) => {
+          if (!isSendingBulkReminders) {
+            setShowBulkReminderConfirm(open);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Send reminder emails?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {`Send reminder emails to ${reminderUserIds.length} visible user${reminderUserIds.length === 1 ? "" : "s"}? This cannot be undone.`}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSendingBulkReminders}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isSendingBulkReminders}
+              onClick={async (event) => {
+                event.preventDefault();
+                await handleSendReminderEmails(reminderUserIds);
+                setShowBulkReminderConfirm(false);
+              }}
+            >
+              {isSendingBulkReminders ? "Queueing..." : "Confirm Send"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <div className="max-w-md">
         <Input
