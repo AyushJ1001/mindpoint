@@ -25,6 +25,27 @@ export const EnrollmentStatus = v.union(
   v.literal("transferred"),
 );
 
+export const EnrollmentRegistrationSource = v.union(
+  v.literal("checkout"),
+  v.literal("guest_checkout"),
+  v.literal("admin_manual"),
+  v.literal("admin_transfer"),
+);
+
+const CourseOfferValue = v.object({
+  name: v.string(),
+  discount: v.optional(v.number()),
+  startDate: v.optional(v.string()),
+  endDate: v.optional(v.string()),
+});
+
+const CourseBogoValue = v.object({
+  enabled: v.boolean(),
+  startDate: v.optional(v.string()),
+  endDate: v.optional(v.string()),
+  label: v.optional(v.string()),
+});
+
 // The schema is entirely optional.
 // You can delete this file (schema.ts) and the
 // app will continue to work.
@@ -39,22 +60,8 @@ export default defineSchema({
     type: v.optional(CourseType),
     code: v.string(),
     price: v.number(),
-    offer: v.optional(
-      v.object({
-        name: v.string(),
-        discount: v.optional(v.number()),
-        startDate: v.optional(v.string()),
-        endDate: v.optional(v.string()),
-      }),
-    ),
-    bogo: v.optional(
-      v.object({
-        enabled: v.boolean(),
-        startDate: v.optional(v.string()),
-        endDate: v.optional(v.string()),
-        label: v.optional(v.string()),
-      }),
-    ),
+    offer: v.optional(CourseOfferValue),
+    bogo: v.optional(CourseBogoValue),
     // Number of sessions for session-based offerings (e.g., therapy)
     sessions: v.optional(v.number()),
     capacity: v.number(),
@@ -110,6 +117,23 @@ export default defineSchema({
     .index("by_lifecycleStatus", ["lifecycleStatus"])
     .index("by_type_and_lifecycleStatus", ["type", "lifecycleStatus"]),
 
+  offerCampaigns: defineTable({
+    name: v.string(),
+    description: v.optional(v.string()),
+    offer: v.optional(CourseOfferValue),
+    bogo: v.optional(CourseBogoValue),
+    isArchived: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdByAdminId: v.string(),
+    updatedByAdminId: v.string(),
+    lastAppliedAt: v.optional(v.number()),
+    lastAppliedCourseIds: v.optional(v.array(v.id("courses"))),
+  })
+    .index("by_name", ["name"])
+    .index("by_updatedAt", ["updatedAt"])
+    .index("by_isArchived", ["isArchived"]),
+
   reviews: defineTable({
     userId: v.string(),
     userName: v.string(),
@@ -149,6 +173,13 @@ export default defineSchema({
     isBogoFree: v.optional(v.boolean()),
     bogoSourceCourseId: v.optional(v.id("courses")),
     bogoOfferName: v.optional(v.string()),
+    listedPrice: v.optional(v.number()),
+    checkoutPrice: v.optional(v.number()),
+    amountPaid: v.optional(v.number()),
+    redemptionDiscountAmount: v.optional(v.number()),
+    couponCode: v.optional(v.string()),
+    mindPointsRedeemed: v.optional(v.number()),
+    registrationSource: v.optional(EnrollmentRegistrationSource),
     status: v.optional(EnrollmentStatus),
     statusReason: v.optional(v.string()),
     cancelledAt: v.optional(v.number()),

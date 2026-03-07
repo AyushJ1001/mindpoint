@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { api } from "./_generated/api";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
 import { CourseType } from "./schema";
@@ -361,5 +362,84 @@ export const createManualCoupon = mutation({
     });
 
     return created;
+  },
+});
+
+export const queueMindPointsReminderEmails = mutation({
+  args: {
+    clerkUserIds: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const uniqueUserIds = Array.from(
+      new Set(args.clerkUserIds.map((value) => value.trim()).filter(Boolean)),
+    );
+
+    let scheduled = 0;
+    let skipped = 0;
+
+    for (const clerkUserId of uniqueUserIds) {
+      const points = await ctx.db
+        .query("mindPoints")
+        .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", clerkUserId))
+        .first();
+
+      if (!points || points.balance <= 0) {
+        skipped += 1;
+        continue;
+      }
+
+      const latestEnrollment = await ctx.db
+        .query("enrollments")
+        .withIndex("by_userId", (q) => q.eq("userId", clerkUserId))
+        .order("desc")
+        .first();
+
+      const userEmail = points.userEmail ?? latestEnrollment?.userEmail;
+      const userName =
+        points.userName ??
+        latestEnrollment?.userName ??
+        userEmail ??
+        clerkUserId;
+
+      if (!userEmail) {
+        skipped += 1;
+        continue;
+      }
+
+      await ctx.scheduler.runAfter(
+        0,
+        api.emailActions.sendMindPointsReminderEmail,
+        {
+          userEmail,
+          userName,
+          balance: points.balance,
+          totalEarned: points.totalEarned,
+          totalRedeemed: points.totalRedeemed,
+        },
+      );
+
+      scheduled += 1;
+    }
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "loyalty.send_mind_points_reminders",
+      entityType: "mindPoints",
+      entityId: uniqueUserIds[0] ?? "batch",
+      metadata: {
+        requested: uniqueUserIds.length,
+        scheduled,
+        skipped,
+        clerkUserIds: uniqueUserIds.slice(0, 50),
+      },
+    });
+
+    return {
+      requested: uniqueUserIds.length,
+      scheduled,
+      skipped,
+    };
   },
 });

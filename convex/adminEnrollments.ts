@@ -280,8 +280,10 @@ export const listEnrollments = query({
           row.userId,
           row.userName ?? "",
           row.userEmail ?? "",
+          row.userPhone ?? "",
           row.courseName ?? "",
           row.enrollmentNumber,
+          row.couponCode ?? "",
         ];
 
         return fields.some((field) => field.toLowerCase().includes(search));
@@ -375,9 +377,15 @@ export const createManualEnrollment = mutation({
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
+    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   },
   handler: async (ctx, args): Promise<Doc<"enrollments"> | null> => {
     const admin = await requireAdmin(ctx);
+    const course = await ctx.db.get(args.courseId);
+
+    if (!course) {
+      throw new Error("Course not found");
+    }
 
     if (args.isGuestUser && isAuthenticatedUserId(args.userId)) {
       throw new Error("A Clerk user ID cannot be enrolled as a guest user.");
@@ -413,6 +421,19 @@ export const createManualEnrollment = mutation({
           },
           courseIds: [args.courseId],
           sessionType: args.sessionType,
+          internshipPlan: args.internshipPlan,
+          checkoutPricing: {
+            totalAmountPaid: 0,
+            items: [
+              {
+                courseId: args.courseId,
+                listedPrice: course.price,
+                checkoutPrice: course.price,
+                amountPaid: 0,
+                redemptionDiscountAmount: course.price,
+              },
+            ],
+          },
         },
       )) as GuestCheckoutResult;
 
@@ -444,6 +465,19 @@ export const createManualEnrollment = mutation({
             studentName: args.userName,
             courseId: args.courseId,
             sessionType: args.sessionType,
+            internshipPlan: args.internshipPlan,
+            checkoutPricing: {
+              totalAmountPaid: 0,
+              items: [
+                {
+                  courseId: args.courseId,
+                  listedPrice: course.price,
+                  checkoutPrice: course.price,
+                  amountPaid: 0,
+                  redemptionDiscountAmount: course.price,
+                },
+              ],
+            },
           },
         );
         enrollmentId = created;
@@ -490,7 +524,11 @@ export const createManualEnrollment = mutation({
       );
     }
 
-    return createdEnrollment;
+    await ctx.db.patch(enrollmentId, {
+      registrationSource: "admin_manual",
+    });
+
+    return await ctx.db.get(enrollmentId);
   },
 });
 
@@ -862,6 +900,12 @@ export const transferEnrollment = mutation({
     }
 
     const now = Date.now();
+    const transferredInternshipPlan =
+      targetCourse.type === "internship"
+        ? extractInternshipPlanFromDuration(targetCourse.duration) ||
+          sourceEnrollment.internshipPlan ||
+          undefined
+        : undefined;
 
     await ctx.db.patch(args.enrollmentId, {
       status: "transferred",
@@ -904,11 +948,18 @@ export const transferEnrollment = mutation({
       isGuestUser: sourceEnrollment.isGuestUser,
       sessionType: sourceEnrollment.sessionType,
       courseType: targetCourse.type,
-      internshipPlan: sourceEnrollment.internshipPlan,
+      internshipPlan: transferredInternshipPlan,
       sessions: targetCourse.sessions,
       isBogoFree: sourceEnrollment.isBogoFree,
       bogoSourceCourseId: sourceEnrollment.bogoSourceCourseId,
       bogoOfferName: sourceEnrollment.bogoOfferName,
+      listedPrice: sourceEnrollment.listedPrice ?? targetCourse.price,
+      checkoutPrice: sourceEnrollment.checkoutPrice ?? targetCourse.price,
+      amountPaid: sourceEnrollment.amountPaid ?? sourceEnrollment.checkoutPrice,
+      redemptionDiscountAmount: sourceEnrollment.redemptionDiscountAmount,
+      couponCode: sourceEnrollment.couponCode,
+      mindPointsRedeemed: sourceEnrollment.mindPointsRedeemed,
+      registrationSource: "admin_transfer",
       status: "active",
       statusReason: `Transfer from ${sourceEnrollment.courseName || String(sourceEnrollment.courseId)}`,
     });

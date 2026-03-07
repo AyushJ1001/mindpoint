@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
@@ -38,8 +39,7 @@ export default function AdminLoyaltyPage() {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [delta, setDelta] = useState(0);
   const [reason, setReason] = useState("");
-  const [couponType, setCouponType] =
-    useState<CouponCourseType>("certificate");
+  const [couponType, setCouponType] = useState<CouponCourseType>("certificate");
   const [couponPointsCost, setCouponPointsCost] = useState(0);
   const [isBackfilling, setIsBackfilling] = useState(false);
 
@@ -53,6 +53,13 @@ export default function AdminLoyaltyPage() {
   const backfillLoyaltySearchFields = useMutation(
     api.adminLoyalty.backfillLoyaltySearchFields,
   );
+  const queueMindPointsReminderEmails = useMutation(
+    api.adminLoyalty.queueMindPointsReminderEmails,
+  );
+  const [sendingReminderKey, setSendingReminderKey] = useState<string | null>(
+    null,
+  );
+  const [isSendingBulkReminders, setIsSendingBulkReminders] = useState(false);
 
   const exportRows = useMemo(
     () =>
@@ -64,6 +71,13 @@ export default function AdminLoyaltyPage() {
         userName: row.profile?.userName,
         userEmail: row.profile?.userEmail,
       })),
+    [rows],
+  );
+  const reminderUserIds = useMemo(
+    () =>
+      (rows || [])
+        .filter((row) => row.balance > 0)
+        .map((row) => row.clerkUserId),
     [rows],
   );
 
@@ -126,6 +140,44 @@ export default function AdminLoyaltyPage() {
     }
   };
 
+  const handleSendReminderEmails = async (clerkUserIds: string[]) => {
+    if (clerkUserIds.length === 0) {
+      toast.error("No eligible loyalty users to remind");
+      return;
+    }
+
+    const targetKey =
+      clerkUserIds.length === 1
+        ? clerkUserIds[0]
+        : `bulk:${clerkUserIds.length}`;
+    setSendingReminderKey(targetKey);
+    if (clerkUserIds.length > 1) {
+      setIsSendingBulkReminders(true);
+    }
+
+    try {
+      const result = await queueMindPointsReminderEmails({ clerkUserIds });
+      toast.success(
+        `Queued ${result.scheduled} reminder email${result.scheduled === 1 ? "" : "s"}`,
+        {
+          description:
+            result.skipped > 0
+              ? `${result.skipped} user(s) were skipped due to missing email or zero balance.`
+              : undefined,
+        },
+      );
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to queue reminder emails",
+      );
+    } finally {
+      setSendingReminderKey(null);
+      setIsSendingBulkReminders(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
@@ -150,6 +202,14 @@ export default function AdminLoyaltyPage() {
               }
             >
               Export CSV
+            </Button>
+            <Button
+              onClick={() => handleSendReminderEmails(reminderUserIds)}
+              disabled={isSendingBulkReminders || reminderUserIds.length === 0}
+            >
+              {isSendingBulkReminders
+                ? "Queueing reminders..."
+                : "Remind Visible Users"}
             </Button>
           </div>
         }
@@ -217,21 +277,23 @@ export default function AdminLoyaltyPage() {
           <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
             <tr>
               <th className="px-3 py-2">User</th>
+              <th className="px-3 py-2">User ID</th>
               <th className="px-3 py-2">Balance</th>
               <th className="px-3 py-2">Earned</th>
               <th className="px-3 py-2">Redeemed</th>
+              <th className="px-3 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {!rows ? (
               <tr>
-                <td className="px-3 py-4 text-slate-600" colSpan={4}>
+                <td className="px-3 py-4 text-slate-600" colSpan={6}>
                   Loading loyalty accounts...
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td className="px-3 py-4 text-slate-600" colSpan={4}>
+                <td className="px-3 py-4 text-slate-600" colSpan={6}>
                   No loyalty accounts found.
                 </td>
               </tr>
@@ -246,9 +308,37 @@ export default function AdminLoyaltyPage() {
                       {row.profile?.userEmail || "-"}
                     </p>
                   </td>
+                  <td className="px-3 py-2 font-mono text-xs text-slate-600">
+                    {row.clerkUserId}
+                  </td>
                   <td className="px-3 py-2">{row.balance}</td>
                   <td className="px-3 py-2">{row.totalEarned}</td>
                   <td className="px-3 py-2">{row.totalRedeemed}</td>
+                  <td className="px-3 py-2">
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link
+                          href={`/admin/users/${encodeURIComponent(`clerk:${row.clerkUserId}`)}`}
+                        >
+                          View
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={() =>
+                          handleSendReminderEmails([row.clerkUserId])
+                        }
+                        disabled={
+                          row.balance <= 0 ||
+                          sendingReminderKey === row.clerkUserId
+                        }
+                      >
+                        {sendingReminderKey === row.clerkUserId
+                          ? "Queueing..."
+                          : "Send Reminder"}
+                      </Button>
+                    </div>
+                  </td>
                 </tr>
               ))
             )}

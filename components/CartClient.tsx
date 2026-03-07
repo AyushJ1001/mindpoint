@@ -73,6 +73,7 @@ const CartContent = () => {
     code: string;
     discount: number;
     courseType: string;
+    pointsCost: number;
   } | null>(null);
   const { Razorpay, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
@@ -166,15 +167,93 @@ const CartContent = () => {
     return Array.from(labels);
   }, [items, itemOfferDetails]);
 
-  // Calculate total points that will be earned (only for authenticated users and paid items)
+  const checkoutPricing = useMemo(() => {
+    const baseItems = items.map((item) => {
+      const listedPrice = Math.round(item.originalPrice ?? item.price ?? 0);
+      const checkoutPrice = Math.round(item.price ?? 0);
+
+      return {
+        courseId: item.id as Id<"courses">,
+        courseType: item.courseType,
+        listedPrice,
+        checkoutPrice,
+        amountPaid: checkoutPrice,
+        redemptionDiscountAmount: 0,
+        couponCode: undefined as string | undefined,
+        mindPointsRedeemed: undefined as number | undefined,
+      };
+    });
+
+    if (!appliedCoupon) {
+      return {
+        totalAmountPaid: baseItems.reduce(
+          (total, item) => total + item.amountPaid,
+          0,
+        ),
+        items: baseItems.map((item) => {
+          const { courseType, ...rest } = item;
+          void courseType;
+          return rest;
+        }),
+      };
+    }
+
+    const eligibleIndex = baseItems.findIndex(
+      (item) =>
+        item.courseType === appliedCoupon.courseType && item.checkoutPrice > 0,
+    );
+
+    const pricedItems = baseItems.map((item, index) => {
+      if (index !== eligibleIndex) {
+        const { courseType, ...rest } = item;
+        void courseType;
+        return rest;
+      }
+
+      const discountAmount = Math.min(
+        item.checkoutPrice,
+        Math.round(item.checkoutPrice * (appliedCoupon.discount / 100)),
+      );
+      const amountPaid = Math.max(0, item.checkoutPrice - discountAmount);
+      const { courseType, ...rest } = item;
+      void courseType;
+
+      return {
+        ...rest,
+        amountPaid,
+        redemptionDiscountAmount: discountAmount,
+        couponCode: appliedCoupon.code,
+        mindPointsRedeemed:
+          discountAmount > 0 ? appliedCoupon.pointsCost : undefined,
+      };
+    });
+
+    return {
+      totalAmountPaid: pricedItems.reduce(
+        (total, item) => total + item.amountPaid,
+        0,
+      ),
+      items: pricedItems,
+    };
+  }, [items, appliedCoupon]);
+
+  const discountedTotal = checkoutPricing.totalAmountPaid;
   const totalPointsEarned = useMemo(() => {
-    if (!user?.id) return 0; // Guest users don't earn points
+    if (!user?.id) return 0;
+
+    const pricingMap = new Map(
+      checkoutPricing.items.map((item) => [String(item.courseId), item]),
+    );
 
     return items.reduce((total, item) => {
-      // Don't count BOGO free items
-      if (item.selectedFreeCourse) return total;
+      if (item.selectedFreeCourse || !item.courseType) {
+        return total;
+      }
 
-      if (!item.courseType) return total;
+      const pricingItem = pricingMap.get(String(item.id));
+      if (!pricingItem || pricingItem.amountPaid <= 0) {
+        return total;
+      }
 
       const pointsMap: Record<string, number> = {
         certificate: 120,
@@ -184,22 +263,13 @@ const CartContent = () => {
         "pre-recorded": 100,
       };
 
-      // Handle internship - default to 120hr (60 points)
-      // Could be enhanced to check course duration if needed
       if (item.courseType === "internship") {
-        return total + 60; // Default to 120hr points
+        return total + 60;
       }
 
       return total + (pointsMap[item.courseType] || 0);
     }, 0);
-  }, [items, user?.id]);
-
-  // Calculate discounted total when coupon is applied
-  const discountedTotal = useMemo(() => {
-    if (!appliedCoupon) return Math.round(cartTotal);
-    const discountMultiplier = 1 - appliedCoupon.discount / 100;
-    return Math.round(cartTotal * discountMultiplier);
-  }, [cartTotal, appliedCoupon]);
+  }, [checkoutPricing.items, items, user?.id]);
 
   const showEnrollmentToast = (
     enrollments:
@@ -330,6 +400,7 @@ const CartContent = () => {
                 undefined, // sessionType
                 bogoSelections.length > 0 ? bogoSelections : undefined,
                 referrerClerkUserId,
+                checkoutPricing,
               );
 
               if (result.success) {
@@ -344,24 +415,7 @@ const CartContent = () => {
                   }
                 }
 
-                // Calculate and show points earned
-                const pointsEarned = items.reduce((total, item) => {
-                  if (item.courseType && !item.selectedFreeCourse) {
-                    // Don't count BOGO free items
-                    const pointsMap: Record<string, number> = {
-                      certificate: 120,
-                      diploma: 200,
-                      worksheet: 20,
-                      masterclass: 20,
-                      "pre-recorded": 100,
-                    };
-                    if (item.courseType === "internship") {
-                      return total + 60; // Default to 120hr, could be enhanced
-                    }
-                    return total + (pointsMap[item.courseType] || 0);
-                  }
-                  return total;
-                }, 0);
+                const pointsEarned = totalPointsEarned;
 
                 if (pointsEarned > 0 && user?.id) {
                   setTimeout(() => {
@@ -620,12 +674,14 @@ const CartContent = () => {
       user?.fullName,
       user?.primaryEmailAddress?.emailAddress,
       discountedTotal,
+      checkoutPricing,
       items,
       userProfile,
       markCouponUsed,
       appliedCoupon,
       setAppliedCoupon,
       setCouponCode,
+      totalPointsEarned,
       emptyCart,
       setIsProcessing,
       Razorpay,
@@ -828,7 +884,9 @@ const CartContent = () => {
                         )}
                       </div>
                       <div className="flex flex-shrink-0 flex-col items-end gap-2 text-right">
-                        <div className="font-semibold">{showRupees(itemTotal)}</div>
+                        <div className="font-semibold">
+                          {showRupees(itemTotal)}
+                        </div>
                         {offerDetails?.hasDiscount && (
                           <div className="text-muted-foreground text-xs">
                             <span className="line-through">
@@ -843,7 +901,7 @@ const CartContent = () => {
                           variant="ghost"
                           size="sm"
                           onClick={() => removeItem(item.id)}
-                          className="text-red-600 hover:text-red-700 h-8 w-8 p-0"
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
                           aria-label={`Remove ${item.name} from cart`}
                         >
                           <Trash2 className="h-4 w-4" />
@@ -941,10 +999,10 @@ const CartContent = () => {
                 <div className="space-y-2">
                   <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
                     <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0" />
-                      <span className="break-words">
-                        {bogoLabels.length > 0 ? bogoLabels.join(", ") : "BOGO"}{" "}
-                        applied:{" "}
-                        {activeBogoTypes.length > 0
+                    <span className="break-words">
+                      {bogoLabels.length > 0 ? bogoLabels.join(", ") : "BOGO"}{" "}
+                      applied:{" "}
+                      {activeBogoTypes.length > 0
                         ? `${activeBogoTypes.join(", ")}`
                         : "complimentary course enrollments"}
                       {" will be added automatically during checkout."}
@@ -1001,10 +1059,23 @@ const CartContent = () => {
                           couponValidation?.valid &&
                           couponValidation.coupon
                         ) {
+                          const hasEligibleCourse = items.some(
+                            (item) =>
+                              item.courseType ===
+                                couponValidation.coupon.courseType &&
+                              Math.round(item.price ?? 0) > 0,
+                          );
+                          if (!hasEligibleCourse) {
+                            toast.error(
+                              `This coupon can only be used on ${couponValidation.coupon.courseType} courses currently in your cart.`,
+                            );
+                            return;
+                          }
                           setAppliedCoupon({
                             code: couponCode,
                             discount: couponValidation.coupon.discount,
                             courseType: couponValidation.coupon.courseType,
+                            pointsCost: couponValidation.coupon.pointsCost,
                           });
                           toast.success("Coupon applied successfully!");
                         } else if (couponValidation?.error) {
@@ -1058,8 +1129,8 @@ const CartContent = () => {
                   <div className="text-sm text-green-600">
                     <Check className="mr-1 inline h-4 w-4" />
                     {appliedCoupon.discount === 100
-                      ? "Coupon applied - Free!"
-                      : `Coupon applied - ${appliedCoupon.discount}% off`}
+                      ? `Coupon applied to one ${appliedCoupon.courseType} course`
+                      : `Coupon applied - ${appliedCoupon.discount}% off one ${appliedCoupon.courseType} course`}
                   </div>
                 )}
                 {user?.id && totalPointsEarned > 0 && (

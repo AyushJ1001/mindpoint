@@ -324,6 +324,8 @@ export const listCourses = query({
           course.code,
           course.description ?? "",
           course.type ?? "",
+          course.offer?.name ?? "",
+          course.bogo?.label ?? "",
         ];
         return fields.some((field) => field.toLowerCase().includes(search));
       });
