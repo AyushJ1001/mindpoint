@@ -156,7 +156,9 @@ export const listCampaigns = query({
           .take(scanLimit)
       : await ctx.db
           .query("offerCampaigns")
-          .withIndex("by_isArchived", (q) => q.eq("isArchived", false))
+          .withIndex("by_isArchived_updatedAt", (q) =>
+            q.eq("isArchived", false),
+          )
           .order("desc")
           .take(scanLimit);
 

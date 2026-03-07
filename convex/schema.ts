@@ -132,7 +132,8 @@ export default defineSchema({
   })
     .index("by_name", ["name"])
     .index("by_updatedAt", ["updatedAt"])
-    .index("by_isArchived", ["isArchived"]),
+    .index("by_isArchived", ["isArchived"])
+    .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"]),
 
   reviews: defineTable({
     userId: v.string(),

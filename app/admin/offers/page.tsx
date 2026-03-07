@@ -592,20 +592,7 @@ export default function AdminOffersPage() {
               </div>
             </div>
 
-            <div className="grid gap-3 lg:grid-cols-[1fr_auto_auto]">
-              <select
-                className="h-10 rounded-md border bg-white px-3 text-sm"
-                value={builderApplyMode}
-                onChange={(e) =>
-                  setBuilderApplyMode(
-                    e.target.value as "discount" | "bogo" | "both",
-                  )
-                }
-              >
-                <option value="both">Apply discount + BOGO</option>
-                <option value="discount">Apply discount only</option>
-                <option value="bogo">Apply BOGO only</option>
-              </select>
+            <div className="grid gap-3 sm:grid-cols-2">
               <Button
                 disabled={isSaving}
                 onClick={() => saveCurrentCampaign("create")}
@@ -624,6 +611,25 @@ export default function AdminOffersPage() {
             <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
               <select
                 className="h-10 rounded-md border bg-white px-3 text-sm"
+                value={builderApplyMode}
+                onChange={(e) =>
+                  setBuilderApplyMode(
+                    e.target.value as "discount" | "bogo" | "both",
+                  )
+                }
+              >
+                <option value="both">Apply discount + BOGO</option>
+                <option value="discount">Apply discount only</option>
+                <option value="bogo">Apply BOGO only</option>
+              </select>
+              <Button disabled={isSaving} onClick={applyBuilderToCourses}>
+                Apply Builder To Selected
+              </Button>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
+              <select
+                className="h-10 rounded-md border bg-white px-3 text-sm"
                 value={clearMode}
                 onChange={(e) =>
                   setClearMode(e.target.value as "discount" | "bogo" | "all")
@@ -633,18 +639,14 @@ export default function AdminOffersPage() {
                 <option value="discount">Clear discount only</option>
                 <option value="bogo">Clear BOGO only</option>
               </select>
-              <Button disabled={isSaving} onClick={applyBuilderToCourses}>
-                Apply Builder To Selected
+              <Button
+                variant="destructive"
+                disabled={isSaving}
+                onClick={clearOffers}
+              >
+                Clear Selected Offers
               </Button>
             </div>
-
-            <Button
-              variant="destructive"
-              disabled={isSaving}
-              onClick={clearOffers}
-            >
-              Clear Selected Offers
-            </Button>
           </CardContent>
         </Card>
       </div>
