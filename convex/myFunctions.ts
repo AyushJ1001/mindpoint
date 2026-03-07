@@ -653,6 +653,8 @@ async function createBogoEnrollment(
     isBogoFree: true,
     bogoSourceCourseId: sourceCourse._id as Id<"courses">,
     bogoOfferName: sourceCourse.name,
+    // BOGO value is tracked via the zero-paid enrollment plus listedPrice/isBogoFree;
+    // we intentionally leave redemptionDiscountAmount unset because no coupon/points were redeemed.
     listedPrice: roundCurrency(freeCourse.price),
     checkoutPrice: 0,
     amountPaid: 0,
