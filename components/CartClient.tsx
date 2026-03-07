@@ -223,10 +223,23 @@ const CartContent = () => {
       };
     }
 
-    const eligibleIndex = baseItems.findIndex(
-      (item) =>
-        item.courseType === appliedCoupon.courseType && item.checkoutPrice > 0,
-    );
+    const eligibleIndex = (() => {
+      let bestIndex = -1;
+      let bestPrice = -1;
+
+      baseItems.forEach((item, index) => {
+        if (
+          item.courseType === appliedCoupon.courseType &&
+          item.checkoutPrice > 0 &&
+          item.checkoutPrice > bestPrice
+        ) {
+          bestIndex = index;
+          bestPrice = item.checkoutPrice;
+        }
+      });
+
+      return bestIndex;
+    })();
 
     if (eligibleIndex === -1) {
       return {

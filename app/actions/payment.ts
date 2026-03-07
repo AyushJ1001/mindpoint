@@ -3,21 +3,7 @@
 import { api } from "../../convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { executeConvexMutationWithRetry } from "@/lib/convex-client-utils";
-
-type CheckoutPricingItem = {
-  courseId: Id<"courses">;
-  listedPrice: number;
-  checkoutPrice: number;
-  amountPaid: number;
-  redemptionDiscountAmount?: number;
-  couponCode?: string;
-  mindPointsRedeemed?: number;
-};
-
-type CheckoutPricing = {
-  totalAmountPaid: number;
-  items: CheckoutPricingItem[];
-};
+import type { CheckoutPricing } from "@/lib/types/checkout";
 
 export async function handlePaymentSuccess(
   userId: string,

@@ -3,6 +3,10 @@ import { query, mutation, action } from "./_generated/server";
 import { api } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
+import type {
+  CheckoutPricing,
+  CheckoutPricingItem,
+} from "../lib/types/checkout";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -255,21 +259,6 @@ const checkoutPricingValidator = v.object({
   totalAmountPaid: v.number(),
   items: v.array(checkoutPricingItemValidator),
 });
-
-type CheckoutPricingItem = {
-  courseId: Id<"courses">;
-  listedPrice: number;
-  checkoutPrice: number;
-  amountPaid: number;
-  redemptionDiscountAmount?: number;
-  couponCode?: string;
-  mindPointsRedeemed?: number;
-};
-
-type CheckoutPricing = {
-  totalAmountPaid: number;
-  items: CheckoutPricingItem[];
-};
 
 function roundCurrency(value: number | undefined): number {
   if (!Number.isFinite(value)) {
