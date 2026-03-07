@@ -41,6 +41,14 @@ const sendEmailWithCopy = async (emailConfig: {
   });
 };
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 // Test email action for debugging
 export const sendTestEmail = action({
   args: {
@@ -156,7 +164,7 @@ export const sendMindPointsReminderEmail = action({
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
             <h2 style="color: #2563eb;">Mind Points Reminder</h2>
-            <p>Dear ${args.userName},</p>
+            <p>Dear ${escapeHtml(args.userName)},</p>
             <p>You currently have <strong>${args.balance} Mind Points</strong> available in your account.</p>
             <table style="width: 100%; border-collapse: collapse; margin: 18px 0;">
               <tbody>
@@ -303,7 +311,7 @@ export const sendCertificateEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Certificate Course Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
           <p>We are pleased to inform you that your payment for the certificate course <strong>${args.courseName}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Course Details</h3>
@@ -395,7 +403,7 @@ export const sendInternshipEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Internship Program Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
           <p>We are pleased to inform you that your payment for the internship program <strong>${args.courseName}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Program Details</h3>
@@ -485,7 +493,7 @@ export const sendDiplomaEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Diploma Course Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
           <p>We are pleased to inform you that your payment for the diploma course <strong>${args.courseName}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Course Details</h3>
@@ -567,7 +575,7 @@ export const sendPreRecordedEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Pre-Recorded Course Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
           <p>We are pleased to inform you that your payment for the pre-recorded course <strong>${args.courseName}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Course Details</h3>
@@ -641,7 +649,7 @@ export const sendMasterclassEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Masterclass Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
           <p>We are pleased to inform you that your payment for the masterclass <strong>${args.courseName}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Masterclass Details</h3>
@@ -819,7 +827,7 @@ export const sendCartCheckoutConfirmation = action({
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
             <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
-            <p>Dear ${args.userName},</p>
+            <p>Dear ${escapeHtml(args.userName)},</p>
             <p>We are happy to confirm that your payments for the following courses have been successfully received:</p>
 
             <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -956,7 +964,7 @@ export const sendTherapyEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Therapy Session Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
           <p>We are pleased to confirm your enrollment for <strong>${args.therapyType}</strong> therapy sessions.</p>
 
           <h3 style="margin-top: 20px;">Session Details</h3>
@@ -1242,7 +1250,7 @@ export const sendWorksheetPurchaseConfirmation = action({
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
           <h2 style="color: #4CAF50; margin-bottom: 20px;">Worksheet Purchase Confirmation</h2>
           
-          <p>Dear <strong>${args.userName}</strong>,</p>
+          <p>Dear <strong>${escapeHtml(args.userName)}</strong>,</p>
           
           <p>We are happy to confirm that your payment for the following worksheet${args.worksheets.length > 1 ? "s" : ""} has been successfully received:</p>
           
@@ -1327,7 +1335,7 @@ export const sendAlreadyEnrolledNotification = action({
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
             <h2 style="color: #FFA500;">Course Enrollment Status</h2>
-            <p>Dear ${args.userName},</p>
+            <p>Dear ${escapeHtml(args.userName)},</p>
             <p>Thank you for your interest in our courses! We noticed that you attempted to enroll in the following courses, but you are already enrolled in them:</p>
 
             <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">

@@ -223,7 +223,11 @@ export default function AdminEditCoursePage() {
                       </td>
                       <td className="px-3 py-2 text-xs text-slate-700">
                         <p>
-                          {showRupees(row.amountPaid ?? row.checkoutPrice ?? 0)}
+                          {row.amountPaid != null
+                            ? showRupees(row.amountPaid)
+                            : row.checkoutPrice != null
+                              ? showRupees(row.checkoutPrice)
+                              : "—"}
                         </p>
                         {row.mindPointsRedeemed ? (
                           <p className="text-slate-500">

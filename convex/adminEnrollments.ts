@@ -953,7 +953,10 @@ export const transferEnrollment = mutation({
       bogoOfferName: sourceEnrollment.bogoOfferName,
       listedPrice: sourceEnrollment.listedPrice ?? targetCourse.price,
       checkoutPrice: sourceEnrollment.checkoutPrice ?? targetCourse.price,
-      amountPaid: sourceEnrollment.amountPaid ?? sourceEnrollment.checkoutPrice,
+      amountPaid:
+        sourceEnrollment.amountPaid ??
+        sourceEnrollment.checkoutPrice ??
+        undefined,
       redemptionDiscountAmount: sourceEnrollment.redemptionDiscountAmount,
       couponCode: sourceEnrollment.couponCode,
       mindPointsRedeemed: sourceEnrollment.mindPointsRedeemed,

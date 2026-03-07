@@ -12,6 +12,15 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { isBogoActive, isDiscountActive, showRupees } from "@/lib/utils";
 
@@ -90,6 +99,7 @@ export default function AdminOffersPage() {
   );
   const [isSaving, setIsSaving] = useState(false);
   const [campaignActionId, setCampaignActionId] = useState<string | null>(null);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -312,7 +322,7 @@ export default function AdminOffersPage() {
   const clearOffers = async () => {
     if (selectedCourseIds.length === 0) {
       toast.error("Select at least one course");
-      return;
+      return false;
     }
 
     setIsSaving(true);
@@ -324,12 +334,25 @@ export default function AdminOffersPage() {
         bogo: clearMode === "bogo" || clearMode === "all" ? null : undefined,
       });
       toast.success(`Cleared offers on ${result.updatedCount} course(s)`);
+      return true;
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to clear offers",
       );
+      return false;
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const confirmClearOffers = async () => {
+    if (isSaving) {
+      return;
+    }
+
+    const didClear = await clearOffers();
+    if (didClear) {
+      setShowClearConfirm(false);
     }
   };
 
@@ -643,7 +666,7 @@ export default function AdminOffersPage() {
               <Button
                 variant="destructive"
                 disabled={isSaving}
-                onClick={clearOffers}
+                onClick={() => setShowClearConfirm(true)}
               >
                 Clear Selected Offers
               </Button>
@@ -769,6 +792,35 @@ export default function AdminOffersPage() {
           </div>
         </CardContent>
       </Card>
+
+      <AlertDialog
+        open={showClearConfirm}
+        onOpenChange={(open) => {
+          if (!isSaving) {
+            setShowClearConfirm(open);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear selected offers?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will clear offers for all selected courses. This cannot be
+              undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSaving}>Cancel</AlertDialogCancel>
+            <Button
+              variant="destructive"
+              disabled={isSaving}
+              onClick={confirmClearOffers}
+            >
+              {isSaving ? "Clearing..." : "Confirm Clear"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

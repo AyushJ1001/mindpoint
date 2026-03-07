@@ -203,17 +203,23 @@ const CartContent = () => {
       };
     });
 
+    const toCheckoutPricingItem = (item: (typeof baseItems)[number]) => ({
+      courseId: item.courseId,
+      listedPrice: item.listedPrice,
+      checkoutPrice: item.checkoutPrice,
+      amountPaid: item.amountPaid,
+      redemptionDiscountAmount: item.redemptionDiscountAmount,
+      couponCode: item.couponCode,
+      mindPointsRedeemed: item.mindPointsRedeemed,
+    });
+
     if (!appliedCoupon) {
       return {
         totalAmountPaid: baseItems.reduce(
           (total, item) => total + item.amountPaid,
           0,
         ),
-        items: baseItems.map((item) => {
-          const { courseType, ...rest } = item;
-          void courseType;
-          return rest;
-        }),
+        items: baseItems.map(toCheckoutPricingItem),
       };
     }
 
@@ -228,19 +234,13 @@ const CartContent = () => {
           (total, item) => total + item.amountPaid,
           0,
         ),
-        items: baseItems.map((item) => {
-          const { courseType, ...rest } = item;
-          void courseType;
-          return rest;
-        }),
+        items: baseItems.map(toCheckoutPricingItem),
       };
     }
 
     const pricedItems = baseItems.map((item, index) => {
       if (index !== eligibleIndex) {
-        const { courseType, ...rest } = item;
-        void courseType;
-        return rest;
+        return toCheckoutPricingItem(item);
       }
 
       const discountAmount = Math.min(
@@ -248,8 +248,7 @@ const CartContent = () => {
         Math.round(item.checkoutPrice * (appliedCoupon.discount / 100)),
       );
       const amountPaid = Math.max(0, item.checkoutPrice - discountAmount);
-      const { courseType, ...rest } = item;
-      void courseType;
+      const rest = toCheckoutPricingItem(item);
 
       return {
         ...rest,

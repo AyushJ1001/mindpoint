@@ -131,14 +131,23 @@ export default function AdminEnrollmentDetailPage() {
           </p>
           <p>
             <strong>Paid:</strong>{" "}
-            {showRupees(detail.amountPaid ?? detail.checkoutPrice ?? 0)}
+            {detail.amountPaid != null
+              ? showRupees(detail.amountPaid)
+              : detail.checkoutPrice != null
+                ? showRupees(detail.checkoutPrice)
+                : "—"}
           </p>
           <p>
             <strong>Checkout Price:</strong>{" "}
-            {showRupees(detail.checkoutPrice ?? detail.listedPrice ?? 0)}
+            {detail.checkoutPrice != null
+              ? showRupees(detail.checkoutPrice)
+              : detail.listedPrice != null
+                ? showRupees(detail.listedPrice)
+                : "—"}
           </p>
           <p>
-            <strong>Listed Price:</strong> {showRupees(detail.listedPrice ?? 0)}
+            <strong>Listed Price:</strong>{" "}
+            {detail.listedPrice != null ? showRupees(detail.listedPrice) : "—"}
           </p>
           <p>
             <strong>Mind Points Redeemed:</strong>{" "}

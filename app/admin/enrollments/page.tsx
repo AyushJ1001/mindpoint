@@ -80,6 +80,7 @@ export default function AdminEnrollmentsPage() {
         amountPaid: row.amountPaid ?? row.checkoutPrice ?? 0,
         mindPointsRedeemed: row.mindPointsRedeemed ?? 0,
         couponCode: row.couponCode ?? "",
+        createdAt: new Date(row._creationTime).toISOString(),
         registeredAt: new Date(row._creationTime).toISOString(),
       })),
     [rows],
@@ -356,9 +357,14 @@ export default function AdminEnrollmentsPage() {
                   </td>
                   <td className="px-3 py-2 text-xs text-slate-700">
                     <p>
-                      {showRupees(row.amountPaid ?? row.checkoutPrice ?? 0)}
+                      {row.amountPaid != null
+                        ? showRupees(row.amountPaid)
+                        : row.checkoutPrice != null
+                          ? showRupees(row.checkoutPrice)
+                          : "—"}
                     </p>
-                    {typeof row.checkoutPrice === "number" &&
+                    {typeof row.amountPaid === "number" &&
+                    typeof row.checkoutPrice === "number" &&
                     row.checkoutPrice !== row.amountPaid ? (
                       <p className="text-slate-500">
                         from {showRupees(row.checkoutPrice)}
