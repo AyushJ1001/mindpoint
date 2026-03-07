@@ -167,6 +167,25 @@ const CartContent = () => {
     return Array.from(labels);
   }, [items, itemOfferDetails]);
 
+  const couponEligible = useMemo(() => {
+    if (!appliedCoupon) {
+      return true;
+    }
+
+    return items.some(
+      (item) =>
+        item.courseType === appliedCoupon.courseType &&
+        Math.round(item.price ?? 0) > 0,
+    );
+  }, [appliedCoupon, items]);
+
+  useEffect(() => {
+    if (appliedCoupon && !couponEligible) {
+      setAppliedCoupon(null);
+      setCouponCode("");
+    }
+  }, [appliedCoupon, couponEligible]);
+
   const checkoutPricing = useMemo(() => {
     const baseItems = items.map((item) => {
       const listedPrice = Math.round(item.originalPrice ?? item.price ?? 0);
@@ -202,6 +221,20 @@ const CartContent = () => {
       (item) =>
         item.courseType === appliedCoupon.courseType && item.checkoutPrice > 0,
     );
+
+    if (eligibleIndex === -1) {
+      return {
+        totalAmountPaid: baseItems.reduce(
+          (total, item) => total + item.amountPaid,
+          0,
+        ),
+        items: baseItems.map((item) => {
+          const { courseType, ...rest } = item;
+          void courseType;
+          return rest;
+        }),
+      };
+    }
 
     const pricedItems = baseItems.map((item, index) => {
       if (index !== eligibleIndex) {

@@ -371,9 +371,11 @@ export const queueMindPointsReminderEmails = mutation({
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
-    const uniqueUserIds = Array.from(
+    const MAX_USERS_PER_BATCH = 200;
+    const requestedUserIds = Array.from(
       new Set(args.clerkUserIds.map((value) => value.trim()).filter(Boolean)),
     );
+    const uniqueUserIds = requestedUserIds.slice(0, MAX_USERS_PER_BATCH);
 
     let scheduled = 0;
     let skipped = 0;
@@ -429,7 +431,8 @@ export const queueMindPointsReminderEmails = mutation({
       entityType: "mindPoints",
       entityId: uniqueUserIds[0] ?? "batch",
       metadata: {
-        requested: uniqueUserIds.length,
+        requested: requestedUserIds.length,
+        processed: uniqueUserIds.length,
         scheduled,
         skipped,
         clerkUserIds: uniqueUserIds.slice(0, 50),
@@ -437,7 +440,8 @@ export const queueMindPointsReminderEmails = mutation({
     });
 
     return {
-      requested: uniqueUserIds.length,
+      requested: requestedUserIds.length,
+      processed: uniqueUserIds.length,
       scheduled,
       skipped,
     };

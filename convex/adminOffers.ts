@@ -33,6 +33,8 @@ type BogoValue = {
   label?: string;
 };
 
+const MAX_COURSES_PER_APPLY = 150;
+
 async function applyOffersToCourseIds(
   ctx: MutationCtx,
   args: {
@@ -54,6 +56,12 @@ async function applyOffersToCourseIds(
 
   if (uniqueCourseIds.length === 0) {
     throw new Error("Select at least one course");
+  }
+
+  if (uniqueCourseIds.length > MAX_COURSES_PER_APPLY) {
+    throw new Error(
+      `Cannot apply offers to more than ${MAX_COURSES_PER_APPLY} courses at once`,
+    );
   }
 
   if (args.offer === undefined && args.bogo === undefined) {

@@ -428,9 +428,8 @@ export const createManualEnrollment = mutation({
               {
                 courseId: args.courseId,
                 listedPrice: course.price,
-                checkoutPrice: course.price,
+                checkoutPrice: 0,
                 amountPaid: 0,
-                redemptionDiscountAmount: course.price,
               },
             ],
           },
@@ -472,9 +471,8 @@ export const createManualEnrollment = mutation({
                 {
                   courseId: args.courseId,
                   listedPrice: course.price,
-                  checkoutPrice: course.price,
+                  checkoutPrice: 0,
                   amountPaid: 0,
-                  redemptionDiscountAmount: course.price,
                 },
               ],
             },
