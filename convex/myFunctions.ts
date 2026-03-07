@@ -60,7 +60,9 @@ async function awardMindPoints(
   amountPaid?: number,
 ): Promise<number> {
   // Don't award points for guest users or BOGO free items
-  if (isBogoFree || roundCurrency(amountPaid) <= 0) {
+  const paidAmount = roundCurrency(amountPaid ?? course.price);
+
+  if (isBogoFree || paidAmount <= 0) {
     return 0;
   }
 
