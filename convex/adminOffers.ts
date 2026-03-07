@@ -35,6 +35,17 @@ type BogoValue = {
 
 const MAX_COURSES_PER_APPLY = 150;
 
+function assertValidOffer(offer?: OfferValue | null) {
+  if (
+    offer?.discount !== undefined &&
+    (!Number.isFinite(offer.discount) ||
+      offer.discount < 0 ||
+      offer.discount > 100)
+  ) {
+    throw new Error("Discount must be a number between 0 and 100");
+  }
+}
+
 async function applyOffersToCourseIds(
   ctx: MutationCtx,
   args: {
@@ -67,6 +78,8 @@ async function applyOffersToCourseIds(
   if (args.offer === undefined && args.bogo === undefined) {
     throw new Error("Provide a discount offer, a BOGO campaign, or both");
   }
+
+  assertValidOffer(args.offer);
 
   const now = Date.now();
   const updatedCourseIds: string[] = [];
@@ -202,6 +215,8 @@ export const saveCampaign = mutation({
         "A campaign must include a discount offer, a BOGO campaign, or both",
       );
     }
+
+    assertValidOffer(offer);
 
     const now = Date.now();
 

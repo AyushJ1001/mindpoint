@@ -1992,6 +1992,12 @@ export const handleGuestUserCartCheckoutWithData = mutation({
   },
 
   handler: async (ctx, args) => {
+    if (!args.checkoutPricing) {
+      console.warn(
+        "Guest cart checkout missing checkoutPricing; enrollment pricing will fall back to course prices",
+      );
+    }
+
     // Check if guest user already exists with this email
     let guestUser = await ctx.db
       .query("guestUsers")

@@ -156,6 +156,7 @@ export async function handleGuestUserPaymentSuccessWithData(
     sourceCourseId: Id<"courses">;
     selectedFreeCourseId: Id<"courses">;
   }>,
+  checkoutPricing?: CheckoutPricing,
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -176,6 +177,7 @@ export async function handleGuestUserPaymentSuccessWithData(
         courseIds: courseIds,
         sessionType: sessionType,
         bogoSelections: bogoSelections,
+        checkoutPricing,
       },
       {
         userEmail: userData.email,
