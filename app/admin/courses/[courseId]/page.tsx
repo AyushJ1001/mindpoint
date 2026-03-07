@@ -86,13 +86,17 @@ export default function AdminEditCoursePage() {
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-sm text-slate-600">
-              Registrations
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-1 text-sm">
-            <p>
+  const registrationRows = enrollments ?? [];
+  const allEnrollments = useQuery(api.adminEnrollments.listEnrollments, {
+    courseId,
+    limit: 500,
+  });
+  const activeCount = (allEnrollments ?? []).filter(
+    (row) => row.status === "active",
+  ).length;
+  const transferredCount = (allEnrollments ?? []).filter(
+    (row) => row.status === "transferred",
+  ).length;
               Active: <strong>{activeCount}</strong>
             </p>
             <p>
