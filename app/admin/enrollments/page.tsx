@@ -80,7 +80,6 @@ export default function AdminEnrollmentsPage() {
         amountPaid: row.amountPaid ?? row.checkoutPrice ?? 0,
         mindPointsRedeemed: row.mindPointsRedeemed ?? 0,
         couponCode: row.couponCode ?? "",
-        createdAt: new Date(row._creationTime).toISOString(),
         registeredAt: new Date(row._creationTime).toISOString(),
       })),
     [rows],

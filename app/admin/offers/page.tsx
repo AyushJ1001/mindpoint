@@ -74,6 +74,8 @@ const courseTypeOptions: CourseTypeFilter[] = [
   "worksheet",
 ];
 
+const MAX_COURSES_PER_APPLY = 150;
+
 export default function AdminOffersPage() {
   const [search, setSearch] = useState("");
   const [courseType, setCourseType] = useState<CourseTypeFilter>("all");
@@ -125,6 +127,7 @@ export default function AdminOffersPage() {
   const rows = useMemo(() => courses ?? [], [courses]);
   const campaignRows = useMemo(() => campaigns ?? [], [campaigns]);
   const selectedCount = selectedCourseIds.length;
+  const exceedsApplyLimit = selectedCount > MAX_COURSES_PER_APPLY;
   const selectedIdSet = useMemo(
     () => new Set(selectedCourseIds),
     [selectedCourseIds],
@@ -267,6 +270,13 @@ export default function AdminOffersPage() {
       return;
     }
 
+    if (selectedCourseIds.length > MAX_COURSES_PER_APPLY) {
+      toast.error(
+        `Select ${MAX_COURSES_PER_APPLY} or fewer courses before applying offers`,
+      );
+      return;
+    }
+
     setIsSaving(true);
     try {
       const { offer, bogo } = buildOfferPayload();
@@ -303,6 +313,13 @@ export default function AdminOffersPage() {
       return;
     }
 
+    if (selectedCourseIds.length > MAX_COURSES_PER_APPLY) {
+      toast.error(
+        `Select ${MAX_COURSES_PER_APPLY} or fewer courses before applying a campaign`,
+      );
+      return;
+    }
+
     setCampaignActionId(campaignId);
     try {
       const result = await applyCampaignToCourses({
@@ -322,6 +339,13 @@ export default function AdminOffersPage() {
   const clearOffers = async () => {
     if (selectedCourseIds.length === 0) {
       toast.error("Select at least one course");
+      return false;
+    }
+
+    if (selectedCourseIds.length > MAX_COURSES_PER_APPLY) {
+      toast.error(
+        `Select ${MAX_COURSES_PER_APPLY} or fewer courses before clearing offers`,
+      );
       return false;
     }
 
@@ -495,7 +519,14 @@ export default function AdminOffersPage() {
                           </Button>
                           <Button
                             size="sm"
-                            disabled={campaign.isArchived || isBusy}
+                            disabled={
+                              campaign.isArchived || isBusy || exceedsApplyLimit
+                            }
+                            title={
+                              exceedsApplyLimit
+                                ? `Select ≤ ${MAX_COURSES_PER_APPLY} courses (currently ${selectedCount})`
+                                : undefined
+                            }
                             onClick={() => applySavedCampaign(campaignId)}
                           >
                             {isBusy ? "Applying..." : "Apply"}
@@ -532,6 +563,12 @@ export default function AdminOffersPage() {
           <CardContent className="space-y-5">
             <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
               Selected courses: <strong>{selectedCount}</strong>
+              {exceedsApplyLimit ? (
+                <span className="ml-2 text-rose-600">
+                  Select {MAX_COURSES_PER_APPLY} or fewer to apply or clear
+                  offers.
+                </span>
+              ) : null}
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2">
@@ -646,7 +683,15 @@ export default function AdminOffersPage() {
                 <option value="discount">Apply discount only</option>
                 <option value="bogo">Apply BOGO only</option>
               </select>
-              <Button disabled={isSaving} onClick={applyBuilderToCourses}>
+              <Button
+                disabled={isSaving || selectedCount === 0 || exceedsApplyLimit}
+                title={
+                  exceedsApplyLimit
+                    ? `Select ≤ ${MAX_COURSES_PER_APPLY} courses (currently ${selectedCount})`
+                    : undefined
+                }
+                onClick={applyBuilderToCourses}
+              >
                 Apply Builder To Selected
               </Button>
             </div>
@@ -665,7 +710,12 @@ export default function AdminOffersPage() {
               </select>
               <Button
                 variant="destructive"
-                disabled={isSaving}
+                disabled={isSaving || selectedCount === 0 || exceedsApplyLimit}
+                title={
+                  exceedsApplyLimit
+                    ? `Select ≤ ${MAX_COURSES_PER_APPLY} courses (currently ${selectedCount})`
+                    : undefined
+                }
                 onClick={() => setShowClearConfirm(true)}
               >
                 Clear Selected Offers

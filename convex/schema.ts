@@ -130,7 +130,6 @@ export default defineSchema({
     lastAppliedAt: v.optional(v.number()),
     lastAppliedCourseIds: v.optional(v.array(v.id("courses"))),
   })
-    .index("by_name", ["name"])
     .index("by_updatedAt", ["updatedAt"])
     .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"]),
 
