@@ -3,6 +3,7 @@
 import { api } from "../../convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { executeConvexMutationWithRetry } from "@/lib/convex-client-utils";
+import type { CheckoutPricing } from "@/lib/types/checkout";
 
 export async function handlePaymentSuccess(
   userId: string,
@@ -16,6 +17,7 @@ export async function handlePaymentSuccess(
     selectedFreeCourseId: Id<"courses">;
   }>,
   referrerClerkUserId?: string,
+  checkoutPricing?: CheckoutPricing,
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -40,6 +42,7 @@ export async function handlePaymentSuccess(
         sessionType: sessionType,
         bogoSelections: bogoSelections,
         referrerClerkUserId,
+        checkoutPricing,
       },
       {
         userId,
@@ -139,6 +142,7 @@ export async function handleGuestUserPaymentSuccessWithData(
     sourceCourseId: Id<"courses">;
     selectedFreeCourseId: Id<"courses">;
   }>,
+  checkoutPricing?: CheckoutPricing,
 ): Promise<{
   success: boolean;
   enrollments?: Array<{
@@ -159,6 +163,7 @@ export async function handleGuestUserPaymentSuccessWithData(
         courseIds: courseIds,
         sessionType: sessionType,
         bogoSelections: bogoSelections,
+        checkoutPricing,
       },
       {
         userEmail: userData.email,

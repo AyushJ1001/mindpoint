@@ -20,6 +20,7 @@ import {
   Users,
   GraduationCap,
   Gift,
+  TicketPercent,
   ClipboardList,
   Settings,
   Shield,
@@ -28,6 +29,7 @@ import {
 const items = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/courses", label: "Courses", icon: BookOpen },
+  { href: "/admin/offers", label: "Offer Manager", icon: TicketPercent },
   { href: "/admin/enrollments", label: "Enrollments", icon: GraduationCap },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/loyalty", label: "Loyalty", icon: Gift },

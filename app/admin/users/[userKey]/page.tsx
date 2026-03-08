@@ -70,10 +70,15 @@ export default function AdminUserDetailPage() {
     return <p className="text-sm text-slate-600">User not found.</p>;
   }
 
+  const userDisplayName =
+    detail.kind === "guest"
+      ? detail.guestUser?.name || detail.enrollments[0]?.userName || detail.id
+      : detail.enrollments[0]?.userName || detail.mindPoints?.userName || detail.id;
+
   return (
     <div className="space-y-6">
       <AdminPageHeader
-        title={`User: ${detail.id}`}
+        title={`User: ${userDisplayName}`}
         description="Edit app-managed profile fields and inspect operational history."
       />
 

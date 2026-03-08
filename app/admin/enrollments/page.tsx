@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { downloadCsv, toCsv } from "@/lib/csv";
+import { showRupees } from "@/lib/utils";
 
 export default function AdminEnrollmentsPage() {
   const [search, setSearch] = useState("");
@@ -37,6 +38,9 @@ export default function AdminEnrollmentsPage() {
   const [manualName, setManualName] = useState("");
   const [manualPhone, setManualPhone] = useState("");
   const [manualCourseId, setManualCourseId] = useState("");
+  const [manualInternshipPlan, setManualInternshipPlan] = useState<
+    "" | "120" | "240"
+  >("");
   const [isCreatingEnrollment, setIsCreatingEnrollment] = useState(false);
   const manualUserIdLooksLikeEmail = manualUserId.includes("@");
 
@@ -57,6 +61,11 @@ export default function AdminEnrollmentsPage() {
   );
 
   const rows = useMemo(() => enrollments ?? [], [enrollments]);
+  const selectedManualCourse = useMemo(
+    () =>
+      (courses || []).find((course) => String(course._id) === manualCourseId),
+    [courses, manualCourseId],
+  );
 
   const exportRows = useMemo(
     () =>
@@ -68,7 +77,10 @@ export default function AdminEnrollmentsPage() {
         courseName: row.courseName,
         enrollmentNumber: row.enrollmentNumber,
         status: row.status,
-        createdAt: new Date(row._creationTime).toISOString(),
+        amountPaid: row.amountPaid ?? row.checkoutPrice ?? 0,
+        mindPointsRedeemed: row.mindPointsRedeemed ?? 0,
+        couponCode: row.couponCode ?? "",
+        registeredAt: new Date(row._creationTime).toISOString(),
       })),
     [rows],
   );
@@ -80,6 +92,11 @@ export default function AdminEnrollmentsPage() {
 
     if (!manualCourseId || !manualEmail || !manualUserId) {
       toast.error("userId, email and course are required");
+      return;
+    }
+
+    if (selectedManualCourse?.type === "internship" && !manualInternshipPlan) {
+      toast.error("Select internship hours before creating the enrollment");
       return;
     }
 
@@ -101,6 +118,12 @@ export default function AdminEnrollmentsPage() {
         userPhone: manualPhone || undefined,
         courseId: manualCourseId as Id<"courses">,
         isGuestUser: manualUserIdLooksLikeEmail,
+        internshipPlan:
+          selectedManualCourse?.type === "internship"
+            ? manualInternshipPlan === "120" || manualInternshipPlan === "240"
+              ? manualInternshipPlan
+              : undefined
+            : undefined,
       });
       toast.success("Manual enrollment created");
       setManualUserId("");
@@ -108,6 +131,7 @@ export default function AdminEnrollmentsPage() {
       setManualName("");
       setManualPhone("");
       setManualCourseId("");
+      setManualInternshipPlan("");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to create enrollment",
@@ -207,7 +231,16 @@ export default function AdminEnrollmentsPage() {
           <select
             className="h-10 rounded-md border bg-white px-3 text-sm"
             value={manualCourseId}
-            onChange={(e) => setManualCourseId(e.target.value)}
+            onChange={(e) => {
+              const nextCourseId = e.target.value;
+              setManualCourseId(nextCourseId);
+              const nextCourse = (courses || []).find(
+                (course) => String(course._id) === nextCourseId,
+              );
+              if (nextCourse?.type !== "internship") {
+                setManualInternshipPlan("");
+              }
+            }}
           >
             <option value="">Select course</option>
             {(courses || []).map((course) => (
@@ -225,6 +258,19 @@ export default function AdminEnrollmentsPage() {
             />
             Treat as guest user
           </label>
+          {selectedManualCourse?.type === "internship" ? (
+            <select
+              className="h-10 rounded-md border bg-white px-3 text-sm"
+              value={manualInternshipPlan}
+              onChange={(e) =>
+                setManualInternshipPlan(e.target.value as "" | "120" | "240")
+              }
+            >
+              <option value="">Select internship hours</option>
+              <option value="120">120 hours</option>
+              <option value="240">240 hours</option>
+            </select>
+          ) : null}
         </div>
         <div className="mt-3">
           <Button
@@ -233,7 +279,9 @@ export default function AdminEnrollmentsPage() {
               isCreatingEnrollment ||
               !manualCourseId ||
               !manualEmail ||
-              !manualUserId
+              !manualUserId ||
+              (selectedManualCourse?.type === "internship" &&
+                !manualInternshipPlan)
             }
           >
             {isCreatingEnrollment ? "Creating..." : "Create Enrollment"}
@@ -271,19 +319,22 @@ export default function AdminEnrollmentsPage() {
               <th className="px-3 py-2">Course</th>
               <th className="px-3 py-2">Enrollment #</th>
               <th className="px-3 py-2">Status</th>
+              <th className="px-3 py-2">Paid</th>
+              <th className="px-3 py-2">Mind Points</th>
+              <th className="px-3 py-2">Registered</th>
               <th className="px-3 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {!enrollments ? (
               <tr>
-                <td className="px-3 py-4 text-slate-600" colSpan={5}>
+                <td className="px-3 py-4 text-slate-600" colSpan={8}>
                   Loading enrollments...
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td className="px-3 py-4 text-slate-600" colSpan={5}>
+                <td className="px-3 py-4 text-slate-600" colSpan={8}>
                   No enrollments found.
                 </td>
               </tr>
@@ -302,6 +353,37 @@ export default function AdminEnrollmentsPage() {
                   <td className="px-3 py-2">{row.enrollmentNumber}</td>
                   <td className="px-3 py-2">
                     <Badge variant="outline">{row.status}</Badge>
+                  </td>
+                  <td className="px-3 py-2 text-xs text-slate-700">
+                    <p>
+                      {row.amountPaid != null
+                        ? showRupees(row.amountPaid)
+                        : row.checkoutPrice != null
+                          ? showRupees(row.checkoutPrice)
+                          : "—"}
+                    </p>
+                    {typeof row.amountPaid === "number" &&
+                    typeof row.checkoutPrice === "number" &&
+                    row.checkoutPrice !== row.amountPaid ? (
+                      <p className="text-slate-500">
+                        from {showRupees(row.checkoutPrice)}
+                      </p>
+                    ) : null}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-slate-700">
+                    {row.mindPointsRedeemed ? (
+                      <>
+                        <p>{row.mindPointsRedeemed} pts</p>
+                        {row.couponCode ? (
+                          <p className="text-slate-500">{row.couponCode}</p>
+                        ) : null}
+                      </>
+                    ) : (
+                      "-"
+                    )}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-slate-600">
+                    {new Date(row._creationTime).toLocaleString()}
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex gap-2">

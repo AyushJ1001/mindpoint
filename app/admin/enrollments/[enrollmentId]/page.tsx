@@ -18,6 +18,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { showRupees } from "@/lib/utils";
 
 export default function AdminEnrollmentDetailPage() {
   const params = useParams<{ enrollmentId: string }>();
@@ -109,6 +110,9 @@ export default function AdminEnrollmentDetailPage() {
             <strong>User:</strong> {detail.userName || detail.userId}
           </p>
           <p>
+            <strong>User ID:</strong> {detail.userId}
+          </p>
+          <p>
             <strong>Email:</strong> {detail.userEmail || "-"}
           </p>
           <p>
@@ -124,6 +128,37 @@ export default function AdminEnrollmentDetailPage() {
           <p>
             <strong>Created:</strong>{" "}
             {new Date(detail._creationTime).toLocaleString()}
+          </p>
+          <p>
+            <strong>Paid:</strong>{" "}
+            {detail.amountPaid != null
+              ? showRupees(detail.amountPaid)
+              : detail.checkoutPrice != null
+                ? showRupees(detail.checkoutPrice)
+                : "—"}
+          </p>
+          <p>
+            <strong>Checkout Price:</strong>{" "}
+            {detail.checkoutPrice != null
+              ? showRupees(detail.checkoutPrice)
+              : detail.listedPrice != null
+                ? showRupees(detail.listedPrice)
+                : "—"}
+          </p>
+          <p>
+            <strong>Listed Price:</strong>{" "}
+            {detail.listedPrice != null ? showRupees(detail.listedPrice) : "—"}
+          </p>
+          <p>
+            <strong>Mind Points Redeemed:</strong>{" "}
+            {detail.mindPointsRedeemed ?? 0}
+          </p>
+          <p>
+            <strong>Coupon Code:</strong> {detail.couponCode || "-"}
+          </p>
+          <p>
+            <strong>Registration Source:</strong>{" "}
+            {detail.registrationSource || "checkout"}
           </p>
         </CardContent>
       </Card>

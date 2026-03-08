@@ -3,6 +3,10 @@ import { query, mutation, action } from "./_generated/server";
 import { api } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
+import type {
+  CheckoutPricing,
+  CheckoutPricingItem,
+} from "../lib/types/checkout";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -57,9 +61,12 @@ async function awardMindPoints(
   course: Doc<"courses">,
   enrollmentId: Id<"enrollments">,
   isBogoFree?: boolean,
+  amountPaid?: number,
 ): Promise<number> {
   // Don't award points for guest users or BOGO free items
-  if (isBogoFree) {
+  const paidAmount = roundCurrency(amountPaid ?? course.price);
+
+  if (isBogoFree || paidAmount <= 0) {
     return 0;
   }
 
@@ -236,6 +243,68 @@ interface EnrollmentSummary {
   sessionType?: "focus" | "flow" | "elevate";
   isBogoFree?: boolean;
   bogoOfferName?: string;
+}
+
+const checkoutPricingItemValidator = v.object({
+  courseId: v.id("courses"),
+  listedPrice: v.number(),
+  checkoutPrice: v.number(),
+  amountPaid: v.number(),
+  redemptionDiscountAmount: v.optional(v.number()),
+  couponCode: v.optional(v.string()),
+  mindPointsRedeemed: v.optional(v.number()),
+});
+
+const checkoutPricingValidator = v.object({
+  totalAmountPaid: v.number(),
+  items: v.array(checkoutPricingItemValidator),
+});
+
+function roundCurrency(value: number | undefined): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.round(value!));
+}
+
+function getCheckoutPricingItem(
+  checkoutPricing: CheckoutPricing | undefined,
+  courseId: Id<"courses">,
+): CheckoutPricingItem | undefined {
+  return checkoutPricing?.items.find(
+    (item) => String(item.courseId) === String(courseId),
+  );
+}
+
+function buildEnrollmentPricingFields(
+  course: CourseDoc,
+  pricingItem?: CheckoutPricingItem,
+) {
+  const listedPrice = roundCurrency(pricingItem?.listedPrice ?? course.price);
+  const checkoutPrice = roundCurrency(
+    pricingItem?.checkoutPrice ?? course.price ?? listedPrice,
+  );
+  const amountPaid = roundCurrency(
+    pricingItem?.amountPaid ?? pricingItem?.checkoutPrice ?? course.price,
+  );
+  const redemptionDiscountAmount = roundCurrency(
+    pricingItem?.redemptionDiscountAmount ??
+      Math.max(0, checkoutPrice - amountPaid),
+  );
+
+  return {
+    listedPrice,
+    checkoutPrice,
+    amountPaid,
+    redemptionDiscountAmount:
+      redemptionDiscountAmount > 0 ? redemptionDiscountAmount : undefined,
+    couponCode: pricingItem?.couponCode?.trim() || undefined,
+    mindPointsRedeemed:
+      pricingItem?.mindPointsRedeemed && pricingItem.mindPointsRedeemed > 0
+        ? roundCurrency(pricingItem.mindPointsRedeemed)
+        : undefined,
+  };
 }
 
 function isBogoActive(bogo?: CourseDoc["bogo"] | null): boolean {
@@ -573,6 +642,12 @@ async function createBogoEnrollment(
     isBogoFree: true,
     bogoSourceCourseId: sourceCourse._id as Id<"courses">,
     bogoOfferName: sourceCourse.name,
+    // BOGO value is tracked via the zero-paid enrollment plus listedPrice/isBogoFree;
+    // we intentionally leave redemptionDiscountAmount unset because no coupon/points were redeemed.
+    listedPrice: roundCurrency(freeCourse.price),
+    checkoutPrice: 0,
+    amountPaid: 0,
+    registrationSource: userContext.isGuestUser ? "guest_checkout" : "checkout",
   });
 
   await addEnrollmentToGoogleSheets(ctx, {
@@ -657,6 +732,8 @@ export const handleSuccessfulPayment = mutation({
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
+    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
+    checkoutPricing: v.optional(checkoutPricingValidator),
   },
 
   handler: async (ctx, args) => {
@@ -688,7 +765,13 @@ export const handleSuccessfulPayment = mutation({
 
     // Extract internship plan from course duration
     const internshipPlan =
-      extractInternshipPlanFromDuration(course.duration) || undefined;
+      args.internshipPlan ||
+      extractInternshipPlanFromDuration(course.duration) ||
+      undefined;
+    const pricingItem = getCheckoutPricingItem(
+      args.checkoutPricing,
+      args.courseId,
+    );
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
@@ -703,6 +786,8 @@ export const handleSuccessfulPayment = mutation({
       courseType: course.type, // Store course type
       internshipPlan: internshipPlan, // Store internship plan if provided
       sessions: course.sessions, // Store number of sessions for therapy courses
+      ...buildEnrollmentPricingFields(course, pricingItem),
+      registrationSource: "checkout",
     });
 
     // Add enrollment to Google Sheets
@@ -730,7 +815,14 @@ export const handleSuccessfulPayment = mutation({
     // For authenticated users, userId is the Clerk user ID; for guests, it's the email
     const isAuthenticatedUser = !args.userId.includes("@");
     if (isAuthenticatedUser) {
-      await awardMindPoints(ctx, args.userId, course, enrollmentId, false);
+      await awardMindPoints(
+        ctx,
+        args.userId,
+        course,
+        enrollmentId,
+        false,
+        pricingItem?.amountPaid ?? course.price,
+      );
     }
 
     const userName = args.studentName || args.userEmail;
@@ -995,6 +1087,7 @@ export const handleCartCheckout = mutation({
         }),
       ),
     ),
+    checkoutPricing: v.optional(checkoutPricingValidator),
   },
 
   handler: async (ctx, args) => {
@@ -1032,6 +1125,10 @@ export const handleCartCheckout = mutation({
       // Extract internship plan from course duration
       const internshipPlan =
         extractInternshipPlanFromDuration(course.duration) || undefined;
+      const pricingItem = getCheckoutPricingItem(
+        args.checkoutPricing,
+        courseId,
+      );
 
       // Create enrollment record
       const enrollmentId = await ctx.db.insert("enrollments", {
@@ -1046,6 +1143,8 @@ export const handleCartCheckout = mutation({
         courseType: course.type, // Store course type
         internshipPlan: internshipPlan, // Store internship plan if provided
         sessions: course.sessions, // Store number of sessions for therapy courses
+        ...buildEnrollmentPricingFields(course, pricingItem),
+        registrationSource: "checkout",
       });
 
       // Add enrollment to Google Sheets
@@ -1078,6 +1177,7 @@ export const handleCartCheckout = mutation({
           course,
           enrollmentId,
           false,
+          pricingItem?.amountPaid ?? course.price,
         );
         if (pointsAwarded > 0) {
           totalPointsEarnedForOrder += pointsAwarded;
@@ -1867,6 +1967,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       phone: v.string(),
     }),
     courseIds: v.array(v.id("courses")),
+    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
@@ -1878,9 +1979,16 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         }),
       ),
     ),
+    checkoutPricing: v.optional(checkoutPricingValidator),
   },
 
   handler: async (ctx, args) => {
+    if (!args.checkoutPricing) {
+      console.warn(
+        "Guest cart checkout missing checkoutPricing; enrollment pricing will fall back to course prices",
+      );
+    }
+
     // Check if guest user already exists with this email
     let guestUser = await ctx.db
       .query("guestUsers")
@@ -1938,7 +2046,13 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
       // Extract internship plan from course duration
       const internshipPlan =
-        extractInternshipPlanFromDuration(course.duration) || undefined;
+        args.internshipPlan ||
+        extractInternshipPlanFromDuration(course.duration) ||
+        undefined;
+      const pricingItem = getCheckoutPricingItem(
+        args.checkoutPricing,
+        courseId,
+      );
 
       // Create enrollment record
       const enrollmentId = await ctx.db.insert("enrollments", {
@@ -1954,6 +2068,8 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         courseType: course.type, // Store course type
         internshipPlan: internshipPlan, // Store internship plan if provided
         sessions: course.sessions, // Store number of sessions for therapy courses
+        ...buildEnrollmentPricingFields(course, pricingItem),
+        registrationSource: "guest_checkout",
       });
 
       // Add enrollment to Google Sheets

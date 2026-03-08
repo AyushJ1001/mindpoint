@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { Button } from "@/components/ui/button";
@@ -79,6 +79,25 @@ type CourseFormState = {
   bogoLabel: string;
   bogoStartDate: string;
   bogoEndDate: string;
+};
+
+type OfferCampaignRecord = {
+  _id: Id<"offerCampaigns">;
+  name: string;
+  description?: string;
+  offer?: {
+    name: string;
+    discount?: number;
+    startDate?: string;
+    endDate?: string;
+  };
+  bogo?: {
+    enabled: boolean;
+    startDate?: string;
+    endDate?: string;
+    label?: string;
+  };
+  isArchived: boolean;
 };
 
 const courseTypes: CourseType[] = [
@@ -232,9 +251,15 @@ export function CourseEditor({
     toInitialState(course),
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [selectedCampaignId, setSelectedCampaignId] = useState("");
   const courseVersion = course
     ? `${course._id}:${course.updatedAt ?? course._creationTime}`
     : "new";
+
+  const campaigns = useQuery(api.adminOffers.listCampaigns, {
+    includeArchived: false,
+    limit: 100,
+  }) as OfferCampaignRecord[] | undefined;
 
   const createCourse = useMutation(api.adminCourses.createCourse);
   const deleteCourse = useMutation(api.adminCourses.deleteCourse);
@@ -242,6 +267,7 @@ export function CourseEditor({
 
   useEffect(() => {
     setState(toInitialState(course));
+    setSelectedCampaignId("");
   }, [course, courseVersion]);
 
   const isWorksheet = state.type === "worksheet";
@@ -308,6 +334,14 @@ export function CourseEditor({
         }))
         .filter((item) => item.title.length > 0 && item.description.length > 0),
     [state.modules],
+  );
+
+  const selectedCampaign = useMemo(
+    () =>
+      (campaigns || []).find(
+        (campaign) => String(campaign._id) === selectedCampaignId,
+      ),
+    [campaigns, selectedCampaignId],
   );
 
   const updateLearningOutcome = (
@@ -419,6 +453,29 @@ export function CourseEditor({
       ...prev,
       sessionVariants: prev.sessionVariants.filter((_, i) => i !== index),
     }));
+  };
+
+  const applyCampaignToForm = () => {
+    if (!selectedCampaign) {
+      toast.error("Select a saved campaign first");
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      offerName: selectedCampaign.offer?.name || "",
+      offerDiscount:
+        selectedCampaign.offer?.discount !== undefined
+          ? String(selectedCampaign.offer.discount)
+          : "",
+      offerStartDate: selectedCampaign.offer?.startDate || "",
+      offerEndDate: selectedCampaign.offer?.endDate || "",
+      bogoEnabled: selectedCampaign.bogo?.enabled ?? false,
+      bogoLabel: selectedCampaign.bogo?.label || "",
+      bogoStartDate: selectedCampaign.bogo?.startDate || "",
+      bogoEndDate: selectedCampaign.bogo?.endDate || "",
+    }));
+    toast.success(`Loaded campaign "${selectedCampaign.name}" into the form`);
   };
 
   const buildPatch = (overrides?: {
@@ -1227,6 +1284,43 @@ export function CourseEditor({
       ) : null}
 
       <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-3 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-4 md:col-span-2">
+          <div className="flex flex-col gap-3 md:flex-row md:items-end">
+            <div className="flex-1 space-y-2">
+              <Label>Saved Offer Campaign</Label>
+              <select
+                className="h-10 w-full rounded-md border bg-white px-3 text-sm"
+                value={selectedCampaignId}
+                onChange={(e) => setSelectedCampaignId(e.target.value)}
+              >
+                <option value="">Select a saved campaign</option>
+                {(campaigns || []).map((campaign) => (
+                  <option key={campaign._id} value={campaign._id}>
+                    {campaign.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={!selectedCampaign}
+              onClick={applyCampaignToForm}
+            >
+              Apply Campaign To Course
+            </Button>
+          </div>
+          <p className="text-sm text-slate-600">
+            Load any saved campaign into this course, then save the course. You
+            can still edit the offer or BOGO fields below before saving.
+          </p>
+          {selectedCampaign?.description ? (
+            <p className="text-sm text-slate-500">
+              {selectedCampaign.description}
+            </p>
+          ) : null}
+        </div>
+
         <div className="space-y-2 rounded-lg border bg-white p-4">
           <h3 className="font-medium">Offer</h3>
           <Input

@@ -41,6 +41,14 @@ const sendEmailWithCopy = async (emailConfig: {
   });
 };
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 // Test email action for debugging
 export const sendTestEmail = action({
   args: {
@@ -132,6 +140,69 @@ export const sendSimpleTestEmail = action({
       // Re-throw so callers/scripts can detect failure
       throw error;
     }
+    return null;
+  },
+});
+
+export const sendMindPointsReminderEmail = action({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    balance: v.number(),
+    totalEarned: v.number(),
+    totalRedeemed: v.number(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    try {
+      const accountUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.themindpoint.org"}/account?tab=points`;
+
+      await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "Your Mind Points are waiting to be redeemed",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #2563eb;">Mind Points Reminder</h2>
+            <p>Dear ${escapeHtml(args.userName)},</p>
+            <p>You currently have <strong>${args.balance} Mind Points</strong> available in your account.</p>
+            <table style="width: 100%; border-collapse: collapse; margin: 18px 0;">
+              <tbody>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f8fafc; width: 45%;">Available Balance</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${args.balance}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f8fafc;">Total Earned</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${args.totalEarned}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px; border: 1px solid #ddd; background-color: #f8fafc;">Total Redeemed</td>
+                  <td style="padding: 8px; border: 1px solid #ddd;">${args.totalRedeemed}</td>
+                </tr>
+              </tbody>
+            </table>
+            <p>You can redeem your points for eligible course coupons directly from your account.</p>
+            <p style="margin: 24px 0;">
+              <a href="${accountUrl}" style="background: #2563eb; color: #fff; padding: 12px 18px; text-decoration: none; border-radius: 999px; display: inline-block; font-weight: 600;">
+                View and Redeem Mind Points
+              </a>
+            </p>
+            <p>If you need help choosing the right course, reply to this email and our team will assist you.</p>
+            <br>
+            <p>Best regards,<br>The Mind Point Team</p>
+          </div>
+        `,
+      });
+    } catch (error) {
+      console.error("Failed to send Mind Points reminder email:", {
+        userEmail: args.userEmail,
+        balance: args.balance,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      throw error;
+    }
+
     return null;
   },
 });
@@ -240,15 +311,15 @@ export const sendCertificateEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Certificate Course Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
-          <p>We are pleased to inform you that your payment for the certificate course <strong>${args.courseName}</strong> has been successfully received.</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
+          <p>We are pleased to inform you that your payment for the certificate course <strong>${escapeHtml(args.courseName)}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Course Details</h3>
           <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
             <tbody>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Course Name</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(args.courseName)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Start Date</td>
@@ -332,15 +403,15 @@ export const sendInternshipEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Internship Program Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
-          <p>We are pleased to inform you that your payment for the internship program <strong>${args.courseName}</strong> has been successfully received.</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
+          <p>We are pleased to inform you that your payment for the internship program <strong>${escapeHtml(args.courseName)}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Program Details</h3>
           <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
             <tbody>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Program Name</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(args.courseName)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Program Plan</td>
@@ -422,15 +493,15 @@ export const sendDiplomaEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Diploma Course Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
-          <p>We are pleased to inform you that your payment for the diploma course <strong>${args.courseName}</strong> has been successfully received.</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
+          <p>We are pleased to inform you that your payment for the diploma course <strong>${escapeHtml(args.courseName)}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Course Details</h3>
           <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
             <tbody>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Course Name</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(args.courseName)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Start Date</td>
@@ -504,15 +575,15 @@ export const sendPreRecordedEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Pre-Recorded Course Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
-          <p>We are pleased to inform you that your payment for the pre-recorded course <strong>${args.courseName}</strong> has been successfully received.</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
+          <p>We are pleased to inform you that your payment for the pre-recorded course <strong>${escapeHtml(args.courseName)}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Course Details</h3>
           <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
             <tbody>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Course Name</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(args.courseName)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Enrollment No</td>
@@ -578,15 +649,15 @@ export const sendMasterclassEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Masterclass Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
-          <p>We are pleased to inform you that your payment for the masterclass <strong>${args.courseName}</strong> has been successfully received.</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
+          <p>We are pleased to inform you that your payment for the masterclass <strong>${escapeHtml(args.courseName)}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Masterclass Details</h3>
           <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
             <tbody>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Masterclass Name</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(args.courseName)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Start Date</td>
@@ -665,14 +736,14 @@ export const sendEnrollmentConfirmation = action({
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
           <p>Dear Learner,</p>
-          <p>We are pleased to inform you that your payment for the course <strong>${args.courseName}</strong> has been successfully received.</p>
+          <p>We are pleased to inform you that your payment for the course <strong>${escapeHtml(args.courseName)}</strong> has been successfully received.</p>
 
           <h3 style="margin-top: 20px;">Course Details</h3>
           <table style="width: 100%; border-collapse: collapse; margin-top: 10px;">
             <tbody>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Course Name</td>
-                <td style="padding: 8px; border: 1px solid #ddd;">${args.courseName}</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(args.courseName)}</td>
               </tr>
               <tr>
                 <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Start Date</td>
@@ -756,7 +827,7 @@ export const sendCartCheckoutConfirmation = action({
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
             <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
-            <p>Dear ${args.userName},</p>
+            <p>Dear ${escapeHtml(args.userName)},</p>
             <p>We are happy to confirm that your payments for the following courses have been successfully received:</p>
 
             <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
@@ -808,7 +879,7 @@ export const sendCartCheckoutConfirmation = action({
 
                     return `
                   <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${e.courseName}${planInfo}${sessionInfo}${typeInfo}</td>
+                    <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(e.courseName)}${planInfo}${sessionInfo}${typeInfo}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${courseType}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.startDate}</td>
                     <td style="padding: 8px; border: 1px solid #ddd;">${e.endDate}</td>
@@ -893,7 +964,7 @@ export const sendTherapyEnrollmentConfirmation = action({
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Therapy Session Enrollment Confirmation</h2>
-          <p>Dear ${args.userName},</p>
+          <p>Dear ${escapeHtml(args.userName)},</p>
           <p>We are pleased to confirm your enrollment for <strong>${args.therapyType}</strong> therapy sessions.</p>
 
           <h3 style="margin-top: 20px;">Session Details</h3>
@@ -1164,7 +1235,7 @@ export const sendWorksheetPurchaseConfirmation = action({
           (worksheet, index) => `
         <tr>
           <td style="padding: 8px; border: 1px solid #ddd;">${index + 1}</td>
-          <td style="padding: 8px; border: 1px solid #ddd;">${worksheet.name}</td>
+          <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(worksheet.name)}</td>
         </tr>
       `,
         )
@@ -1179,7 +1250,7 @@ export const sendWorksheetPurchaseConfirmation = action({
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333; line-height: 1.6;">
           <h2 style="color: #4CAF50; margin-bottom: 20px;">Worksheet Purchase Confirmation</h2>
           
-          <p>Dear <strong>${args.userName}</strong>,</p>
+          <p>Dear <strong>${escapeHtml(args.userName)}</strong>,</p>
           
           <p>We are happy to confirm that your payment for the following worksheet${args.worksheets.length > 1 ? "s" : ""} has been successfully received:</p>
           
@@ -1264,7 +1335,7 @@ export const sendAlreadyEnrolledNotification = action({
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
             <h2 style="color: #FFA500;">Course Enrollment Status</h2>
-            <p>Dear ${args.userName},</p>
+            <p>Dear ${escapeHtml(args.userName)},</p>
             <p>Thank you for your interest in our courses! We noticed that you attempted to enroll in the following courses, but you are already enrolled in them:</p>
 
             <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
