@@ -6,7 +6,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type {
   CheckoutPricing,
   CheckoutPricingItem,
-} from "../lib/types/checkout";
+} from "../apps/web/lib/types/checkout";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -50,7 +50,7 @@ function extractInternshipPlanFromDuration(
 // Import the canonical points calculation function from lib/mind-points.ts
 // This ensures we use a single source of truth for points logic
 // Note: POINTS_EARN_CONFIG is also available from lib/mind-points.ts if needed
-import { calculatePointsEarned } from "../lib/mind-points";
+import { calculatePointsEarned } from "../apps/web/lib/mind-points";
 
 // Helper function to award Mind Points after successful payment
 // Returns the number of points awarded (0 when no award occurs)

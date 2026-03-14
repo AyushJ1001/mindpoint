@@ -33,17 +33,17 @@ Main blockers:
 
 - Checkout depends on a Next API route and Next server action
 - Auth and Convex providers are tied to `@clerk/nextjs`
-- Shared domain logic is mixed into web components and `app/`
+- Shared domain logic is mixed into web components and `apps/web/app/`
 - Convex generated types are imported through the web alias path
 - Several flows rely on browser-only APIs and web-only libraries
 
 Files that define the current coupling points:
 
-- [components/CartClient.tsx](../components/CartClient.tsx)
-- [app/actions/payment.ts](../app/actions/payment.ts)
-- [app/api/create-order/route.ts](../app/api/create-order/route.ts)
-- [components/ClientProviders.tsx](../components/ClientProviders.tsx)
-- [components/ConvexClientProvider.tsx](../components/ConvexClientProvider.tsx)
+- [apps/web/components/CartClient.tsx](../apps/web/components/CartClient.tsx)
+- [apps/web/app/actions/payment.ts](../apps/web/app/actions/payment.ts)
+- [apps/web/app/api/create-order/route.ts](../apps/web/app/api/create-order/route.ts)
+- [apps/web/components/ClientProviders.tsx](../apps/web/components/ClientProviders.tsx)
+- [apps/web/components/ConvexClientProvider.tsx](../apps/web/components/ConvexClientProvider.tsx)
 
 ## Target Repository Shape
 

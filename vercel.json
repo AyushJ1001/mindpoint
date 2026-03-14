@@ -1,0 +1,6 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "buildCommand": "TURBO_TELEMETRY_DISABLED=1 NEXT_TELEMETRY_DISABLED=1 npm run build:turbo",
+  "outputDirectory": "apps/web/.next"
+}

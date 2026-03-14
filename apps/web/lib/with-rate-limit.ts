@@ -4,13 +4,20 @@ import {
   createRateLimitHeaders,
   strictRatelimit,
   authRatelimit,
+  isRateLimitConfigured,
 } from "./rate-limit";
-import { Ratelimit } from "@upstash/ratelimit";
 
 type ApiHandler = (req: NextRequest) => Promise<NextResponse>;
 
 interface RateLimitOptions {
-  limiter?: Ratelimit;
+  limiter?: {
+    limit(identifier: string): Promise<{
+      success: boolean;
+      limit: number;
+      remaining: number;
+      reset: number;
+    }>;
+  };
   errorMessage?: string;
   statusCode?: number;
 }
@@ -27,6 +34,10 @@ export function withRateLimit(
 
   return async (req: NextRequest): Promise<NextResponse> => {
     try {
+      if (!isRateLimitConfigured) {
+        return await handler(req);
+      }
+
       // Check rate limit
       const rateLimitResult = await checkRateLimit(req, limiter);
 
