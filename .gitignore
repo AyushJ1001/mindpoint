@@ -24,6 +24,9 @@
 # production
 /build
 
+# Turbo build cache and logs
+.turbo/
+
 # misc
 .DS_Store
 *.pem

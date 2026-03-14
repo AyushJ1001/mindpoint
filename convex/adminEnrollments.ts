@@ -478,7 +478,7 @@ export const createManualEnrollment = mutation({
             },
           },
         );
-        enrollmentId = created;
+        enrollmentId = created.enrollmentId;
       } catch (innerError) {
         throw new Error(
           `handleSuccessfulPayment failed: ${

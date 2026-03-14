@@ -367,7 +367,11 @@ export async function handleSingleCourseEnrollment(
   options: { convexUrl?: string } = {},
 ): Promise<CheckoutResult & { enrollment?: EnrollmentSummary }> {
   try {
-    const enrollmentId = await runCheckoutMutation<string>(
+    const enrollment = await runCheckoutMutation<{
+      enrollmentId: Id<"enrollments">;
+      enrollmentNumber: string;
+      courseName: string;
+    }>(
       api.myFunctions.handleSuccessfulPayment,
       {
         courseId,
@@ -389,9 +393,9 @@ export async function handleSingleCourseEnrollment(
     return {
       success: true,
       enrollment: {
-        courseName: "",
-        enrollmentId,
-        enrollmentNumber: "",
+        courseName: enrollment.courseName,
+        enrollmentId: enrollment.enrollmentId as string,
+        enrollmentNumber: enrollment.enrollmentNumber,
       },
     };
   } catch (error) {

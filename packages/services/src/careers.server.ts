@@ -16,6 +16,13 @@ export class ResumeTooLargeError extends Error {
   }
 }
 
+export class InvalidRolesPayloadError extends Error {
+  constructor() {
+    super("The 'roles' field must be a valid JSON array.");
+    this.name = "InvalidRolesPayloadError";
+  }
+}
+
 function getSafeLinkedInUrl(linkedIn: string): string | null {
   if (!linkedIn) {
     return null;
@@ -51,14 +58,13 @@ export async function sendCareersApplication(
   const coverLetter = String(formData.get("coverLetter") || "");
   const resume = formData.get("resume");
 
-  const roles: string[] = (() => {
-    try {
-      const parsed = JSON.parse(rolesRaw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
-    }
-  })();
+  let roles: string[];
+  try {
+    const parsed = JSON.parse(rolesRaw);
+    roles = Array.isArray(parsed) ? parsed : [];
+  } catch {
+    throw new InvalidRolesPayloadError();
+  }
 
   careerApplicationSchema.parse({
     coverLetter,

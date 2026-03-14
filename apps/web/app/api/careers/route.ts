@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  InvalidRolesPayloadError,
   ResumeTooLargeError,
   sendCareersApplication,
 } from "@mindpoint/services/careers/server";
@@ -11,7 +12,11 @@ async function handleCareersApplication(req: NextRequest) {
     const result = await sendCareersApplication(await req.formData());
     return NextResponse.json(result);
   } catch (error) {
-    if (error instanceof ZodError || error instanceof ResumeTooLargeError) {
+    if (
+      error instanceof ZodError ||
+      error instanceof ResumeTooLargeError ||
+      error instanceof InvalidRolesPayloadError
+    ) {
       return NextResponse.json(
         {
           success: false,

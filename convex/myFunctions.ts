@@ -1063,7 +1063,11 @@ export const handleSuccessfulPayment = mutation({
       }
     }
 
-    return enrollmentId;
+    return {
+      enrollmentId,
+      enrollmentNumber,
+      courseName: course.name,
+    };
   },
 });
 
