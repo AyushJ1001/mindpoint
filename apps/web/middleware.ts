@@ -1,5 +1,5 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { isClerkServerConfigured } from "@mindpoint/config";
+import { isClerkServerConfigured } from "@mindpoint/config/server";
 import { NextResponse, NextRequest } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/server"]);

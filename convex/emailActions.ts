@@ -1035,7 +1035,10 @@ export const sendSupervisedTherapyWelcomeEmail = action({
         args.userEmail,
       );
       console.log("Using base URL for attachments:", baseUrl);
-      console.log("Environment variable NEXT_PUBLIC_SITE_URL:", getSiteUrl());
+      console.log(
+        "Environment variable NEXT_PUBLIC_SITE_URL:",
+        process.env.NEXT_PUBLIC_SITE_URL,
+      );
 
       // Fetch the PDF files and convert them to buffers for attachments
       const fetchFile = async (url: string): Promise<Buffer> => {

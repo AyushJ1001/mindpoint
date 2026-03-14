@@ -28,12 +28,6 @@ export function hasClerkPublishableKey(env: EnvSource = process.env): boolean {
   return Boolean(readPublicEnv(env).clerkPublishableKey);
 }
 
-export function isClerkServerConfigured(env: EnvSource = process.env): boolean {
-  return Boolean(
-    readPublicEnv(env).clerkPublishableKey && env.CLERK_SECRET_KEY,
-  );
-}
-
 export function getSiteUrl(
   env: EnvSource = process.env,
   fallback = "https://www.themindpoint.org",

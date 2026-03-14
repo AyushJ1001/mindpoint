@@ -1,3 +1,3 @@
 import "server-only";
 
-export { isClerkServerConfigured } from "@mindpoint/config";
+export { isClerkServerConfigured } from "@mindpoint/config/server";
