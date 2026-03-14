@@ -1,0 +1,107 @@
+
+> build
+> next build
+
+   ▲ Next.js 15.2.8
+
+   Creating an optimized production build ...
+ ✓ Compiled successfully
+   Skipping validation of types
+   Skipping linting
+   Collecting page data ...
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
+[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
+[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
+[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
+[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
+[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
+[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+   Generating static pages (0/37) ...
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
+[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
+[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
+[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
+[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
+[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
+   Generating static pages (9/37) 
+   Generating static pages (18/37) 
+   Generating static pages (27/37) 
+ ✓ Generating static pages (37/37)
+   Finalizing page optimization ...
+   Collecting build traces ...
+
+Route (app)                                 Size  First Load JS  Revalidate  Expire
+┌ ƒ /                                     6.2 kB         213 kB
+├ ○ /_not-found                            985 B         102 kB
+├ ○ /about                               3.76 kB         131 kB
+├ ○ /account                             11.3 kB         202 kB
+├ ƒ /admin                               3.54 kB         146 kB
+├ ƒ /admin/admins                         5.5 kB         170 kB
+├ ƒ /admin/audit-log                     4.04 kB         147 kB
+├ ƒ /admin/courses                       5.54 kB         151 kB
+├ ƒ /admin/courses/[courseId]            2.81 kB         188 kB
+├ ƒ /admin/courses/new                     422 B         183 kB
+├ ƒ /admin/enrollments                    7.1 kB         174 kB
+├ ƒ /admin/enrollments/[enrollmentId]    6.01 kB         170 kB
+├ ƒ /admin/loyalty                       7.22 kB         174 kB
+├ ƒ /admin/offers                          12 kB         176 kB
+├ ƒ /admin/settings                        171 B         101 kB
+├ ƒ /admin/users                         4.64 kB         150 kB
+├ ƒ /admin/users/[userKey]               4.82 kB         157 kB
+├ ƒ /api/careers                           171 B         101 kB
+├ ƒ /api/contact                           171 B         101 kB
+├ ƒ /api/create-order                      171 B         101 kB
+├ ƒ /api/uploadthing                       171 B         101 kB
+├ ○ /careers                             12.1 kB         200 kB
+├ ƒ /cart                                14.1 kB         270 kB
+├ ○ /contact                             7.12 kB         138 kB
+├ ○ /courses                             5.87 kB         208 kB         30m      1y
+├ ƒ /courses/[id]                        46.7 kB         331 kB
+├ ○ /courses/certificate                   747 B         204 kB         30m      1y
+├ ○ /courses/diploma                       747 B         204 kB         30m      1y
+├ ○ /courses/internship                    747 B         204 kB         30m      1y
+├ ○ /courses/masterclass                   747 B         204 kB         30m      1y
+├ ○ /courses/pre-recorded                  747 B         204 kB         30m      1y
+├ ○ /courses/resume-studio                 747 B         204 kB         30m      1y
+├ ○ /courses/supervised                  2.13 kB         253 kB         30m      1y
+├ ○ /courses/therapy                     2.14 kB         253 kB         30m      1y
+├ ○ /courses/worksheet                     747 B         204 kB         30m      1y
+├ ○ /privacy                               171 B         101 kB
+├ ○ /refund                                171 B         101 kB
+├ ƒ /server                                577 B         123 kB
+├ ○ /sitemap.xml                           171 B         101 kB
+└ ○ /toc                                   171 B         101 kB
++ First Load JS shared by all             101 kB
+  ├ chunks/8315-9d336534b4c84af8.js      45.9 kB
+  ├ chunks/87c73c54-a0c409353e3fe5f5.js  53.3 kB
+  └ other shared chunks (total)          1.98 kB
+
+
+ƒ Middleware                             78.1 kB
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
