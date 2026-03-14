@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Phone, Mail, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { submitContactForm } from "@mindpoint/services/contact";
 
 import { contactFormSchema } from "@/lib/utils";
 
@@ -37,21 +38,9 @@ export default function ContactClient() {
     setStatus("Sending...");
 
     try {
-      const res = await fetch("/api/contact", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-
-      const result = await res.json();
-      if (result.success) {
-        setStatus("Message sent successfully!");
-        form.reset();
-      } else {
-        setStatus("Error sending message.");
-      }
+      await submitContactForm(data);
+      setStatus("Message sent successfully!");
+      form.reset();
     } catch {
       setStatus("Error sending message.");
     }

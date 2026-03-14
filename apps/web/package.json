@@ -4,7 +4,8 @@
   "dependencies": {
     "@mindpoint/backend": "*",
     "@mindpoint/config": "*",
-    "@mindpoint/domain": "*"
+    "@mindpoint/domain": "*",
+    "@mindpoint/services": "*"
   },
   "scripts": {
     "dev": "next dev",

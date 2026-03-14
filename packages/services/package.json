@@ -1,0 +1,24 @@
+{
+  "name": "@mindpoint/services",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./careers": "./src/careers.ts",
+    "./careers/server": "./src/careers.server.ts",
+    "./checkout": "./src/checkout.ts",
+    "./contact": "./src/contact.ts",
+    "./contact/server": "./src/contact.server.ts",
+    "./payments": "./src/payments.ts",
+    "./payments/server": "./src/payments.server.ts"
+  },
+  "dependencies": {
+    "@mindpoint/backend": "*",
+    "@mindpoint/config": "*",
+    "@mindpoint/domain": "*",
+    "convex": "^1.23.0",
+    "razorpay": "^2.9.6",
+    "resend": "^5.0.0"
+  }
+}

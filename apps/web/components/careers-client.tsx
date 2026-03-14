@@ -33,6 +33,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { submitCareersApplication } from "@mindpoint/services/careers";
 
 const ApplicationSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
@@ -171,16 +172,7 @@ export default function CareersClient() {
       data.append("roles", JSON.stringify(selectedRoles));
       data.append("resume", selectedFile);
 
-      const response = await fetch("/api/careers", {
-        method: "POST",
-        body: data,
-      });
-
-      const result = await response.json();
-
-      if (!response.ok) {
-        throw new Error(result.error || "Failed to submit application");
-      }
+      await submitCareersApplication(data);
 
       toast.success("Application submitted successfully!", {
         description:
@@ -192,7 +184,8 @@ export default function CareersClient() {
       setSelectedFile(null);
       setSelectedRoles([]);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Please try again later.";
+      const message =
+        error instanceof Error ? error.message : "Please try again later.";
       toast.error("Failed to submit application", {
         description: message,
       });

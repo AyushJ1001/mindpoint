@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
     "@mindpoint/backend",
     "@mindpoint/config",
     "@mindpoint/domain",
+    "@mindpoint/services",
   ],
   typescript: {
     ignoreBuildErrors: true,
