@@ -1,6 +1,6 @@
 import "server-only";
 
-import { getResendEmailConfig } from "@mindpoint/config/server";
+import { getCareersEmailConfig } from "@mindpoint/config/server";
 import { careerApplicationSchema } from "@mindpoint/domain/forms";
 import { Resend } from "resend";
 
@@ -16,11 +16,30 @@ export class ResumeTooLargeError extends Error {
   }
 }
 
+function getSafeLinkedInUrl(linkedIn: string): string | null {
+  if (!linkedIn) {
+    return null;
+  }
+
+  try {
+    const url = new URL(linkedIn);
+    const isLinkedInHost =
+      url.hostname === "linkedin.com" || url.hostname.endsWith(".linkedin.com");
+
+    if (url.protocol !== "https:" || !isLinkedInHost) {
+      return null;
+    }
+
+    return url.toString();
+  } catch {
+    return null;
+  }
+}
+
 export async function sendCareersApplication(
   formData: FormData,
 ): Promise<CareersSubmissionResult> {
-  const { fromEmail, resendApiKey } = getResendEmailConfig();
-  const toEmail = "contact.themindpoint@gmail.com";
+  const { fromEmail, resendApiKey, toEmail } = getCareersEmailConfig();
   const resend = new Resend(resendApiKey);
 
   const fullName = String(formData.get("fullName") || "");
@@ -74,7 +93,8 @@ export async function sendCareersApplication(
   const escapedEmail = escapeHtml(email);
   const escapedPhone = escapeHtml(phone);
   const escapedLocation = escapeHtml(location);
-  const escapedLinkedIn = escapeHtml(linkedIn);
+  const safeLinkedIn = getSafeLinkedInUrl(linkedIn);
+  const escapedLinkedIn = safeLinkedIn ? escapeHtml(safeLinkedIn) : "";
   const escapedRoles = roles.map((role) => escapeHtml(role));
   const escapedCoverLetter = escapeHtml(coverLetter).replace(/\n/g, "<br/>");
 
@@ -85,7 +105,7 @@ export async function sendCareersApplication(
         <p><strong>Email:</strong> ${escapedEmail}</p>
         <p><strong>Phone:</strong> ${escapedPhone}</p>
         <p><strong>Location:</strong> ${escapedLocation}</p>
-        ${linkedIn ? `<p><strong>LinkedIn:</strong> <a href="${escapedLinkedIn}">${escapedLinkedIn}</a></p>` : ""}
+        ${safeLinkedIn ? `<p><strong>LinkedIn:</strong> <a href="${escapedLinkedIn}">${escapedLinkedIn}</a></p>` : ""}
         <p><strong>Roles of Interest:</strong> ${escapedRoles.join(", ") || "(none)"}</p>
         ${coverLetter ? `<p><strong>Cover Letter:</strong></p><p>${escapedCoverLetter}</p>` : ""}
       </div>

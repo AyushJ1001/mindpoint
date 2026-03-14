@@ -1,8 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import {
-  createPaymentOrder,
-  InvalidPaymentAmountError,
-} from "@mindpoint/services/payments/server";
+import { createPaymentOrder } from "@mindpoint/services/payments/server";
 import { withRateLimit } from "@/lib/with-rate-limit";
 
 async function handleCreateOrder(req: NextRequest) {
@@ -18,10 +15,6 @@ async function handleCreateOrder(req: NextRequest) {
 
     return NextResponse.json(order);
   } catch (error) {
-    if (error instanceof InvalidPaymentAmountError) {
-      return NextResponse.json({ error: error.message }, { status: 400 });
-    }
-
     return NextResponse.json(
       {
         error:

@@ -66,3 +66,24 @@ export function getContactEmailConfig(env: EnvSource = process.env): {
     toEmail,
   };
 }
+
+export function getCareersEmailConfig(env: EnvSource = process.env): {
+  fromEmail: string;
+  resendApiKey: string;
+  toEmail: string;
+} {
+  const { fromEmail, resendApiKey } = getResendEmailConfig(env);
+  const toEmail = env.CAREERS_TO_EMAIL || env.TO_EMAIL;
+
+  if (!toEmail) {
+    throw new Error(
+      "Email service not configured. Please set RESEND_API_KEY, FROM_EMAIL, and CAREERS_TO_EMAIL or TO_EMAIL.",
+    );
+  }
+
+  return {
+    fromEmail,
+    resendApiKey,
+    toEmail,
+  };
+}
