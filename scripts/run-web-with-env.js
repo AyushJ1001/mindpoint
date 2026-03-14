@@ -23,23 +23,31 @@ if (!script) {
   process.exit(1);
 }
 
-const workspaceArgs = [
-  "--workspace",
-  "@mindpoint/web",
-  "run",
-  script,
-  ...(args.length > 0 ? ["--", ...args] : []),
-];
-
 const npmExecPath = process.env.npm_execpath;
-const command =
-  npmExecPath && fs.existsSync(npmExecPath)
-    ? process.execPath
-    : process.platform === "win32"
-      ? "npm.cmd"
-      : "npm";
-const commandArgs =
-  npmExecPath && fs.existsSync(npmExecPath) ? [npmExecPath, ...workspaceArgs] : workspaceArgs;
+const hasExecPath = npmExecPath && fs.existsSync(npmExecPath);
+const isBunExecPath = hasExecPath && path.basename(npmExecPath).toLowerCase() === "bun";
+const workspaceArgs = isBunExecPath
+  ? ["run", "--filter", "@mindpoint/web", script, ...(args.length > 0 ? ["--", ...args] : [])]
+  : [
+      "--workspace",
+      "@mindpoint/web",
+      "run",
+      script,
+      ...(args.length > 0 ? ["--", ...args] : []),
+    ];
+
+const command = hasExecPath
+  ? isBunExecPath
+    ? npmExecPath
+    : process.execPath
+  : process.platform === "win32"
+    ? "npm.cmd"
+    : "npm";
+const commandArgs = hasExecPath
+  ? isBunExecPath
+    ? workspaceArgs
+    : [npmExecPath, ...workspaceArgs]
+  : workspaceArgs;
 
 const child = spawn(command, commandArgs, {
   cwd: rootDir,
