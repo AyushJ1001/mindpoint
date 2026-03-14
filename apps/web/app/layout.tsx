@@ -8,12 +8,9 @@ import "./globals.css";
 import "react-phone-number-input/style.css";
 import { PostHogProvider } from "@/components/PostHogProvider";
 import ClientProviders from "@/components/ClientProviders";
-import ClientNavbar from "@/components/ClientNavbar";
 import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
-import StructuredData from "@/components/structured-data";
-import RouteBodyClass from "@/components/RouteBodyClass";
 
 const manrope = Manrope({
   variable: "--font-manrope",
@@ -94,18 +91,7 @@ export default function RootLayout({
 
         <PostHogProvider>
           <ClientProviders>
-            <RouteBodyClass />
-            <StructuredData />
-            <ClientNavbar />
-
-            <main
-              id="main-content"
-              className="flex-grow"
-              role="main"
-              tabIndex={-1}
-            >
-              {children}
-            </main>
+            {children}
           </ClientProviders>
 
           <Footer />

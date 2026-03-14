@@ -6,12 +6,26 @@ import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { CartProvider } from "@/components/CartProvider";
 import { ReferralTracker } from "@/components/ReferralTracker";
 import { MindPointsProvider } from "@/contexts/MindPointsContext";
+import ClientNavbar from "@/components/ClientNavbar";
+import RouteBodyClass from "@/components/RouteBodyClass";
+import StructuredData from "@/components/structured-data";
 
 interface ClientProvidersProps {
   children: ReactNode;
 }
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
+  const appShell = (
+    <>
+      <RouteBodyClass />
+      <StructuredData />
+      <ClientNavbar />
+      <main id="main-content" className="flex-grow" role="main" tabIndex={-1}>
+        {children}
+      </main>
+    </>
+  );
+
   // Only use ClerkProvider if the public key is available
   if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     return (
@@ -20,7 +34,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
           <MindPointsProvider>
             <CartProvider>
               <ReferralTracker />
-              {children}
+              {appShell}
             </CartProvider>
           </MindPointsProvider>
         </ConvexClientProvider>
@@ -34,7 +48,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
     <ConvexClientProvider>
       <CartProvider>
         <ReferralTracker />
-        {children}
+        {appShell}
       </CartProvider>
     </ConvexClientProvider>
   );

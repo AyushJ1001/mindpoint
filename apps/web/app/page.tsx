@@ -6,6 +6,7 @@ import HomeHero from "@/components/HomeHero";
 import { Suspense } from "react";
 import { hasAdminAccess } from "@/lib/admin-access";
 import { resolveAuthEmail } from "@/lib/clerk-email";
+import { isClerkServerConfigured } from "@/lib/clerk-env";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -67,12 +68,24 @@ async function getUpcomingCourses() {
 }
 
 export default async function Home() {
-  const [{ userId, sessionClaims, getToken }, upcomingCourses] =
-    await Promise.all([auth(), getUpcomingCourses()]);
-  const sessionEmail = await resolveAuthEmail(sessionClaims);
-
   let canAccessAdmin = false;
-  if (userId || sessionEmail) {
+  const upcomingCourses = await getUpcomingCourses();
+
+  if (isClerkServerConfigured()) {
+    const { userId, sessionClaims, getToken } = await auth();
+    const sessionEmail = await resolveAuthEmail(sessionClaims);
+
+    if (!userId && !sessionEmail) {
+      return (
+        <>
+          <HomeHero canAccessAdmin={canAccessAdmin} />
+          <Suspense fallback={<div>Loading courses...</div>}>
+            <HomeClient upcomingCourses={upcomingCourses} />
+          </Suspense>
+        </>
+      );
+    }
+
     try {
       const convexToken = await getToken({ template: "convex" });
       canAccessAdmin = await hasAdminAccess(userId, sessionEmail, convexToken);
