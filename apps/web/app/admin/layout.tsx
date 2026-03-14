@@ -6,12 +6,17 @@ import { AdminConvexGate } from "@/components/admin/AdminConvexGate";
 import { AdminRetryButton } from "@/components/admin/AdminRetryButton";
 import { hasAdminAccess } from "@/lib/admin-access";
 import { resolveAuthEmail } from "@/lib/clerk-email";
+import { isClerkServerConfigured } from "@/lib/clerk-env";
 
 export default async function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  if (!isClerkServerConfigured()) {
+    redirect("/");
+  }
+
   const { userId, sessionClaims, getToken } = await auth();
   const sessionEmail = await resolveAuthEmail(sessionClaims);
 

@@ -3,10 +3,15 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { UploadThingError } from "uploadthing/server";
 import { hasAdminAccess } from "@/lib/admin-access";
 import { resolveAuthEmail } from "@/lib/clerk-email";
+import { isClerkServerConfigured } from "@/lib/clerk-env";
 
 const f = createUploadthing();
 
 async function adminMiddleware() {
+  if (!isClerkServerConfigured()) {
+    throw new UploadThingError("Unauthorized");
+  }
+
   const { userId, sessionClaims, getToken } = await auth();
   const sessionEmail = await resolveAuthEmail(sessionClaims);
   const convexToken = await getToken({ template: "convex" });
