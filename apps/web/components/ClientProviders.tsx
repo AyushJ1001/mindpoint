@@ -1,5 +1,6 @@
 "use client";
 
+import { hasClerkPublishableKey } from "@mindpoint/config";
 import { ReactNode } from "react";
 import { ClerkProvider } from "@clerk/nextjs";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
@@ -27,7 +28,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   );
 
   // Only use ClerkProvider if the public key is available
-  if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
+  if (hasClerkPublishableKey()) {
     return (
       <ClerkProvider>
         <ConvexClientProvider>

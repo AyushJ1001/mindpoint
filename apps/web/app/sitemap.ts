@@ -1,6 +1,6 @@
 import { MetadataRoute } from "next";
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://themindpoint.org";

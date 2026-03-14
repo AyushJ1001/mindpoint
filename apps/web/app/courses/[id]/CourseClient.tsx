@@ -4,8 +4,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "react-use-cart";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@mindpoint/backend/api";
+import { Id } from "@mindpoint/backend/data-model";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,7 @@ import CourseHero from "@/components/course/course-hero";
 import CountdownTimer from "@/components/course/countdown-timer";
 import CourseOverview from "@/components/course/course-overview";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@mindpoint/backend/data-model";
 import {
   getOfferDetails,
   getCoursePrice,

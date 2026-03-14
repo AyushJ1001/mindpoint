@@ -1,9 +1,9 @@
 "use server";
 
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@mindpoint/backend/api";
+import { Id } from "@mindpoint/backend/data-model";
+import type { CheckoutPricing } from "@mindpoint/domain/checkout";
 import { executeConvexMutationWithRetry } from "@/lib/convex-client-utils";
-import type { CheckoutPricing } from "@/lib/types/checkout";
 
 export async function handlePaymentSuccess(
   userId: string,

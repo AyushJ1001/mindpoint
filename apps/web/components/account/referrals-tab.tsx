@@ -2,7 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Gift, Users } from "lucide-react";
@@ -31,14 +31,15 @@ export function ReferralsTab() {
     return (
       <div className="space-y-4">
         <div>
-          <h2 className="text-2xl font-semibold mb-2">My Referrals</h2>
+          <h2 className="mb-2 text-2xl font-semibold">My Referrals</h2>
           <p className="text-muted-foreground">
-            Track the people who used your referral link and the rewards you&apos;ve earned.
+            Track the people who used your referral link and the rewards
+            you&apos;ve earned.
           </p>
         </div>
         <Card>
           <CardContent className="py-12 text-center">
-            <Users className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+            <Users className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
             <p className="text-muted-foreground">
               No referrals yet. Share your referral link to start earning!
             </p>
@@ -51,9 +52,10 @@ export function ReferralsTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold mb-2">My Referrals</h2>
+        <h2 className="mb-2 text-2xl font-semibold">My Referrals</h2>
         <p className="text-muted-foreground">
-          Track the people who used your referral link and the rewards you&apos;ve earned.
+          Track the people who used your referral link and the rewards
+          you&apos;ve earned.
         </p>
       </div>
 
@@ -68,20 +70,18 @@ export function ReferralsTab() {
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-primary text-2xl font-bold">
                 {referralRewards.length}
               </div>
-              <div className="text-sm text-muted-foreground">
+              <div className="text-muted-foreground text-sm">
                 Total Referrals
               </div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-primary text-2xl font-bold">
                 {totalPointsEarned.toLocaleString()}
               </div>
-              <div className="text-sm text-muted-foreground">
-                Points Earned
-              </div>
+              <div className="text-muted-foreground text-sm">Points Earned</div>
             </div>
           </div>
         </CardContent>
@@ -100,7 +100,7 @@ export function ReferralsTab() {
                       {reward.referredUserName || "Anonymous User"}
                     </CardTitle>
                     {reward.referredUserEmail && (
-                      <p className="text-sm text-muted-foreground mt-1">
+                      <p className="text-muted-foreground mt-1 text-sm">
                         {reward.referredUserEmail}
                       </p>
                     )}
@@ -113,7 +113,7 @@ export function ReferralsTab() {
               <CardContent>
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <Calendar className="text-muted-foreground h-4 w-4" />
                     <span>
                       Referred on{" "}
                       {new Date(reward.createdAt).toLocaleDateString("en-US", {
@@ -140,4 +140,3 @@ export function ReferralsTab() {
     </div>
   );
 }
-

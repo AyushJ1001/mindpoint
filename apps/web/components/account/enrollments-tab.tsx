@@ -2,7 +2,7 @@
 
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, BookOpen } from "lucide-react";
@@ -26,7 +26,7 @@ export function EnrollmentsTab() {
     return (
       <Card>
         <CardContent className="py-12 text-center">
-          <BookOpen className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+          <BookOpen className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
           <p className="text-muted-foreground">
             You haven&apos;t enrolled in any courses yet.
           </p>
@@ -68,7 +68,7 @@ export function EnrollmentsTab() {
                   )}
                   {course.startDate && (
                     <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
+                      <Calendar className="text-muted-foreground h-4 w-4" />
                       <span>
                         {new Date(course.startDate).toLocaleDateString()} -{" "}
                         {new Date(course.endDate).toLocaleDateString()}
@@ -77,7 +77,7 @@ export function EnrollmentsTab() {
                   )}
                   {course.startTime && (
                     <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <Clock className="text-muted-foreground h-4 w-4" />
                       <span>
                         {course.startTime} - {course.endTime}
                       </span>
@@ -106,4 +106,3 @@ export function EnrollmentsTab() {
     </div>
   );
 }
-

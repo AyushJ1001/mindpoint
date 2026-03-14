@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { toast } from "sonner";
 import { X, MessageCircle } from "lucide-react";
 import { useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 
 interface WhatsAppModalProps {
   isOpen: boolean;
@@ -34,7 +34,9 @@ export function WhatsAppModal({
   clerkUserId,
 }: WhatsAppModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const saveWhatsappNumber = useMutation(api.myFunctions.saveUserWhatsappNumber);
+  const saveWhatsappNumber = useMutation(
+    api.myFunctions.saveUserWhatsappNumber,
+  );
 
   const {
     handleSubmit,
@@ -263,5 +265,3 @@ export function WhatsAppModal({
     </div>
   );
 }
-
-

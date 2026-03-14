@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import ChoosePlan from "@/components/therapy/choose-plan";
 import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@mindpoint/backend/data-model";
 
 interface TherapyCourseProps {
   course: Doc<"courses">;

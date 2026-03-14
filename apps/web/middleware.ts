@@ -1,31 +1,31 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { isClerkServerConfigured } from "@mindpoint/config/server";
 import { NextResponse, NextRequest } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/server"]);
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
 // Only use Clerk middleware if keys are available
-const middleware =
-  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY
-    ? clerkMiddleware(async (auth, req) => {
-        // Handle redirects for legacy routes
-        if (req.nextUrl.pathname === "/terms") {
-          return NextResponse.redirect(new URL("/toc", req.url));
-        }
+const middleware = isClerkServerConfigured()
+  ? clerkMiddleware(async (auth, req) => {
+      // Handle redirects for legacy routes
+      if (req.nextUrl.pathname === "/terms") {
+        return NextResponse.redirect(new URL("/toc", req.url));
+      }
 
-        if (isProtectedRoute(req)) await auth.protect();
-        if (isAdminRoute(req)) await auth.protect();
-      })
-    : (req: NextRequest) => {
-        // Fallback middleware when Clerk keys are not available
-        if (req.nextUrl.pathname === "/terms") {
-          return NextResponse.redirect(new URL("/toc", req.url));
-        }
-        if (req.nextUrl.pathname.startsWith("/admin")) {
-          return NextResponse.redirect(new URL("/", req.url));
-        }
-        return NextResponse.next();
-      };
+      if (isProtectedRoute(req)) await auth.protect();
+      if (isAdminRoute(req)) await auth.protect();
+    })
+  : (req: NextRequest) => {
+      // Fallback middleware when Clerk keys are not available
+      if (req.nextUrl.pathname === "/terms") {
+        return NextResponse.redirect(new URL("/toc", req.url));
+      }
+      if (req.nextUrl.pathname.startsWith("/admin")) {
+        return NextResponse.redirect(new URL("/", req.url));
+      }
+      return NextResponse.next();
+    };
 
 export default middleware;
 

@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -60,7 +60,7 @@ export default function AdminAuditLogPage() {
 
       <div className="overflow-hidden rounded-lg border bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+          <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
             <tr>
               <th className="px-3 py-2">Timestamp</th>
               <th className="px-3 py-2">Action</th>
@@ -87,7 +87,9 @@ export default function AdminAuditLogPage() {
                   <td className="px-3 py-2 text-xs text-slate-600">
                     {new Date(row.createdAt).toLocaleString()}
                   </td>
-                  <td className="px-3 py-2 font-medium text-slate-900">{row.action}</td>
+                  <td className="px-3 py-2 font-medium text-slate-900">
+                    {row.action}
+                  </td>
                   <td className="px-3 py-2 text-xs text-slate-600">
                     {row.entityType} • {row.entityId}
                   </td>

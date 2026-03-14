@@ -1,0 +1,19 @@
+{
+  "name": "@mindpoint/domain",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./cart": "./src/cart.ts",
+    "./checkout": "./src/checkout.ts",
+    "./forms": "./src/forms.ts",
+    "./pricing": "./src/pricing.ts",
+    "./referrals": "./src/referrals.ts",
+    "./time": "./src/time.ts"
+  },
+  "dependencies": {
+    "@mindpoint/backend": "*",
+    "zod": "^4.0.15"
+  }
+}

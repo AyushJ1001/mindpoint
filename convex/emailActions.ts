@@ -1,5 +1,6 @@
 "use node";
 
+import { getSiteUrl } from "@mindpoint/config";
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { Resend } from "resend";
@@ -155,7 +156,7 @@ export const sendMindPointsReminderEmail = action({
   returns: v.null(),
   handler: async (ctx, args) => {
     try {
-      const accountUrl = `${process.env.NEXT_PUBLIC_SITE_URL || "https://www.themindpoint.org"}/account?tab=points`;
+      const accountUrl = `${getSiteUrl()}/account?tab=points`;
 
       await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
@@ -1027,8 +1028,7 @@ export const sendSupervisedTherapyWelcomeEmail = action({
   handler: async (ctx, args) => {
     try {
       // Get the base URL for attachments - use environment variable or fallback to production URL
-      const baseUrl =
-        process.env.NEXT_PUBLIC_SITE_URL || "https://www.themindpoint.org";
+      const baseUrl = getSiteUrl();
 
       console.log(
         "Sending supervised therapy welcome email to:",

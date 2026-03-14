@@ -33,7 +33,7 @@ import {
 import StickyCTA from "@/components/course/sticky-cta";
 import ReviewsSection from "@/components/course/reviews-section";
 import TrustBar from "@/components/course/trust-bar";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@mindpoint/backend/data-model";
 import {
   getOfferDetails,
   getCoursePrice,

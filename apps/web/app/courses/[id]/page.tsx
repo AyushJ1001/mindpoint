@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import CourseClient from "./CourseClient";
 import { ConvexHttpClient } from "convex/browser";
-import { Id } from "@/convex/_generated/dataModel";
+import { Id } from "@mindpoint/backend/data-model";
 import Script from "next/script";
 
 // Create a Convex client for server-side data fetching

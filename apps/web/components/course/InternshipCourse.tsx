@@ -1,7 +1,7 @@
 import React from "react";
 
 import InternshipSection from "./internship-section";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@mindpoint/backend/data-model";
 
 interface InternshipCourseProps {
   course: Doc<"courses">;

@@ -1,7 +1,7 @@
 import CourseTypePage from "@/components/CourseTypePage";
 import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 
 export const revalidate = 1800; // 30 min ISR
 

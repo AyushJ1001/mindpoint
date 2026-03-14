@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Star, Users, Target, Zap } from "lucide-react";
 import CourseModulesSection from "./course-modules-section";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@mindpoint/backend/data-model";
 
 interface MasterclassCourseProps {
   course: Doc<"courses">;

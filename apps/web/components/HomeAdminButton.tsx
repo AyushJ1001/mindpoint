@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useConvexAuth, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import { Button } from "@/components/ui/button";
 
 export default function HomeAdminButton() {

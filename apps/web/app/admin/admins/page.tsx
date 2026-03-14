@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,9 +22,7 @@ export default function AdminManagersPage() {
   const [newAdminName, setNewAdminName] = useState("");
   const [newAdminNote, setNewAdminNote] = useState("");
   const [loadingEmail, setLoadingEmail] = useState<string | null>(null);
-  const [removeTargetKey, setRemoveTargetKey] = useState<string | null>(
-    null,
-  );
+  const [removeTargetKey, setRemoveTargetKey] = useState<string | null>(null);
   const [removeReason, setRemoveReason] = useState("Access no longer required");
 
   const data = useQuery(api.adminManagers.listAdmins, {

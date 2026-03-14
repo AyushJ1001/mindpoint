@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,9 @@ export default function AdminUserDetailPage() {
   const userDisplayName =
     detail.kind === "guest"
       ? detail.guestUser?.name || detail.enrollments[0]?.userName || detail.id
-      : detail.enrollments[0]?.userName || detail.mindPoints?.userName || detail.id;
+      : detail.enrollments[0]?.userName ||
+        detail.mindPoints?.userName ||
+        detail.id;
 
   return (
     <div className="space-y-6">

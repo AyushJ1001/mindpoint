@@ -6,7 +6,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type {
   CheckoutPricing,
   CheckoutPricingItem,
-} from "../apps/web/lib/types/checkout";
+} from "@mindpoint/domain/checkout";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
