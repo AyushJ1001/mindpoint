@@ -18,7 +18,7 @@ export async function sendContactMessage(
   const escapedMessage = escapeHtml(message).replace(/\n/g, "<br/>");
   const data = await resend.emails.send({
     from: `"Contact Form" <${fromEmail}>`,
-    to: [toEmail, "contact.themindpoint@gmail.com"],
+    to: [toEmail],
     subject: `New Contact Message from ${name}`,
     replyTo: email,
     html: `

@@ -7,6 +7,15 @@ import { Resend } from "resend";
 import type { CareersSubmissionResult } from "./careers";
 import { escapeHtml } from "./html";
 
+const MAX_RESUME_BYTES = 5 * 1024 * 1024;
+
+export class ResumeTooLargeError extends Error {
+  constructor() {
+    super("Resume file must be 5 MB or smaller.");
+    this.name = "ResumeTooLargeError";
+  }
+}
+
 export async function sendCareersApplication(
   formData: FormData,
 ): Promise<CareersSubmissionResult> {
@@ -49,6 +58,10 @@ export async function sendCareersApplication(
   }[] = [];
 
   if (resume && resume instanceof File) {
+    if (resume.size > MAX_RESUME_BYTES) {
+      throw new ResumeTooLargeError();
+    }
+
     const arrayBuffer = await resume.arrayBuffer();
     attachments.push({
       filename: resume.name || "resume",

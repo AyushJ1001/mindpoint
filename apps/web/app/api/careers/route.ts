@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { sendCareersApplication } from "@mindpoint/services/careers/server";
+import {
+  ResumeTooLargeError,
+  sendCareersApplication,
+} from "@mindpoint/services/careers/server";
+import { ZodError } from "zod";
 import { withRateLimit } from "@/lib/with-rate-limit";
 
 async function handleCareersApplication(req: NextRequest) {
@@ -7,6 +11,16 @@ async function handleCareersApplication(req: NextRequest) {
     const result = await sendCareersApplication(await req.formData());
     return NextResponse.json(result);
   } catch (error) {
+    if (error instanceof ZodError || error instanceof ResumeTooLargeError) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: error.message || "Invalid input.",
+        },
+        { status: 400 },
+      );
+    }
+
     return NextResponse.json(
       {
         success: false,
