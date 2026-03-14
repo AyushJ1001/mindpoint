@@ -39,11 +39,11 @@ Main blockers:
 
 Files that define the current coupling points:
 
-- [components/CartClient.tsx](/Users/ayushjuvekar/Work/mindpoint/components/CartClient.tsx)
-- [app/actions/payment.ts](/Users/ayushjuvekar/Work/mindpoint/app/actions/payment.ts)
-- [app/api/create-order/route.ts](/Users/ayushjuvekar/Work/mindpoint/app/api/create-order/route.ts)
-- [components/ClientProviders.tsx](/Users/ayushjuvekar/Work/mindpoint/components/ClientProviders.tsx)
-- [components/ConvexClientProvider.tsx](/Users/ayushjuvekar/Work/mindpoint/components/ConvexClientProvider.tsx)
+- [components/CartClient.tsx](../components/CartClient.tsx)
+- [app/actions/payment.ts](../app/actions/payment.ts)
+- [app/api/create-order/route.ts](../app/api/create-order/route.ts)
+- [components/ClientProviders.tsx](../components/ClientProviders.tsx)
+- [components/ConvexClientProvider.tsx](../components/ConvexClientProvider.tsx)
 
 ## Target Repository Shape
 
