@@ -1,6 +1,6 @@
 "use server";
 
-import { api } from "../../convex/_generated/api";
+import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { executeConvexMutationWithRetry } from "@/lib/convex-client-utils";
 import type { CheckoutPricing } from "@/lib/types/checkout";

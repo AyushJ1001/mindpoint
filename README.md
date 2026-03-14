@@ -125,38 +125,15 @@ The Mind Point is a full-stack e-commerce platform for mental health education, 
 
 ```
 mindpoint/
-├── app/                          # Next.js App Router
-│   ├── about/                    # About page
-│   ├── account/                  # User dashboard
-│   ├── actions/                  # Server actions (payments)
-│   ├── api/                      # API routes
-│   │   ├── careers/              # Job applications
-│   │   ├── contact/              # Contact form
-│   │   └── create-order/         # Razorpay order creation
-│   ├── careers/                  # Careers page
-│   ├── cart/                     # Shopping cart
-│   ├── contact/                  # Contact page
-│   ├── courses/                  # Course pages
-│   │   ├── [id]/                 # Dynamic course detail
-│   │   ├── certificate/          # Certificate courses
-│   │   ├── diploma/              # Diploma courses
-│   │   ├── internship/           # Internship programs
-│   │   ├── masterclass/          # Masterclass courses
-│   │   ├── pre-recorded/         # Pre-recorded courses
-│   │   ├── resume-studio/        # Resume services
-│   │   ├── supervised/           # Supervised therapy
-│   │   ├── therapy/              # Therapy sessions
-│   │   └── worksheet/            # Worksheet products
-│   ├── privacy/                  # Privacy policy
-│   ├── refund/                   # Refund policy
-│   ├── server/                   # Protected routes
-│   └── toc/                      # Terms and conditions
-├── components/                   # React components
-│   ├── account/                  # Account-related components
-│   ├── course/                   # Course display components
-│   ├── therapy/                  # Therapy-specific components
-│   └── ui/                       # Reusable UI primitives (shadcn/ui)
-├── contexts/                     # React contexts
+├── apps/
+│   └── web/                      # Next.js customer-facing app
+│       ├── app/                  # App Router routes and loaders
+│       ├── components/           # React components
+│       ├── contexts/             # React contexts
+│       ├── hooks/                # Custom React hooks
+│       ├── lib/                  # Utility functions
+│       ├── public/               # Static assets
+│       └── types/                # TypeScript type definitions
 ├── convex/                       # Convex backend
 │   ├── _generated/               # Auto-generated types
 │   ├── schema.ts                 # Database schema
@@ -166,10 +143,7 @@ mindpoint/
 │   ├── googleSheets.ts           # Google Sheets integration
 │   └── rateLimit.ts              # Rate limiting logic
 ├── docs/                         # Internal documentation
-├── hooks/                        # Custom React hooks
-├── lib/                          # Utility functions
-├── public/                       # Static assets
-└── types/                        # TypeScript type definitions
+└── scripts/                      # Operational scripts and checks
 ```
 
 ---
@@ -197,7 +171,7 @@ mindpoint/
 2. **Install dependencies**
 
    ```bash
-   npm install
+   bun install
    ```
 
 3. **Set up environment variables**
@@ -215,7 +189,7 @@ mindpoint/
 5. **Start the development server**
 
    ```bash
-   npm run dev
+   bun dev
    ```
 
    Open [http://localhost:3000](http://localhost:3000) in your browser.
