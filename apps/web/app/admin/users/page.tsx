@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -66,7 +66,7 @@ export default function AdminUsersPage() {
 
       <div className="overflow-hidden rounded-lg border bg-white">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-50 text-xs uppercase tracking-wide text-slate-600">
+          <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
             <tr>
               <th className="px-3 py-2">User</th>
               <th className="px-3 py-2">Type</th>
@@ -92,8 +92,12 @@ export default function AdminUsersPage() {
               rows.map((row) => (
                 <tr key={row.userKey} className="border-t">
                   <td className="px-3 py-2">
-                    <p className="font-medium text-slate-900">{row.displayName || row.userId}</p>
-                    <p className="text-xs text-slate-600">{row.email || row.userId}</p>
+                    <p className="font-medium text-slate-900">
+                      {row.displayName || row.userId}
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      {row.email || row.userId}
+                    </p>
                   </td>
                   <td className="px-3 py-2">
                     <Badge variant="outline">{row.kind}</Badge>
@@ -104,7 +108,9 @@ export default function AdminUsersPage() {
                   <td className="px-3 py-2">{row.mindPointsBalance ?? 0}</td>
                   <td className="px-3 py-2">
                     <Button variant="outline" size="sm" asChild>
-                      <Link href={`/admin/users/${encodeURIComponent(row.userKey)}`}>
+                      <Link
+                        href={`/admin/users/${encodeURIComponent(row.userKey)}`}
+                      >
                         View
                       </Link>
                     </Button>

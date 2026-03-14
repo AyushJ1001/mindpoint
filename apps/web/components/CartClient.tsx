@@ -1,5 +1,7 @@
 "use client";
 
+import type { Id } from "@mindpoint/backend/data-model";
+import { REFERRAL_COOKIE_KEY } from "@mindpoint/domain/referrals";
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import Image from "next/image";
@@ -20,10 +22,9 @@ import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/clerk-react";
 import { handlePaymentSuccess } from "@/app/actions/payment";
 import { toast } from "sonner";
-import { Id } from "@/convex/_generated/dataModel";
 import { WhatsAppModal } from "@/components/whatsapp-modal";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import {
   Dialog,
   DialogContent,
@@ -40,8 +41,6 @@ import { useNow } from "@/hooks/use-now";
 import { useMemo } from "react";
 
 export const dynamic = "force-dynamic";
-
-const REFERRAL_COOKIE_KEY = "mp_ref";
 
 const getReferralCookie = () => {
   if (typeof document === "undefined") return null;

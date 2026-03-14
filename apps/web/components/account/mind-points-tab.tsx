@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,12 +42,14 @@ export function MindPointsTab() {
   }
 
   if (accountSummary === undefined) {
-    return (
-      <div className="text-muted-foreground">Loading Mind Points...</div>
-    );
+    return <div className="text-muted-foreground">Loading Mind Points...</div>;
   }
 
-  const { points: pointsData, history: pointsHistory, coupons } = accountSummary;
+  const {
+    points: pointsData,
+    history: pointsHistory,
+    coupons,
+  } = accountSummary;
   const balance = pointsData.balance || 0;
   const totalEarned = pointsData.totalEarned || 0;
   const totalRedeemed = pointsData.totalRedeemed || 0;
@@ -104,7 +106,7 @@ export function MindPointsTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold mb-2">Mind Points</h2>
+        <h2 className="mb-2 text-2xl font-semibold">Mind Points</h2>
         <p className="text-muted-foreground">
           Earn points with every purchase and redeem them for free courses!
         </p>
@@ -121,15 +123,15 @@ export function MindPointsTab() {
         <CardContent>
           <div className="space-y-4">
             <div>
-              <div className="text-4xl font-bold text-primary mb-2">
+              <div className="text-primary mb-2 text-4xl font-bold">
                 {balance.toLocaleString()}
               </div>
-              <p className="text-sm text-muted-foreground">Mind Points</p>
+              <p className="text-muted-foreground text-sm">Mind Points</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+            <div className="grid grid-cols-2 gap-4 border-t pt-4">
               <div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                <div className="text-muted-foreground mb-1 flex items-center gap-2 text-sm">
                   <TrendingUp className="h-4 w-4 text-green-500" />
                   Total Earned
                 </div>
@@ -138,7 +140,7 @@ export function MindPointsTab() {
                 </div>
               </div>
               <div>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                <div className="text-muted-foreground mb-1 flex items-center gap-2 text-sm">
                   <TrendingDown className="h-4 w-4 text-orange-500" />
                   Total Redeemed
                 </div>
@@ -149,8 +151,8 @@ export function MindPointsTab() {
             </div>
 
             {/* Progress Bar */}
-            <div className="pt-4 border-t">
-              <div className="flex items-center justify-between text-sm mb-2">
+            <div className="border-t pt-4">
+              <div className="mb-2 flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
                   Progress to next reward
                 </span>
@@ -170,7 +172,7 @@ export function MindPointsTab() {
           <CardTitle>Refer &amp; Earn</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Share your personal link. When a friend signs in, places their{" "}
             <span className="font-medium">first order</span> within 30 days, and
             earns Mind Points, you instantly receive the same amount.
@@ -200,9 +202,14 @@ export function MindPointsTab() {
               )}
             </Button>
           </div>
-          <ul className="text-sm text-muted-foreground space-y-1">
-            <li>- First click wins: we track the first referral link for 30 days.</li>
-            <li>- Referral rewards only apply to MindPoint accounts (not guest checkouts).</li>
+          <ul className="text-muted-foreground space-y-1 text-sm">
+            <li>
+              - First click wins: we track the first referral link for 30 days.
+            </li>
+            <li>
+              - Referral rewards only apply to MindPoint accounts (not guest
+              checkouts).
+            </li>
             <li>- Self referrals are ignored.</li>
           </ul>
         </CardContent>
@@ -220,17 +227,19 @@ export function MindPointsTab() {
               return (
                 <div
                   key={option.courseType}
-                  className="flex items-center justify-between p-4 border rounded-lg"
+                  className="flex items-center justify-between rounded-lg border p-4"
                 >
                   <div>
                     <div className="font-medium">{option.label}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       {option.pointsRequired} points
                     </div>
                   </div>
                   <Button
                     onClick={() =>
-                      setSelectedRedemption(option.courseType + ":" + option.pointsRequired)
+                      setSelectedRedemption(
+                        option.courseType + ":" + option.pointsRequired,
+                      )
                     }
                     disabled={!canAfford}
                     size="sm"
@@ -255,15 +264,16 @@ export function MindPointsTab() {
               {coupons.map((coupon) => (
                 <div
                   key={coupon._id}
-                  className="flex items-center justify-between p-4 border rounded-lg"
+                  className="flex items-center justify-between rounded-lg border p-4"
                 >
                   <div>
-                    <div className="font-mono font-semibold text-lg">
+                    <div className="font-mono text-lg font-semibold">
                       {coupon.code}
                     </div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       {coupon.courseType.charAt(0).toUpperCase() +
-                        coupon.courseType.slice(1)} - 100% off
+                        coupon.courseType.slice(1)}{" "}
+                      - 100% off
                     </div>
                   </div>
                   <Button
@@ -301,11 +311,11 @@ export function MindPointsTab() {
               {pointsHistory.map((transaction) => (
                 <div
                   key={transaction._id}
-                  className="flex items-center justify-between py-2 border-b last:border-0"
+                  className="flex items-center justify-between border-b py-2 last:border-0"
                 >
                   <div>
                     <div className="font-medium">{transaction.description}</div>
-                    <div className="text-sm text-muted-foreground">
+                    <div className="text-muted-foreground text-sm">
                       {new Date(transaction.createdAt).toLocaleDateString()}
                     </div>
                   </div>
@@ -345,4 +355,3 @@ export function MindPointsTab() {
     </div>
   );
 }
-

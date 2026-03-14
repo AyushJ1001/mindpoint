@@ -21,7 +21,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@mindpoint/backend/data-model";
 
 // Configuration constants
 // Based on the actual pricing table:

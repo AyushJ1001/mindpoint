@@ -1,6 +1,11 @@
 {
   "name": "@mindpoint/web",
   "private": true,
+  "dependencies": {
+    "@mindpoint/backend": "*",
+    "@mindpoint/config": "*",
+    "@mindpoint/domain": "*"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

@@ -1,7 +1,8 @@
 import "server-only";
 
+import { api } from "@mindpoint/backend/api";
+import { readPublicEnv } from "@mindpoint/config";
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
 
 function normalizeEmail(email?: string | null): string | undefined {
   const normalized = (email || "").trim().toLowerCase();
@@ -19,7 +20,7 @@ export async function hasAdminAccess(
     return false;
   }
 
-  const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+  const { convexUrl } = readPublicEnv();
   if (!convexUrl) {
     return false;
   }

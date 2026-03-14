@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { CheckCircle } from "lucide-react";
-import { Doc } from "@/convex/_generated/dataModel";
+import { Doc } from "@mindpoint/backend/data-model";
 
 export default function Internship({
   internship,

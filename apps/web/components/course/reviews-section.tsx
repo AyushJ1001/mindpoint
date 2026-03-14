@@ -39,8 +39,8 @@ import {
 import { StarRating } from "@/components/course/ratings";
 import ReviewForm from "@/components/course/review-form";
 import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@mindpoint/backend/api";
+import { Id } from "@mindpoint/backend/data-model";
 import { getRelativeTime } from "@/lib/time-utils";
 import { useAuth } from "@clerk/nextjs";
 

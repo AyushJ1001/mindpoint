@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useConvexAuth, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 
 const AUTH_TIMEOUT_MS = 10_000;
 

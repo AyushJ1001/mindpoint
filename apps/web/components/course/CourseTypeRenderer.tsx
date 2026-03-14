@@ -1,5 +1,5 @@
 import React from "react";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@mindpoint/backend/data-model";
 import CertificateCourse from "./CertificateCourse";
 import InternshipCourse from "./InternshipCourse";
 import TherapyCourse from "./TherapyCourse";

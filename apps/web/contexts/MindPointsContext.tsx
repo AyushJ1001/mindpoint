@@ -3,7 +3,7 @@
 import { createContext, useContext, ReactNode } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 
 interface MindPointsData {
   balance: number;
@@ -22,7 +22,7 @@ export function MindPointsProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
   const pointsData = useQuery(
     api.mindPoints.getUserPoints,
-    user?.id ? { clerkUserId: user.id } : "skip"
+    user?.id ? { clerkUserId: user.id } : "skip",
   );
 
   const value: MindPointsContextValue = {

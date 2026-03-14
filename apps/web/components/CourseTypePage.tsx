@@ -31,8 +31,8 @@ import {
   FileText,
 } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
-import { Doc } from "@/convex/_generated/dataModel";
-import { Id } from "@/convex/_generated/dataModel";
+import { Doc } from "@mindpoint/backend/data-model";
+import { Id } from "@mindpoint/backend/data-model";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 
 // Type for courses with sessions (therapy)
@@ -307,7 +307,7 @@ const CourseGroupCard = ({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-[52%] truncate whitespace-nowrap bg-white/95 text-[11px] font-semibold shadow-sm"
+              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -318,7 +318,7 @@ const CourseGroupCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountPercentage}% OFF
@@ -329,7 +329,7 @@ const CourseGroupCard = ({
                 </Badge>
               )}
               {offerDetails?.hasBogo && (
-                <Badge className="max-w-full whitespace-nowrap bg-emerald-500/90 text-[11px] font-semibold text-white uppercase shadow-lg">
+                <Badge className="max-w-full bg-emerald-500/90 text-[11px] font-semibold whitespace-nowrap text-white uppercase shadow-lg">
                   <span className="sm:hidden">BOGO</span>
                   <span className="hidden sm:inline">
                     🛍️ {offerDetails.bogoLabel || "BOGO"}
@@ -672,7 +672,7 @@ const CourseCard = ({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-[52%] truncate whitespace-nowrap bg-white/95 text-[11px] font-semibold shadow-sm"
+              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -683,7 +683,7 @@ const CourseCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountPercentage}% OFF
@@ -694,7 +694,7 @@ const CourseCard = ({
                 </Badge>
               )}
               {offerDetails?.hasBogo && (
-                <Badge className="max-w-full whitespace-nowrap bg-emerald-500/90 text-[11px] font-semibold text-white uppercase shadow-lg">
+                <Badge className="max-w-full bg-emerald-500/90 text-[11px] font-semibold whitespace-nowrap text-white uppercase shadow-lg">
                   <span className="sm:hidden">BOGO</span>
                   <span className="hidden sm:inline">
                     🛍️ {offerDetails.bogoLabel || "BOGO"}

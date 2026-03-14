@@ -21,8 +21,8 @@ import { Button } from "@/components/ui/button";
 import { useForm } from "react-hook-form";
 import { InteractiveStarRating } from "@/components/course/ratings";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { Id } from "@/convex/_generated/dataModel";
+import { api } from "@mindpoint/backend/api";
+import { Id } from "@mindpoint/backend/data-model";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 

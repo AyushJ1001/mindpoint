@@ -2,7 +2,7 @@
 
 import { Clock } from "lucide-react";
 import { UpcomingCourseCard } from "./course-card";
-import { Doc } from "@/convex/_generated/dataModel";
+import { Doc } from "@mindpoint/backend/data-model";
 
 interface HomeClientProps {
   upcomingCourses: Doc<"courses">[];

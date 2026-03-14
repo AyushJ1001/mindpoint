@@ -33,7 +33,7 @@ import {
 
 import CourseImageGallery from "@/components/course/gallery";
 import TrustBar from "@/components/course/trust-bar";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@mindpoint/backend/data-model";
 import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import { Gift } from "lucide-react";
@@ -432,10 +432,12 @@ export default function CourseHero({
                   </div>
                   <div className="flex-1">
                     <div className="font-semibold text-green-700 dark:text-green-400">
-                      Buy this and earn {calculatePointsEarned(displayCourse)} Mind Points!
+                      Buy this and earn {calculatePointsEarned(displayCourse)}{" "}
+                      Mind Points!
                     </div>
-                    <div className="text-sm text-muted-foreground">
-                      Points are automatically added to your account after purchase
+                    <div className="text-muted-foreground text-sm">
+                      Points are automatically added to your account after
+                      purchase
                     </div>
                   </div>
                 </div>

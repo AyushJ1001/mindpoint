@@ -1,6 +1,7 @@
 import { ConvexHttpClient } from "convex/browser";
 import { auth } from "@clerk/nextjs/server";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
+import { readPublicEnv } from "@mindpoint/config";
 import HomeClient from "@/components/HomeClient";
 import HomeHero from "@/components/HomeHero";
 import { Suspense } from "react";
@@ -31,15 +32,17 @@ export const metadata = {
 
 async function getUpcomingCourses() {
   try {
+    const { convexUrl } = readPublicEnv();
+
     // Skip data fetching during build if CONVEX_URL is not available
-    if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
+    if (!convexUrl) {
       console.warn(
         "NEXT_PUBLIC_CONVEX_URL not available, returning empty courses array",
       );
       return [];
     }
 
-    const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
+    const convex = new ConvexHttpClient(convexUrl);
     const allCourses = await convex.query(api.courses.listCourses, {
       count: undefined,
     });

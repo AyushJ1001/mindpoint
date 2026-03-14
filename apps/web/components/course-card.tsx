@@ -8,10 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CourseImageCarousel } from "@/components/CourseTypePage";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc } from "@mindpoint/backend/data-model";
 import { useEffect, useState } from "react";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
-import { Id } from "@/convex/_generated/dataModel";
+import { Id } from "@mindpoint/backend/data-model";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import { Gift } from "lucide-react";
 
@@ -187,7 +187,7 @@ export function CourseCard({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-[52%] truncate whitespace-nowrap bg-white/95 text-[11px] font-semibold shadow-sm"
+              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -198,7 +198,7 @@ export function CourseCard({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountPercentage}% OFF
@@ -209,7 +209,7 @@ export function CourseCard({
                 </Badge>
               )}
               {offerDetails?.hasBogo && (
-                <Badge className="max-w-full whitespace-nowrap bg-emerald-500/90 text-[11px] font-semibold text-white uppercase shadow-lg">
+                <Badge className="max-w-full bg-emerald-500/90 text-[11px] font-semibold whitespace-nowrap text-white uppercase shadow-lg">
                   <span className="sm:hidden">BOGO</span>
                   <span className="hidden sm:inline">
                     🛍️ {offerDetails.bogoLabel || "BOGO"}
@@ -448,7 +448,7 @@ export function UpcomingCourseCard({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-full truncate whitespace-nowrap bg-white/95 text-[11px] font-semibold shadow-sm"
+              className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -456,7 +456,7 @@ export function UpcomingCourseCard({
           )}
           <Badge
             variant="default"
-            className="w-fit max-w-full whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+            className="w-fit max-w-full bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
           >
             <Clock className="mr-1 h-3 w-3" />
             Upcoming
@@ -468,7 +468,7 @@ export function UpcomingCourseCard({
             {offerDetails?.hasDiscount && (
               <Badge
                 variant="destructive"
-                className="max-w-full animate-pulse whitespace-nowrap bg-gradient-to-r from-orange-500 to-red-500 text-[11px] text-white shadow-lg"
+                className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
               >
                 <span className="sm:hidden">
                   {offerDetails.discountPercentage}% OFF
@@ -479,7 +479,7 @@ export function UpcomingCourseCard({
               </Badge>
             )}
             {offerDetails?.hasBogo && (
-              <Badge className="max-w-full whitespace-nowrap bg-emerald-500/90 text-[11px] font-semibold text-white uppercase shadow-lg">
+              <Badge className="max-w-full bg-emerald-500/90 text-[11px] font-semibold whitespace-nowrap text-white uppercase shadow-lg">
                 <span className="sm:hidden">BOGO</span>
                 <span className="hidden sm:inline">
                   🛍️ {offerDetails.bogoLabel || "BOGO"}

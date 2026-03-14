@@ -1,6 +1,6 @@
 import Home from "./inner";
 import { preloadQuery, preloadedQueryResult } from "convex/nextjs";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 
 export const metadata = {
   title: "Server - The Mind Point",

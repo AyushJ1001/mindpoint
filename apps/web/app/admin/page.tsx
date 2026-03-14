@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -23,23 +23,39 @@ export default function AdminDashboardPage() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm text-slate-600">Courses</CardTitle>
+                <CardTitle className="text-sm text-slate-600">
+                  Courses
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 text-sm">
-                <p>Published: <strong>{data.lifecycleCounts.published}</strong></p>
-                <p>Draft: <strong>{data.lifecycleCounts.draft}</strong></p>
-                <p>Archived: <strong>{data.lifecycleCounts.archived}</strong></p>
+                <p>
+                  Published: <strong>{data.lifecycleCounts.published}</strong>
+                </p>
+                <p>
+                  Draft: <strong>{data.lifecycleCounts.draft}</strong>
+                </p>
+                <p>
+                  Archived: <strong>{data.lifecycleCounts.archived}</strong>
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm text-slate-600">Enrollments</CardTitle>
+                <CardTitle className="text-sm text-slate-600">
+                  Enrollments
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-1 text-sm">
-                <p>Active: <strong>{data.statusCounts.active}</strong></p>
-                <p>Cancelled: <strong>{data.statusCounts.cancelled}</strong></p>
-                <p>Transferred: <strong>{data.statusCounts.transferred}</strong></p>
+                <p>
+                  Active: <strong>{data.statusCounts.active}</strong>
+                </p>
+                <p>
+                  Cancelled: <strong>{data.statusCounts.cancelled}</strong>
+                </p>
+                <p>
+                  Transferred: <strong>{data.statusCounts.transferred}</strong>
+                </p>
               </CardContent>
             </Card>
 
@@ -48,14 +64,20 @@ export default function AdminDashboardPage() {
                 <CardTitle className="text-sm text-slate-600">Users</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-semibold">{data.totalUsersApprox}</p>
-                <p className="text-xs text-slate-600">Distinct users observed in enrollments</p>
+                <p className="text-2xl font-semibold">
+                  {data.totalUsersApprox}
+                </p>
+                <p className="text-xs text-slate-600">
+                  Distinct users observed in enrollments
+                </p>
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm text-slate-600">Active Coupons</CardTitle>
+                <CardTitle className="text-sm text-slate-600">
+                  Active Coupons
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-2xl font-semibold">{data.activeCoupons}</p>
@@ -85,7 +107,9 @@ export default function AdminDashboardPage() {
                             {course.startDate} • Seats left: {course.seatsLeft}
                           </p>
                         </div>
-                        <Badge variant="secondary">{course.type || "course"}</Badge>
+                        <Badge variant="secondary">
+                          {course.type || "course"}
+                        </Badge>
                       </div>
                     ))}
                   </div>
@@ -103,7 +127,10 @@ export default function AdminDashboardPage() {
                 ) : (
                   <div className="space-y-2">
                     {data.recentAuditLogs.map((event) => (
-                      <div key={event._id} className="rounded-md border p-2 text-sm">
+                      <div
+                        key={event._id}
+                        className="rounded-md border p-2 text-sm"
+                      >
                         <p className="font-medium">{event.action}</p>
                         <p className="text-xs text-slate-600">
                           {event.entityType} • {event.entityId}

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ConvexHttpClient } from "convex/browser";
-import { api } from "@/convex/_generated/api";
+import { api } from "@mindpoint/backend/api";
 import CoursesClient from "@/components/CoursesClient";
 import CoursesHero from "@/components/CoursesHero";
 import Script from "next/script";
