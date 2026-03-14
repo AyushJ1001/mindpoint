@@ -12,7 +12,7 @@
     "dev:web": "bun run --cwd apps/web --env-file ../../.env.local dev",
     "dev:backend": "convex dev",
     "predev": "convex dev --until-success && convex dashboard",
-    "build": "bun run --cwd apps/web --env-file ../../.env.local build",
+    "build": "sh -c 'set -a; [ -f .env.local ] && . ./.env.local; set +a; npm --workspace @mindpoint/web run build'",
     "build:turbo": "turbo run build --filter=@mindpoint/web",
     "start": "bun run --cwd apps/web --env-file ../../.env.local start",
     "lint": "turbo run lint --filter=@mindpoint/web",

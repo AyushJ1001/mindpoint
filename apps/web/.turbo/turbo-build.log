@@ -9,43 +9,7 @@
    Skipping validation of types
    Skipping linting
    Collecting page data ...
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
-[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
-[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
-[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
-[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
-[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
-[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
-[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
-[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
-[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
-[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
-[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
-[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
    Generating static pages (0/37) ...
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
-[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
-[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
-[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
-[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_URL`
-[Upstash Redis] Unable to find environment variable: `UPSTASH_REDIS_REST_TOKEN`
-[Upstash Redis] The 'url' property is missing or undefined in your Redis config.
-[Upstash Redis] The 'token' property is missing or undefined in your Redis config.
    Generating static pages (9/37) 
    Generating static pages (18/37) 
    Generating static pages (27/37) 
