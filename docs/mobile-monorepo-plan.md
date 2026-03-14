@@ -313,7 +313,11 @@ Exit criteria:
 ### Payment integration differences
 
 - Web uses `react-razorpay`
+- Mobile should use `react-native-razorpay`
 - Mobile cannot use the same UI entrypoint
+- `react-native-razorpay` requires native modules, so it works with Expo prebuild/dev client or bare workflow, but not Expo Go
+- Mobile checkout uses a different callback model than the web widget
+- Android will need explicit UPI deep-link handling and verification during checkout QA
 - Mitigation: isolate payment orchestration from UI invocation
 
 ### Auth/provider divergence
