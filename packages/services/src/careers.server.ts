@@ -5,6 +5,7 @@ import { careerApplicationSchema } from "@mindpoint/domain/forms";
 import { Resend } from "resend";
 
 import type { CareersSubmissionResult } from "./careers";
+import { escapeHtml } from "./html";
 
 export async function sendCareersApplication(
   formData: FormData,
@@ -56,22 +57,30 @@ export async function sendCareersApplication(
     });
   }
 
+  const escapedFullName = escapeHtml(fullName);
+  const escapedEmail = escapeHtml(email);
+  const escapedPhone = escapeHtml(phone);
+  const escapedLocation = escapeHtml(location);
+  const escapedLinkedIn = escapeHtml(linkedIn);
+  const escapedRoles = roles.map((role) => escapeHtml(role));
+  const escapedCoverLetter = escapeHtml(coverLetter).replace(/\n/g, "<br/>");
+
   const html = `
       <div>
         <h2>New Careers Application</h2>
-        <p><strong>Name:</strong> ${fullName}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        <p><strong>Phone:</strong> ${phone}</p>
-        <p><strong>Location:</strong> ${location}</p>
-        ${linkedIn ? `<p><strong>LinkedIn:</strong> <a href="${linkedIn}">${linkedIn}</a></p>` : ""}
-        <p><strong>Roles of Interest:</strong> ${roles.join(", ") || "(none)"}</p>
-        ${coverLetter ? `<p><strong>Cover Letter:</strong></p><p>${coverLetter.replace(/\n/g, "<br/>")}</p>` : ""}
+        <p><strong>Name:</strong> ${escapedFullName}</p>
+        <p><strong>Email:</strong> ${escapedEmail}</p>
+        <p><strong>Phone:</strong> ${escapedPhone}</p>
+        <p><strong>Location:</strong> ${escapedLocation}</p>
+        ${linkedIn ? `<p><strong>LinkedIn:</strong> <a href="${escapedLinkedIn}">${escapedLinkedIn}</a></p>` : ""}
+        <p><strong>Roles of Interest:</strong> ${escapedRoles.join(", ") || "(none)"}</p>
+        ${coverLetter ? `<p><strong>Cover Letter:</strong></p><p>${escapedCoverLetter}</p>` : ""}
       </div>
     `;
 
   const data = await resend.emails.send({
     from: `Careers Application <${fromEmail}>`,
-    to: [toEmail, "contact.themindpoint@gmail.com"],
+    to: [toEmail],
     subject: `New Careers Application: ${fullName}`,
     replyTo: email || undefined,
     html,

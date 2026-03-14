@@ -1,3 +1,5 @@
+import "server-only";
+
 import { api } from "@mindpoint/backend/api";
 import type { Id } from "@mindpoint/backend/data-model";
 import type { CheckoutPricing } from "@mindpoint/domain/checkout";
@@ -88,6 +90,8 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
   const errors: Array<{ attempt: number; error: string; timestamp: Date }> = [];
 
   for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
+    let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+
     try {
       if (attempt > 0) {
         console.log(
@@ -109,7 +113,7 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
         args as DefaultFunctionArgs,
       );
       const timeoutPromise = new Promise<never>((_, reject) => {
-        setTimeout(
+        timeoutHandle = setTimeout(
           () =>
             reject(
               new Error(
@@ -120,6 +124,9 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
         );
       });
       const result = await Promise.race([mutationPromise, timeoutPromise]);
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
 
       if (attempt > 0) {
         console.log(
@@ -129,6 +136,10 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
 
       return result as Return;
     } catch (error) {
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
+
       lastError = error;
       const errorMessage =
         error instanceof Error ? error.message : String(error);

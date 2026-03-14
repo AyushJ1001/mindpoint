@@ -2,7 +2,7 @@
 
 import type { Id } from "@mindpoint/backend/data-model";
 import { REFERRAL_COOKIE_KEY } from "@mindpoint/domain/referrals";
-import { handlePaymentSuccess, requestPaymentOrder } from "@mindpoint/services";
+import { requestPaymentOrder } from "@mindpoint/services/payments";
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import Image from "next/image";
@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/clerk-react";
+import { handlePaymentSuccess } from "@/app/actions/payment";
 import { toast } from "sonner";
 import { WhatsAppModal } from "@/components/whatsapp-modal";
 import { useQuery, useMutation } from "convex/react";

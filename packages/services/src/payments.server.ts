@@ -5,6 +5,13 @@ import Razorpay from "razorpay";
 
 import type { CreatePaymentOrderInput, PaymentOrder } from "./payments";
 
+export class InvalidPaymentAmountError extends Error {
+  constructor() {
+    super("Invalid amount.");
+    this.name = "InvalidPaymentAmountError";
+  }
+}
+
 export async function createPaymentOrder(
   input: CreatePaymentOrderInput,
 ): Promise<PaymentOrder> {
@@ -13,7 +20,13 @@ export async function createPaymentOrder(
     key_id: razorpayKeyId,
     key_secret: razorpayKeySecret,
   });
-  const roundedAmount = Math.round(Number(input.amount) || 0);
+  const amount = Number(input.amount);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    throw new InvalidPaymentAmountError();
+  }
+
+  const roundedAmount = Math.round(amount);
 
   return (await razorpay.orders.create({
     amount: roundedAmount * 100,
