@@ -7,13 +7,13 @@ import { usePathname } from "next/navigation";
 
 export default function StructuredData() {
   const pathname = usePathname();
-  const isAdminRoute = pathname.startsWith("/admin");
-  const allCourses = useQuery(
-    api.courses.listCourses,
-    isAdminRoute ? "skip" : { count: undefined },
-  );
+  if (pathname.startsWith("/admin")) return null;
 
-  if (isAdminRoute) return null;
+  return <StructuredDataContent />;
+}
+
+function StructuredDataContent() {
+  const allCourses = useQuery(api.courses.listCourses, { count: undefined });
 
   if (!allCourses) return null;
 
