@@ -5,7 +5,7 @@ import { careerApplicationSchema } from "@mindpoint/domain/forms";
 import { Resend } from "resend";
 
 import type { CareersSubmissionResult } from "./careers";
-import { escapeHtml } from "./html";
+import { escapeHtml, sanitizeHeaderValue } from "./html";
 
 const MAX_RESUME_BYTES = 5 * 1024 * 1024;
 
@@ -103,6 +103,7 @@ export async function sendCareersApplication(
   const escapedLinkedIn = safeLinkedIn ? escapeHtml(safeLinkedIn) : "";
   const escapedRoles = roles.map((role) => escapeHtml(role));
   const escapedCoverLetter = escapeHtml(coverLetter).replace(/\n/g, "<br/>");
+  const sanitizedFullName = sanitizeHeaderValue(fullName);
 
   const html = `
       <div>
@@ -120,7 +121,7 @@ export async function sendCareersApplication(
   const data = await resend.emails.send({
     from: `Careers Application <${fromEmail}>`,
     to: [toEmail],
-    subject: `New Careers Application: ${fullName}`,
+    subject: `New Careers Application: ${sanitizedFullName}`,
     replyTo: email || undefined,
     html,
     attachments,
