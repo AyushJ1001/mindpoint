@@ -12,8 +12,15 @@ import { CourseCard } from "@/components/CourseCard";
 import { publicEnv } from "@/lib/public-env";
 
 export default function BrowseScreen() {
-  const courses = useQuery(api.courses.listCourses, { count: 24 });
+  const courses = useQuery(
+    api.courses.listCourses,
+    publicEnv.convexUrl ? { count: 24 } : "skip",
+  );
   const courseCountLabel = useMemo(() => {
+    if (!publicEnv.convexUrl) {
+      return "Convex is not configured for this app build";
+    }
+
     if (!courses) {
       return "Loading courses from Convex…";
     }
@@ -28,7 +35,15 @@ export default function BrowseScreen() {
         data={courses ?? []}
         keyExtractor={(course) => course._id}
         ListEmptyComponent={
-          courses ? (
+          !publicEnv.convexUrl ? (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyTitle}>Convex is not configured</Text>
+              <Text style={styles.emptyCopy}>
+                Add the Convex URL to the root `.env`, then restart Metro so
+                the mobile app can load courses.
+              </Text>
+            </View>
+          ) : courses ? (
             <View style={styles.emptyState}>
               <Text style={styles.emptyTitle}>No courses found</Text>
               <Text style={styles.emptyCopy}>

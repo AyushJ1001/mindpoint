@@ -108,7 +108,11 @@ export const CourseFields = {
   archivedAt: v.optional(v.number()),
 };
 
-export const CourseDocumentValue = v.object(CourseFields);
+export const CourseDocumentValue = v.object({
+  _id: v.id("courses"),
+  _creationTime: v.number(),
+  ...CourseFields,
+});
 
 export const EnrollmentFields = {
   userId: v.string(),

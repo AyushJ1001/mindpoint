@@ -135,7 +135,14 @@ export default function AccountScreen() {
                   <Text style={styles.historyDescription}>
                     {entry.description}
                   </Text>
-                  <Text style={styles.historyPoints}>
+                  <Text
+                    style={[
+                      styles.historyPoints,
+                      {
+                        color: entry.type === "redeem" ? "#b42318" : "#0f766e",
+                      },
+                    ]}
+                  >
                     {entry.type === "redeem" ? "-" : "+"}
                     {Math.abs(entry.points)}
                   </Text>
@@ -203,7 +210,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   historyPoints: {
-    color: "#0f766e",
     fontSize: 14,
     fontWeight: "700",
   },
