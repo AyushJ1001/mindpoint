@@ -2,6 +2,7 @@
 
 import type { Id } from "@mindpoint/backend/data-model";
 import { REFERRAL_COOKIE_KEY } from "@mindpoint/domain/referrals";
+import { requestPaymentOrder } from "@mindpoint/services/payments";
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import Image from "next/image";
@@ -395,18 +396,14 @@ const CartContent = () => {
       setIsProcessing(true);
 
       try {
-        const response = await fetch("/api/create-order", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount: discountedTotal }), // API will convert to paise
+        const data = await requestPaymentOrder({
+          amount: discountedTotal,
         });
-
-        const data = await response.json();
 
         const options: RazorpayOrderOptions = {
           key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
           amount: data.amount,
-          currency: data.currency,
+          currency: data.currency as RazorpayOrderOptions["currency"],
           name: "The Mind Point",
           description: `Payment for ${items.length} course(s)`,
           order_id: data.id,

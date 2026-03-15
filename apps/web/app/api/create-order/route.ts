@@ -1,34 +1,30 @@
-import { NextResponse } from "next/server";
-import Razorpay from "razorpay";
+import { NextRequest, NextResponse } from "next/server";
+import { createPaymentOrder } from "@mindpoint/services/payments/server";
+import { withRateLimit } from "@/lib/with-rate-limit";
 
-export async function POST(req: Request) {
-  const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-  const keySecret = process.env.RAZORPAY_KEY_SECRET;
+async function handleCreateOrder(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const amount = Number(body?.amount);
 
-  if (!keyId || !keySecret) {
+    if (!Number.isFinite(amount) || amount <= 0) {
+      return NextResponse.json({ error: "Invalid amount." }, { status: 400 });
+    }
+
+    const order = await createPaymentOrder({ amount });
+
+    return NextResponse.json(order);
+  } catch (error) {
     return NextResponse.json(
       {
         error:
-          "Payment service not configured. Please set NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.",
+          error instanceof Error ? error.message : "Failed to create order.",
       },
       { status: 500 },
     );
   }
-
-  const razorpay = new Razorpay({
-    key_id: keyId,
-    key_secret: keySecret,
-  });
-
-  const { amount } = await req.json();
-  const roundedAmount = Math.round(Number(amount) || 0);
-
-  console.log("amount", roundedAmount);
-
-  const order = await razorpay.orders.create({
-    amount: roundedAmount * 100,
-    currency: "INR",
-  });
-
-  return NextResponse.json(order);
 }
+
+export const POST = withRateLimit(handleCreateOrder, {
+  errorMessage: "Too many order requests. Please wait before trying again.",
+});
