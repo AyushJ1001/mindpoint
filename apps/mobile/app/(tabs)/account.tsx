@@ -1,4 +1,11 @@
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Alert,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { useAuth, useClerk, useUser } from "@clerk/clerk-expo";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
@@ -17,13 +24,11 @@ export default function AccountScreen() {
   );
   const enrollments = useQuery(
     api.myFunctions.getUserEnrollments,
-    isAuthenticated && userId ? { userId } : "skip",
+    isAuthenticated ? {} : "skip",
   );
   const accountSummary = useQuery(
     api.mindPoints.getUserAccountSummary,
-    isAuthenticated && userId
-      ? { clerkUserId: userId, historyLimit: 5 }
-      : "skip",
+    isAuthenticated ? { historyLimit: 5 } : "skip",
   );
 
   return (
@@ -74,7 +79,11 @@ export default function AccountScreen() {
                 <Text style={styles.cardCopy}>Clerk user ID: {userId}</Text>
               </View>
               <Pressable
-                onPress={() => signOut()}
+                onPress={() => {
+                  void signOut().catch(() => {
+                    Alert.alert("Sign out failed", "Please try again.");
+                  });
+                }}
                 style={({ pressed }) => [
                   styles.secondaryButton,
                   pressed && styles.secondaryButtonPressed,

@@ -104,6 +104,7 @@ export function SignInForm() {
         placeholderTextColor="#7b8794"
         secureTextEntry
         style={styles.input}
+        textContentType="password"
         value={password}
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}

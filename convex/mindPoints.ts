@@ -408,7 +408,6 @@ export const markCouponUsed = mutation({
  */
 export const getUserAccountSummary = query({
   args: {
-    clerkUserId: v.string(),
     historyLimit: v.optional(v.number()),
   },
   returns: v.object({
@@ -446,25 +445,30 @@ export const getUserAccountSummary = query({
     ),
   }),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     // Run all queries in parallel
     const [pointsRecord, history, coupons] = await Promise.all([
       ctx.db
         .query("mindPoints")
         .withIndex("by_clerkUserId", (q) =>
-          q.eq("clerkUserId", args.clerkUserId),
+          q.eq("clerkUserId", identity.subject),
         )
         .first(),
       ctx.db
         .query("pointsTransactions")
         .withIndex("by_clerkUserId", (q) =>
-          q.eq("clerkUserId", args.clerkUserId),
+          q.eq("clerkUserId", identity.subject),
         )
         .order("desc")
         .take(args.historyLimit || 20),
       ctx.db
         .query("coupons")
         .withIndex("by_clerkUserId_and_isUsed", (q) =>
-          q.eq("clerkUserId", args.clerkUserId).eq("isUsed", false),
+          q.eq("clerkUserId", identity.subject).eq("isUsed", false),
         )
         .order("desc")
         .collect(),

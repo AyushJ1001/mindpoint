@@ -1602,14 +1602,17 @@ export const handleCartCheckout = mutation({
 // Get enrollments for a specific user
 // Optimized to use index and batch course fetches
 export const getUserEnrollments = query({
-  args: {
-    userId: v.string(),
-  },
+  args: {},
 
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     const enrollments = await ctx.db
       .query("enrollments")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
       .collect();
 
     // Batch fetch all courses at once to avoid N+1 queries

@@ -26,7 +26,7 @@ export function MindPointsTab() {
   // Single batch query instead of 3 separate queries
   const accountSummary = useQuery(
     api.mindPoints.getUserAccountSummary,
-    user?.id ? { clerkUserId: user.id, historyLimit: 20 } : "skip",
+    user?.id ? { historyLimit: 20 } : "skip",
   );
 
   const redeemPoints = useMutation(api.mindPoints.redeemPoints);

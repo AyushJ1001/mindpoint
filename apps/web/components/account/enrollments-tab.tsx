@@ -11,7 +11,7 @@ export function EnrollmentsTab() {
   const { user } = useUser();
   const enrollments = useQuery(
     api.myFunctions.getUserEnrollments,
-    user?.id ? { userId: user.id } : "skip",
+    user?.id ? {} : "skip",
   );
 
   if (!user) {
