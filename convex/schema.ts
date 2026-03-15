@@ -118,7 +118,7 @@ export const PublicCourseFields = {
   bogo: v.optional(CourseBogoValue),
   sessions: v.optional(v.number()),
   capacity: v.number(),
-  enrolledUsers: v.array(v.string()),
+  enrolledCount: v.number(),
   startDate: v.string(),
   endDate: v.string(),
   startTime: v.string(),

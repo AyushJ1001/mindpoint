@@ -31,6 +31,7 @@ import type * as image from "../image.js";
 import type * as loyaltySearch from "../loyaltySearch.js";
 import type * as mindPoints from "../mindPoints.js";
 import type * as myFunctions from "../myFunctions.js";
+import type * as publicCourse from "../publicCourse.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as testOffer from "../testOffer.js";
 import type * as viewer from "../viewer.js";
@@ -62,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   loyaltySearch: typeof loyaltySearch;
   mindPoints: typeof mindPoints;
   myFunctions: typeof myFunctions;
+  publicCourse: typeof publicCourse;
   rateLimit: typeof rateLimit;
   testOffer: typeof testOffer;
   viewer: typeof viewer;

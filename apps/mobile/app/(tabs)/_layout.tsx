@@ -7,12 +7,13 @@ import { useClientOnlyValue } from "@/components/useClientOnlyValue";
 
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+  const headerShown = useClientOnlyValue(false, true);
 
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: Colors[colorScheme].tint,
-        headerShown: useClientOnlyValue(false, true),
+        headerShown,
       }}
     >
       <Tabs.Screen

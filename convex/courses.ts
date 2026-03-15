@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { CourseType } from "./schema";
+import { pickCompatiblePublicCourse } from "./publicCourse";
 
 function isPublishedCourse(course: { lifecycleStatus?: "draft" | "published" | "archived" }) {
   return !course.lifecycleStatus || course.lifecycleStatus === "published";
@@ -23,7 +24,9 @@ export const listCourses = query({
           .order("desc")
           .take(args.count)
       : await ctx.db.query("courses").order("desc").collect();
-    return allCourses.filter((course) => isPublishedCourse(course));
+    return allCourses
+      .filter((course) => isPublishedCourse(course))
+      .map((course) => pickCompatiblePublicCourse(course));
   },
 });
 
@@ -49,7 +52,9 @@ export const listCoursesByType = query({
 
     return {
       viewer: (await ctx.auth.getUserIdentity())?.name ?? null,
-      courses: filteredCourses.reverse().map((course) => course),
+      courses: filteredCourses
+        .reverse()
+        .map((course) => pickCompatiblePublicCourse(course)),
     };
   },
 });
@@ -60,7 +65,7 @@ export const getCourseById = query({
   handler: async (ctx, args) => {
     const course = await ctx.db.get(args.id);
     if (!course || !isPublishedCourse(course)) return null;
-    return course;
+    return pickCompatiblePublicCourse(course);
   },
 });
 
@@ -83,7 +88,7 @@ export const getRelatedVariants = query({
       (a, b) =>
         (a.price ?? 0) - (b.price ?? 0) || a._creationTime - b._creationTime,
     );
-    return publishedVariants;
+    return publishedVariants.map((course) => pickCompatiblePublicCourse(course));
   },
 });
 
@@ -216,7 +221,9 @@ export const getBogoCoursesByType = query({
       .order("desc")
       .collect();
 
-    return courses.filter((course) => isPublishedCourse(course));
+    return courses
+      .filter((course) => isPublishedCourse(course))
+      .map((course) => pickCompatiblePublicCourse(course));
   },
 });
 
@@ -244,7 +251,9 @@ export const getBogoCoursesByTypes = query({
         .order("desc")
         .collect();
       
-      result[courseType] = courses.filter((course) => isPublishedCourse(course));
+      result[courseType] = courses
+        .filter((course) => isPublishedCourse(course))
+        .map((course) => pickCompatiblePublicCourse(course));
     }
 
     return result;

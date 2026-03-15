@@ -28,6 +28,7 @@ export function MindPointsProvider({ children }: { children: ReactNode }) {
 
   const value: MindPointsContextValue = {
     pointsData: pointsData ?? undefined,
+    // Loading ends once the Convex auth handshake settles, even if auth fails.
     isLoading:
       !!user &&
       (isConvexAuthLoading || (isAuthenticated && pointsData === undefined)),

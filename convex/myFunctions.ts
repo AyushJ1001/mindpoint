@@ -11,6 +11,7 @@ import {
   PublicCourseDocumentValue,
   PublicEnrollmentFields,
 } from "./schema";
+import { pickPublicCourse } from "./publicCourse";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -1615,37 +1616,6 @@ export const getUserEnrollments = query({
   ),
 
   handler: async (ctx) => {
-    const toPublicCourse = (course: Doc<"courses">) => ({
-      _id: course._id,
-      _creationTime: course._creationTime,
-      name: course.name,
-      description: course.description,
-      type: course.type,
-      code: course.code,
-      price: course.price,
-      offer: course.offer,
-      bogo: course.bogo,
-      sessions: course.sessions,
-      capacity: course.capacity,
-      enrolledUsers: course.enrolledUsers,
-      startDate: course.startDate,
-      endDate: course.endDate,
-      startTime: course.startTime,
-      endTime: course.endTime,
-      daysOfWeek: course.daysOfWeek,
-      content: course.content,
-      reviews: course.reviews,
-      duration: course.duration,
-      prerequisites: course.prerequisites,
-      imageUrls: course.imageUrls,
-      modules: course.modules,
-      learningOutcomes: course.learningOutcomes,
-      allocation: course.allocation,
-      fileUrl: course.fileUrl,
-      worksheetDescription: course.worksheetDescription,
-      targetAudience: course.targetAudience,
-    });
-
     const toPublicEnrollment = (enrollment: Doc<"enrollments">) => ({
       _id: enrollment._id,
       _creationTime: enrollment._creationTime,
@@ -1708,7 +1678,7 @@ export const getUserEnrollments = query({
 
       return {
         ...toPublicEnrollment(enrollment),
-        course: course ? toPublicCourse(course) : null,
+        course: course ? pickPublicCourse(course) : null,
       };
     });
 
