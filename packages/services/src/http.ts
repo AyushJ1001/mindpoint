@@ -3,7 +3,10 @@ export type FetchImpl = typeof fetch;
 type RequestOptions = {
   fetchImpl?: FetchImpl;
   headers?: HeadersInit;
+  timeoutMs?: number;
 };
+
+const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 
 function getErrorMessage(payload: unknown, fallback: string): string {
   if (!payload || typeof payload !== "object") {
@@ -51,18 +54,35 @@ export async function postJson<TRequest, TResponse>(
   body: TRequest,
   options: RequestOptions = {},
 ): Promise<TResponse> {
-  const { fetchImpl = fetch, headers } = options;
+  const {
+    fetchImpl = fetch,
+    headers,
+    timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  } = options;
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
 
-  const response = await fetchImpl(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      ...headers,
-    },
-    body: JSON.stringify(body),
-  });
+  try {
+    const response = await fetchImpl(endpoint, {
+      method: "POST",
+      signal: controller.signal,
+      headers: {
+        "Content-Type": "application/json",
+        ...headers,
+      },
+      body: JSON.stringify(body),
+    });
 
-  return parseJsonResponse<TResponse>(response);
+    return parseJsonResponse<TResponse>(response);
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Request timed out after ${timeoutMs}ms.`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutHandle);
+  }
 }
 
 export async function postFormData<TResponse>(
@@ -70,13 +90,30 @@ export async function postFormData<TResponse>(
   body: FormData,
   options: RequestOptions = {},
 ): Promise<TResponse> {
-  const { fetchImpl = fetch, headers } = options;
-
-  const response = await fetchImpl(endpoint, {
-    method: "POST",
+  const {
+    fetchImpl = fetch,
     headers,
-    body,
-  });
+    timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
+  } = options;
+  const controller = new AbortController();
+  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
 
-  return parseJsonResponse<TResponse>(response);
+  try {
+    const response = await fetchImpl(endpoint, {
+      method: "POST",
+      signal: controller.signal,
+      headers,
+      body,
+    });
+
+    return parseJsonResponse<TResponse>(response);
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error(`Request timed out after ${timeoutMs}ms.`);
+    }
+
+    throw error;
+  } finally {
+    clearTimeout(timeoutHandle);
+  }
 }

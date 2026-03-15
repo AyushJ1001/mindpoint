@@ -84,6 +84,8 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
   context: MutationContext,
   convexUrl?: string,
 ): Promise<Return> {
+  // These service calls use explicit user identifiers in args and do not attach
+  // a Clerk session token, so ctx.auth will be null inside the called mutations.
   const convex = new ConvexHttpClient(resolveConvexUrl(convexUrl));
   let lastError: Error | unknown = null;
   const errors: Array<{ attempt: number; error: string; timestamp: Date }> = [];
