@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
+import type { ReactNode } from "react";
 import { useAuth, useClerk, useUser } from "@clerk/clerk-expo";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
@@ -13,7 +14,30 @@ import { SignInForm } from "@/components/SignInForm";
 import { publicEnv } from "@/lib/public-env";
 
 export default function AccountScreen() {
-  const { isLoaded, isSignedIn, userId } = useAuth();
+  if (!publicEnv.clerkPublishableKey) {
+    return (
+      <AccountLayout>
+        <AccountHero />
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Account sign-in unavailable</Text>
+          <Text style={styles.cardCopy}>
+            Add the Clerk publishable key to the root env file, then restart
+            Metro to enable sign-in on mobile.
+          </Text>
+        </View>
+      </AccountLayout>
+    );
+  }
+
+  if (!publicEnv.convexUrl) {
+    return <AccountWithoutConvex />;
+  }
+
+  return <ConnectedAccountScreen />;
+}
+
+function ConnectedAccountScreen() {
+  const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();
   const { signOut } = useClerk();
   const { isAuthenticated, isLoading } = useConvexAuth();
@@ -32,41 +56,18 @@ export default function AccountScreen() {
   );
 
   return (
-    <ScrollView
-      contentContainerStyle={styles.content}
-      style={styles.screen}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.hero}>
-        <Text style={styles.eyebrow}>Authenticated access</Text>
-        <Text style={styles.title}>Sign in and verify Convex auth</Text>
-        <Text style={styles.copy}>
-          Clerk handles the session on-device and Convex receives the same
-          Clerk-backed identity used by the web app.
-        </Text>
-      </View>
+    <AccountLayout>
+      <AccountHero />
 
-      {!publicEnv.clerkPublishableKey ? (
+      {!isLoaded ? (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Clerk is not configured</Text>
-          <Text style={styles.cardCopy}>
-            Add `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` to the root env file before
-            testing the account flow on mobile.
-          </Text>
+          <Text style={styles.cardTitle}>Loading account...</Text>
         </View>
       ) : null}
 
-      {publicEnv.clerkPublishableKey && !isLoaded ? (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>Loading auth…</Text>
-        </View>
-      ) : null}
+      {isLoaded && !isSignedIn ? <SignInForm /> : null}
 
-      {publicEnv.clerkPublishableKey && isLoaded && !isSignedIn ? (
-        <SignInForm />
-      ) : null}
-
-      {publicEnv.clerkPublishableKey && isLoaded && isSignedIn ? (
+      {isLoaded && isSignedIn ? (
         <>
           <View style={styles.card}>
             <View style={styles.rowBetween}>
@@ -74,9 +75,12 @@ export default function AccountScreen() {
                 <Text style={styles.cardTitle}>
                   {user?.fullName ||
                     user?.primaryEmailAddress?.emailAddress ||
-                    "Signed in"}
+                    "Welcome back"}
                 </Text>
-                <Text style={styles.cardCopy}>Clerk user ID: {userId}</Text>
+                <Text style={styles.cardCopy}>
+                  {user?.primaryEmailAddress?.emailAddress ||
+                    "Your learning account is ready."}
+                </Text>
               </View>
               <Pressable
                 onPress={() => {
@@ -95,20 +99,16 @@ export default function AccountScreen() {
           </View>
 
           <View style={styles.card}>
-            <Text style={styles.cardTitle}>Convex session status</Text>
+            <Text style={styles.cardTitle}>Account status</Text>
             <Text style={styles.cardCopy}>
               {isLoading
-                ? "Waiting for Convex auth handshake…"
+                ? "Syncing your latest enrollments and rewards..."
                 : isAuthenticated
-                  ? "Authenticated"
-                  : "Not authenticated"}
+                  ? "Your account details are up to date."
+                  : "We are still connecting your account data."}
             </Text>
             <Text style={styles.statusValue}>
-              {viewer
-                ? `${viewer.name || viewer.email || viewer.subject}`
-                : isAuthenticated
-                  ? "Connected, loading viewer record…"
-                  : "Sign in to query Convex with auth."}
+              {viewer?.name || viewer?.email || "Your profile is ready."}
             </Text>
           </View>
 
@@ -152,13 +152,96 @@ export default function AccountScreen() {
               <Text style={styles.cardCopy}>
                 {accountSummary
                   ? "No loyalty activity yet."
-                  : "Loading account summary…"}
+                  : "Loading account summary..."}
               </Text>
             )}
           </View>
         </>
       ) : null}
+    </AccountLayout>
+  );
+}
+
+function AccountWithoutConvex() {
+  const { isLoaded, isSignedIn } = useAuth();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  return (
+    <AccountLayout>
+      <AccountHero />
+
+      {!isLoaded ? (
+        <View style={styles.card}>
+          <Text style={styles.cardTitle}>Loading account...</Text>
+        </View>
+      ) : null}
+
+      {isLoaded && !isSignedIn ? <SignInForm /> : null}
+
+      {isLoaded && isSignedIn ? (
+        <View style={styles.card}>
+          <View style={styles.rowBetween}>
+            <View style={styles.identityBlock}>
+              <Text style={styles.cardTitle}>
+                {user?.fullName ||
+                  user?.primaryEmailAddress?.emailAddress ||
+                  "Welcome back"}
+              </Text>
+              <Text style={styles.cardCopy}>
+                Account details are temporarily unavailable in this app build.
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => {
+                void signOut().catch(() => {
+                  Alert.alert("Sign out failed", "Please try again.");
+                });
+              }}
+              style={({ pressed }) => [
+                styles.secondaryButton,
+                pressed && styles.secondaryButtonPressed,
+              ]}
+            >
+              <Text style={styles.secondaryButtonLabel}>Sign out</Text>
+            </Pressable>
+          </View>
+        </View>
+      ) : null}
+
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Account details unavailable</Text>
+        <Text style={styles.cardCopy}>
+          Add the Convex URL to the root env file, then restart Metro to load
+          enrollments and rewards on mobile.
+        </Text>
+      </View>
+    </AccountLayout>
+  );
+}
+
+function AccountLayout({ children }: { children: ReactNode }) {
+  return (
+    <ScrollView
+      contentContainerStyle={styles.content}
+      style={styles.screen}
+      showsVerticalScrollIndicator={false}
+    >
+      {children}
     </ScrollView>
+  );
+}
+
+function AccountHero() {
+  return (
+    <View style={styles.hero}>
+      <Text style={styles.eyebrow}>Your account</Text>
+      <Text style={styles.title}>Manage learning and rewards</Text>
+      <Text style={styles.copy}>
+        Sign in to review your enrollments, track Mind Points, and keep your
+        account ready for the next program.
+      </Text>
+    </View>
   );
 }
 

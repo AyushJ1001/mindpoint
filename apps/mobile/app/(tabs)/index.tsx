@@ -12,20 +12,23 @@ import { CourseCard } from "@/components/CourseCard";
 import { publicEnv } from "@/lib/public-env";
 
 export default function BrowseScreen() {
-  const courses = useQuery(
-    api.courses.listCourses,
-    publicEnv.convexUrl ? { count: 24 } : "skip",
-  );
+  if (!publicEnv.convexUrl) {
+    return <BrowseUnavailableScreen />;
+  }
+
+  return <BrowseCatalogScreen />;
+}
+
+function BrowseCatalogScreen() {
+  const courses = useQuery(api.courses.listCourses, { count: 24 });
   const courseCountLabel = useMemo(() => {
-    if (!publicEnv.convexUrl) {
-      return "Convex is not configured for this app build";
-    }
-
     if (!courses) {
-      return "Loading courses from Convex…";
+      return "Loading available programs...";
     }
 
-    return `${courses.length} published courses loaded without authentication`;
+    return courses.length === 1
+      ? "1 program available now"
+      : `${courses.length} programs available now`;
   }, [courses]);
 
   return (
@@ -35,20 +38,12 @@ export default function BrowseScreen() {
         data={courses ?? []}
         keyExtractor={(course) => course._id}
         ListEmptyComponent={
-          !publicEnv.convexUrl ? (
+          courses ? (
             <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>Convex is not configured</Text>
+              <Text style={styles.emptyTitle}>No programs available yet</Text>
               <Text style={styles.emptyCopy}>
-                Add the Convex URL to the root `.env`, then restart Metro so
-                the mobile app can load courses.
-              </Text>
-            </View>
-          ) : courses ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>No courses found</Text>
-              <Text style={styles.emptyCopy}>
-                Convex is reachable, but the current dataset did not return any
-                published courses.
+                New cohorts and self-paced options will appear here as soon as
+                they are published.
               </Text>
             </View>
           ) : (
@@ -59,19 +54,17 @@ export default function BrowseScreen() {
         }
         ListHeaderComponent={
           <View style={styles.hero}>
-            <Text style={styles.eyebrow}>Phase 4 mobile bootstrap</Text>
-            <Text style={styles.title}>Browse courses as a guest</Text>
+            <Text style={styles.eyebrow}>Explore</Text>
+            <Text style={styles.title}>Discover upcoming programs</Text>
             <Text style={styles.copy}>
-              This screen reads from the shared Convex backend through the
-              workspace packages and works before sign-in.
+              Browse current courses, check pricing, and find the format that
+              fits your next step.
             </Text>
             <View style={styles.statusCard}>
-              <Text style={styles.statusLabel}>Public backend status</Text>
+              <Text style={styles.statusLabel}>Course catalog</Text>
               <Text style={styles.statusValue}>{courseCountLabel}</Text>
               <Text style={styles.statusMeta}>
-                {publicEnv.convexUrl
-                  ? `Convex URL configured: ${publicEnv.convexUrl}`
-                  : "Convex URL is not set in the root .env. Add it and restart Metro."}
+                Sign in from the Account tab to view enrollments and rewards.
               </Text>
             </View>
           </View>
@@ -79,6 +72,30 @@ export default function BrowseScreen() {
         renderItem={({ item }) => <CourseCard course={item} />}
         showsVerticalScrollIndicator={false}
       />
+    </View>
+  );
+}
+
+function BrowseUnavailableScreen() {
+  return (
+    <View style={styles.screen}>
+      <View style={styles.content}>
+        <View style={styles.hero}>
+          <Text style={styles.eyebrow}>Explore</Text>
+          <Text style={styles.title}>Discover upcoming programs</Text>
+          <Text style={styles.copy}>
+            Browse current courses, check pricing, and find the format that
+            fits your next step.
+          </Text>
+        </View>
+        <View style={styles.emptyState}>
+          <Text style={styles.emptyTitle}>Course catalog unavailable</Text>
+          <Text style={styles.emptyCopy}>
+            The app is missing its course service configuration. Add the
+            Convex URL to the root `.env`, then restart Metro.
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }

@@ -11,28 +11,33 @@ const convexClient = publicEnv.convexUrl
   : null;
 
 export function AppProviders({ children }: PropsWithChildren) {
-  if (!publicEnv.clerkPublishableKey) {
-    if (!convexClient) {
-      return children;
-    }
+  if (publicEnv.clerkPublishableKey && convexClient) {
+    return (
+      <ClerkProvider
+        publishableKey={publicEnv.clerkPublishableKey}
+        tokenCache={tokenCache}
+      >
+        <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
+          {children}
+        </ConvexProviderWithClerk>
+      </ClerkProvider>
+    );
+  }
 
+  if (publicEnv.clerkPublishableKey) {
+    return (
+      <ClerkProvider
+        publishableKey={publicEnv.clerkPublishableKey}
+        tokenCache={tokenCache}
+      >
+        {children}
+      </ClerkProvider>
+    );
+  }
+
+  if (convexClient) {
     return <ConvexProvider client={convexClient}>{children}</ConvexProvider>;
   }
 
-  const content = convexClient ? (
-    <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
-      {children}
-    </ConvexProviderWithClerk>
-  ) : (
-    children
-  );
-
-  return (
-    <ClerkProvider
-      publishableKey={publicEnv.clerkPublishableKey}
-      tokenCache={tokenCache}
-    >
-      {content}
-    </ClerkProvider>
-  );
+  return children;
 }

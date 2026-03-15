@@ -52,7 +52,7 @@ export const EnrollmentSessionType = v.union(
   v.literal("elevate"),
 );
 
-export const CourseFields = {
+const courseTableFields = {
   name: v.string(),
   description: v.optional(v.string()),
   type: v.optional(CourseType),
@@ -108,13 +108,63 @@ export const CourseFields = {
   archivedAt: v.optional(v.number()),
 };
 
-export const CourseDocumentValue = v.object({
+export const PublicCourseFields = {
+  name: v.string(),
+  description: v.optional(v.string()),
+  type: v.optional(CourseType),
+  code: v.string(),
+  price: v.number(),
+  offer: v.optional(CourseOfferValue),
+  bogo: v.optional(CourseBogoValue),
+  sessions: v.optional(v.number()),
+  capacity: v.number(),
+  enrolledUsers: v.array(v.string()),
+  startDate: v.string(),
+  endDate: v.string(),
+  startTime: v.string(),
+  endTime: v.string(),
+  daysOfWeek: v.array(v.string()),
+  content: v.string(),
+  reviews: v.array(v.id("reviews")),
+  duration: v.optional(v.string()),
+  prerequisites: v.optional(v.string()),
+  imageUrls: v.optional(v.array(v.string())),
+  modules: v.optional(
+    v.array(
+      v.object({
+        title: v.string(),
+        description: v.string(),
+      }),
+    ),
+  ),
+  learningOutcomes: v.optional(
+    v.array(
+      v.object({
+        icon: v.string(),
+        title: v.string(),
+      }),
+    ),
+  ),
+  allocation: v.optional(
+    v.array(
+      v.object({
+        topic: v.string(),
+        hours: v.number(),
+      }),
+    ),
+  ),
+  fileUrl: v.optional(v.string()),
+  worksheetDescription: v.optional(v.string()),
+  targetAudience: v.optional(v.array(v.string())),
+};
+
+export const PublicCourseDocumentValue = v.object({
   _id: v.id("courses"),
   _creationTime: v.number(),
-  ...CourseFields,
+  ...PublicCourseFields,
 });
 
-export const EnrollmentFields = {
+const enrollmentTableFields = {
   userId: v.string(),
   userName: v.optional(v.string()),
   userEmail: v.optional(v.string()),
@@ -147,6 +197,37 @@ export const EnrollmentFields = {
   lastConfirmationSentAt: v.optional(v.number()),
 };
 
+export const PublicEnrollmentFields = {
+  userId: v.string(),
+  userName: v.optional(v.string()),
+  userEmail: v.optional(v.string()),
+  userPhone: v.optional(v.string()),
+  courseId: v.id("courses"),
+  courseName: v.optional(v.string()),
+  enrollmentNumber: v.string(),
+  isGuestUser: v.optional(v.boolean()),
+  sessionType: v.optional(EnrollmentSessionType),
+  courseType: v.optional(CourseType),
+  internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
+  sessions: v.optional(v.number()),
+  isBogoFree: v.optional(v.boolean()),
+  bogoSourceCourseId: v.optional(v.id("courses")),
+  bogoOfferName: v.optional(v.string()),
+  listedPrice: v.optional(v.number()),
+  checkoutPrice: v.optional(v.number()),
+  amountPaid: v.optional(v.number()),
+  redemptionDiscountAmount: v.optional(v.number()),
+  couponCode: v.optional(v.string()),
+  mindPointsRedeemed: v.optional(v.number()),
+  registrationSource: v.optional(EnrollmentRegistrationSource),
+  status: v.optional(EnrollmentStatus),
+  statusReason: v.optional(v.string()),
+  cancelledAt: v.optional(v.number()),
+  transferredAt: v.optional(v.number()),
+  transferredToCourseId: v.optional(v.id("courses")),
+  lastConfirmationSentAt: v.optional(v.number()),
+};
+
 // The schema is entirely optional.
 // You can delete this file (schema.ts) and the
 // app will continue to work.
@@ -155,7 +236,7 @@ export default defineSchema({
   numbers: defineTable({
     value: v.number(),
   }),
-  courses: defineTable(CourseFields)
+  courses: defineTable(courseTableFields)
     .index("by_name_and_type", ["name", "type"])
     .index("by_startDate", ["startDate"])
     .index("by_type", ["type"])
@@ -199,7 +280,7 @@ export default defineSchema({
     whatsappNumber: v.optional(v.string()), // WhatsApp phone number for manual communications
   }).index("by_clerkUserId", ["clerkUserId"]),
 
-  enrollments: defineTable(EnrollmentFields)
+  enrollments: defineTable(enrollmentTableFields)
     .index("by_userId", ["userId"])
     .index("by_userId_and_status", ["userId", "status"])
     .index("by_userId_and_courseId", ["userId", "courseId"])

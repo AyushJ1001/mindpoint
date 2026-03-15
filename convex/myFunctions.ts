@@ -8,8 +8,8 @@ import type {
   CheckoutPricingItem,
 } from "@mindpoint/domain/checkout";
 import {
-  CourseDocumentValue,
-  EnrollmentFields,
+  PublicCourseDocumentValue,
+  PublicEnrollmentFields,
 } from "./schema";
 
 // Write your Convex functions in any file inside this directory (`convex`).
@@ -1609,8 +1609,8 @@ export const getUserEnrollments = query({
     v.object({
       _id: v.id("enrollments"),
       _creationTime: v.number(),
-      ...EnrollmentFields,
-      course: v.union(CourseDocumentValue, v.null()),
+      ...PublicEnrollmentFields,
+      course: v.union(PublicCourseDocumentValue, v.null()),
     }),
   ),
 
