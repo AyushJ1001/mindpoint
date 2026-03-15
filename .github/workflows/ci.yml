@@ -30,6 +30,9 @@ jobs:
       - name: Run TypeScript type checking
         run: npm run type-check
 
+      - name: Type-check mobile app
+        run: npm run type-check:mobile
+
       - name: Run ESLint
         run: npm run lint
 
