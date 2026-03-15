@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import {
   buildLoyaltySearchFields,
   loyaltySearchFieldsChanged,
@@ -110,7 +110,7 @@ export const getUserCoupons = query({
  * Award points to a user after successful payment
  * This is called internally from checkout mutations
  */
-export const awardPoints = mutation({
+export const awardPoints = internalMutation({
   args: {
     clerkUserId: v.string(),
     points: v.number(),
@@ -224,7 +224,6 @@ export const awardPoints = mutation({
  */
 export const redeemPoints = mutation({
   args: {
-    clerkUserId: v.string(),
     courseType: v.string(),
     pointsRequired: v.number(),
   },
@@ -236,6 +235,13 @@ export const redeemPoints = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const clerkUserId = identity.subject;
+
     if (args.pointsRequired <= 0) {
       return { success: false, error: "Invalid points requirement" };
     }
@@ -243,7 +249,7 @@ export const redeemPoints = mutation({
     // Get user's points balance - reload immediately before checking to prevent race conditions
     const pointsRecord = await ctx.db
       .query("mindPoints")
-      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", clerkUserId))
       .first();
 
     if (!pointsRecord) {
@@ -272,7 +278,7 @@ export const redeemPoints = mutation({
     // Create coupon
     const couponId = await ctx.db.insert("coupons", {
       code: couponCode,
-      clerkUserId: args.clerkUserId,
+      clerkUserId,
       courseType: args.courseType,
       discount: 100, // 100% off
       isUsed: false,
@@ -291,7 +297,7 @@ export const redeemPoints = mutation({
 
     // Create transaction record
     await ctx.db.insert("pointsTransactions", {
-      clerkUserId: args.clerkUserId,
+      clerkUserId,
       type: "redeem",
       points: -args.pointsRequired,
       description: `Redeemed ${args.pointsRequired} points for ${args.courseType}`,

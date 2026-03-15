@@ -56,7 +56,7 @@ export default function BrowseScreen() {
               <Text style={styles.statusMeta}>
                 {publicEnv.convexUrl
                   ? `Convex URL configured: ${publicEnv.convexUrl}`
-                  : "NEXT_PUBLIC_CONVEX_URL is missing from Expo extra."}
+                  : "Convex URL is not set in the root .env. Add it and restart Metro."}
               </Text>
             </View>
           </View>

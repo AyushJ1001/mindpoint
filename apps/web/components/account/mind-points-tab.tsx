@@ -60,7 +60,6 @@ export function MindPointsTab() {
 
     try {
       const result = await redeemPoints({
-        clerkUserId: user.id,
         courseType,
         pointsRequired,
       });

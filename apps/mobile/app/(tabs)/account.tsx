@@ -137,7 +137,7 @@ export default function AccountScreen() {
                   </Text>
                   <Text style={styles.historyPoints}>
                     {entry.type === "redeem" ? "-" : "+"}
-                    {entry.points}
+                    {Math.abs(entry.points)}
                   </Text>
                 </View>
               ))

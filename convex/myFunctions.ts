@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type {
@@ -73,7 +73,7 @@ async function awardMindPoints(
   try {
     const pointsEarned = calculatePointsEarned(course);
     if (pointsEarned > 0) {
-      await ctx.runMutation(api.mindPoints.awardPoints, {
+      await ctx.runMutation(internal.mindPoints.awardPoints, {
         clerkUserId,
         points: pointsEarned,
         description: `Earned ${pointsEarned} points for purchasing ${course.name}`,
@@ -1358,7 +1358,7 @@ export const handleCartCheckout = mutation({
             firstEnrollmentId: firstPaidEnrollmentId ?? undefined,
           });
 
-          await ctx.runMutation(api.mindPoints.awardPoints, {
+          await ctx.runMutation(internal.mindPoints.awardPoints, {
             clerkUserId: args.referrerClerkUserId!,
             points: totalPointsEarnedForOrder,
             description: `Referral bonus: your friend earned ${totalPointsEarnedForOrder} Mind Points`,
