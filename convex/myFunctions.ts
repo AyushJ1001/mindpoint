@@ -1615,6 +1615,70 @@ export const getUserEnrollments = query({
   ),
 
   handler: async (ctx) => {
+    const toPublicCourse = (course: Doc<"courses">) => ({
+      _id: course._id,
+      _creationTime: course._creationTime,
+      name: course.name,
+      description: course.description,
+      type: course.type,
+      code: course.code,
+      price: course.price,
+      offer: course.offer,
+      bogo: course.bogo,
+      sessions: course.sessions,
+      capacity: course.capacity,
+      enrolledUsers: course.enrolledUsers,
+      startDate: course.startDate,
+      endDate: course.endDate,
+      startTime: course.startTime,
+      endTime: course.endTime,
+      daysOfWeek: course.daysOfWeek,
+      content: course.content,
+      reviews: course.reviews,
+      duration: course.duration,
+      prerequisites: course.prerequisites,
+      imageUrls: course.imageUrls,
+      modules: course.modules,
+      learningOutcomes: course.learningOutcomes,
+      allocation: course.allocation,
+      fileUrl: course.fileUrl,
+      worksheetDescription: course.worksheetDescription,
+      targetAudience: course.targetAudience,
+    });
+
+    const toPublicEnrollment = (enrollment: Doc<"enrollments">) => ({
+      _id: enrollment._id,
+      _creationTime: enrollment._creationTime,
+      userId: enrollment.userId,
+      userName: enrollment.userName,
+      userEmail: enrollment.userEmail,
+      userPhone: enrollment.userPhone,
+      courseId: enrollment.courseId,
+      courseName: enrollment.courseName,
+      enrollmentNumber: enrollment.enrollmentNumber,
+      isGuestUser: enrollment.isGuestUser,
+      sessionType: enrollment.sessionType,
+      courseType: enrollment.courseType,
+      internshipPlan: enrollment.internshipPlan,
+      sessions: enrollment.sessions,
+      isBogoFree: enrollment.isBogoFree,
+      bogoSourceCourseId: enrollment.bogoSourceCourseId,
+      bogoOfferName: enrollment.bogoOfferName,
+      listedPrice: enrollment.listedPrice,
+      checkoutPrice: enrollment.checkoutPrice,
+      amountPaid: enrollment.amountPaid,
+      redemptionDiscountAmount: enrollment.redemptionDiscountAmount,
+      couponCode: enrollment.couponCode,
+      mindPointsRedeemed: enrollment.mindPointsRedeemed,
+      registrationSource: enrollment.registrationSource,
+      status: enrollment.status,
+      statusReason: enrollment.statusReason,
+      cancelledAt: enrollment.cancelledAt,
+      transferredAt: enrollment.transferredAt,
+      transferredToCourseId: enrollment.transferredToCourseId,
+      lastConfirmationSentAt: enrollment.lastConfirmationSentAt,
+    });
+
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
       throw new Error("Unauthenticated");
@@ -1639,10 +1703,14 @@ export const getUserEnrollments = query({
     );
 
     // Combine enrollments with courses
-    const enrollmentsWithCourses = enrollments.map((enrollment) => ({
-      ...enrollment,
-      course: courseMap.get(enrollment.courseId) ?? null,
-    }));
+    const enrollmentsWithCourses = enrollments.map((enrollment) => {
+      const course = courseMap.get(enrollment.courseId);
+
+      return {
+        ...toPublicEnrollment(enrollment),
+        course: course ? toPublicCourse(course) : null,
+      };
+    });
 
     return enrollmentsWithCourses;
   },
