@@ -1,3 +1,5 @@
+import "client-only";
+
 import { postJson, type FetchImpl } from "./http";
 
 export type CreatePaymentOrderInput = {

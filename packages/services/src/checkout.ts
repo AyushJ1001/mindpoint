@@ -53,6 +53,8 @@ function isRetryableError(error: unknown): boolean {
   }
 
   const message = error.message.toLowerCase();
+  const hasRetryableStatusCode = /(^|\D)(502|503|504)(\D|$)/.test(message);
+
   return (
     message.includes("network") ||
     message.includes("timeout") ||
@@ -60,10 +62,7 @@ function isRetryableError(error: unknown): boolean {
     message.includes("enotfound") ||
     message.includes("econnreset") ||
     message.includes("etimedout") ||
-    message.includes("503") ||
-    message.includes("502") ||
-    message.includes("504") ||
-    message.includes("500") ||
+    hasRetryableStatusCode ||
     message.includes("rate limit") ||
     message.includes("temporary")
   );

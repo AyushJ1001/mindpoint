@@ -1,3 +1,5 @@
+import "client-only";
+
 import type { FetchImpl } from "./http";
 import { postFormData } from "./http";
 
