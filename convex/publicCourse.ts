@@ -17,11 +17,3 @@ export function pickPublicCourse(course: Doc<"courses">) {
     enrolledCount: enrolledUsers.length,
   };
 }
-
-export function pickCompatiblePublicCourse(course: Doc<"courses">) {
-  return {
-    ...pickPublicCourse(course),
-    // Keep seat-count callers working while avoiding exposure of raw Clerk IDs.
-    enrolledUsers: course.enrolledUsers.map(() => ""),
-  };
-}

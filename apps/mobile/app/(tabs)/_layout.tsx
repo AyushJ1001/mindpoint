@@ -1,6 +1,7 @@
 import React from "react";
 import { SymbolView } from "expo-symbols";
 import { Tabs } from "expo-router";
+import { Platform } from "react-native";
 import Colors from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import { useClientOnlyValue } from "@/components/useClientOnlyValue";
@@ -22,11 +23,13 @@ export default function TabLayout() {
           title: "Browse",
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={{
-                ios: "book.pages",
-                android: "book",
-                web: "book",
-              }}
+              name={
+                Platform.select({
+                  ios: "book.pages",
+                  android: "book",
+                  default: "book",
+                }) ?? "book"
+              }
               tintColor={color}
               size={28}
             />
@@ -39,11 +42,13 @@ export default function TabLayout() {
           title: "Account",
           tabBarIcon: ({ color }) => (
             <SymbolView
-              name={{
-                ios: "person.crop.circle",
-                android: "person",
-                web: "person",
-              }}
+              name={
+                Platform.select({
+                  ios: "person.crop.circle",
+                  android: "person",
+                  default: "person",
+                }) ?? "person"
+              }
               tintColor={color}
               size={28}
             />

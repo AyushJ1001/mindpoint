@@ -12,6 +12,7 @@ interface MindPointsData {
 }
 
 interface MindPointsContextValue {
+  isAuthError: boolean;
   pointsData: MindPointsData | undefined;
   isLoading: boolean;
 }
@@ -27,6 +28,7 @@ export function MindPointsProvider({ children }: { children: ReactNode }) {
   );
 
   const value: MindPointsContextValue = {
+    isAuthError: !!user && !isConvexAuthLoading && !isAuthenticated,
     pointsData: pointsData ?? undefined,
     // Loading ends once the Convex auth handshake settles, even if auth fails.
     isLoading:
@@ -45,7 +47,7 @@ export function useMindPoints(): MindPointsContextValue {
   const context = useContext(MindPointsContext);
   if (!context) {
     // Return safe defaults when used outside provider (e.g., no Clerk)
-    return { pointsData: undefined, isLoading: false };
+    return { isAuthError: false, pointsData: undefined, isLoading: false };
   }
   return context;
 }
