@@ -9,18 +9,21 @@ import {
  * Get user's current Mind Points balance and summary
  */
 export const getUserPoints = query({
-  args: {
-    clerkUserId: v.string(),
-  },
+  args: {},
   returns: v.object({
     balance: v.number(),
     totalEarned: v.number(),
     totalRedeemed: v.number(),
   }),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     const pointsRecord = await ctx.db
       .query("mindPoints")
-      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", identity.subject))
       .first();
 
     if (!pointsRecord) {
@@ -44,7 +47,6 @@ export const getUserPoints = query({
  */
 export const getPointsHistory = query({
   args: {
-    clerkUserId: v.string(),
     limit: v.optional(v.number()),
   },
   returns: v.array(
@@ -61,9 +63,14 @@ export const getPointsHistory = query({
     }),
   ),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     const transactions = await ctx.db
       .query("pointsTransactions")
-      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", identity.subject))
       .order("desc")
       .take(args.limit || 50);
 
@@ -75,9 +82,7 @@ export const getPointsHistory = query({
  * Get user's active (unused) coupons
  */
 export const getUserCoupons = query({
-  args: {
-    clerkUserId: v.string(),
-  },
+  args: {},
   returns: v.array(
     v.object({
       _id: v.id("coupons"),
@@ -92,12 +97,17 @@ export const getUserCoupons = query({
       usedAt: v.optional(v.number()),
     }),
   ),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     // Use composite index for better performance
     const coupons = await ctx.db
       .query("coupons")
       .withIndex("by_clerkUserId_and_isUsed", (q) =>
-        q.eq("clerkUserId", args.clerkUserId).eq("isUsed", false),
+        q.eq("clerkUserId", identity.subject).eq("isUsed", false),
       )
       .order("desc")
       .collect();

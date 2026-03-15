@@ -22,7 +22,7 @@ export function MindPointsProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
   const pointsData = useQuery(
     api.mindPoints.getUserPoints,
-    user?.id ? { clerkUserId: user.id } : "skip",
+    user?.id ? {} : "skip",
   );
 
   const value: MindPointsContextValue = {

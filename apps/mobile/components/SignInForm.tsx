@@ -99,6 +99,7 @@ export function SignInForm() {
       />
       <TextInput
         autoCapitalize="none"
+        autoComplete="current-password"
         onChangeText={setPassword}
         placeholder="Password"
         placeholderTextColor="#7b8794"

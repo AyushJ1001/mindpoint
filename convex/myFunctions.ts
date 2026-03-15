@@ -7,6 +7,12 @@ import type {
   CheckoutPricing,
   CheckoutPricingItem,
 } from "@mindpoint/domain/checkout";
+import {
+  CourseLifecycleStatus,
+  CourseType,
+  EnrollmentRegistrationSource,
+  EnrollmentStatus,
+} from "./schema";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -1601,8 +1607,119 @@ export const handleCartCheckout = mutation({
 
 // Get enrollments for a specific user
 // Optimized to use index and batch course fetches
+const courseReturnValidator = v.object({
+  _id: v.id("courses"),
+  _creationTime: v.number(),
+  name: v.string(),
+  description: v.optional(v.string()),
+  type: v.optional(CourseType),
+  code: v.string(),
+  price: v.number(),
+  offer: v.optional(
+    v.object({
+      name: v.string(),
+      discount: v.optional(v.number()),
+      startDate: v.optional(v.string()),
+      endDate: v.optional(v.string()),
+    }),
+  ),
+  bogo: v.optional(
+    v.object({
+      enabled: v.boolean(),
+      startDate: v.optional(v.string()),
+      endDate: v.optional(v.string()),
+      label: v.optional(v.string()),
+    }),
+  ),
+  sessions: v.optional(v.number()),
+  capacity: v.number(),
+  enrolledUsers: v.array(v.string()),
+  startDate: v.string(),
+  endDate: v.string(),
+  startTime: v.string(),
+  endTime: v.string(),
+  daysOfWeek: v.array(v.string()),
+  content: v.string(),
+  reviews: v.array(v.id("reviews")),
+  duration: v.optional(v.string()),
+  prerequisites: v.optional(v.string()),
+  imageUrls: v.optional(v.array(v.string())),
+  modules: v.optional(
+    v.array(
+      v.object({
+        title: v.string(),
+        description: v.string(),
+      }),
+    ),
+  ),
+  learningOutcomes: v.optional(
+    v.array(
+      v.object({
+        icon: v.string(),
+        title: v.string(),
+      }),
+    ),
+  ),
+  allocation: v.optional(
+    v.array(
+      v.object({
+        topic: v.string(),
+        hours: v.number(),
+      }),
+    ),
+  ),
+  fileUrl: v.optional(v.string()),
+  worksheetDescription: v.optional(v.string()),
+  targetAudience: v.optional(v.array(v.string())),
+  lifecycleStatus: v.optional(CourseLifecycleStatus),
+  createdByAdminId: v.optional(v.string()),
+  updatedByAdminId: v.optional(v.string()),
+  updatedAt: v.optional(v.number()),
+  publishedAt: v.optional(v.number()),
+  archivedAt: v.optional(v.number()),
+});
+
 export const getUserEnrollments = query({
   args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("enrollments"),
+      _creationTime: v.number(),
+      userId: v.string(),
+      userName: v.optional(v.string()),
+      userEmail: v.optional(v.string()),
+      userPhone: v.optional(v.string()),
+      courseId: v.id("courses"),
+      courseName: v.optional(v.string()),
+      enrollmentNumber: v.string(),
+      isGuestUser: v.optional(v.boolean()),
+      sessionType: v.optional(
+        v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
+      ),
+      courseType: v.optional(CourseType),
+      internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
+      sessions: v.optional(v.number()),
+      isBogoFree: v.optional(v.boolean()),
+      bogoSourceCourseId: v.optional(v.id("courses")),
+      bogoOfferName: v.optional(v.string()),
+      listedPrice: v.optional(v.number()),
+      checkoutPrice: v.optional(v.number()),
+      amountPaid: v.optional(v.number()),
+      redemptionDiscountAmount: v.optional(v.number()),
+      couponCode: v.optional(v.string()),
+      mindPointsRedeemed: v.optional(v.number()),
+      registrationSource: v.optional(EnrollmentRegistrationSource),
+      status: v.optional(EnrollmentStatus),
+      statusReason: v.optional(v.string()),
+      cancelledAt: v.optional(v.number()),
+      cancelledByAdminId: v.optional(v.string()),
+      transferredAt: v.optional(v.number()),
+      transferredByAdminId: v.optional(v.string()),
+      transferredToCourseId: v.optional(v.id("courses")),
+      lastConfirmationSentAt: v.optional(v.number()),
+      course: v.union(courseReturnValidator, v.null()),
+    }),
+  ),
 
   handler: async (ctx) => {
     const identity = await ctx.auth.getUserIdentity();
