@@ -3,4 +3,4 @@ export type {
   Doc,
   Id,
   TableNames,
-} from "../../../convex/_generated/dataModel";
+} from "../../../convex/_generated/dataModel.js";

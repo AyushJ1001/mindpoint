@@ -33,6 +33,7 @@ import type * as mindPoints from "../mindPoints.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as testOffer from "../testOffer.js";
+import type * as viewer from "../viewer.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   myFunctions: typeof myFunctions;
   rateLimit: typeof rateLimit;
   testOffer: typeof testOffer;
+  viewer: typeof viewer;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
