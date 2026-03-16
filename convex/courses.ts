@@ -17,12 +17,22 @@ export const listCourses = query({
   // Query implementation.
   handler: async (ctx, args) => {
     const limit = Math.max(1, args.count ?? 1000);
-    const publishedCourses = await ctx.db
-      .query("courses")
-      .withIndex("by_lifecycleStatus", (q) => q.eq("lifecycleStatus", "published"))
-      .order("desc")
-      .take(limit)
-      .then((courses) => courses.map((course) => pickPublicCourse(course)));
+    const [publishedViaIndex, publishedLegacy] = await Promise.all([
+      ctx.db
+        .query("courses")
+        .withIndex("by_lifecycleStatus", (q) => q.eq("lifecycleStatus", "published"))
+        .order("desc")
+        .take(limit),
+      ctx.db
+        .query("courses")
+        .filter((q) => q.eq(q.field("lifecycleStatus"), undefined))
+        .order("desc")
+        .take(limit),
+    ]);
+    const publishedCourses = [...publishedViaIndex, ...publishedLegacy]
+      .sort((a, b) => b._creationTime - a._creationTime)
+      .slice(0, limit)
+      .map((course) => pickPublicCourse(course));
 
     return publishedCourses;
   },
