@@ -396,6 +396,11 @@ export const markCouponUsed = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     const coupon = await ctx.db
       .query("coupons")
       .withIndex("by_code", (q) => q.eq("code", args.couponCode))
@@ -407,6 +412,13 @@ export const markCouponUsed = mutation({
 
     if (coupon.isUsed) {
       return { success: false, error: "Coupon already used" };
+    }
+
+    if (coupon.clerkUserId !== identity.subject) {
+      return {
+        success: false,
+        error: "Coupon does not belong to your account",
+      };
     }
 
     await ctx.db.patch(coupon._id, {

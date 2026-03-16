@@ -16,18 +16,12 @@ export const listCourses = query({
 
   // Query implementation.
   handler: async (ctx, args) => {
-    //// Read the database as many times as you need here.
-    //// See https://docs.convex.dev/database/reading-data.
-    const allCourses = args.count
-      ? await ctx.db
-          .query("courses")
-          // Ordered by _creationTime, return most recent
-          .order("desc")
-          .take(args.count)
-      : await ctx.db.query("courses").order("desc").collect();
-    return allCourses
+    const allCourses = await ctx.db.query("courses").order("desc").collect();
+    const publishedCourses = allCourses
       .filter((course) => isPublishedCourse(course))
       .map((course) => pickPublicCourse(course));
+
+    return args.count ? publishedCourses.slice(0, args.count) : publishedCourses;
   },
 });
 

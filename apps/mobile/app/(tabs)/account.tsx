@@ -13,6 +13,7 @@ import { api } from "@mindpoint/backend/api";
 import { SignInForm } from "@/components/SignInForm";
 import { publicEnv } from "@/lib/public-env";
 
+// `publicEnv` is compiled into the Expo app config and treated as process-static.
 export default function AccountScreen() {
   if (!publicEnv.clerkPublishableKey) {
     return (

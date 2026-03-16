@@ -68,6 +68,7 @@ export function SignInForm() {
 
       if (!result.createdSessionId) {
         setError("This account requires an additional sign-in step.");
+        setPassword("");
         return;
       }
 
