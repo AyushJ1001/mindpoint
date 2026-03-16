@@ -1632,11 +1632,14 @@ export const getUserEnrollments = query({
     if (!identity) {
       throw new Error("Unauthenticated");
     }
+    // Authenticated enrollments store the Clerk user ID, which Clerk also
+    // exposes as the JWT `sub` claim used by Convex auth.
+    const limit = Math.min(Math.max(args.limit ?? 100, 1), 200);
 
     const enrollments = await ctx.db
       .query("enrollments")
       .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .take(args.limit ?? 50);
+      .take(limit);
 
     // Batch fetch all courses at once to avoid N+1 queries
     const courseIds = enrollments.map((e) => e.courseId);

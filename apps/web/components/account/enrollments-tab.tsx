@@ -12,7 +12,7 @@ export function EnrollmentsTab() {
   const { isAuthenticated } = useConvexAuth();
   const enrollments = useQuery(
     api.myFunctions.getUserEnrollments,
-    isAuthenticated ? {} : "skip",
+    isAuthenticated ? { limit: 200 } : "skip",
   );
 
   if (!user) {

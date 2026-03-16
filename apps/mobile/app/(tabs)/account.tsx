@@ -49,7 +49,7 @@ function ConnectedAccountScreen() {
   );
   const enrollments = useQuery(
     api.myFunctions.getUserEnrollments,
-    isAuthenticated ? {} : "skip",
+    isAuthenticated ? { limit: 200 } : "skip",
   );
   const accountSummary = useQuery(
     api.mindPoints.getUserAccountSummary,
