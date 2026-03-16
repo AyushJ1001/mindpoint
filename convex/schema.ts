@@ -123,7 +123,7 @@ export const PublicCourseDocumentValue = v.object({
   ...PublicCourseFields,
 });
 
-const enrollmentTableFields = {
+const publicEnrollmentFields = {
   userId: v.string(),
   userName: v.optional(v.string()),
   userEmail: v.optional(v.string()),
@@ -149,43 +149,18 @@ const enrollmentTableFields = {
   status: v.optional(EnrollmentStatus),
   statusReason: v.optional(v.string()),
   cancelledAt: v.optional(v.number()),
-  cancelledByAdminId: v.optional(v.string()),
   transferredAt: v.optional(v.number()),
-  transferredByAdminId: v.optional(v.string()),
   transferredToCourseId: v.optional(v.id("courses")),
   lastConfirmationSentAt: v.optional(v.number()),
 };
 
-export const PublicEnrollmentFields = {
-  userId: v.string(),
-  userName: v.optional(v.string()),
-  userEmail: v.optional(v.string()),
-  userPhone: v.optional(v.string()),
-  courseId: v.id("courses"),
-  courseName: v.optional(v.string()),
-  enrollmentNumber: v.string(),
-  isGuestUser: v.optional(v.boolean()),
-  sessionType: v.optional(EnrollmentSessionType),
-  courseType: v.optional(CourseType),
-  internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
-  sessions: v.optional(v.number()),
-  isBogoFree: v.optional(v.boolean()),
-  bogoSourceCourseId: v.optional(v.id("courses")),
-  bogoOfferName: v.optional(v.string()),
-  listedPrice: v.optional(v.number()),
-  checkoutPrice: v.optional(v.number()),
-  amountPaid: v.optional(v.number()),
-  redemptionDiscountAmount: v.optional(v.number()),
-  couponCode: v.optional(v.string()),
-  mindPointsRedeemed: v.optional(v.number()),
-  registrationSource: v.optional(EnrollmentRegistrationSource),
-  status: v.optional(EnrollmentStatus),
-  statusReason: v.optional(v.string()),
-  cancelledAt: v.optional(v.number()),
-  transferredAt: v.optional(v.number()),
-  transferredToCourseId: v.optional(v.id("courses")),
-  lastConfirmationSentAt: v.optional(v.number()),
+const enrollmentTableFields = {
+  ...publicEnrollmentFields,
+  cancelledByAdminId: v.optional(v.string()),
+  transferredByAdminId: v.optional(v.string()),
 };
+
+export const PublicEnrollmentFields = publicEnrollmentFields;
 
 // The schema is entirely optional.
 // You can delete this file (schema.ts) and the

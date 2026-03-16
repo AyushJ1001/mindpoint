@@ -162,6 +162,10 @@ function ConnectedAccountScreen() {
   );
 }
 
+/**
+ * Renders the account screen when Convex is not configured.
+ * Must only render when `clerkPublishableKey` is set so ClerkProvider exists.
+ */
 function AccountWithoutConvex() {
   const { isLoaded, isSignedIn } = useAuth();
   const { user } = useUser();

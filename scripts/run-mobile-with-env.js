@@ -12,7 +12,6 @@ for (const envFile of envFiles) {
   dotenv.config({
     path: path.join(rootDir, envFile),
     override: envFile === ".env.local",
-    quiet: true,
   });
 }
 
