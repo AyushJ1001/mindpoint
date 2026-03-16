@@ -52,7 +52,7 @@ export const EnrollmentSessionType = v.union(
   v.literal("elevate"),
 );
 
-const courseTableFields = {
+const sharedCourseFields = {
   name: v.string(),
   description: v.optional(v.string()),
   type: v.optional(CourseType),
@@ -62,7 +62,6 @@ const courseTableFields = {
   bogo: v.optional(CourseBogoValue),
   sessions: v.optional(v.number()),
   capacity: v.number(),
-  enrolledUsers: v.array(v.string()),
   startDate: v.string(),
   endDate: v.string(),
   startTime: v.string(),
@@ -100,6 +99,11 @@ const courseTableFields = {
   fileUrl: v.optional(v.string()),
   worksheetDescription: v.optional(v.string()),
   targetAudience: v.optional(v.array(v.string())),
+};
+
+const courseTableFields = {
+  ...sharedCourseFields,
+  enrolledUsers: v.array(v.string()),
   lifecycleStatus: v.optional(CourseLifecycleStatus),
   createdByAdminId: v.optional(v.string()),
   updatedByAdminId: v.optional(v.string()),
@@ -109,53 +113,8 @@ const courseTableFields = {
 };
 
 export const PublicCourseFields = {
-  name: v.string(),
-  description: v.optional(v.string()),
-  type: v.optional(CourseType),
-  code: v.string(),
-  price: v.number(),
-  offer: v.optional(CourseOfferValue),
-  bogo: v.optional(CourseBogoValue),
-  sessions: v.optional(v.number()),
-  capacity: v.number(),
+  ...sharedCourseFields,
   enrolledCount: v.number(),
-  startDate: v.string(),
-  endDate: v.string(),
-  startTime: v.string(),
-  endTime: v.string(),
-  daysOfWeek: v.array(v.string()),
-  content: v.string(),
-  reviews: v.array(v.id("reviews")),
-  duration: v.optional(v.string()),
-  prerequisites: v.optional(v.string()),
-  imageUrls: v.optional(v.array(v.string())),
-  modules: v.optional(
-    v.array(
-      v.object({
-        title: v.string(),
-        description: v.string(),
-      }),
-    ),
-  ),
-  learningOutcomes: v.optional(
-    v.array(
-      v.object({
-        icon: v.string(),
-        title: v.string(),
-      }),
-    ),
-  ),
-  allocation: v.optional(
-    v.array(
-      v.object({
-        topic: v.string(),
-        hours: v.number(),
-      }),
-    ),
-  ),
-  fileUrl: v.optional(v.string()),
-  worksheetDescription: v.optional(v.string()),
-  targetAudience: v.optional(v.array(v.string())),
 };
 
 export const PublicCourseDocumentValue = v.object({

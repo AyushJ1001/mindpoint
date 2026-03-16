@@ -615,10 +615,10 @@ const CourseCard = ({
 
   const handleAddToCart = () => {
     // Check if course is out of stock
-  const seatsLeft = Math.max(
-    0,
-    (course.capacity ?? 0) - getEnrolledCount(course),
-  );
+    const seatsLeft = Math.max(
+      0,
+      (course.capacity ?? 0) - getEnrolledCount(course),
+    );
     const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
     if (isOutOfStock) {
