@@ -73,6 +73,7 @@ export function SignInForm() {
       }
 
       await setActive({ session: result.createdSessionId });
+      setEmailAddress("");
       setPassword("");
     } catch (submissionError) {
       setError(resolveClerkError(submissionError, "Unable to sign in."));

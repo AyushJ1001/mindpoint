@@ -39,5 +39,5 @@ export function AppProviders({ children }: PropsWithChildren) {
     return <ConvexProvider client={convexClient}>{children}</ConvexProvider>;
   }
 
-  return children;
+  return <>{children}</>;
 }

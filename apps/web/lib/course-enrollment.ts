@@ -5,5 +5,5 @@ export function getEnrolledCount(course: CourseLike): number {
     return course.enrolledCount;
   }
 
-  return course.enrolledUsers?.length ?? 0;
+  return course.enrolledUsers.length;
 }
