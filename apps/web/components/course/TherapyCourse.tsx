@@ -14,11 +14,11 @@ import {
 } from "lucide-react";
 import ChoosePlan from "@/components/therapy/choose-plan";
 import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 
 interface TherapyCourseProps {
-  course: Doc<"courses">;
-  variants?: Doc<"courses">[];
+  course: PublicCourse;
+  variants?: PublicCourse[];
 }
 
 export default function TherapyCourse({

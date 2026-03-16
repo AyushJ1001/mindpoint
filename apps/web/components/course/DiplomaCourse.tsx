@@ -2,10 +2,10 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { GraduationCap, Users, Award, Target } from "lucide-react";
 import CourseModulesSection from "./course-modules-section";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 
 interface DiplomaCourseProps {
-  course: Doc<"courses">;
+  course: PublicCourse;
 }
 
 export default function DiplomaCourse({ course }: DiplomaCourseProps) {

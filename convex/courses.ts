@@ -1,6 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { CourseType } from "./schema";
+import { CourseType, PublicCourseDocumentValue } from "./schema";
+import { pickPublicCourse, type PublicCourse } from "./_publicCourse";
 
 function isPublishedCourse(course: { lifecycleStatus?: "draft" | "published" | "archived" }) {
   return !course.lifecycleStatus || course.lifecycleStatus === "published";
@@ -11,19 +12,29 @@ export const listCourses = query({
   args: {
     count: v.optional(v.number()),
   },
+  returns: v.array(PublicCourseDocumentValue),
 
   // Query implementation.
   handler: async (ctx, args) => {
-    //// Read the database as many times as you need here.
-    //// See https://docs.convex.dev/database/reading-data.
-    const allCourses = args.count
-      ? await ctx.db
-          .query("courses")
-          // Ordered by _creationTime, return most recent
-          .order("desc")
-          .take(args.count)
-      : await ctx.db.query("courses").order("desc").collect();
-    return allCourses.filter((course) => isPublishedCourse(course));
+    const limit = Math.max(1, args.count ?? 1000);
+    const [publishedViaIndex, publishedLegacy] = await Promise.all([
+      ctx.db
+        .query("courses")
+        .withIndex("by_lifecycleStatus", (q) => q.eq("lifecycleStatus", "published"))
+        .order("desc")
+        .take(limit),
+      ctx.db
+        .query("courses")
+        .filter((q) => q.eq(q.field("lifecycleStatus"), undefined))
+        .order("desc")
+        .take(limit),
+    ]);
+    const publishedCourses = [...publishedViaIndex, ...publishedLegacy]
+      .sort((a, b) => b._creationTime - a._creationTime)
+      .slice(0, limit)
+      .map((course) => pickPublicCourse(course));
+
+    return publishedCourses;
   },
 });
 
@@ -33,6 +44,10 @@ export const listCoursesByType = query({
     type: CourseType,
     count: v.optional(v.number()),
   },
+  returns: v.object({
+    viewer: v.union(v.string(), v.null()),
+    courses: v.array(PublicCourseDocumentValue),
+  }),
 
   // Query implementation.
   handler: async (ctx, args) => {
@@ -49,7 +64,7 @@ export const listCoursesByType = query({
 
     return {
       viewer: (await ctx.auth.getUserIdentity())?.name ?? null,
-      courses: filteredCourses.reverse().map((course) => course),
+      courses: filteredCourses.reverse().map((course) => pickPublicCourse(course)),
     };
   },
 });
@@ -57,16 +72,18 @@ export const listCoursesByType = query({
 // Fetch a single course by its id
 export const getCourseById = query({
   args: { id: v.id("courses") },
+  returns: v.union(PublicCourseDocumentValue, v.null()),
   handler: async (ctx, args) => {
     const course = await ctx.db.get(args.id);
     if (!course || !isPublishedCourse(course)) return null;
-    return course;
+    return pickPublicCourse(course);
   },
 });
 
 // Fetch related variants for a given course: same name & type (e.g., sessions/duration variants)
 export const getRelatedVariants = query({
   args: { id: v.id("courses") },
+  returns: v.array(PublicCourseDocumentValue),
   handler: async (ctx, args) => {
     const base = await ctx.db.get(args.id);
     if (!base) return [];
@@ -83,7 +100,7 @@ export const getRelatedVariants = query({
       (a, b) =>
         (a.price ?? 0) - (b.price ?? 0) || a._creationTime - b._creationTime,
     );
-    return publishedVariants;
+    return publishedVariants.map((course) => pickPublicCourse(course));
   },
 });
 
@@ -208,6 +225,7 @@ export const deleteReview = mutation({
 // Note: Since bogo.enabled is a nested field, we use index for type and filter for bogo
 export const getBogoCoursesByType = query({
   args: { courseType: CourseType },
+  returns: v.array(PublicCourseDocumentValue),
   handler: async (ctx, args) => {
     const courses = await ctx.db
       .query("courses")
@@ -216,7 +234,9 @@ export const getBogoCoursesByType = query({
       .order("desc")
       .collect();
 
-    return courses.filter((course) => isPublishedCourse(course));
+    return courses
+      .filter((course) => isPublishedCourse(course))
+      .map((course) => pickPublicCourse(course));
   },
 });
 
@@ -225,15 +245,15 @@ export const getBogoCoursesByType = query({
 // Optimized to use indexes and parallel fetching
 export const getBogoCoursesByTypes = query({
   args: { courseTypes: v.array(CourseType) },
-  returns: v.record(v.string(), v.array(v.any())),
+  returns: v.record(v.string(), v.array(PublicCourseDocumentValue)),
   handler: async (ctx, args) => {
-    const result: Record<string, any[]> = {};
-    
+    const result: Record<string, PublicCourse[]> = {};
+
     // Initialize all types with empty arrays
     for (const courseType of args.courseTypes) {
       result[courseType] = [];
     }
-    
+
     // Fetch BOGO courses for each type using index
     // Using Promise.all for parallel execution (though Convex queries are sequential)
     for (const courseType of args.courseTypes) {
@@ -243,8 +263,10 @@ export const getBogoCoursesByTypes = query({
         .filter((q) => q.eq(q.field("bogo.enabled"), true))
         .order("desc")
         .collect();
-      
-      result[courseType] = courses.filter((course) => isPublishedCourse(course));
+
+      result[courseType] = courses
+        .filter((course) => isPublishedCourse(course))
+        .map((course) => pickPublicCourse(course));
     }
 
     return result;

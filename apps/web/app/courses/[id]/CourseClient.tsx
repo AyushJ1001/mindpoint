@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "react-use-cart";
 import { useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
+import type { PublicCourse } from "@mindpoint/backend";
 import { Id } from "@mindpoint/backend/data-model";
 
 import { Button } from "@/components/ui/button";
@@ -24,22 +25,22 @@ import CourseHero from "@/components/course/course-hero";
 import CountdownTimer from "@/components/course/countdown-timer";
 import CourseOverview from "@/components/course/course-overview";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
-import type { Doc } from "@mindpoint/backend/data-model";
 import {
   getOfferDetails,
   getCoursePrice,
   hasActivePromotion,
 } from "@/lib/utils";
+import { getEnrolledCount } from "@/lib/course-enrollment";
 
-type CourseVariant = Doc<"courses">;
+type CourseVariant = PublicCourse;
 
 // Type for courses with sessions (therapy)
-interface TherapyCourse extends Doc<"courses"> {
+interface TherapyCourse extends PublicCourse {
   sessions?: number;
 }
 
 // Type for courses with duration (internship)
-interface InternshipCourse extends Doc<"courses"> {
+interface InternshipCourse extends PublicCourse {
   duration?: string;
 }
 
@@ -47,11 +48,11 @@ export default function CourseClient({
   course,
   variants = [],
 }: {
-  course: Doc<"courses">;
+  course: PublicCourse;
   variants?: CourseVariant[];
 }) {
   const router = useRouter();
-  const [activeCourse, setActiveCourse] = useState<Doc<"courses">>(course);
+  const [activeCourse, setActiveCourse] = useState<PublicCourse>(course);
   const [customDuration, setCustomDuration] = useState<string | undefined>(
     undefined,
   );
@@ -146,7 +147,7 @@ export default function CourseClient({
   };
 
   // Helper function to handle buy now
-  const handleBuyNow = (course: Doc<"courses">) => {
+  const handleBuyNow = (course: PublicCourse) => {
     // Check if cart has any items (including this course)
     if (items.length > 0) {
       // Cart has items, show confirmation dialog
@@ -158,7 +159,7 @@ export default function CourseClient({
   };
 
   // Helper function to confirm buy now action
-  const handleBuyNowConfirm = (course: Doc<"courses">) => {
+  const handleBuyNowConfirm = (course: PublicCourse) => {
     // Use utility function to get the correct price
     const priceToUse = getCoursePrice(course);
 
@@ -193,7 +194,7 @@ export default function CourseClient({
   };
 
   // Helper function to handle quantity increase
-  const handleIncreaseQuantity = (course: Doc<"courses">) => {
+  const handleIncreaseQuantity = (course: PublicCourse) => {
     const currentQuantity = getCurrentQuantity(course._id);
     const maxQuantity = course.capacity || 1;
 
@@ -241,7 +242,7 @@ export default function CourseClient({
   };
 
   // Helper function to handle quantity decrease
-  const handleDecreaseQuantity = (course: Doc<"courses">) => {
+  const handleDecreaseQuantity = (course: PublicCourse) => {
     const currentQuantity = getCurrentQuantity(course._id);
 
     if (currentQuantity > 1) {
@@ -253,7 +254,7 @@ export default function CourseClient({
 
   const seatsLeft = Math.max(
     0,
-    (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+    (course.capacity ?? 0) - getEnrolledCount(course),
   );
 
   // Check if course is out of stock (capacity 0 or no seats left)

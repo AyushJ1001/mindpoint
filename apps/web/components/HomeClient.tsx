@@ -2,10 +2,10 @@
 
 import { Clock } from "lucide-react";
 import { UpcomingCourseCard } from "./course-card";
-import { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 
 interface HomeClientProps {
-  upcomingCourses: Doc<"courses">[];
+  upcomingCourses: PublicCourse[];
 }
 
 export default function HomeClient({ upcomingCourses }: HomeClientProps) {

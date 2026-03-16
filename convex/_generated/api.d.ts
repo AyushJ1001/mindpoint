@@ -13,6 +13,7 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as _publicCourse from "../_publicCourse.js";
 import type * as adminAudit from "../adminAudit.js";
 import type * as adminAuth from "../adminAuth.js";
 import type * as adminCourses from "../adminCourses.js";
@@ -33,6 +34,7 @@ import type * as mindPoints from "../mindPoints.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as testOffer from "../testOffer.js";
+import type * as viewer from "../viewer.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -43,6 +45,7 @@ import type * as testOffer from "../testOffer.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  _publicCourse: typeof _publicCourse;
   adminAudit: typeof adminAudit;
   adminAuth: typeof adminAuth;
   adminCourses: typeof adminCourses;
@@ -63,6 +66,7 @@ declare const fullApi: ApiFromModules<{
   myFunctions: typeof myFunctions;
   rateLimit: typeof rateLimit;
   testOffer: typeof testOffer;
+  viewer: typeof viewer;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,

@@ -21,7 +21,8 @@ import {
   Flame,
 } from "lucide-react";
 import { useInView } from "@/hooks/use-in-view";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
+import { getEnrolledCount } from "@/lib/course-enrollment";
 
 // Configuration constants
 // Based on the actual pricing table:
@@ -71,8 +72,8 @@ type Plan = {
 };
 
 interface ChoosePlanProps {
-  course: Doc<"courses">;
-  variants: Doc<"courses">[];
+  course: PublicCourse;
+  variants: PublicCourse[];
   onBook?: (payload: {
     planId: string;
     sessions: Sessions;
@@ -229,7 +230,7 @@ export default function ChoosePlan({
     const seatsLeft = Math.max(
       0,
       (selectedVariant.capacity ?? 0) -
-        (selectedVariant.enrolledUsers?.length ?? 0),
+        getEnrolledCount(selectedVariant),
     );
     const isOutOfStock =
       (selectedVariant.capacity ?? 0) === 0 || seatsLeft === 0;

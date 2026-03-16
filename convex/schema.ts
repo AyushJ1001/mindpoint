@@ -32,19 +32,135 @@ export const EnrollmentRegistrationSource = v.union(
   v.literal("admin_transfer"),
 );
 
-const CourseOfferValue = v.object({
+export const CourseOfferValue = v.object({
   name: v.string(),
   discount: v.optional(v.number()),
   startDate: v.optional(v.string()),
   endDate: v.optional(v.string()),
 });
 
-const CourseBogoValue = v.object({
+export const CourseBogoValue = v.object({
   enabled: v.boolean(),
   startDate: v.optional(v.string()),
   endDate: v.optional(v.string()),
   label: v.optional(v.string()),
 });
+
+export const EnrollmentSessionType = v.union(
+  v.literal("focus"),
+  v.literal("flow"),
+  v.literal("elevate"),
+);
+
+const sharedCourseFields = {
+  name: v.string(),
+  description: v.optional(v.string()),
+  type: v.optional(CourseType),
+  code: v.string(),
+  price: v.number(),
+  offer: v.optional(CourseOfferValue),
+  bogo: v.optional(CourseBogoValue),
+  sessions: v.optional(v.number()),
+  capacity: v.number(),
+  startDate: v.string(),
+  endDate: v.string(),
+  startTime: v.string(),
+  endTime: v.string(),
+  daysOfWeek: v.array(v.string()),
+  content: v.string(),
+  reviews: v.array(v.id("reviews")),
+  duration: v.optional(v.string()),
+  prerequisites: v.optional(v.string()),
+  imageUrls: v.optional(v.array(v.string())),
+  modules: v.optional(
+    v.array(
+      v.object({
+        title: v.string(),
+        description: v.string(),
+      }),
+    ),
+  ),
+  learningOutcomes: v.optional(
+    v.array(
+      v.object({
+        icon: v.string(),
+        title: v.string(),
+      }),
+    ),
+  ),
+  allocation: v.optional(
+    v.array(
+      v.object({
+        topic: v.string(),
+        hours: v.number(),
+      }),
+    ),
+  ),
+  fileUrl: v.optional(v.string()),
+  worksheetDescription: v.optional(v.string()),
+  targetAudience: v.optional(v.array(v.string())),
+};
+
+const courseTableFields = {
+  ...sharedCourseFields,
+  enrolledUsers: v.array(v.string()),
+  lifecycleStatus: v.optional(CourseLifecycleStatus),
+  createdByAdminId: v.optional(v.string()),
+  updatedByAdminId: v.optional(v.string()),
+  updatedAt: v.optional(v.number()),
+  publishedAt: v.optional(v.number()),
+  archivedAt: v.optional(v.number()),
+};
+
+export const PublicCourseFields = {
+  ...sharedCourseFields,
+  enrolledCount: v.number(),
+};
+
+export const PublicCourseDocumentValue = v.object({
+  _id: v.id("courses"),
+  _creationTime: v.number(),
+  ...PublicCourseFields,
+});
+
+const publicEnrollmentFields = {
+  userId: v.string(),
+  userName: v.optional(v.string()),
+  userEmail: v.optional(v.string()),
+  userPhone: v.optional(v.string()),
+  courseId: v.id("courses"),
+  courseName: v.optional(v.string()),
+  enrollmentNumber: v.string(),
+  isGuestUser: v.optional(v.boolean()),
+  sessionType: v.optional(EnrollmentSessionType),
+  courseType: v.optional(CourseType),
+  internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
+  sessions: v.optional(v.number()),
+  isBogoFree: v.optional(v.boolean()),
+  bogoSourceCourseId: v.optional(v.id("courses")),
+  bogoOfferName: v.optional(v.string()),
+  listedPrice: v.optional(v.number()),
+  checkoutPrice: v.optional(v.number()),
+  amountPaid: v.optional(v.number()),
+  redemptionDiscountAmount: v.optional(v.number()),
+  couponCode: v.optional(v.string()),
+  mindPointsRedeemed: v.optional(v.number()),
+  registrationSource: v.optional(EnrollmentRegistrationSource),
+  status: v.optional(EnrollmentStatus),
+  statusReason: v.optional(v.string()),
+  cancelledAt: v.optional(v.number()),
+  transferredAt: v.optional(v.number()),
+  transferredToCourseId: v.optional(v.id("courses")),
+  lastConfirmationSentAt: v.optional(v.number()),
+};
+
+const enrollmentTableFields = {
+  ...publicEnrollmentFields,
+  cancelledByAdminId: v.optional(v.string()),
+  transferredByAdminId: v.optional(v.string()),
+};
+
+export const PublicEnrollmentFields = publicEnrollmentFields;
 
 // The schema is entirely optional.
 // You can delete this file (schema.ts) and the
@@ -54,63 +170,7 @@ export default defineSchema({
   numbers: defineTable({
     value: v.number(),
   }),
-  courses: defineTable({
-    name: v.string(),
-    description: v.optional(v.string()),
-    type: v.optional(CourseType),
-    code: v.string(),
-    price: v.number(),
-    offer: v.optional(CourseOfferValue),
-    bogo: v.optional(CourseBogoValue),
-    // Number of sessions for session-based offerings (e.g., therapy)
-    sessions: v.optional(v.number()),
-    capacity: v.number(),
-    enrolledUsers: v.array(v.string()),
-    startDate: v.string(),
-    endDate: v.string(),
-    startTime: v.string(),
-    endTime: v.string(),
-    daysOfWeek: v.array(v.string()),
-    content: v.string(),
-    reviews: v.array(v.id("reviews")),
-    duration: v.optional(v.string()),
-    prerequisites: v.optional(v.string()),
-    imageUrls: v.optional(v.array(v.string())),
-    modules: v.optional(
-      v.array(
-        v.object({
-          title: v.string(),
-          description: v.string(),
-        }),
-      ),
-    ),
-    learningOutcomes: v.optional(
-      v.array(
-        v.object({
-          icon: v.string(),
-          title: v.string(),
-        }),
-      ),
-    ),
-    allocation: v.optional(
-      v.array(
-        v.object({
-          topic: v.string(),
-          hours: v.number(),
-        }),
-      ),
-    ),
-    // Worksheet-specific fields
-    fileUrl: v.optional(v.string()), // UploadThing public URL for the PDF
-    worksheetDescription: v.optional(v.string()), // Detailed worksheet description
-    targetAudience: v.optional(v.array(v.string())), // "who is this worksheet for"
-    lifecycleStatus: v.optional(CourseLifecycleStatus),
-    createdByAdminId: v.optional(v.string()),
-    updatedByAdminId: v.optional(v.string()),
-    updatedAt: v.optional(v.number()),
-    publishedAt: v.optional(v.number()),
-    archivedAt: v.optional(v.number()),
-  })
+  courses: defineTable(courseTableFields)
     .index("by_name_and_type", ["name", "type"])
     .index("by_startDate", ["startDate"])
     .index("by_type", ["type"])
@@ -154,40 +214,7 @@ export default defineSchema({
     whatsappNumber: v.optional(v.string()), // WhatsApp phone number for manual communications
   }).index("by_clerkUserId", ["clerkUserId"]),
 
-  enrollments: defineTable({
-    userId: v.string(),
-    userName: v.optional(v.string()),
-    userEmail: v.optional(v.string()),
-    userPhone: v.optional(v.string()),
-    courseId: v.id("courses"),
-    courseName: v.optional(v.string()),
-    enrollmentNumber: v.string(),
-    isGuestUser: v.optional(v.boolean()),
-    sessionType: v.optional(
-      v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
-    ),
-    courseType: v.optional(CourseType),
-    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
-    sessions: v.optional(v.number()), // Number of sessions for therapy courses
-    isBogoFree: v.optional(v.boolean()),
-    bogoSourceCourseId: v.optional(v.id("courses")),
-    bogoOfferName: v.optional(v.string()),
-    listedPrice: v.optional(v.number()),
-    checkoutPrice: v.optional(v.number()),
-    amountPaid: v.optional(v.number()),
-    redemptionDiscountAmount: v.optional(v.number()),
-    couponCode: v.optional(v.string()),
-    mindPointsRedeemed: v.optional(v.number()),
-    registrationSource: v.optional(EnrollmentRegistrationSource),
-    status: v.optional(EnrollmentStatus),
-    statusReason: v.optional(v.string()),
-    cancelledAt: v.optional(v.number()),
-    cancelledByAdminId: v.optional(v.string()),
-    transferredAt: v.optional(v.number()),
-    transferredByAdminId: v.optional(v.string()),
-    transferredToCourseId: v.optional(v.id("courses")),
-    lastConfirmationSentAt: v.optional(v.number()),
-  })
+  enrollments: defineTable(enrollmentTableFields)
     .index("by_userId", ["userId"])
     .index("by_userId_and_status", ["userId", "status"])
     .index("by_userId_and_courseId", ["userId", "courseId"])

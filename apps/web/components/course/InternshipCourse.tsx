@@ -1,11 +1,11 @@
 import React from "react";
 
 import InternshipSection from "./internship-section";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 
 interface InternshipCourseProps {
-  course: Doc<"courses">;
-  variants?: Doc<"courses">[];
+  course: PublicCourse;
+  variants?: PublicCourse[];
   onVariantSelect?: (hours: 120 | 240) => void;
 }
 

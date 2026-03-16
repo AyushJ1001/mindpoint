@@ -1,12 +1,18 @@
 import { v } from "convex/values";
 import { query, mutation, action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type {
   CheckoutPricing,
   CheckoutPricingItem,
 } from "@mindpoint/domain/checkout";
+import { calculatePointsEarned } from "@mindpoint/domain/mind-points";
+import {
+  PublicCourseDocumentValue,
+  PublicEnrollmentFields,
+} from "./schema";
+import { pickPublicCourse } from "./_publicCourse";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -47,11 +53,6 @@ function extractInternshipPlanFromDuration(
   return null;
 }
 
-// Import the canonical points calculation function from lib/mind-points.ts
-// This ensures we use a single source of truth for points logic
-// Note: POINTS_EARN_CONFIG is also available from lib/mind-points.ts if needed
-import { calculatePointsEarned } from "../apps/web/lib/mind-points";
-
 // Helper function to award Mind Points after successful payment
 // Returns the number of points awarded (0 when no award occurs)
 // Only awards points for authenticated users (not guest users) and paid purchases (not BOGO free items)
@@ -73,7 +74,7 @@ async function awardMindPoints(
   try {
     const pointsEarned = calculatePointsEarned(course);
     if (pointsEarned > 0) {
-      await ctx.runMutation(api.mindPoints.awardPoints, {
+      await ctx.runMutation(internal.mindPoints.awardPoints, {
         clerkUserId,
         points: pointsEarned,
         description: `Earned ${pointsEarned} points for purchasing ${course.name}`,
@@ -1358,7 +1359,7 @@ export const handleCartCheckout = mutation({
             firstEnrollmentId: firstPaidEnrollmentId ?? undefined,
           });
 
-          await ctx.runMutation(api.mindPoints.awardPoints, {
+          await ctx.runMutation(internal.mindPoints.awardPoints, {
             clerkUserId: args.referrerClerkUserId!,
             points: totalPointsEarnedForOrder,
             description: `Referral bonus: your friend earned ${totalPointsEarnedForOrder} Mind Points`,
@@ -1599,18 +1600,42 @@ export const handleCartCheckout = mutation({
   },
 });
 
-// Get enrollments for a specific user
-// Optimized to use index and batch course fetches
 export const getUserEnrollments = query({
   args: {
-    userId: v.string(),
+    limit: v.optional(v.number()),
   },
+  returns: v.array(
+    v.object({
+      _id: v.id("enrollments"),
+      _creationTime: v.number(),
+      ...PublicEnrollmentFields,
+      course: v.union(PublicCourseDocumentValue, v.null()),
+    }),
+  ),
 
   handler: async (ctx, args) => {
+    const toPublicEnrollment = (enrollment: Doc<"enrollments">) => {
+      const {
+        cancelledByAdminId: _cancelledByAdminId,
+        transferredByAdminId: _transferredByAdminId,
+        ...publicFields
+      } = enrollment;
+
+      return publicFields;
+    };
+
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+    // Authenticated enrollments store the Clerk user ID, which Clerk also
+    // exposes as the JWT `sub` claim used by Convex auth.
+    const limit = Math.min(Math.max(args.limit ?? 100, 1), 200);
+
     const enrollments = await ctx.db
       .query("enrollments")
-      .withIndex("by_userId", (q) => q.eq("userId", args.userId))
-      .collect();
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .take(limit);
 
     // Batch fetch all courses at once to avoid N+1 queries
     const courseIds = enrollments.map((e) => e.courseId);
@@ -1626,10 +1651,14 @@ export const getUserEnrollments = query({
     );
 
     // Combine enrollments with courses
-    const enrollmentsWithCourses = enrollments.map((enrollment) => ({
-      ...enrollment,
-      course: courseMap.get(enrollment.courseId) ?? null,
-    }));
+    const enrollmentsWithCourses = enrollments.map((enrollment) => {
+      const course = courseMap.get(enrollment.courseId);
+
+      return {
+        ...toPublicEnrollment(enrollment),
+        course: course ? pickPublicCourse(course) : null,
+      };
+    });
 
     return enrollmentsWithCourses;
   },

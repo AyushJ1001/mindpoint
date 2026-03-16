@@ -24,7 +24,7 @@ import { useUser, useClerk } from "@clerk/clerk-react";
 import { handlePaymentSuccess } from "@/app/actions/payment";
 import { toast } from "sonner";
 import { WhatsAppModal } from "@/components/whatsapp-modal";
-import { useQuery, useMutation } from "convex/react";
+import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import {
   Dialog,
@@ -78,6 +78,7 @@ const CartContent = () => {
   const { Razorpay, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
   const { openSignIn } = useClerk();
+  const { isAuthenticated } = useConvexAuth();
 
   // Ensure hydration matches server render
   useEffect(() => {
@@ -93,9 +94,7 @@ const CartContent = () => {
   // Validate coupon code
   const couponValidation = useQuery(
     api.mindPoints.validateCoupon,
-    couponCode && user?.id
-      ? { code: couponCode, clerkUserId: user.id }
-      : "skip",
+    couponCode && isAuthenticated ? { code: couponCode } : "skip",
   );
 
   const markCouponUsed = useMutation(api.mindPoints.markCouponUsed);

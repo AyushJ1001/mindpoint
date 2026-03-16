@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { query, mutation } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 import {
   buildLoyaltySearchFields,
   loyaltySearchFieldsChanged,
@@ -9,18 +9,21 @@ import {
  * Get user's current Mind Points balance and summary
  */
 export const getUserPoints = query({
-  args: {
-    clerkUserId: v.string(),
-  },
+  args: {},
   returns: v.object({
     balance: v.number(),
     totalEarned: v.number(),
     totalRedeemed: v.number(),
   }),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     const pointsRecord = await ctx.db
       .query("mindPoints")
-      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", identity.subject))
       .first();
 
     if (!pointsRecord) {
@@ -44,7 +47,6 @@ export const getUserPoints = query({
  */
 export const getPointsHistory = query({
   args: {
-    clerkUserId: v.string(),
     limit: v.optional(v.number()),
   },
   returns: v.array(
@@ -61,9 +63,14 @@ export const getPointsHistory = query({
     }),
   ),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     const transactions = await ctx.db
       .query("pointsTransactions")
-      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", identity.subject))
       .order("desc")
       .take(args.limit || 50);
 
@@ -75,9 +82,7 @@ export const getPointsHistory = query({
  * Get user's active (unused) coupons
  */
 export const getUserCoupons = query({
-  args: {
-    clerkUserId: v.string(),
-  },
+  args: {},
   returns: v.array(
     v.object({
       _id: v.id("coupons"),
@@ -92,12 +97,17 @@ export const getUserCoupons = query({
       usedAt: v.optional(v.number()),
     }),
   ),
-  handler: async (ctx, args) => {
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     // Use composite index for better performance
     const coupons = await ctx.db
       .query("coupons")
       .withIndex("by_clerkUserId_and_isUsed", (q) =>
-        q.eq("clerkUserId", args.clerkUserId).eq("isUsed", false),
+        q.eq("clerkUserId", identity.subject).eq("isUsed", false),
       )
       .order("desc")
       .collect();
@@ -108,9 +118,9 @@ export const getUserCoupons = query({
 
 /**
  * Award points to a user after successful payment
- * This is called internally from checkout mutations
+ * This is server-only and should only be called from verified checkout flows.
  */
-export const awardPoints = mutation({
+export const awardPoints = internalMutation({
   args: {
     clerkUserId: v.string(),
     points: v.number(),
@@ -224,7 +234,6 @@ export const awardPoints = mutation({
  */
 export const redeemPoints = mutation({
   args: {
-    clerkUserId: v.string(),
     courseType: v.string(),
     pointsRequired: v.number(),
   },
@@ -236,6 +245,13 @@ export const redeemPoints = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
+    const clerkUserId = identity.subject;
+
     if (args.pointsRequired <= 0) {
       return { success: false, error: "Invalid points requirement" };
     }
@@ -243,7 +259,7 @@ export const redeemPoints = mutation({
     // Get user's points balance - reload immediately before checking to prevent race conditions
     const pointsRecord = await ctx.db
       .query("mindPoints")
-      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
+      .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", clerkUserId))
       .first();
 
     if (!pointsRecord) {
@@ -272,7 +288,7 @@ export const redeemPoints = mutation({
     // Create coupon
     const couponId = await ctx.db.insert("coupons", {
       code: couponCode,
-      clerkUserId: args.clerkUserId,
+      clerkUserId,
       courseType: args.courseType,
       discount: 100, // 100% off
       isUsed: false,
@@ -291,7 +307,7 @@ export const redeemPoints = mutation({
 
     // Create transaction record
     await ctx.db.insert("pointsTransactions", {
-      clerkUserId: args.clerkUserId,
+      clerkUserId,
       type: "redeem",
       points: -args.pointsRequired,
       description: `Redeemed ${args.pointsRequired} points for ${args.courseType}`,
@@ -314,7 +330,6 @@ export const redeemPoints = mutation({
 export const validateCoupon = query({
   args: {
     code: v.string(),
-    clerkUserId: v.optional(v.string()),
   },
   returns: v.union(
     v.object({
@@ -332,6 +347,11 @@ export const validateCoupon = query({
     }),
   ),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     const coupon = await ctx.db
       .query("coupons")
       .withIndex("by_code", (q) => q.eq("code", args.code))
@@ -348,8 +368,7 @@ export const validateCoupon = query({
       };
     }
 
-    // If clerkUserId is provided, verify it matches
-    if (args.clerkUserId && coupon.clerkUserId !== args.clerkUserId) {
+    if (coupon.clerkUserId !== identity.subject) {
       return {
         valid: false as const,
         error: "This coupon does not belong to your account",
@@ -380,6 +399,11 @@ export const markCouponUsed = mutation({
     error: v.optional(v.string()),
   }),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     const coupon = await ctx.db
       .query("coupons")
       .withIndex("by_code", (q) => q.eq("code", args.couponCode))
@@ -391,6 +415,13 @@ export const markCouponUsed = mutation({
 
     if (coupon.isUsed) {
       return { success: false, error: "Coupon already used" };
+    }
+
+    if (coupon.clerkUserId !== identity.subject) {
+      return {
+        success: false,
+        error: "Coupon does not belong to your account",
+      };
     }
 
     await ctx.db.patch(coupon._id, {
@@ -408,7 +439,6 @@ export const markCouponUsed = mutation({
  */
 export const getUserAccountSummary = query({
   args: {
-    clerkUserId: v.string(),
     historyLimit: v.optional(v.number()),
   },
   returns: v.object({
@@ -446,25 +476,30 @@ export const getUserAccountSummary = query({
     ),
   }),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     // Run all queries in parallel
     const [pointsRecord, history, coupons] = await Promise.all([
       ctx.db
         .query("mindPoints")
         .withIndex("by_clerkUserId", (q) =>
-          q.eq("clerkUserId", args.clerkUserId),
+          q.eq("clerkUserId", identity.subject),
         )
         .first(),
       ctx.db
         .query("pointsTransactions")
         .withIndex("by_clerkUserId", (q) =>
-          q.eq("clerkUserId", args.clerkUserId),
+          q.eq("clerkUserId", identity.subject),
         )
         .order("desc")
         .take(args.historyLimit || 20),
       ctx.db
         .query("coupons")
         .withIndex("by_clerkUserId_and_isUsed", (q) =>
-          q.eq("clerkUserId", args.clerkUserId).eq("isUsed", false),
+          q.eq("clerkUserId", identity.subject).eq("isUsed", false),
         )
         .order("desc")
         .collect(),

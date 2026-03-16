@@ -1,5 +1,5 @@
 import React from "react";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 import CertificateCourse from "./CertificateCourse";
 import InternshipCourse from "./InternshipCourse";
 import TherapyCourse from "./TherapyCourse";
@@ -20,8 +20,8 @@ import CommunitiesSection from "./communities-section";
 import VideoTestimonialsSection from "@/components/VideoTestimonialsSection";
 
 interface CourseTypeRendererProps {
-  course: Doc<"courses">;
-  variants?: Doc<"courses">[];
+  course: PublicCourse;
+  variants?: PublicCourse[];
   onVariantSelect?: (hours: 120 | 240) => void;
 }
 

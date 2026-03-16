@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useQuery, useMutation } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input";
 
 export function MindPointsTab() {
   const { user } = useUser();
+  const { isAuthenticated } = useConvexAuth();
   const [selectedRedemption, setSelectedRedemption] = useState<string | null>(
     null,
   );
@@ -26,7 +27,7 @@ export function MindPointsTab() {
   // Single batch query instead of 3 separate queries
   const accountSummary = useQuery(
     api.mindPoints.getUserAccountSummary,
-    user?.id ? { clerkUserId: user.id, historyLimit: 20 } : "skip",
+    isAuthenticated ? { historyLimit: 20 } : "skip",
   );
 
   const redeemPoints = useMutation(api.mindPoints.redeemPoints);
@@ -60,7 +61,6 @@ export function MindPointsTab() {
 
     try {
       const result = await redeemPoints({
-        clerkUserId: user.id,
         courseType,
         pointsRequired,
       });

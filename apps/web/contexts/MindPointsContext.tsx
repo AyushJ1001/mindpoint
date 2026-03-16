@@ -2,7 +2,7 @@
 
 import { createContext, useContext, ReactNode } from "react";
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 
 interface MindPointsData {
@@ -20,14 +20,18 @@ const MindPointsContext = createContext<MindPointsContextValue | null>(null);
 
 export function MindPointsProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
+  const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   const pointsData = useQuery(
     api.mindPoints.getUserPoints,
-    user?.id ? { clerkUserId: user.id } : "skip",
+    isAuthenticated ? {} : "skip",
   );
 
   const value: MindPointsContextValue = {
     pointsData: pointsData ?? undefined,
-    isLoading: pointsData === undefined && !!user?.id,
+    // Loading ends once the Convex auth handshake settles, even if auth fails.
+    isLoading:
+      !!user &&
+      (isConvexAuthLoading || (isAuthenticated && pointsData === undefined)),
   };
 
   return (
