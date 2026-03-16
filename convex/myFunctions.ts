@@ -7,6 +7,7 @@ import type {
   CheckoutPricing,
   CheckoutPricingItem,
 } from "@mindpoint/domain/checkout";
+import { calculatePointsEarned } from "@mindpoint/domain/mind-points";
 import {
   PublicCourseDocumentValue,
   PublicEnrollmentFields,
@@ -51,11 +52,6 @@ function extractInternshipPlanFromDuration(
 
   return null;
 }
-
-// Import the canonical points calculation function from lib/mind-points.ts
-// This ensures we use a single source of truth for points logic
-// Note: POINTS_EARN_CONFIG is also available from lib/mind-points.ts if needed
-import { calculatePointsEarned } from "../apps/web/lib/mind-points";
 
 // Helper function to award Mind Points after successful payment
 // Returns the number of points awarded (0 when no award occurs)

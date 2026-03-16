@@ -8,6 +8,7 @@
     "./cart": "./src/cart.ts",
     "./checkout": "./src/checkout.ts",
     "./forms": "./src/forms.ts",
+    "./mind-points": "./src/mind-points.ts",
     "./pricing": "./src/pricing.ts",
     "./referrals": "./src/referrals.ts",
     "./time": "./src/time.ts"

@@ -330,7 +330,6 @@ export const redeemPoints = mutation({
 export const validateCoupon = query({
   args: {
     code: v.string(),
-    clerkUserId: v.optional(v.string()),
   },
   returns: v.union(
     v.object({
@@ -348,6 +347,11 @@ export const validateCoupon = query({
     }),
   ),
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated");
+    }
+
     const coupon = await ctx.db
       .query("coupons")
       .withIndex("by_code", (q) => q.eq("code", args.code))
@@ -364,8 +368,7 @@ export const validateCoupon = query({
       };
     }
 
-    // If clerkUserId is provided, verify it matches
-    if (args.clerkUserId && coupon.clerkUserId !== args.clerkUserId) {
+    if (coupon.clerkUserId !== identity.subject) {
       return {
         valid: false as const,
         error: "This coupon does not belong to your account",
