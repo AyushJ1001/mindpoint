@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { CourseType, PublicCourseDocumentValue } from "./schema";
-import { pickPublicCourse } from "./publicCourse";
+import { pickPublicCourse, type PublicCourse } from "./_publicCourse";
 
 function isPublishedCourse(course: { lifecycleStatus?: "draft" | "published" | "archived" }) {
   return !course.lifecycleStatus || course.lifecycleStatus === "published";
@@ -240,13 +240,13 @@ export const getBogoCoursesByTypes = query({
   args: { courseTypes: v.array(CourseType) },
   returns: v.record(v.string(), v.array(PublicCourseDocumentValue)),
   handler: async (ctx, args) => {
-    const result: Record<string, any[]> = {};
-    
+    const result: Record<string, PublicCourse[]> = {};
+
     // Initialize all types with empty arrays
     for (const courseType of args.courseTypes) {
       result[courseType] = [];
     }
-    
+
     // Fetch BOGO courses for each type using index
     // Using Promise.all for parallel execution (though Convex queries are sequential)
     for (const courseType of args.courseTypes) {
@@ -256,7 +256,7 @@ export const getBogoCoursesByTypes = query({
         .filter((q) => q.eq(q.field("bogo.enabled"), true))
         .order("desc")
         .collect();
-      
+
       result[courseType] = courses
         .filter((course) => isPublishedCourse(course))
         .map((course) => pickPublicCourse(course));

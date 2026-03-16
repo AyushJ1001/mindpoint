@@ -11,7 +11,7 @@ import {
   PublicCourseDocumentValue,
   PublicEnrollmentFields,
 } from "./schema";
-import { pickPublicCourse } from "./publicCourse";
+import { pickPublicCourse } from "./_publicCourse";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
