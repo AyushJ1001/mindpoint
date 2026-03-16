@@ -31,19 +31,24 @@ import {
   FileText,
 } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
-import { Doc } from "@mindpoint/backend/data-model";
+import type {
+  CourseLike,
+  PublicCourse,
+  PublicCoursesByTypeResult,
+} from "@mindpoint/backend";
 import { Id } from "@mindpoint/backend/data-model";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
+import { getEnrolledCount } from "@/lib/course-enrollment";
 
 // Type for courses with sessions (therapy)
-interface TherapyCourse extends Doc<"courses"> {
+type TherapyCourse = CourseLike & {
   sessions?: number;
-}
+};
 
 // Type for courses with duration (internship)
-interface InternshipCourse extends Doc<"courses"> {
+type InternshipCourse = CourseLike & {
   duration?: string;
-}
+};
 import Image from "next/image";
 import {
   Select,
@@ -108,7 +113,7 @@ export const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
 };
 
 // Prefer explicit fields: `sessions` (number) or fallback to `duration` (string)
-const extractVariantLabel = (course: Doc<"courses">): string | null => {
+const extractVariantLabel = (course: CourseLike): string | null => {
   if (typeof (course as TherapyCourse).sessions === "number") {
     const count = (course as TherapyCourse).sessions ?? 0;
     return `${count} ${count === 1 ? "session" : "sessions"}`;
@@ -134,8 +139,8 @@ const CourseGroupCard = ({
   courses,
   bogoCourses,
 }: {
-  courses: Array<Doc<"courses">>;
-  bogoCourses?: Array<Doc<"courses">>;
+  courses: Array<PublicCourse>;
+  bogoCourses?: Array<PublicCourse>;
 }) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
@@ -244,8 +249,7 @@ const CourseGroupCard = ({
     // Check if course is out of stock
     const seatsLeft = Math.max(
       0,
-      (selectedCourse.capacity ?? 0) -
-        (selectedCourse.enrolledUsers?.length ?? 0),
+      (selectedCourse.capacity ?? 0) - getEnrolledCount(selectedCourse),
     );
     const isOutOfStock =
       (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
@@ -483,11 +487,11 @@ const CourseGroupCard = ({
             )}
           </div>
           {(() => {
-            const seatsLeft = Math.max(
-              0,
-              (selectedCourse.capacity ?? 0) -
-                (selectedCourse.enrolledUsers?.length ?? 0),
-            );
+              const seatsLeft = Math.max(
+                0,
+                (selectedCourse.capacity ?? 0) -
+                  getEnrolledCount(selectedCourse),
+              );
             const isOutOfStock =
               (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
@@ -535,8 +539,8 @@ const CourseCard = ({
   course,
   bogoCourses,
 }: {
-  course: Doc<"courses">;
-  bogoCourses?: Array<Doc<"courses">>;
+  course: PublicCourse;
+  bogoCourses?: Array<PublicCourse>;
 }) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
@@ -611,10 +615,10 @@ const CourseCard = ({
 
   const handleAddToCart = () => {
     // Check if course is out of stock
-    const seatsLeft = Math.max(
-      0,
-      (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
-    );
+  const seatsLeft = Math.max(
+    0,
+    (course.capacity ?? 0) - getEnrolledCount(course),
+  );
     const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
     if (isOutOfStock) {
@@ -726,7 +730,7 @@ const CourseCard = ({
           {(() => {
             const seatsLeft = Math.max(
               0,
-              (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+              (course.capacity ?? 0) - getEnrolledCount(course),
             );
             const isOutOfStock =
               (course.capacity ?? 0) === 0 || seatsLeft === 0;
@@ -813,11 +817,8 @@ interface CourseTypePageProps {
   title: string;
   description: string;
   iconName: keyof typeof iconMap;
-  coursesData: {
-    viewer: string | null;
-    courses: Array<Doc<"courses">>;
-  };
-  bogoCourses?: Array<Doc<"courses">>;
+  coursesData: PublicCoursesByTypeResult;
+  bogoCourses?: Array<PublicCourse>;
 }
 
 export default function CourseTypePage({
@@ -857,7 +858,7 @@ export default function CourseTypePage({
             <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
               {(() => {
                 // Group courses by name; if multiple with same name, render a grouped card with select
-                const nameToCourses = new Map<string, Array<Doc<"courses">>>();
+                const nameToCourses = new Map<string, Array<PublicCourse>>();
                 for (const course of coursesData.courses) {
                   const list = nameToCourses.get(course.name) ?? [];
                   list.push(course);

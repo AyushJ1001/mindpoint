@@ -1,10 +1,10 @@
 import React from "react";
 
 import CourseModulesSection from "./course-modules-section";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 
 interface CertificateCourseProps {
-  course: Doc<"courses">;
+  course: PublicCourse;
 }
 
 export default function CertificateCourse({ course }: CertificateCourseProps) {

@@ -1,4 +1,4 @@
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { CourseLike } from "@mindpoint/backend";
 
 // Points earned per course type
 export const POINTS_EARN_CONFIG = {
@@ -25,7 +25,7 @@ export const POINTS_REDEEM_CONFIG = {
 /**
  * Calculate points earned for a course based on its type
  */
-export function calculatePointsEarned(course: Doc<"courses">): number {
+export function calculatePointsEarned(course: CourseLike): number {
   if (!course.type) return 0;
 
   // Handle internship courses based on duration

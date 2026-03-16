@@ -1,18 +1,10 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { CourseType } from "./schema";
+import { CourseType, PublicCourseDocumentValue } from "./schema";
 import { pickPublicCourse } from "./publicCourse";
 
 function isPublishedCourse(course: { lifecycleStatus?: "draft" | "published" | "archived" }) {
   return !course.lifecycleStatus || course.lifecycleStatus === "published";
-}
-
-function toCatalogCourse(course: Parameters<typeof pickPublicCourse>[0]) {
-  return {
-    ...pickPublicCourse(course),
-    // Transitional compatibility for web seat-count callers; raw Clerk IDs stay hidden.
-    enrolledUsers: course.enrolledUsers.map(() => ""),
-  };
 }
 
 export const listCourses = query({
@@ -20,6 +12,7 @@ export const listCourses = query({
   args: {
     count: v.optional(v.number()),
   },
+  returns: v.array(PublicCourseDocumentValue),
 
   // Query implementation.
   handler: async (ctx, args) => {
@@ -34,7 +27,7 @@ export const listCourses = query({
       : await ctx.db.query("courses").order("desc").collect();
     return allCourses
       .filter((course) => isPublishedCourse(course))
-      .map((course) => toCatalogCourse(course));
+      .map((course) => pickPublicCourse(course));
   },
 });
 
@@ -44,6 +37,10 @@ export const listCoursesByType = query({
     type: CourseType,
     count: v.optional(v.number()),
   },
+  returns: v.object({
+    viewer: v.union(v.string(), v.null()),
+    courses: v.array(PublicCourseDocumentValue),
+  }),
 
   // Query implementation.
   handler: async (ctx, args) => {
@@ -60,9 +57,7 @@ export const listCoursesByType = query({
 
     return {
       viewer: (await ctx.auth.getUserIdentity())?.name ?? null,
-      courses: filteredCourses
-        .reverse()
-        .map((course) => toCatalogCourse(course)),
+      courses: filteredCourses.reverse().map((course) => pickPublicCourse(course)),
     };
   },
 });
@@ -70,16 +65,18 @@ export const listCoursesByType = query({
 // Fetch a single course by its id
 export const getCourseById = query({
   args: { id: v.id("courses") },
+  returns: v.union(PublicCourseDocumentValue, v.null()),
   handler: async (ctx, args) => {
     const course = await ctx.db.get(args.id);
     if (!course || !isPublishedCourse(course)) return null;
-    return toCatalogCourse(course);
+    return pickPublicCourse(course);
   },
 });
 
 // Fetch related variants for a given course: same name & type (e.g., sessions/duration variants)
 export const getRelatedVariants = query({
   args: { id: v.id("courses") },
+  returns: v.array(PublicCourseDocumentValue),
   handler: async (ctx, args) => {
     const base = await ctx.db.get(args.id);
     if (!base) return [];
@@ -96,7 +93,7 @@ export const getRelatedVariants = query({
       (a, b) =>
         (a.price ?? 0) - (b.price ?? 0) || a._creationTime - b._creationTime,
     );
-    return publishedVariants.map((course) => toCatalogCourse(course));
+    return publishedVariants.map((course) => pickPublicCourse(course));
   },
 });
 
@@ -221,6 +218,7 @@ export const deleteReview = mutation({
 // Note: Since bogo.enabled is a nested field, we use index for type and filter for bogo
 export const getBogoCoursesByType = query({
   args: { courseType: CourseType },
+  returns: v.array(PublicCourseDocumentValue),
   handler: async (ctx, args) => {
     const courses = await ctx.db
       .query("courses")
@@ -231,7 +229,7 @@ export const getBogoCoursesByType = query({
 
     return courses
       .filter((course) => isPublishedCourse(course))
-      .map((course) => toCatalogCourse(course));
+      .map((course) => pickPublicCourse(course));
   },
 });
 
@@ -240,7 +238,7 @@ export const getBogoCoursesByType = query({
 // Optimized to use indexes and parallel fetching
 export const getBogoCoursesByTypes = query({
   args: { courseTypes: v.array(CourseType) },
-  returns: v.record(v.string(), v.array(v.any())),
+  returns: v.record(v.string(), v.array(PublicCourseDocumentValue)),
   handler: async (ctx, args) => {
     const result: Record<string, any[]> = {};
     
@@ -261,7 +259,7 @@ export const getBogoCoursesByTypes = query({
       
       result[courseType] = courses
         .filter((course) => isPublishedCourse(course))
-        .map((course) => toCatalogCourse(course));
+        .map((course) => pickPublicCourse(course));
     }
 
     return result;

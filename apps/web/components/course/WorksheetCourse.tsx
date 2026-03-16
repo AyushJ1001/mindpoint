@@ -33,7 +33,7 @@ import {
 import StickyCTA from "@/components/course/sticky-cta";
 import ReviewsSection from "@/components/course/reviews-section";
 import TrustBar from "@/components/course/trust-bar";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 import {
   getOfferDetails,
   getCoursePrice,
@@ -55,7 +55,7 @@ function formatINR(value: number): string {
 }
 
 interface WorksheetCourseProps {
-  course: Doc<"courses">;
+  course: PublicCourse;
 }
 
 export default function WorksheetCourse({ course }: WorksheetCourseProps) {

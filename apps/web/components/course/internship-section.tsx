@@ -2,15 +2,15 @@
 
 import React, { useState, useMemo } from "react";
 import { CheckCircle } from "lucide-react";
-import { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 
 export default function Internship({
   internship,
   variants = [],
   onVariantSelect,
 }: {
-  internship: Doc<"courses">;
-  variants?: Doc<"courses">[];
+  internship: PublicCourse;
+  variants?: PublicCourse[];
   onVariantSelect?: (hours: 120 | 240) => void;
 }) {
   const [selectedHours, setSelectedHours] = useState<120 | 240>(120);
@@ -64,7 +64,7 @@ export default function Internship({
 
   // Helper function to render allocation breakdown
   const renderAllocationBreakdown = (
-    course: Doc<"courses">,
+    course: PublicCourse,
     colorClass: string,
   ) => {
     const allocation = course.allocation || [];

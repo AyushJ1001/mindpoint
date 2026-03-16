@@ -33,7 +33,7 @@ import {
 
 import CourseImageGallery from "@/components/course/gallery";
 import TrustBar from "@/components/course/trust-bar";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import { Gift } from "lucide-react";
@@ -107,13 +107,13 @@ function useScrollAnimation() {
   return { ref, isVisible } as const;
 }
 
-type CourseVariant = Doc<"courses">;
+type CourseVariant = PublicCourse;
 
 interface CourseHeroProps {
-  course: Doc<"courses">;
+  course: PublicCourse;
   variants?: CourseVariant[];
-  activeCourse: Doc<"courses">;
-  setActiveCourse: (course: Doc<"courses">) => void;
+  activeCourse: PublicCourse;
+  setActiveCourse: (course: PublicCourse) => void;
   hasValidOffer: boolean;
   offerDetails: OfferDetails | null;
   isOutOfStock: boolean;
@@ -122,9 +122,9 @@ interface CourseHeroProps {
   normalizedVariants: CourseVariant[];
   variantLabel: (v: CourseVariant) => string;
   handleVariantSelect: (val: string) => void;
-  handleIncreaseQuantity: (course: Doc<"courses">) => void;
-  handleDecreaseQuantity: (course: Doc<"courses">) => void;
-  handleBuyNow: (course: Doc<"courses">) => void;
+  handleIncreaseQuantity: (course: PublicCourse) => void;
+  handleDecreaseQuantity: (course: PublicCourse) => void;
+  handleBuyNow: (course: PublicCourse) => void;
   getCurrentQuantity: (courseId: string) => number;
   inCart: (courseId: string) => boolean;
   removeItem: (courseId: string) => void;

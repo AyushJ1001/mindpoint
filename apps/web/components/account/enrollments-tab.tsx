@@ -1,7 +1,7 @@
 "use client";
 
 import { useUser } from "@clerk/nextjs";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -9,9 +9,10 @@ import { Calendar, Clock, BookOpen } from "lucide-react";
 
 export function EnrollmentsTab() {
   const { user } = useUser();
+  const { isAuthenticated } = useConvexAuth();
   const enrollments = useQuery(
     api.myFunctions.getUserEnrollments,
-    user?.id ? {} : "skip",
+    isAuthenticated ? {} : "skip",
   );
 
   if (!user) {

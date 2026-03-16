@@ -2,11 +2,11 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Eye, MessageCircle, Users, Clock, Shield, Brain } from "lucide-react";
 import ChooseSupervisedPlan from "@/components/therapy/choose-supervised-plan";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { PublicCourse } from "@mindpoint/backend";
 
 interface SupervisedCourseProps {
-  course: Doc<"courses">;
-  variants?: Doc<"courses">[];
+  course: PublicCourse;
+  variants?: PublicCourse[];
 }
 
 export default function SupervisedCourse({

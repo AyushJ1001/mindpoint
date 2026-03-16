@@ -1616,38 +1616,15 @@ export const getUserEnrollments = query({
   ),
 
   handler: async (ctx) => {
-    const toPublicEnrollment = (enrollment: Doc<"enrollments">) => ({
-      _id: enrollment._id,
-      _creationTime: enrollment._creationTime,
-      userId: enrollment.userId,
-      userName: enrollment.userName,
-      userEmail: enrollment.userEmail,
-      userPhone: enrollment.userPhone,
-      courseId: enrollment.courseId,
-      courseName: enrollment.courseName,
-      enrollmentNumber: enrollment.enrollmentNumber,
-      isGuestUser: enrollment.isGuestUser,
-      sessionType: enrollment.sessionType,
-      courseType: enrollment.courseType,
-      internshipPlan: enrollment.internshipPlan,
-      sessions: enrollment.sessions,
-      isBogoFree: enrollment.isBogoFree,
-      bogoSourceCourseId: enrollment.bogoSourceCourseId,
-      bogoOfferName: enrollment.bogoOfferName,
-      listedPrice: enrollment.listedPrice,
-      checkoutPrice: enrollment.checkoutPrice,
-      amountPaid: enrollment.amountPaid,
-      redemptionDiscountAmount: enrollment.redemptionDiscountAmount,
-      couponCode: enrollment.couponCode,
-      mindPointsRedeemed: enrollment.mindPointsRedeemed,
-      registrationSource: enrollment.registrationSource,
-      status: enrollment.status,
-      statusReason: enrollment.statusReason,
-      cancelledAt: enrollment.cancelledAt,
-      transferredAt: enrollment.transferredAt,
-      transferredToCourseId: enrollment.transferredToCourseId,
-      lastConfirmationSentAt: enrollment.lastConfirmationSentAt,
-    });
+    const toPublicEnrollment = (enrollment: Doc<"enrollments">) => {
+      const {
+        cancelledByAdminId: _cancelledByAdminId,
+        transferredByAdminId: _transferredByAdminId,
+        ...publicFields
+      } = enrollment;
+
+      return publicFields;
+    };
 
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {

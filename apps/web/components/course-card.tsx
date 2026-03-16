@@ -8,12 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CourseImageCarousel } from "@/components/CourseTypePage";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
-import type { Doc } from "@mindpoint/backend/data-model";
+import type { CourseLike } from "@mindpoint/backend";
 import { useEffect, useState } from "react";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { Id } from "@mindpoint/backend/data-model";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import { Gift } from "lucide-react";
+import { getEnrolledCount } from "@/lib/course-enrollment";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -53,8 +54,8 @@ export function CourseCard({
   course,
   bogoCoursesByType,
 }: {
-  course: Doc<"courses">;
-  bogoCoursesByType?: Record<string, Doc<"courses">[]>;
+  course: CourseLike;
+  bogoCoursesByType?: Record<string, CourseLike[]>;
 }) {
   const { addItem, inCart } = useCart();
   const router = useRouter();
@@ -82,7 +83,7 @@ export function CourseCard({
     // Check if course is out of stock
     const seatsLeft = Math.max(
       0,
-      (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+      (course.capacity ?? 0) - getEnrolledCount(course),
     );
     const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
@@ -271,7 +272,7 @@ export function CourseCard({
         {(() => {
           const seatsLeft = Math.max(
             0,
-            (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+            (course.capacity ?? 0) - getEnrolledCount(course),
           );
           const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
@@ -315,8 +316,8 @@ export function UpcomingCourseCard({
   course,
   bogoCoursesByType,
 }: {
-  course: Doc<"courses">;
-  bogoCoursesByType?: Record<string, Doc<"courses">[]>;
+  course: CourseLike;
+  bogoCoursesByType?: Record<string, CourseLike[]>;
 }) {
   const { addItem, inCart } = useCart();
   const router = useRouter();
@@ -344,7 +345,7 @@ export function UpcomingCourseCard({
     // Check if course is out of stock
     const seatsLeft = Math.max(
       0,
-      (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+      (course.capacity ?? 0) - getEnrolledCount(course),
     );
     const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
@@ -552,7 +553,7 @@ export function UpcomingCourseCard({
           {(() => {
             const seatsLeft = Math.max(
               0,
-              (course.capacity ?? 0) - (course.enrolledUsers?.length ?? 0),
+              (course.capacity ?? 0) - getEnrolledCount(course),
             );
             const isOutOfStock =
               (course.capacity ?? 0) === 0 || seatsLeft === 0;
