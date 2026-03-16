@@ -118,7 +118,7 @@ export const getUserCoupons = query({
 
 /**
  * Award points to a user after successful payment
- * This is called internally from checkout mutations
+ * This is server-only and should only be called from verified checkout flows.
  */
 export const awardPoints = internalMutation({
   args: {

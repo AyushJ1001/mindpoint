@@ -20,6 +20,7 @@ export default function BrowseScreen() {
 }
 
 function BrowseCatalogScreen() {
+  // `BrowseScreen` only renders this branch when the Convex provider invariant holds.
   const courses = useQuery(api.courses.listCourses, { count: 24 });
   const courseCountLabel = useMemo(() => {
     if (!courses) {

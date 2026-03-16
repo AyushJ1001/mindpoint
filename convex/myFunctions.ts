@@ -1605,7 +1605,9 @@ export const handleCartCheckout = mutation({
 });
 
 export const getUserEnrollments = query({
-  args: {},
+  args: {
+    limit: v.optional(v.number()),
+  },
   returns: v.array(
     v.object({
       _id: v.id("enrollments"),
@@ -1615,7 +1617,7 @@ export const getUserEnrollments = query({
     }),
   ),
 
-  handler: async (ctx) => {
+  handler: async (ctx, args) => {
     const toPublicEnrollment = (enrollment: Doc<"enrollments">) => {
       const {
         cancelledByAdminId: _cancelledByAdminId,
@@ -1634,7 +1636,7 @@ export const getUserEnrollments = query({
     const enrollments = await ctx.db
       .query("enrollments")
       .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
-      .collect();
+      .take(args.limit ?? 50);
 
     // Batch fetch all courses at once to avoid N+1 queries
     const courseIds = enrollments.map((e) => e.courseId);

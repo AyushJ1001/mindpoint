@@ -16,12 +16,17 @@ export const listCourses = query({
 
   // Query implementation.
   handler: async (ctx, args) => {
-    const allCourses = await ctx.db.query("courses").order("desc").collect();
+    const limit = Math.max(1, args.count ?? 1000);
+    const allCourses = await ctx.db
+      .query("courses")
+      .order("desc")
+      .take(Math.min(limit * 4, 1000));
     const publishedCourses = allCourses
       .filter((course) => isPublishedCourse(course))
+      .slice(0, limit)
       .map((course) => pickPublicCourse(course));
 
-    return args.count ? publishedCourses.slice(0, args.count) : publishedCourses;
+    return publishedCourses;
   },
 });
 
