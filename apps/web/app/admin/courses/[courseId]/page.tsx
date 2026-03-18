@@ -76,18 +76,24 @@ export default function AdminEditCoursePage() {
         description="Update metadata, offers, BOGO, lifecycle, and assets."
         actions={
           <>
-            <Button variant="outline" onClick={() => runTransition("draft")}>
+            <Button
+              variant="outline"
+              onClick={() => void runTransition("draft")}
+              disabled={hasUnsavedChanges}
+            >
               Move to Draft
             </Button>
             <Button
               variant="outline"
-              onClick={() => runTransition("published")}
+              onClick={() => void runTransition("published")}
+              disabled={hasUnsavedChanges}
             >
               Publish
             </Button>
             <Button
               variant="destructive"
-              onClick={() => runTransition("archived")}
+              onClick={() => void runTransition("archived")}
+              disabled={hasUnsavedChanges}
             >
               Archive
             </Button>

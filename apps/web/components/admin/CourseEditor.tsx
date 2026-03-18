@@ -260,7 +260,7 @@ export function CourseEditor({
     : "new";
   const initialStateSnapshot = useMemo(
     () => JSON.stringify(toInitialState(course)),
-    [course, courseVersion],
+    [course],
   );
 
   const campaigns = useQuery(api.adminOffers.listCampaigns, {

@@ -6,7 +6,9 @@ export function getUserFacingErrorMessage(
     return fallback;
   }
 
-  const uncaughtMatch = error.message.match(/Uncaught Error:\s*([^\n]+)/);
+  const uncaughtMatch = error.message.match(
+    /Uncaught (?:Convex)?Error:\s*([^\n]+)/,
+  );
   if (uncaughtMatch?.[1]) {
     return uncaughtMatch[1].trim();
   }
