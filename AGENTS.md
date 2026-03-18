@@ -11,7 +11,7 @@
 
 ## Build, Test, and Development Commands
 
-- Install dependencies with `bun install` after syncing `.env.local` (see `setup-env.sh` for required keys).
+- Install dependencies with `bun install` after syncing `.env` (see `setup-env.sh` for required keys).
 - `bun dev` launches Next.js and Convex dev servers in parallel; open <http://localhost:3000>.
 - `bun build` compiles the production bundle; `bun start` serves it.
 - `bun lint` applies ESLint’s Next.js rules; `bun type-check` runs `tsc --noEmit`.
