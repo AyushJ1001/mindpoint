@@ -758,7 +758,10 @@ export function CourseEditor({
             </div>
             <p className="text-sm text-slate-600">{saveStateDescription}</p>
           </div>
-          <Button onClick={() => void handleSave()} disabled={isSaving}>
+          <Button
+            onClick={() => void handleSave()}
+            disabled={isSaving || (!!course && !isDirty)}
+          >
             {isSaving ? "Saving..." : "Save Course"}
           </Button>
         </div>

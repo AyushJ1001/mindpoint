@@ -14,7 +14,7 @@ export function getUserFacingErrorMessage(
   }
 
   const validationMatch = error.message.match(
-    /ArgumentValidationError:\s*([^\n]+)/,
+    /ArgumentValidationError:\s*([\s\S]+?)(?=\n\n|\[CONVEX|\[Request ID:|$)/,
   );
   if (validationMatch?.[1]) {
     return validationMatch[1].trim();
