@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { UploadDropzone } from "@/lib/uploadthing";
+import { getUserFacingErrorMessage } from "@/lib/convex-error";
 
 type CourseLifecycleStatus = "draft" | "published" | "archived";
 type CourseType =
@@ -243,9 +244,11 @@ function toInitialState(course?: Doc<"courses">): CourseFormState {
 export function CourseEditor({
   course,
   onSaved,
+  onDirtyChange,
 }: {
   course?: Doc<"courses">;
   onSaved?: (courseId: string) => void;
+  onDirtyChange?: (isDirty: boolean) => void;
 }) {
   const [state, setState] = useState<CourseFormState>(() =>
     toInitialState(course),
@@ -255,6 +258,10 @@ export function CourseEditor({
   const courseVersion = course
     ? `${course._id}:${course.updatedAt ?? course._creationTime}`
     : "new";
+  const initialStateSnapshot = useMemo(
+    () => JSON.stringify(toInitialState(course)),
+    [course, courseVersion],
+  );
 
   const campaigns = useQuery(api.adminOffers.listCampaigns, {
     includeArchived: false,
@@ -343,6 +350,25 @@ export function CourseEditor({
       ),
     [campaigns, selectedCampaignId],
   );
+
+  const isDirty = useMemo(
+    () => JSON.stringify(state) !== initialStateSnapshot,
+    [initialStateSnapshot, state],
+  );
+  const saveStateLabel = !course
+    ? "New draft"
+    : isDirty
+      ? "Unsaved changes"
+      : "All changes saved";
+  const saveStateDescription = !course
+    ? "Fill out the form and save to create this course."
+    : isDirty
+      ? "Save the course before using Publish, Move to Draft, or Archive."
+      : "Lifecycle actions use the last saved version of this course.";
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
 
   const updateLearningOutcome = (
     index: number,
@@ -705,9 +731,7 @@ export function CourseEditor({
       }
     } catch (error) {
       console.error(error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to save course",
-      );
+      toast.error(getUserFacingErrorMessage(error, "Failed to save course"));
     } finally {
       setIsSaving(false);
     }
@@ -715,6 +739,31 @@ export function CourseEditor({
 
   return (
     <div className="space-y-6">
+      <div className="sticky top-4 z-20 rounded-lg border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur">
+        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div className="space-y-1">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge
+                variant="outline"
+                className={
+                  !course
+                    ? "border-sky-300 bg-sky-50 text-sky-800"
+                    : isDirty
+                      ? "border-amber-300 bg-amber-50 text-amber-800"
+                      : "border-emerald-300 bg-emerald-50 text-emerald-800"
+                }
+              >
+                {saveStateLabel}
+              </Badge>
+            </div>
+            <p className="text-sm text-slate-600">{saveStateDescription}</p>
+          </div>
+          <Button onClick={() => void handleSave()} disabled={isSaving}>
+            {isSaving ? "Saving..." : "Save Course"}
+          </Button>
+        </div>
+      </div>
+
       <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-2 md:col-span-2">
           <Label>Course Name</Label>
@@ -1398,7 +1447,7 @@ export function CourseEditor({
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving}>
+        <Button onClick={() => void handleSave()} disabled={isSaving}>
           {isSaving ? "Saving..." : "Save Course"}
         </Button>
       </div>

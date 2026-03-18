@@ -14,6 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { showRupees } from "@/lib/utils";
+import { getUserFacingErrorMessage } from "@/lib/convex-error";
 
 export default function AdminEditCoursePage() {
   const params = useParams<{ courseId: string }>();
@@ -22,6 +23,7 @@ export default function AdminEditCoursePage() {
   const [registrantStatus, setRegistrantStatus] = useState<
     "all" | "active" | "cancelled" | "transferred"
   >("all");
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const course = useQuery(api.adminCourses.getCourseById, { courseId });
   const transition = useMutation(api.adminCourses.transitionCourseLifecycle);
@@ -33,11 +35,20 @@ export default function AdminEditCoursePage() {
   });
 
   const runTransition = async (status: "draft" | "published" | "archived") => {
+    if (hasUnsavedChanges) {
+      toast.error(
+        "You have unsaved changes. Save the course before changing draft, publish, or archive state.",
+      );
+      return;
+    }
+
     try {
       await transition({ courseId, lifecycleStatus: status });
       toast.success(`Course moved to ${status}`);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Transition failed");
+      toast.error(
+        getUserFacingErrorMessage(error, "Failed to change course lifecycle"),
+      );
     }
   };
 
@@ -143,7 +154,11 @@ export default function AdminEditCoursePage() {
         </Card>
       </div>
 
-      <CourseEditor key={editorKey} course={course} />
+      <CourseEditor
+        key={editorKey}
+        course={course}
+        onDirtyChange={setHasUnsavedChanges}
+      />
 
       <Card>
         <CardHeader>
