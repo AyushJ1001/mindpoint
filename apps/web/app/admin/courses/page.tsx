@@ -11,7 +11,6 @@ import { Badge } from "@/components/ui/badge";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -127,6 +126,9 @@ export default function AdminCoursesPage() {
         courseId: pendingTransition.courseId,
         lifecycleStatus: pendingTransition.nextStatus,
       });
+      toast.success(
+        `"${pendingTransition.courseName}" moved to ${pendingTransition.nextStatus}`,
+      );
       setPendingTransition(null);
     } catch (error) {
       toast.error(
@@ -447,12 +449,12 @@ export default function AdminCoursesPage() {
             <AlertDialogCancel disabled={isTransitioning}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction
+            <Button
               disabled={isTransitioning}
               onClick={() => void confirmTransition()}
             >
               {isTransitioning ? "Updating..." : "Confirm"}
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
