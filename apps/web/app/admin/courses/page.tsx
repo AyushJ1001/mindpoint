@@ -2,14 +2,27 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
+import type { Id } from "@mindpoint/backend/data-model";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { downloadCsv, toCsv } from "@/lib/csv";
 import { isBogoActive, isDiscountActive, showRupees } from "@/lib/utils";
+import { getUserFacingErrorMessage } from "@/lib/convex-error";
+import { toast } from "sonner";
 
 type CourseTypeFilter =
   | "all"
@@ -46,6 +59,13 @@ export default function AdminCoursesPage() {
   const [courseType, setCourseType] = useState<CourseTypeFilter>("all");
   const [view, setView] = useState<"catalog" | "offers">("catalog");
   const [offerFilter, setOfferFilter] = useState<OfferFilter>("all");
+  const [pendingTransition, setPendingTransition] = useState<{
+    courseId: Id<"courses">;
+    courseName: string;
+    currentStatus: "draft" | "published" | "archived";
+    nextStatus: "draft" | "published" | "archived";
+  } | null>(null);
+  const [isTransitioning, setIsTransitioning] = useState(false);
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -53,6 +73,9 @@ export default function AdminCoursesPage() {
     type: courseType === "all" ? undefined : courseType,
     limit: 500,
   });
+  const transitionCourse = useMutation(
+    api.adminCourses.transitionCourseLifecycle,
+  );
 
   const rows = useMemo(() => courses ?? [], [courses]);
 
@@ -94,6 +117,25 @@ export default function AdminCoursesPage() {
       }),
     [offerFilter, rows],
   );
+
+  const confirmTransition = async () => {
+    if (!pendingTransition) return;
+
+    try {
+      setIsTransitioning(true);
+      await transitionCourse({
+        courseId: pendingTransition.courseId,
+        lifecycleStatus: pendingTransition.nextStatus,
+      });
+      setPendingTransition(null);
+    } catch (error) {
+      toast.error(
+        getUserFacingErrorMessage(error, "Failed to change course lifecycle"),
+      );
+    } finally {
+      setIsTransitioning(false);
+    }
+  };
 
   return (
     <div>
@@ -241,9 +283,43 @@ export default function AdminCoursesPage() {
                       {course.startDate} - {course.endDate}
                     </td>
                     <td className="px-3 py-2">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href={`/admin/courses/${course._id}`}>Open</Link>
-                      </Button>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/admin/courses/${course._id}`}>
+                            Open
+                          </Link>
+                        </Button>
+                        {(["draft", "published", "archived"] as const).map(
+                          (nextStatus) => {
+                            const currentStatus =
+                              course.lifecycleStatus || "published";
+                            const isCurrent = currentStatus === nextStatus;
+
+                            return (
+                              <Button
+                                key={nextStatus}
+                                variant={isCurrent ? "secondary" : "ghost"}
+                                size="sm"
+                                disabled={isTransitioning || isCurrent}
+                                onClick={() =>
+                                  setPendingTransition({
+                                    courseId: course._id,
+                                    courseName: course.name,
+                                    currentStatus,
+                                    nextStatus,
+                                  })
+                                }
+                              >
+                                {nextStatus === "published"
+                                  ? "Publish"
+                                  : nextStatus === "archived"
+                                    ? "Archive"
+                                    : "Draft"}
+                              </Button>
+                            );
+                          },
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -349,6 +425,37 @@ export default function AdminCoursesPage() {
           </table>
         </div>
       )}
+
+      <AlertDialog
+        open={pendingTransition !== null}
+        onOpenChange={(open) => {
+          if (!open && !isTransitioning) {
+            setPendingTransition(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Change course lifecycle?</AlertDialogTitle>
+            <AlertDialogDescription>
+              {pendingTransition
+                ? `Move "${pendingTransition.courseName}" from ${pendingTransition.currentStatus} to ${pendingTransition.nextStatus}?`
+                : ""}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isTransitioning}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              disabled={isTransitioning}
+              onClick={() => void confirmTransition()}
+            >
+              {isTransitioning ? "Updating..." : "Confirm"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

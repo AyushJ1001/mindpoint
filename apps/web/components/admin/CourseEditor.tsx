@@ -253,15 +253,14 @@ export function CourseEditor({
   const [state, setState] = useState<CourseFormState>(() =>
     toInitialState(course),
   );
+  const [initialSnapshot, setInitialSnapshot] = useState(() =>
+    JSON.stringify(toInitialState(course)),
+  );
   const [isSaving, setIsSaving] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState("");
   const courseVersion = course
     ? `${course._id}:${course.updatedAt ?? course._creationTime}`
     : "new";
-  const initialStateSnapshot = useMemo(
-    () => JSON.stringify(toInitialState(course)),
-    [course],
-  );
 
   const campaigns = useQuery(api.adminOffers.listCampaigns, {
     includeArchived: false,
@@ -273,7 +272,9 @@ export function CourseEditor({
   const updateCourse = useMutation(api.adminCourses.updateCourse);
 
   useEffect(() => {
-    setState(toInitialState(course));
+    const nextInitialState = toInitialState(course);
+    setState(nextInitialState);
+    setInitialSnapshot(JSON.stringify(nextInitialState));
     setSelectedCampaignId("");
   }, [course, courseVersion]);
 
@@ -352,8 +353,8 @@ export function CourseEditor({
   );
 
   const isDirty = useMemo(
-    () => JSON.stringify(state) !== initialStateSnapshot,
-    [initialStateSnapshot, state],
+    () => JSON.stringify(state) !== initialSnapshot,
+    [initialSnapshot, state],
   );
   const saveStateLabel = !course
     ? "New draft"
@@ -717,6 +718,7 @@ export function CourseEditor({
           courseId: course._id,
           patch,
         });
+        setInitialSnapshot(JSON.stringify(state));
         toast.success("Course updated");
         onSaved?.(course._id);
       } else {
@@ -726,6 +728,7 @@ export function CourseEditor({
           lifecycleStatus: state.lifecycleStatus,
           data: patch,
         });
+        setInitialSnapshot(JSON.stringify(state));
         toast.success("Course created");
         onSaved?.(courseId);
       }
@@ -1450,7 +1453,10 @@ export function CourseEditor({
       </div>
 
       <div className="flex justify-end">
-        <Button onClick={() => void handleSave()} disabled={isSaving}>
+        <Button
+          onClick={() => void handleSave()}
+          disabled={isSaving || (!!course && !isDirty)}
+        >
           {isSaving ? "Saving..." : "Save Course"}
         </Button>
       </div>
