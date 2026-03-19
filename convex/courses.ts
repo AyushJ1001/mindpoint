@@ -10,11 +10,13 @@ function isPublishedCourse(course: {
   return !course.lifecycleStatus || course.lifecycleStatus === "published";
 }
 
-function normalizeReviewRating(value: number): number {
+function normalizePublicReviewRating(value: number): number {
   if (!Number.isFinite(value)) {
     throw new Error("Rating must be a valid number");
   }
 
+  // The public review form uses interactive half-star input, so public
+  // mutations accept the same 0.5-step range as admin-managed reviews.
   const rounded = Math.round(value * 2) / 2;
   return Math.max(0.5, Math.min(5, rounded));
 }
@@ -156,7 +158,7 @@ export const createReview = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const rating = normalizeReviewRating(args.rating);
+    const rating = normalizePublicReviewRating(args.rating);
     // Ensure course exists
     const course = await ctx.db.get(args.courseId);
     if (!course) throw new Error("Course not found");
@@ -174,15 +176,9 @@ export const createReview = mutation({
       isEdited: false,
     });
 
-    const existingIdStrings = new Set(
-      (course.reviews ?? []).map((id) => String(id)),
-    );
-
-    if (!existingIdStrings.has(String(reviewId))) {
-      await ctx.db.patch(args.courseId, {
-        reviews: [...(course.reviews ?? []), reviewId],
-      });
-    }
+    await ctx.db.patch(args.courseId, {
+      reviews: [...(course.reviews ?? []), reviewId],
+    });
 
     return reviewId;
   },
@@ -196,7 +192,7 @@ export const updateReview = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    const rating = normalizeReviewRating(args.rating);
+    const rating = normalizePublicReviewRating(args.rating);
 
     // Get the review
     const review = await ctx.db.get(args.reviewId);

@@ -263,7 +263,7 @@ export const updateReview = mutation({
 
     await ctx.db.patch(args.reviewId, patch);
 
-    let previousCourseReferenceRemoved = true;
+    let previousCourseReferenceRemoved: boolean | null = null;
     if (String(existing.course) !== String(args.courseId)) {
       previousCourseReferenceRemoved = await syncCourseReviewReference(ctx, {
         courseId: existing.course,
