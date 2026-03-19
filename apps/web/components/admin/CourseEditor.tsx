@@ -1508,7 +1508,7 @@ export function CourseEditor({
           </div>
           {offerWindowPreview ? (
             <p className="text-xs text-slate-500">
-              Offer window: {offerWindowPreview} ({timeZoneLabel})
+              Offer window: {offerWindowPreview}
             </p>
           ) : null}
         </div>
@@ -1550,7 +1550,7 @@ export function CourseEditor({
           </div>
           {bogoWindowPreview ? (
             <p className="text-xs text-slate-500">
-              BOGO window: {bogoWindowPreview} ({timeZoneLabel})
+              BOGO window: {bogoWindowPreview}
             </p>
           ) : null}
         </div>

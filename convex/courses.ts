@@ -170,8 +170,9 @@ export const createReview = mutation({
     const existingReview = identity
       ? await ctx.db
           .query("reviews")
-          .withIndex("by_course", (q) => q.eq("course", args.courseId))
-          .filter((q) => q.eq(q.field("userId"), userId))
+          .withIndex("by_course_and_user", (q) =>
+            q.eq("course", args.courseId).eq("userId", userId),
+          )
           .first()
       : null;
     if (existingReview) {

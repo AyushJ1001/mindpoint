@@ -92,13 +92,15 @@ export const listReviews = query({
       return course;
     };
 
+    const dbOrder = args.sortBy === "oldest" ? "asc" : "desc";
+
     let rows = args.courseId
       ? await ctx.db
           .query("reviews")
           .withIndex("by_course", (q) => q.eq("course", args.courseId!))
-          .order("desc")
+          .order(dbOrder)
           .take(scanLimit)
-      : await ctx.db.query("reviews").order("desc").take(scanLimit);
+      : await ctx.db.query("reviews").order(dbOrder).take(scanLimit);
     const hitScanLimit = rows.length === scanLimit;
 
     if (typeof args.rating === "number") {

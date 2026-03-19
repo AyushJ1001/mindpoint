@@ -104,7 +104,7 @@ export default function AdminOffersPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [campaignActionId, setCampaignActionId] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const { timeZoneLabel, formatDate, formatTimestamp } = useAdminTimeZone();
+  const { formatDate, formatTimestamp } = useAdminTimeZone();
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -630,7 +630,7 @@ export default function AdminOffersPage() {
                 </div>
                 {offerWindowPreview ? (
                   <p className="text-xs text-slate-500">
-                    Offer window: {offerWindowPreview} ({timeZoneLabel})
+                    Offer window: {offerWindowPreview}
                   </p>
                 ) : null}
               </div>
@@ -665,7 +665,7 @@ export default function AdminOffersPage() {
                 </div>
                 {bogoWindowPreview ? (
                   <p className="text-xs text-slate-500">
-                    BOGO window: {bogoWindowPreview} ({timeZoneLabel})
+                    BOGO window: {bogoWindowPreview}
                   </p>
                 ) : null}
               </div>

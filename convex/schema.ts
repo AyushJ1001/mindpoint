@@ -200,7 +200,9 @@ export default defineSchema({
     content: v.string(),
     course: v.id("courses"),
     isEdited: v.optional(v.boolean()),
-  }).index("by_course", ["course"]),
+  })
+    .index("by_course", ["course"])
+    .index("by_course_and_user", ["course", "userId"]),
 
   guestUsers: defineTable({
     name: v.string(),
