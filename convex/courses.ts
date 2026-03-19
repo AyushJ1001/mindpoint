@@ -10,6 +10,15 @@ function isPublishedCourse(course: {
   return !course.lifecycleStatus || course.lifecycleStatus === "published";
 }
 
+function normalizeReviewRating(value: number): number {
+  if (!Number.isFinite(value)) {
+    throw new Error("Rating must be a valid number");
+  }
+
+  const rounded = Math.round(value * 2) / 2;
+  return Math.max(0.5, Math.min(5, rounded));
+}
+
 export const listCourses = query({
   // Validators for arguments.
   args: {
@@ -147,8 +156,7 @@ export const createReview = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    // Basic validation
-    const rating = Math.max(1, Math.min(5, Math.round(args.rating)));
+    const rating = normalizeReviewRating(args.rating);
     // Ensure course exists
     const course = await ctx.db.get(args.courseId);
     if (!course) throw new Error("Course not found");
@@ -188,8 +196,7 @@ export const updateReview = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    // Basic validation
-    const rating = Math.max(1, Math.min(5, Math.round(args.rating)));
+    const rating = normalizeReviewRating(args.rating);
 
     // Get the review
     const review = await ctx.db.get(args.reviewId);

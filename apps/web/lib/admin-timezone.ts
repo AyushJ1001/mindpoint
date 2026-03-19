@@ -22,21 +22,28 @@ export function isSupportedAdminTimeZone(
 export function resolveDefaultAdminTimeZone(): AdminTimeZoneOption {
   if (typeof Intl !== "undefined") {
     const detected = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    if (detected === "Asia/Kolkata") {
-      return "Asia/Kolkata";
+    if (isSupportedAdminTimeZone(detected)) {
+      return detected;
     }
-    if (
-      detected === "America/Chicago" ||
-      detected === "America/Winnipeg" ||
-      detected === "America/Matamoros"
-    ) {
-      return "America/Chicago";
-    }
-    if (
-      detected === "America/New_York" ||
-      detected === "America/Detroit" ||
-      detected === "America/Indiana/Indianapolis"
-    ) {
+
+    try {
+      const now = new Date();
+      const detectedOffset = getTimeZoneOffsetMinutes(detected, now);
+      let nearestOption: AdminTimeZoneOption = "America/New_York";
+      let smallestDifference = Number.POSITIVE_INFINITY;
+
+      for (const option of ADMIN_TIME_ZONE_OPTIONS) {
+        const optionOffset = getTimeZoneOffsetMinutes(option.value, now);
+        const difference = Math.abs(optionOffset - detectedOffset);
+
+        if (difference < smallestDifference) {
+          smallestDifference = difference;
+          nearestOption = option.value;
+        }
+      }
+
+      return nearestOption;
+    } catch {
       return "America/New_York";
     }
   }
