@@ -14,6 +14,7 @@ import {
 type AdminTimeZoneContextValue = {
   timeZone: string;
   timeZoneLabel: string;
+  isHydrated: boolean;
   setTimeZone: (value: string) => void;
   formatTimestamp: (value: number | string | Date) => string;
   formatDate: (value?: string) => string | null;
@@ -30,6 +31,7 @@ export function AdminTimeZoneProvider({
   children: React.ReactNode;
 }) {
   const [timeZone, setTimeZoneState] = useState<string>("America/New_York");
+  const [isHydrated, setIsHydrated] = useState(false);
 
   useEffect(() => {
     const stored = window.localStorage.getItem(ADMIN_TIME_ZONE_STORAGE_KEY);
@@ -38,12 +40,14 @@ export function AdminTimeZoneProvider({
         ? stored
         : resolveDefaultAdminTimeZone(),
     );
+    setIsHydrated(true);
   }, []);
 
   const value = useMemo<AdminTimeZoneContextValue>(
     () => ({
       timeZone,
       timeZoneLabel: getAdminTimeZoneLabel(timeZone),
+      isHydrated,
       setTimeZone: (nextTimeZone) => {
         if (!isSupportedAdminTimeZone(nextTimeZone)) {
           return;
@@ -58,7 +62,7 @@ export function AdminTimeZoneProvider({
       formatDateTime: (dateValue, timeValue) =>
         formatPlainDateTimeForAdmin(dateValue, timeValue, timeZone),
     }),
-    [timeZone],
+    [isHydrated, timeZone],
   );
 
   return (

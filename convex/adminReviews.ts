@@ -155,7 +155,7 @@ export const listReviews = query({
     }
 
     const limitedRows = rows.slice(0, limit);
-    const hasMore = hitScanLimit;
+    const hasMore = hitScanLimit && rows.length >= limit;
 
     return {
       reviews: await Promise.all(

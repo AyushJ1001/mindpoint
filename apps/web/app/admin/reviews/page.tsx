@@ -34,6 +34,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { getUserFacingErrorMessage } from "@/lib/convex-error";
 
+export const dynamic = "force-dynamic";
+
 type ReviewRow = {
   _id: Id<"reviews">;
   _creationTime: number;

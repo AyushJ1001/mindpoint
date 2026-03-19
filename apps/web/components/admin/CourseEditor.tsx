@@ -266,9 +266,10 @@ export function CourseEditor({
   const courseVersion = course
     ? `${course._id}:${course.updatedAt ?? course._creationTime}`
     : "new";
-  const { timeZone, timeZoneLabel, formatDate, formatDateTime } =
+  const { timeZone, timeZoneLabel, formatDate, formatDateTime, isHydrated } =
     useAdminTimeZone();
   const previousTimeZoneRef = useRef(timeZone);
+  const hasHydratedTimeZoneRef = useRef(false);
 
   const campaigns = useQuery(api.adminOffers.listCampaigns, {
     includeArchived: false,
@@ -287,6 +288,16 @@ export function CourseEditor({
   }, [course, courseVersion]);
 
   useEffect(() => {
+    if (!isHydrated) {
+      return;
+    }
+
+    if (!hasHydratedTimeZoneRef.current) {
+      previousTimeZoneRef.current = timeZone;
+      hasHydratedTimeZoneRef.current = true;
+      return;
+    }
+
     const previousTimeZone = previousTimeZoneRef.current;
     if (previousTimeZone === timeZone) {
       return;
@@ -321,7 +332,7 @@ export function CourseEditor({
 
       return nextState;
     });
-  }, [timeZone]);
+  }, [isHydrated, timeZone]);
 
   const isWorksheet = state.type === "worksheet";
   const isInternship = state.type === "internship";
