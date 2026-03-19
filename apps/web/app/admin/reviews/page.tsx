@@ -98,13 +98,19 @@ export default function AdminReviewsPage() {
     sortBy: "name",
     sortOrder: "asc",
   }) as Doc<"courses">[] | undefined;
+  const courseOptions = useMemo(() => courses ?? [], [courses]);
+  const knownCourseIds = useMemo(
+    () => new Set(courseOptions.map((course) => String(course._id))),
+    [courseOptions],
+  );
+  const selectedCourseIdValue =
+    selectedCourseId !== "all" && knownCourseIds.has(selectedCourseId)
+      ? (selectedCourseId as Id<"courses">)
+      : undefined;
 
   const reviewsResult = useQuery(api.adminReviews.listReviews, {
     search: search || undefined,
-    courseId:
-      selectedCourseId !== "all"
-        ? (selectedCourseId as Id<"courses">)
-        : undefined,
+    courseId: selectedCourseIdValue,
     rating: selectedRating !== "all" ? Number(selectedRating) : undefined,
     sortBy,
     limit: 500,
@@ -124,8 +130,6 @@ export default function AdminReviewsPage() {
           rows.reduce((total, review) => total + review.rating, 0) / rows.length
         ).toFixed(1)
       : "0.0";
-
-  const courseOptions = useMemo(() => courses ?? [], [courses]);
 
   const resetForm = () => {
     setEditingReview(null);
@@ -159,9 +163,16 @@ export default function AdminReviewsPage() {
 
   const handleSave = async () => {
     const numericRating = Number(formState.rating);
+    const selectedFormCourseId = knownCourseIds.has(formState.courseId)
+      ? (formState.courseId as Id<"courses">)
+      : null;
 
     if (!formState.courseId) {
       toast.error("Select a course for this review");
+      return;
+    }
+    if (!selectedFormCourseId) {
+      toast.error("Select a valid course for this review");
       return;
     }
     if (!formState.userName.trim()) {
@@ -172,6 +183,14 @@ export default function AdminReviewsPage() {
       toast.error("Review content is required");
       return;
     }
+    if (
+      !Number.isFinite(numericRating) ||
+      numericRating < 0.5 ||
+      numericRating > 5
+    ) {
+      toast.error("Rating must be between 0.5 and 5");
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -179,7 +198,7 @@ export default function AdminReviewsPage() {
       if (editingReview) {
         await updateReview({
           reviewId: editingReview._id,
-          courseId: formState.courseId as Id<"courses">,
+          courseId: selectedFormCourseId,
           userName: formState.userName,
           userId: formState.userId || undefined,
           rating: numericRating,
@@ -188,7 +207,7 @@ export default function AdminReviewsPage() {
         toast.success("Review updated");
       } else {
         await createReview({
-          courseId: formState.courseId as Id<"courses">,
+          courseId: selectedFormCourseId,
           userName: formState.userName,
           userId: formState.userId || undefined,
           rating: numericRating,

@@ -52,6 +52,8 @@ export function AdminTimeZoneProvider({
         window.localStorage.setItem(ADMIN_TIME_ZONE_STORAGE_KEY, nextTimeZone);
       },
       formatTimestamp: (input) => formatTimestampInTimeZone(input, timeZone),
+      // Plain YYYY-MM-DD values are intentionally formatted in UTC so the day
+      // never shifts with the selected edit zone.
       formatDate: (input) => formatPlainDateForAdmin(input),
       formatDateTime: (dateValue, timeValue) =>
         formatPlainDateTimeForAdmin(dateValue, timeValue, timeZone),
