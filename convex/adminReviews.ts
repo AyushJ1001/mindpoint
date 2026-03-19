@@ -225,7 +225,7 @@ export const updateReview = mutation({
     reviewId: v.id("reviews"),
     courseId: v.id("courses"),
     userName: v.string(),
-    userId: v.optional(v.string()),
+    userId: v.string(),
     rating: v.number(),
     content: v.string(),
   },
@@ -246,10 +246,8 @@ export const updateReview = mutation({
       course: args.courseId,
       userName: normalizeRequiredText(args.userName, "Reviewer name"),
       userId:
-        normalizeOptionalUserId(args.userId) ||
-        (existing.userId?.trim()
-          ? existing.userId
-          : `admin-managed:${admin.userId}`),
+        normalizeOptionalUserId(args.userId) ??
+        `admin-managed:${admin.userId}`,
       rating: normalizeRating(args.rating),
       content: normalizeRequiredText(args.content, "Review content"),
       isEdited: true,

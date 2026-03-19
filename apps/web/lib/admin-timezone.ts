@@ -126,7 +126,7 @@ export function formatPlainDateForAdmin(dateValue?: string): string | null {
 export function formatPlainDateTimeForAdmin(
   dateValue?: string,
   timeValue?: string,
-  timeZone?: string,
+  editZone?: string,
 ): string | null {
   const date = parsePlainDateTime(dateValue, timeValue);
   if (!date) {
@@ -142,8 +142,8 @@ export function formatPlainDateTimeForAdmin(
     timeZone: "UTC",
   }).format(date);
 
-  return timeZone
-    ? `${formatted} • ${getAdminTimeZoneLabel(timeZone)}`
+  return editZone
+    ? `${formatted} • ${getAdminTimeZoneLabel(editZone)}`
     : formatted;
 }
 

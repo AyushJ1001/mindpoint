@@ -205,7 +205,7 @@ function AdminReviewsPageInner() {
           reviewId: editingReview._id,
           courseId: selectedFormCourseId,
           userName: formState.userName,
-          userId: formState.userId || undefined,
+          userId: formState.userId,
           rating: numericRating,
           content: formState.content,
         });
