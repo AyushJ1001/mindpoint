@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { AdminTimeZoneProvider } from "@/components/admin/AdminTimeZoneProvider";
+import { AdminTimeZoneSelect } from "@/components/admin/AdminTimeZoneSelect";
 import {
   Sidebar,
   SidebarContent,
@@ -24,12 +26,14 @@ import {
   ClipboardList,
   Settings,
   Shield,
+  MessageSquareQuote,
 } from "lucide-react";
 
 const items = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/courses", label: "Courses", icon: BookOpen },
   { href: "/admin/offers", label: "Offer Manager", icon: TicketPercent },
+  { href: "/admin/reviews", label: "Reviews", icon: MessageSquareQuote },
   { href: "/admin/enrollments", label: "Enrollments", icon: GraduationCap },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/loyalty", label: "Loyalty", icon: Gift },
@@ -42,49 +46,54 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   return (
-    <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-[radial-gradient(circle_at_top_left,oklch(0.96_0.02_220),transparent_45%),radial-gradient(circle_at_top_right,oklch(0.93_0.03_160),transparent_40%)]">
-        <Sidebar className="top-16 h-[calc(100svh-4rem)]">
-          <SidebarContent>
-            <SidebarGroup>
-              <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {items.map((item) => {
-                    const Icon = item.icon;
-                    const isActive =
-                      item.href === "/admin"
-                        ? pathname === "/admin"
-                        : pathname.startsWith(item.href);
-                    return (
-                      <SidebarMenuItem key={item.href}>
-                        <SidebarMenuButton asChild isActive={isActive}>
-                          <Link href={item.href}>
-                            <Icon className="h-4 w-4" />
-                            <span>{item.label}</span>
-                          </Link>
-                        </SidebarMenuButton>
-                      </SidebarMenuItem>
-                    );
-                  })}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-        </Sidebar>
+    <AdminTimeZoneProvider>
+      <SidebarProvider>
+        <div className="flex min-h-screen w-full bg-[radial-gradient(circle_at_top_left,oklch(0.96_0.02_220),transparent_45%),radial-gradient(circle_at_top_right,oklch(0.93_0.03_160),transparent_40%)]">
+          <Sidebar className="top-16 h-[calc(100svh-4rem)]">
+            <SidebarContent>
+              <SidebarGroup>
+                <SidebarGroupLabel>Admin Panel</SidebarGroupLabel>
+                <SidebarGroupContent>
+                  <SidebarMenu>
+                    {items.map((item) => {
+                      const Icon = item.icon;
+                      const isActive =
+                        item.href === "/admin"
+                          ? pathname === "/admin"
+                          : pathname.startsWith(item.href);
+                      return (
+                        <SidebarMenuItem key={item.href}>
+                          <SidebarMenuButton asChild isActive={isActive}>
+                            <Link href={item.href}>
+                              <Icon className="h-4 w-4" />
+                              <span>{item.label}</span>
+                            </Link>
+                          </SidebarMenuButton>
+                        </SidebarMenuItem>
+                      );
+                    })}
+                  </SidebarMenu>
+                </SidebarGroupContent>
+              </SidebarGroup>
+            </SidebarContent>
+          </Sidebar>
 
-        <main className="flex-1 pb-10">
-          <div className="border-border/80 sticky top-0 z-20 border-b bg-white/85 backdrop-blur">
-            <div className="flex h-14 items-center gap-2 px-4">
-              <SidebarTrigger />
-              <span className="text-sm font-semibold tracking-wide text-slate-700">
-                MindPoint Admin
-              </span>
+          <main className="flex-1 pb-10">
+            <div className="border-border/80 sticky top-0 z-20 border-b bg-white/85 backdrop-blur">
+              <div className="flex min-h-14 flex-wrap items-center gap-3 px-4 py-2">
+                <SidebarTrigger />
+                <span className="text-sm font-semibold tracking-wide text-slate-700">
+                  MindPoint Admin
+                </span>
+                <div className="ml-auto">
+                  <AdminTimeZoneSelect />
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="p-4 md:p-6">{children}</div>
-        </main>
-      </div>
-    </SidebarProvider>
+            <div className="p-4 md:p-6">{children}</div>
+          </main>
+        </div>
+      </SidebarProvider>
+    </AdminTimeZoneProvider>
   );
 }

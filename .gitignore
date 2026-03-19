@@ -47,6 +47,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# convex generated files
+/convex/_generated/
+
 # Ignored for the template, you probably want to remove it:
 
 # clerk configuration (can include secrets)

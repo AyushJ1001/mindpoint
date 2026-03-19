@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { Doc, Id } from "@mindpoint/backend/data-model";
@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { getUserFacingErrorMessage } from "@/lib/convex-error";
+import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
+import { convertPlainDateTimeBetweenTimeZones } from "@/lib/admin-timezone";
 
 type CourseLifecycleStatus = "draft" | "published" | "archived";
 type CourseType =
@@ -176,6 +178,21 @@ function hasText(value: string | undefined | null): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function formatDateWindow(
+  startDate: string,
+  endDate: string,
+  formatDate: (value?: string) => string | null,
+): string | null {
+  const start = formatDate(startDate);
+  const end = formatDate(endDate);
+
+  if (start && end) {
+    return `${start} to ${end}`;
+  }
+
+  return start || end;
+}
+
 function toInitialState(course?: Doc<"courses">): CourseFormState {
   const type = (course?.type as CourseType) || "certificate";
   const defaultVariants =
@@ -261,6 +278,9 @@ export function CourseEditor({
   const courseVersion = course
     ? `${course._id}:${course.updatedAt ?? course._creationTime}`
     : "new";
+  const { timeZone, timeZoneLabel, formatDate, formatDateTime } =
+    useAdminTimeZone();
+  const previousTimeZoneRef = useRef(timeZone);
 
   const campaigns = useQuery(api.adminOffers.listCampaigns, {
     includeArchived: false,
@@ -277,6 +297,43 @@ export function CourseEditor({
     setInitialSnapshot(JSON.stringify(nextInitialState));
     setSelectedCampaignId("");
   }, [course, courseVersion]);
+
+  useEffect(() => {
+    const previousTimeZone = previousTimeZoneRef.current;
+    if (previousTimeZone === timeZone) {
+      return;
+    }
+
+    previousTimeZoneRef.current = timeZone;
+
+    setState((current) => {
+      const nextState = { ...current };
+      const convertedStart = convertPlainDateTimeBetweenTimeZones(
+        current.startDate,
+        current.startTime,
+        previousTimeZone,
+        timeZone,
+      );
+      const convertedEnd = convertPlainDateTimeBetweenTimeZones(
+        current.endDate,
+        current.endTime,
+        previousTimeZone,
+        timeZone,
+      );
+
+      if (convertedStart) {
+        nextState.startDate = convertedStart.dateValue;
+        nextState.startTime = convertedStart.timeValue;
+      }
+
+      if (convertedEnd) {
+        nextState.endDate = convertedEnd.dateValue;
+        nextState.endTime = convertedEnd.timeValue;
+      }
+
+      return nextState;
+    });
+  }, [timeZone]);
 
   const isWorksheet = state.type === "worksheet";
   const isInternship = state.type === "internship";
@@ -355,6 +412,22 @@ export function CourseEditor({
   const isDirty = useMemo(
     () => JSON.stringify(state) !== initialSnapshot,
     [initialSnapshot, state],
+  );
+  const scheduleStartPreview = showSchedule
+    ? formatDateTime(state.startDate, state.startTime)
+    : null;
+  const scheduleEndPreview = showSchedule
+    ? formatDateTime(state.endDate, state.endTime)
+    : null;
+  const offerWindowPreview = formatDateWindow(
+    state.offerStartDate,
+    state.offerEndDate,
+    formatDate,
+  );
+  const bogoWindowPreview = formatDateWindow(
+    state.bogoStartDate,
+    state.bogoEndDate,
+    formatDate,
   );
   const saveStateLabel = !course
     ? "New draft"
@@ -585,9 +658,6 @@ export function CourseEditor({
 
     if (!hasText(state.description)) {
       throw new Error("Description is required before publishing");
-    }
-    if (!hasText(state.content)) {
-      throw new Error("Content is required before publishing");
     }
 
     if (supportsLearningOutcomes && parsedLearningOutcomes.length === 0) {
@@ -891,7 +961,12 @@ export function CourseEditor({
       </div>
 
       <div className="space-y-2">
-        <Label>Content (Markdown/Text)</Label>
+        <div className="flex items-center justify-between gap-3">
+          <Label>Content (Markdown/Text, optional)</Label>
+          <span className="text-xs text-slate-500">
+            Defaults to an empty string if left blank.
+          </span>
+        </div>
         <Textarea
           rows={8}
           value={state.content}
@@ -948,6 +1023,20 @@ export function CourseEditor({
               />
             </div>
           </div>
+
+          {scheduleStartPreview || scheduleEndPreview ? (
+            <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
+              <p className="font-medium">Schedule preview in {timeZoneLabel}</p>
+              <p className="text-xs text-sky-700">
+                Switching CT, ET, or IST shifts these fields into that edit
+                zone.
+              </p>
+              {scheduleStartPreview ? (
+                <p>Starts: {scheduleStartPreview}</p>
+              ) : null}
+              {scheduleEndPreview ? <p>Ends: {scheduleEndPreview}</p> : null}
+            </div>
+          ) : null}
 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
@@ -1412,6 +1501,11 @@ export function CourseEditor({
               }
             />
           </div>
+          {offerWindowPreview ? (
+            <p className="text-xs text-slate-500">
+              Offer window: {offerWindowPreview} ({timeZoneLabel})
+            </p>
+          ) : null}
         </div>
 
         <div className="space-y-2 rounded-lg border bg-white p-4">
@@ -1449,6 +1543,11 @@ export function CourseEditor({
               }
             />
           </div>
+          {bogoWindowPreview ? (
+            <p className="text-xs text-slate-500">
+              BOGO window: {bogoWindowPreview} ({timeZoneLabel})
+            </p>
+          ) : null}
         </div>
       </div>
 

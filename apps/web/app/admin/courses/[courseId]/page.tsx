@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { showRupees } from "@/lib/utils";
 import { getUserFacingErrorMessage } from "@/lib/convex-error";
+import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
 
 export default function AdminEditCoursePage() {
   const params = useParams<{ courseId: string }>();
@@ -24,6 +25,7 @@ export default function AdminEditCoursePage() {
     "all" | "active" | "cancelled" | "transferred"
   >("all");
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const { timeZoneLabel, formatDate, formatTimestamp } = useAdminTimeZone();
 
   const course = useQuery(api.adminCourses.getCourseById, { courseId });
   const transition = useMutation(api.adminCourses.transitionCourseLifecycle);
@@ -97,6 +99,11 @@ export default function AdminEditCoursePage() {
             >
               Archive
             </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/admin/reviews?courseId=${courseId}`}>
+                Manage Reviews
+              </Link>
+            </Button>
           </>
         }
       />
@@ -150,11 +157,15 @@ export default function AdminEditCoursePage() {
             <p>
               Schedule:{" "}
               <strong>
-                {course.startDate} to {course.endDate}
+                {formatDate(course.startDate) || course.startDate} to{" "}
+                {formatDate(course.endDate) || course.endDate}
               </strong>
             </p>
             <p>
               Type: <strong>{course.type || "-"}</strong>
+            </p>
+            <p>
+              Time zone: <strong>{timeZoneLabel}</strong>
             </p>
           </CardContent>
         </Card>
@@ -257,7 +268,7 @@ export default function AdminEditCoursePage() {
                         ) : null}
                       </td>
                       <td className="px-3 py-2 text-xs text-slate-600">
-                        {new Date(row._creationTime).toLocaleString()}
+                        {formatTimestamp(row._creationTime)}
                       </td>
                       <td className="px-3 py-2">
                         <Button variant="outline" size="sm" asChild>

@@ -21,6 +21,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
 import { toast } from "sonner";
 import { isBogoActive, isDiscountActive, showRupees } from "@/lib/utils";
 
@@ -76,6 +77,21 @@ const courseTypeOptions: CourseTypeFilter[] = [
 
 const MAX_COURSES_PER_APPLY = 150;
 
+function formatDateWindow(
+  startDate: string,
+  endDate: string,
+  formatDate: (value?: string) => string | null,
+): string | null {
+  const start = formatDate(startDate);
+  const end = formatDate(endDate);
+
+  if (start && end) {
+    return `${start} to ${end}`;
+  }
+
+  return start || end;
+}
+
 export default function AdminOffersPage() {
   const [search, setSearch] = useState("");
   const [courseType, setCourseType] = useState<CourseTypeFilter>("all");
@@ -102,6 +118,7 @@ export default function AdminOffersPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [campaignActionId, setCampaignActionId] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const { timeZoneLabel, formatDate, formatTimestamp } = useAdminTimeZone();
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -128,6 +145,16 @@ export default function AdminOffersPage() {
   const campaignRows = useMemo(() => campaigns ?? [], [campaigns]);
   const selectedCount = selectedCourseIds.length;
   const exceedsApplyLimit = selectedCount > MAX_COURSES_PER_APPLY;
+  const offerWindowPreview = formatDateWindow(
+    offerStartDate,
+    offerEndDate,
+    formatDate,
+  );
+  const bogoWindowPreview = formatDateWindow(
+    bogoStartDate,
+    bogoEndDate,
+    formatDate,
+  );
   const selectedIdSet = useMemo(
     () => new Set(selectedCourseIds),
     [selectedCourseIds],
@@ -496,16 +523,11 @@ export default function AdminOffersPage() {
                           ) : null}
                         </div>
                         <div className="space-y-1 text-xs text-slate-500">
-                          <p>
-                            Updated{" "}
-                            {new Date(campaign.updatedAt).toLocaleString()}
-                          </p>
+                          <p>Updated {formatTimestamp(campaign.updatedAt)}</p>
                           {campaign.lastAppliedAt ? (
                             <p>
                               Last applied{" "}
-                              {new Date(
-                                campaign.lastAppliedAt,
-                              ).toLocaleString()}
+                              {formatTimestamp(campaign.lastAppliedAt)}
                             </p>
                           ) : null}
                         </div>
@@ -620,6 +642,11 @@ export default function AdminOffersPage() {
                     onChange={(e) => setOfferEndDate(e.target.value)}
                   />
                 </div>
+                {offerWindowPreview ? (
+                  <p className="text-xs text-slate-500">
+                    Offer window: {offerWindowPreview} ({timeZoneLabel})
+                  </p>
+                ) : null}
               </div>
 
               <div className="space-y-3 rounded-2xl border border-emerald-200/70 bg-emerald-50/60 p-4">
@@ -650,6 +677,11 @@ export default function AdminOffersPage() {
                     onChange={(e) => setBogoEndDate(e.target.value)}
                   />
                 </div>
+                {bogoWindowPreview ? (
+                  <p className="text-xs text-slate-500">
+                    BOGO window: {bogoWindowPreview} ({timeZoneLabel})
+                  </p>
+                ) : null}
               </div>
             </div>
 

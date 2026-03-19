@@ -1,9 +1,12 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 import { CourseType, PublicCourseDocumentValue } from "./schema";
 import { pickPublicCourse, type PublicCourse } from "./_publicCourse";
 
-function isPublishedCourse(course: { lifecycleStatus?: "draft" | "published" | "archived" }) {
+function isPublishedCourse(course: {
+  lifecycleStatus?: "draft" | "published" | "archived";
+}) {
   return !course.lifecycleStatus || course.lifecycleStatus === "published";
 }
 
@@ -20,7 +23,9 @@ export const listCourses = query({
     const [publishedViaIndex, publishedLegacy] = await Promise.all([
       ctx.db
         .query("courses")
-        .withIndex("by_lifecycleStatus", (q) => q.eq("lifecycleStatus", "published"))
+        .withIndex("by_lifecycleStatus", (q) =>
+          q.eq("lifecycleStatus", "published"),
+        )
         .order("desc")
         .take(limit),
       ctx.db
@@ -57,14 +62,18 @@ export const listCoursesByType = query({
       .order("desc")
       .collect();
 
-    const publishedCourses = courses.filter((course) => isPublishedCourse(course));
+    const publishedCourses = courses.filter((course) =>
+      isPublishedCourse(course),
+    );
     const filteredCourses = args.count
       ? publishedCourses.slice(0, args.count)
       : publishedCourses;
 
     return {
       viewer: (await ctx.auth.getUserIdentity())?.name ?? null,
-      courses: filteredCourses.reverse().map((course) => pickPublicCourse(course)),
+      courses: filteredCourses
+        .reverse()
+        .map((course) => pickPublicCourse(course)),
     };
   },
 });
@@ -94,7 +103,9 @@ export const getRelatedVariants = query({
       .query("courses")
       .withIndex("by_name_and_type", (q) => q.eq("name", name).eq("type", type))
       .collect();
-    const publishedVariants = variants.filter((course) => isPublishedCourse(course));
+    const publishedVariants = variants.filter((course) =>
+      isPublishedCourse(course),
+    );
     // Ensure stable order by price ascending, then _creationTime
     publishedVariants.sort(
       (a, b) =>
@@ -155,8 +166,14 @@ export const createReview = mutation({
       isEdited: false,
     });
 
-    // Optionally attach to course document if needed in the future
-    // await ctx.db.patch(args.courseId, { reviews: [...(course.reviews ?? []), reviewId] });
+    const nextReviewIds = Array.from(
+      new Set([
+        ...(course.reviews ?? []).map((id) => String(id)),
+        String(reviewId),
+      ]),
+    ).map((id) => id as Id<"reviews">);
+
+    await ctx.db.patch(args.courseId, { reviews: nextReviewIds });
 
     return reviewId;
   },
@@ -214,8 +231,17 @@ export const deleteReview = mutation({
       throw new Error("You can only delete your own reviews");
     }
 
+    const course = await ctx.db.get(review.course);
     // Delete the review
     await ctx.db.delete(args.reviewId);
+
+    if (course) {
+      await ctx.db.patch(review.course, {
+        reviews: (course.reviews ?? []).filter(
+          (reviewId) => String(reviewId) !== String(args.reviewId),
+        ),
+      });
+    }
 
     return args.reviewId;
   },
