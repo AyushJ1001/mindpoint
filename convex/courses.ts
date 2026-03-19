@@ -166,14 +166,15 @@ export const createReview = mutation({
       isEdited: false,
     });
 
-    const nextReviewIds = Array.from(
-      new Set([
-        ...(course.reviews ?? []).map((id) => String(id)),
-        String(reviewId),
-      ]),
-    ).map((id) => id as Id<"reviews">);
+    const existingIdStrings = new Set(
+      (course.reviews ?? []).map((id) => String(id)),
+    );
 
-    await ctx.db.patch(args.courseId, { reviews: nextReviewIds });
+    if (!existingIdStrings.has(String(reviewId))) {
+      await ctx.db.patch(args.courseId, {
+        reviews: [...(course.reviews ?? []), reviewId],
+      });
+    }
 
     return reviewId;
   },

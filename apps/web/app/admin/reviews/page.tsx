@@ -38,7 +38,7 @@ type ReviewRow = {
   _id: Id<"reviews">;
   _creationTime: number;
   course: Id<"courses">;
-  userId: string;
+  userId?: string;
   userName: string;
   rating: number;
   content: string;
@@ -154,7 +154,10 @@ export default function AdminReviewsPage() {
     setFormState({
       courseId: String(review.course),
       userName: review.userName,
-      userId: review.userId.startsWith("admin-managed:") ? "" : review.userId,
+      userId:
+        (review.userId ?? "").startsWith("admin-managed:")
+          ? ""
+          : (review.userId ?? ""),
       rating: String(review.rating),
       content: review.content,
     });
