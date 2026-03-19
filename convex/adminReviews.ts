@@ -11,13 +11,7 @@ function normalizeRating(value: number): number {
   }
 
   const rounded = Math.round(value * 2) / 2;
-  const clamped = Math.max(0.5, Math.min(5, rounded));
-
-  if (!Number.isFinite(clamped)) {
-    throw new Error("Rating must be between 0.5 and 5");
-  }
-
-  return clamped;
+  return Math.max(0.5, Math.min(5, rounded));
 }
 
 function normalizeRequiredText(value: string, field: string): string {

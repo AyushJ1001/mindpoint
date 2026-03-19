@@ -709,7 +709,7 @@ export function CourseEditor({
 
       validateForPublish();
 
-      if (state.lifecycleStatus === "published" && !hasText(state.content)) {
+      if (!hasText(state.content)) {
         toast.warning(
           "Publishing without course content. The public course page may look incomplete.",
         );
