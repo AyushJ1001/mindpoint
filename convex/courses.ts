@@ -167,6 +167,15 @@ export const createReview = mutation({
     const userId = identity?.subject ?? "anonymous";
     const userName = identity?.name ?? "Anonymous";
 
+    const existingReview = await ctx.db
+      .query("reviews")
+      .withIndex("by_course", (q) => q.eq("course", args.courseId))
+      .filter((q) => q.eq(q.field("userId"), userId))
+      .first();
+    if (existingReview) {
+      throw new Error("You have already reviewed this course");
+    }
+
     const reviewId = await ctx.db.insert("reviews", {
       course: args.courseId,
       userId,

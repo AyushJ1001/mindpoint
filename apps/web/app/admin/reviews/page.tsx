@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
-import type { Doc, Id } from "@mindpoint/backend/data-model";
+import type { Id } from "@mindpoint/backend/data-model";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
 import { Button } from "@/components/ui/button";
@@ -71,7 +71,7 @@ const emptyFormState: ReviewFormState = {
   content: "",
 };
 
-export default function AdminReviewsPage() {
+function AdminReviewsPageInner() {
   const searchParams = useSearchParams();
   const preselectedCourseId = searchParams.get("courseId") ?? "all";
 
@@ -99,7 +99,7 @@ export default function AdminReviewsPage() {
     limit: 500,
     sortBy: "name",
     sortOrder: "asc",
-  }) as Doc<"courses">[] | undefined;
+  });
   const courseOptions = useMemo(() => courses ?? [], [courses]);
   const knownCourseIds = useMemo(
     () => new Set(courseOptions.map((course) => String(course._id))),
@@ -356,8 +356,9 @@ export default function AdminReviewsPage() {
 
           {hasMore ? (
             <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-              Showing the first 500 reviews from the current scan. Narrow the
-              filters for a complete result set.
+              Showing {rows.length} review{rows.length !== 1 ? "s" : ""} — the
+              scan window may not include all matches. Narrow the filters for a
+              more complete result set.
             </div>
           ) : null}
 
@@ -600,5 +601,13 @@ export default function AdminReviewsPage() {
         </AlertDialogContent>
       </AlertDialog>
     </div>
+  );
+}
+
+export default function AdminReviewsPage() {
+  return (
+    <Suspense>
+      <AdminReviewsPageInner />
+    </Suspense>
   );
 }
