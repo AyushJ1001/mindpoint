@@ -1,12 +1,13 @@
 "use client";
 
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
   ADMIN_TIME_ZONE_STORAGE_KEY,
   formatPlainDateForAdmin,
   formatPlainDateTimeForAdmin,
   formatTimestampInTimeZone,
   getAdminTimeZoneLabel,
+  isSupportedAdminTimeZone,
   resolveDefaultAdminTimeZone,
 } from "@/lib/admin-timezone";
 
@@ -28,22 +29,25 @@ export function AdminTimeZoneProvider({
 }: {
   children: React.ReactNode;
 }) {
-  const [timeZone, setTimeZoneState] = useState<string>(() => {
-    if (typeof window === "undefined") {
-      return "America/New_York";
-    }
+  const [timeZone, setTimeZoneState] = useState<string>("America/New_York");
 
-    return (
-      window.localStorage.getItem(ADMIN_TIME_ZONE_STORAGE_KEY) ||
-      resolveDefaultAdminTimeZone()
+  useEffect(() => {
+    const stored = window.localStorage.getItem(ADMIN_TIME_ZONE_STORAGE_KEY);
+    setTimeZoneState(
+      stored && isSupportedAdminTimeZone(stored)
+        ? stored
+        : resolveDefaultAdminTimeZone(),
     );
-  });
+  }, []);
 
   const value = useMemo<AdminTimeZoneContextValue>(
     () => ({
       timeZone,
       timeZoneLabel: getAdminTimeZoneLabel(timeZone),
       setTimeZone: (nextTimeZone) => {
+        if (!isSupportedAdminTimeZone(nextTimeZone)) {
+          return;
+        }
         setTimeZoneState(nextTimeZone);
         window.localStorage.setItem(ADMIN_TIME_ZONE_STORAGE_KEY, nextTimeZone);
       },

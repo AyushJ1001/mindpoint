@@ -1,5 +1,3 @@
-"use client";
-
 export const ADMIN_TIME_ZONE_STORAGE_KEY = "mindpoint.admin.timeZone";
 
 export const ADMIN_TIME_ZONE_OPTIONS = [

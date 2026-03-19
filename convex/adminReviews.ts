@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
@@ -33,6 +33,16 @@ function normalizeOptionalUserId(value?: string): string | undefined {
   return trimmed ? trimmed : undefined;
 }
 
+function isCourseDoc(value: unknown): value is Doc<"courses"> {
+  return (
+    !!value &&
+    typeof value === "object" &&
+    "name" in value &&
+    "code" in value &&
+    "reviews" in value
+  );
+}
+
 async function syncCourseReviewReference(
   ctx: MutationCtx,
   args: {
@@ -46,15 +56,16 @@ async function syncCourseReviewReference(
     return;
   }
 
-  const reviewIds = new Set((course.reviews ?? []).map((id) => String(id)));
-  if (args.action === "add") {
-    reviewIds.add(String(args.reviewId));
-  } else {
-    reviewIds.delete(String(args.reviewId));
-  }
+  const existingIds = course.reviews ?? [];
+  const nextIds =
+    args.action === "add"
+      ? existingIds.some((id) => id === args.reviewId)
+        ? existingIds
+        : [...existingIds, args.reviewId]
+      : existingIds.filter((id) => id !== args.reviewId);
 
   await ctx.db.patch(args.courseId, {
-    reviews: Array.from(reviewIds).map((id) => id as Id<"reviews">),
+    reviews: nextIds,
   });
 }
 
@@ -75,10 +86,7 @@ export const listReviews = query({
     const scanLimit = args.search
       ? Math.min(Math.max(limit * 10, 500), 2500)
       : Math.min(Math.max(limit * 5, 250), 1500);
-    const courseCache = new Map<
-      string,
-      Awaited<ReturnType<typeof ctx.db.get>>
-    >();
+    const courseCache = new Map<string, Doc<"courses"> | null>();
 
     const getCourse = async (courseId: Id<"courses">) => {
       const key = String(courseId);
@@ -86,7 +94,8 @@ export const listReviews = query({
         return courseCache.get(key) ?? null;
       }
 
-      const course = await ctx.db.get(courseId);
+      const result = await ctx.db.get(courseId);
+      const course = isCourseDoc(result) ? result : null;
       courseCache.set(key, course);
       return course;
     };
@@ -98,6 +107,7 @@ export const listReviews = query({
           .order("desc")
           .take(scanLimit)
       : await ctx.db.query("reviews").order("desc").take(scanLimit);
+    const hitScanLimit = rows.length === scanLimit;
 
     if (typeof args.rating === "number") {
       rows = rows.filter((row) => row.rating === args.rating);
@@ -108,9 +118,9 @@ export const listReviews = query({
       const filteredRows = [];
 
       for (const row of rows) {
-        const matchesBaseFields = [row.userName, row.userId, row.content].some(
-          (part) => part.toLowerCase().includes(search),
-        );
+        const matchesBaseFields = [row.userName, row.userId, row.content]
+          .filter((part): part is string => typeof part === "string")
+          .some((part) => part.toLowerCase().includes(search));
 
         if (matchesBaseFields) {
           filteredRows.push(row);
@@ -148,17 +158,20 @@ export const listReviews = query({
 
     const limitedRows = rows.slice(0, limit);
 
-    return await Promise.all(
-      limitedRows.map(async (row) => {
-        const course = await getCourse(row.course);
-        return {
-          ...row,
-          courseName: course?.name ?? "Unknown course",
-          courseCode: course?.code ?? "—",
-          courseType: course?.type ?? null,
-        };
-      }),
-    );
+    return {
+      reviews: await Promise.all(
+        limitedRows.map(async (row) => {
+          const course = await getCourse(row.course);
+          return {
+            ...row,
+            courseName: course?.name ?? "Unknown course",
+            courseCode: course?.code ?? "—",
+            courseType: course?.type ?? null,
+          };
+        }),
+      ),
+      hasMore: hitScanLimit,
+    };
   },
 });
 

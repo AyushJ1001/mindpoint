@@ -698,6 +698,12 @@ export function CourseEditor({
 
       validateForPublish();
 
+      if (state.lifecycleStatus === "published" && !hasText(state.content)) {
+        toast.warning(
+          "Publishing without course content. The public course page may look incomplete.",
+        );
+      }
+
       if (isSessionBatchCreate) {
         if (state.sessionVariants.length === 0) {
           throw new Error("Add at least one session variant");

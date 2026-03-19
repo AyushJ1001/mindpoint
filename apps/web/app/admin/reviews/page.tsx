@@ -48,6 +48,11 @@ type ReviewRow = {
   courseType: string | null;
 };
 
+type ReviewsResponse = {
+  reviews: ReviewRow[];
+  hasMore: boolean;
+};
+
 type ReviewFormState = {
   courseId: string;
   userName: string;
@@ -94,7 +99,7 @@ export default function AdminReviewsPage() {
     sortOrder: "asc",
   }) as Doc<"courses">[] | undefined;
 
-  const reviews = useQuery(api.adminReviews.listReviews, {
+  const reviewsResult = useQuery(api.adminReviews.listReviews, {
     search: search || undefined,
     courseId:
       selectedCourseId !== "all"
@@ -103,13 +108,14 @@ export default function AdminReviewsPage() {
     rating: selectedRating !== "all" ? Number(selectedRating) : undefined,
     sortBy,
     limit: 500,
-  }) as ReviewRow[] | undefined;
+  }) as ReviewsResponse | undefined;
 
   const createReview = useMutation(api.adminReviews.createReview);
   const updateReview = useMutation(api.adminReviews.updateReview);
   const deleteReview = useMutation(api.adminReviews.deleteReview);
 
-  const rows = reviews ?? [];
+  const rows = reviewsResult?.reviews ?? [];
+  const hasMore = reviewsResult?.hasMore ?? false;
   const hasActiveFilters =
     !!search.trim() || selectedCourseId !== "all" || selectedRating !== "all";
   const averageRating =
@@ -324,6 +330,13 @@ export default function AdminReviewsPage() {
             </select>
           </div>
 
+          {hasMore ? (
+            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+              Showing the first 500 reviews from the current scan. Narrow the
+              filters for a complete result set.
+            </div>
+          ) : null}
+
           <div className="overflow-hidden rounded-lg border bg-white">
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
@@ -337,7 +350,7 @@ export default function AdminReviewsPage() {
                 </tr>
               </thead>
               <tbody>
-                {reviews === undefined ? (
+                {reviewsResult === undefined ? (
                   <tr>
                     <td className="px-3 py-4 text-slate-600" colSpan={6}>
                       Loading reviews...
