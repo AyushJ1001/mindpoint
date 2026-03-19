@@ -126,6 +126,9 @@ export function formatPlainDateTimeForAdmin(
     return null;
   }
 
+  // Date/time form fields already hold wall-clock values in the currently
+  // selected edit zone, so this formatter intentionally preserves those raw
+  // values instead of converting them again.
   const formatted = new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
     timeStyle: timeValue ? "short" : undefined,

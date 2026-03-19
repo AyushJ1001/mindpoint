@@ -35,11 +35,7 @@ function normalizeOptionalUserId(value?: string): string | undefined {
 
 function isCourseDoc(value: unknown): value is Doc<"courses"> {
   return (
-    !!value &&
-    typeof value === "object" &&
-    "name" in value &&
-    "code" in value &&
-    "reviews" in value
+    !!value && typeof value === "object" && "name" in value && "code" in value
   );
 }
 
@@ -53,7 +49,7 @@ async function syncCourseReviewReference(
 ) {
   const course = await ctx.db.get(args.courseId);
   if (!course) {
-    return;
+    return false;
   }
 
   const existingIds = course.reviews ?? [];
@@ -67,6 +63,8 @@ async function syncCourseReviewReference(
   await ctx.db.patch(args.courseId, {
     reviews: nextIds,
   });
+
+  return true;
 }
 
 export const listReviews = query({
@@ -157,6 +155,7 @@ export const listReviews = query({
     }
 
     const limitedRows = rows.slice(0, limit);
+    const hasMore = hitScanLimit && rows.length > limitedRows.length;
 
     return {
       reviews: await Promise.all(
@@ -170,7 +169,7 @@ export const listReviews = query({
           };
         }),
       ),
-      hasMore: hitScanLimit,
+      hasMore,
     };
   },
 });
@@ -202,7 +201,7 @@ export const createReview = mutation({
     };
 
     const reviewId = await ctx.db.insert("reviews", review);
-    await syncCourseReviewReference(ctx, {
+    const addedCourseReference = await syncCourseReviewReference(ctx, {
       courseId: args.courseId,
       reviewId,
       action: "add",
@@ -219,6 +218,7 @@ export const createReview = mutation({
       metadata: {
         courseId: String(args.courseId),
         courseName: course.name,
+        courseReferenceSynced: addedCourseReference,
       },
     });
 
@@ -263,8 +263,9 @@ export const updateReview = mutation({
 
     await ctx.db.patch(args.reviewId, patch);
 
+    let previousCourseReferenceRemoved = true;
     if (String(existing.course) !== String(args.courseId)) {
-      await syncCourseReviewReference(ctx, {
+      previousCourseReferenceRemoved = await syncCourseReviewReference(ctx, {
         courseId: existing.course,
         reviewId: args.reviewId,
         action: "remove",
@@ -285,6 +286,9 @@ export const updateReview = mutation({
       entityId: String(args.reviewId),
       before: existing,
       after: updated,
+      metadata: {
+        previousCourseReferenceRemoved,
+      },
     });
 
     return updated;
@@ -304,7 +308,7 @@ export const deleteReview = mutation({
     }
 
     await ctx.db.delete(args.reviewId);
-    await syncCourseReviewReference(ctx, {
+    const removedCourseReference = await syncCourseReviewReference(ctx, {
       courseId: existing.course,
       reviewId: args.reviewId,
       action: "remove",
@@ -317,6 +321,9 @@ export const deleteReview = mutation({
       entityType: "review",
       entityId: String(args.reviewId),
       before: existing,
+      metadata: {
+        removedCourseReference,
+      },
     });
 
     return { success: true };
