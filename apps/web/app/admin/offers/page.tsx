@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
 import { toast } from "sonner";
+import { formatDateWindow } from "@/lib/admin-timezone";
 import { isBogoActive, isDiscountActive, showRupees } from "@/lib/utils";
 
 type CourseTypeFilter =
@@ -76,21 +77,6 @@ const courseTypeOptions: CourseTypeFilter[] = [
 ];
 
 const MAX_COURSES_PER_APPLY = 150;
-
-function formatDateWindow(
-  startDate: string,
-  endDate: string,
-  formatDate: (value?: string) => string | null,
-): string | null {
-  const start = formatDate(startDate);
-  const end = formatDate(endDate);
-
-  if (start && end) {
-    return `${start} to ${end}`;
-  }
-
-  return start || end;
-}
 
 export default function AdminOffersPage() {
   const [search, setSearch] = useState("");

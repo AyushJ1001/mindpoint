@@ -75,7 +75,9 @@ export default function AdminReviewsPage() {
     "newest",
   );
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [deleteReviewId, setDeleteReviewId] = useState<string | null>(null);
+  const [deleteReviewId, setDeleteReviewId] = useState<Id<"reviews"> | null>(
+    null,
+  );
   const [editingReview, setEditingReview] = useState<ReviewRow | null>(null);
   const [formState, setFormState] = useState<ReviewFormState>(emptyFormState);
   const [isSaving, setIsSaving] = useState(false);
@@ -108,6 +110,8 @@ export default function AdminReviewsPage() {
   const deleteReview = useMutation(api.adminReviews.deleteReview);
 
   const rows = reviews ?? [];
+  const hasActiveFilters =
+    !!search.trim() || selectedCourseId !== "all" || selectedRating !== "all";
   const averageRating =
     rows.length > 0
       ? (
@@ -154,6 +158,14 @@ export default function AdminReviewsPage() {
       toast.error("Select a course for this review");
       return;
     }
+    if (!formState.userName.trim()) {
+      toast.error("Reviewer name is required");
+      return;
+    }
+    if (!formState.content.trim()) {
+      toast.error("Review content is required");
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -195,7 +207,7 @@ export default function AdminReviewsPage() {
 
     try {
       setIsDeleting(true);
-      await deleteReview({ reviewId: deleteReviewId as Id<"reviews"> });
+      await deleteReview({ reviewId: deleteReviewId });
       toast.success("Review deleted");
       setDeleteReviewId(null);
     } catch (error) {
@@ -229,7 +241,7 @@ export default function AdminReviewsPage() {
         <Card>
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-slate-600">
-              Average Rating
+              {hasActiveFilters ? "Average (filtered)" : "Average Rating"}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -383,9 +395,7 @@ export default function AdminReviewsPage() {
                           <Button
                             variant="destructive"
                             size="sm"
-                            onClick={() =>
-                              setDeleteReviewId(String(review._id))
-                            }
+                            onClick={() => setDeleteReviewId(review._id)}
                           >
                             Delete
                           </Button>

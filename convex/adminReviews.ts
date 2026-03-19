@@ -75,6 +75,21 @@ export const listReviews = query({
     const scanLimit = args.search
       ? Math.min(Math.max(limit * 10, 500), 2500)
       : Math.min(Math.max(limit * 5, 250), 1500);
+    const courseCache = new Map<
+      string,
+      Awaited<ReturnType<typeof ctx.db.get>>
+    >();
+
+    const getCourse = async (courseId: Id<"courses">) => {
+      const key = String(courseId);
+      if (courseCache.has(key)) {
+        return courseCache.get(key) ?? null;
+      }
+
+      const course = await ctx.db.get(courseId);
+      courseCache.set(key, course);
+      return course;
+    };
 
     let rows = args.courseId
       ? await ctx.db
@@ -88,58 +103,62 @@ export const listReviews = query({
       rows = rows.filter((row) => row.rating === args.rating);
     }
 
-    const courseIds = Array.from(
-      new Set(rows.map((row) => String(row.course))),
-    ).map((id) => id as Id<"courses">);
-    const courseDocs = await Promise.all(
-      courseIds.map(async (courseId) => ({
-        courseId: String(courseId),
-        course: await ctx.db.get(courseId),
-      })),
-    );
-    const coursesById = new Map(
-      courseDocs.map(({ courseId, course }) => [courseId, course] as const),
-    );
-
-    let enriched = rows.map((row) => {
-      const course = coursesById.get(String(row.course));
-      return {
-        ...row,
-        courseName: course?.name ?? "Unknown course",
-        courseCode: course?.code ?? "—",
-        courseType: course?.type ?? null,
-      };
-    });
-
     if (args.search) {
       const search = args.search.toLowerCase();
-      enriched = enriched.filter((row) =>
-        [
-          row.userName,
-          row.userId,
-          row.content,
-          row.courseName,
-          row.courseCode,
-          row.courseType ?? "",
-        ].some((part) => part.toLowerCase().includes(search)),
-      );
+      const filteredRows = [];
+
+      for (const row of rows) {
+        const matchesBaseFields = [row.userName, row.userId, row.content].some(
+          (part) => part.toLowerCase().includes(search),
+        );
+
+        if (matchesBaseFields) {
+          filteredRows.push(row);
+          continue;
+        }
+
+        const course = await getCourse(row.course);
+        const courseParts = [
+          course?.name ?? "",
+          course?.code ?? "",
+          course?.type ?? "",
+        ];
+
+        if (courseParts.some((part) => part.toLowerCase().includes(search))) {
+          filteredRows.push(row);
+        }
+      }
+
+      rows = filteredRows;
     }
 
     switch (args.sortBy) {
       case "oldest":
-        enriched.sort((a, b) => a._creationTime - b._creationTime);
+        rows.sort((a, b) => a._creationTime - b._creationTime);
         break;
       case "rating":
-        enriched.sort(
+        rows.sort(
           (a, b) => b.rating - a.rating || b._creationTime - a._creationTime,
         );
         break;
       default:
-        enriched.sort((a, b) => b._creationTime - a._creationTime);
+        rows.sort((a, b) => b._creationTime - a._creationTime);
         break;
     }
 
-    return enriched.slice(0, limit);
+    const limitedRows = rows.slice(0, limit);
+
+    return await Promise.all(
+      limitedRows.map(async (row) => {
+        const course = await getCourse(row.course);
+        return {
+          ...row,
+          courseName: course?.name ?? "Unknown course",
+          courseCode: course?.code ?? "—",
+          courseType: course?.type ?? null,
+        };
+      }),
+    );
   },
 });
 

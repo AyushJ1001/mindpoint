@@ -139,6 +139,21 @@ export function formatPlainDateTimeForAdmin(
     : formatted;
 }
 
+export function formatDateWindow(
+  startDate: string,
+  endDate: string,
+  formatDate: (value?: string) => string | null,
+): string | null {
+  const start = formatDate(startDate);
+  const end = formatDate(endDate);
+
+  if (start && end) {
+    return `${start} to ${end}`;
+  }
+
+  return start || end;
+}
+
 function getTimeZoneOffsetMinutes(timeZone: string, date: Date): number {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone,

@@ -13,7 +13,10 @@ import { toast } from "sonner";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { getUserFacingErrorMessage } from "@/lib/convex-error";
 import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
-import { convertPlainDateTimeBetweenTimeZones } from "@/lib/admin-timezone";
+import {
+  convertPlainDateTimeBetweenTimeZones,
+  formatDateWindow,
+} from "@/lib/admin-timezone";
 
 type CourseLifecycleStatus = "draft" | "published" | "archived";
 type CourseType =
@@ -176,21 +179,6 @@ function defaultSessionVariants(): SessionVariantInput[] {
 
 function hasText(value: string | undefined | null): boolean {
   return typeof value === "string" && value.trim().length > 0;
-}
-
-function formatDateWindow(
-  startDate: string,
-  endDate: string,
-  formatDate: (value?: string) => string | null,
-): string | null {
-  const start = formatDate(startDate);
-  const end = formatDate(endDate);
-
-  if (start && end) {
-    return `${start} to ${end}`;
-  }
-
-  return start || end;
 }
 
 function toInitialState(course?: Doc<"courses">): CourseFormState {
