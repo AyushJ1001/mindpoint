@@ -6,6 +6,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { Id } from "@mindpoint/backend/data-model";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -43,6 +44,7 @@ export default function AdminEnrollmentsPage() {
   >("");
   const [isCreatingEnrollment, setIsCreatingEnrollment] = useState(false);
   const manualUserIdLooksLikeEmail = manualUserId.includes("@");
+  const { formatTimestamp } = useAdminTimeZone();
 
   const enrollments = useQuery(api.adminEnrollments.listEnrollments, {
     search: search || undefined,
@@ -383,7 +385,7 @@ export default function AdminEnrollmentsPage() {
                     )}
                   </td>
                   <td className="px-3 py-2 text-xs text-slate-600">
-                    {new Date(row._creationTime).toLocaleString()}
+                    {formatTimestamp(row._creationTime)}
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex gap-2">

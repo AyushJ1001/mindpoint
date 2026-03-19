@@ -1,10 +1,24 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 import { CourseType, PublicCourseDocumentValue } from "./schema";
 import { pickPublicCourse, type PublicCourse } from "./_publicCourse";
 
-function isPublishedCourse(course: { lifecycleStatus?: "draft" | "published" | "archived" }) {
+function isPublishedCourse(course: {
+  lifecycleStatus?: "draft" | "published" | "archived";
+}) {
   return !course.lifecycleStatus || course.lifecycleStatus === "published";
+}
+
+function normalizePublicReviewRating(value: number): number {
+  if (!Number.isFinite(value)) {
+    throw new Error("Rating must be a valid number");
+  }
+
+  // The public review form uses interactive half-star input, so public
+  // mutations accept the same 0.5-step range as admin-managed reviews.
+  const rounded = Math.round(value * 2) / 2;
+  return Math.max(0.5, Math.min(5, rounded));
 }
 
 export const listCourses = query({
@@ -20,7 +34,9 @@ export const listCourses = query({
     const [publishedViaIndex, publishedLegacy] = await Promise.all([
       ctx.db
         .query("courses")
-        .withIndex("by_lifecycleStatus", (q) => q.eq("lifecycleStatus", "published"))
+        .withIndex("by_lifecycleStatus", (q) =>
+          q.eq("lifecycleStatus", "published"),
+        )
         .order("desc")
         .take(limit),
       ctx.db
@@ -57,14 +73,18 @@ export const listCoursesByType = query({
       .order("desc")
       .collect();
 
-    const publishedCourses = courses.filter((course) => isPublishedCourse(course));
+    const publishedCourses = courses.filter((course) =>
+      isPublishedCourse(course),
+    );
     const filteredCourses = args.count
       ? publishedCourses.slice(0, args.count)
       : publishedCourses;
 
     return {
       viewer: (await ctx.auth.getUserIdentity())?.name ?? null,
-      courses: filteredCourses.reverse().map((course) => pickPublicCourse(course)),
+      courses: filteredCourses
+        .reverse()
+        .map((course) => pickPublicCourse(course)),
     };
   },
 });
@@ -94,7 +114,9 @@ export const getRelatedVariants = query({
       .query("courses")
       .withIndex("by_name_and_type", (q) => q.eq("name", name).eq("type", type))
       .collect();
-    const publishedVariants = variants.filter((course) => isPublishedCourse(course));
+    const publishedVariants = variants.filter((course) =>
+      isPublishedCourse(course),
+    );
     // Ensure stable order by price ascending, then _creationTime
     publishedVariants.sort(
       (a, b) =>
@@ -136,8 +158,7 @@ export const createReview = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    // Basic validation
-    const rating = Math.max(1, Math.min(5, Math.round(args.rating)));
+    const rating = normalizePublicReviewRating(args.rating);
     // Ensure course exists
     const course = await ctx.db.get(args.courseId);
     if (!course) throw new Error("Course not found");
@@ -145,6 +166,18 @@ export const createReview = mutation({
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject ?? "anonymous";
     const userName = identity?.name ?? "Anonymous";
+
+    const existingReview = identity
+      ? await ctx.db
+          .query("reviews")
+          .withIndex("by_course_and_user", (q) =>
+            q.eq("course", args.courseId).eq("userId", userId),
+          )
+          .first()
+      : null;
+    if (existingReview) {
+      throw new Error("You have already reviewed this course");
+    }
 
     const reviewId = await ctx.db.insert("reviews", {
       course: args.courseId,
@@ -155,8 +188,9 @@ export const createReview = mutation({
       isEdited: false,
     });
 
-    // Optionally attach to course document if needed in the future
-    // await ctx.db.patch(args.courseId, { reviews: [...(course.reviews ?? []), reviewId] });
+    await ctx.db.patch(args.courseId, {
+      reviews: [...(course.reviews ?? []), reviewId],
+    });
 
     return reviewId;
   },
@@ -170,8 +204,7 @@ export const updateReview = mutation({
     content: v.string(),
   },
   handler: async (ctx, args) => {
-    // Basic validation
-    const rating = Math.max(1, Math.min(5, Math.round(args.rating)));
+    const rating = normalizePublicReviewRating(args.rating);
 
     // Get the review
     const review = await ctx.db.get(args.reviewId);
@@ -214,8 +247,17 @@ export const deleteReview = mutation({
       throw new Error("You can only delete your own reviews");
     }
 
+    const course = await ctx.db.get(review.course);
     // Delete the review
     await ctx.db.delete(args.reviewId);
+
+    if (course) {
+      await ctx.db.patch(review.course, {
+        reviews: (course.reviews ?? []).filter(
+          (reviewId) => String(reviewId) !== String(args.reviewId),
+        ),
+      });
+    }
 
     return args.reviewId;
   },

@@ -4,12 +4,14 @@ import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { downloadCsv, toCsv } from "@/lib/csv";
 
 export default function AdminAuditLogPage() {
   const [search, setSearch] = useState("");
+  const { formatTimestamp } = useAdminTimeZone();
 
   const logs = useQuery(api.adminAudit.listAuditLogs, {
     search: search || undefined,
@@ -85,7 +87,7 @@ export default function AdminAuditLogPage() {
               logs.map((row) => (
                 <tr key={row._id} className="border-t">
                   <td className="px-3 py-2 text-xs text-slate-600">
-                    {new Date(row.createdAt).toLocaleString()}
+                    {formatTimestamp(row.createdAt)}
                   </td>
                   <td className="px-3 py-2 font-medium text-slate-900">
                     {row.action}

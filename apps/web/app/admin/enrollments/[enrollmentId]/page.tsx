@@ -6,6 +6,7 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { Id } from "@mindpoint/backend/data-model";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -29,6 +30,7 @@ export default function AdminEnrollmentDetailPage() {
     "transfer" | "cancel" | null
   >(null);
   const [actionReason, setActionReason] = useState("Cancelled by admin");
+  const { formatTimestamp } = useAdminTimeZone();
 
   const detail = useQuery(api.adminEnrollments.getEnrollmentDetail, {
     enrollmentId,
@@ -126,8 +128,7 @@ export default function AdminEnrollmentDetailPage() {
             <strong>Type:</strong> {detail.courseType || "-"}
           </p>
           <p>
-            <strong>Created:</strong>{" "}
-            {new Date(detail._creationTime).toLocaleString()}
+            <strong>Created:</strong> {formatTimestamp(detail._creationTime)}
           </p>
           <p>
             <strong>Paid:</strong>{" "}

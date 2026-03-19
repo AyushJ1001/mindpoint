@@ -141,9 +141,6 @@ function validatePublishableCourse(course: {
   if (!hasText(course.description)) {
     throw new Error("Course description is required before publishing");
   }
-  if (!hasText(course.content)) {
-    throw new Error("Course content is required before publishing");
-  }
 
   switch (course.type) {
     case "certificate":
@@ -534,7 +531,12 @@ export const deleteCourse = mutation({
       throw new Error("Cannot delete a course with enrollments");
     }
 
-    if ((existing.reviews ?? []).length > 0) {
+    const linkedReview = await ctx.db
+      .query("reviews")
+      .withIndex("by_course", (q) => q.eq("course", args.courseId))
+      .first();
+
+    if (linkedReview) {
       throw new Error("Cannot delete a course with reviews");
     }
 
