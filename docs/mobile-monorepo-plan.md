@@ -293,7 +293,7 @@ Priority order:
 
 Notes:
 
-- Mobile UI does not need to match web one-to-one
+- Mobile UI does not need to match web one-to-one (the main UI can and perhaps should be identical but the navigation UI can be changed based on the normal mobile navigation methods)
 - Feature behavior must remain the same
 
 Exit criteria:
