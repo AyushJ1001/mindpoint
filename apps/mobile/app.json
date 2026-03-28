@@ -14,7 +14,6 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.anonymous.mindpoint-mobile",
       "infoPlist": {
         "CFBundleDisplayName": "The Mind Point"
       }
