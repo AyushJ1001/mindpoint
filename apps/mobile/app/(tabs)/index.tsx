@@ -11,9 +11,10 @@ import { useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { PublicCourse } from "@mindpoint/backend";
 import { CourseCard } from "@/components/CourseCard";
+import { CourseGroupCard } from "@/components/CourseGroupCard";
 import { CourseCardSkeleton } from "@/components/CourseCardSkeleton";
 import { publicEnv } from "@/lib/public-env";
-import { BookOpen } from "lucide-react-native";
+import { BookOpen, Users, Star, GraduationCap } from "lucide-react-native";
 
 const COURSE_TYPES = [
   { label: "All", value: "all" },
@@ -60,11 +61,22 @@ function BrowseCatalogScreen() {
     return courses.filter((c) => c.type === selectedType);
   }, [courses, selectedType]);
 
+  // Group courses by name so variants appear as a single card
+  const courseGroups = useMemo(() => {
+    const nameToCourses = new Map<string, PublicCourse[]>();
+    for (const course of filteredCourses) {
+      const list = nameToCourses.get(course.name) ?? [];
+      list.push(course);
+      nameToCourses.set(course.name, list);
+    }
+    return Array.from(nameToCourses.values());
+  }, [filteredCourses]);
+
   const courseCountLabel = useMemo(() => {
     if (!courses) return "Loading available programs...";
-    const count = filteredCourses.length;
+    const count = courseGroups.length;
     return count === 1 ? "1 program available" : `${count} programs available`;
-  }, [courses, filteredCourses]);
+  }, [courses, courseGroups]);
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -76,8 +88,8 @@ function BrowseCatalogScreen() {
     <View className="flex-1 bg-background">
       <FlatList
         contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 14 }}
-        data={filteredCourses}
-        keyExtractor={(course) => course._id}
+        data={courseGroups}
+        keyExtractor={(group) => group[0]._id}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
@@ -115,6 +127,38 @@ function BrowseCatalogScreen() {
                 Don't miss out on these exciting courses starting soon. Secure
                 your spot today!
               </Text>
+
+              {/* Trust stats row */}
+              <View className="mt-3 flex-row gap-2">
+                <View className="flex-1 items-center rounded-xl bg-white/15 px-2 py-2.5">
+                  <Users size={16} color="#ffffff" />
+                  <Text className="mt-1 text-xs font-bold text-primary-foreground">
+                    1000+
+                  </Text>
+                  <Text className="text-[10px] text-primary-foreground/70">
+                    Students
+                  </Text>
+                </View>
+                <View className="flex-1 items-center rounded-xl bg-white/15 px-2 py-2.5">
+                  <Star size={16} color="#ffffff" />
+                  <Text className="mt-1 text-xs font-bold text-primary-foreground">
+                    4.9
+                  </Text>
+                  <Text className="text-[10px] text-primary-foreground/70">
+                    Rating
+                  </Text>
+                </View>
+                <View className="flex-1 items-center rounded-xl bg-white/15 px-2 py-2.5">
+                  <GraduationCap size={16} color="#ffffff" />
+                  <Text className="mt-1 text-xs font-bold text-primary-foreground">
+                    50+
+                  </Text>
+                  <Text className="text-[10px] text-primary-foreground/70">
+                    Programs
+                  </Text>
+                </View>
+              </View>
+
               <View className="mt-3 rounded-xl bg-card p-4">
                 <Text className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
                   Course catalog
@@ -158,9 +202,19 @@ function BrowseCatalogScreen() {
             </ScrollView>
           </View>
         }
-        renderItem={({ item }) => (
-          <CourseCard course={item} bogoCoursesByType={bogoCoursesByType} />
-        )}
+        renderItem={({ item: group }) =>
+          group.length > 1 ? (
+            <CourseGroupCard
+              courses={group}
+              bogoCoursesByType={bogoCoursesByType}
+            />
+          ) : (
+            <CourseCard
+              course={group[0]}
+              bogoCoursesByType={bogoCoursesByType}
+            />
+          )
+        }
         showsVerticalScrollIndicator={false}
       />
     </View>
