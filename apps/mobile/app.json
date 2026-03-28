@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Mind Point",
+    "name": "The Mind Point",
     "slug": "mindpoint-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -13,7 +13,10 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "CFBundleDisplayName": "The Mind Point"
+      }
     },
     "android": {
       "adaptiveIcon": {

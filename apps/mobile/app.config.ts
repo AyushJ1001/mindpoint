@@ -14,7 +14,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
   return {
     ...config,
-    name: "Mind Point",
+    name: "The Mind Point",
     slug: "mindpoint-mobile",
     scheme: "mindpoint",
     extra: {
