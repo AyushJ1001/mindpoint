@@ -107,8 +107,6 @@ export default function CheckoutScreen() {
         checkoutPrice,
         amountPaid: checkoutPrice,
         redemptionDiscountAmount: 0,
-        couponCode: undefined as string | undefined,
-        mindPointsRedeemed: undefined as number | undefined,
       };
     });
 
