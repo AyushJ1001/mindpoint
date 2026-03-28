@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { useSignIn, useSSO } from "@clerk/clerk-expo";
 import * as AuthSession from "expo-auth-session";
+import Constants from "expo-constants";
 import * as WebBrowser from "expo-web-browser";
 import { GoogleLogo } from "./icons/GoogleLogo";
 
@@ -68,6 +69,13 @@ export function SignInForm() {
 
   const { isLoaded, signIn, setActive } = useSignIn();
   const { startSSOFlow } = useSSO();
+  const iosBundleIdentifier =
+    Constants.expoConfig?.ios?.bundleIdentifier ||
+    "com.anonymous.mindpoint-mobile";
+  const redirectUrl =
+    Platform.OS === "ios"
+      ? `${iosBundleIdentifier}://callback`
+      : AuthSession.makeRedirectUri({ scheme: "mindpoint", path: "callback" });
   const [emailAddress, setEmailAddress] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -84,7 +92,7 @@ export function SignInForm() {
       const { createdSessionId, setActive: ssoSetActive } =
         await startSSOFlow({
           strategy: "oauth_google",
-          redirectUrl: AuthSession.makeRedirectUri(),
+          redirectUrl,
         });
 
       if (createdSessionId && ssoSetActive) {
