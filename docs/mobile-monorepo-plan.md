@@ -293,7 +293,7 @@ Priority order:
 
 Notes:
 
-- Mobile UI does not need to match web one-to-one
+- The majority of the UI, in fact, should be identical to the web version except for things like the navigation aspects, which can be different based on the normal ways we navigate in a mobile app
 - Feature behavior must remain the same
 
 Exit criteria:

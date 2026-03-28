@@ -1,38 +1,38 @@
 import React from "react";
-import { SymbolView } from "expo-symbols";
 import { Tabs } from "expo-router";
-import { Platform } from "react-native";
-import Colors from "@/constants/Colors";
-import { useColorScheme } from "@/components/useColorScheme";
-import { useClientOnlyValue } from "@/components/useClientOnlyValue";
+import { BookOpen, ShoppingCart, User, Menu } from "lucide-react-native";
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-  const headerShown = useClientOnlyValue(false, true);
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        headerShown,
+        tabBarActiveTintColor: "#4338ca",
+        tabBarInactiveTintColor: "#6b7280",
+        tabBarStyle: {
+          backgroundColor: "#ffffff",
+          borderTopColor: "#d4dae6",
+        },
+        headerStyle: {
+          backgroundColor: "#ffffff",
+        },
+        headerTintColor: "#1a1f2e",
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Browse",
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={
-                Platform.select({
-                  ios: "book.pages",
-                  android: "book",
-                  default: "book",
-                }) ?? "book"
-              }
-              tintColor={color}
-              size={28}
-            />
+          tabBarIcon: ({ color, size }) => (
+            <BookOpen size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="cart"
+        options={{
+          title: "Cart",
+          tabBarIcon: ({ color, size }) => (
+            <ShoppingCart size={size} color={color} />
           ),
         }}
       />
@@ -40,18 +40,17 @@ export default function TabLayout() {
         name="account"
         options={{
           title: "Account",
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={
-                Platform.select({
-                  ios: "person.crop.circle",
-                  android: "person",
-                  default: "person",
-                }) ?? "person"
-              }
-              tintColor={color}
-              size={28}
-            />
+          tabBarIcon: ({ color, size }) => (
+            <User size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: "More",
+          tabBarIcon: ({ color, size }) => (
+            <Menu size={size} color={color} />
           ),
         }}
       />

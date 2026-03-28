@@ -7,12 +7,17 @@
     "apps/*",
     "packages/*"
   ],
+  "overrides": {
+    "lightningcss": "1.31.1"
+  },
   "scripts": {
     "dev": "npm-run-all --parallel dev:web dev:mobile dev:backend",
     "dev:web": "node scripts/run-web-with-env.js dev",
-    "dev:mobile": "node scripts/run-mobile-with-env.js start",
+    "dev:mobile": "cd apps/mobile && bun run start",
     "ios:mobile": "node scripts/run-mobile-with-env.js ios",
+    "ios:mobile:build": "node scripts/run-mobile-with-env.js run:ios",
     "android:mobile": "node scripts/run-mobile-with-env.js android",
+    "android:mobile:build": "node scripts/run-mobile-with-env.js run:android",
     "dev:backend": "convex dev",
     "predev": "convex dev --until-success && convex dashboard",
     "build": "node scripts/run-web-with-env.js build",
