@@ -19,6 +19,7 @@ import { TherapyFAQSection } from "@/components/therapy/therapy-faq-section";
 import { SupervisedFAQSection } from "@/components/therapy/supervised-faq-section";
 import { CommunitiesSection } from "./communities-section";
 import { TrustBar } from "./trust-bar";
+import VideoTestimonialsSection from "@/components/VideoTestimonialsSection";
 
 interface CourseTypeRendererProps {
   course: PublicCourse;
@@ -74,6 +75,7 @@ export default function CourseTypeRenderer({
     return (
       <View>
         {renderCourseTypeContent()}
+        <VideoTestimonialsSection />
         <TrustBar />
         <ReviewsSection courseId={course._id} courseType={course.type} />
         {courseType === "supervised" ? (
@@ -94,6 +96,7 @@ export default function CourseTypeRenderer({
       <WhoShouldDo />
       <WhyChoose />
       <Certification courseType={course.type} />
+      <VideoTestimonialsSection />
       <ReviewsSection courseId={course._id} courseType={course.type} />
       <FAQSection />
       <CommunitiesSection />
