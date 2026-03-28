@@ -1,15 +1,32 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
-  ActivityIndicator,
   FlatList,
-  StyleSheet,
+  ScrollView,
   Text,
   View,
+  Pressable,
+  RefreshControl,
 } from "react-native";
 import { useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
+import type { PublicCourse } from "@mindpoint/backend";
 import { CourseCard } from "@/components/CourseCard";
+import { CourseCardSkeleton } from "@/components/CourseCardSkeleton";
 import { publicEnv } from "@/lib/public-env";
+import { BookOpen } from "lucide-react-native";
+
+const COURSE_TYPES = [
+  { label: "All", value: "all" },
+  { label: "Certificate", value: "certificate" },
+  { label: "Diploma", value: "diploma" },
+  { label: "Therapy", value: "therapy" },
+  { label: "Internship", value: "internship" },
+  { label: "Masterclass", value: "masterclass" },
+  { label: "Pre-Recorded", value: "pre-recorded" },
+  { label: "Supervised", value: "supervised" },
+  { label: "Resume Studio", value: "resume-studio" },
+  { label: "Worksheet", value: "worksheet" },
+] as const;
 
 export default function BrowseScreen() {
   if (!publicEnv.convexUrl) {
@@ -20,57 +37,130 @@ export default function BrowseScreen() {
 }
 
 function BrowseCatalogScreen() {
-  // `BrowseScreen` only renders this branch when the Convex provider invariant holds.
-  const courses = useQuery(api.courses.listCourses, { count: 24 });
-  const courseCountLabel = useMemo(() => {
-    if (!courses) {
-      return "Loading available programs...";
-    }
+  const courses = useQuery(api.courses.listCourses, { count: 100 });
+  const [selectedType, setSelectedType] = useState("all");
+  const [refreshing, setRefreshing] = useState(false);
 
-    return courses.length === 1
-      ? "1 program available now"
-      : `${courses.length} programs available now`;
+  // Build BOGO courses lookup by type
+  const bogoCoursesByType = useMemo(() => {
+    if (!courses) return {};
+    const map: Record<string, PublicCourse[]> = {};
+    for (const course of courses) {
+      if (course.bogo && course.type) {
+        if (!map[course.type]) map[course.type] = [];
+        map[course.type].push(course);
+      }
+    }
+    return map;
   }, [courses]);
 
+  const filteredCourses = useMemo(() => {
+    if (!courses) return [];
+    if (selectedType === "all") return courses;
+    return courses.filter((c) => c.type === selectedType);
+  }, [courses, selectedType]);
+
+  const courseCountLabel = useMemo(() => {
+    if (!courses) return "Loading available programs...";
+    const count = filteredCourses.length;
+    return count === 1 ? "1 program available" : `${count} programs available`;
+  }, [courses, filteredCourses]);
+
+  const handleRefresh = () => {
+    setRefreshing(true);
+    // Convex queries auto-refresh; we just need to indicate we're done
+    setTimeout(() => setRefreshing(false), 1000);
+  };
+
   return (
-    <View style={styles.screen}>
+    <View className="flex-1 bg-background">
       <FlatList
-        contentContainerStyle={styles.content}
-        data={courses ?? []}
+        contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 14 }}
+        data={filteredCourses}
         keyExtractor={(course) => course._id}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
+        }
         ListEmptyComponent={
           courses ? (
-            <View style={styles.emptyState}>
-              <Text style={styles.emptyTitle}>No programs available yet</Text>
-              <Text style={styles.emptyCopy}>
+            <View className="items-center rounded-xl border border-border bg-card p-6">
+              <BookOpen size={32} color="#6b7280" />
+              <Text className="mt-3 text-lg font-semibold text-foreground">
+                No programs available yet
+              </Text>
+              <Text className="mt-1 text-center text-sm text-muted-foreground">
                 New cohorts and self-paced options will appear here as soon as
                 they are published.
               </Text>
             </View>
           ) : (
-            <View style={styles.loadingState}>
-              <ActivityIndicator color="#0f766e" />
+            <View className="gap-3.5">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <CourseCardSkeleton key={i} />
+              ))}
             </View>
           )
         }
         ListHeaderComponent={
-          <View style={styles.hero}>
-            <Text style={styles.eyebrow}>Explore</Text>
-            <Text style={styles.title}>Discover upcoming programs</Text>
-            <Text style={styles.copy}>
-              Browse current courses, check pricing, and find the format that
-              fits your next step.
-            </Text>
-            <View style={styles.statusCard}>
-              <Text style={styles.statusLabel}>Course catalog</Text>
-              <Text style={styles.statusValue}>{courseCountLabel}</Text>
-              <Text style={styles.statusMeta}>
-                Sign in from the Account tab to view enrollments and rewards.
+          <View className="gap-4">
+            {/* Hero section */}
+            <View className="rounded-2xl bg-primary p-5">
+              <Text className="text-xs font-bold uppercase tracking-wider text-primary-foreground/70">
+                Explore
               </Text>
+              <Text className="mt-2 text-2xl font-bold text-primary-foreground">
+                Upcoming Courses
+              </Text>
+              <Text className="mt-1 text-sm leading-5 text-primary-foreground/80">
+                Don't miss out on these exciting courses starting soon. Secure
+                your spot today!
+              </Text>
+              <View className="mt-3 rounded-xl bg-card p-4">
+                <Text className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                  Course catalog
+                </Text>
+                <Text className="mt-1 text-lg font-bold text-foreground">
+                  {courseCountLabel}
+                </Text>
+                <Text className="mt-0.5 text-xs text-muted-foreground">
+                  Sign in from the Account tab to view enrollments and rewards.
+                </Text>
+              </View>
             </View>
+
+            {/* Category filter */}
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={{ gap: 8 }}
+            >
+              {COURSE_TYPES.map((type) => (
+                <Pressable
+                  key={type.value}
+                  onPress={() => setSelectedType(type.value)}
+                  className={`rounded-[999px] px-4 py-2 ${
+                    selectedType === type.value
+                      ? "bg-primary"
+                      : "bg-secondary"
+                  }`}
+                >
+                  <Text
+                    className={`text-sm font-medium ${
+                      selectedType === type.value
+                        ? "text-primary-foreground"
+                        : "text-secondary-foreground"
+                    }`}
+                  >
+                    {type.label}
+                  </Text>
+                </Pressable>
+              ))}
+            </ScrollView>
           </View>
         }
-        renderItem={({ item }) => <CourseCard course={item} />}
+        renderItem={({ item }) => (
+          <CourseCard course={item} bogoCoursesByType={bogoCoursesByType} />
+        )}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -79,108 +169,30 @@ function BrowseCatalogScreen() {
 
 function BrowseUnavailableScreen() {
   return (
-    <View style={styles.screen}>
-      <View style={styles.content}>
-        <View style={styles.hero}>
-          <Text style={styles.eyebrow}>Explore</Text>
-          <Text style={styles.title}>Discover upcoming programs</Text>
-          <Text style={styles.copy}>
-            Browse current courses, check pricing, and find the format that
-            fits your next step.
+    <View className="flex-1 bg-background">
+      <View className="p-5">
+        <View className="rounded-2xl bg-primary p-5">
+          <Text className="text-xs font-bold uppercase tracking-wider text-primary-foreground/70">
+            Explore
+          </Text>
+          <Text className="mt-2 text-2xl font-bold text-primary-foreground">
+            Upcoming Courses
+          </Text>
+          <Text className="mt-1 text-sm leading-5 text-primary-foreground/80">
+            Browse current courses, check pricing, and find the format that fits
+            your next step.
           </Text>
         </View>
-        <View style={styles.emptyState}>
-          <Text style={styles.emptyTitle}>Course catalog unavailable</Text>
-          <Text style={styles.emptyCopy}>
-            The app is missing its course service configuration. Add the
-            Convex URL to the root `.env`, then restart Metro.
+        <View className="mt-4 items-center rounded-xl border border-border bg-card p-6">
+          <Text className="text-lg font-semibold text-foreground">
+            Course catalog unavailable
+          </Text>
+          <Text className="mt-1 text-center text-sm text-muted-foreground">
+            The app is missing its course service configuration. Add the Convex
+            URL to the root .env, then restart Metro.
           </Text>
         </View>
       </View>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  content: {
-    gap: 14,
-    padding: 20,
-    paddingBottom: 40,
-  },
-  copy: {
-    color: "#d7e7ee",
-    fontSize: 15,
-    lineHeight: 22,
-  },
-  emptyCopy: {
-    color: "#516170",
-    fontSize: 14,
-    lineHeight: 20,
-    textAlign: "center",
-  },
-  emptyState: {
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderColor: "#d9e2ec",
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 8,
-    padding: 20,
-  },
-  emptyTitle: {
-    color: "#0f1720",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  eyebrow: {
-    color: "#a7f3d0",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 1.2,
-    textTransform: "uppercase",
-  },
-  hero: {
-    backgroundColor: "#0f4c5c",
-    borderRadius: 28,
-    gap: 10,
-    padding: 20,
-  },
-  loadingState: {
-    alignItems: "center",
-    justifyContent: "center",
-    paddingVertical: 40,
-  },
-  screen: {
-    flex: 1,
-    backgroundColor: "#f3f7fa",
-  },
-  statusCard: {
-    backgroundColor: "#ffffff",
-    borderRadius: 20,
-    gap: 4,
-    marginTop: 10,
-    padding: 16,
-  },
-  statusLabel: {
-    color: "#516170",
-    fontSize: 12,
-    fontWeight: "700",
-    letterSpacing: 0.8,
-    textTransform: "uppercase",
-  },
-  statusMeta: {
-    color: "#516170",
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  statusValue: {
-    color: "#0f1720",
-    fontSize: 18,
-    fontWeight: "700",
-  },
-  title: {
-    color: "#ffffff",
-    fontSize: 30,
-    fontWeight: "700",
-  },
-});

@@ -31,6 +31,8 @@ const scriptArgsByName = {
   ios: ["start", "--ios"],
   start: ["start"],
   web: ["start", "--web"],
+  "run:ios": ["run:ios"],
+  "run:android": ["run:android"],
 };
 
 const expoArgs = scriptArgsByName[script] || [script];

@@ -5,12 +5,15 @@ import { ConvexProvider } from "convex/react";
 import { ConvexProviderWithClerk } from "convex/react-clerk";
 import { publicEnv } from "@/lib/public-env";
 import { tokenCache } from "@/lib/token-cache";
+import { CartProvider } from "@/components/CartProvider";
 
 const convexClient = publicEnv.convexUrl
   ? new ConvexReactClient(publicEnv.convexUrl)
   : null;
 
 export function AppProviders({ children }: PropsWithChildren) {
+  const inner = <CartProvider>{children}</CartProvider>;
+
   if (publicEnv.clerkPublishableKey && convexClient) {
     return (
       <ClerkProvider
@@ -18,7 +21,7 @@ export function AppProviders({ children }: PropsWithChildren) {
         tokenCache={tokenCache}
       >
         <ConvexProviderWithClerk client={convexClient} useAuth={useAuth}>
-          {children}
+          {inner}
         </ConvexProviderWithClerk>
       </ClerkProvider>
     );
@@ -30,14 +33,14 @@ export function AppProviders({ children }: PropsWithChildren) {
         publishableKey={publicEnv.clerkPublishableKey}
         tokenCache={tokenCache}
       >
-        {children}
+        {inner}
       </ClerkProvider>
     );
   }
 
   if (convexClient) {
-    return <ConvexProvider client={convexClient}>{children}</ConvexProvider>;
+    return <ConvexProvider client={convexClient}>{inner}</ConvexProvider>;
   }
 
-  return <>{children}</>;
+  return <>{inner}</>;
 }

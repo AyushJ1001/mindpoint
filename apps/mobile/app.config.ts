@@ -1,26 +1,49 @@
 import type { ConfigContext, ExpoConfig } from "expo/config";
+import dotenv from "dotenv";
+import path from "path";
 import { readPublicEnv } from "@mindpoint/config/env";
 
 export default ({ config }: ConfigContext): ExpoConfig => {
+  const rootDir = path.resolve(__dirname, "../..");
+
+  dotenv.config({ path: path.join(rootDir, ".env"), quiet: true });
+  dotenv.config({
+    path: path.join(rootDir, ".env.local"),
+    override: true,
+    quiet: true,
+  });
+
   // Only NEXT_PUBLIC_* values are embedded into the mobile bundle. Razorpay's
   // key here is the publishable key ID; the secret remains server-only.
   const publicEnv = readPublicEnv(process.env);
 
   if (!publicEnv.convexUrl || !publicEnv.clerkPublishableKey) {
     console.warn(
-      "Mind Point mobile env is incomplete. Start Expo via the root mobile wrapper script so app.config.ts receives the root .env values.",
+      "Mind Point mobile env is incomplete after loading the root .env files.",
     );
   }
 
   return {
     ...config,
-    name: "Mind Point",
+    name: "The Mind Point",
     slug: "mindpoint-mobile",
     scheme: "mindpoint",
+    ios: {
+      ...config.ios,
+      infoPlist: {
+        ...config.ios?.infoPlist,
+        CFBundleDisplayName: "The Mind Point",
+      },
+    },
     extra: {
       ...config.extra,
       publicEnv,
     },
-    plugins: ["expo-router", "expo-secure-store"],
+    plugins: [
+      "expo-dev-client",
+      "expo-router",
+      "expo-secure-store",
+      "expo-document-picker",
+    ],
   };
 };
