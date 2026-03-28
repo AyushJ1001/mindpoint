@@ -12,6 +12,12 @@ export type PaymentOrder = {
   id: string;
 };
 
+export type VerifyPaymentInput = {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+};
+
 type RequestPaymentOrderOptions = {
   endpoint?: string;
   fetchImpl?: FetchImpl;

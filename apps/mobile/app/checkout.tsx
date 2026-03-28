@@ -15,7 +15,7 @@ import { useUser } from "@clerk/clerk-expo";
 import { useConvexAuth, useQuery, useMutation } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { Id } from "@mindpoint/backend/data-model";
-import { showRupees, getOfferDetails } from "@mindpoint/domain/pricing";
+import { showRupees } from "@mindpoint/domain/pricing";
 import { Image } from "expo-image";
 import {
   ShoppingCart,
@@ -24,8 +24,6 @@ import {
   Gift,
   User,
   Mail,
-  Phone,
-  Check,
 } from "lucide-react-native";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -39,16 +37,39 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { createPaymentOrder } from "@/lib/api-client";
+import { createPaymentOrder, verifyRazorpayPayment } from "@/lib/api-client";
 import { getReferralCode, clearReferralCode } from "@/lib/referral-storage";
 import { publicEnv } from "@/lib/public-env";
-import { showToast, showErrorToast } from "@/lib/toast";
+import { showToast } from "@/lib/toast";
+
+type CheckoutPricingItem = {
+  courseId: Id<"courses">;
+  listedPrice: number;
+  checkoutPrice: number;
+  amountPaid: number;
+  redemptionDiscountAmount: number;
+  couponCode?: string;
+  mindPointsRedeemed?: number;
+};
+
+type CheckoutPricing = {
+  totalAmountPaid: number;
+  items: CheckoutPricingItem[];
+};
+
+type AppliedCoupon = {
+  code: string;
+  discount: number;
+  courseType: string;
+  pointsCost: number;
+};
 
 export default function CheckoutScreen() {
   const router = useRouter();
-  const { items, cartTotal, isEmpty, emptyCart } = useCart();
+  const { items, cartTotal, isEmpty, emptyCart, metadata, clearCartMetadata } =
+    useCart();
   const { user, isLoaded: isUserLoaded } = useUser();
-  const { isAuthenticated } = useConvexAuth();
+  useConvexAuth();
   const [isProcessing, setIsProcessing] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -75,7 +96,7 @@ export default function CheckoutScreen() {
   }, []);
 
   // Build checkout pricing from cart items
-  const checkoutPricing = useMemo(() => {
+  const fallbackCheckoutPricing = useMemo<CheckoutPricing>(() => {
     const pricedItems = items.map((item) => {
       const listedPrice = Math.round(item.originalPrice ?? item.price ?? 0);
       const checkoutPrice = Math.round(item.price ?? 0);
@@ -96,6 +117,34 @@ export default function CheckoutScreen() {
       items: pricedItems,
     };
   }, [items]);
+
+  const checkoutPricing = useMemo<CheckoutPricing>(() => {
+    const storedPricing = metadata?.checkoutPricing as
+      | CheckoutPricing
+      | undefined;
+    if (!storedPricing) {
+      return fallbackCheckoutPricing;
+    }
+
+    const cartIds = items.map((item) => String(item.id)).sort();
+    const pricingIds = storedPricing.items
+      .map((item) => String(item.courseId))
+      .sort();
+
+    if (
+      cartIds.length !== pricingIds.length ||
+      cartIds.some((id, index) => id !== pricingIds[index])
+    ) {
+      return fallbackCheckoutPricing;
+    }
+
+    return storedPricing;
+  }, [fallbackCheckoutPricing, items, metadata]);
+
+  const appliedCoupon = metadata?.appliedCoupon as
+    | AppliedCoupon
+    | null
+    | undefined;
 
   const totalAmount = checkoutPricing.totalAmountPaid;
   const usesLiveNativePayments =
@@ -137,6 +186,13 @@ export default function CheckoutScreen() {
         });
 
         if (enrollments && enrollments.length > 0) {
+          const couponCode = checkoutPricing.items.find(
+            (item) => item.couponCode,
+          )?.couponCode;
+          if (couponCode) {
+            await markCouponUsed({ couponCode });
+          }
+
           showToast(
             "Payment successful!",
             isDemoPaymentMode
@@ -179,10 +235,12 @@ export default function CheckoutScreen() {
 
       if (referralCode) await clearReferralCode();
       emptyCart();
+      clearCartMetadata();
       router.replace("/(tabs)/account");
     },
     [
       checkoutPricing,
+      clearCartMetadata,
       emptyCart,
       handleCartCheckout,
       handleGuestCheckout,
@@ -212,9 +270,11 @@ export default function CheckoutScreen() {
 
         // Try to import and use react-native-razorpay
         let RazorpayCheckout: {
-          open: (
-            options: Record<string, unknown>,
-          ) => Promise<{ razorpay_payment_id: string }>;
+          open: (options: Record<string, unknown>) => Promise<{
+            razorpay_payment_id: string;
+            razorpay_order_id: string;
+            razorpay_signature: string;
+          }>;
         };
         try {
           RazorpayCheckout = require("react-native-razorpay").default;
@@ -246,7 +306,12 @@ export default function CheckoutScreen() {
         };
 
         // Open Razorpay checkout
-        await RazorpayCheckout.open(razorpayOptions);
+        const paymentResult = await RazorpayCheckout.open(razorpayOptions);
+        await verifyRazorpayPayment({
+          razorpayOrderId: paymentResult.razorpay_order_id,
+          razorpayPaymentId: paymentResult.razorpay_payment_id,
+          razorpaySignature: paymentResult.razorpay_signature,
+        });
         await completeCheckout(payerInfo);
       } catch (error: unknown) {
         const message =
@@ -410,6 +475,13 @@ export default function CheckoutScreen() {
                     {showRupees(totalAmount)}
                   </Text>
                 </View>
+                {appliedCoupon ? (
+                  <Text className="mt-1 text-xs text-green-600">
+                    {appliedCoupon.discount === 100
+                      ? `Coupon applied to one ${appliedCoupon.courseType} course`
+                      : `Coupon applied - ${appliedCoupon.discount}% off one ${appliedCoupon.courseType} course`}
+                  </Text>
+                ) : null}
               </View>
             </CardContent>
           </Card>

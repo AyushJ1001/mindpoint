@@ -36,15 +36,16 @@ export function useAsyncCartStorage(
 
   const setValue = useCallback(
     (value: string | Function) => {
-      const resolved =
-        typeof value === "function" ? value(storedValue) : value;
-      setStoredValue(resolved);
-      // Write through to AsyncStorage asynchronously
-      AsyncStorage.setItem(key, resolved).catch(() => {
-        // Silently ignore write errors
+      setStoredValue((currentValue) => {
+        const resolved =
+          typeof value === "function" ? value(currentValue) : value;
+        AsyncStorage.setItem(key, resolved).catch(() => {
+          // Silently ignore write errors
+        });
+        return resolved;
       });
     },
-    [key, storedValue],
+    [key],
   );
 
   // Return initial value until hydrated to avoid flash

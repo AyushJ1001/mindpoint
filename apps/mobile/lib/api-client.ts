@@ -16,10 +16,16 @@ const DEFAULT_TIMEOUT_MS = 30_000;
 
 function getErrorMessage(payload: unknown, fallback: string): string {
   if (!payload || typeof payload !== "object") return fallback;
-  if ("error" in payload && typeof (payload as Record<string, unknown>).error === "string") {
+  if (
+    "error" in payload &&
+    typeof (payload as Record<string, unknown>).error === "string"
+  ) {
     return (payload as Record<string, string>).error;
   }
-  if ("message" in payload && typeof (payload as Record<string, unknown>).message === "string") {
+  if (
+    "message" in payload &&
+    typeof (payload as Record<string, unknown>).message === "string"
+  ) {
     return (payload as Record<string, string>).message;
   }
   return fallback;
@@ -35,7 +41,10 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 
   if (!response.ok) {
     throw new Error(
-      getErrorMessage(payload, `Request failed with status ${response.status}.`),
+      getErrorMessage(
+        payload,
+        `Request failed with status ${response.status}.`,
+      ),
     );
   }
 
@@ -111,8 +120,23 @@ export async function postFormData<TResponse>(
  * Create a Razorpay payment order via the web API.
  */
 export async function createPaymentOrder(amount: number) {
-  return postJson<{ amount: number }, { id: string; amount: number; currency: string }>(
-    "/api/create-order",
-    { amount },
-  );
+  return postJson<
+    { amount: number },
+    { id: string; amount: number; currency: string }
+  >("/api/create-order", { amount });
+}
+
+export async function verifyRazorpayPayment(payment: {
+  razorpayOrderId: string;
+  razorpayPaymentId: string;
+  razorpaySignature: string;
+}) {
+  return postJson<
+    {
+      razorpayOrderId: string;
+      razorpayPaymentId: string;
+      razorpaySignature: string;
+    },
+    { success: boolean }
+  >("/api/verify-payment", payment);
 }

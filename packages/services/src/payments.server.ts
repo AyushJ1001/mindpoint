@@ -1,9 +1,14 @@
 import "server-only";
 
+import crypto from "node:crypto";
 import { getRazorpayServerConfig } from "@mindpoint/config/server";
 import Razorpay from "razorpay";
 
-import type { CreatePaymentOrderInput, PaymentOrder } from "./payments";
+import type {
+  CreatePaymentOrderInput,
+  PaymentOrder,
+  VerifyPaymentInput,
+} from "./payments";
 
 export class InvalidPaymentAmountError extends Error {
   constructor() {
@@ -32,4 +37,17 @@ export async function createPaymentOrder(
     amount: roundedAmount * 100,
     currency: "INR",
   })) as PaymentOrder;
+}
+
+export function verifyPaymentSignature(input: VerifyPaymentInput): boolean {
+  const { razorpayKeySecret } = getRazorpayServerConfig();
+  const expectedSignature = crypto
+    .createHmac("sha256", razorpayKeySecret)
+    .update(`${input.razorpayOrderId}|${input.razorpayPaymentId}`)
+    .digest("hex");
+
+  return crypto.timingSafeEqual(
+    Buffer.from(expectedSignature),
+    Buffer.from(input.razorpaySignature),
+  );
 }

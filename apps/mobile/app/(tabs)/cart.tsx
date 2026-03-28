@@ -28,12 +28,7 @@ import {
   Check,
 } from "lucide-react-native";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
@@ -44,6 +39,7 @@ import {
 } from "@/components/ui/dialog";
 import { CartItemRow } from "@/components/CartItemRow";
 import { CouponInput } from "@/components/CouponInput";
+import { useNow } from "@/hooks/use-now";
 
 export default function CartScreen() {
   const router = useRouter();
@@ -54,6 +50,7 @@ export default function CartScreen() {
     cartTotal,
     isEmpty,
     emptyCart,
+    setCartMetadata,
   } = useCart();
   const { user } = useUser();
   const { isAuthenticated } = useConvexAuth();
@@ -80,10 +77,10 @@ export default function CartScreen() {
   );
 
   // Compute offer details for each cart item
-  const minuteKey = Math.floor(Date.now() / 60000);
+  const now = useNow();
+  const minuteKey = Math.floor(now / 60000);
   const itemOfferDetails = useMemo(() => {
     const newOfferDetails: Record<string, OfferDetails> = {};
-    if (minuteKey < 0) return {};
     items.forEach((item) => {
       if (item.offer || item.bogo) {
         const offerPrice = item.price || 0;
@@ -114,9 +111,7 @@ export default function CartScreen() {
     return newOfferDetails;
   }, [items, minuteKey]);
 
-  const hasBogoItems = items.some(
-    (item) => itemOfferDetails[item.id]?.hasBogo,
-  );
+  const hasBogoItems = items.some((item) => itemOfferDetails[item.id]?.hasBogo);
 
   const activeBogoTypes = useMemo(() => {
     const types = new Set<string>();
@@ -239,6 +234,13 @@ export default function CartScreen() {
 
   const discountedTotal = checkoutPricing.totalAmountPaid;
 
+  useEffect(() => {
+    setCartMetadata({
+      appliedCoupon,
+      checkoutPricing,
+    });
+  }, [appliedCoupon, checkoutPricing, setCartMetadata]);
+
   // Mind Points earned calculation
   const totalPointsEarned = useMemo(() => {
     if (!user?.id) return 0;
@@ -305,9 +307,9 @@ export default function CartScreen() {
   // Loading state
   if (!mounted) {
     return (
-      <View className="flex-1 items-center justify-center bg-background px-6">
+      <View className="bg-background flex-1 items-center justify-center px-6">
         <ActivityIndicator size="large" color="#4338ca" />
-        <Text className="mt-4 text-lg font-semibold text-foreground">
+        <Text className="text-foreground mt-4 text-lg font-semibold">
           Loading cart...
         </Text>
       </View>
@@ -317,19 +319,16 @@ export default function CartScreen() {
   // Empty state
   if (isEmpty) {
     return (
-      <View className="flex-1 items-center justify-center bg-background px-6">
+      <View className="bg-background flex-1 items-center justify-center px-6">
         <ShoppingCart size={48} color="#6b7280" />
-        <Text className="mt-4 text-xl font-semibold text-foreground">
+        <Text className="text-foreground mt-4 text-xl font-semibold">
           Your cart is empty
         </Text>
-        <Text className="mt-2 text-center text-sm text-muted-foreground">
+        <Text className="text-muted-foreground mt-2 text-center text-sm">
           Add some courses to get started with your learning journey.
         </Text>
-        <Button
-          className="mt-6"
-          onPress={() => router.push("/(tabs)")}
-        >
-          <Text className="font-semibold text-primary-foreground">
+        <Button className="mt-6" onPress={() => router.push("/(tabs)")}>
+          <Text className="text-primary-foreground font-semibold">
             Browse Courses
           </Text>
         </Button>
@@ -339,7 +338,7 @@ export default function CartScreen() {
 
   return (
     <ScrollView
-      className="flex-1 bg-background"
+      className="bg-background flex-1"
       contentContainerClassName="pb-8"
       showsVerticalScrollIndicator={false}
       refreshControl={
@@ -348,10 +347,10 @@ export default function CartScreen() {
     >
       {/* Header */}
       <View className="px-4 pt-4 pb-2">
-        <Text className="text-2xl font-bold tracking-tight text-foreground">
+        <Text className="text-foreground text-2xl font-bold tracking-tight">
           Shopping Cart
         </Text>
-        <Text className="mt-1 text-sm text-muted-foreground">
+        <Text className="text-muted-foreground mt-1 text-sm">
           Review your selected courses and proceed to checkout.
         </Text>
       </View>
@@ -487,9 +486,7 @@ export default function CartScreen() {
                     style={{ marginTop: 2 }}
                   />
                   <Text className="flex-1 text-xs font-medium text-emerald-700">
-                    {bogoLabels.length > 0
-                      ? bogoLabels.join(", ")
-                      : "BOGO"}{" "}
+                    {bogoLabels.length > 0 ? bogoLabels.join(", ") : "BOGO"}{" "}
                     applied:{" "}
                     {activeBogoTypes.length > 0
                       ? activeBogoTypes.join(", ")
@@ -522,22 +519,22 @@ export default function CartScreen() {
 
             {/* Subtotal */}
             <View className="flex-row items-center justify-between">
-              <Text className="text-sm text-foreground">
+              <Text className="text-foreground text-sm">
                 Subtotal ({items.length} items)
               </Text>
-              <Text className="text-sm text-foreground">
+              <Text className="text-foreground text-sm">
                 {showRupees(Math.round(cartTotal))}
               </Text>
             </View>
 
             {/* Tax */}
             <View className="flex-row items-center justify-between">
-              <Text className="text-sm text-foreground">Tax</Text>
-              <Text className="text-sm text-foreground">{"\u20B9"}0.00</Text>
+              <Text className="text-foreground text-sm">Tax</Text>
+              <Text className="text-foreground text-sm">{"\u20B9"}0.00</Text>
             </View>
 
             {/* Coupon */}
-            <View className="border-t border-border pt-4">
+            <View className="border-border border-t pt-4">
               <CouponInput
                 couponCode={couponCode}
                 setCouponCode={setCouponCode}
@@ -550,12 +547,12 @@ export default function CartScreen() {
             </View>
 
             {/* Total */}
-            <View className="border-t border-border pt-4 gap-2">
+            <View className="border-border gap-2 border-t pt-4">
               <View className="flex-row items-center justify-between">
-                <Text className="text-base font-semibold text-foreground">
+                <Text className="text-foreground text-base font-semibold">
                   Total
                 </Text>
-                <Text className="text-base font-semibold text-foreground">
+                <Text className="text-foreground text-base font-semibold">
                   {showRupees(discountedTotal)}
                 </Text>
               </View>
@@ -583,11 +580,8 @@ export default function CartScreen() {
             </View>
 
             {/* Checkout Button */}
-            <Button
-              className="mt-2"
-              onPress={() => router.push("/checkout")}
-            >
-              <Text className="font-semibold text-primary-foreground">
+            <Button className="mt-2" onPress={() => router.push("/checkout")}>
+              <Text className="text-primary-foreground font-semibold">
                 Proceed to Checkout
               </Text>
             </Button>
@@ -612,7 +606,7 @@ export default function CartScreen() {
             variant="outline"
             onPress={() => setShowClearCartDialog(false)}
           >
-            <Text className="font-semibold text-foreground">Cancel</Text>
+            <Text className="text-foreground font-semibold">Cancel</Text>
           </Button>
           <Button variant="destructive" onPress={handleClearCart}>
             <Text className="font-semibold text-white">Clear Cart</Text>
