@@ -159,13 +159,10 @@ export default function CartScreen() {
       const checkoutPrice = Math.round(item.price ?? 0);
       return {
         courseId: item.id,
-        courseType: item.courseType as string | undefined,
         listedPrice,
         checkoutPrice,
         amountPaid: checkoutPrice,
         redemptionDiscountAmount: 0,
-        couponCode: undefined as string | undefined,
-        mindPointsRedeemed: undefined as number | undefined,
       };
     });
 
@@ -185,7 +182,7 @@ export default function CartScreen() {
       let bestPrice = -1;
       baseItems.forEach((item, index) => {
         if (
-          item.courseType === appliedCoupon.courseType &&
+          items[index]?.courseType === appliedCoupon.courseType &&
           item.checkoutPrice > 0 &&
           item.checkoutPrice > bestPrice
         ) {
@@ -217,9 +214,12 @@ export default function CartScreen() {
         ...item,
         amountPaid,
         redemptionDiscountAmount: discountAmount,
-        couponCode: appliedCoupon.code,
-        mindPointsRedeemed:
-          discountAmount > 0 ? appliedCoupon.pointsCost : undefined,
+        ...(discountAmount > 0
+          ? {
+              couponCode: appliedCoupon.code,
+              mindPointsRedeemed: appliedCoupon.pointsCost,
+            }
+          : {}),
       };
     });
 
