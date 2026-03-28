@@ -30,9 +30,17 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     scheme: "mindpoint",
     ios: {
       ...config.ios,
+      bundleIdentifier: "com.anonymous.mindpoint-mobile",
       infoPlist: {
         ...config.ios?.infoPlist,
         CFBundleDisplayName: "The Mind Point",
+        // Apple validation requires these because a linked dependency references
+        // photo-library APIs, even though the current app flow does not present
+        // an image picker directly.
+        NSPhotoLibraryUsageDescription:
+          "The Mind Point needs photo library access so you can attach and upload images from your library.",
+        NSPhotoLibraryAddUsageDescription:
+          "The Mind Point needs permission to save images to your photo library when you choose to export or download them.",
       },
     },
     extra: {

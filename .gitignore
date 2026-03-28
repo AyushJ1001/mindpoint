@@ -21,6 +21,7 @@
 /apps/web/.next/
 /out/
 /apps/web/out/
+/apps/mobile/build/
 
 # production
 /build
