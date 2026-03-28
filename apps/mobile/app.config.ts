@@ -30,6 +30,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     scheme: "mindpoint",
     ios: {
       ...config.ios,
+      bundleIdentifier: "com.anonymous.mindpoint-mobile",
       infoPlist: {
         ...config.ios?.infoPlist,
         CFBundleDisplayName: "The Mind Point",
