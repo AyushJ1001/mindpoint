@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import type { ReactNode } from "react";
 import {
   Alert,
@@ -56,11 +56,25 @@ function ConnectedAccountScreen() {
   const { isLoading } = useConvexAuth();
   const [activeTab, setActiveTab] = useState<TabName>("Enrollments");
   const [refreshing, setRefreshing] = useState(false);
+  const [clerkLoadTimedOut, setClerkLoadTimedOut] = useState(false);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setTimeout(() => setRefreshing(false), 1000);
   }, []);
+
+  useEffect(() => {
+    if (isLoaded) {
+      setClerkLoadTimedOut(false);
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      setClerkLoadTimedOut(true);
+    }, 8000);
+
+    return () => clearTimeout(timer);
+  }, [isLoaded]);
 
   if (!isLoaded) {
     return (
@@ -77,6 +91,14 @@ function ConnectedAccountScreen() {
             <Text className="text-xl font-bold text-[#1a1f2e]">
               Loading account...
             </Text>
+            {clerkLoadTimedOut ? (
+              <Text className="text-sm leading-5 text-[#64748b]">
+                Account sign-in is taking longer than expected. For TestFlight
+                and App Store builds, make sure the live Clerk instance has
+                Native API enabled and that this iOS app's bundle ID is added on
+                the Native applications page.
+              </Text>
+            ) : null}
           </View>
         </ScrollView>
       </View>
