@@ -33,6 +33,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       infoPlist: {
         ...config.ios?.infoPlist,
         CFBundleDisplayName: "The Mind Point",
+        NSPhotoLibraryUsageDescription:
+          "The Mind Point needs photo library access so you can attach and upload images from your library.",
+        NSPhotoLibraryAddUsageDescription:
+          "The Mind Point needs permission to save images to your photo library when you choose to export or download them.",
       },
     },
     extra: {
