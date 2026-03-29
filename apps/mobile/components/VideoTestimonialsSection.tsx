@@ -1,22 +1,22 @@
-import { useState, useRef } from "react";
+import { useState, useCallback } from "react";
 import {
   View,
   Text,
-  Pressable,
+  TouchableOpacity,
   ScrollView,
   Modal,
   Dimensions,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import { Video, ResizeMode } from "expo-av";
+import { useVideoPlayer, VideoView } from "expo-video";
 import { Play, X } from "lucide-react-native";
 import {
   VIDEO_TESTIMONIALS,
   type VideoTestimonial,
 } from "@/lib/videoTestimonials";
 
-const CARD_WIDTH = 150;
-const CARD_ASPECT = 4 / 5;
+const CARD_WIDTH = 140;
+const CARD_HEIGHT = 175;
 
 function VideoCard({
   testimonial,
@@ -26,72 +26,95 @@ function VideoCard({
   onPress: () => void;
 }) {
   return (
-    <Pressable
+    <TouchableOpacity
       onPress={onPress}
-      style={({ pressed }) => ({
-        opacity: pressed ? 0.9 : 1,
-        width: CARD_WIDTH,
-        aspectRatio: CARD_ASPECT,
-      })}
-      className="overflow-hidden rounded-xl"
+      activeOpacity={0.85}
     >
-      {/* Background gradient (poster fallback) */}
-      <LinearGradient
-        colors={["#dbeafe", "#e0e7ff"]}
-        style={{ position: "absolute", top: 0, left: 0, right: 0, bottom: 0 }}
-      />
-
-      {/* Dark overlay for contrast */}
       <View
-        className="absolute inset-0 bg-black/20"
-        style={{ zIndex: 1 }}
-      />
-
-      {/* Play button */}
-      <View
-        className="absolute inset-0 items-center justify-center"
-        style={{ zIndex: 2 }}
-      >
-        <View className="h-12 w-12 items-center justify-center rounded-full bg-white/90"
-          style={{
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.2,
-            shadowRadius: 4,
-            elevation: 4,
-          }}
-        >
-          <Play
-            size={20}
-            color="#2563eb"
-            fill="#2563eb"
-            style={{ marginLeft: 2 }}
-          />
-        </View>
-      </View>
-
-      {/* Label overlay at bottom */}
-      <LinearGradient
-        colors={["transparent", "rgba(0,0,0,0.6)"]}
         style={{
-          position: "absolute",
-          bottom: 0,
-          left: 0,
-          right: 0,
-          zIndex: 2,
-          paddingTop: 32,
-          paddingBottom: 12,
-          paddingHorizontal: 12,
+          width: CARD_WIDTH,
+          height: CARD_HEIGHT,
+          borderRadius: 12,
+          overflow: "hidden",
+          backgroundColor: "#dbeafe",
         }}
       >
-        <Text className="text-xs font-medium text-white">
-          {testimonial.name || "Student Testimonial"}
-        </Text>
-        {testimonial.role && (
-          <Text className="text-[10px] text-white/80">{testimonial.role}</Text>
-        )}
-      </LinearGradient>
-    </Pressable>
+        {/* Background gradient */}
+        <LinearGradient
+          colors={["#dbeafe", "#c7d2fe", "#e0e7ff"]}
+          style={{
+            width: CARD_WIDTH,
+            height: CARD_HEIGHT,
+          }}
+        />
+
+        {/* Dark overlay */}
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: CARD_WIDTH,
+            height: CARD_HEIGHT,
+            backgroundColor: "rgba(0,0,0,0.1)",
+          }}
+        />
+
+        {/* Play button centered */}
+        <View
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: CARD_WIDTH,
+            height: CARD_HEIGHT,
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <View
+            style={{
+              height: 40,
+              width: 40,
+              alignItems: "center",
+              justifyContent: "center",
+              borderRadius: 20,
+              backgroundColor: "rgba(255,255,255,0.9)",
+              shadowColor: "#000",
+              shadowOffset: { width: 0, height: 2 },
+              shadowOpacity: 0.2,
+              shadowRadius: 4,
+              elevation: 4,
+            }}
+          >
+            <Play
+              size={16}
+              color="#2563eb"
+              fill="#2563eb"
+              style={{ marginLeft: 2 }}
+            />
+          </View>
+        </View>
+
+        {/* Label at bottom */}
+        <LinearGradient
+          colors={["transparent", "rgba(0,0,0,0.55)"]}
+          style={{
+            position: "absolute",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            paddingTop: 28,
+            paddingBottom: 8,
+            paddingHorizontal: 10,
+          }}
+        >
+          <Text style={{ fontSize: 11, fontWeight: "500", color: "white" }}>
+            {testimonial.name || "Student Testimonial"}
+          </Text>
+        </LinearGradient>
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -104,16 +127,18 @@ function VideoModal({
   visible: boolean;
   onClose: () => void;
 }) {
-  const videoRef = useRef<Video>(null);
   const { width, height } = Dimensions.get("window");
 
-  const handleClose = async () => {
-    if (videoRef.current) {
-      await videoRef.current.stopAsync();
-      await videoRef.current.unloadAsync();
+  const player = useVideoPlayer(testimonial?.videoUrl ?? null, (p) => {
+    if (testimonial) {
+      p.play();
     }
+  });
+
+  const handleClose = useCallback(() => {
+    player.pause();
     onClose();
-  };
+  }, [player, onClose]);
 
   return (
     <Modal
@@ -122,23 +147,39 @@ function VideoModal({
       presentationStyle="fullScreen"
       onRequestClose={handleClose}
     >
-      <View className="flex-1 bg-black items-center justify-center">
-        {/* Close button */}
-        <Pressable
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "black",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <TouchableOpacity
           onPress={handleClose}
-          className="absolute top-14 right-5 z-10 h-10 w-10 items-center justify-center rounded-full bg-white/20"
+          activeOpacity={0.7}
+          style={{
+            position: "absolute",
+            top: 56,
+            right: 20,
+            zIndex: 10,
+            height: 40,
+            width: 40,
+            alignItems: "center",
+            justifyContent: "center",
+            borderRadius: 20,
+            backgroundColor: "rgba(255,255,255,0.2)",
+          }}
         >
           <X size={20} color="#ffffff" />
-        </Pressable>
+        </TouchableOpacity>
 
         {testimonial && (
-          <Video
-            ref={videoRef}
-            source={{ uri: testimonial.videoUrl }}
-            useNativeControls
-            resizeMode={ResizeMode.CONTAIN}
-            shouldPlay
+          <VideoView
+            player={player}
             style={{ width, height: height * 0.85 }}
+            contentFit="contain"
+            nativeControls
           />
         )}
       </View>
@@ -165,11 +206,27 @@ export default function VideoTestimonialsSection() {
   if (VIDEO_TESTIMONIALS.length === 0) return null;
 
   return (
-    <View className="mt-8">
-      <Text className="mb-2 text-center text-2xl font-bold text-foreground">
+    <View style={{ marginTop: 32 }}>
+      <Text
+        style={{
+          marginBottom: 8,
+          textAlign: "center",
+          fontSize: 20,
+          fontWeight: "700",
+          color: "#303853",
+        }}
+      >
         Hear From Our Students
       </Text>
-      <Text className="mb-5 text-center text-sm text-muted-foreground">
+      <Text
+        style={{
+          marginBottom: 20,
+          textAlign: "center",
+          fontSize: 13,
+          color: "#717a93",
+          paddingHorizontal: 16,
+        }}
+      >
         Real stories from students who transformed their understanding of mental
         health with The Mind Point
       </Text>
@@ -178,6 +235,7 @@ export default function VideoTestimonialsSection() {
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 12, paddingHorizontal: 4 }}
+        style={{ minHeight: CARD_HEIGHT + 8 }}
       >
         {VIDEO_TESTIMONIALS.map((testimonial) => (
           <VideoCard

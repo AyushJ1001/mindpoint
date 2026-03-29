@@ -58,7 +58,7 @@ export function WhyChoose() {
           >
             <LinearGradient
               colors={["#4338ca", "#7c3aed"]}
-              className="mb-2 h-10 w-10 items-center justify-center rounded-full"
+              style={{ marginBottom: 8, height: 40, width: 40, alignItems: "center", justifyContent: "center", borderRadius: 20 }}
             >
               <reason.icon size={18} color="#ffffff" />
             </LinearGradient>

@@ -25,40 +25,57 @@ function InstagramIcon() {
 
 export function CommunitiesSection() {
   return (
-    <View className="mt-8 overflow-hidden rounded-2xl">
+    <View style={{ marginTop: 32, borderRadius: 16, overflow: "hidden" }}>
       <LinearGradient
         colors={["#2563eb", "#9333ea"]}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
-        className="items-center px-5 py-8"
+        style={{ alignItems: "center", paddingHorizontal: 20, paddingVertical: 28 }}
       >
-        <Text className="mb-2 text-center text-2xl font-bold text-white">
+        <Text
+          style={{
+            marginBottom: 6,
+            textAlign: "center",
+            fontSize: 18,
+            fontWeight: "700",
+            color: "white",
+          }}
+        >
           Join Our Learning Community!
         </Text>
-        <Text className="mb-6 text-center text-sm text-white/90">
+        <Text
+          style={{
+            marginBottom: 20,
+            textAlign: "center",
+            fontSize: 12,
+            lineHeight: 18,
+            color: "rgba(255,255,255,0.9)",
+            paddingHorizontal: 8,
+          }}
+        >
           Connect with fellow learners, share insights, and continue your
           journey together
         </Text>
 
-        <View className="w-full gap-3">
+        <View style={{ width: "100%", gap: 10 }}>
           <Pressable
             onPress={() => Linking.openURL(WHATSAPP_LINK)}
-            className="flex-row items-center justify-center gap-3 rounded-xl bg-white px-6 py-3.5"
+            className="flex-row items-center justify-center gap-3 rounded-xl bg-white px-5 py-3"
             style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
           >
             <WhatsAppIcon />
-            <Text className="text-sm font-semibold text-blue-600">
+            <Text style={{ fontSize: 13, fontWeight: "600", color: "#2563eb" }}>
               Join WhatsApp Community
             </Text>
           </Pressable>
 
           <Pressable
             onPress={() => Linking.openURL(INSTAGRAM_LINK)}
-            className="flex-row items-center justify-center gap-3 rounded-xl bg-white px-6 py-3.5"
+            className="flex-row items-center justify-center gap-3 rounded-xl bg-white px-5 py-3"
             style={({ pressed }) => ({ opacity: pressed ? 0.9 : 1 })}
           >
             <InstagramIcon />
-            <Text className="text-sm font-semibold text-purple-600">
+            <Text style={{ fontSize: 13, fontWeight: "600", color: "#9333ea" }}>
               Join Instagram Community
             </Text>
           </Pressable>
