@@ -1,6 +1,5 @@
 import { View, Text } from "react-native";
 import { Target } from "lucide-react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { Card } from "@/components/ui/card";
 
 const TARGET_AUDIENCE = [

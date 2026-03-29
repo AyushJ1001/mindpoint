@@ -280,7 +280,7 @@ export default function SupervisedCourse({
                 colors={plan.gradientColors}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-                className="px-4 py-4"
+                style={{ paddingHorizontal: 16, paddingVertical: 16 }}
               >
                 <View className="flex-row items-center gap-3">
                   <View className="h-10 w-10 items-center justify-center rounded-xl bg-white/20">
@@ -344,7 +344,7 @@ export default function SupervisedCourse({
                       colors={plan.gradientColors}
                       start={{ x: 0, y: 0 }}
                       end={{ x: 1, y: 0 }}
-                      className="flex-row items-center rounded-xl px-4 py-2.5"
+                      style={{ flexDirection: "row", alignItems: "center", borderRadius: 12, paddingHorizontal: 16, paddingVertical: 10 }}
                     >
                       <Text className="text-sm font-semibold text-white">
                         Start Session

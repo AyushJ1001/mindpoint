@@ -70,7 +70,7 @@ export default function MasterclassCourse({ course }: MasterclassCourseProps) {
                 <View className="flex-row items-start gap-3 p-4">
                   <LinearGradient
                     colors={["#4338ca", "#7c3aed"]}
-                    className="h-11 w-11 items-center justify-center rounded-xl"
+                    style={{ height: 44, width: 44, alignItems: "center", justifyContent: "center", borderRadius: 12 }}
                   >
                     <Icon size={20} color="#ffffff" />
                   </LinearGradient>
