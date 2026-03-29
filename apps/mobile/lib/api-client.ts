@@ -4,7 +4,7 @@ import { publicEnv } from "./public-env";
  * Base URL for the web API. Falls back to production URL if siteUrl is not set.
  */
 function getBaseUrl(): string {
-  return publicEnv.siteUrl || "https://themindpoint.com";
+  return publicEnv.siteUrl || "https://themindpoint.org";
 }
 
 type RequestOptions = {

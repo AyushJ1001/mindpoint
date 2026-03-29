@@ -45,7 +45,7 @@ export function MindPointsTab() {
   const redeemPoints = useMutation(api.mindPoints.redeemPoints);
 
   const referralLink = user?.id
-    ? `https://themindpoint.com/?ref=${user.id}`
+    ? `https://themindpoint.org/?ref=${user.id}`
     : "";
 
   if (!user) {

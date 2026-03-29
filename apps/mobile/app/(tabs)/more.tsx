@@ -12,7 +12,7 @@ import {
 } from "lucide-react-native";
 import { Separator } from "@/components/ui/separator";
 
-const SITE_URL = "https://www.themindpoint.com";
+const SITE_URL = "https://www.themindpoint.org";
 
 type MenuItemProps = {
   icon: React.ReactNode;
