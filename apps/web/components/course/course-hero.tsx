@@ -148,7 +148,7 @@ export default function CourseHero({ course }: CourseHeroProps) {
                   <Badge
                     key={badge.label}
                     variant="secondary"
-                    className="rounded-full border border-white/45 bg-white/78 px-3.5 py-1.5 text-sm shadow-sm"
+                    className="dark:bg-card/76 dark:text-foreground rounded-full border border-white/45 bg-white/78 px-3.5 py-1.5 text-sm shadow-sm dark:border-white/10"
                   >
                     <badge.icon className="mr-1.5 h-3.5 w-3.5" />
                     {badge.label}

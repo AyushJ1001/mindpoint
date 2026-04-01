@@ -57,7 +57,7 @@ export default function CommunitiesSection({
             <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
               <Link
                 href={whatsappLink}
-                className="border-border/70 text-foreground hover:bg-muted inline-flex items-center gap-3 rounded-xl border bg-white/82 px-8 py-4 font-semibold transition-all"
+                className="border-border/70 text-foreground hover:bg-muted dark:bg-card/72 inline-flex items-center gap-3 rounded-xl border bg-white/82 px-8 py-4 font-semibold transition-all dark:border-white/8"
                 target="_blank"
                 rel="noopener noreferrer"
               >
@@ -66,7 +66,7 @@ export default function CommunitiesSection({
               </Link>
               <Link
                 href={instagramLink}
-                className="border-border/70 text-foreground hover:bg-muted inline-flex items-center gap-3 rounded-xl border bg-white/82 px-8 py-4 font-semibold transition-all"
+                className="border-border/70 text-foreground hover:bg-muted dark:bg-card/72 inline-flex items-center gap-3 rounded-xl border bg-white/82 px-8 py-4 font-semibold transition-all dark:border-white/8"
                 target="_blank"
                 rel="noopener noreferrer"
               >

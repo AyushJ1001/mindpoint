@@ -37,7 +37,7 @@ export default function CuratedQuotesSection({
               {quotes.slice(0, 3).map((q, i) => (
                 <blockquote
                   key={i}
-                  className="border-border/70 rounded-[1.3rem] border bg-white/78 px-4 py-4"
+                  className="border-border/70 dark:bg-card/72 rounded-[1.3rem] border bg-white/78 px-4 py-4 dark:border-white/8"
                 >
                   <p className="text-foreground text-sm leading-6 italic sm:text-base">
                     &ldquo;{q.quote}&rdquo;

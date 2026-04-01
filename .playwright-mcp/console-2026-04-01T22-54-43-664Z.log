@@ -40,3 +40,4 @@
 [  142697ms] [WARNING] [PostHog.js] Enqueued failed request for retry in 4756 @ webpack-internal:///(app-pages-browser)/../../node_modules/posthog-js/dist/module.js:17
 [  152966ms] [ERROR] Failed to load resource: the server responded with a status of 504 (Gateway Timeout) @ http://127.0.0.1:3000/_next/image?url=https%3A%2F%2Fpw6ih6yl8k.ufs.sh%2Ff%2FyzGpkAZp75KHqiQXHr1C7TdfAVuKoRta8qZzXY4iPJEpnrLM&w=640&q=75:0
 [  237550ms] [LOG] [Fast Refresh] rebuilding @ webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:241
+[  282458ms] [LOG] [Fast Refresh] done in 44914ms @ webpack-internal:///(app-pages-browser)/../../node_modules/next/dist/client/components/react-dev-overlay/app/hot-reloader-client.js:73

@@ -213,7 +213,7 @@ export default function ReviewsSection({
                           return (
                             <Card
                               key={review._id}
-                              className="border-border/70 border bg-white/82 transition-shadow hover:shadow-lg"
+                              className="border-border/70 dark:bg-card/72 border bg-white/82 transition-shadow hover:shadow-lg dark:border-white/8"
                             >
                               <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between gap-3">

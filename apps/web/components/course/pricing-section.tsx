@@ -158,7 +158,7 @@ export default function PricingSection({
         <ScrollReveal>
           <div className="course-shell course-shell-strong mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-8 lg:px-10">
             <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8">
-              <div className="border-border/75 rounded-[1.8rem] border bg-white/82 p-6 text-center shadow-sm sm:p-8 lg:text-left">
+              <div className="border-border/75 dark:bg-card/72 rounded-[1.8rem] border bg-white/82 p-6 text-center shadow-sm sm:p-8 lg:text-left dark:border-white/8">
                 <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                   Reserve your spot
                 </span>

@@ -268,6 +268,22 @@
     opacity: 0.75;
   }
 
+  .dark .course-page::before {
+    background:
+      radial-gradient(
+        900px circle at 50% 0%,
+        color-mix(in oklab, var(--color-primary) 18%, transparent),
+        transparent 58%
+      ),
+      linear-gradient(
+        180deg,
+        transparent 0%,
+        color-mix(in oklab, var(--color-background) 90%, black) 32%,
+        transparent 100%
+      );
+    opacity: 0.68;
+  }
+
   .course-section-lg {
     @apply py-12 sm:py-16 lg:py-20;
   }
@@ -294,6 +310,18 @@
     border-radius: 2rem;
   }
 
+  .dark .course-shell {
+    border: 1px solid color-mix(in oklab, var(--color-border) 92%, black);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-card) 92%, black) 0%,
+      color-mix(in oklab, var(--color-card) 82%, var(--color-background)) 100%
+    );
+    box-shadow:
+      0 28px 62px -44px rgb(9 8 17 / 0.7),
+      inset 0 1px 0 rgb(255 255 255 / 0.05);
+  }
+
   .course-shell-strong {
     background:
       radial-gradient(
@@ -305,6 +333,20 @@
         180deg,
         color-mix(in oklab, white 84%, var(--color-card)) 0%,
         color-mix(in oklab, white 60%, var(--color-card)) 100%
+      );
+  }
+
+  .dark .course-shell-strong {
+    background:
+      radial-gradient(
+        180px circle at 15% 12%,
+        color-mix(in oklab, var(--color-primary) 18%, transparent),
+        transparent 68%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--color-card) 94%, black) 0%,
+        color-mix(in oklab, var(--color-card) 84%, var(--color-background)) 100%
       );
   }
 
@@ -321,10 +363,28 @@
     backdrop-filter: blur(10px);
   }
 
+  .dark .course-shell-soft {
+    border: 1px solid color-mix(in oklab, var(--color-border) 88%, black);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-card) 90%, black) 0%,
+      color-mix(in oklab, var(--color-card) 78%, var(--color-background)) 100%
+    );
+    box-shadow:
+      0 24px 56px -44px rgb(9 8 17 / 0.64),
+      inset 0 1px 0 rgb(255 255 255 / 0.04);
+  }
+
   .course-subpanel {
     border: 1px solid color-mix(in oklab, var(--color-border) 84%, white);
     background: color-mix(in oklab, white 74%, var(--color-card));
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.45);
+  }
+
+  .dark .course-subpanel {
+    border: 1px solid color-mix(in oklab, var(--color-border) 86%, black);
+    background: color-mix(in oklab, var(--color-card) 84%, black);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
   }
 
   .course-hero-glow {
@@ -340,6 +400,10 @@
         transparent 64%
       );
     opacity: 0.85;
+  }
+
+  .dark .course-hero-glow {
+    opacity: 0.52;
   }
 
   .home-section-lg {
@@ -374,6 +438,24 @@
     border-radius: 2rem;
   }
 
+  .dark .home-shell {
+    border: 1px solid color-mix(in oklab, var(--color-border) 90%, black);
+    background:
+      radial-gradient(
+        180px circle at 14% 14%,
+        color-mix(in oklab, var(--color-primary) 18%, transparent),
+        transparent 70%
+      ),
+      linear-gradient(
+        180deg,
+        color-mix(in oklab, var(--color-card) 92%, black) 0%,
+        color-mix(in oklab, var(--color-card) 80%, var(--color-background)) 100%
+      );
+    box-shadow:
+      0 28px 62px -44px rgb(9 8 17 / 0.7),
+      inset 0 1px 0 rgb(255 255 255 / 0.05);
+  }
+
   .home-shell-soft {
     border: 1px solid color-mix(in oklab, var(--color-border) 80%, white);
     background: linear-gradient(
@@ -387,10 +469,44 @@
     backdrop-filter: blur(10px);
   }
 
+  .dark .home-shell-soft {
+    border: 1px solid color-mix(in oklab, var(--color-border) 88%, black);
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-card) 90%, black) 0%,
+      color-mix(in oklab, var(--color-card) 78%, var(--color-background)) 100%
+    );
+    box-shadow:
+      0 24px 56px -44px rgb(9 8 17 / 0.64),
+      inset 0 1px 0 rgb(255 255 255 / 0.04);
+  }
+
   .home-subpanel {
     border: 1px solid color-mix(in oklab, var(--color-border) 82%, white);
     background: color-mix(in oklab, white 74%, var(--color-card));
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.4);
+  }
+
+  .dark .home-subpanel {
+    border: 1px solid color-mix(in oklab, var(--color-border) 86%, black);
+    background: color-mix(in oklab, var(--color-card) 84%, black);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.04);
+  }
+
+  .course-story-outcomes-panel {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-terracotta-light) 42%, white) 0%,
+      color-mix(in oklab, var(--color-card) 72%, white) 100%
+    );
+  }
+
+  .dark .course-story-outcomes-panel {
+    background: linear-gradient(
+      180deg,
+      color-mix(in oklab, var(--color-primary) 14%, var(--color-card)) 0%,
+      color-mix(in oklab, var(--color-card) 84%, var(--color-background)) 100%
+    );
   }
 
   .card-shadow {

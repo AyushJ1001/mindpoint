@@ -39,7 +39,7 @@ export default function SimpleModulesSection({
               {items.map((item, i) => (
                 <li
                   key={i}
-                  className="border-border/70 grid gap-3 rounded-[1.35rem] border bg-white/72 px-4 py-4 sm:grid-cols-[8rem_1fr] sm:px-5"
+                  className="border-border/70 dark:bg-card/70 grid gap-3 rounded-[1.35rem] border bg-white/72 px-4 py-4 sm:grid-cols-[8rem_1fr] sm:px-5 dark:border-white/8"
                 >
                   <div className="flex items-center gap-3 sm:block">
                     <span className="text-primary/70 text-xs font-semibold tracking-[0.28em] uppercase">

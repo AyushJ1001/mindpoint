@@ -76,7 +76,7 @@ export default function CourseStorySection({
                 )}
 
                 {keyOutcomes.length > 0 && (
-                  <div className="border-primary/14 rounded-[1.6rem] border bg-[linear-gradient(180deg,color-mix(in_oklab,var(--color-terracotta-light)_42%,white)_0%,color-mix(in_oklab,var(--color-card)_72%,white)_100%)] px-5 py-6 sm:px-6">
+                  <div className="course-story-outcomes-panel border-primary/14 rounded-[1.6rem] border px-5 py-6 sm:px-6">
                     <div className="mb-4">
                       <p className="text-primary text-sm font-semibold tracking-[0.24em] uppercase">
                         What changes after
