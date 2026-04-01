@@ -50,7 +50,7 @@ export default function InternshipCourse({
                   >
                     <View className="flex-row items-center justify-between">
                       <View className="flex-row items-center gap-2">
-                        <Clock size={18} color={isSelected ? "#4338ca" : "#6b7280"} />
+                        <Clock size={18} color={isSelected ? "#5b7a5e" : "#8a8279"} />
                         <View>
                           <Text className="text-sm font-semibold text-foreground">
                             {duration}

@@ -60,7 +60,7 @@ export default function MasterclassCourse({ course }: MasterclassCourseProps) {
                 key={benefit.title}
                 className="border-0"
                 style={{
-                  shadowColor: "#4338ca",
+                  shadowColor: "#5b7a5e",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.08,
                   shadowRadius: 12,
@@ -69,7 +69,7 @@ export default function MasterclassCourse({ course }: MasterclassCourseProps) {
               >
                 <View className="flex-row items-start gap-3 p-4">
                   <LinearGradient
-                    colors={["#4338ca", "#7c3aed"]}
+                    colors={["#5b7a5e", "#7a9a7d"]}
                     style={{ height: 44, width: 44, alignItems: "center", justifyContent: "center", borderRadius: 12 }}
                   >
                     <Icon size={20} color="#ffffff" />

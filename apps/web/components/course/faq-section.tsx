@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 import { parseFaqMarkdown } from "@/components/course/faq";
 
@@ -19,8 +19,8 @@ interface FAQSectionProps {
 }
 
 export default function FAQSection({
-  title = "Frequently Asked Questions",
-  description = "Get answers to common questions about this course",
+  title = "Questions, answered with care",
+  description = "A few practical things people usually want to know before they commit.",
 }: FAQSectionProps) {
   const [faqMarkdown, setFaqMarkdown] = useState<string | null>(null);
 
@@ -44,20 +44,23 @@ export default function FAQSection({
   }, []);
 
   return (
-    <section className="from-muted/20 to-background bg-gradient-to-br py-16">
+    <section className="course-section-md pt-8 sm:pt-10">
       <div className="container">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                {title}
+          <ScrollReveal>
+            <div className="mb-12 text-center">
+              <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
+                Helpful details
               </span>
-            </h2>
-            <p className="text-muted-foreground text-lg">{description}</p>
-          </div>
+              <h2 className="font-display text-foreground mt-3 mb-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+                {title}
+              </h2>
+              <p className="text-muted-foreground text-lg">{description}</p>
+            </div>
+          </ScrollReveal>
 
-          <Card className="border-muted border-2 shadow-xl">
-            <CardContent className="p-8">
+          <ScrollReveal>
+            <div className="course-shell-soft rounded-[1.8rem] p-8">
               {faqMarkdown == null ? (
                 <div className="py-8 text-center">
                   <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
@@ -95,8 +98,8 @@ export default function FAQSection({
                   );
                 })()
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>

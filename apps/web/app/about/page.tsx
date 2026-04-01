@@ -103,7 +103,7 @@ export default function About() {
       />
       <div className="min-h-screen">
         {/* Hero Section */}
-        <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+        <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
           <div className="container">
             <div className="mx-auto max-w-4xl text-center">
               <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
@@ -274,7 +274,7 @@ export default function About() {
             </div>
 
             {/* Why Choose Us */}
-            <div className="from-primary/5 to-accent/5 rounded-2xl bg-gradient-to-br p-8 md:p-12 dark:bg-gradient-to-br dark:from-slate-900 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+            <div className="from-primary/5 to-accent/5 rounded-2xl bg-gradient-to-br p-8 md:p-12">
               <h2 className="mb-12 text-center text-3xl font-bold">
                 Why Choose The Mind Point?
               </h2>

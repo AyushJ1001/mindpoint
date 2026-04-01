@@ -9,6 +9,7 @@ import {
   CardDescription,
 } from "@/components/ui/card";
 import { Users } from "lucide-react";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 type Educator = { name: string; role: string };
 
@@ -31,15 +32,13 @@ const EDUCATORS: Array<Educator> = [
 export default function Educators() {
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="relative overflow-hidden rounded-2xl">
-        <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
-        <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
+      <ScrollReveal>
+      <div className="rounded-2xl">
+        <Card className="border border-border bg-card">
           <CardHeader className="pb-6 text-center">
-            <CardTitle className="flex items-center justify-center gap-3 text-3xl font-bold md:text-4xl">
+            <CardTitle className="font-display text-foreground flex items-center justify-center gap-3 text-3xl font-bold md:text-4xl">
               <Users className="text-primary h-10 w-10" />
-              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                Educators and Supervisors
-              </span>
+              Educators and Supervisors
             </CardTitle>
             <CardDescription className="text-lg">
               Learn from experienced professionals in the field
@@ -50,7 +49,7 @@ export default function Educators() {
               {EDUCATORS.map((p, idx) => (
                 <Card
                   key={idx}
-                  className="border-muted border-2 shadow-lg transition-shadow hover:shadow-xl"
+                  className="border border-border bg-card transition-shadow hover:shadow-lg"
                 >
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4">
@@ -81,6 +80,7 @@ export default function Educators() {
           </CardContent>
         </Card>
       </div>
+      </ScrollReveal>
     </div>
   );
 }

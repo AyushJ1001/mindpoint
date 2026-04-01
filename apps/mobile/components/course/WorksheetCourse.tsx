@@ -23,7 +23,7 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
       <View className="mt-4">
         <Badge variant="secondary" className="mb-2 self-start">
           <View className="flex-row items-center gap-1">
-            <FileText size={12} color="#6b7280" />
+            <FileText size={12} color="#8a8279" />
             <Text className="text-xs font-semibold text-secondary-foreground">
               Worksheet
             </Text>
@@ -73,7 +73,7 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
         {/* Features */}
         <View className="mt-4 gap-3">
           <Card className="flex-row items-center gap-3">
-            <Download size={20} color="#4338ca" />
+            <Download size={20} color="#5b7a5e" />
             <View className="flex-1">
               <Text className="text-sm font-semibold text-foreground">
                 Instant Download

@@ -37,7 +37,7 @@ export function Select({
         >
           {selectedOption?.label ?? placeholder}
         </Text>
-        <ChevronDown size={16} color="#717a93" />
+        <ChevronDown size={16} color="#8a8279" />
       </Pressable>
 
       <Dialog open={open} onClose={() => setOpen(false)}>

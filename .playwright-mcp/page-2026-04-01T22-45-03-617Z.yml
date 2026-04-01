@@ -1,0 +1,230 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - navigation "Primary" [ref=e4]:
+      - generic [ref=e6]:
+        - link "Home" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img "The Mind Point" [ref=e8]
+          - generic [ref=e9]: The Mind Point
+        - navigation "Site sections" [ref=e11]:
+          - list [ref=e13]:
+            - listitem [ref=e14]:
+              - button "Home" [ref=e15]:
+                - text: Home
+                - img [ref=e16]
+            - listitem [ref=e18]:
+              - button "TMP Academy" [ref=e19]:
+                - text: TMP Academy
+                - img [ref=e20]
+            - listitem [ref=e22]:
+              - button "Therapy & Career" [ref=e23]:
+                - text: Therapy & Career
+                - img [ref=e24]
+        - generic [ref=e26]:
+          - button "Toggle theme" [ref=e27]:
+            - img
+            - generic [ref=e28]: Toggle theme
+          - button "Open cart" [ref=e29]:
+            - img
+            - generic [ref=e30]: Cart
+          - button "Sign In" [ref=e32] [cursor=pointer]:
+            - generic [ref=e33]: Sign In
+    - main [ref=e34]:
+      - generic [ref=e36]:
+        - generic [ref=e41]:
+          - generic [ref=e42]: Course Types
+          - list [ref=e44]:
+            - listitem [ref=e45]:
+              - link "All" [ref=e46] [cursor=pointer]:
+                - /url: /courses
+                - generic [ref=e47]: All
+            - listitem [ref=e48]:
+              - link "Certificate" [ref=e49] [cursor=pointer]:
+                - /url: /courses/certificate
+                - generic [ref=e50]: Certificate
+            - listitem [ref=e51]:
+              - link "Internship" [ref=e52] [cursor=pointer]:
+                - /url: /courses/internship
+                - generic [ref=e53]: Internship
+            - listitem [ref=e54]:
+              - link "Diploma" [ref=e55] [cursor=pointer]:
+                - /url: /courses/diploma
+                - generic [ref=e56]: Diploma
+            - listitem [ref=e57]:
+              - link "Pre-recorded" [ref=e58] [cursor=pointer]:
+                - /url: /courses/pre-recorded
+                - generic [ref=e59]: Pre-recorded
+            - listitem [ref=e60]:
+              - link "Masterclass" [ref=e61] [cursor=pointer]:
+                - /url: /courses/masterclass
+                - generic [ref=e62]: Masterclass
+            - listitem [ref=e63]:
+              - link "Therapy" [ref=e64] [cursor=pointer]:
+                - /url: /courses/therapy
+                - generic [ref=e65]: Therapy
+            - listitem [ref=e66]:
+              - link "Supervised" [ref=e67] [cursor=pointer]:
+                - /url: /courses/supervised
+                - generic [ref=e68]: Supervised
+            - listitem [ref=e69]:
+              - link "Resume Studio" [ref=e70] [cursor=pointer]:
+                - /url: /courses/resume-studio
+                - generic [ref=e71]: Resume Studio
+        - main [ref=e72]:
+          - generic [ref=e74]:
+            - button "Toggle Sidebar" [ref=e75]:
+              - img
+              - generic [ref=e76]: Toggle Sidebar
+            - link "Courses" [ref=e78] [cursor=pointer]:
+              - /url: /courses
+              - heading "Courses" [level=1] [ref=e79]
+          - generic [ref=e81]:
+            - generic [ref=e84]:
+              - paragraph [ref=e85]: Build a meaningful foundation.
+              - heading "Certificate Courses" [level=1] [ref=e86]
+              - paragraph [ref=e87]: Our certificate courses give you structured, expert-led learning in psychology and mental health. Each one blends theory with real exercises — so you walk away with skills you can actually use.
+            - generic [ref=e91]:
+              - generic [ref=e92] [cursor=pointer]:
+                - img "Course image" [ref=e94]
+                - generic:
+                  - generic:
+                    - generic: Diwali Offer
+                  - generic:
+                    - generic:
+                      - generic: 🛍️ Diwali
+                - generic [ref=e98]: Art and Colour Therapy for Children inc Spl. Needs
+                - generic [ref=e99]:
+                  - generic [ref=e100]:
+                    - generic [ref=e101]: ₹3,499
+                    - button "Add to Cart" [ref=e102]:
+                      - img
+                      - text: Add to Cart
+                  - generic [ref=e103]:
+                    - generic [ref=e104]: left
+                    - generic [ref=e105]: Includes a free bonus course
+              - generic [ref=e106] [cursor=pointer]:
+                - img "Course image" [ref=e108]
+                - generic [ref=e112]: Wilderness & Mirror Therapy
+                - generic [ref=e114]:
+                  - generic [ref=e115]: ₹3,499
+                  - button "Add to Cart" [ref=e116]:
+                    - img
+                    - text: Add to Cart
+              - generic [ref=e117] [cursor=pointer]:
+                - img "Course image" [ref=e119]
+                - generic [ref=e123]: Schema Therapy
+                - generic [ref=e125]:
+                  - generic [ref=e126]: ₹3,499
+                  - button "Out of Stock" [disabled]:
+                    - img
+                    - text: Out of Stock
+              - generic [ref=e127] [cursor=pointer]:
+                - img "Course image" [ref=e129]
+                - generic [ref=e133]: Dream Analysis & Therapy
+                - generic [ref=e135]:
+                  - generic [ref=e136]: ₹3,499
+                  - button "Add to Cart" [ref=e137]:
+                    - img
+                    - text: Add to Cart
+              - generic [ref=e138] [cursor=pointer]:
+                - img "Course image" [ref=e140]
+                - generic:
+                  - generic:
+                    - generic: BOGO Offer
+                  - generic:
+                    - generic:
+                      - generic: 🛍️ BOGO
+                - generic [ref=e144]: Inner Child Healing
+                - generic [ref=e145]:
+                  - generic [ref=e146]:
+                    - generic [ref=e147]: ₹3,499
+                    - button "Add to Cart" [ref=e148]:
+                      - img
+                      - text: Add to Cart
+                  - generic [ref=e149]:
+                    - generic [ref=e150]: left
+                    - generic [ref=e151]: Includes a free bonus course
+              - generic [ref=e152] [cursor=pointer]:
+                - img "Course image" [ref=e154]
+                - generic [ref=e158]: Trauma & Grief Therapy
+                - generic [ref=e160]:
+                  - generic [ref=e161]: ₹3,499
+                  - button "Add to Cart" [ref=e162]:
+                    - img
+                    - text: Add to Cart
+              - generic [ref=e163] [cursor=pointer]:
+                - img "Course image" [ref=e165]
+                - generic [ref=e169]: Marital and Family Therapy
+                - generic [ref=e171]:
+                  - generic [ref=e172]: ₹100
+                  - button "Add to Cart" [ref=e173]:
+                    - img
+                    - text: Add to Cart
+              - generic [ref=e174] [cursor=pointer]:
+                - img "Course image" [ref=e176]
+                - generic:
+                  - generic:
+                    - generic: BOGO Offer
+                  - generic:
+                    - generic:
+                      - generic: 🛍️ BOGO
+                - generic [ref=e180]: Body Language and Skills
+                - generic [ref=e181]:
+                  - generic [ref=e182]:
+                    - generic [ref=e183]: ₹3,499
+                    - button "Add to Cart" [ref=e184]:
+                      - img
+                      - text: Add to Cart
+                  - generic [ref=e185]:
+                    - generic [ref=e186]: left
+                    - generic [ref=e187]: Includes a free bonus course
+              - generic [ref=e188] [cursor=pointer]:
+                - img "Course image" [ref=e190]
+                - generic [ref=e194]: Rational Emotive Behavioural Therapy
+                - generic [ref=e196]:
+                  - generic [ref=e197]: ₹3,499
+                  - button "Add to Cart" [ref=e198]:
+                    - img
+                    - text: Add to Cart
+  - contentinfo "Footer" [ref=e199]:
+    - generic [ref=e200]:
+      - generic [ref=e201]:
+        - generic [ref=e202]:
+          - heading "The Mind Point" [level=3] [ref=e203]
+          - paragraph [ref=e204]: Empowering minds through comprehensive mental health education and professional development. Join our community of learners and professionals dedicated to mental wellness.
+          - generic [ref=e205]:
+            - link "Follow us on Instagram" [ref=e206] [cursor=pointer]:
+              - /url: https://instagram.com/themindpoint?igshid=YmMyMTA2M2Y=
+              - img [ref=e207]
+            - link "Follow us on Facebook" [ref=e209] [cursor=pointer]:
+              - /url: https://www.facebook.com/themindpoint?mibextid=LQQJ4d
+              - img [ref=e210]
+        - generic [ref=e212]:
+          - heading "Quick Links" [level=4] [ref=e213]
+          - list [ref=e214]:
+            - listitem [ref=e215]:
+              - link "About Us" [ref=e216] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e217]:
+              - link "Contact" [ref=e218] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e219]:
+              - link "Careers - Join Us" [ref=e220] [cursor=pointer]:
+                - /url: /careers
+        - generic [ref=e221]:
+          - heading "Legal" [level=4] [ref=e222]
+          - list [ref=e223]:
+            - listitem [ref=e224]:
+              - link "Terms & Conditions" [ref=e225] [cursor=pointer]:
+                - /url: /toc
+            - listitem [ref=e226]:
+              - link "Privacy Policy" [ref=e227] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e228]:
+              - link "Refund Policy" [ref=e229] [cursor=pointer]:
+                - /url: /refund
+      - paragraph [ref=e231]: Copyright © 2026 The Mind Point. All rights reserved.
+  - region "Notifications alt+T"
+  - alert [ref=e232]

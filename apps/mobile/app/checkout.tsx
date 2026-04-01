@@ -299,7 +299,7 @@ export default function CheckoutScreen() {
             contact: payerInfo.phone || "",
           },
           theme: {
-            color: "#4338ca",
+            color: "#5b7a5e",
           },
         };
 
@@ -355,7 +355,7 @@ export default function CheckoutScreen() {
   if (!mounted) {
     return (
       <View className="bg-background flex-1 items-center justify-center">
-        <ActivityIndicator size="large" color="#4338ca" />
+        <ActivityIndicator size="large" color="#5b7a5e" />
       </View>
     );
   }
@@ -363,7 +363,7 @@ export default function CheckoutScreen() {
   if (isEmpty) {
     return (
       <View className="bg-background flex-1 items-center justify-center px-6">
-        <ShoppingCart size={48} color="#64748b" />
+        <ShoppingCart size={48} color="#8a8279" />
         <Text className="text-foreground mt-4 text-lg font-semibold">
           Your cart is empty
         </Text>
@@ -492,13 +492,13 @@ export default function CheckoutScreen() {
                   Paying as
                 </Text>
                 <View className="flex-row items-center gap-2">
-                  <User size={16} color="#64748b" />
+                  <User size={16} color="#8a8279" />
                   <Text className="text-foreground text-sm">
                     {user.fullName || "User"}
                   </Text>
                 </View>
                 <View className="flex-row items-center gap-2">
-                  <Mail size={16} color="#64748b" />
+                  <Mail size={16} color="#8a8279" />
                   <Text className="text-muted-foreground text-sm">
                     {user.primaryEmailAddress?.emailAddress}
                   </Text>

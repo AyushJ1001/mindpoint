@@ -71,12 +71,12 @@ export default function CoursesLayout({
       <div className="flex min-h-screen w-full overflow-x-clip">
         <AppSidebar />
         <main className="min-w-0 flex-1">
-          <div className="border-b border-blue-200/65 bg-gradient-to-r from-blue-100/70 via-white/85 to-indigo-100/70 shadow-[0_12px_24px_-20px_rgba(37,99,235,0.95)] backdrop-blur-md dark:border-blue-900/40 dark:from-slate-950/85 dark:via-blue-950/80 dark:to-slate-950/85">
+          <div className="border-b border-border bg-secondary/50 shadow-sm backdrop-blur-md">
             <div className="flex h-14 items-center gap-2 px-3 sm:h-16 sm:px-4">
-              <SidebarTrigger className="rounded-xl border border-transparent text-blue-900 hover:border-blue-200/80 hover:bg-blue-100/75 dark:text-blue-100 dark:hover:border-blue-800/70 dark:hover:bg-blue-950/70" />
+              <SidebarTrigger className="rounded-xl border border-transparent text-foreground hover:border-lavender-200 hover:bg-accent" />
               <div className="min-w-0">
                 <Link href="/courses">
-                  <h1 className="truncate bg-gradient-to-r from-blue-950 via-blue-800 to-indigo-700 bg-clip-text text-xl font-semibold tracking-tight text-transparent sm:text-2xl dark:from-blue-100 dark:via-blue-200 dark:to-indigo-200">
+                  <h1 className="font-display truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">
                     Courses
                   </h1>
                 </Link>

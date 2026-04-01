@@ -56,7 +56,7 @@ export default function CourseDetailScreen() {
   if (!courses) {
     return (
       <View className="flex-1 items-center justify-center bg-background">
-        <ActivityIndicator size="large" color="#4338ca" />
+        <ActivityIndicator size="large" color="#5b7a5e" />
       </View>
     );
   }

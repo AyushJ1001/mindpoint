@@ -58,7 +58,7 @@ export function StickyCTA({
           className="px-4"
         >
           <View className="flex-row items-center gap-1">
-            <ShoppingCart size={14} color="#1a1a2e" />
+            <ShoppingCart size={14} color="#2d2a26" />
             <Text className="text-xs font-semibold text-foreground">
               Buy Now
             </Text>

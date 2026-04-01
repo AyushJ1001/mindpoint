@@ -195,11 +195,11 @@ export default function CareersClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-10% via-blue-50 to-blue-100 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
+    <div className="min-h-screen bg-gradient-to-br from-10% via-lavender-50 to-lavender-100">
       <div className="container py-12">
         {/* Header Section */}
         <div className="mb-12 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-blue-950 md:text-5xl dark:text-white">
+          <h1 className="mb-4 text-4xl font-bold text-foreground md:text-5xl">
             Join Our Mission
           </h1>
           <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-lg">
@@ -236,7 +236,7 @@ export default function CareersClient() {
                 <div className="bg-primary/10 mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full">
                   <Icon className="text-primary h-8 w-8" />
                 </div>
-                <h3 className="mb-1 font-semibold text-blue-950 dark:text-white">
+                <h3 className="mb-1 font-semibold text-foreground">
                   {title}
                 </h3>
                 <p className="text-muted-foreground text-sm">{desc}</p>
@@ -248,7 +248,7 @@ export default function CareersClient() {
         {/* Application Form */}
         <Card className="mx-auto max-w-4xl">
           <CardHeader>
-            <CardTitle className="text-2xl text-blue-950 dark:text-white">
+            <CardTitle className="text-2xl text-foreground">
               Apply Now
             </CardTitle>
             <p className="text-muted-foreground">
@@ -330,7 +330,7 @@ export default function CareersClient() {
 
                 {/* Personal Details */}
                 <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-blue-950 dark:text-white">
+                  <h3 className="text-lg font-semibold text-foreground">
                     Personal Details
                   </h3>
 

@@ -33,7 +33,7 @@ export function WhoShouldDo() {
   return (
     <View className="mt-8">
       <View className="mb-2 flex-row items-center justify-center gap-2">
-        <Target size={22} color="#4338ca" />
+        <Target size={22} color="#5b7a5e" />
         <Text className="text-xl font-bold text-primary">
           Who Should Do This Course?
         </Text>
@@ -48,7 +48,7 @@ export function WhoShouldDo() {
             key={item.title}
             className="w-[47%] border-primary/20 bg-primary/5"
             style={{
-              shadowColor: "#4338ca",
+              shadowColor: "#5b7a5e",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.06,
               shadowRadius: 8,

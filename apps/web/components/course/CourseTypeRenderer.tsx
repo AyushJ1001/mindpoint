@@ -9,9 +9,9 @@ import MasterclassCourse from "./MasterclassCourse";
 import SupervisedCourse from "./SupervisedCourse";
 import ResumeStudioCourse from "./ResumeStudioCourse";
 import WorksheetCourse from "./WorksheetCourse";
-import WhoShouldDo from "./who-should-do";
-import WhyChoose from "./why-choose";
-import Certification from "./certification";
+import PainPointsSection from "./pain-points-section";
+import OutcomesSection from "./outcomes-section";
+import WhyDifferentSection from "./why-different-section";
 import ReviewsSection from "./reviews-section";
 import FAQSection from "./faq-section";
 import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
@@ -30,7 +30,7 @@ export default function CourseTypeRenderer({
   variants = [],
   onVariantSelect,
 }: CourseTypeRendererProps) {
-  const courseType = course.type;
+  const courseType = course.type || "certificate";
 
   // Render course type specific content
   const renderCourseTypeContent = () => {
@@ -68,19 +68,18 @@ export default function CourseTypeRenderer({
   // Render common sections based on course type
   const renderCommonSections = () => {
     // For worksheets, the WorksheetCourse component handles everything
-    // including hero, pricing, description, target audience, reviews, and sticky CTA
     if (courseType === "worksheet") {
       return <>{renderCourseTypeContent()}</>;
     }
 
-    // For therapy and supervised courses, skip the hero section and start directly with plan selection
+    // For therapy and supervised courses
     if (courseType === "therapy" || courseType === "supervised") {
       return (
         <>
-          {/* Therapy and supervised courses start directly with plan selection */}
           {renderCourseTypeContent()}
-
-          {/* Common sections for therapy and supervised */}
+          <PainPointsSection course={course} />
+          <OutcomesSection course={course} />
+          <WhyDifferentSection course={course} />
           <VideoTestimonialsSection />
           <ReviewsSection courseId={course._id} courseType={course.type} />
           {courseType === "supervised" ? (
@@ -93,16 +92,13 @@ export default function CourseTypeRenderer({
       );
     }
 
-    // For all other course types, include all sections
+    // All other types
     return (
       <>
-        {/* Course type specific content */}
         {renderCourseTypeContent()}
-
-        {/* Common sections for all course types except therapy */}
-        <WhoShouldDo />
-        <WhyChoose />
-        <Certification courseType={course.type} />
+        <PainPointsSection course={course} />
+        <OutcomesSection course={course} />
+        <WhyDifferentSection course={course} />
         <VideoTestimonialsSection />
         <ReviewsSection courseId={course._id} courseType={course.type} />
         <FAQSection />

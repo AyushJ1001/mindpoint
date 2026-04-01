@@ -303,7 +303,7 @@ export default function SupervisedCourse({
                   {plan.highlights.map((h) => (
                     <View key={h} className="flex-row items-start gap-2.5">
                       <View className="mt-0.5 h-4 w-4 items-center justify-center rounded-full bg-primary/10">
-                        <CheckCircle2 size={10} color="#4338ca" />
+                        <CheckCircle2 size={10} color="#5b7a5e" />
                       </View>
                       <Text className="flex-1 text-xs text-muted-foreground">
                         {h}

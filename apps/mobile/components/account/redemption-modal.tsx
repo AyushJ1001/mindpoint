@@ -34,7 +34,7 @@ export function RedemptionModal({
     <Dialog open={isOpen} onClose={onClose}>
       <DialogHeader onClose={onClose}>
         <View className="flex-row items-center gap-2">
-          <Gift size={20} color="#4338ca" />
+          <Gift size={20} color="#5b7a5e" />
           <DialogTitle>Redeem Mind Points</DialogTitle>
         </View>
         <DialogDescription>

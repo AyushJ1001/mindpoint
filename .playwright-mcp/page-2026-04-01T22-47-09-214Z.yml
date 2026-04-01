@@ -1,0 +1,332 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - navigation [ref=e4]:
+      - generic [ref=e5]:
+        - link "The Mind Point The Mind Point" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img "The Mind Point" [ref=e8]
+          - generic [ref=e9]: The Mind Point
+        - generic [ref=e11]:
+          - button "Shopping cart" [ref=e14]:
+            - generic [ref=e15]: Shopping cart
+            - img [ref=e16]
+          - button [ref=e19]:
+            - img [ref=e20]
+    - main [ref=e21]:
+      - main [ref=e24]:
+        - generic [ref=e26]:
+          - button "Toggle Sidebar" [ref=e27]:
+            - img
+            - generic [ref=e28]: Toggle Sidebar
+          - link "Courses" [ref=e30] [cursor=pointer]:
+            - /url: /courses
+            - heading "Courses" [level=1] [ref=e31]
+        - generic [ref=e33]:
+          - generic [ref=e37]:
+            - navigation "Breadcrumb" [ref=e39]:
+              - link "Courses" [ref=e40] [cursor=pointer]:
+                - /url: /courses
+              - text: /Individual Therapy / Counselling
+            - generic [ref=e41]:
+              - text: Thoughtful learning, made human
+              - heading "Struggling with overthinking or anxiety?" [level=1] [ref=e42]
+              - paragraph [ref=e43]:
+                - text: Individual Therapy / Counselling
+                - generic [ref=e44]: At The Mind Point, we understand the importance of a safe and supportive environment to address your concerns. Our Individual Therapy/Counselling offers you the chance to explore your thoughts and emotions in a confidential setting. With just 1 session, you can start your journey towards self-discovery and healing. Our compassionate and experienced therapists are dedicated to helping you navigate life's challenges and achieve personal growth. Experience the difference a single session can make in your well-being today.
+            - generic [ref=e45]:
+              - generic [ref=e46]:
+                - img
+                - text: Live + Interactive
+              - generic [ref=e47]:
+                - img
+                - text: Certificate Included
+            - generic [ref=e48]:
+              - link "Reserve your spot" [ref=e49] [cursor=pointer]:
+                - /url: "#pricing"
+              - paragraph [ref=e50]: Live guidance, practical tools, and a pace that still leaves room to breathe.
+          - generic [ref=e55]:
+            - generic [ref=e56]:
+              - text: A gentler way in
+              - heading "A page that meets people where they are, then shows what opens up." [level=2] [ref=e57]
+              - paragraph [ref=e58]: This program should feel less like a pitch deck and more like a clear, welcoming conversation. Here is the shift it is designed to support.
+            - generic [ref=e59]:
+              - generic [ref=e60]:
+                - generic [ref=e61]:
+                  - paragraph [ref=e62]: You're here because
+                  - heading "Something here already feels familiar." [level=3] [ref=e63]
+                  - paragraph [ref=e64]: You do not need another distant, theory-heavy experience. You need something that makes sense in the middle of real life.
+                - list [ref=e65]:
+                  - listitem [ref=e66]:
+                    - img [ref=e67]
+                    - generic [ref=e70]: You constantly overthink — even small situations
+                  - listitem [ref=e71]:
+                    - img [ref=e72]
+                    - generic [ref=e75]: Your mind feels exhausting and hard to control
+                  - listitem [ref=e76]:
+                    - img [ref=e77]
+                    - generic [ref=e80]: You feel anxious without a clear reason
+                  - listitem [ref=e81]:
+                    - img [ref=e82]
+                    - generic [ref=e85]: You've tried self-help but nothing sticks
+              - generic [ref=e86]:
+                - generic [ref=e87]:
+                  - paragraph [ref=e88]: What changes after
+                  - heading "Five changes that make the course feel worth considering." [level=3] [ref=e89]
+                  - paragraph [ref=e90]: Not an endless list. Just the clearest shifts you can expect to carry into how you think, respond, and show up.
+                - list [ref=e91]:
+                  - listitem [ref=e92]:
+                    - img [ref=e93]
+                    - generic [ref=e95]: Understand how your thoughts influence your emotions
+                  - listitem [ref=e96]:
+                    - img [ref=e97]
+                    - generic [ref=e99]: Learn practical tools to manage overthinking and anxiety
+                  - listitem [ref=e100]:
+                    - img [ref=e101]
+                    - generic [ref=e103]: Break repetitive negative thinking patterns
+                  - listitem [ref=e104]:
+                    - img [ref=e105]
+                    - generic [ref=e107]: Feel more mentally clear and in control
+          - generic [ref=e111]:
+            - generic [ref=e112]:
+              - text: How this feels different
+              - heading "Thoughtful structure, but never at the cost of warmth." [level=2] [ref=e113]
+              - paragraph [ref=e114]: Most courses stop at information. This one is meant to feel closer, clearer, and more usable in the situations that actually matter.
+              - paragraph [ref=e115]: You are not just collecting language here. You are building a steadier way of working, noticing, and responding.
+            - generic [ref=e116]:
+              - generic [ref=e117]:
+                - generic [ref=e118]:
+                  - img [ref=e120]
+                  - generic [ref=e123]: "01"
+                - paragraph [ref=e124]: You practice techniques during sessions, not just talk about them
+              - generic [ref=e125]:
+                - generic [ref=e126]:
+                  - img [ref=e128]
+                  - generic [ref=e131]: "02"
+                - paragraph [ref=e132]: Sessions are tailored to your specific situation
+              - generic [ref=e133]:
+                - generic [ref=e134]:
+                  - img [ref=e136]
+                  - generic [ref=e139]: "03"
+                - paragraph [ref=e140]: You're guided step-by-step — no confusion, no overwhelm
+              - generic [ref=e141]:
+                - generic [ref=e142]:
+                  - img [ref=e144]
+                  - generic [ref=e147]: "04"
+                - paragraph [ref=e148]: Our therapists are compassionate, qualified, and genuinely invested
+          - generic [ref=e152]:
+            - generic [ref=e153]:
+              - generic [ref=e154]:
+                - text: A few voices before you decide
+                - 'heading "Real people tend to describe the same thing: clarity that stays with them." [level=2] [ref=e155]'
+              - paragraph [ref=e156]: A little reassurance before you get to the practical details.
+            - generic [ref=e157]:
+              - blockquote [ref=e158]:
+                - paragraph [ref=e159]: “I finally feel heard. The sessions gave me clarity I couldn't find on my own.”
+                - generic [ref=e160]: N.R.
+              - blockquote [ref=e161]:
+                - paragraph [ref=e162]: “I was skeptical about online therapy. Now I look forward to every session.”
+                - generic [ref=e163]: P.S.
+              - blockquote [ref=e164]:
+                - paragraph [ref=e165]: “My therapist helped me see patterns I'd been stuck in for years.”
+                - generic [ref=e166]: D.K.
+          - generic [ref=e170]:
+            - generic [ref=e171]:
+              - text: Reserve your spot
+              - heading "Choose the version of support that fits the season you are in." [level=2] [ref=e172]
+              - paragraph [ref=e173]: The next step should feel reassuring, not rushed. Pick the format that gives you the right level of care and continuity.
+            - generic [ref=e175]:
+              - generic [ref=e177]:
+                - heading "Choose the level of support that feels right." [level=2] [ref=e178]
+                - paragraph [ref=e179]: Select the number of sessions that work best for you. You can always add more later.
+                - generic [ref=e180]:
+                  - button "1 session" [pressed] [ref=e181]
+                  - button "3 sessions" [ref=e182]
+                  - button "6 sessions" [ref=e183]
+              - generic [ref=e184]:
+                - generic [ref=e186]:
+                  - generic [ref=e187]:
+                    - img [ref=e189]
+                    - generic [ref=e191]:
+                      - heading "Spark" [level=3] [ref=e192]
+                      - paragraph [ref=e193]: Starter plan to begin your journey
+                  - list [ref=e194]:
+                    - listitem [ref=e195]:
+                      - img [ref=e196]
+                      - generic [ref=e199]: Low commitment option for those who want to try therapy
+                    - listitem [ref=e200]:
+                      - img [ref=e201]
+                      - generic [ref=e204]: Convenient and flexible for busy schedules
+                    - listitem [ref=e205]:
+                      - img [ref=e206]
+                      - generic [ref=e209]: Great for follow up sessions
+                    - listitem [ref=e210]:
+                      - img [ref=e211]
+                      - generic [ref=e214]: Session duration ~20 mins
+                  - generic [ref=e215]:
+                    - generic [ref=e216]:
+                      - generic [ref=e217]: ₹600
+                      - generic [ref=e218]: per session
+                    - generic [ref=e219]: Billed for 1 session at ₹600
+                  - generic [ref=e220]:
+                    - generic [ref=e221]: Valid for 10 days
+                    - button "Begin with Spark" [ref=e222]
+                - generic [ref=e224]:
+                  - generic [ref=e225]:
+                    - img [ref=e227]
+                    - generic [ref=e229]:
+                      - heading "Express" [level=3] [ref=e230]
+                      - paragraph [ref=e231]: Quick therapy at affordable rates
+                  - list [ref=e232]:
+                    - listitem [ref=e233]:
+                      - img [ref=e234]
+                      - generic [ref=e237]: A balanced option for those seeking to address a specific concern
+                    - listitem [ref=e238]:
+                      - img [ref=e239]
+                      - generic [ref=e242]: Suitable for stress, anxiety, or situational challenges
+                    - listitem [ref=e243]:
+                      - img [ref=e244]
+                      - generic [ref=e247]: Provides practical coping tools and short term support
+                    - listitem [ref=e248]:
+                      - img [ref=e249]
+                      - generic [ref=e252]: Session duration ~30 to 35 mins
+                  - generic [ref=e253]:
+                    - generic [ref=e254]:
+                      - generic [ref=e255]: ₹950
+                      - generic [ref=e256]: per session
+                    - generic [ref=e257]: Billed for 1 session at ₹950
+                  - generic [ref=e258]:
+                    - generic [ref=e259]: Valid for 10 days
+                    - button "Begin with Express" [ref=e260]
+                - generic [ref=e262]:
+                  - generic [ref=e263]:
+                    - img [ref=e265]
+                    - generic [ref=e268]:
+                      - heading "Connection" [level=3] [ref=e269]
+                      - paragraph [ref=e270]: Premium therapy with senior experts
+                  - list [ref=e271]:
+                    - listitem [ref=e272]:
+                      - img [ref=e273]
+                      - generic [ref=e276]: Ideal for ongoing therapy and complex issues
+                    - listitem [ref=e277]:
+                      - img [ref=e278]
+                      - generic [ref=e281]: In depth comprehensive counselling
+                    - listitem [ref=e282]:
+                      - img [ref=e283]
+                      - generic [ref=e286]: Builds lasting therapeutic relationship and progress
+                    - listitem [ref=e287]:
+                      - img [ref=e288]
+                      - generic [ref=e291]: Session duration ~50 mins
+                  - generic [ref=e292]:
+                    - generic [ref=e293]:
+                      - generic [ref=e294]: ₹1,400
+                      - generic [ref=e295]: per session
+                    - generic [ref=e296]: Billed for 1 session at ₹1,400
+                  - generic [ref=e297]:
+                    - generic [ref=e298]: Valid for 10 days
+                    - button "Begin with Connection" [ref=e299]
+          - generic [ref=e305]:
+            - generic [ref=e306]:
+              - generic [ref=e307]: More voices, if you need them
+              - generic [ref=e308]: Client Reviews
+              - generic [ref=e309]: A fuller look at how clients describe the care and support they received.
+              - button "Latest" [ref=e311]:
+                - img
+                - text: Latest
+            - generic [ref=e312]:
+              - generic [ref=e314]: Loading reviews...
+              - generic [ref=e316]:
+                - generic [ref=e317]:
+                  - generic [ref=e318]: Leave a review
+                  - generic [ref=e319]: Share your experience with this course.
+                - generic [ref=e321]:
+                  - generic [ref=e322]:
+                    - generic [ref=e323]: Rating
+                    - generic [ref=e324]:
+                      - generic [ref=e325]:
+                        - generic [ref=e326]:
+                          - img [ref=e327]
+                          - img [ref=e330] [cursor=pointer]
+                          - img [ref=e334] [cursor=pointer]
+                        - generic [ref=e336]:
+                          - img [ref=e337]
+                          - img [ref=e340] [cursor=pointer]
+                          - img [ref=e344] [cursor=pointer]
+                        - generic [ref=e346]:
+                          - img [ref=e347]
+                          - img [ref=e350] [cursor=pointer]
+                          - img [ref=e354] [cursor=pointer]
+                        - generic [ref=e356]:
+                          - img [ref=e357]
+                          - img [ref=e360] [cursor=pointer]
+                          - img [ref=e364] [cursor=pointer]
+                        - generic [ref=e366]:
+                          - img [ref=e367]
+                          - img [ref=e370] [cursor=pointer]
+                          - img [ref=e374] [cursor=pointer]
+                      - generic [ref=e376]: 5.0 / 5
+                    - paragraph [ref=e377]: Select a rating from 0.5 to 5.
+                  - generic [ref=e378]:
+                    - generic [ref=e379]: Review
+                    - textbox "Review" [ref=e380]:
+                      - /placeholder: What did you like?
+                  - button "Submit review" [ref=e382]
+          - generic [ref=e385]:
+            - generic [ref=e387]:
+              - text: Helpful details
+              - heading "Questions about therapy, answered gently" [level=2] [ref=e388]
+              - paragraph [ref=e389]: A few things people usually want clarified before they begin.
+            - paragraph [ref=e395]: Loading FAQs...
+          - generic [ref=e399]:
+            - text: Keep the warmth going
+            - heading "Stay close to the community." [level=3] [ref=e400]
+            - paragraph [ref=e401]: Keep the conversation going with people who are learning, noticing, and growing alongside you.
+            - generic [ref=e402]:
+              - link "Join WhatsApp Community" [ref=e403] [cursor=pointer]:
+                - /url: https://chat.whatsapp.com/LYKNhlQbmV84YiBioVo83Y?mode=ac_t
+                - img [ref=e404]
+                - text: Join WhatsApp Community
+              - link "Join Instagram Community" [ref=e406] [cursor=pointer]:
+                - /url: https://www.instagram.com/channel/AbZNVUaQ3yMrfJGm/?igsh=dTV3MWozOXJsdDFy
+                - img [ref=e407]
+                - text: Join Instagram Community
+  - contentinfo "Footer" [ref=e409]:
+    - generic [ref=e410]:
+      - generic [ref=e411]:
+        - generic [ref=e412]:
+          - heading "The Mind Point" [level=3] [ref=e413]
+          - paragraph [ref=e414]: Empowering minds through comprehensive mental health education and professional development. Join our community of learners and professionals dedicated to mental wellness.
+          - generic [ref=e415]:
+            - link "Follow us on Instagram" [ref=e416] [cursor=pointer]:
+              - /url: https://instagram.com/themindpoint?igshid=YmMyMTA2M2Y=
+              - img [ref=e417]
+            - link "Follow us on Facebook" [ref=e419] [cursor=pointer]:
+              - /url: https://www.facebook.com/themindpoint?mibextid=LQQJ4d
+              - img [ref=e420]
+        - generic [ref=e422]:
+          - heading "Quick Links" [level=4] [ref=e423]
+          - list [ref=e424]:
+            - listitem [ref=e425]:
+              - link "About Us" [ref=e426] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e427]:
+              - link "Contact" [ref=e428] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e429]:
+              - link "Careers - Join Us" [ref=e430] [cursor=pointer]:
+                - /url: /careers
+        - generic [ref=e431]:
+          - heading "Legal" [level=4] [ref=e432]
+          - list [ref=e433]:
+            - listitem [ref=e434]:
+              - link "Terms & Conditions" [ref=e435] [cursor=pointer]:
+                - /url: /toc
+            - listitem [ref=e436]:
+              - link "Privacy Policy" [ref=e437] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e438]:
+              - link "Refund Policy" [ref=e439] [cursor=pointer]:
+                - /url: /refund
+      - paragraph [ref=e441]: Copyright © 2026 The Mind Point. All rights reserved.
+  - region "Notifications alt+T"

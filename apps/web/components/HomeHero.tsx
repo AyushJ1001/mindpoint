@@ -47,20 +47,20 @@ export default function HomeHero({
   return (
     <main className="flex-1">
       <section className="relative overflow-hidden py-12 sm:py-16 lg:py-24">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-100/70 via-white to-indigo-100/70 dark:from-slate-950 dark:via-blue-950/80 dark:to-slate-950" />
-        <div className="pointer-events-none absolute -top-32 -left-16 h-72 w-72 rounded-full bg-blue-300/40 blur-3xl dark:bg-blue-500/20" />
-        <div className="pointer-events-none absolute top-10 -right-14 h-80 w-80 rounded-full bg-indigo-300/35 blur-3xl dark:bg-indigo-500/20" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-lavender-100/70 via-white to-lavender-50/70 dark:from-background dark:via-background dark:to-background" />
+        <div className="pointer-events-none absolute -top-32 -left-16 h-72 w-72 rounded-full bg-lavender-200/40 blur-3xl dark:bg-lavender-700/20" />
+        <div className="pointer-events-none absolute top-10 -right-14 h-80 w-80 rounded-full bg-lavender-200/35 blur-3xl dark:bg-lavender-700/20" />
 
         <div className="relative z-10 container grid gap-10 md:grid-cols-[1.05fr_0.95fr] md:items-center lg:gap-14">
           <div className="space-y-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-200/80 bg-white/70 px-4 py-2 text-sm font-medium text-blue-900 shadow-[0_12px_25px_-20px_rgba(37,99,235,0.9)] backdrop-blur dark:border-blue-800/70 dark:bg-blue-950/50 dark:text-blue-100">
-              <span className="h-2 w-2 rounded-full bg-blue-500" />
+            <div className="inline-flex items-center gap-2 rounded-full border border-lavender-200 bg-white/70 px-4 py-2 text-sm font-medium text-lavender-900 shadow-[0_12px_25px_-20px_rgba(124,111,155,0.9)] backdrop-blur dark:border-lavender-700/70 dark:bg-card/50 dark:text-foreground">
+              <span className="h-2 w-2 rounded-full bg-primary" />
               Nurture mind & wellbeing
             </div>
 
             <div className="space-y-4">
               <h1 className="max-w-2xl text-5xl leading-[0.95] font-semibold tracking-tight sm:text-6xl lg:text-7xl">
-                <span className="animate-gradient block bg-gradient-to-r from-[#09094e] via-blue-800 to-blue-100 bg-clip-text text-transparent dark:from-indigo-200 dark:via-blue-200 dark:to-sky-300">
+                <span className="animate-gradient block bg-gradient-to-r from-lavender-900 via-primary to-lavender-200 bg-clip-text text-transparent dark:from-lavender-100 dark:via-lavender-200 dark:to-cream-100">
                   The Mind Point
                 </span>
               </h1>
@@ -109,20 +109,20 @@ export default function HomeHero({
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:max-w-[520px] sm:gap-4">
-              <div className="rounded-2xl border border-blue-200/70 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(37,99,235,0.8)] backdrop-blur dark:border-blue-900/45 dark:bg-slate-950/55">
-                <div className="bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-2xl font-semibold text-transparent">
+              <div className="rounded-2xl border border-lavender-200 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.8)] backdrop-blur dark:border-lavender-700/45 dark:bg-card/55">
+                <div className="bg-gradient-to-r from-primary to-accent bg-clip-text text-2xl font-semibold text-transparent">
                   <AnimatedCounter target={10000} suffix="+" />
                 </div>
                 <p className="text-muted-foreground text-xs">Learners</p>
               </div>
-              <div className="rounded-2xl border border-blue-200/70 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(37,99,235,0.8)] backdrop-blur dark:border-blue-900/45 dark:bg-slate-950/55">
-                <div className="bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-2xl font-semibold text-transparent">
+              <div className="rounded-2xl border border-lavender-200 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.8)] backdrop-blur dark:border-lavender-700/45 dark:bg-card/55">
+                <div className="bg-gradient-to-r from-primary to-accent bg-clip-text text-2xl font-semibold text-transparent">
                   <AnimatedCounter target={50} suffix="+" />
                 </div>
                 <p className="text-muted-foreground text-xs">Courses</p>
               </div>
-              <div className="rounded-2xl border border-blue-200/70 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(37,99,235,0.8)] backdrop-blur dark:border-blue-900/45 dark:bg-slate-950/55">
-                <div className="bg-gradient-to-r from-blue-700 to-indigo-600 bg-clip-text text-2xl font-semibold text-transparent">
+              <div className="rounded-2xl border border-lavender-200 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.8)] backdrop-blur dark:border-lavender-700/45 dark:bg-card/55">
+                <div className="bg-gradient-to-r from-primary to-accent bg-clip-text text-2xl font-semibold text-transparent">
                   <AnimatedCounter target={4.8} decimals={1} />
                 </div>
                 <p className="text-muted-foreground text-xs">Avg rating</p>
@@ -130,7 +130,7 @@ export default function HomeHero({
             </div>
           </div>
 
-          <div className="hero-video-container relative mx-auto w-full max-w-md rounded-[2rem] border border-blue-200/70 bg-white/65 p-3 shadow-[0_34px_58px_-36px_rgba(37,99,235,0.95)] backdrop-blur-md dark:border-blue-900/45 dark:bg-slate-950/55">
+          <div className="hero-video-container relative mx-auto w-full max-w-md rounded-[2rem] border border-lavender-200 bg-white/65 p-3 shadow-[0_34px_58px_-36px_rgba(124,111,155,0.95)] backdrop-blur-md dark:border-lavender-700/45 dark:bg-card/55">
             <div className="absolute -right-4 -bottom-4 flex items-center gap-2 rounded-2xl border border-emerald-200/80 bg-emerald-50/95 px-3 py-2 text-xs font-semibold text-emerald-700 shadow-md dark:border-emerald-800/70 dark:bg-emerald-950/50 dark:text-emerald-300">
               <ShieldCheck className="h-4 w-4" />
               Trusted by thousands
@@ -156,7 +156,7 @@ export default function HomeHero({
       <VideoTestimonialsSection />
 
       <section className="section-padding relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-blue-50/75 via-white to-indigo-50/80 dark:from-slate-950 dark:via-blue-950/65 dark:to-slate-950" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-lavender-50/75 via-white to-lavender-50/80 dark:from-background dark:via-background dark:to-background" />
         <div className="relative z-10 container">
           <div className="mx-auto mb-12 max-w-3xl text-center">
             <h2 className="mb-4 text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -172,9 +172,9 @@ export default function HomeHero({
             {HIGHLIGHTS.map((item) => (
               <article
                 key={item.title}
-                className="group rounded-[1.4rem] border border-blue-200/70 bg-white/78 p-6 shadow-[0_20px_38px_-28px_rgba(37,99,235,0.9)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 dark:border-blue-900/45 dark:bg-slate-950/58"
+                className="group rounded-[1.4rem] border border-lavender-200 bg-white/78 p-6 shadow-[0_20px_38px_-28px_rgba(124,111,155,0.9)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 dark:border-lavender-700/45 dark:bg-card/58"
               >
-                <div className="mb-4 inline-flex rounded-2xl border border-blue-200/70 bg-blue-100/75 p-3 text-blue-700 dark:border-blue-800/70 dark:bg-blue-950/60 dark:text-blue-200">
+                <div className="mb-4 inline-flex rounded-2xl border border-lavender-200 bg-lavender-100/75 p-3 text-primary dark:border-lavender-700/70 dark:bg-card/60 dark:text-foreground">
                   <item.icon className="h-5 w-5" />
                 </div>
                 <h3 className="mb-2 text-2xl leading-tight font-semibold tracking-tight">

@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/card";
 
 import StructuredContent from "@/components/course/structured-content";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 interface CourseOverviewProps {
   description: string;
@@ -17,17 +18,15 @@ interface CourseOverviewProps {
 
 export default function CourseOverview({ description }: CourseOverviewProps) {
   return (
-    <section className="from-muted/20 to-background bg-gradient-to-br py-16">
+    <section className="py-16">
       <div className="container">
         <div className="mx-auto max-w-4xl">
-          <div className="relative overflow-hidden rounded-2xl">
-            <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
-            <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
+          <ScrollReveal>
+          <div className="rounded-2xl">
+            <Card className="border border-border bg-card">
               <CardHeader className="pb-6 text-center">
-                <CardTitle className="text-3xl font-bold md:text-4xl">
-                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                    Course Overview
-                  </span>
+                <CardTitle className="font-display text-foreground text-3xl font-bold md:text-4xl">
+                  Course Overview
                 </CardTitle>
                 <CardDescription className="text-lg">
                   Comprehensive learning experience designed for your success
@@ -38,6 +37,7 @@ export default function CourseOverview({ description }: CourseOverviewProps) {
               </CardContent>
             </Card>
           </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>

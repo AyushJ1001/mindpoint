@@ -308,7 +308,7 @@ export default function CartScreen() {
   if (!mounted) {
     return (
       <View className="bg-background flex-1 items-center justify-center px-6">
-        <ActivityIndicator size="large" color="#4338ca" />
+        <ActivityIndicator size="large" color="#5b7a5e" />
         <Text className="text-foreground mt-4 text-lg font-semibold">
           Loading cart...
         </Text>
@@ -320,7 +320,7 @@ export default function CartScreen() {
   if (isEmpty) {
     return (
       <View className="bg-background flex-1 items-center justify-center px-6">
-        <ShoppingCart size={48} color="#6b7280" />
+        <ShoppingCart size={48} color="#8a8279" />
         <Text className="text-foreground mt-4 text-xl font-semibold">
           Your cart is empty
         </Text>
@@ -361,7 +361,7 @@ export default function CartScreen() {
           <CardHeader>
             <View className="flex-row items-center justify-between">
               <View className="flex-row items-center gap-2">
-                <ShoppingCart size={18} color="#6b7280" />
+                <ShoppingCart size={18} color="#8a8279" />
                 <CardTitle>Cart Items ({items.length})</CardTitle>
               </View>
               <Button
@@ -471,7 +471,7 @@ export default function CartScreen() {
         <Card>
           <CardHeader>
             <View className="flex-row items-center gap-2">
-              <CreditCard size={18} color="#6b7280" />
+              <CreditCard size={18} color="#8a8279" />
               <CardTitle>Order Summary</CardTitle>
             </View>
           </CardHeader>

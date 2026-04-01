@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card";
 
 export function CourseCardSkeleton() {
   return (
-    <Card className="overflow-hidden border-blue-200/80">
+    <Card className="overflow-hidden border-border">
       {/* Image placeholder */}
       <Skeleton className="h-44 w-full rounded-none" />
 

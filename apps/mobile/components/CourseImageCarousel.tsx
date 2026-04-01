@@ -32,7 +32,7 @@ export function CourseImageCarousel({
         className="items-center justify-center rounded-t-xl bg-muted"
         style={{ height }}
       >
-        <BookOpen size={48} color="#6b7280" />
+        <BookOpen size={48} color="#8a8279" />
       </View>
     );
   }

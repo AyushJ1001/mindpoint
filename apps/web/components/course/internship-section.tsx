@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { CheckCircle } from "lucide-react";
 import type { PublicCourse } from "@mindpoint/backend";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function Internship({
   internship,
@@ -74,8 +75,8 @@ export default function Internship({
       <div className="mb-8 space-y-3">
         {allocation.map((item, index) => (
           <div key={index} className="flex items-center justify-between py-2">
-            <span className="font-medium text-slate-700">{item.topic}</span>
-            <span className="mx-3 flex-1 border-b border-dotted border-slate-300"></span>
+            <span className="font-medium text-foreground">{item.topic}</span>
+            <span className="mx-3 flex-1 border-b border-dotted border-lavender-200"></span>
             <span className={`font-semibold ${colorClass}`}>
               {item.hours} {item.hours === 1 ? "hour" : "hours"}
             </span>
@@ -83,8 +84,8 @@ export default function Internship({
         ))}
 
         {/* Total hours display */}
-        <div className="mb-6 border-t border-slate-200 pt-4">
-          <div className="from-primary to-accent bg-gradient-to-r bg-clip-text text-center text-xl font-bold text-transparent">
+        <div className="mb-6 border-t border-lavender-200 pt-4">
+          <div className="font-display text-foreground text-center text-xl font-bold">
             {totalHours} hours
           </div>
         </div>
@@ -93,17 +94,16 @@ export default function Internship({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
+    <ScrollReveal>
+    <div className="min-h-screen">
       <div className="mx-auto max-w-7xl px-4 pb-16 sm:px-6 lg:px-8">
         {/* Curriculum Breakdown Section */}
         <div className="mb-16">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 text-4xl font-bold">
-              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                Curriculum Breakdown
-              </span>
+            <h2 className="font-display text-foreground mb-4 text-4xl font-bold">
+              Curriculum Breakdown
             </h2>
-            <p className="mx-auto max-w-3xl text-lg text-slate-600">
+            <p className="mx-auto max-w-3xl text-lg text-muted-foreground">
               Comprehensive topics covered in our clinical psychology training
               programs
             </p>
@@ -114,22 +114,22 @@ export default function Internship({
             <div
               className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
                 selectedHours === 120
-                  ? "border-blue-500 bg-blue-50 shadow-2xl"
-                  : "border-slate-200 bg-white hover:shadow-2xl"
+                  ? "border-primary bg-lavender-50 shadow-2xl"
+                  : "border-lavender-200 bg-white hover:shadow-2xl"
               }`}
               onClick={() => handleHourSelection(120)}
             >
               {selectedHours === 120 && (
-                <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
+                <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white shadow-lg">
                   <CheckCircle className="h-5 w-5" />
                 </div>
               )}
               <div className="mb-6 text-center">
-                <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
+                <div className="mb-2 text-sm font-medium tracking-wider text-muted-foreground uppercase">
                   Topics to be covered in
                 </div>
                 <div className="mb-4">
-                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent">
+                  <span className="font-display text-foreground text-5xl font-bold">
                     120 hours
                   </span>
                 </div>
@@ -138,10 +138,10 @@ export default function Internship({
               <div className="space-y-4">
                 {courseVariants[120].learningOutcomes?.map((outcome, index) => (
                   <div key={index} className="flex items-center space-x-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                      <CheckCircle className="h-4 w-4 text-slate-600" />
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-lavender-100">
+                      <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-foreground">
                       {outcome.title}
                     </span>
                   </div>
@@ -154,7 +154,7 @@ export default function Internship({
               className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
                 selectedHours === 240
                   ? "border-purple-500 bg-purple-50 shadow-2xl"
-                  : "border-slate-200 bg-white hover:shadow-2xl"
+                  : "border-lavender-200 bg-white hover:shadow-2xl"
               }`}
               onClick={() => handleHourSelection(240)}
             >
@@ -164,11 +164,11 @@ export default function Internship({
                 </div>
               )}
               <div className="mb-6 text-center">
-                <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
+                <div className="mb-2 text-sm font-medium tracking-wider text-muted-foreground uppercase">
                   Topics to be covered in
                 </div>
                 <div className="mb-4">
-                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-5xl font-bold text-transparent">
+                  <span className="font-display text-foreground text-5xl font-bold">
                     240 hours
                   </span>
                 </div>
@@ -177,10 +177,10 @@ export default function Internship({
               <div className="space-y-4">
                 {courseVariants[240].learningOutcomes?.map((outcome, index) => (
                   <div key={index} className="flex items-center space-x-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-slate-200">
-                      <CheckCircle className="h-4 w-4 text-slate-600" />
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-lavender-100">
+                      <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     </div>
-                    <span className="text-sm font-medium text-slate-700">
+                    <span className="text-sm font-medium text-foreground">
                       {outcome.title}
                     </span>
                   </div>
@@ -193,12 +193,10 @@ export default function Internship({
         {/* Infographic Section */}
         <div className="mb-16">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 text-4xl font-bold">
-              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                Program Structure Breakdown
-              </span>
+            <h2 className="font-display text-foreground mb-4 text-4xl font-bold">
+              Program Structure Breakdown
             </h2>
-            <p className="mx-auto max-w-3xl text-lg text-slate-600">
+            <p className="mx-auto max-w-3xl text-lg text-muted-foreground">
               Detailed hourly allocation for each training component to ensure
               comprehensive skill development
             </p>
@@ -209,47 +207,47 @@ export default function Internship({
             <div
               className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
                 selectedHours === 120
-                  ? "border-blue-500 bg-blue-50 shadow-2xl"
-                  : "border-slate-200 bg-white hover:shadow-2xl"
+                  ? "border-primary bg-lavender-50 shadow-2xl"
+                  : "border-lavender-200 bg-white hover:shadow-2xl"
               }`}
               onClick={() => handleHourSelection(120)}
             >
               {selectedHours === 120 && (
-                <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-blue-500 text-white shadow-lg">
+                <div className="absolute -top-2 -right-2 flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white shadow-lg">
                   <CheckCircle className="h-5 w-5" />
                 </div>
               )}
               <div className="mb-8 text-center">
-                <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
+                <div className="mb-2 text-sm font-medium tracking-wider text-muted-foreground uppercase">
                   THE MIND POINT&apos;S
                 </div>
-                <div className="mb-4 text-sm font-medium text-slate-600">
-                  <span className="font-semibold text-slate-800">
+                <div className="mb-4 text-sm font-medium text-muted-foreground">
+                  <span className="font-semibold text-foreground">
                     ONLINE TRAINING BASED INTERNSHIP
                   </span>
                 </div>
-                <h3 className="mb-4 text-lg font-semibold text-slate-800">
+                <h3 className="mb-4 text-lg font-semibold text-foreground">
                   Segregation of Hourly Structure
                 </h3>
                 <div className="mb-2">
-                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-6xl font-bold text-transparent">
+                  <span className="font-display text-foreground text-6xl font-bold">
                     120
                   </span>
-                  <span className="ml-2 text-4xl font-bold text-slate-700">
+                  <span className="ml-2 text-4xl font-bold text-foreground">
                     HOURS
                   </span>
                 </div>
               </div>
 
-              {renderAllocationBreakdown(courseVariants[120], "text-blue-600")}
+              {renderAllocationBreakdown(courseVariants[120], "text-primary")}
 
-              <div className="rounded-xl border border-blue-100 bg-gradient-to-r from-blue-50 to-purple-50 p-6">
-                <h4 className="mb-3 text-center font-bold text-slate-800">
+              <div className="rounded-xl border border-lavender-200 bg-gradient-to-r from-lavender-50 to-cream-50 p-6">
+                <h4 className="mb-3 text-center font-bold text-foreground">
                   Beginner to Intermediate Level
                 </h4>
-                <p className="text-center text-sm leading-relaxed text-slate-600">
+                <p className="text-center text-sm leading-relaxed text-muted-foreground">
                   Choose the{" "}
-                  <span className="font-semibold text-blue-600">
+                  <span className="font-semibold text-primary">
                     120-hour program
                   </span>{" "}
                   if you&apos;re new to psychology, currently in high school, or
@@ -264,7 +262,7 @@ export default function Internship({
               className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
                 selectedHours === 240
                   ? "border-purple-500 bg-purple-50 shadow-2xl"
-                  : "border-slate-200 bg-white hover:shadow-2xl"
+                  : "border-lavender-200 bg-white hover:shadow-2xl"
               }`}
               onClick={() => handleHourSelection(240)}
             >
@@ -274,22 +272,22 @@ export default function Internship({
                 </div>
               )}
               <div className="mb-8 text-center">
-                <div className="mb-2 text-sm font-medium tracking-wider text-slate-500 uppercase">
+                <div className="mb-2 text-sm font-medium tracking-wider text-muted-foreground uppercase">
                   THE MIND POINT&apos;S
                 </div>
-                <div className="mb-4 text-sm font-medium text-slate-600">
-                  <span className="font-semibold text-slate-800">
+                <div className="mb-4 text-sm font-medium text-muted-foreground">
+                  <span className="font-semibold text-foreground">
                     ONLINE TRAINING BASED INTERNSHIP
                   </span>
                 </div>
-                <h3 className="mb-4 text-lg font-semibold text-slate-800">
+                <h3 className="mb-4 text-lg font-semibold text-foreground">
                   Segregation of Hourly Structure
                 </h3>
                 <div className="mb-2">
-                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-6xl font-bold text-transparent">
+                  <span className="font-display text-foreground text-6xl font-bold">
                     240
                   </span>
-                  <span className="ml-2 text-4xl font-bold text-slate-700">
+                  <span className="ml-2 text-4xl font-bold text-foreground">
                     HOURS
                   </span>
                 </div>
@@ -300,11 +298,11 @@ export default function Internship({
                 "text-purple-600",
               )}
 
-              <div className="rounded-xl border border-purple-100 bg-gradient-to-r from-purple-50 to-blue-50 p-6">
-                <h4 className="mb-3 text-center font-bold text-slate-800">
+              <div className="rounded-xl border border-lavender-200 bg-gradient-to-r from-cream-50 to-lavender-50 p-6">
+                <h4 className="mb-3 text-center font-bold text-foreground">
                   Advanced Level
                 </h4>
-                <p className="text-center text-sm leading-relaxed text-slate-600">
+                <p className="text-center text-sm leading-relaxed text-muted-foreground">
                   Choose the{" "}
                   <span className="font-semibold text-purple-600">
                     240-hour program
@@ -319,5 +317,6 @@ export default function Internship({
         </div>
       </div>
     </div>
+    </ScrollReveal>
   );
 }

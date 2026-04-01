@@ -43,7 +43,7 @@ export function DialogHeader({
       <View className="flex-1">{children}</View>
       {onClose && (
         <Pressable onPress={onClose} className="ml-2 p-1">
-          <X size={20} color="#6b7280" />
+          <X size={20} color="#8a8279" />
         </Pressable>
       )}
     </View>

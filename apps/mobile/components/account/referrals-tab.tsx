@@ -27,7 +27,7 @@ export function ReferralsTab() {
   if (referralRewards === undefined) {
     return (
       <View className="flex-1 items-center justify-center py-12">
-        <ActivityIndicator size="large" color="#4338ca" />
+        <ActivityIndicator size="large" color="#5b7a5e" />
         <Text className="text-muted-foreground mt-3 text-sm">
           Loading referrals...
         </Text>
@@ -44,7 +44,7 @@ export function ReferralsTab() {
     return (
       <Card className="mx-4 mt-4">
         <CardContent className="items-center py-12">
-          <Users size={48} color="#64748b" />
+          <Users size={48} color="#8a8279" />
           <Text className="text-muted-foreground mt-4 text-center">
             No referrals yet. Share your referral link to start earning!
           </Text>
@@ -58,7 +58,7 @@ export function ReferralsTab() {
       <Card className="mb-1">
         <CardHeader>
           <View className="flex-row items-center gap-2">
-            <Gift size={20} color="#4338ca" />
+            <Gift size={20} color="#5b7a5e" />
             <CardTitle>Referral Summary</CardTitle>
           </View>
         </CardHeader>
@@ -105,7 +105,7 @@ export function ReferralsTab() {
           </CardHeader>
           <CardContent className="gap-2">
             <View className="flex-row items-center gap-2">
-              <Calendar size={16} color="#64748b" />
+              <Calendar size={16} color="#8a8279" />
               <Text className="text-foreground text-sm">
                 Referred on{" "}
                 {new Date(reward.createdAt).toLocaleDateString("en-US", {

@@ -29,6 +29,10 @@ export type PublicCourse = {
   fileUrl?: string;
   worksheetDescription?: string;
   targetAudience?: string[];
+  emotionalHook?: string;
+  painPoints?: string[];
+  outcomes?: string[];
+  whyDifferent?: string[];
 };
 
 export function pickPublicCourse(course: Doc<"courses">): PublicCourse {
@@ -61,5 +65,9 @@ export function pickPublicCourse(course: Doc<"courses">): PublicCourse {
     fileUrl: course.fileUrl,
     worksheetDescription: course.worksheetDescription,
     targetAudience: course.targetAudience,
+    emotionalHook: course.emotionalHook,
+    painPoints: course.painPoints,
+    outcomes: course.outcomes,
+    whyDifferent: course.whyDifferent,
   };
 }

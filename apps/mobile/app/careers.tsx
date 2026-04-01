@@ -198,7 +198,7 @@ export default function CareersScreen() {
           {VALUES.map(({ icon: Icon, title, desc }) => (
             <View key={title} className="w-[44%] items-center">
               <View className="mb-2 h-14 w-14 items-center justify-center rounded-[999px] bg-primary/10">
-                <Icon size={28} color="#4338ca" />
+                <Icon size={28} color="#5b7a5e" />
               </View>
               <Text className="font-semibold text-foreground">{title}</Text>
               <Text className="text-center text-xs text-muted-foreground">
@@ -226,7 +226,7 @@ export default function CareersScreen() {
                 <Label>Resume/CV *</Label>
                 {selectedFile ? (
                   <View className="flex-row items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
-                    <FileText size={28} color="#4338ca" />
+                    <FileText size={28} color="#5b7a5e" />
                     <View className="flex-1">
                       <Text
                         className="font-medium text-foreground"
@@ -241,7 +241,7 @@ export default function CareersScreen() {
                       )}
                     </View>
                     <Pressable onPress={removeFile} className="p-1">
-                      <X size={18} color="#64748b" />
+                      <X size={18} color="#8a8279" />
                     </Pressable>
                   </View>
                 ) : (
@@ -249,7 +249,7 @@ export default function CareersScreen() {
                     onPress={handlePickDocument}
                     className="items-center rounded-lg border-2 border-dashed border-muted-foreground/25 p-8"
                   >
-                    <Upload size={36} color="#64748b" />
+                    <Upload size={36} color="#8a8279" />
                     <Text className="mt-3 text-base font-medium text-foreground">
                       Tap to upload your resume
                     </Text>

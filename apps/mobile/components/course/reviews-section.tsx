@@ -19,7 +19,7 @@ function StarRating({ rating }: { rating: number }) {
         <Star
           key={star}
           size={14}
-          color={star <= rating ? "#f59e0b" : "#d4dae6"}
+          color={star <= rating ? "#f59e0b" : "#e2dcd4"}
           fill={star <= rating ? "#f59e0b" : "transparent"}
         />
       ))}
@@ -66,7 +66,7 @@ export default function ReviewsSection({
   return (
     <View className="mt-6">
       <View className="mb-4 flex-row items-center gap-2">
-        <MessageSquare size={20} color="#4338ca" />
+        <MessageSquare size={20} color="#5b7a5e" />
         <Text className="text-lg font-semibold text-foreground">
           {sectionTitle}
         </Text>

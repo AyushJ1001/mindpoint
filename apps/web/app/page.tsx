@@ -2,12 +2,18 @@ import { ConvexHttpClient } from "convex/browser";
 import { auth } from "@clerk/nextjs/server";
 import { api } from "@mindpoint/backend/api";
 import { readPublicEnv } from "@mindpoint/config";
-import HomeClient from "@/components/HomeClient";
-import HomeHero from "@/components/HomeHero";
 import { Suspense } from "react";
 import { hasAdminAccess } from "@/lib/admin-access";
 import { resolveAuthEmail } from "@/lib/clerk-email";
 import { isClerkServerConfigured } from "@/lib/clerk-env";
+import HeroSection from "@/components/landing/HeroSection";
+import TwoPathsSection from "@/components/landing/TwoPathsSection";
+import WhoThisIsForSection from "@/components/landing/WhoThisIsForSection";
+import WhatWeOfferSection from "@/components/landing/WhatWeOfferSection";
+import FeaturedEntrySection from "@/components/landing/FeaturedEntrySection";
+import TestimonialsSection from "@/components/landing/TestimonialsSection";
+import CoursePreviewSection from "@/components/landing/CoursePreviewSection";
+import FinalCtaSection from "@/components/landing/FinalCtaSection";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -81,10 +87,22 @@ export default async function Home() {
     if (!userId && !sessionEmail) {
       return (
         <>
-          <HomeHero canAccessAdmin={canAccessAdmin} />
-          <Suspense fallback={<div>Loading courses...</div>}>
-            <HomeClient upcomingCourses={upcomingCourses} />
+          <HeroSection canAccessAdmin={canAccessAdmin} />
+          <TwoPathsSection />
+          <WhoThisIsForSection />
+          <WhatWeOfferSection />
+          <FeaturedEntrySection />
+          <TestimonialsSection />
+          <Suspense
+            fallback={
+              <div className="section-padding text-muted-foreground text-center">
+                Loading courses...
+              </div>
+            }
+          >
+            <CoursePreviewSection upcomingCourses={upcomingCourses} />
           </Suspense>
+          <FinalCtaSection />
         </>
       );
     }
@@ -99,10 +117,22 @@ export default async function Home() {
 
   return (
     <>
-      <HomeHero canAccessAdmin={canAccessAdmin} />
-      <Suspense fallback={<div>Loading courses...</div>}>
-        <HomeClient upcomingCourses={upcomingCourses} />
+      <HeroSection canAccessAdmin={canAccessAdmin} />
+      <TwoPathsSection />
+      <WhoThisIsForSection />
+      <WhatWeOfferSection />
+      <FeaturedEntrySection />
+      <TestimonialsSection />
+      <Suspense
+        fallback={
+          <div className="section-padding text-muted-foreground text-center">
+            Loading courses...
+          </div>
+        }
+      >
+        <CoursePreviewSection upcomingCourses={upcomingCourses} />
       </Suspense>
+      <FinalCtaSection />
     </>
   );
 }

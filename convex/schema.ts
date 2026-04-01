@@ -99,6 +99,10 @@ const sharedCourseFields = {
   fileUrl: v.optional(v.string()),
   worksheetDescription: v.optional(v.string()),
   targetAudience: v.optional(v.array(v.string())),
+  emotionalHook: v.optional(v.string()),
+  painPoints: v.optional(v.array(v.string())),
+  outcomes: v.optional(v.array(v.string())),
+  whyDifferent: v.optional(v.array(v.string())),
 };
 
 const courseTableFields = {

@@ -2,7 +2,7 @@ import { View, Text } from "react-native";
 import { Shield, Lock, Users, Award } from "lucide-react-native";
 
 const TRUST_ITEMS = [
-  { icon: Shield, label: "Certified", color: "#4338ca" },
+  { icon: Shield, label: "Certified", color: "#5b7a5e" },
   { icon: Lock, label: "Secure", color: "#059669" },
   { icon: Users, label: "Community", color: "#2563eb" },
   { icon: Award, label: "Quality", color: "#d97706" },

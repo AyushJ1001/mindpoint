@@ -137,7 +137,7 @@ export function CourseHero({
         {stats.map((stat, idx) => (
           <View key={idx} className="w-1/2 items-center pb-4">
             <View className="mb-2 h-12 w-12 items-center justify-center rounded-[999px] bg-primary/10">
-              <stat.Icon size={24} color="#4338ca" />
+              <stat.Icon size={24} color="#5b7a5e" />
             </View>
             <Text className="text-center text-xs font-medium text-muted-foreground">
               {stat.label}
@@ -204,7 +204,7 @@ export function CourseHero({
         <CardContent>
           <View className="flex-row items-center gap-3">
             <View className="h-10 w-10 items-center justify-center rounded-[999px] bg-primary/10">
-              <Gift size={20} color="#4338ca" />
+              <Gift size={20} color="#5b7a5e" />
             </View>
             <View className="flex-1">
               <Text className="font-semibold text-green-700">
@@ -223,7 +223,7 @@ export function CourseHero({
         <Card className="mt-4 border border-border">
           <CardHeader className="pb-2">
             <View className="flex-row items-center gap-2">
-              <Calendar size={20} color="#4338ca" />
+              <Calendar size={20} color="#5b7a5e" />
               <CardTitle>Schedule & Timing</CardTitle>
             </View>
           </CardHeader>
@@ -232,7 +232,7 @@ export function CourseHero({
               {/* Start Date */}
               <View className="flex-row items-center gap-3">
                 <View className="h-10 w-10 items-center justify-center rounded-[999px] bg-primary/10">
-                  <Calendar size={20} color="#4338ca" />
+                  <Calendar size={20} color="#5b7a5e" />
                 </View>
                 <View>
                   <Text className="text-sm font-medium text-foreground">
@@ -248,7 +248,7 @@ export function CourseHero({
               {course.type === "certificate" && course.endDate && (
                 <View className="flex-row items-center gap-3">
                   <View className="h-10 w-10 items-center justify-center rounded-[999px] bg-primary/10">
-                    <Calendar size={20} color="#4338ca" />
+                    <Calendar size={20} color="#5b7a5e" />
                   </View>
                   <View>
                     <Text className="text-sm font-medium text-foreground">
@@ -264,7 +264,7 @@ export function CourseHero({
               {/* Time */}
               <View className="flex-row items-center gap-3">
                 <View className="h-10 w-10 items-center justify-center rounded-[999px] bg-primary/10">
-                  <Clock size={20} color="#4338ca" />
+                  <Clock size={20} color="#5b7a5e" />
                 </View>
                 <View>
                   <Text className="text-sm font-medium text-foreground">
@@ -279,7 +279,7 @@ export function CourseHero({
               {/* Days */}
               <View className="flex-row items-center gap-3">
                 <View className="h-10 w-10 items-center justify-center rounded-[999px] bg-primary/10">
-                  <MapPin size={20} color="#4338ca" />
+                  <MapPin size={20} color="#5b7a5e" />
                 </View>
                 <View>
                   <Text className="text-sm font-medium text-foreground">
@@ -294,7 +294,7 @@ export function CourseHero({
               {/* Duration */}
               <View className="flex-row items-center gap-3">
                 <View className="h-10 w-10 items-center justify-center rounded-[999px] bg-primary/10">
-                  <TrendingUp size={20} color="#4338ca" />
+                  <TrendingUp size={20} color="#5b7a5e" />
                 </View>
                 <View>
                   <Text className="text-sm font-medium text-foreground">
@@ -316,13 +316,13 @@ export function CourseHero({
       <View className="mt-4 rounded-xl border-2 border-primary/20 p-4">
         <View className="gap-3">
           <View className="flex-row items-center gap-3">
-            <Sparkles size={24} color="#4338ca" />
+            <Sparkles size={24} color="#5b7a5e" />
             <Text className="font-medium text-foreground">
               Practical, guided learning
             </Text>
           </View>
           <View className="flex-row items-center gap-3">
-            <HeartHandshake size={24} color="#4338ca" />
+            <HeartHandshake size={24} color="#5b7a5e" />
             <Text className="font-medium text-foreground">
               Lifetime doubt clearing
             </Text>

@@ -29,7 +29,7 @@ function MenuItem({ icon, label, onPress }: MenuItemProps) {
     >
       {icon}
       <Text className="ml-4 flex-1 text-base text-foreground">{label}</Text>
-      <ChevronRight size={18} color="#6b7280" />
+      <ChevronRight size={18} color="#8a8279" />
     </Pressable>
   );
 }
@@ -45,13 +45,13 @@ export default function MoreScreen() {
     <ScrollView className="flex-1 bg-background">
       <View className="mt-4 rounded-xl bg-card mx-4">
         <MenuItem
-          icon={<Mail size={20} color="#4338ca" />}
+          icon={<Mail size={20} color="#5b7a5e" />}
           label="Contact Us"
           onPress={() => router.push("/contact" as never)}
         />
         <Separator className="ml-14" />
         <MenuItem
-          icon={<Briefcase size={20} color="#4338ca" />}
+          icon={<Briefcase size={20} color="#5b7a5e" />}
           label="Careers"
           onPress={() => router.push("/careers" as never)}
         />
@@ -59,25 +59,25 @@ export default function MoreScreen() {
 
       <View className="mt-4 rounded-xl bg-card mx-4">
         <MenuItem
-          icon={<Info size={20} color="#6b7280" />}
+          icon={<Info size={20} color="#8a8279" />}
           label="About Us"
           onPress={() => openInBrowser("/about")}
         />
         <Separator className="ml-14" />
         <MenuItem
-          icon={<Shield size={20} color="#6b7280" />}
+          icon={<Shield size={20} color="#8a8279" />}
           label="Privacy Policy"
           onPress={() => openInBrowser("/privacy")}
         />
         <Separator className="ml-14" />
         <MenuItem
-          icon={<FileText size={20} color="#6b7280" />}
+          icon={<FileText size={20} color="#8a8279" />}
           label="Refund Policy"
           onPress={() => openInBrowser("/refund")}
         />
         <Separator className="ml-14" />
         <MenuItem
-          icon={<ScrollText size={20} color="#6b7280" />}
+          icon={<ScrollText size={20} color="#8a8279" />}
           label="Terms & Conditions"
           onPress={() => openInBrowser("/toc")}
         />

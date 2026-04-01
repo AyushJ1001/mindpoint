@@ -22,7 +22,7 @@ export type ButtonProps = PressableProps & {
 };
 
 const variantClasses: Record<ButtonVariant, string> = {
-  default: "bg-primary shadow-sm shadow-indigo-300/40",
+  default: "bg-primary shadow-sm shadow-sage-dark/20",
   secondary: "border border-border/70 bg-secondary",
   outline: "border border-border bg-transparent",
   ghost: "bg-transparent",
@@ -38,8 +38,8 @@ const variantTextClasses: Record<ButtonVariant, string> = {
 };
 
 const sizeClasses: Record<ButtonSize, string> = {
-  default: "rounded-xl px-5 py-3",
-  sm: "rounded-lg px-3 py-2",
+  default: "rounded-2xl px-5 py-3",
+  sm: "rounded-xl px-3 py-2",
   lg: "rounded-2xl px-8 py-4",
   icon: "rounded-xl p-3",
 };

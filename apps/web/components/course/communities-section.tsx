@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 // WhatsApp and Instagram SVG Icons
 const WhatsAppIcon = () => (
@@ -36,42 +37,45 @@ interface CommunitiesSectionProps {
 }
 
 export default function CommunitiesSection({
-  title = "Join Our Learning Community! 🚀",
-  description = "Connect with fellow learners, share insights, and continue your journey together",
+  title = "Stay close to the community.",
+  description = "Keep the conversation going with people who are learning, noticing, and growing alongside you.",
   whatsappLink = "https://chat.whatsapp.com/LYKNhlQbmV84YiBioVo83Y?mode=ac_t",
   instagramLink = "https://www.instagram.com/channel/AbZNVUaQ3yMrfJGm/?igsh=dTV3MWozOXJsdDFy",
 }: CommunitiesSectionProps) {
   return (
-    <section className="bg-gradient-to-r from-blue-600 to-purple-600 py-16">
+    <section className="course-section-sm pt-8 pb-16 sm:pt-10">
       <div className="container">
-        <div className="mx-auto max-w-3xl text-center text-white">
-          <h3 className="mb-4 text-3xl font-bold">
-            <span className="bg-gradient-to-r from-white to-white/80 bg-clip-text text-transparent">
-              {title}
+        <ScrollReveal>
+          <div className="course-shell-soft mx-auto max-w-4xl px-8 py-10 text-center">
+            <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
+              Keep the warmth going
             </span>
-          </h3>
-          <p className="mb-8 text-lg text-white/90">{description}</p>
-          <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
-            <Link
-              href={whatsappLink}
-              className="inline-flex items-center gap-3 rounded-xl bg-white px-8 py-4 font-semibold text-blue-600 transition-all hover:bg-gray-100 hover:shadow-lg"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <WhatsAppIcon />
-              Join WhatsApp Community
-            </Link>
-            <Link
-              href={instagramLink}
-              className="inline-flex items-center gap-3 rounded-xl bg-white px-8 py-4 font-semibold text-purple-600 transition-all hover:bg-gray-100 hover:shadow-lg"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              <InstagramIcon />
-              Join Instagram Community
-            </Link>
+            <h3 className="font-display text-foreground mt-3 mb-4 text-3xl font-semibold tracking-tight">
+              {title}
+            </h3>
+            <p className="text-muted-foreground mb-8 text-lg">{description}</p>
+            <div className="flex flex-col gap-4 sm:flex-row sm:justify-center">
+              <Link
+                href={whatsappLink}
+                className="border-border/70 text-foreground hover:bg-muted dark:bg-card/72 inline-flex items-center gap-3 rounded-xl border bg-white/82 px-8 py-4 font-semibold transition-all dark:border-white/8"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <WhatsAppIcon />
+                Join WhatsApp Community
+              </Link>
+              <Link
+                href={instagramLink}
+                className="border-border/70 text-foreground hover:bg-muted dark:bg-card/72 inline-flex items-center gap-3 rounded-xl border bg-white/82 px-8 py-4 font-semibold transition-all dark:border-white/8"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <InstagramIcon />
+                Join Instagram Community
+              </Link>
+            </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );
