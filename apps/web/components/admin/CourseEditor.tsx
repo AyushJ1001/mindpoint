@@ -76,6 +76,10 @@ type CourseFormState = {
   fileUrl: string;
   worksheetDescription: string;
   targetAudience: string;
+  emotionalHook: string;
+  painPoints: string[];
+  outcomes: string[];
+  whyDifferent: string[];
   lifecycleStatus: CourseLifecycleStatus;
   offerName: string;
   offerDiscount: string;
@@ -230,6 +234,10 @@ function toInitialState(course?: Doc<"courses">): CourseFormState {
     fileUrl: course?.fileUrl || "",
     worksheetDescription: course?.worksheetDescription || "",
     targetAudience: (course?.targetAudience || []).join(", "),
+    emotionalHook: course?.emotionalHook || "",
+    painPoints: course?.painPoints || [],
+    outcomes: course?.outcomes || [],
+    whyDifferent: course?.whyDifferent || [],
     lifecycleStatus:
       (course?.lifecycleStatus as CourseLifecycleStatus | undefined) || "draft",
     offerName: course?.offer?.name || "",
@@ -262,6 +270,7 @@ export function CourseEditor({
     JSON.stringify(toInitialState(course)),
   );
   const [isSaving, setIsSaving] = useState(false);
+  const [emotionalContentOpen, setEmotionalContentOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState("");
   const courseVersion = course
     ? `${course._id}:${course.updatedAt ?? course._creationTime}`
@@ -645,6 +654,19 @@ export function CourseEditor({
       targetAudience:
         isWorksheet && parsedTargetAudience.length > 0
           ? parsedTargetAudience
+          : undefined,
+      emotionalHook: state.emotionalHook.trim() || undefined,
+      painPoints:
+        state.painPoints.filter((s) => s.trim()).length > 0
+          ? state.painPoints.filter((s) => s.trim())
+          : undefined,
+      outcomes:
+        state.outcomes.filter((s) => s.trim()).length > 0
+          ? state.outcomes.filter((s) => s.trim())
+          : undefined,
+      whyDifferent:
+        state.whyDifferent.filter((s) => s.trim()).length > 0
+          ? state.whyDifferent.filter((s) => s.trim())
           : undefined,
       lifecycleStatus: state.lifecycleStatus,
       offer,
@@ -1277,6 +1299,220 @@ export function CourseEditor({
           )}
         </div>
       ) : null}
+
+      <div className="space-y-3 rounded-lg border bg-white p-4">
+        <button
+          type="button"
+          className="flex w-full items-center justify-between gap-3 text-left"
+          onClick={() => setEmotionalContentOpen((prev) => !prev)}
+        >
+          <h3 className="font-medium">Emotional Content (Marketing)</h3>
+          <span className="text-sm text-slate-500">
+            {emotionalContentOpen ? "Collapse" : "Expand"}
+          </span>
+        </button>
+
+        {emotionalContentOpen ? (
+          <div className="space-y-4 pt-2">
+            <div className="space-y-2">
+              <Label>Emotional Hook</Label>
+              <Input
+                placeholder="e.g., Struggling with Overthinking or Anxiety?"
+                value={state.emotionalHook}
+                onChange={(e) =>
+                  setState((prev) => ({
+                    ...prev,
+                    emotionalHook: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label>Pain Points</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setState((prev) => ({
+                      ...prev,
+                      painPoints: [...prev.painPoints, ""],
+                    }))
+                  }
+                >
+                  Add pain point
+                </Button>
+              </div>
+              {state.painPoints.length === 0 ? (
+                <p className="text-sm text-slate-600">
+                  No pain points added yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {state.painPoints.map((item, index) => (
+                    <div
+                      key={`pain-point-${index}`}
+                      className="grid gap-2 md:grid-cols-[1fr_auto]"
+                    >
+                      <Input
+                        placeholder="e.g., You constantly overthink even small situations"
+                        value={item}
+                        onChange={(e) =>
+                          setState((prev) => ({
+                            ...prev,
+                            painPoints: prev.painPoints.map((v, i) =>
+                              i === index ? e.target.value : v,
+                            ),
+                          }))
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setState((prev) => ({
+                            ...prev,
+                            painPoints: prev.painPoints.filter(
+                              (_, i) => i !== index,
+                            ),
+                          }))
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label>Outcomes</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setState((prev) => ({
+                      ...prev,
+                      outcomes: [...prev.outcomes, ""],
+                    }))
+                  }
+                >
+                  Add outcome
+                </Button>
+              </div>
+              {state.outcomes.length === 0 ? (
+                <p className="text-sm text-slate-600">
+                  No outcomes added yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {state.outcomes.map((item, index) => (
+                    <div
+                      key={`outcome-emotional-${index}`}
+                      className="grid gap-2 md:grid-cols-[1fr_auto]"
+                    >
+                      <Input
+                        placeholder="e.g., Understand how your thoughts influence your emotions"
+                        value={item}
+                        onChange={(e) =>
+                          setState((prev) => ({
+                            ...prev,
+                            outcomes: prev.outcomes.map((v, i) =>
+                              i === index ? e.target.value : v,
+                            ),
+                          }))
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setState((prev) => ({
+                            ...prev,
+                            outcomes: prev.outcomes.filter(
+                              (_, i) => i !== index,
+                            ),
+                          }))
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-3">
+                <Label>Why This Is Different</Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() =>
+                    setState((prev) => ({
+                      ...prev,
+                      whyDifferent: [...prev.whyDifferent, ""],
+                    }))
+                  }
+                >
+                  Add item
+                </Button>
+              </div>
+              {state.whyDifferent.length === 0 ? (
+                <p className="text-sm text-slate-600">
+                  No items added yet.
+                </p>
+              ) : (
+                <div className="space-y-2">
+                  {state.whyDifferent.map((item, index) => (
+                    <div
+                      key={`why-different-${index}`}
+                      className="grid gap-2 md:grid-cols-[1fr_auto]"
+                    >
+                      <Input
+                        placeholder="e.g., You practice techniques during live sessions"
+                        value={item}
+                        onChange={(e) =>
+                          setState((prev) => ({
+                            ...prev,
+                            whyDifferent: prev.whyDifferent.map((v, i) =>
+                              i === index ? e.target.value : v,
+                            ),
+                          }))
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setState((prev) => ({
+                            ...prev,
+                            whyDifferent: prev.whyDifferent.filter(
+                              (_, i) => i !== index,
+                            ),
+                          }))
+                        }
+                      >
+                        Remove
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
 
       {supportsModules ? (
         <div className="space-y-3 rounded-lg border bg-white p-4">

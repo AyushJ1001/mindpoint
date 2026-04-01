@@ -287,7 +287,7 @@ function AIQuiz() {
 
   if (currentStep === "type") {
     return (
-      <section className="bg-gradient-to-br from-sage-50 via-cream-50 to-sage-100 py-16">
+      <section className="bg-gradient-to-br from-lavender-50 via-cream-50 to-lavender-100 py-16">
         <div className="mx-auto max-w-4xl px-4">
           <div className="mb-12 text-center">
             <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-primary to-accent">
@@ -306,7 +306,7 @@ function AIQuiz() {
             {typeOptions.map((option) => (
               <Card
                 key={option.id}
-                className="cursor-pointer border-2 transition-all duration-300 hover:scale-105 hover:border-sage-200 hover:shadow-lg"
+                className="cursor-pointer border-2 transition-all duration-300 hover:scale-105 hover:border-lavender-200 hover:shadow-lg"
                 onClick={() => handleTypeSelect(option.id)}
               >
                 <CardHeader className="pb-4 text-center">
@@ -336,7 +336,7 @@ function AIQuiz() {
     const IconComponent = selectedOption?.icon || BookOpen;
 
     return (
-      <section className="bg-gradient-to-br from-sage-50 via-cream-50 to-sage-100 py-16">
+      <section className="bg-gradient-to-br from-lavender-50 via-cream-50 to-lavender-100 py-16">
         <div className="mx-auto max-w-4xl px-4">
           <div className="mb-8 text-center">
             <div
@@ -372,7 +372,7 @@ function AIQuiz() {
                               className={`h-auto justify-start p-4 text-left ${
                                 answers[q.id] === opt
                                   ? "border-primary bg-primary text-white"
-                                  : "hover:border-sage-200 hover:bg-sage-50"
+                                  : "hover:border-lavender-200 hover:bg-lavender-50"
                               }`}
                               onClick={() => handleAnswer(q.id, opt)}
                             >
@@ -420,7 +420,7 @@ function AIQuiz() {
     return (
       <section
         id="quiz-results"
-        className="bg-gradient-to-br from-sage-50 via-cream-50 to-sage-100 py-16"
+        className="bg-gradient-to-br from-lavender-50 via-cream-50 to-lavender-100 py-16"
       >
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-12 text-center">

@@ -589,7 +589,7 @@ export default function Navbar() {
                       </div>
                       <div className="bg-background/95 sticky right-0 bottom-0 left-0 space-y-4 border-t pt-4 backdrop-blur">
                         {hasBogoItems && (
-                          <div className="flex items-start gap-2 rounded-md border border-primary/30 bg-sage-50 px-3 py-2 text-[11px] font-medium text-primary">
+                          <div className="flex items-start gap-2 rounded-md border border-primary/30 bg-lavender-50 px-3 py-2 text-[11px] font-medium text-primary">
                             <Sparkles className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
                             <span>
                               BOGO applied: bonus enrollments are added during

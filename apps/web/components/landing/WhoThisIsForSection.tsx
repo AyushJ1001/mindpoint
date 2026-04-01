@@ -25,38 +25,45 @@ const PERSONAS = [
 
 export default function WhoThisIsForSection() {
   return (
-    <section className="section-padding">
-      <div className="container mx-auto max-w-4xl">
+    <section className="home-section-sm pt-4 sm:pt-6">
+      <div className="container">
         <ScrollReveal>
-          <h2 className="text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
-            Who this is for
-          </h2>
-          <p className="text-muted-foreground mt-4 max-w-3xl text-lg leading-relaxed">
-            Whether you&apos;re a psychology student looking to bridge theory and
-            practice, a working professional exploring a career shift into mental
-            health, or someone who simply wants to understand the mind more
-            deeply — this is your space. The Mind Point was built for the
-            curious, the compassionate, and the committed.
-          </p>
-        </ScrollReveal>
-
-        <div className="mt-12 grid gap-6 md:grid-cols-2">
-          {PERSONAS.map((persona, index) => (
-            <ScrollReveal key={persona.label}>
-              <article
-                className="rounded-2xl border border-border bg-card p-6"
-                style={{ transitionDelay: `${index * 100}ms` }}
-              >
-                <blockquote className="text-foreground/80 text-base italic leading-relaxed">
-                  &ldquo;{persona.quote}&rdquo;
-                </blockquote>
-                <p className="text-muted-foreground mt-3 text-sm">
-                  — {persona.label}
+          <div className="home-shell-soft mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-8">
+            <div className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:gap-8">
+              <div>
+                <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
+                  Who this is for
+                </span>
+                <h2 className="text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
+                  Built for the curious, the compassionate, and the
+                  not-quite-sure-yet.
+                </h2>
+                <p className="text-muted-foreground mt-4 max-w-2xl text-lg leading-8">
+                  Whether you&apos;re studying, shifting careers, practicing
+                  already, or simply trying to understand yourself better, there
+                  should be a clear way in.
                 </p>
-              </article>
-            </ScrollReveal>
-          ))}
-        </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                {PERSONAS.map((persona, index) => (
+                  <article
+                    key={persona.label}
+                    className="home-subpanel rounded-[1.35rem] px-5 py-5"
+                    style={{ transitionDelay: `${index * 90}ms` }}
+                  >
+                    <blockquote className="text-foreground/85 text-base leading-7 italic">
+                      &ldquo;{persona.quote}&rdquo;
+                    </blockquote>
+                    <p className="text-muted-foreground mt-3 text-sm font-medium tracking-[0.14em] uppercase">
+                      {persona.label}
+                    </p>
+                  </article>
+                ))}
+              </div>
+            </div>
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );

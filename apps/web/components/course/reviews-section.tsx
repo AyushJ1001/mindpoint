@@ -148,186 +148,189 @@ export default function ReviewsSection({
     setDeleteDialogOpen(true);
   };
   return (
-    <section className="py-16">
+    <section className="course-section-md pt-8 sm:pt-10">
       <div className="container">
         <div className="mx-auto max-w-4xl">
           <ScrollReveal>
-          <div className="rounded-2xl">
-            <Card className="border border-border bg-card">
-              <CardHeader className="pb-6 text-center">
-                <CardTitle className="font-display text-foreground text-3xl font-bold md:text-4xl">
-                  {courseType === "certificate" || courseType === "internship"
-                    ? "Student Reviews"
-                    : "Client Reviews"}
-                </CardTitle>
-                <CardDescription className="text-lg">
-                  {courseType === "certificate" || courseType === "internship"
-                    ? "Hear from our successful students"
-                    : "Hear from our successful clients"}
-                </CardDescription>
+            <div className="rounded-2xl">
+              <Card className="course-shell-soft border-border/70 overflow-hidden bg-transparent">
+                <CardHeader className="pb-6 text-center">
+                  <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
+                    More voices, if you need them
+                  </span>
+                  <CardTitle className="font-display text-foreground mt-3 text-3xl font-bold md:text-4xl">
+                    {courseType === "certificate" || courseType === "internship"
+                      ? "Student Reviews"
+                      : "Client Reviews"}
+                  </CardTitle>
+                  <CardDescription className="mx-auto max-w-2xl text-lg">
+                    {courseType === "certificate" || courseType === "internship"
+                      ? "A fuller look at how the experience lands once people move through it."
+                      : "A fuller look at how clients describe the care and support they received."}
+                  </CardDescription>
 
-                {/* Sorting Toggle */}
-                <div className="mt-4 flex justify-center">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() =>
-                      setSortBy(sortBy === "date" ? "rating" : "date")
-                    }
-                    className="flex items-center gap-2"
-                  >
-                    {sortBy === "date" ? (
-                      <>
-                        <Calendar className="h-4 w-4" />
-                        Latest
-                      </>
-                    ) : (
-                      <>
-                        <Star className="h-4 w-4" />
-                        Highest Rated
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-8">
-                {reviews === undefined ? (
-                  <div className="py-12 text-center">
-                    <div className="text-muted-foreground">
-                      Loading reviews...
-                    </div>
+                  {/* Sorting Toggle */}
+                  <div className="mt-4 flex justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() =>
+                        setSortBy(sortBy === "date" ? "rating" : "date")
+                      }
+                      className="flex items-center gap-2"
+                    >
+                      {sortBy === "date" ? (
+                        <>
+                          <Calendar className="h-4 w-4" />
+                          Latest
+                        </>
+                      ) : (
+                        <>
+                          <Star className="h-4 w-4" />
+                          Highest Rated
+                        </>
+                      )}
+                    </Button>
                   </div>
-                ) : displayedReviews.length > 0 ? (
-                  <>
-                    <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
-                      {displayedReviews.map((review) => {
-                        const isOwner = userId && review.userId === userId;
-                        const isAnonymous = review.userId === "anonymous";
-                        const isPlaceholder = review.userId === "placeholder";
-                        const canEdit =
-                          isOwner && !isAnonymous && !isPlaceholder;
-
-                        return (
-                          <Card
-                            key={review._id}
-                            className="border border-border bg-card transition-shadow hover:shadow-lg"
-                          >
-                            <CardHeader className="pb-3">
-                              <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-3">
-                                  <StarRating
-                                    rating={review.rating}
-                                    size="sm"
-                                  />
-                                  <span className="text-muted-foreground text-sm font-medium">
-                                    {review.rating % 1 === 0
-                                      ? review.rating.toString()
-                                      : review.rating.toFixed(1)}{" "}
-                                    / 5
-                                  </span>
-                                </div>
-                                {canEdit && (
-                                  <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                      <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        className="h-8 w-8 p-0"
-                                      >
-                                        <MoreVertical className="h-4 w-4" />
-                                      </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                      <DropdownMenuItem
-                                        onClick={() =>
-                                          setEditingReview(review._id)
-                                        }
-                                      >
-                                        <Edit2 className="mr-2 h-4 w-4" />
-                                        Edit
-                                      </DropdownMenuItem>
-                                      <DropdownMenuItem
-                                        onClick={() =>
-                                          openDeleteDialog(review._id)
-                                        }
-                                        className="text-red-600"
-                                      >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
-                                      </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                  </DropdownMenu>
-                                )}
-                              </div>
-                              <div className="flex items-center justify-between">
-                                <p className="text-muted-foreground/70 text-xs">
-                                  — {review.userName}
-                                </p>
-                                <p className="text-muted-foreground/50 text-xs">
-                                  {getRelativeTime(review._creationTime)}
-                                  {review.isEdited && " (edited)"}
-                                </p>
-                              </div>
-                            </CardHeader>
-                            <CardContent>
-                              <p className="text-muted-foreground leading-relaxed">
-                                {review.content}
-                              </p>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-
-                    {/* Pagination Controls */}
-                    {allReviews.length > 6 && (
-                      <div className="flex justify-center gap-4">
-                        {visibleCount > 6 && (
-                          <Button
-                            variant="outline"
-                            onClick={() => setVisibleCount(6)}
-                            className="flex items-center gap-2"
-                          >
-                            <ChevronUp className="h-4 w-4" />
-                            Show Less
-                          </Button>
-                        )}
-                        {hasMoreReviews && (
-                          <Button
-                            variant="outline"
-                            onClick={() =>
-                              setVisibleCount((prev) =>
-                                Math.min(prev + 6, allReviews.length),
-                              )
-                            }
-                            className="flex items-center gap-2"
-                          >
-                            Show More
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                        )}
+                </CardHeader>
+                <CardContent className="space-y-8">
+                  {reviews === undefined ? (
+                    <div className="py-12 text-center">
+                      <div className="text-muted-foreground">
+                        Loading reviews...
                       </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="py-12 text-center">
-                    <StarIcon className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
-                    <p className="text-muted-foreground text-lg">
-                      No reviews yet - be the first!
-                    </p>
-                  </div>
-                )}
+                    </div>
+                  ) : displayedReviews.length > 0 ? (
+                    <>
+                      <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+                        {displayedReviews.map((review) => {
+                          const isOwner = userId && review.userId === userId;
+                          const isAnonymous = review.userId === "anonymous";
+                          const isPlaceholder = review.userId === "placeholder";
+                          const canEdit =
+                            isOwner && !isAnonymous && !isPlaceholder;
 
-                <div className="mx-auto max-w-2xl">
-                  <ReviewForm
-                    courseId={courseId}
-                    editingReview={editingReview}
-                    onEditComplete={() => setEditingReview(null)}
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+                          return (
+                            <Card
+                              key={review._id}
+                              className="border-border/70 border bg-white/82 transition-shadow hover:shadow-lg"
+                            >
+                              <CardHeader className="pb-3">
+                                <div className="flex items-center justify-between gap-3">
+                                  <div className="flex items-center gap-3">
+                                    <StarRating
+                                      rating={review.rating}
+                                      size="sm"
+                                    />
+                                    <span className="text-muted-foreground text-sm font-medium">
+                                      {review.rating % 1 === 0
+                                        ? review.rating.toString()
+                                        : review.rating.toFixed(1)}{" "}
+                                      / 5
+                                    </span>
+                                  </div>
+                                  {canEdit && (
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-8 w-8 p-0"
+                                        >
+                                          <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent align="end">
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            setEditingReview(review._id)
+                                          }
+                                        >
+                                          <Edit2 className="mr-2 h-4 w-4" />
+                                          Edit
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            openDeleteDialog(review._id)
+                                          }
+                                          className="text-red-600"
+                                        >
+                                          <Trash2 className="mr-2 h-4 w-4" />
+                                          Delete
+                                        </DropdownMenuItem>
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
+                                  )}
+                                </div>
+                                <div className="flex items-center justify-between">
+                                  <p className="text-muted-foreground/70 text-xs">
+                                    — {review.userName}
+                                  </p>
+                                  <p className="text-muted-foreground/50 text-xs">
+                                    {getRelativeTime(review._creationTime)}
+                                    {review.isEdited && " (edited)"}
+                                  </p>
+                                </div>
+                              </CardHeader>
+                              <CardContent>
+                                <p className="text-muted-foreground leading-relaxed">
+                                  {review.content}
+                                </p>
+                              </CardContent>
+                            </Card>
+                          );
+                        })}
+                      </div>
+
+                      {/* Pagination Controls */}
+                      {allReviews.length > 6 && (
+                        <div className="flex justify-center gap-4">
+                          {visibleCount > 6 && (
+                            <Button
+                              variant="outline"
+                              onClick={() => setVisibleCount(6)}
+                              className="flex items-center gap-2"
+                            >
+                              <ChevronUp className="h-4 w-4" />
+                              Show Less
+                            </Button>
+                          )}
+                          {hasMoreReviews && (
+                            <Button
+                              variant="outline"
+                              onClick={() =>
+                                setVisibleCount((prev) =>
+                                  Math.min(prev + 6, allReviews.length),
+                                )
+                              }
+                              className="flex items-center gap-2"
+                            >
+                              Show More
+                              <ChevronDown className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="py-12 text-center">
+                      <StarIcon className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+                      <p className="text-muted-foreground text-lg">
+                        No reviews yet - be the first!
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="mx-auto max-w-2xl">
+                    <ReviewForm
+                      courseId={courseId}
+                      editingReview={editingReview}
+                      onEditComplete={() => setEditingReview(null)}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </ScrollReveal>
         </div>
       </div>

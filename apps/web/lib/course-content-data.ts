@@ -621,3 +621,254 @@ export const whyChooseByType: Record<string, WhyChooseData> = {
     ],
   },
 };
+
+// ---------------------------------------------------------------------------
+// Default Emotional Hooks Per Type (fallback when course has no custom hook)
+// ---------------------------------------------------------------------------
+
+export const defaultEmotionalHooks: Record<string, string> = {
+  certificate: "Want real skills — not just another certificate?",
+  therapy: "Struggling with overthinking or anxiety?",
+  supervised: "Ready to grow as a therapist — with someone in your corner?",
+  diploma: "Ready to go deeper into psychology?",
+  internship: "Want hands-on experience, not just theory?",
+  "pre-recorded": "Want to learn at your own pace?",
+  masterclass: "Want to learn one topic really well?",
+  "resume-studio": "Want a resume that actually gets noticed?",
+  worksheet: "Need practical tools you can use right now?",
+};
+
+// ---------------------------------------------------------------------------
+// Default Pain Points Per Type
+// ---------------------------------------------------------------------------
+
+export const defaultPainPoints: Record<string, string[]> = {
+  certificate: [
+    "You want structured learning but most courses feel too theoretical",
+    "You're looking for credentials that actually mean something",
+    "You want to apply what you learn, not just memorize it",
+    "You've tried self-study but need guided, interactive learning",
+  ],
+  therapy: [
+    "You constantly overthink — even small situations",
+    "Your mind feels exhausting and hard to control",
+    "You feel anxious without a clear reason",
+    "You've tried self-help but nothing sticks",
+  ],
+  supervised: [
+    "You want feedback on your clinical work but don't know where to get it",
+    "You feel unsure about your therapeutic approach",
+    "You need supervised hours but want meaningful mentorship, not a checkbox",
+    "You're early in your career and want someone experienced in your corner",
+  ],
+  diploma: [
+    "You want more than surface-level understanding of psychology",
+    "You're ready to commit to something serious and long-term",
+    "You need a qualification that's recognized and respected",
+    "You want to stand out in a competitive field",
+  ],
+  internship: [
+    "You've studied theory but never worked with real cases",
+    "You want supervised clinical experience before going independent",
+    "You need practical hours to complete your training requirements",
+    "You learn best by doing, not just reading",
+  ],
+  "pre-recorded": [
+    "Your schedule doesn't allow for live classes",
+    "You want to learn at your own pace without pressure",
+    "You need to revisit difficult concepts multiple times",
+    "You want quality content without the time-zone constraints",
+  ],
+  masterclass: [
+    "You want deep knowledge on a specific topic, not a broad survey",
+    "You're looking for insights from someone who practices daily",
+    "You want to ask questions and get real answers, not pre-recorded lectures",
+    "You need something focused — not another long course",
+  ],
+  "resume-studio": [
+    "Your resume doesn't reflect how capable you actually are",
+    "You don't know what psychology employers are looking for",
+    "You've been applying but not getting responses",
+    "You want help positioning yourself for the roles you actually want",
+  ],
+  worksheet: [
+    "You need ready-to-use tools for your practice or personal growth",
+    "You want evidence-based exercises, not generic self-help",
+    "You're looking for structured activities that actually make a difference",
+    "You want something you can start using immediately",
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Default Outcomes Per Type
+// ---------------------------------------------------------------------------
+
+export const defaultOutcomes: Record<string, string[]> = {
+  certificate: [
+    "Apply psychology concepts to real-life situations",
+    "Earn a credential recognized by employers and institutions",
+    "Build practical skills through hands-on exercises",
+    "Join a community of learners who support your growth",
+  ],
+  therapy: [
+    "Understand how your thoughts influence your emotions",
+    "Learn practical tools to manage overthinking and anxiety",
+    "Break repetitive negative thinking patterns",
+    "Feel more mentally clear and in control",
+  ],
+  supervised: [
+    "Gain confidence in your clinical decision-making",
+    "Receive structured, honest feedback on your approach",
+    "Build a stronger therapeutic framework",
+    "Feel supported as you navigate real client work",
+  ],
+  diploma: [
+    "Develop advanced clinical and theoretical understanding",
+    "Build a portfolio of work that demonstrates your expertise",
+    "Earn a diploma that signals depth and commitment",
+    "Connect with a cohort of serious, dedicated learners",
+  ],
+  internship: [
+    "Work with real scenarios under professional guidance",
+    "Build confidence through structured milestones and feedback",
+    "Develop practical skills that classroom learning can't teach",
+    "Graduate with experience that employers actually value",
+  ],
+  "pre-recorded": [
+    "Learn at your own pace without scheduling constraints",
+    "Revisit material as many times as you need",
+    "Access downloadable resources for future reference",
+    "Complete modules that fit around your existing commitments",
+  ],
+  masterclass: [
+    "Gain deep understanding of a specific therapeutic topic",
+    "Learn from a practitioner who works in this area daily",
+    "Walk away with frameworks you can apply immediately",
+    "Get your specific questions answered in a live setting",
+  ],
+  "resume-studio": [
+    "Have a polished, ATS-friendly resume tailored for psychology",
+    "Clearly communicate your unique strengths and experience",
+    "Position yourself effectively for the roles you want",
+    "Receive personalized feedback from career professionals",
+  ],
+  worksheet: [
+    "Start using evidence-based tools immediately",
+    "Enhance your practice with professionally designed activities",
+    "Support your clients with structured, printable resources",
+    "Build a personal toolkit for ongoing mental health work",
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Default Why Different Per Type
+// ---------------------------------------------------------------------------
+
+export const defaultWhyDifferent: Record<string, string[]> = {
+  certificate: [
+    "You practice techniques during sessions, not just listen to lectures",
+    "Small cohorts mean your educators know your name",
+    "Lifetime access to community and doubt-clearing support",
+    "Curriculum designed by working professionals, not academics",
+  ],
+  therapy: [
+    "You practice techniques during sessions, not just talk about them",
+    "Sessions are tailored to your specific situation",
+    "You're guided step-by-step — no confusion, no overwhelm",
+    "Our therapists are compassionate, qualified, and genuinely invested",
+  ],
+  supervised: [
+    "Your supervisor is a working clinician, not just an academic",
+    "Feedback is specific, actionable, and supportive — not judgmental",
+    "You work with real cases, not hypothetical scenarios",
+    "The mentorship relationship continues beyond the program",
+  ],
+  diploma: [
+    "Long-form immersion that goes far beyond surface-level courses",
+    "Case studies and projects that mirror real clinical work",
+    "Personalized mentorship throughout the program",
+    "A peer network of committed professionals who share your dedication",
+  ],
+  internship: [
+    "Structured exposure to real cases, not just observation",
+    "Your mentor catches you when you stumble — that's the point",
+    "Clear milestones so you can see your own progress",
+    "A safe environment where making mistakes is part of learning",
+  ],
+  "pre-recorded": [
+    "Professionally produced content designed for retention",
+    "Bite-sized lessons you can fit into any schedule",
+    "Downloadable resources that last beyond the course",
+    "No time pressure — learn when it suits you best",
+  ],
+  masterclass: [
+    "Taught by someone who does this work every day",
+    "Interactive — your questions get answered live",
+    "Focused on one topic, taught with depth and care",
+    "Actionable takeaways you can use the very next day",
+  ],
+  "resume-studio": [
+    "We specialize in psychology careers — not generic resume writing",
+    "Every resume is personalized, not template-based",
+    "ATS optimization so your resume actually reaches humans",
+    "Strategic career guidance is included, not an upsell",
+  ],
+  worksheet: [
+    "Designed by practicing professionals, not generated from templates",
+    "Evidence-based activities grounded in clinical research",
+    "Printable and immediately usable in sessions or self-practice",
+    "Regularly updated based on practitioner feedback",
+  ],
+};
+
+// ---------------------------------------------------------------------------
+// Curated Quotes Per Type
+// ---------------------------------------------------------------------------
+
+export const curatedQuotes: Record<string, Array<{ quote: string; initials: string }>> = {
+  certificate: [
+    { quote: "I finally understood why I overthink — and how to stop it.", initials: "S.K." },
+    { quote: "This made psychology so simple and practical.", initials: "R.M." },
+    { quote: "I felt a real difference within weeks.", initials: "A.P." },
+  ],
+  therapy: [
+    { quote: "I finally feel heard. The sessions gave me clarity I couldn't find on my own.", initials: "N.R." },
+    { quote: "I was skeptical about online therapy. Now I look forward to every session.", initials: "P.S." },
+    { quote: "My therapist helped me see patterns I'd been stuck in for years.", initials: "D.K." },
+  ],
+  supervised: [
+    { quote: "The feedback I got here was more useful than my entire grad program.", initials: "M.L." },
+    { quote: "I went from nervous to confident in my clinical work.", initials: "R.S." },
+    { quote: "Having a mentor who actually practices made all the difference.", initials: "A.N." },
+  ],
+  diploma: [
+    { quote: "This diploma changed my career trajectory completely.", initials: "K.P." },
+    { quote: "The depth of learning here is unmatched by any short course.", initials: "V.R." },
+    { quote: "I built connections with peers who are now my professional network.", initials: "S.M." },
+  ],
+  internship: [
+    { quote: "Working with real cases gave me confidence no textbook could.", initials: "T.K." },
+    { quote: "My mentor caught mistakes I didn't even know I was making.", initials: "P.R." },
+    { quote: "This internship was the bridge between studying and actually practicing.", initials: "N.S." },
+  ],
+  "pre-recorded": [
+    { quote: "I could finally learn without rearranging my entire schedule.", initials: "D.M." },
+    { quote: "The content is clear, practical, and easy to revisit.", initials: "A.K." },
+    { quote: "Perfect for someone who wants to learn at their own pace.", initials: "R.J." },
+  ],
+  masterclass: [
+    { quote: "I learned more in one session than in weeks of self-study.", initials: "S.R." },
+    { quote: "The instructor answered my specific questions — that was invaluable.", initials: "K.M." },
+    { quote: "Focused, practical, and immediately useful.", initials: "P.D." },
+  ],
+  "resume-studio": [
+    { quote: "My resume finally reflects what I'm actually capable of.", initials: "N.K." },
+    { quote: "I got interview callbacks within a week of updating my CV.", initials: "R.P." },
+    { quote: "They understood exactly what psychology employers look for.", initials: "A.S." },
+  ],
+  worksheet: [
+    { quote: "I use these worksheets in every client session now.", initials: "D.R." },
+    { quote: "Evidence-based, well-designed, and immediately usable.", initials: "M.K." },
+    { quote: "These saved me hours of creating my own materials.", initials: "S.P." },
+  ],
+};

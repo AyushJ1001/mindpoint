@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/accordion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 import { parseFaqMarkdown } from "@/components/course/faq";
 
@@ -19,8 +20,8 @@ interface SupervisedFAQSectionProps {
 }
 
 export default function SupervisedFAQSection({
-  title = "Supervised Sessions FAQs",
-  description = "Get answers to common questions about our supervised therapy sessions",
+  title = "Questions about supervision, answered clearly",
+  description = "A few practical things people usually want to know before they begin.",
 }: SupervisedFAQSectionProps) {
   const [faqMarkdown, setFaqMarkdown] = useState<string | null>(null);
 
@@ -44,55 +45,64 @@ export default function SupervisedFAQSection({
   }, []);
 
   return (
-    <section className="from-muted/20 to-background bg-gradient-to-br py-16 dark:bg-gradient-to-br dark:from-background dark:via-background dark:to-background dark:text-white">
+    <section className="course-section-md pt-8 sm:pt-10">
       <div className="container">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">{title}</h2>
-            <p className="text-muted-foreground text-lg">{description}</p>
-          </div>
+          <ScrollReveal>
+            <div className="mb-12 text-center">
+              <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
+                Helpful details
+              </span>
+              <h2 className="font-display mt-3 mb-4 text-3xl font-semibold tracking-tight md:text-4xl">
+                {title}
+              </h2>
+              <p className="text-muted-foreground text-lg">{description}</p>
+            </div>
+          </ScrollReveal>
 
-          <Card className="border-muted border-2 shadow-xl">
-            <CardContent className="p-8">
-              {faqMarkdown == null ? (
-                <div className="py-8 text-center">
-                  <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-                  <p className="text-muted-foreground">Loading FAQs...</p>
-                </div>
-              ) : (
-                (() => {
-                  const items = parseFaqMarkdown(faqMarkdown);
-                  if (items.length === 0) {
+          <ScrollReveal>
+            <Card className="course-shell-soft border-border/70 shadow-none">
+              <CardContent className="p-8">
+                {faqMarkdown == null ? (
+                  <div className="py-8 text-center">
+                    <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
+                    <p className="text-muted-foreground">Loading FAQs...</p>
+                  </div>
+                ) : (
+                  (() => {
+                    const items = parseFaqMarkdown(faqMarkdown);
+                    if (items.length === 0) {
+                      return (
+                        <div className="prose prose-lg dark:prose-invert max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {faqMarkdown}
+                          </ReactMarkdown>
+                        </div>
+                      );
+                    }
                     return (
-                      <div className="prose prose-lg dark:prose-invert max-w-none">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {faqMarkdown}
-                        </ReactMarkdown>
-                      </div>
+                      <Accordion type="single" collapsible className="w-full">
+                        {items.map((item, idx) => (
+                          <AccordionItem key={idx} value={`faq-${idx + 1}`}>
+                            <AccordionTrigger className="hover:text-primary text-left text-lg font-semibold">
+                              {item.q}
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              <div className="prose dark:prose-invert max-w-none pt-2">
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                  {item.a}
+                                </ReactMarkdown>
+                              </div>
+                            </AccordionContent>
+                          </AccordionItem>
+                        ))}
+                      </Accordion>
                     );
-                  }
-                  return (
-                    <Accordion type="single" collapsible className="w-full">
-                      {items.map((item, idx) => (
-                        <AccordionItem key={idx} value={`faq-${idx + 1}`}>
-                          <AccordionTrigger className="hover:text-primary text-left text-lg font-semibold">
-                            {item.q}
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <div className="prose dark:prose-invert max-w-none pt-2">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {item.a}
-                              </ReactMarkdown>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
-                  );
-                })()
-              )}
-            </CardContent>
-          </Card>
+                  })()
+                )}
+              </CardContent>
+            </Card>
+          </ScrollReveal>
         </div>
       </div>
     </section>

@@ -7,7 +7,10 @@ import { hasAdminAccess } from "@/lib/admin-access";
 import { resolveAuthEmail } from "@/lib/clerk-email";
 import { isClerkServerConfigured } from "@/lib/clerk-env";
 import HeroSection from "@/components/landing/HeroSection";
+import TwoPathsSection from "@/components/landing/TwoPathsSection";
 import WhoThisIsForSection from "@/components/landing/WhoThisIsForSection";
+import WhatWeOfferSection from "@/components/landing/WhatWeOfferSection";
+import FeaturedEntrySection from "@/components/landing/FeaturedEntrySection";
 import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import CoursePreviewSection from "@/components/landing/CoursePreviewSection";
 import FinalCtaSection from "@/components/landing/FinalCtaSection";
@@ -85,7 +88,10 @@ export default async function Home() {
       return (
         <>
           <HeroSection canAccessAdmin={canAccessAdmin} />
+          <TwoPathsSection />
           <WhoThisIsForSection />
+          <WhatWeOfferSection />
+          <FeaturedEntrySection />
           <TestimonialsSection />
           <Suspense
             fallback={
@@ -112,7 +118,10 @@ export default async function Home() {
   return (
     <>
       <HeroSection canAccessAdmin={canAccessAdmin} />
+      <TwoPathsSection />
       <WhoThisIsForSection />
+      <WhatWeOfferSection />
+      <FeaturedEntrySection />
       <TestimonialsSection />
       <Suspense
         fallback={

@@ -1,0 +1,241 @@
+- generic [active] [ref=e1]:
+  - link "Skip to main content" [ref=e2] [cursor=pointer]:
+    - /url: "#main-content"
+  - generic [ref=e3]:
+    - navigation "Primary" [ref=e4]:
+      - generic [ref=e6]:
+        - link "Home" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - img "The Mind Point" [ref=e8]
+          - generic [ref=e9]: The Mind Point
+        - button "Open menu" [ref=e290]:
+          - img
+        - generic [ref=e26]:
+          - button "Toggle theme" [ref=e27]:
+            - img
+            - generic [ref=e28]: Toggle theme
+          - button "Open cart" [ref=e29]:
+            - img
+          - button "Sign in" [ref=e291] [cursor=pointer]:
+            - generic [ref=e292]: Sign in
+    - main [ref=e34]:
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - text: Mental health learning, made more human
+          - heading "Your mind deserves the same care you give to others." [level=1] [ref=e40]
+          - paragraph [ref=e41]: Join a warm, serious learning space for people who want support, direction, and skills they can actually carry into life and work.
+          - generic [ref=e42]:
+            - link "Begin your journey" [ref=e43] [cursor=pointer]:
+              - /url: /courses
+              - text: Begin your journey
+              - img
+            - link "Find the right support" [ref=e44] [cursor=pointer]:
+              - /url: "#paths"
+          - paragraph [ref=e45]: Start with therapy, training, or a first small step. You do not need to have the whole path figured out yet.
+        - generic [ref=e46]:
+          - article [ref=e47]:
+            - img [ref=e49]
+            - heading "Personal support" [level=2] [ref=e51]
+            - paragraph [ref=e52]: Therapy and counselling that feels calm, human, and accessible.
+          - article [ref=e53]:
+            - img [ref=e55]
+            - heading "Career growth" [level=2] [ref=e57]
+            - paragraph [ref=e58]: Certificates, internships, and supervision that lead to usable skill.
+          - article [ref=e59]:
+            - img [ref=e61]
+            - heading "A warmer pace" [level=2] [ref=e64]
+            - paragraph [ref=e65]: Learning and support designed for real lives, not ideal schedules.
+      - generic [ref=e69]:
+        - generic [ref=e70]:
+          - text: Start where you are
+          - heading "Most people come here needing one of two things first." [level=2] [ref=e71]
+          - paragraph [ref=e72]: A softer place to land, or a clearer path forward. The site should help people feel that difference immediately instead of making them sort through a wall of options.
+        - generic [ref=e73]:
+          - article [ref=e74]:
+            - img [ref=e76]
+            - heading "I want personal support" [level=3] [ref=e78]
+            - paragraph [ref=e79]: Therapy, counselling, and tools for managing overthinking, anxiety, and emotional stress.
+            - link "Explore support options" [ref=e80] [cursor=pointer]:
+              - /url: /courses/therapy
+              - text: Explore support options
+              - img [ref=e81]
+          - article [ref=e83]:
+            - img [ref=e85]
+            - heading "I want to build my career" [level=3] [ref=e88]
+            - paragraph [ref=e89]: Certificates, diplomas, internships, and supervised practice for psychology professionals.
+            - link "See programs" [ref=e90] [cursor=pointer]:
+              - /url: /courses
+              - text: See programs
+              - img [ref=e91]
+      - generic [ref=e97]:
+        - generic [ref=e98]:
+          - text: Who this is for
+          - heading "Built for the curious, the compassionate, and the not-quite-sure-yet." [level=2] [ref=e99]
+          - paragraph [ref=e100]: Whether you're studying, shifting careers, practicing already, or simply trying to understand yourself better, there should be a clear way in.
+        - generic [ref=e101]:
+          - article [ref=e102]:
+            - blockquote [ref=e103]: “I'm a psychology student wanting real-world skills, not just textbook theory.”
+            - paragraph [ref=e104]: Psychology Student
+          - article [ref=e105]:
+            - blockquote [ref=e106]: “I'm a career switcher exploring whether counseling is the right path for me.”
+            - paragraph [ref=e107]: Career Changer
+          - article [ref=e108]:
+            - blockquote [ref=e109]: “I'm a practicing therapist who wants structured supervision and peer community.”
+            - paragraph [ref=e110]: Working Professional
+          - article [ref=e111]:
+            - blockquote [ref=e112]: “I want to understand mental health better — for myself and the people I care about.”
+            - paragraph [ref=e113]: Lifelong Learner
+      - generic [ref=e117]:
+        - generic [ref=e118]:
+          - text: What we offer
+          - heading "Real tools for real life, arranged more like a conversation than a catalog." [level=2] [ref=e119]
+          - paragraph [ref=e120]: Instead of listing products in a row, the homepage should help people connect what they are struggling with to the kind of support or structure that actually fits.
+        - generic [ref=e121]:
+          - generic [ref=e122]:
+            - generic [ref=e123]: Overthinking & anxiety
+            - link "Therapy & CBT tools" [ref=e126] [cursor=pointer]:
+              - /url: /courses/therapy
+          - generic [ref=e127]:
+            - generic [ref=e128]: Career confusion in mental health
+            - link "Structured certificate programs" [ref=e131] [cursor=pointer]:
+              - /url: /courses/certificate
+          - generic [ref=e132]:
+            - generic [ref=e133]: Need someone to talk to
+            - link "One-on-one therapy sessions" [ref=e136] [cursor=pointer]:
+              - /url: /courses/therapy
+          - generic [ref=e137]:
+            - generic [ref=e138]: Want real clinical skills
+            - link "Supervised practice & internships" [ref=e141] [cursor=pointer]:
+              - /url: /courses/supervised
+          - generic [ref=e142]:
+            - generic [ref=e143]: Learning on a busy schedule
+            - link "Self-paced courses" [ref=e146] [cursor=pointer]:
+              - /url: /courses/pre-recorded
+      - generic [ref=e150]:
+        - generic [ref=e151]:
+          - text: A smaller first step
+          - heading "Not sure where to begin? Start with one calm conversation." [level=2] [ref=e152]
+          - paragraph [ref=e153]: Book a single therapy session. No pressure to commit to the whole path at once, just a supportive first moment with someone who listens.
+        - generic [ref=e154]:
+          - generic [ref=e155]:
+            - generic [ref=e156]:
+              - img [ref=e158]
+              - paragraph [ref=e161]: ~20 min session
+            - generic [ref=e162]:
+              - img [ref=e164]
+              - paragraph [ref=e166]: Licensed professional
+            - generic [ref=e167]:
+              - img [ref=e169]
+              - paragraph [ref=e171]: Flexible scheduling
+          - generic [ref=e172]:
+            - generic [ref=e173]:
+              - paragraph [ref=e174]: Starting from ₹600
+              - paragraph [ref=e175]: One session is enough to begin getting oriented.
+            - link "Book your first session" [ref=e176] [cursor=pointer]:
+              - /url: /courses/therapy
+      - generic [ref=e180]:
+        - generic [ref=e181]:
+          - text: Social proof, without the hard sell
+          - heading "Trusted by 10,000+ learners" [level=2] [ref=e182]
+          - paragraph [ref=e183]: Real experiences from people who've walked this path
+        - generic [ref=e184]:
+          - generic [ref=e185]:
+            - article [ref=e187]:
+              - blockquote [ref=e188]: “I finally understood why my mind keeps overthinking everything. The tools I learned here actually work.”
+              - generic [ref=e189]: S.K., Intern
+            - article [ref=e191]:
+              - blockquote [ref=e192]: “I came in confused about my career path. Now I'm a practicing counsellor.”
+              - generic [ref=e193]: R.M., Certificate Graduate
+            - article [ref=e195]:
+              - blockquote [ref=e196]: “What sets TMP apart is the community. You're never learning alone.”
+              - generic [ref=e197]: A.P., Diploma Student
+          - button "Play testimonial video" [ref=e200]:
+            - img [ref=e202]
+      - generic [ref=e207]:
+        - generic [ref=e208]:
+          - generic [ref=e209]:
+            - text: What's coming up
+            - heading "Programs you can step into next" [level=2] [ref=e210]
+            - paragraph [ref=e211]: A smaller, more useful preview of what's starting soon.
+          - link "Browse all courses" [ref=e212] [cursor=pointer]:
+            - /url: /courses
+            - text: Browse all courses
+            - img
+        - generic [ref=e215] [cursor=pointer]:
+          - generic:
+            - generic:
+              - generic:
+                - img
+                - text: Upcoming
+          - generic:
+            - generic:
+              - img "Course image"
+          - generic [ref=e216]:
+            - generic [ref=e217]: Psychological Assessment & Case Formulation
+            - generic [ref=e218]:
+              - generic [ref=e219]:
+                - img [ref=e220]
+                - generic [ref=e222]: Tue, Aug 11, 2026
+              - generic [ref=e223]: Starts in 5 months
+          - generic [ref=e225]:
+            - generic [ref=e227]: ₹2,650
+            - button "Enroll Now" [ref=e228]:
+              - img
+              - text: Enroll Now
+      - generic [ref=e232]:
+        - text: One simple next step
+        - heading "Still thinking? Start smaller, not harder." [level=2] [ref=e233]
+        - paragraph [ref=e234]: You don't need to force certainty. Pick the next step that feels kind, clear, and manageable.
+        - link "Book your first session" [ref=e235] [cursor=pointer]:
+          - /url: /courses/therapy
+  - contentinfo "Footer" [ref=e236]:
+    - generic [ref=e237]:
+      - generic [ref=e238]:
+        - generic [ref=e239]:
+          - heading "The Mind Point" [level=3] [ref=e240]
+          - paragraph [ref=e241]: Empowering minds through comprehensive mental health education and professional development. Join our community of learners and professionals dedicated to mental wellness.
+          - generic [ref=e242]:
+            - link "Follow us on Instagram" [ref=e243] [cursor=pointer]:
+              - /url: https://instagram.com/themindpoint?igshid=YmMyMTA2M2Y=
+              - img [ref=e244]
+            - link "Follow us on Facebook" [ref=e246] [cursor=pointer]:
+              - /url: https://www.facebook.com/themindpoint?mibextid=LQQJ4d
+              - img [ref=e247]
+        - generic [ref=e249]:
+          - heading "Quick Links" [level=4] [ref=e250]
+          - list [ref=e251]:
+            - listitem [ref=e252]:
+              - link "About Us" [ref=e253] [cursor=pointer]:
+                - /url: /about
+            - listitem [ref=e254]:
+              - link "Contact" [ref=e255] [cursor=pointer]:
+                - /url: /contact
+            - listitem [ref=e256]:
+              - link "Careers - Join Us" [ref=e257] [cursor=pointer]:
+                - /url: /careers
+        - generic [ref=e258]:
+          - heading "Legal" [level=4] [ref=e259]
+          - list [ref=e260]:
+            - listitem [ref=e261]:
+              - link "Terms & Conditions" [ref=e262] [cursor=pointer]:
+                - /url: /toc
+            - listitem [ref=e263]:
+              - link "Privacy Policy" [ref=e264] [cursor=pointer]:
+                - /url: /privacy
+            - listitem [ref=e265]:
+              - link "Refund Policy" [ref=e266] [cursor=pointer]:
+                - /url: /refund
+      - paragraph [ref=e268]: Copyright © 2026 The Mind Point. All rights reserved.
+  - region "Notifications alt+T"
+  - generic [ref=e273] [cursor=pointer]:
+    - button "Open Next.js Dev Tools" [ref=e274]:
+      - img [ref=e275]
+    - generic [ref=e293]:
+      - button "Open issues overlay" [ref=e294]:
+        - generic [ref=e295]:
+          - generic [ref=e296]: "0"
+          - generic [ref=e297]: "1"
+        - generic [ref=e298]: Issue
+      - button "Collapse issues badge" [ref=e299]:
+        - img [ref=e300]
+  - alert [ref=e287]

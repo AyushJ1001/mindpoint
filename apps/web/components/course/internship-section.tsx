@@ -76,7 +76,7 @@ export default function Internship({
         {allocation.map((item, index) => (
           <div key={index} className="flex items-center justify-between py-2">
             <span className="font-medium text-foreground">{item.topic}</span>
-            <span className="mx-3 flex-1 border-b border-dotted border-sage-200"></span>
+            <span className="mx-3 flex-1 border-b border-dotted border-lavender-200"></span>
             <span className={`font-semibold ${colorClass}`}>
               {item.hours} {item.hours === 1 ? "hour" : "hours"}
             </span>
@@ -84,7 +84,7 @@ export default function Internship({
         ))}
 
         {/* Total hours display */}
-        <div className="mb-6 border-t border-sage-200 pt-4">
+        <div className="mb-6 border-t border-lavender-200 pt-4">
           <div className="font-display text-foreground text-center text-xl font-bold">
             {totalHours} hours
           </div>
@@ -114,8 +114,8 @@ export default function Internship({
             <div
               className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
                 selectedHours === 120
-                  ? "border-primary bg-sage-50 shadow-2xl"
-                  : "border-sage-200 bg-white hover:shadow-2xl"
+                  ? "border-primary bg-lavender-50 shadow-2xl"
+                  : "border-lavender-200 bg-white hover:shadow-2xl"
               }`}
               onClick={() => handleHourSelection(120)}
             >
@@ -138,7 +138,7 @@ export default function Internship({
               <div className="space-y-4">
                 {courseVariants[120].learningOutcomes?.map((outcome, index) => (
                   <div key={index} className="flex items-center space-x-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-sage-100">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-lavender-100">
                       <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <span className="text-sm font-medium text-foreground">
@@ -154,7 +154,7 @@ export default function Internship({
               className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
                 selectedHours === 240
                   ? "border-purple-500 bg-purple-50 shadow-2xl"
-                  : "border-sage-200 bg-white hover:shadow-2xl"
+                  : "border-lavender-200 bg-white hover:shadow-2xl"
               }`}
               onClick={() => handleHourSelection(240)}
             >
@@ -177,7 +177,7 @@ export default function Internship({
               <div className="space-y-4">
                 {courseVariants[240].learningOutcomes?.map((outcome, index) => (
                   <div key={index} className="flex items-center space-x-3">
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-sage-100">
+                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-lavender-100">
                       <CheckCircle className="h-4 w-4 text-muted-foreground" />
                     </div>
                     <span className="text-sm font-medium text-foreground">
@@ -207,8 +207,8 @@ export default function Internship({
             <div
               className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
                 selectedHours === 120
-                  ? "border-primary bg-sage-50 shadow-2xl"
-                  : "border-sage-200 bg-white hover:shadow-2xl"
+                  ? "border-primary bg-lavender-50 shadow-2xl"
+                  : "border-lavender-200 bg-white hover:shadow-2xl"
               }`}
               onClick={() => handleHourSelection(120)}
             >
@@ -241,7 +241,7 @@ export default function Internship({
 
               {renderAllocationBreakdown(courseVariants[120], "text-primary")}
 
-              <div className="rounded-xl border border-sage-200 bg-gradient-to-r from-sage-50 to-cream-50 p-6">
+              <div className="rounded-xl border border-lavender-200 bg-gradient-to-r from-lavender-50 to-cream-50 p-6">
                 <h4 className="mb-3 text-center font-bold text-foreground">
                   Beginner to Intermediate Level
                 </h4>
@@ -262,7 +262,7 @@ export default function Internship({
               className={`relative cursor-pointer rounded-3xl border-2 p-8 shadow-xl transition-all duration-300 ${
                 selectedHours === 240
                   ? "border-purple-500 bg-purple-50 shadow-2xl"
-                  : "border-sage-200 bg-white hover:shadow-2xl"
+                  : "border-lavender-200 bg-white hover:shadow-2xl"
               }`}
               onClick={() => handleHourSelection(240)}
             >
@@ -298,7 +298,7 @@ export default function Internship({
                 "text-purple-600",
               )}
 
-              <div className="rounded-xl border border-sage-200 bg-gradient-to-r from-cream-50 to-sage-50 p-6">
+              <div className="rounded-xl border border-lavender-200 bg-gradient-to-r from-cream-50 to-lavender-50 p-6">
                 <h4 className="mb-3 text-center font-bold text-foreground">
                   Advanced Level
                 </h4>

@@ -1,25 +1,22 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCart } from "react-use-cart";
 import {
   FileText,
-  Users,
   Download,
   CheckCircle2,
   ShoppingCart,
   Plus,
   Minus,
   Trash2,
-  Sparkles,
   BookOpen,
   Zap,
 } from "lucide-react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -49,7 +46,7 @@ function formatINR(value: number): string {
       maximumFractionDigits: 0,
     }).format(value);
   } catch {
-    return `\u20B9${value}`;
+    return `₹${value}`;
   }
 }
 
@@ -200,7 +197,7 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
             {/* Left Column - Image */}
             <div>
-              <div className="rounded-2xl border border-border overflow-hidden">
+              <div className="border-border overflow-hidden rounded-2xl border">
                 <div className="relative aspect-[9/16] w-full">
                   <Image
                     src={
@@ -222,11 +219,17 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
             <div className="flex flex-col gap-6">
               {/* Status Badges */}
               <div className="flex flex-wrap gap-3">
-                <Badge variant="secondary" className="text-xs uppercase tracking-wide">
+                <Badge
+                  variant="secondary"
+                  className="text-xs tracking-wide uppercase"
+                >
                   <Download className="mr-1 h-3 w-3" />
                   Instant Download
                 </Badge>
-                <Badge variant="secondary" className="text-xs uppercase tracking-wide">
+                <Badge
+                  variant="secondary"
+                  className="text-xs tracking-wide uppercase"
+                >
                   <FileText className="mr-1 h-3 w-3" />
                   PDF Format
                 </Badge>
@@ -242,8 +245,8 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
                 {course.name}
               </h1>
               <p className="text-muted-foreground leading-relaxed">
-                A comprehensive worksheet designed to support your mental
-                health journey.
+                A comprehensive worksheet designed to support your mental health
+                journey.
               </p>
 
               {/* Quick Benefits */}
@@ -254,9 +257,12 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
                   { icon: BookOpen, label: "Self-Guided" },
                   { icon: Zap, label: "Evidence-Based" },
                 ].map((stat, idx) => (
-                  <div key={idx} className="rounded-2xl border border-border bg-card p-4 text-center">
-                    <stat.icon className="mx-auto h-5 w-5 text-primary" />
-                    <p className="mt-2 text-sm font-medium text-foreground">
+                  <div
+                    key={idx}
+                    className="border-border bg-card rounded-2xl border p-4 text-center"
+                  >
+                    <stat.icon className="text-primary mx-auto h-5 w-5" />
+                    <p className="text-foreground mt-2 text-sm font-medium">
                       {stat.label}
                     </p>
                   </div>
@@ -264,7 +270,7 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
               </div>
 
               {/* Pricing Card */}
-              <div className="rounded-2xl border border-border bg-card p-6">
+              <div className="border-border bg-card rounded-2xl border p-6">
                 <div className="mb-6 space-y-2">
                   <div className="flex items-baseline gap-3">
                     <span className="text-foreground text-3xl font-semibold">
@@ -286,10 +292,8 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
                     )}
                   </p>
                   {offerDetails && offerDetails.hasDiscount && (
-                    <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
-                      <span>
-                        {offerDetails.discountPercentage}% off
-                      </span>
+                    <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs font-medium">
+                      <span>{offerDetails.discountPercentage}% off</span>
                       <span>
                         {offerDetails.timeLeft.days > 0 &&
                           `${offerDetails.timeLeft.days}d `}
@@ -376,8 +380,8 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
         <section className="py-16">
           <div className="container">
             <div className="mx-auto max-w-4xl">
-              <div className="rounded-2xl border border-border bg-card p-8">
-                <div className="mb-4 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+              <div className="border-border bg-card rounded-2xl border p-8">
+                <div className="text-muted-foreground mb-4 flex items-center gap-2 text-sm font-medium">
                   <FileText className="h-4 w-4" />
                   About This Worksheet
                 </div>
@@ -412,12 +416,14 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
                 {course.targetAudience.map((audience, index) => (
                   <div
                     key={index}
-                    className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5"
+                    className="border-border bg-card flex items-center gap-4 rounded-2xl border p-5"
                   >
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
-                      <CheckCircle2 className="h-5 w-5 text-primary" />
+                    <div className="bg-primary/10 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl">
+                      <CheckCircle2 className="text-primary h-5 w-5" />
                     </div>
-                    <span className="font-medium text-foreground">{audience}</span>
+                    <span className="text-foreground font-medium">
+                      {audience}
+                    </span>
                   </div>
                 ))}
               </div>

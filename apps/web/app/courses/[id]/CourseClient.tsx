@@ -17,16 +17,19 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Separator } from "@/components/ui/separator";
 
+import CourseHero from "@/components/course/course-hero";
+import CourseStorySection from "@/components/course/course-story-section";
+import WhyDifferentSection from "@/components/course/why-different-section";
+import SimpleModulesSection from "@/components/course/simple-modules-section";
+import PricingSection from "@/components/course/pricing-section";
+import CuratedQuotesSection from "@/components/course/curated-quotes-section";
+import ReviewsSection from "@/components/course/reviews-section";
+import FAQSection from "@/components/course/faq-section";
+import CommunitiesSection from "@/components/course/communities-section";
+import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
+import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
 import StickyCTA from "@/components/course/sticky-cta";
-import CourseTypeRenderer from "@/components/course/CourseTypeRenderer";
-import CourseHero, {
-  CourseScheduleSection,
-} from "@/components/course/course-hero";
-import CountdownTimer from "@/components/course/countdown-timer";
-import CourseOverview from "@/components/course/course-overview";
-import WhatYouGet from "@/components/course/what-you-get";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import {
   getOfferDetails,
@@ -56,9 +59,6 @@ export default function CourseClient({
 }) {
   const router = useRouter();
   const [activeCourse, setActiveCourse] = useState<PublicCourse>(course);
-  const [customDuration, setCustomDuration] = useState<string | undefined>(
-    undefined,
-  );
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -69,16 +69,6 @@ export default function CourseClient({
   useEffect(() => {
     setMounted(true);
   }, []);
-
-  // Update customDuration when activeCourse changes (for live updates)
-  useEffect(() => {
-    if (activeCourse && activeCourse.duration) {
-      setCustomDuration(activeCourse.duration);
-    } else {
-      // Reset customDuration if no course duration is set
-      setCustomDuration(undefined);
-    }
-  }, [activeCourse]);
 
   const { addItem, inCart, updateItemQuantity, removeItem, items } = useCart();
 
@@ -257,11 +247,11 @@ export default function CourseClient({
 
   const seatsLeft = Math.max(
     0,
-    (course.capacity ?? 0) - getEnrolledCount(course),
+    (displayCourse.capacity ?? 0) - getEnrolledCount(displayCourse),
   );
 
   // Check if course is out of stock (capacity 0 or no seats left)
-  const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
+  const isOutOfStock = (displayCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
   // Build variant options only for internship or therapy
   const normalizedVariants: CourseVariant[] = useMemo(() => {
@@ -358,10 +348,6 @@ export default function CourseClient({
     if (target) {
       // Instantly update UI client-side
       setActiveCourse(target);
-      // Update customDuration immediately for live updates
-      if (target.duration) {
-        setCustomDuration(target.duration);
-      }
       // Update URL without full navigation to avoid white flash
       if (typeof window !== "undefined") {
         window.history.replaceState(null, "", `/courses/${val}`);
@@ -372,91 +358,63 @@ export default function CourseClient({
   };
 
   return (
-    <div className="relative">
-      {/* Conditionally render hero section for course types that use it */}
-      {displayCourse.type !== "therapy" &&
-        displayCourse.type !== "supervised" &&
-        displayCourse.type !== "worksheet" && (
-          <>
-            <CourseHero
-              course={activeCourse}
-              variants={variants}
-              activeCourse={activeCourse}
-              setActiveCourse={setActiveCourse}
-              hasValidOffer={hasValidOffer}
-              offerDetails={offerDetails}
-              isOutOfStock={isOutOfStock}
-              seatsLeft={seatsLeft}
-              shouldShowVariantSelect={shouldShowVariantSelect}
-              normalizedVariants={normalizedVariants}
-              variantLabel={variantLabel}
-              handleVariantSelect={handleVariantSelect}
-              handleIncreaseQuantity={handleIncreaseQuantity}
-              handleDecreaseQuantity={handleDecreaseQuantity}
-              handleBuyNow={handleBuyNow}
-              getCurrentQuantity={getCurrentQuantity}
-              inCart={(id) => (mounted ? inCart(id) : false)}
-              removeItem={removeItem}
-              customDuration={customDuration}
-            />
+    <div className="course-page relative overflow-hidden pb-28">
+      {/* 1. Hero — emotional hook + badges + CTA */}
+      <CourseHero course={displayCourse} />
 
-            <WhatYouGet
-              duration={
-                displayCourse.type === "pre-recorded"
-                  ? "3 months access"
-                  : displayCourse.duration || customDuration
-              }
-              isPreRecorded={displayCourse.type === "pre-recorded"}
-            />
+      {/* 2. Recognition + outcomes */}
+      <CourseStorySection course={displayCourse} />
 
-            {displayCourse.type !== "pre-recorded" && (
-              <CourseScheduleSection
-                course={activeCourse}
-                customDuration={customDuration}
-              />
-            )}
+      {/* 3. Why Different */}
+      <WhyDifferentSection course={displayCourse} />
 
-            {/* Only show countdown timer for non-pre-recorded courses */}
-            {displayCourse.type !== "pre-recorded" && (
-              <CountdownTimer
-                course={activeCourse}
-                customDuration={customDuration}
-              />
-            )}
+      {/* 4. Program Structure */}
+      <SimpleModulesSection course={displayCourse} />
 
-            <Separator className="my-8" />
+      {/* 5. Quote bridge */}
+      <CuratedQuotesSection courseType={displayCourse.type} />
 
-            <CourseOverview description={course.description ?? ""} />
-          </>
-        )}
-
-      {/* Course Type Specific Sections */}
-      <CourseTypeRenderer
+      {/* 6. Pricing */}
+      <PricingSection
         course={course}
+        activeCourse={activeCourse}
         variants={variants}
-        onVariantSelect={(hours) => {
-          // Sort variants by price (ascending) - lower price = 120 hours, higher price = 240 hours
-          const sortedVariants = [...normalizedVariants].sort(
-            (a, b) => (a.price || 0) - (b.price || 0),
-          );
-
-          let targetVariant;
-          if (hours === 120) {
-            // Select the lower-priced variant for 120 hours
-            targetVariant = sortedVariants[0];
-          } else if (hours === 240) {
-            // Select the higher-priced variant for 240 hours
-            targetVariant = sortedVariants[sortedVariants.length - 1];
-          }
-
-          if (targetVariant) {
-            // Select the variant using the existing handler
-            handleVariantSelect(targetVariant._id as unknown as string);
-          }
-        }}
+        isOutOfStock={isOutOfStock}
+        seatsLeft={seatsLeft}
+        hasValidOffer={hasValidOffer}
+        offerDetails={offerDetails}
+        shouldShowVariantSelect={shouldShowVariantSelect}
+        normalizedVariants={normalizedVariants}
+        variantLabel={variantLabel}
+        handleVariantSelect={handleVariantSelect}
+        handleIncreaseQuantity={handleIncreaseQuantity}
+        handleDecreaseQuantity={handleDecreaseQuantity}
+        handleBuyNow={handleBuyNow}
+        getCurrentQuantity={getCurrentQuantity}
+        inCart={(id) => (mounted ? inCart(id) : false)}
+        removeItem={removeItem}
+        mounted={mounted}
       />
 
-      {/* Buy Now Confirmation Dialog */}
+      {/* 7. Reviews */}
+      <ReviewsSection
+        courseId={displayCourse._id}
+        courseType={displayCourse.type}
+      />
+
+      {/* 8. FAQ */}
+      {displayCourse.type === "therapy" ? (
+        <TherapyFAQSection />
+      ) : displayCourse.type === "supervised" ? (
+        <SupervisedFAQSection />
+      ) : (
+        <FAQSection />
+      )}
+
+      {/* 9. Community */}
+      <CommunitiesSection />
+
+      {/* Buy Now Dialog */}
       <Dialog open={showBuyNowDialog} onOpenChange={setShowBuyNowDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -479,7 +437,6 @@ export default function CourseClient({
             <Button
               onClick={() => {
                 setShowBuyNowDialog(false);
-                // If course is not in cart, add it; if it is, just proceed to checkout
                 if (!inCart(displayCourse._id)) {
                   handleIncreaseQuantity(displayCourse);
                 }
@@ -493,7 +450,7 @@ export default function CourseClient({
         </DialogContent>
       </Dialog>
 
-      {/* BOGO Selection Modal */}
+      {/* BOGO Modal */}
       {offerDetails?.hasBogo && displayCourse.type && (
         <BogoSelectionModal
           isOpen={showBogoModal}
@@ -505,7 +462,7 @@ export default function CourseClient({
         />
       )}
 
-      {/* Sticky CTA - worksheets handle their own CTA internally */}
+      {/* Sticky CTA - visible only after scrolling past pricing */}
       {displayCourse.type !== "worksheet" && (
         <StickyCTA
           price={getCoursePrice(activeCourse)}

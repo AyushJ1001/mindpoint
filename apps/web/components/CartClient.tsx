@@ -501,7 +501,7 @@ const CartContent = () => {
             contact: whatsappNumber || userProfile?.whatsappNumber || "",
           },
           theme: {
-            color: "#5B7A5E",
+            color: "#7C6F9B",
           },
         };
 
@@ -877,7 +877,7 @@ const CartContent = () => {
                 return (
                   <div
                     key={item.id}
-                    className="rounded-xl border border-sage-200 bg-card p-3 shadow-[0_10px_22px_-18px_rgba(91,122,94,0.7)]"
+                    className="rounded-xl border border-lavender-200 bg-card p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.7)]"
                   >
                     <div className="flex items-start gap-3">
                       <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md sm:h-16 sm:w-16">

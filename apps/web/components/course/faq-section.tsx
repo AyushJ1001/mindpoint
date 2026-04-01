@@ -19,8 +19,8 @@ interface FAQSectionProps {
 }
 
 export default function FAQSection({
-  title = "Frequently Asked Questions",
-  description = "Get answers to common questions about this course",
+  title = "Questions, answered with care",
+  description = "A few practical things people usually want to know before they commit.",
 }: FAQSectionProps) {
   const [faqMarkdown, setFaqMarkdown] = useState<string | null>(null);
 
@@ -44,12 +44,15 @@ export default function FAQSection({
   }, []);
 
   return (
-    <section className="section-padding">
+    <section className="course-section-md pt-8 sm:pt-10">
       <div className="container">
         <div className="mx-auto max-w-4xl">
           <ScrollReveal>
             <div className="mb-12 text-center">
-              <h2 className="font-display text-foreground mb-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+              <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
+                Helpful details
+              </span>
+              <h2 className="font-display text-foreground mt-3 mb-4 text-3xl font-semibold tracking-tight sm:text-4xl">
                 {title}
               </h2>
               <p className="text-muted-foreground text-lg">{description}</p>
@@ -57,7 +60,7 @@ export default function FAQSection({
           </ScrollReveal>
 
           <ScrollReveal>
-            <div className="rounded-2xl border border-border bg-card p-8">
+            <div className="course-shell-soft rounded-[1.8rem] p-8">
               {faqMarkdown == null ? (
                 <div className="py-8 text-center">
                   <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />

@@ -9,19 +9,15 @@ import MasterclassCourse from "./MasterclassCourse";
 import SupervisedCourse from "./SupervisedCourse";
 import ResumeStudioCourse from "./ResumeStudioCourse";
 import WorksheetCourse from "./WorksheetCourse";
-import WhoShouldDo from "./who-should-do";
-import WhyChoose from "./why-choose";
-import Certification from "./certification";
+import PainPointsSection from "./pain-points-section";
+import OutcomesSection from "./outcomes-section";
+import WhyDifferentSection from "./why-different-section";
 import ReviewsSection from "./reviews-section";
 import FAQSection from "./faq-section";
 import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
 import CommunitiesSection from "./communities-section";
 import VideoTestimonialsSection from "@/components/VideoTestimonialsSection";
-import {
-  whoShouldDoByType,
-  whyChooseByType,
-} from "@/lib/course-content-data";
 
 interface CourseTypeRendererProps {
   course: PublicCourse;
@@ -76,16 +72,14 @@ export default function CourseTypeRenderer({
       return <>{renderCourseTypeContent()}</>;
     }
 
-    const whoData = whoShouldDoByType[courseType];
-    const whyData = whyChooseByType[courseType];
-
     // For therapy and supervised courses
     if (courseType === "therapy" || courseType === "supervised") {
       return (
         <>
           {renderCourseTypeContent()}
-          {whoData && <WhoShouldDo {...whoData} />}
-          {whyData && <WhyChoose {...whyData} />}
+          <PainPointsSection course={course} />
+          <OutcomesSection course={course} />
+          <WhyDifferentSection course={course} />
           <VideoTestimonialsSection />
           <ReviewsSection courseId={course._id} courseType={course.type} />
           {courseType === "supervised" ? (
@@ -102,9 +96,9 @@ export default function CourseTypeRenderer({
     return (
       <>
         {renderCourseTypeContent()}
-        {whoData && <WhoShouldDo {...whoData} />}
-        {whyData && <WhyChoose {...whyData} />}
-        <Certification courseType={course.type} />
+        <PainPointsSection course={course} />
+        <OutcomesSection course={course} />
+        <WhyDifferentSection course={course} />
         <VideoTestimonialsSection />
         <ReviewsSection courseId={course._id} courseType={course.type} />
         <FAQSection />

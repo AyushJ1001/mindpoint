@@ -181,7 +181,7 @@ function VideoCard({
     <button
       ref={containerRef}
       onClick={onClick}
-      className="group relative aspect-[4/5] w-full overflow-hidden rounded-xl border-2 border-transparent bg-gradient-to-br from-sage-100 to-sage-50 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-sage-200 hover:shadow-xl sm:aspect-[9/16] dark:from-card dark:to-card dark:hover:border-primary"
+      className="group relative aspect-[4/5] w-full overflow-hidden rounded-xl border-2 border-transparent bg-gradient-to-br from-lavender-100 to-lavender-50 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-lavender-200 hover:shadow-xl sm:aspect-[9/16] dark:from-card dark:to-card dark:hover:border-primary"
     >
       {/* Use poster image if available, otherwise try video thumbnail */}
       {testimonial.posterUrl ? (
@@ -209,7 +209,7 @@ function VideoCard({
           )}
           {/* Fallback gradient - shown while video loads */}
           {!hasLoadedFrame && (
-            <div className="absolute inset-0 z-[1] bg-gradient-to-br from-sage-100 to-sage-50 dark:from-card dark:to-card" />
+            <div className="absolute inset-0 z-[1] bg-gradient-to-br from-lavender-100 to-lavender-50 dark:from-card dark:to-card" />
           )}
         </>
       )}
@@ -305,7 +305,7 @@ export default function VideoTestimonialsSection() {
   if (VIDEO_TESTIMONIALS.length === 0) return null;
 
   return (
-    <section className="section-padding bg-gradient-to-br from-sage-50/50 via-white to-sage-50/50 dark:from-background dark:via-background dark:to-background">
+    <section className="section-padding bg-gradient-to-br from-lavender-50/50 via-white to-lavender-50/50 dark:from-background dark:via-background dark:to-background">
       <div className="container">
         <div className="mb-8 text-center md:mb-12">
           <h2 className="mb-4 text-3xl font-bold md:text-4xl">

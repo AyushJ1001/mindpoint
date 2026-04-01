@@ -73,7 +73,7 @@ export default function CoursesLayout({
         <main className="min-w-0 flex-1">
           <div className="border-b border-border bg-secondary/50 shadow-sm backdrop-blur-md">
             <div className="flex h-14 items-center gap-2 px-3 sm:h-16 sm:px-4">
-              <SidebarTrigger className="rounded-xl border border-transparent text-foreground hover:border-sage-200 hover:bg-accent" />
+              <SidebarTrigger className="rounded-xl border border-transparent text-foreground hover:border-lavender-200 hover:bg-accent" />
               <div className="min-w-0">
                 <Link href="/courses">
                   <h1 className="font-display truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl">

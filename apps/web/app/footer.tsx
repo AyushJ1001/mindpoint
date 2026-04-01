@@ -8,7 +8,7 @@ export default function Footer() {
       aria-label="Footer"
     >
       <div className="container py-10 sm:py-12">
-        <div className="grid grid-cols-1 gap-10 rounded-[1.6rem] border border-border bg-card/75 p-6 shadow-[0_24px_45px_-30px_rgba(91,122,94,0.35)] backdrop-blur sm:p-8 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-10 rounded-[1.6rem] border border-border bg-card/75 p-6 shadow-[0_24px_45px_-30px_rgba(124,111,155,0.35)] backdrop-blur sm:p-8 md:grid-cols-4">
           {/* Brand Section */}
           <div className="md:col-span-2">
             <h3 className="text-foreground font-display mb-4 text-3xl font-semibold tracking-tight">
