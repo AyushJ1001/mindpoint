@@ -311,7 +311,7 @@ export default function TherapyCourse({
                   {plan.highlights.map((h) => (
                     <View key={h} className="flex-row items-start gap-2.5">
                       <View className="mt-0.5 h-4 w-4 items-center justify-center rounded-full bg-primary/10">
-                        <CheckCircle2 size={10} color="#4338ca" />
+                        <CheckCircle2 size={10} color="#5b7a5e" />
                       </View>
                       <Text className="flex-1 text-xs text-muted-foreground">
                         {h}
@@ -376,7 +376,7 @@ export default function TherapyCourse({
       {/* Why Choose The Mind Point for Therapy */}
       <View className="mt-8">
         <View className="mb-2 flex-row items-center justify-center gap-2">
-          <Star size={16} color="#4338ca" />
+          <Star size={16} color="#5b7a5e" />
           <Text className="text-xs font-medium text-primary">
             Trusted by 1000+ Clients
           </Text>
@@ -399,7 +399,7 @@ export default function TherapyCourse({
                 key={item.title}
                 className="border-0 bg-card"
                 style={{
-                  shadowColor: "#4338ca",
+                  shadowColor: "#5b7a5e",
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: 0.08,
                   shadowRadius: 12,
@@ -408,7 +408,7 @@ export default function TherapyCourse({
               >
                 <View className="flex-row items-start gap-3 p-4">
                   <LinearGradient
-                    colors={["#4338ca", "#7c3aed"]}
+                    colors={["#5b7a5e", "#7a9a7d"]}
                     style={{ height: 44, width: 44, alignItems: "center", justifyContent: "center", borderRadius: 12 }}
                   >
                     <Icon size={20} color="#ffffff" />
@@ -429,7 +429,7 @@ export default function TherapyCourse({
 
         {/* Trust Indicators */}
         <LinearGradient
-          colors={["#4338ca10", "#7c3aed10"]}
+          colors={["#5b7a5e10", "#7a9a7d10"]}
           style={{ marginTop: 24, flexDirection: "row", alignItems: "center", justifyContent: "space-around", borderRadius: 16, padding: 20 }}
         >
           <View className="items-center">
@@ -460,7 +460,7 @@ export default function TherapyCourse({
             return (
               <Card key={benefit.title} className="p-4">
                 <View className="flex-row items-center gap-3 mb-2">
-                  <Icon size={22} color="#4338ca" />
+                  <Icon size={22} color="#5b7a5e" />
                   <Text className="text-base font-bold text-foreground">
                     {benefit.title}
                   </Text>

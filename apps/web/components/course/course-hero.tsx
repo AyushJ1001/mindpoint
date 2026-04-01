@@ -1,26 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 import {
   Plus,
   Minus,
   Trash2,
-  BookOpen,
-  Clock,
-  Award,
-  Video,
-  Calendar,
-  MapPin,
   ShoppingCart,
   Sparkles,
-  HeartHandshake,
+  Calendar,
+  Clock,
+  MapPin,
   TrendingUp as TrendingUpIcon,
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -30,13 +26,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
-import CourseImageGallery from "@/components/course/gallery";
-import TrustBar from "@/components/course/trust-bar";
 import type { PublicCourse } from "@mindpoint/backend";
 import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 import { calculatePointsEarned } from "@/lib/mind-points";
-import { Gift } from "lucide-react";
 
 const INR = "en-IN";
 
@@ -48,7 +42,7 @@ function formatINR(value: number): string {
       maximumFractionDigits: 0,
     }).format(value);
   } catch {
-    return `₹${value}`;
+    return `\u20B9${value}`;
   }
 }
 
@@ -85,26 +79,6 @@ function formatDateCommon(dateStr: string) {
   const month = d.toLocaleString("en-GB", { month: "long", timeZone: "UTC" });
   const year = d.getUTCFullYear();
   return `${day}${getOrdinal(day)} ${month} ${year}`;
-}
-
-function useScrollAnimation() {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => entry.isIntersecting && setIsVisible(true),
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px",
-      },
-    );
-    const currentRef = ref.current;
-    if (currentRef) observer.observe(currentRef);
-    return () => {
-      if (currentRef) observer.unobserve(currentRef);
-    };
-  }, []);
-  return { ref, isVisible } as const;
 }
 
 type CourseVariant = PublicCourse;
@@ -148,19 +122,14 @@ export default function CourseHero({
   getCurrentQuantity,
   inCart,
   removeItem,
-  customDuration,
 }: CourseHeroProps) {
-  const heroAnimation = useScrollAnimation();
   const displayCourse = activeCourse ?? course;
 
   return (
-    <section className="relative overflow-hidden py-8 sm:py-12 md:py-20 dark:text-white">
-      <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950" />
-      <div className="bg-primary/10 absolute top-0 right-0 h-64 w-64 rounded-full blur-3xl sm:h-96 sm:w-96" />
-      <div className="bg-accent/10 absolute bottom-0 left-0 h-64 w-64 rounded-full blur-3xl sm:h-96 sm:w-96" />
-
-      <div className="relative z-10 container px-0 sm:px-2">
-        <div className="text-muted-foreground mb-5 text-xs leading-relaxed break-words sm:mb-6 sm:text-sm">
+    <section className="py-8 sm:py-12 md:py-16">
+      <div className="container">
+        {/* Breadcrumb */}
+        <div className="text-muted-foreground mb-6 text-xs leading-relaxed break-words sm:text-sm">
           <Link
             href="/courses"
             className="hover:text-foreground transition-colors"
@@ -173,367 +142,306 @@ export default function CourseHero({
           </span>
         </div>
 
-        <div
-          ref={heroAnimation.ref}
-          className={`grid grid-cols-1 gap-8 transition-all duration-1000 ease-out lg:grid-cols-2 lg:gap-12 ${
-            heroAnimation.isVisible
-              ? "translate-y-0 opacity-100"
-              : "translate-y-8 opacity-0"
-          }`}
-        >
-          {/* Left Column - Course Image */}
-          <div className="space-y-4 sm:space-y-6">
-            <div className="border-primary/20 from-primary/5 to-accent/5 relative overflow-hidden rounded-2xl border-2 bg-gradient-to-br p-2 shadow-2xl">
-              <div className="bg-primary/20 absolute top-0 left-0 h-32 w-32 rounded-full blur-2xl" />
-              <div className="bg-accent/20 absolute right-0 bottom-0 h-32 w-32 rounded-full blur-2xl" />
-              <div className="relative z-10">
-                <CourseImageGallery imageUrls={displayCourse.imageUrls ?? []} />
+        {/* Two-column layout */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 lg:gap-12">
+          {/* Left Column - Single Course Image */}
+          <div>
+            <div className="rounded-2xl border border-border overflow-hidden">
+              <div className="relative aspect-[4/3] w-full">
+                <Image
+                  src={
+                    displayCourse.imageUrls?.[0] ??
+                    "/placeholder.svg?height=600&width=800&query=course"
+                  }
+                  alt={displayCourse.name}
+                  fill
+                  className="object-cover"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+                  priority
+                />
               </div>
             </div>
-            <TrustBar />
           </div>
 
           {/* Right Column - Course Details */}
-          <div className="flex min-w-0 flex-col gap-6 sm:gap-8">
-            {/* Status Badges */}
-            <div className="flex flex-wrap gap-3">
-              {seatsLeft > 0 && seatsLeft <= 5 && (
-                <Badge variant="destructive" className="animate-pulse">
-                  🔥 Only {seatsLeft} seats left
-                </Badge>
-              )}
-              {seatsLeft === 0 && (
-                <Badge variant="secondary">📋 Waitlist Available</Badge>
-              )}
-              {offerDetails?.hasBogo && (
-                <Badge className="bg-emerald-500/90 text-xs font-semibold text-white uppercase">
-                  🛍️ BOGO Bonus
-                </Badge>
-              )}
-              <Badge
-                variant="outline"
-                className="border-primary/50 text-primary"
-              >
-                {course.type ?? "Course"}
-              </Badge>
-            </div>
+          <div className="flex min-w-0 flex-col gap-5">
+            {/* Course type badge */}
+            <Badge variant="secondary" className="text-xs uppercase tracking-wide w-fit">
+              {course.type ?? "Course"}
+            </Badge>
 
-            {/* Course Title & Description */}
-            <div className="space-y-4">
-              <h1 className="text-3xl leading-tight font-bold tracking-tight break-words sm:text-4xl md:text-5xl lg:text-6xl">
-                <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                  {displayCourse.name}
+            {/* Title */}
+            <h1 className="font-display text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
+              {displayCourse.name}
+            </h1>
+
+            {/* Description */}
+            <p className="text-muted-foreground mt-0 leading-relaxed">
+              {course.description ||
+                "Guided, interactive classes with recordings and lifetime support."}
+            </p>
+
+            {/* Price display */}
+            <div className="space-y-2">
+              <div className="flex items-baseline gap-3">
+                <span className="text-foreground text-3xl font-semibold">
+                  {formatINR(getCoursePrice(displayCourse))}
                 </span>
-              </h1>
-              <p className="text-muted-foreground text-base leading-relaxed sm:text-lg">
-                Guided, interactive classes with recordings and lifetime
-                support.
+                {offerDetails?.hasDiscount && (
+                  <span className="text-muted-foreground text-sm line-through">
+                    {formatINR(offerDetails.originalPrice)}
+                  </span>
+                )}
+              </div>
+              <p className="text-muted-foreground text-sm">
+                Inclusive of all taxes
+                {hasValidOffer && offerDetails && (
+                  <span className="text-primary font-medium">
+                    {" "}
+                    &middot; {offerDetails.offerName}
+                  </span>
+                )}
               </p>
-            </div>
-
-            {/* Course Stats */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              {[
-                {
-                  icon: BookOpen,
-                  label: "Study Material",
-                  value: "✔︎",
-                },
-                {
-                  icon: Video,
-                  label: "Session Recordings",
-                  value: "✔︎",
-                },
-                {
-                  icon: Clock,
-                  label:
-                    course.type === "pre-recorded"
-                      ? "Recording Duration"
-                      : "Duration",
-                  value:
-                    course.type === "pre-recorded"
-                      ? "3 months"
-                      : course.duration || customDuration || "2 weeks",
-                },
-                { icon: Award, label: "Certificate", value: "✔︎" },
-              ].map((stat, idx) => (
-                <div key={idx} className="text-center">
-                  <div className="bg-primary/10 mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
-                    <stat.icon className="text-primary h-6 w-6" />
-                  </div>
-                  <div className="text-muted-foreground text-[11px] leading-tight font-medium sm:text-sm">
-                    {stat.label}
-                  </div>
-                  <div className="text-xs font-bold sm:text-sm">
-                    {stat.value}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Pricing Card */}
-            <Card className="border-primary/20 from-background to-primary/5 border-2 bg-gradient-to-br shadow-xl">
-              <CardContent className="p-6">
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                  <div className="space-y-1">
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-primary text-4xl font-bold">
-                        {formatINR(getCoursePrice(displayCourse))}
-                      </span>
-                      {offerDetails?.hasDiscount && (
-                        <span className="text-muted-foreground text-sm line-through">
-                          {formatINR(offerDetails.originalPrice)}
-                        </span>
-                      )}
-                    </div>
-                    <p className="text-muted-foreground text-sm">
-                      Inclusive of all taxes
-                      {hasValidOffer && offerDetails && (
-                        <span className="text-primary font-medium">
-                          {" "}
-                          • {offerDetails.offerName}
-                        </span>
-                      )}
-                    </p>
-                    {offerDetails && (
-                      <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-                        {offerDetails.hasDiscount && (
-                          <span className="text-orange-600">
-                            🔥 {offerDetails.discountPercentage}% OFF
-                          </span>
-                        )}
-                        <span
-                          className={`${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
-                        >
-                          {offerDetails.timeLeft.days > 0 &&
-                            `${offerDetails.timeLeft.days}d `}
-                          {offerDetails.timeLeft.hours > 0 &&
-                            `${offerDetails.timeLeft.hours}h `}
-                          {offerDetails.timeLeft.minutes > 0 &&
-                            `${offerDetails.timeLeft.minutes}m`}{" "}
-                          left
-                        </span>
-                      </div>
-                    )}
-                    {offerDetails?.hasBogo && (
-                      <div className="flex items-center gap-2 text-xs font-semibold text-emerald-600">
-                        <Sparkles className="h-3 w-3" />
-                        {`${offerDetails.bogoLabel || "BOGO"}: Buy one, get one free`}
-                      </div>
-                    )}
-                  </div>
-
-                  {shouldShowVariantSelect && (
-                    <Select
-                      key={displayCourse._id as unknown as string}
-                      value={displayCourse._id as unknown as string}
-                      onValueChange={handleVariantSelect}
-                    >
-                      <SelectTrigger className="w-full sm:w-48">
-                        <SelectValue placeholder="Choose option" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>
-                            {course.type === "therapy"
-                              ? "Sessions"
-                              : "Duration"}
-                          </SelectLabel>
-                          {normalizedVariants.map((v) => (
-                            <SelectItem
-                              key={v._id}
-                              value={v._id as unknown as string}
-                            >
-                              <span className="font-medium">
-                                {variantLabel(v)}
-                              </span>{" "}
-                              <span className="text-muted-foreground">
-                                — {formatINR(getCoursePrice(v))}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
+              {offerDetails && (
+                <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+                  {offerDetails.hasDiscount && (
+                    <span className="text-muted-foreground">
+                      {offerDetails.discountPercentage}% off
+                    </span>
                   )}
-                </div>
-
-                {/* Action Buttons */}
-                <div className="space-y-3">
-                  {isOutOfStock ? (
-                    <Button disabled className="h-12 w-full text-base">
-                      Out of Stock
-                    </Button>
-                  ) : inCart(displayCourse._id) ? (
-                    <div className="flex items-center gap-3">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDecreaseQuantity(displayCourse)}
-                          className="h-10 w-10 p-0"
-                        >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="min-w-[3rem] text-center font-medium">
-                          {getCurrentQuantity(displayCourse._id)}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleIncreaseQuantity(displayCourse)}
-                          disabled={
-                            getCurrentQuantity(displayCourse._id) >=
-                            (displayCourse.capacity || 1)
-                          }
-                          className="h-10 w-10 p-0"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => removeItem(displayCourse._id)}
-                        className="text-red-600 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ) : (
-                    <Button
-                      onClick={() => handleIncreaseQuantity(displayCourse)}
-                      className="h-12 w-full text-base font-semibold"
-                      size="lg"
-                    >
-                      🛒 Add to Cart
-                    </Button>
-                  )}
-
-                  <Button
-                    variant="outline"
-                    className="h-12 w-full border-2 bg-transparent text-base font-semibold"
-                    disabled={isOutOfStock}
-                    onClick={() => handleBuyNow(displayCourse)}
-                  >
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    Buy Now
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Mind Points Banner */}
-            <Card className="border-primary/20 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-950/20 dark:to-emerald-950/20">
-              <CardContent className="p-4">
-                <div className="flex items-center gap-3">
-                  <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                    <Gift className="text-primary h-5 w-5" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="font-semibold text-green-700 dark:text-green-400">
-                      Buy this and earn {calculatePointsEarned(displayCourse)}{" "}
-                      Mind Points!
-                    </div>
-                    <div className="text-muted-foreground text-sm">
-                      Points are automatically added to your account after
-                      purchase
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Schedule Card - Only show for non-pre-recorded courses */}
-            {(course.type as string) !== "pre-recorded" && (
-              <Card className="border-muted border">
-                <CardHeader className="pb-3">
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Calendar className="text-primary h-5 w-5" />
-                    Schedule & Timing
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                      <Calendar className="text-primary h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Start Date</div>
-                      <div className="text-muted-foreground text-sm">
-                        {formatDateCommon(course.startDate)}
-                      </div>
-                    </div>
-                  </div>
-                  {course.type === "certificate" && course.endDate && (
-                    <div className="flex items-center gap-3">
-                      <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                        <Calendar className="text-primary h-5 w-5" />
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">End Date</div>
-                        <div className="text-muted-foreground text-sm">
-                          {formatDateCommon(course.endDate)}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                      <Clock className="text-primary h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Time</div>
-                      <div className="text-muted-foreground text-sm">
-                        {course.startTime} - {course.endTime}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                      <MapPin className="text-primary h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Days</div>
-                      <div className="text-muted-foreground text-sm">
-                        {course.daysOfWeek.join(", ")}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-full">
-                      <TrendingUpIcon className="text-primary h-5 w-5" />
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium">Duration</div>
-                      <div className="text-muted-foreground text-xs">
-                        {(course.type as string) === "pre-recorded"
-                          ? "3 months"
-                          : course.duration || customDuration || "2 weeks"}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {/* Benefits */}
-            <div className="border-primary/20 from-primary/5 to-accent/5 rounded-xl border-2 bg-gradient-to-r p-6">
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="flex items-center gap-3">
-                  <Sparkles className="text-primary h-6 w-6" />
-                  <span className="font-medium">
-                    Practical, guided learning
+                  <span className="text-muted-foreground">
+                    {offerDetails.timeLeft.days > 0 &&
+                      `${offerDetails.timeLeft.days}d `}
+                    {offerDetails.timeLeft.hours > 0 &&
+                      `${offerDetails.timeLeft.hours}h `}
+                    {offerDetails.timeLeft.minutes > 0 &&
+                      `${offerDetails.timeLeft.minutes}m`}{" "}
+                    left
                   </span>
                 </div>
+              )}
+              {offerDetails?.hasBogo && (
+                <div className="flex items-center gap-2 text-xs font-medium text-primary">
+                  <Sparkles className="h-3 w-3" />
+                  {`${offerDetails.bogoLabel || "BOGO"}: Buy one, get one free`}
+                </div>
+              )}
+            </div>
+
+            {/* Seats left indicator */}
+            {seatsLeft > 0 && seatsLeft <= 5 && (
+              <p className="text-sm text-muted-foreground">
+                Only {seatsLeft} seats left
+              </p>
+            )}
+
+            {/* Variant selector */}
+            {shouldShowVariantSelect && (
+              <Select
+                key={displayCourse._id as unknown as string}
+                value={displayCourse._id as unknown as string}
+                onValueChange={handleVariantSelect}
+              >
+                <SelectTrigger className="w-full sm:w-56">
+                  <SelectValue placeholder="Choose option" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>
+                      {course.type === "therapy" ? "Sessions" : "Duration"}
+                    </SelectLabel>
+                    {normalizedVariants.map((v) => (
+                      <SelectItem
+                        key={v._id}
+                        value={v._id as unknown as string}
+                      >
+                        <span className="font-medium">
+                          {variantLabel(v)}
+                        </span>{" "}
+                        <span className="text-muted-foreground">
+                          &mdash; {formatINR(getCoursePrice(v))}
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+            )}
+
+            {/* Action Buttons */}
+            <div className="space-y-3">
+              {isOutOfStock ? (
+                <Button disabled className="h-12 w-full text-base">
+                  Currently full
+                </Button>
+              ) : inCart(displayCourse._id) ? (
                 <div className="flex items-center gap-3">
-                  <HeartHandshake className="text-primary h-6 w-6" />
-                  <span className="font-medium">Lifetime doubt clearing</span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecreaseQuantity(displayCourse)}
+                      className="h-10 w-10 p-0"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </Button>
+                    <span className="min-w-[3rem] text-center font-medium">
+                      {getCurrentQuantity(displayCourse._id)}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleIncreaseQuantity(displayCourse)}
+                      disabled={
+                        getCurrentQuantity(displayCourse._id) >=
+                        (displayCourse.capacity || 1)
+                      }
+                      className="h-10 w-10 p-0"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => removeItem(displayCourse._id)}
+                    className="text-red-600 hover:bg-red-50"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  onClick={() => handleIncreaseQuantity(displayCourse)}
+                  className="h-12 w-full text-base font-semibold"
+                  size="lg"
+                >
+                  <ShoppingCart className="mr-2 h-5 w-5" />
+                  Add to your cart
+                </Button>
+              )}
+
+              <Button
+                variant="ghost"
+                className="h-12 w-full text-base font-semibold"
+                disabled={isOutOfStock}
+                onClick={() => handleBuyNow(displayCourse)}
+              >
+                Go to checkout
+              </Button>
+            </div>
+
+            {/* Mind Points note */}
+            <p className="text-muted-foreground text-sm">
+              Earn {calculatePointsEarned(displayCourse)} Mind Points with this
+              purchase
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/*  CourseScheduleSection — extracted from the hero for reuse          */
+/* ------------------------------------------------------------------ */
+
+export function CourseScheduleSection({
+  course,
+  customDuration,
+}: {
+  course: PublicCourse;
+  customDuration?: string;
+}) {
+  // Only render for non-pre-recorded courses
+  if ((course.type as string) === "pre-recorded") return null;
+
+  return (
+    <section className="section-padding">
+      <div className="container mx-auto max-w-4xl">
+        <ScrollReveal>
+          <h2 className="font-display text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">
+            Schedule &amp; timing
+          </h2>
+        </ScrollReveal>
+        <ScrollReveal>
+          <div className="mt-8 rounded-2xl border border-border bg-card p-6">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Calendar className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-foreground">
+                    Start Date
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatDateCommon(course.startDate)}
+                  </div>
+                </div>
+              </div>
+
+              {course.type === "certificate" && course.endDate && (
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                    <Calendar className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-foreground">
+                      End Date
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      {formatDateCommon(course.endDate)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-foreground">
+                    Time
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {course.startTime} - {course.endTime}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <MapPin className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-foreground">
+                    Days
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {course.daysOfWeek.join(", ")}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <TrendingUpIcon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <div className="text-sm font-medium text-foreground">
+                    Duration
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {course.duration || customDuration || "2 weeks"}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

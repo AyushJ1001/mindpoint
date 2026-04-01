@@ -61,7 +61,7 @@ export function MindPointsTab() {
   if (accountSummary === undefined) {
     return (
       <View className="flex-1 items-center justify-center py-12">
-        <ActivityIndicator size="large" color="#4338ca" />
+        <ActivityIndicator size="large" color="#5b7a5e" />
         <Text className="mt-3 text-sm text-muted-foreground">
           Loading Mind Points...
         </Text>
@@ -141,7 +141,7 @@ export function MindPointsTab() {
       <Card>
         <CardHeader>
           <View className="flex-row items-center gap-2">
-            <Gift size={20} color="#4338ca" />
+            <Gift size={20} color="#5b7a5e" />
             <CardTitle>Your Balance</CardTitle>
           </View>
         </CardHeader>
@@ -225,9 +225,9 @@ export function MindPointsTab() {
             >
               <View className="flex-row items-center gap-2">
                 {copiedReferral ? (
-                  <Check size={16} color="#4338ca" />
+                  <Check size={16} color="#5b7a5e" />
                 ) : (
-                  <Copy size={16} color="#4338ca" />
+                  <Copy size={16} color="#5b7a5e" />
                 )}
                 <Text className="text-sm font-semibold text-foreground">
                   {copiedReferral ? "Copied" : "Copy"}
@@ -242,7 +242,7 @@ export function MindPointsTab() {
               disabled={!referralLink}
             >
               <View className="flex-row items-center gap-2">
-                <Share2 size={16} color="#4338ca" />
+                <Share2 size={16} color="#5b7a5e" />
                 <Text className="text-sm font-semibold text-foreground">
                   Share
                 </Text>
@@ -332,9 +332,9 @@ export function MindPointsTab() {
                 >
                   <View className="flex-row items-center gap-2">
                     {copiedCode === coupon.code ? (
-                      <Check size={16} color="#4338ca" />
+                      <Check size={16} color="#5b7a5e" />
                     ) : (
-                      <Copy size={16} color="#4338ca" />
+                      <Copy size={16} color="#5b7a5e" />
                     )}
                     <Text className="text-sm font-semibold text-foreground">
                       {copiedCode === coupon.code ? "Copied" : "Copy"}

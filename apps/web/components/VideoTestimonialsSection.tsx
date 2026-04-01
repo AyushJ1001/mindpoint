@@ -181,7 +181,7 @@ function VideoCard({
     <button
       ref={containerRef}
       onClick={onClick}
-      className="group relative aspect-[4/5] w-full overflow-hidden rounded-xl border-2 border-transparent bg-gradient-to-br from-blue-100 to-indigo-100 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-blue-300 hover:shadow-xl sm:aspect-[9/16] dark:from-blue-900/30 dark:to-indigo-900/30 dark:hover:border-blue-500"
+      className="group relative aspect-[4/5] w-full overflow-hidden rounded-xl border-2 border-transparent bg-gradient-to-br from-sage-100 to-sage-50 shadow-lg transition-all duration-300 hover:scale-[1.02] hover:border-sage-200 hover:shadow-xl sm:aspect-[9/16] dark:from-card dark:to-card dark:hover:border-primary"
     >
       {/* Use poster image if available, otherwise try video thumbnail */}
       {testimonial.posterUrl ? (
@@ -209,7 +209,7 @@ function VideoCard({
           )}
           {/* Fallback gradient - shown while video loads */}
           {!hasLoadedFrame && (
-            <div className="absolute inset-0 z-[1] bg-gradient-to-br from-blue-100 to-indigo-100 dark:from-blue-900/30 dark:to-indigo-900/30" />
+            <div className="absolute inset-0 z-[1] bg-gradient-to-br from-sage-100 to-sage-50 dark:from-card dark:to-card" />
           )}
         </>
       )}
@@ -219,8 +219,8 @@ function VideoCard({
 
       {/* Play button overlay */}
       <div className="absolute inset-0 z-10 flex items-center justify-center">
-        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-lg transition-transform duration-300 group-hover:scale-110 dark:bg-slate-800/90">
-          <Play className="ml-1 h-8 w-8 text-blue-600 dark:text-blue-400" />
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/90 shadow-lg transition-transform duration-300 group-hover:scale-110 dark:bg-card/90">
+          <Play className="ml-1 h-8 w-8 text-primary dark:text-primary" />
         </div>
       </div>
 
@@ -305,7 +305,7 @@ export default function VideoTestimonialsSection() {
   if (VIDEO_TESTIMONIALS.length === 0) return null;
 
   return (
-    <section className="section-padding bg-gradient-to-br from-blue-50/50 via-white to-indigo-50/50 dark:from-slate-900 dark:via-slate-950 dark:to-indigo-950/30">
+    <section className="section-padding bg-gradient-to-br from-sage-50/50 via-white to-sage-50/50 dark:from-background dark:via-background dark:to-background">
       <div className="container">
         <div className="mb-8 text-center md:mb-12">
           <h2 className="mb-4 text-3xl font-bold md:text-4xl">

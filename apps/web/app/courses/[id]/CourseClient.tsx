@@ -21,9 +21,12 @@ import { Separator } from "@/components/ui/separator";
 
 import StickyCTA from "@/components/course/sticky-cta";
 import CourseTypeRenderer from "@/components/course/CourseTypeRenderer";
-import CourseHero from "@/components/course/course-hero";
+import CourseHero, {
+  CourseScheduleSection,
+} from "@/components/course/course-hero";
 import CountdownTimer from "@/components/course/countdown-timer";
 import CourseOverview from "@/components/course/course-overview";
+import WhatYouGet from "@/components/course/what-you-get";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import {
   getOfferDetails,
@@ -368,205 +371,157 @@ export default function CourseClient({
     }
   };
 
-  // Function to get gradient background based on course type
-  const getCourseTypeGradient = (courseType: string) => {
-    switch (courseType) {
-      case "certificate":
-        return "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
-      case "internship":
-        return "bg-gradient-to-br from-green-50 to-emerald-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
-      case "therapy":
-        return "bg-gradient-to-br from-pink-50 to-rose-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
-      case "diploma":
-        return "bg-gradient-to-br from-purple-50 to-violet-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
-      case "pre-recorded":
-        return "bg-gradient-to-br from-orange-50 to-amber-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
-      case "masterclass":
-        return "bg-gradient-to-br from-yellow-50 to-amber-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
-      case "supervised":
-        return "bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
-      case "resume-studio":
-        return "bg-gradient-to-br from-emerald-50 to-green-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
-      default:
-        return "bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-oklch(0.08_0.02_240) dark:to-oklch(0.12_0.02_240)";
-    }
-  };
-
-  // Function to get gradient background for sticky section with proper opacity
-  const getStickyGradient = (courseType: string) => {
-    switch (courseType) {
-      case "certificate":
-        return "!bg-gradient-to-br !from-blue-50 !to-indigo-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
-      case "internship":
-        return "!bg-gradient-to-br !from-green-50 !to-emerald-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
-      case "therapy":
-        return "!bg-gradient-to-br !from-pink-50 !to-rose-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
-      case "diploma":
-        return "!bg-gradient-to-br !from-purple-50 !to-violet-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
-      case "pre-recorded":
-        return "!bg-gradient-to-br !from-orange-50 !to-amber-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
-      case "masterclass":
-        return "!bg-gradient-to-br !from-yellow-50 !to-amber-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
-      case "supervised":
-        return "!bg-gradient-to-br !from-teal-50 !to-cyan-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
-      case "resume-studio":
-        return "!bg-gradient-to-br !from-emerald-50 !to-green-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
-      default:
-        return "!bg-gradient-to-br !from-blue-50 !to-indigo-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)";
-    }
-  };
-
   return (
-    <>
-      {/* Background gradient that covers the entire courses area */}
-      <div
-        className={`fixed inset-0 ${getCourseTypeGradient(displayCourse.type || "certificate")} -z-10`}
-        style={{
-          top: "64px", // Below navbar
-          bottom: "80px", // Above footer
-          left: "0px", // Cover full width including sidebar
-          right: "0px",
+    <div className="relative">
+      {/* Conditionally render hero section for course types that use it */}
+      {displayCourse.type !== "therapy" &&
+        displayCourse.type !== "supervised" &&
+        displayCourse.type !== "worksheet" && (
+          <>
+            <CourseHero
+              course={activeCourse}
+              variants={variants}
+              activeCourse={activeCourse}
+              setActiveCourse={setActiveCourse}
+              hasValidOffer={hasValidOffer}
+              offerDetails={offerDetails}
+              isOutOfStock={isOutOfStock}
+              seatsLeft={seatsLeft}
+              shouldShowVariantSelect={shouldShowVariantSelect}
+              normalizedVariants={normalizedVariants}
+              variantLabel={variantLabel}
+              handleVariantSelect={handleVariantSelect}
+              handleIncreaseQuantity={handleIncreaseQuantity}
+              handleDecreaseQuantity={handleDecreaseQuantity}
+              handleBuyNow={handleBuyNow}
+              getCurrentQuantity={getCurrentQuantity}
+              inCart={(id) => (mounted ? inCart(id) : false)}
+              removeItem={removeItem}
+              customDuration={customDuration}
+            />
+
+            <WhatYouGet
+              duration={
+                displayCourse.type === "pre-recorded"
+                  ? "3 months access"
+                  : displayCourse.duration || customDuration
+              }
+              isPreRecorded={displayCourse.type === "pre-recorded"}
+            />
+
+            {displayCourse.type !== "pre-recorded" && (
+              <CourseScheduleSection
+                course={activeCourse}
+                customDuration={customDuration}
+              />
+            )}
+
+            {/* Only show countdown timer for non-pre-recorded courses */}
+            {displayCourse.type !== "pre-recorded" && (
+              <CountdownTimer
+                course={activeCourse}
+                customDuration={customDuration}
+              />
+            )}
+
+            <Separator className="my-8" />
+
+            <CourseOverview description={course.description ?? ""} />
+          </>
+        )}
+
+      {/* Course Type Specific Sections */}
+      <CourseTypeRenderer
+        course={course}
+        variants={variants}
+        onVariantSelect={(hours) => {
+          // Sort variants by price (ascending) - lower price = 120 hours, higher price = 240 hours
+          const sortedVariants = [...normalizedVariants].sort(
+            (a, b) => (a.price || 0) - (b.price || 0),
+          );
+
+          let targetVariant;
+          if (hours === 120) {
+            // Select the lower-priced variant for 120 hours
+            targetVariant = sortedVariants[0];
+          } else if (hours === 240) {
+            // Select the higher-priced variant for 240 hours
+            targetVariant = sortedVariants[sortedVariants.length - 1];
+          }
+
+          if (targetVariant) {
+            // Select the variant using the existing handler
+            handleVariantSelect(targetVariant._id as unknown as string);
+          }
         }}
       />
 
-      <div className="relative z-10">
-        {/* Conditionally render hero section for course types that use it */}
-        {displayCourse.type !== "therapy" &&
-          displayCourse.type !== "supervised" &&
-          displayCourse.type !== "worksheet" && (
-            <>
-              <CourseHero
-                course={activeCourse}
-                variants={variants}
-                activeCourse={activeCourse}
-                setActiveCourse={setActiveCourse}
-                hasValidOffer={hasValidOffer}
-                offerDetails={offerDetails}
-                isOutOfStock={isOutOfStock}
-                seatsLeft={seatsLeft}
-                shouldShowVariantSelect={shouldShowVariantSelect}
-                normalizedVariants={normalizedVariants}
-                variantLabel={variantLabel}
-                handleVariantSelect={handleVariantSelect}
-                handleIncreaseQuantity={handleIncreaseQuantity}
-                handleDecreaseQuantity={handleDecreaseQuantity}
-                handleBuyNow={handleBuyNow}
-                getCurrentQuantity={getCurrentQuantity}
-                inCart={(id) => (mounted ? inCart(id) : false)}
-                removeItem={removeItem}
-                customDuration={customDuration}
-              />
+      {/* Buy Now Confirmation Dialog */}
+      <Dialog open={showBuyNowDialog} onOpenChange={setShowBuyNowDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cart Already Has Items</DialogTitle>
+            <DialogDescription>
+              Your cart currently contains items. Would you like to:
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col gap-2 sm:flex-row">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowBuyNowDialog(false);
+                handleBuyNowConfirm(displayCourse);
+              }}
+              className="w-full sm:w-auto"
+            >
+              Buy Only This Course
+            </Button>
+            <Button
+              onClick={() => {
+                setShowBuyNowDialog(false);
+                // If course is not in cart, add it; if it is, just proceed to checkout
+                if (!inCart(displayCourse._id)) {
+                  handleIncreaseQuantity(displayCourse);
+                }
+                router.push("/cart");
+              }}
+              className="w-full sm:w-auto"
+            >
+              Keep All Items
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-              <Separator className="my-8" />
-
-              {/* Only show countdown timer for non-pre-recorded courses */}
-              {displayCourse.type !== "pre-recorded" && (
-                <CountdownTimer
-                  course={activeCourse}
-                  customDuration={customDuration}
-                />
-              )}
-
-              <CourseOverview description={course.description ?? ""} />
-            </>
-          )}
-
-        {/* Course Type Specific Sections */}
-        <CourseTypeRenderer
-          course={course}
-          variants={variants}
-          onVariantSelect={(hours) => {
-            // Sort variants by price (ascending) - lower price = 120 hours, higher price = 240 hours
-            const sortedVariants = [...normalizedVariants].sort(
-              (a, b) => (a.price || 0) - (b.price || 0),
-            );
-
-            let targetVariant;
-            if (hours === 120) {
-              // Select the lower-priced variant for 120 hours
-              targetVariant = sortedVariants[0];
-            } else if (hours === 240) {
-              // Select the higher-priced variant for 240 hours
-              targetVariant = sortedVariants[sortedVariants.length - 1];
-            }
-
-            if (targetVariant) {
-              // Select the variant using the existing handler
-              handleVariantSelect(targetVariant._id as unknown as string);
-            }
-          }}
+      {/* BOGO Selection Modal */}
+      {offerDetails?.hasBogo && displayCourse.type && (
+        <BogoSelectionModal
+          isOpen={showBogoModal}
+          onClose={() => setShowBogoModal(false)}
+          onSelect={handleBogoSelection}
+          courseType={displayCourse.type}
+          sourceCourseId={displayCourse._id}
+          sourceCourseName={displayCourse.name}
         />
+      )}
 
-        {/* Buy Now Confirmation Dialog */}
-        <Dialog open={showBuyNowDialog} onOpenChange={setShowBuyNowDialog}>
-          <DialogContent className="sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle>Cart Already Has Items</DialogTitle>
-              <DialogDescription>
-                Your cart currently contains items. Would you like to:
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex-col gap-2 sm:flex-row">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowBuyNowDialog(false);
-                  handleBuyNowConfirm(displayCourse);
-                }}
-                className="w-full sm:w-auto"
-              >
-                Buy Only This Course
-              </Button>
-              <Button
-                onClick={() => {
-                  setShowBuyNowDialog(false);
-                  // If course is not in cart, add it; if it is, just proceed to checkout
-                  if (!inCart(displayCourse._id)) {
-                    handleIncreaseQuantity(displayCourse);
-                  }
-                  router.push("/cart");
-                }}
-                className="w-full sm:w-auto"
-              >
-                Keep All Items
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-
-        {/* BOGO Selection Modal */}
-        {offerDetails?.hasBogo && displayCourse.type && (
-          <BogoSelectionModal
-            isOpen={showBogoModal}
-            onClose={() => setShowBogoModal(false)}
-            onSelect={handleBogoSelection}
-            courseType={displayCourse.type}
-            sourceCourseId={displayCourse._id}
-            sourceCourseName={displayCourse.name}
-          />
-        )}
-
-        {/* Sticky CTA - worksheets handle their own CTA internally */}
-        {displayCourse.type !== "worksheet" && (
-          <StickyCTA
-            price={getCoursePrice(activeCourse)}
-            onPrimary={() => handleIncreaseQuantity(activeCourse)}
-            onBuyNow={() => handleBuyNow(activeCourse)}
-            disabled={
-              isOutOfStock ||
-              (inCart(activeCourse._id) &&
-                getCurrentQuantity(activeCourse._id) >=
-                  (activeCourse.capacity || 1))
-            }
-            inCart={inCart(activeCourse._id)}
-            quantity={getCurrentQuantity(activeCourse._id)}
-            isOutOfStock={isOutOfStock}
-            gradientClass={getStickyGradient(
-              activeCourse.type || "certificate",
-            )}
-          />
-        )}
-      </div>
-    </>
+      {/* Sticky CTA - worksheets handle their own CTA internally */}
+      {displayCourse.type !== "worksheet" && (
+        <StickyCTA
+          price={getCoursePrice(activeCourse)}
+          onPrimary={() => handleIncreaseQuantity(activeCourse)}
+          onBuyNow={() => handleBuyNow(activeCourse)}
+          disabled={
+            isOutOfStock ||
+            (inCart(activeCourse._id) &&
+              getCurrentQuantity(activeCourse._id) >=
+                (activeCourse.capacity || 1))
+          }
+          inCart={inCart(activeCourse._id)}
+          quantity={getCurrentQuantity(activeCourse._id)}
+          isOutOfStock={isOutOfStock}
+        />
+      )}
+    </div>
   );
 }

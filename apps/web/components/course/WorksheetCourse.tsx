@@ -32,7 +32,6 @@ import {
 } from "@/components/ui/dialog";
 import StickyCTA from "@/components/course/sticky-cta";
 import ReviewsSection from "@/components/course/reviews-section";
-import TrustBar from "@/components/course/trust-bar";
 import type { PublicCourse } from "@mindpoint/backend";
 import {
   getOfferDetails,
@@ -50,7 +49,7 @@ function formatINR(value: number): string {
       maximumFractionDigits: 0,
     }).format(value);
   } catch {
-    return `₹${value}`;
+    return `\u20B9${value}`;
   }
 }
 
@@ -177,12 +176,8 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
   return (
     <>
       {/* Hero Section */}
-      <section className="relative overflow-hidden py-12 md:py-20 dark:text-white">
-        <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br via-transparent dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950" />
-        <div className="bg-primary/10 absolute top-0 right-0 h-96 w-96 rounded-full blur-3xl" />
-        <div className="bg-accent/10 absolute bottom-0 left-0 h-96 w-96 rounded-full blur-3xl" />
-
-        <div className="relative z-10 container">
+      <section className="py-8 sm:py-12 md:py-16">
+        <div className="container">
           {/* Breadcrumb */}
           <div className="text-muted-foreground mb-6 text-sm">
             <Link
@@ -204,211 +199,171 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
 
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-2">
             {/* Left Column - Image */}
-            <div className="space-y-6">
-              <div className="border-primary/20 from-primary/5 to-accent/5 relative overflow-hidden rounded-2xl border-2 bg-gradient-to-br p-2 shadow-2xl">
-                <div className="bg-primary/20 absolute top-0 left-0 h-32 w-32 rounded-full blur-2xl" />
-                <div className="bg-accent/20 absolute right-0 bottom-0 h-32 w-32 rounded-full blur-2xl" />
-                <div className="relative z-10">
-                  <div className="bg-muted/20 border-primary/20 relative overflow-hidden rounded-lg border-2">
-                    <div className="relative aspect-[9/16] w-full">
-                      <Image
-                        src={
-                          course.imageUrls?.[0] ??
-                          "/placeholder.svg?height=1600&width=900&query=worksheet"
-                        }
-                        alt={course.name}
-                        fill
-                        className="object-contain"
-                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
-                        priority
-                        quality={95}
-                      />
-                    </div>
-                  </div>
+            <div>
+              <div className="rounded-2xl border border-border overflow-hidden">
+                <div className="relative aspect-[9/16] w-full">
+                  <Image
+                    src={
+                      course.imageUrls?.[0] ??
+                      "/placeholder.svg?height=1600&width=900&query=worksheet"
+                    }
+                    alt={course.name}
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 40vw"
+                    priority
+                    quality={95}
+                  />
                 </div>
               </div>
-              <TrustBar />
             </div>
 
             {/* Right Column - Details */}
-            <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-6">
               {/* Status Badges */}
               <div className="flex flex-wrap gap-3">
-                <Badge
-                  variant="outline"
-                  className="border-amber-500/50 bg-amber-500/10 text-amber-700 dark:text-amber-400"
-                >
+                <Badge variant="secondary" className="text-xs uppercase tracking-wide">
                   <Download className="mr-1 h-3 w-3" />
                   Instant Download
                 </Badge>
-                <Badge
-                  variant="outline"
-                  className="border-emerald-500/50 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                >
+                <Badge variant="secondary" className="text-xs uppercase tracking-wide">
                   <FileText className="mr-1 h-3 w-3" />
                   PDF Format
                 </Badge>
                 {offerDetails?.hasDiscount && (
-                  <Badge className="animate-pulse bg-orange-500/90 text-xs font-semibold text-white uppercase">
-                    🔥 {offerDetails.discountPercentage}% OFF
+                  <Badge variant="secondary" className="text-xs font-medium">
+                    {offerDetails.discountPercentage}% off
                   </Badge>
                 )}
               </div>
 
               {/* Title */}
-              <div className="space-y-4">
-                <h1 className="text-4xl leading-tight font-bold tracking-tight md:text-5xl lg:text-6xl">
-                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                    {course.name}
-                  </span>
-                </h1>
-                <p className="text-muted-foreground text-lg leading-relaxed">
-                  A comprehensive worksheet designed to support your mental
-                  health journey.
-                </p>
-              </div>
+              <h1 className="font-display text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
+                {course.name}
+              </h1>
+              <p className="text-muted-foreground leading-relaxed">
+                A comprehensive worksheet designed to support your mental
+                health journey.
+              </p>
 
               {/* Quick Benefits */}
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { icon: Download, label: "Instant Access", value: "✔︎" },
-                  { icon: FileText, label: "Printable PDF", value: "✔︎" },
-                  { icon: BookOpen, label: "Self-Guided", value: "✔︎" },
-                  { icon: Zap, label: "Evidence-Based", value: "✔︎" },
+                  { icon: Download, label: "Instant Access" },
+                  { icon: FileText, label: "Printable PDF" },
+                  { icon: BookOpen, label: "Self-Guided" },
+                  { icon: Zap, label: "Evidence-Based" },
                 ].map((stat, idx) => (
-                  <div key={idx} className="text-center">
-                    <div className="bg-primary/10 mx-auto mb-2 flex h-12 w-12 items-center justify-center rounded-full">
-                      <stat.icon className="text-primary h-6 w-6" />
-                    </div>
-                    <div className="text-muted-foreground text-sm font-medium">
+                  <div key={idx} className="rounded-2xl border border-border bg-card p-4 text-center">
+                    <stat.icon className="mx-auto h-5 w-5 text-primary" />
+                    <p className="mt-2 text-sm font-medium text-foreground">
                       {stat.label}
-                    </div>
-                    <div className="text-sm font-bold">{stat.value}</div>
+                    </p>
                   </div>
                 ))}
               </div>
 
               {/* Pricing Card */}
-              <Card className="border-primary/20 from-background to-primary/5 border-2 bg-gradient-to-br shadow-xl">
-                <CardContent className="p-6">
-                  <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                    <div className="space-y-1">
-                      <div className="flex items-baseline gap-3">
-                        <span className="text-primary text-4xl font-bold">
-                          {formatINR(getCoursePrice(course))}
-                        </span>
-                        {offerDetails?.hasDiscount && (
-                          <span className="text-muted-foreground text-sm line-through">
-                            {formatINR(offerDetails.originalPrice)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-muted-foreground text-sm">
-                        Inclusive of all taxes
-                        {hasValidOffer && offerDetails && (
-                          <span className="text-primary font-medium">
-                            {" "}
-                            • {offerDetails.offerName}
-                          </span>
-                        )}
-                      </p>
-                      {offerDetails && offerDetails.hasDiscount && (
-                        <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
-                          <span className="text-orange-600">
-                            🔥 {offerDetails.discountPercentage}% OFF
-                          </span>
-                          <span className="text-orange-600">
-                            {offerDetails.timeLeft.days > 0 &&
-                              `${offerDetails.timeLeft.days}d `}
-                            {offerDetails.timeLeft.hours > 0 &&
-                              `${offerDetails.timeLeft.hours}h `}
-                            {offerDetails.timeLeft.minutes > 0 &&
-                              `${offerDetails.timeLeft.minutes}m`}{" "}
-                            left
-                          </span>
-                        </div>
-                      )}
-                    </div>
+              <div className="rounded-2xl border border-border bg-card p-6">
+                <div className="mb-6 space-y-2">
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-foreground text-3xl font-semibold">
+                      {formatINR(getCoursePrice(course))}
+                    </span>
+                    {offerDetails?.hasDiscount && (
+                      <span className="text-muted-foreground text-sm line-through">
+                        {formatINR(offerDetails.originalPrice)}
+                      </span>
+                    )}
                   </div>
+                  <p className="text-muted-foreground text-sm">
+                    Inclusive of all taxes
+                    {hasValidOffer && offerDetails && (
+                      <span className="text-primary font-medium">
+                        {" "}
+                        &middot; {offerDetails.offerName}
+                      </span>
+                    )}
+                  </p>
+                  {offerDetails && offerDetails.hasDiscount && (
+                    <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-muted-foreground">
+                      <span>
+                        {offerDetails.discountPercentage}% off
+                      </span>
+                      <span>
+                        {offerDetails.timeLeft.days > 0 &&
+                          `${offerDetails.timeLeft.days}d `}
+                        {offerDetails.timeLeft.hours > 0 &&
+                          `${offerDetails.timeLeft.hours}h `}
+                        {offerDetails.timeLeft.minutes > 0 &&
+                          `${offerDetails.timeLeft.minutes}m`}{" "}
+                        left
+                      </span>
+                    </div>
+                  )}
+                </div>
 
-                  {/* Action Buttons */}
-                  <div className="space-y-3">
-                    {isOutOfStock ? (
-                      <Button disabled className="h-12 w-full text-base">
-                        Currently Unavailable
-                      </Button>
-                    ) : isInCart ? (
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleDecreaseQuantity}
-                            className="h-10 w-10 p-0"
-                          >
-                            <Minus className="h-4 w-4" />
-                          </Button>
-                          <span className="min-w-[3rem] text-center font-medium">
-                            {getCurrentQuantity(course._id)}
-                          </span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={handleIncreaseQuantity}
-                            disabled={
-                              getCurrentQuantity(course._id) >=
-                              (course.capacity || 1)
-                            }
-                            className="h-10 w-10 p-0"
-                          >
-                            <Plus className="h-4 w-4" />
-                          </Button>
-                        </div>
+                {/* Action Buttons */}
+                <div className="space-y-3">
+                  {isOutOfStock ? (
+                    <Button disabled className="h-12 w-full text-base">
+                      Currently full
+                    </Button>
+                  ) : isInCart ? (
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => removeItem(course._id)}
-                          className="text-red-600 hover:bg-red-50"
+                          onClick={handleDecreaseQuantity}
+                          className="h-10 w-10 p-0"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Minus className="h-4 w-4" />
+                        </Button>
+                        <span className="min-w-[3rem] text-center font-medium">
+                          {getCurrentQuantity(course._id)}
+                        </span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleIncreaseQuantity}
+                          disabled={
+                            getCurrentQuantity(course._id) >=
+                            (course.capacity || 1)
+                          }
+                          className="h-10 w-10 p-0"
+                        >
+                          <Plus className="h-4 w-4" />
                         </Button>
                       </div>
-                    ) : (
                       <Button
-                        onClick={handleIncreaseQuantity}
-                        className="h-12 w-full text-base font-semibold"
-                        size="lg"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => removeItem(course._id)}
+                        className="text-red-600 hover:bg-red-50"
                       >
-                        🛒 Add to Cart
+                        <Trash2 className="h-4 w-4" />
                       </Button>
-                    )}
-
+                    </div>
+                  ) : (
                     <Button
-                      variant="outline"
-                      className="h-12 w-full border-2 bg-transparent text-base font-semibold"
-                      disabled={isOutOfStock}
-                      onClick={handleBuyNow}
+                      onClick={handleIncreaseQuantity}
+                      className="h-12 w-full text-base font-semibold"
+                      size="lg"
                     >
                       <ShoppingCart className="mr-2 h-5 w-5" />
-                      Buy Now
+                      Add to your cart
                     </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  )}
 
-              {/* Benefits Banner */}
-              <div className="border-primary/20 from-primary/5 to-accent/5 rounded-xl border-2 bg-gradient-to-r p-6">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="flex items-center gap-3">
-                    <Sparkles className="text-primary h-6 w-6" />
-                    <span className="font-medium">Professionally designed</span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <CheckCircle2 className="text-primary h-6 w-6" />
-                    <span className="font-medium">
-                      Ready to use immediately
-                    </span>
-                  </div>
+                  <Button
+                    variant="ghost"
+                    className="h-12 w-full text-base font-semibold"
+                    disabled={isOutOfStock}
+                    onClick={handleBuyNow}
+                  >
+                    Go to checkout
+                  </Button>
                 </div>
               </div>
             </div>
@@ -421,26 +376,17 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
         <section className="py-16">
           <div className="container">
             <div className="mx-auto max-w-4xl">
-              <div className="relative overflow-hidden rounded-2xl">
-                <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
-                <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br p-8">
-                  <CardHeader className="pb-6">
-                    <div className="bg-primary/10 text-primary mb-4 inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-medium">
-                      <FileText className="h-4 w-4" />
-                      About This Worksheet
-                    </div>
-                    <CardTitle className="text-3xl font-bold">
-                      <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                        What&apos;s Inside?
-                      </span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-muted-foreground text-lg leading-relaxed whitespace-pre-line">
-                      {course.worksheetDescription}
-                    </p>
-                  </CardContent>
-                </Card>
+              <div className="rounded-2xl border border-border bg-card p-8">
+                <div className="mb-4 flex items-center gap-2 text-sm font-medium text-muted-foreground">
+                  <FileText className="h-4 w-4" />
+                  About This Worksheet
+                </div>
+                <h3 className="font-display text-foreground text-2xl font-semibold tracking-tight">
+                  What&apos;s inside?
+                </h3>
+                <p className="text-muted-foreground mt-3 text-lg leading-relaxed whitespace-pre-line">
+                  {course.worksheetDescription}
+                </p>
               </div>
             </div>
           </div>
@@ -449,43 +395,30 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
 
       {/* Target Audience Section */}
       {course.targetAudience && course.targetAudience.length > 0 && (
-        <section className="relative overflow-hidden py-16 md:py-20">
-          <div className="from-primary/10 to-accent/10 absolute inset-0 bg-gradient-to-br via-transparent dark:bg-gradient-to-br dark:from-slate-900 dark:via-blue-950 dark:to-indigo-950" />
-          <div className="bg-primary/5 absolute top-0 left-0 h-96 w-96 rounded-full blur-3xl" />
-          <div className="bg-accent/5 absolute right-0 bottom-0 h-96 w-96 rounded-full blur-3xl" />
-
-          <div className="relative z-10 container">
+        <section className="section-padding">
+          <div className="container">
             <div className="mx-auto max-w-4xl">
-              <div className="mb-12 text-center">
-                <div className="bg-primary/10 text-primary mb-4 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium">
-                  <Users className="h-4 w-4" />
-                  Perfect For
-                </div>
-                <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                    Who Is This Worksheet For?
-                  </span>
+              <div className="mb-8 text-center">
+                <h2 className="font-display text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">
+                  Who is this worksheet for?
                 </h2>
-                <p className="text-muted-foreground mx-auto max-w-2xl text-lg">
+                <p className="text-muted-foreground mx-auto mt-3 max-w-2xl text-lg">
                   This worksheet is designed to support various individuals on
                   their mental health journey
                 </p>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 {course.targetAudience.map((audience, index) => (
-                  <Card
+                  <div
                     key={index}
-                    className="group relative overflow-hidden border-0 bg-white/50 p-6 shadow-lg transition-all duration-300 hover:scale-105 hover:shadow-xl dark:bg-slate-800/50"
+                    className="flex items-center gap-4 rounded-2xl border border-border bg-card p-5"
                   >
-                    <div className="from-primary/5 to-accent/5 absolute inset-0 bg-gradient-to-br opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    <div className="relative z-10 flex items-center gap-4">
-                      <div className="from-primary to-accent flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-white shadow-lg">
-                        <CheckCircle2 className="h-6 w-6" />
-                      </div>
-                      <span className="text-lg font-medium">{audience}</span>
+                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                      <CheckCircle2 className="h-5 w-5 text-primary" />
                     </div>
-                  </Card>
+                    <span className="font-medium text-foreground">{audience}</span>
+                  </div>
                 ))}
               </div>
             </div>
@@ -545,7 +478,6 @@ export default function WorksheetCourse({ course }: WorksheetCourseProps) {
         inCart={isInCart}
         quantity={getCurrentQuantity(course._id)}
         isOutOfStock={isOutOfStock}
-        gradientClass="!bg-gradient-to-br !from-amber-50 !to-orange-50 dark:!from-oklch(0.1_0.02_240) dark:!to-oklch(0.14_0.02_240)"
       />
     </>
   );

@@ -141,7 +141,7 @@ export function CartItemRow({
           }
           disabled={(item.quantity || 1) <= 1}
         >
-          <Minus size={14} color="#6b7280" />
+          <Minus size={14} color="#8a8279" />
         </Button>
         <Text className="w-8 text-center text-sm font-medium text-foreground">
           {item.quantity}
@@ -153,7 +153,7 @@ export function CartItemRow({
             onUpdateQuantity(item.id, (item.quantity || 1) + 1)
           }
         >
-          <Plus size={14} color="#6b7280" />
+          <Plus size={14} color="#8a8279" />
         </Button>
       </View>
     </View>

@@ -10,13 +10,13 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-gradient-to-r from-blue-700 via-blue-600 to-indigo-600 text-white shadow-[0_18px_34px_-18px_rgba(37,99,235,0.95)] hover:-translate-y-0.5 hover:from-blue-600 hover:via-blue-500 hover:to-indigo-500 hover:shadow-[0_26px_44px_-20px_rgba(37,99,235,0.95)]",
+          "bg-primary text-primary-foreground shadow-[0_18px_34px_-18px_rgba(91,122,94,0.7)] hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-[0_26px_44px_-20px_rgba(91,122,94,0.75)]",
         destructive:
           "bg-destructive text-white hover:bg-destructive/90 focus-visible:ring-destructive/20 dark:focus-visible:ring-destructive/40 dark:bg-destructive/60",
         outline:
-          "border border-blue-200/80 bg-white/85 text-blue-950 shadow-[0_14px_30px_-20px_rgba(30,64,175,0.65)] hover:-translate-y-0.5 hover:bg-blue-50 hover:text-blue-900 dark:border-blue-800/60 dark:bg-blue-950/40 dark:text-blue-100 dark:hover:bg-blue-900/55",
+          "border border-border bg-card text-foreground shadow-[0_14px_30px_-20px_rgba(91,122,94,0.35)] hover:-translate-y-0.5 hover:bg-accent hover:text-accent-foreground",
         secondary:
-          "bg-blue-100/90 text-blue-900 hover:bg-blue-200/90 dark:bg-blue-900/60 dark:text-blue-100 dark:hover:bg-blue-800/70",
+          "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost:
           "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
         link: "text-primary underline-offset-4 hover:underline",

@@ -33,7 +33,7 @@ export function Badge({
 
   return (
     <View
-      className={`self-start rounded-[999px] px-3 py-1.5 ${variantClasses[variant]} ${className ?? ""}`}
+      className={`self-start rounded-[999px] px-3.5 py-1.5 ${variantClasses[variant]} ${className ?? ""}`}
       {...props}
     >
       {isTextChild ? (

@@ -1,8 +1,9 @@
 import React, { useState, useEffect, memo } from "react";
-import { View, Text, Pressable } from "react-native";
+import { View, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { useCart } from "react-use-cart";
 import { Plus, Gift } from "lucide-react-native";
+import { ScaleOnPress } from "@/components/animated/ScaleOnPress";
 import type { PublicCourse } from "@mindpoint/backend";
 import type { Id } from "@mindpoint/backend/data-model";
 import {
@@ -195,11 +196,10 @@ export const CourseGroupCard = memo(function CourseGroupCard({
 
   return (
     <>
-      <Pressable
+      <ScaleOnPress
         onPress={() => router.push(`/course/${selectedCourse._id}`)}
-        style={({ pressed }) => ({ opacity: pressed ? 0.95 : 1 })}
       >
-        <Card className="overflow-hidden border-blue-200/80">
+        <Card className="overflow-hidden border-border">
           <CourseImageCarousel
             imageUrls={selectedCourse.imageUrls || []}
           />
@@ -288,7 +288,7 @@ export const CourseGroupCard = memo(function CourseGroupCard({
                   </Text>
                 )}
                 <View className="mt-1 flex-row items-center gap-1">
-                  <Gift size={12} color="#6b7280" />
+                  <Gift size={12} color="#8a8279" />
                   <Text className="text-xs text-muted-foreground">
                     Earn {calculatePointsEarned(selectedCourse)} Mind Points
                   </Text>
@@ -301,7 +301,7 @@ export const CourseGroupCard = memo(function CourseGroupCard({
                 disabled={isInCart || isOutOfStock}
               >
                 <View className="flex-row items-center">
-                  <Plus size={14} color="#f5f7fa" />
+                  <Plus size={14} color="#ffffff" />
                   <Text className="ml-1 text-xs font-semibold text-primary-foreground">
                     {isOutOfStock
                       ? "Out of Stock"
@@ -314,7 +314,7 @@ export const CourseGroupCard = memo(function CourseGroupCard({
             </View>
           </CardContent>
         </Card>
-      </Pressable>
+      </ScaleOnPress>
 
       {showBogoModal && selectedCourse.type && (
         <BogoSelectionModal

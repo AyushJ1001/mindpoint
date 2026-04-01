@@ -267,7 +267,7 @@ const CourseGroupCard = ({
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-blue-200/80 bg-gradient-to-b from-white via-blue-50/55 to-white/95 shadow-[0_14px_35px_-24px_rgba(37,99,235,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(37,99,235,0.95)] dark:border-blue-900/50 dark:bg-gradient-to-b dark:from-slate-950/80 dark:via-blue-950/35 dark:to-slate-950/90"
+      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-sage-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(91,122,94,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(91,122,94,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
@@ -620,7 +620,7 @@ const CourseCard = ({
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-blue-200/80 bg-gradient-to-b from-white via-blue-50/55 to-white/95 shadow-[0_14px_35px_-24px_rgba(37,99,235,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(37,99,235,0.95)] dark:border-blue-900/50 dark:bg-gradient-to-b dark:from-slate-950/80 dark:via-blue-950/35 dark:to-slate-950/90"
+      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-sage-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(91,122,94,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(91,122,94,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />

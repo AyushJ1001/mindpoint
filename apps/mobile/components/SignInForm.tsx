@@ -157,7 +157,7 @@ export function SignInForm() {
         ]}
       >
         {isGoogleLoading ? (
-          <ActivityIndicator color="#1a1f2e" />
+          <ActivityIndicator color="#2d2a26" />
         ) : (
           <View style={styles.googleButtonContent}>
             <GoogleLogo size={20} />
@@ -220,7 +220,7 @@ export function SignInForm() {
 const styles = StyleSheet.create({
   button: {
     alignItems: "center",
-    backgroundColor: "#4338ca",
+    backgroundColor: "#5b7a5e",
     borderRadius: 14,
     minHeight: 52,
     justifyContent: "center",
@@ -238,7 +238,7 @@ const styles = StyleSheet.create({
   },
   card: {
     backgroundColor: "#ffffff",
-    borderColor: "#d9e2ec",
+    borderColor: "#d4cfc8",
     borderRadius: 20,
     borderWidth: 1,
     gap: 14,
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   dividerLine: {
-    backgroundColor: "#d9e2ec",
+    backgroundColor: "#d4cfc8",
     flex: 1,
     height: 1,
   },
@@ -273,7 +273,7 @@ const styles = StyleSheet.create({
   googleButton: {
     alignItems: "center",
     backgroundColor: "#ffffff",
-    borderColor: "#d9e2ec",
+    borderColor: "#d4cfc8",
     borderRadius: 14,
     borderWidth: 1.5,
     minHeight: 52,
@@ -285,13 +285,13 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   googleButtonLabel: {
-    color: "#1a1f2e",
+    color: "#2d2a26",
     fontSize: 16,
     fontWeight: "600",
   },
   input: {
     backgroundColor: "#f8fafc",
-    borderColor: "#d9e2ec",
+    borderColor: "#d4cfc8",
     borderRadius: 14,
     borderWidth: 1,
     color: "#0f1720",

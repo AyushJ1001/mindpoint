@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -10,6 +9,7 @@ import {
 } from "@/components/ui/accordion";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 import { parseFaqMarkdown } from "@/components/course/faq";
 
@@ -44,20 +44,20 @@ export default function FAQSection({
   }, []);
 
   return (
-    <section className="from-muted/20 to-background bg-gradient-to-br py-16">
+    <section className="section-padding">
       <div className="container">
         <div className="mx-auto max-w-4xl">
-          <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
+          <ScrollReveal>
+            <div className="mb-12 text-center">
+              <h2 className="font-display text-foreground mb-4 text-3xl font-semibold tracking-tight sm:text-4xl">
                 {title}
-              </span>
-            </h2>
-            <p className="text-muted-foreground text-lg">{description}</p>
-          </div>
+              </h2>
+              <p className="text-muted-foreground text-lg">{description}</p>
+            </div>
+          </ScrollReveal>
 
-          <Card className="border-muted border-2 shadow-xl">
-            <CardContent className="p-8">
+          <ScrollReveal>
+            <div className="rounded-2xl border border-border bg-card p-8">
               {faqMarkdown == null ? (
                 <div className="py-8 text-center">
                   <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
@@ -95,8 +95,8 @@ export default function FAQSection({
                   );
                 })()
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </ScrollReveal>
         </div>
       </div>
     </section>

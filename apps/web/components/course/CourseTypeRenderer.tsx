@@ -18,6 +18,10 @@ import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
 import CommunitiesSection from "./communities-section";
 import VideoTestimonialsSection from "@/components/VideoTestimonialsSection";
+import {
+  whoShouldDoByType,
+  whyChooseByType,
+} from "@/lib/course-content-data";
 
 interface CourseTypeRendererProps {
   course: PublicCourse;
@@ -30,7 +34,7 @@ export default function CourseTypeRenderer({
   variants = [],
   onVariantSelect,
 }: CourseTypeRendererProps) {
-  const courseType = course.type;
+  const courseType = course.type || "certificate";
 
   // Render course type specific content
   const renderCourseTypeContent = () => {
@@ -68,19 +72,20 @@ export default function CourseTypeRenderer({
   // Render common sections based on course type
   const renderCommonSections = () => {
     // For worksheets, the WorksheetCourse component handles everything
-    // including hero, pricing, description, target audience, reviews, and sticky CTA
     if (courseType === "worksheet") {
       return <>{renderCourseTypeContent()}</>;
     }
 
-    // For therapy and supervised courses, skip the hero section and start directly with plan selection
+    const whoData = whoShouldDoByType[courseType];
+    const whyData = whyChooseByType[courseType];
+
+    // For therapy and supervised courses
     if (courseType === "therapy" || courseType === "supervised") {
       return (
         <>
-          {/* Therapy and supervised courses start directly with plan selection */}
           {renderCourseTypeContent()}
-
-          {/* Common sections for therapy and supervised */}
+          {whoData && <WhoShouldDo {...whoData} />}
+          {whyData && <WhyChoose {...whyData} />}
           <VideoTestimonialsSection />
           <ReviewsSection courseId={course._id} courseType={course.type} />
           {courseType === "supervised" ? (
@@ -93,15 +98,12 @@ export default function CourseTypeRenderer({
       );
     }
 
-    // For all other course types, include all sections
+    // All other types
     return (
       <>
-        {/* Course type specific content */}
         {renderCourseTypeContent()}
-
-        {/* Common sections for all course types except therapy */}
-        <WhoShouldDo />
-        <WhyChoose />
+        {whoData && <WhoShouldDo {...whoData} />}
+        {whyData && <WhyChoose {...whyData} />}
         <Certification courseType={course.type} />
         <VideoTestimonialsSection />
         <ReviewsSection courseId={course._id} courseType={course.type} />

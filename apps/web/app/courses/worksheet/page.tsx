@@ -47,9 +47,7 @@ export default async function WorksheetPage() {
 
   return (
     <CourseTypePage
-      title="Worksheets"
-      description="Access our collection of comprehensive worksheets and downloadable resources designed to enhance your learning experience. Each worksheet is carefully crafted by our expert faculty to provide practical tools, exercises, and insights that complement your psychology and mental health education. Download instantly after purchase and use these resources at your own pace to reinforce key concepts and apply what you've learned."
-      iconName="FileText"
+      type="worksheet"
       coursesData={courses}
       bogoCourses={bogoCourses}
     />

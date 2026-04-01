@@ -501,7 +501,7 @@ const CartContent = () => {
             contact: whatsappNumber || userProfile?.whatsappNumber || "",
           },
           theme: {
-            color: "#3B82F6",
+            color: "#5B7A5E",
           },
         };
 
@@ -783,7 +783,7 @@ const CartContent = () => {
   // Show loading state during hydration to prevent mismatch
   if (!isMounted) {
     return (
-      <div className="container mx-auto py-16 dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+      <div className="container mx-auto py-16 ">
         <div className="text-center">
           <ShoppingCart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
           <h2 className="mb-2 text-2xl font-semibold">Loading cart...</h2>
@@ -794,7 +794,7 @@ const CartContent = () => {
 
   if (isEmpty) {
     return (
-      <div className="container mx-auto py-16 dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+      <div className="container mx-auto py-16 ">
         <div className="text-center">
           <ShoppingCart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
           <h2 className="mb-2 text-2xl font-semibold">Your cart is empty</h2>
@@ -810,7 +810,7 @@ const CartContent = () => {
   }
 
   return (
-    <div className="container py-6 sm:py-8 dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+    <div className="container py-6 sm:py-8 ">
       <div className="mb-6 sm:mb-8">
         <h1 className="mb-2 text-4xl font-bold tracking-tight sm:text-5xl">
           Shopping Cart
@@ -877,7 +877,7 @@ const CartContent = () => {
                 return (
                   <div
                     key={item.id}
-                    className="rounded-xl border border-blue-200/70 bg-white/75 p-3 shadow-[0_10px_22px_-18px_rgba(37,99,235,0.7)] dark:border-blue-900/40 dark:bg-slate-950/55"
+                    className="rounded-xl border border-sage-200 bg-card p-3 shadow-[0_10px_22px_-18px_rgba(91,122,94,0.7)]"
                   >
                     <div className="flex items-start gap-3">
                       <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md sm:h-16 sm:w-16">

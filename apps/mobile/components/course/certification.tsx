@@ -12,7 +12,7 @@ export function Certification({ courseType }: CertificationProps) {
       <Card className="bg-primary/5 border-primary/20">
         <View className="items-center gap-3">
           <View className="rounded-[999px] bg-primary/10 p-3">
-            <Award size={32} color="#4338ca" />
+            <Award size={32} color="#5b7a5e" />
           </View>
           <Text className="text-lg font-semibold text-foreground">
             Earn Your Certificate

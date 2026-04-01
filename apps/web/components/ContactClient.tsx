@@ -49,7 +49,7 @@ export default function ContactClient() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
         <div className="container">
           <div className="mx-auto max-w-4xl text-center">
             <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">

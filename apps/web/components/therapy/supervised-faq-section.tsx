@@ -44,7 +44,7 @@ export default function SupervisedFAQSection({
   }, []);
 
   return (
-    <section className="from-muted/20 to-background bg-gradient-to-br py-16 dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
+    <section className="from-muted/20 to-background bg-gradient-to-br py-16 dark:bg-gradient-to-br dark:from-background dark:via-background dark:to-background dark:text-white">
       <div className="container">
         <div className="mx-auto max-w-4xl">
           <div className="mb-12 text-center">

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Calendar, Clock, BookOpen, Award } from "lucide-react";
 
 import { Card, CardContent } from "@/components/ui/card";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 function parseUTCDateOnly(dateStr: string): Date | null {
   // First try to parse as ISO format (YYYY-MM-DD)
@@ -54,26 +55,6 @@ function formatINR(value: number): string {
   }
 }
 
-function useScrollAnimation() {
-  const [isVisible, setIsVisible] = useState(false);
-  const ref = React.useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => entry.isIntersecting && setIsVisible(true),
-      {
-        threshold: 0.1,
-        rootMargin: "0px 0px -50px 0px",
-      },
-    );
-    const currentRef = ref.current;
-    if (currentRef) observer.observe(currentRef);
-    return () => {
-      if (currentRef) observer.unobserve(currentRef);
-    };
-  }, []);
-  return { ref, isVisible } as const;
-}
-
 interface CountdownTimerProps {
   course: {
     startDate: string;
@@ -91,8 +72,6 @@ export default function CountdownTimer({
   course,
   customDuration,
 }: CountdownTimerProps) {
-  const statsAnimation = useScrollAnimation();
-
   const [timeLeft, setTimeLeft] = useState({
     days: 0,
     hours: 0,
@@ -131,19 +110,10 @@ export default function CountdownTimer({
   return (
     <section className="py-16">
       <div className="container">
-        <div
-          ref={statsAnimation.ref}
-          className={`mx-auto max-w-6xl transition-all duration-1000 ease-out ${
-            statsAnimation.isVisible
-              ? "translate-y-0 opacity-100"
-              : "translate-y-8 opacity-0"
-          }`}
-        >
+        <ScrollReveal className="mx-auto max-w-6xl">
           <div className="mb-12 text-center">
-            <h2 className="mb-4 text-3xl font-bold md:text-4xl">
-              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                Course Highlights
-              </span>
+            <h2 className="font-display text-foreground mb-4 text-3xl font-bold md:text-4xl">
+              Course Highlights
             </h2>
             <p className="text-muted-foreground text-lg">
               Everything you need to know at a glance
@@ -195,11 +165,7 @@ export default function CountdownTimer({
             ].map((item, idx) => (
               <Card
                 key={idx}
-                className={`group transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${
-                  statsAnimation.isVisible
-                    ? `animate-in slide-in-from-bottom-4 duration-700 delay-${idx * 100}`
-                    : ""
-                }`}
+                className="group border border-border bg-card transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
               >
                 <CardContent className="p-6 text-center">
                   <div className="bg-primary/10 group-hover:bg-primary/20 mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full transition-colors">
@@ -216,12 +182,10 @@ export default function CountdownTimer({
 
           {/* Countdown Timer */}
           <div className="mt-16 text-center">
-            <h3 className="mb-6 text-2xl font-semibold">
-              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                Course Starting In
-              </span>
+            <h3 className="font-display text-foreground mb-6 text-2xl font-semibold">
+              Course Starting In
             </h3>
-            <div className="border-primary/20 from-primary/5 to-accent/5 mx-auto max-w-2xl rounded-2xl border-2 bg-gradient-to-br p-8">
+            <div className="border border-border bg-card mx-auto max-w-2xl rounded-2xl p-8">
               <div className="grid grid-cols-2 gap-6 sm:grid-cols-4">
                 {[
                   { label: "Days", value: timeLeft.days },
@@ -230,7 +194,7 @@ export default function CountdownTimer({
                   { label: "Seconds", value: timeLeft.seconds },
                 ].map((time, idx) => (
                   <div key={idx} className="text-center">
-                    <div className="border-primary/30 bg-background text-primary mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-xl border-2 text-2xl font-bold">
+                    <div className="border border-border bg-background text-foreground mx-auto mb-2 flex h-16 w-16 items-center justify-center rounded-xl text-2xl font-bold">
                       {String(time.value).padStart(2, "0")}
                     </div>
                     <div className="text-muted-foreground text-sm font-medium">
@@ -241,7 +205,7 @@ export default function CountdownTimer({
               </div>
             </div>
           </div>
-        </div>
+        </ScrollReveal>
       </div>
     </section>
   );

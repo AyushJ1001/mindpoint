@@ -205,7 +205,7 @@ const typeOptions = [
     title: "Courses & Certifications",
     description: "Structured learning programs with certificates",
     icon: BookOpen,
-    color: "bg-blue-500",
+    color: "bg-primary",
   },
 ];
 
@@ -287,10 +287,10 @@ function AIQuiz() {
 
   if (currentStep === "type") {
     return (
-      <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-16">
+      <section className="bg-gradient-to-br from-sage-50 via-cream-50 to-sage-100 py-16">
         <div className="mx-auto max-w-4xl px-4">
           <div className="mb-12 text-center">
-            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600">
+            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-r from-primary to-accent">
               <Sparkles className="h-8 w-8 text-white" />
             </div>
             <h2 className="mb-4 text-4xl font-bold text-gray-900">
@@ -306,12 +306,12 @@ function AIQuiz() {
             {typeOptions.map((option) => (
               <Card
                 key={option.id}
-                className="cursor-pointer border-2 transition-all duration-300 hover:scale-105 hover:border-blue-300 hover:shadow-lg"
+                className="cursor-pointer border-2 transition-all duration-300 hover:scale-105 hover:border-sage-200 hover:shadow-lg"
                 onClick={() => handleTypeSelect(option.id)}
               >
                 <CardHeader className="pb-4 text-center">
                   <div
-                    className={`inline-flex h-12 w-12 items-center justify-center ${option.color} mb-4 rounded-full`}
+                    className={`mx-auto inline-flex h-12 w-12 items-center justify-center ${option.color} mb-4 rounded-full`}
                   >
                     <option.icon className="h-6 w-6 text-white" />
                   </div>
@@ -336,7 +336,7 @@ function AIQuiz() {
     const IconComponent = selectedOption?.icon || BookOpen;
 
     return (
-      <section className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-16">
+      <section className="bg-gradient-to-br from-sage-50 via-cream-50 to-sage-100 py-16">
         <div className="mx-auto max-w-4xl px-4">
           <div className="mb-8 text-center">
             <div
@@ -371,8 +371,8 @@ function AIQuiz() {
                               }
                               className={`h-auto justify-start p-4 text-left ${
                                 answers[q.id] === opt
-                                  ? "border-blue-600 bg-blue-600 text-white"
-                                  : "hover:border-blue-300 hover:bg-blue-50"
+                                  ? "border-primary bg-primary text-white"
+                                  : "hover:border-sage-200 hover:bg-sage-50"
                               }`}
                               onClick={() => handleAnswer(q.id, opt)}
                             >
@@ -401,7 +401,7 @@ function AIQuiz() {
                 </Button>
                 <Button
                   onClick={getRecommendations}
-                  className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  className="flex-1 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
                   disabled={Object.keys(answers).length < quizQuestions.length}
                 >
                   Get Recommendations
@@ -420,7 +420,7 @@ function AIQuiz() {
     return (
       <section
         id="quiz-results"
-        className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 py-16"
+        className="bg-gradient-to-br from-sage-50 via-cream-50 to-sage-100 py-16"
       >
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-12 text-center">
@@ -463,7 +463,7 @@ function AIQuiz() {
                     </div>
                     {rec.score > 0 && (
                       <div className="ml-4 text-right">
-                        <div className="text-2xl font-bold text-blue-600">
+                        <div className="text-2xl font-bold text-primary">
                           {rec.score}
                         </div>
                         <div className="text-xs text-gray-500">match score</div>

@@ -64,7 +64,7 @@ export function CouponInput({
             className="rounded-md p-1.5"
             style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
           >
-            <X size={16} color="#6b7280" />
+            <X size={16} color="#8a8279" />
           </Pressable>
         </View>
       </View>

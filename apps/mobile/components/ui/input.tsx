@@ -11,7 +11,7 @@ export const Input = forwardRef<TextInput, InputProps>(
       <TextInput
         ref={ref}
         className={`border-border/80 bg-input text-foreground rounded-xl border px-4 py-3 text-sm ${className ?? ""}`}
-        placeholderTextColor="#717a93"
+        placeholderTextColor="#8a8279"
         {...props}
       />
     );

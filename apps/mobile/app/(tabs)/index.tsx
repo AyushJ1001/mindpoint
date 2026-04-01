@@ -7,14 +7,27 @@ import {
   Pressable,
   RefreshControl,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { PublicCourse } from "@mindpoint/backend";
 import { CourseCard } from "@/components/CourseCard";
 import { CourseGroupCard } from "@/components/CourseGroupCard";
 import { CourseCardSkeleton } from "@/components/CourseCardSkeleton";
+import { PersonalizedGreeting } from "@/components/PersonalizedGreeting";
+import { LeafDecoration } from "@/components/decorative/LeafDecoration";
+import { WavyDivider } from "@/components/decorative/WavyDivider";
+import { BlobShape } from "@/components/decorative/BlobShape";
+import { FadeInView } from "@/components/animated/FadeInView";
 import { publicEnv } from "@/lib/public-env";
 import { BookOpen, Users, Star, GraduationCap } from "lucide-react-native";
+
+let useUser: () => { user: any };
+try {
+  useUser = require("@clerk/clerk-expo").useUser;
+} catch {
+  useUser = () => ({ user: null });
+}
 
 const COURSE_TYPES = [
   { label: "All", value: "all" },
@@ -41,6 +54,7 @@ function BrowseCatalogScreen() {
   const courses = useQuery(api.courses.listCourses, { count: 100 });
   const [selectedType, setSelectedType] = useState("all");
   const [refreshing, setRefreshing] = useState(false);
+  const { user } = useUser();
 
   // Build BOGO courses lookup by type
   const bogoCoursesByType = useMemo(() => {
@@ -96,7 +110,7 @@ function BrowseCatalogScreen() {
         ListEmptyComponent={
           courses ? (
             <View className="items-center rounded-xl border border-border bg-card p-6">
-              <BookOpen size={32} color="#6b7280" />
+              <BookOpen size={32} color="#8a8279" />
               <Text className="mt-3 text-lg font-semibold text-foreground">
                 No programs available yet
               </Text>
@@ -115,61 +129,101 @@ function BrowseCatalogScreen() {
         }
         ListHeaderComponent={
           <View className="gap-4">
-            {/* Hero section */}
-            <View className="rounded-2xl bg-primary p-5">
-              <Text className="text-xs font-bold uppercase tracking-wider text-primary-foreground/70">
-                Explore
-              </Text>
-              <Text className="mt-2 text-2xl font-bold text-primary-foreground">
-                Upcoming Courses
-              </Text>
-              <Text className="mt-1 text-sm leading-5 text-primary-foreground/80">
-                Don't miss out on these exciting courses starting soon. Secure
-                your spot today!
-              </Text>
+            {/* Hero section with gradient and decorative elements */}
+            <View className="overflow-hidden rounded-3xl">
+              <LinearGradient
+                colors={["#5b7a5e", "#7a9a7d"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{ padding: 20, paddingBottom: 0 }}
+              >
+                {/* Decorative blob behind content */}
+                <BlobShape
+                  size={100}
+                  color="#ffffff"
+                  opacity={0.06}
+                  variant={2}
+                  style={{ position: "absolute", top: -10, right: -10 }}
+                />
 
-              {/* Trust stats row */}
-              <View className="mt-3 flex-row gap-2">
-                <View className="flex-1 items-center rounded-xl bg-white/15 px-2 py-2.5">
-                  <Users size={16} color="#ffffff" />
-                  <Text className="mt-1 text-xs font-bold text-primary-foreground">
-                    1000+
-                  </Text>
-                  <Text className="text-[10px] text-primary-foreground/70">
-                    Students
-                  </Text>
-                </View>
-                <View className="flex-1 items-center rounded-xl bg-white/15 px-2 py-2.5">
-                  <Star size={16} color="#ffffff" />
-                  <Text className="mt-1 text-xs font-bold text-primary-foreground">
-                    4.9
-                  </Text>
-                  <Text className="text-[10px] text-primary-foreground/70">
-                    Rating
-                  </Text>
-                </View>
-                <View className="flex-1 items-center rounded-xl bg-white/15 px-2 py-2.5">
-                  <GraduationCap size={16} color="#ffffff" />
-                  <Text className="mt-1 text-xs font-bold text-primary-foreground">
-                    50+
-                  </Text>
-                  <Text className="text-[10px] text-primary-foreground/70">
-                    Programs
-                  </Text>
-                </View>
-              </View>
+                {/* Leaf decoration */}
+                <LeafDecoration
+                  size={56}
+                  color="#ffffff"
+                  variant={3}
+                  opacity={0.15}
+                  style={{ position: "absolute", top: 8, right: 12 }}
+                />
 
-              <View className="mt-3 rounded-xl bg-card p-4">
-                <Text className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
-                  Course catalog
+                {/* Personalized greeting */}
+                <PersonalizedGreeting
+                  firstName={user?.firstName}
+                  isSignedIn={!!user}
+                />
+
+                <Text className="mt-3 text-2xl font-bold text-primary-foreground">
+                  Your Growth Journey
                 </Text>
-                <Text className="mt-1 text-lg font-bold text-foreground">
-                  {courseCountLabel}
+                <Text className="mt-1 text-sm leading-5 text-primary-foreground/80">
+                  Discover courses designed to nurture your mind and build your
+                  practice.
                 </Text>
-                <Text className="mt-0.5 text-xs text-muted-foreground">
-                  Sign in from the Account tab to view enrollments and rewards.
-                </Text>
-              </View>
+
+                {/* Trust stats row */}
+                <View className="mt-4 flex-row gap-2">
+                  <View className="flex-1 items-center rounded-2xl bg-white/20 px-2 py-2.5">
+                    <Users size={16} color="#ffffff" />
+                    <Text className="mt-1 text-xs font-bold text-primary-foreground">
+                      1000+
+                    </Text>
+                    <Text className="text-[10px] text-primary-foreground/70">
+                      Students
+                    </Text>
+                  </View>
+                  <View className="flex-1 items-center rounded-2xl bg-white/20 px-2 py-2.5">
+                    <Star size={16} color="#ffffff" />
+                    <Text className="mt-1 text-xs font-bold text-primary-foreground">
+                      4.9
+                    </Text>
+                    <Text className="text-[10px] text-primary-foreground/70">
+                      Rating
+                    </Text>
+                  </View>
+                  <View className="flex-1 items-center rounded-2xl bg-white/20 px-2 py-2.5">
+                    <GraduationCap size={16} color="#ffffff" />
+                    <Text className="mt-1 text-xs font-bold text-primary-foreground">
+                      50+
+                    </Text>
+                    <Text className="text-[10px] text-primary-foreground/70">
+                      Programs
+                    </Text>
+                  </View>
+                </View>
+
+                {/* Course count card with cream tint */}
+                <View className="relative mt-4 rounded-xl bg-cream p-4">
+                  <LeafDecoration
+                    size={24}
+                    color="#5b7a5e"
+                    variant={1}
+                    opacity={0.12}
+                    style={{ position: "absolute", top: 6, right: 8 }}
+                  />
+                  <Text className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+                    Course catalog
+                  </Text>
+                  <Text className="mt-1 text-lg font-bold text-foreground">
+                    {courseCountLabel}
+                  </Text>
+                  <Text className="mt-0.5 text-xs text-muted-foreground">
+                    Sign in from the Account tab to view enrollments and
+                    rewards.
+                  </Text>
+                </View>
+
+                {/* Wavy divider that blends into the background */}
+                <WavyDivider color="#faf7f2" height={20} />
+              </LinearGradient>
             </View>
 
             {/* Category filter */}
@@ -200,21 +254,28 @@ function BrowseCatalogScreen() {
                 </Pressable>
               ))}
             </ScrollView>
+
+            {/* Section label */}
+            <Text className="text-base font-semibold text-foreground">
+              Programs for You
+            </Text>
           </View>
         }
-        renderItem={({ item: group }) =>
-          group.length > 1 ? (
-            <CourseGroupCard
-              courses={group}
-              bogoCoursesByType={bogoCoursesByType}
-            />
-          ) : (
-            <CourseCard
-              course={group[0]}
-              bogoCoursesByType={bogoCoursesByType}
-            />
-          )
-        }
+        renderItem={({ item: group, index }) => (
+          <FadeInView delay={index * 80} duration={400} direction="up">
+            {group.length > 1 ? (
+              <CourseGroupCard
+                courses={group}
+                bogoCoursesByType={bogoCoursesByType}
+              />
+            ) : (
+              <CourseCard
+                course={group[0]}
+                bogoCoursesByType={bogoCoursesByType}
+              />
+            )}
+          </FadeInView>
+        )}
         showsVerticalScrollIndicator={false}
       />
     </View>
@@ -225,17 +286,24 @@ function BrowseUnavailableScreen() {
   return (
     <View className="flex-1 bg-background">
       <View className="p-5">
-        <View className="rounded-2xl bg-primary p-5">
-          <Text className="text-xs font-bold uppercase tracking-wider text-primary-foreground/70">
-            Explore
-          </Text>
-          <Text className="mt-2 text-2xl font-bold text-primary-foreground">
-            Upcoming Courses
-          </Text>
-          <Text className="mt-1 text-sm leading-5 text-primary-foreground/80">
-            Browse current courses, check pricing, and find the format that fits
-            your next step.
-          </Text>
+        <View className="overflow-hidden rounded-3xl">
+          <LinearGradient
+            colors={["#5b7a5e", "#7a9a7d"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={{ padding: 20 }}
+          >
+            <Text className="text-xs font-bold uppercase tracking-wider text-primary-foreground/70">
+              Explore
+            </Text>
+            <Text className="mt-2 text-2xl font-bold text-primary-foreground">
+              Your Growth Journey
+            </Text>
+            <Text className="mt-1 text-sm leading-5 text-primary-foreground/80">
+              Browse current courses, check pricing, and find the format that
+              fits your next step.
+            </Text>
+          </LinearGradient>
         </View>
         <View className="mt-4 items-center rounded-xl border border-border bg-card p-6">
           <Text className="text-lg font-semibold text-foreground">

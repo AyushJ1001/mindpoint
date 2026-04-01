@@ -34,7 +34,7 @@ export function WhyChoose() {
   return (
     <View className="mt-8">
       <View className="mb-2 flex-row items-center justify-center gap-2">
-        <Star size={22} color="#4338ca" />
+        <Star size={22} color="#5b7a5e" />
         <Text className="text-xl font-bold text-primary">
           Why Choose This Course?
         </Text>
@@ -49,7 +49,7 @@ export function WhyChoose() {
             key={reason.title}
             className="w-[47%] border-primary/20 bg-primary/5"
             style={{
-              shadowColor: "#4338ca",
+              shadowColor: "#5b7a5e",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.06,
               shadowRadius: 8,
@@ -57,7 +57,7 @@ export function WhyChoose() {
             }}
           >
             <LinearGradient
-              colors={["#4338ca", "#7c3aed"]}
+              colors={["#5b7a5e", "#7a9a7d"]}
               style={{ marginBottom: 8, height: 40, width: 40, alignItems: "center", justifyContent: "center", borderRadius: 20 }}
             >
               <reason.icon size={18} color="#ffffff" />

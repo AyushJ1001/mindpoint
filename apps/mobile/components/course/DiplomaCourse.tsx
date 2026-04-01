@@ -25,7 +25,7 @@ export default function DiplomaCourse({ course }: DiplomaCourseProps) {
         {DIPLOMA_BENEFITS.map((benefit) => (
           <Card key={benefit.title} className="flex-row items-center gap-3">
             <View className="rounded-lg bg-primary/10 p-2">
-              <benefit.icon size={20} color="#4338ca" />
+              <benefit.icon size={20} color="#5b7a5e" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-semibold text-foreground">

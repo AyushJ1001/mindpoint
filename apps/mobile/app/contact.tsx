@@ -94,7 +94,7 @@ export default function ContactScreen() {
             <Card>
               <CardContent className="flex-row items-center gap-4 p-4">
                 <View className="h-12 w-12 items-center justify-center rounded-[999px] bg-primary/10">
-                  <Phone size={24} color="#4338ca" />
+                  <Phone size={24} color="#5b7a5e" />
                 </View>
                 <View>
                   <Text className="font-semibold text-foreground">Phone</Text>
@@ -108,7 +108,7 @@ export default function ContactScreen() {
             <Card>
               <CardContent className="flex-row items-center gap-4 p-4">
                 <View className="h-12 w-12 items-center justify-center rounded-[999px] bg-primary/10">
-                  <Mail size={24} color="#4338ca" />
+                  <Mail size={24} color="#5b7a5e" />
                 </View>
                 <View>
                   <Text className="font-semibold text-foreground">Email</Text>
@@ -122,7 +122,7 @@ export default function ContactScreen() {
             <Card>
               <CardContent className="flex-row items-center gap-4 p-4">
                 <View className="h-12 w-12 items-center justify-center rounded-[999px] bg-primary/10">
-                  <Clock size={24} color="#4338ca" />
+                  <Clock size={24} color="#5b7a5e" />
                 </View>
                 <View>
                   <Text className="font-semibold text-foreground">

@@ -44,7 +44,7 @@ export function FAQSection({
   return (
     <View className="mt-6">
       <View className="mb-4 flex-row items-center gap-2">
-        <HelpCircle size={20} color="#4338ca" />
+        <HelpCircle size={20} color="#5b7a5e" />
         <Text className="text-lg font-semibold text-foreground">{title}</Text>
       </View>
       <View className="gap-2">
@@ -61,9 +61,9 @@ export function FAQSection({
                 {item.question}
               </Text>
               {openIndex === index ? (
-                <ChevronUp size={18} color="#6b7280" />
+                <ChevronUp size={18} color="#8a8279" />
               ) : (
-                <ChevronDown size={18} color="#6b7280" />
+                <ChevronDown size={18} color="#8a8279" />
               )}
             </View>
             {openIndex === index && (

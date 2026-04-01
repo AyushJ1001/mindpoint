@@ -13,7 +13,7 @@ export default function HomeClient({ upcomingCourses }: HomeClientProps) {
     <>
       {/* Upcoming Courses */}
       <section className="section-padding relative overflow-hidden">
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-indigo-50/70 via-white to-blue-50/70 dark:from-slate-950 dark:via-blue-950/65 dark:to-slate-950" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-sage-50/70 via-white to-sage-50/70 dark:from-background dark:via-background dark:to-background" />
         <div className="container">
           <div className="relative z-10 mb-12 text-center">
             <h2 className="mb-4 text-4xl font-semibold tracking-tight md:text-5xl">

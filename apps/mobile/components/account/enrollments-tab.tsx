@@ -16,7 +16,7 @@ export function EnrollmentsTab() {
   if (enrollments === undefined) {
     return (
       <View className="flex-1 items-center justify-center py-12">
-        <ActivityIndicator size="large" color="#4338ca" />
+        <ActivityIndicator size="large" color="#5b7a5e" />
         <Text className="text-muted-foreground mt-3 text-sm">
           Loading enrollments...
         </Text>
@@ -28,7 +28,7 @@ export function EnrollmentsTab() {
     return (
       <Card className="mx-4 mt-4">
         <CardContent className="items-center py-12">
-          <BookOpen size={48} color="#64748b" />
+          <BookOpen size={48} color="#8a8279" />
           <Text className="text-muted-foreground mt-4 text-center">
             You haven't enrolled in any courses yet.
           </Text>
@@ -73,7 +73,7 @@ export function EnrollmentsTab() {
 
               {course.startDate ? (
                 <View className="flex-row items-center gap-2">
-                  <Calendar size={16} color="#64748b" />
+                  <Calendar size={16} color="#8a8279" />
                   <Text className="text-foreground text-sm">
                     {new Date(course.startDate).toLocaleDateString()} -{" "}
                     {new Date(course.endDate).toLocaleDateString()}
@@ -83,7 +83,7 @@ export function EnrollmentsTab() {
 
               {course.startTime ? (
                 <View className="flex-row items-center gap-2">
-                  <Clock size={16} color="#64748b" />
+                  <Clock size={16} color="#8a8279" />
                   <Text className="text-foreground text-sm">
                     {course.startTime} - {course.endTime}
                   </Text>

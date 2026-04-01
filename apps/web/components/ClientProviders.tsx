@@ -9,6 +9,7 @@ import { MindPointsProvider } from "@/contexts/MindPointsContext";
 import ClientNavbar from "@/components/ClientNavbar";
 import RouteBodyClass from "@/components/RouteBodyClass";
 import StructuredData from "@/components/structured-data";
+import { ThemeProvider } from "@/components/theme-provider";
 
 interface ClientProvidersProps {
   children: ReactNode;
@@ -16,14 +17,14 @@ interface ClientProvidersProps {
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
   const appShell = (
-    <>
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
       <RouteBodyClass />
       <StructuredData />
       <ClientNavbar />
       <main id="main-content" className="flex-grow" role="main" tabIndex={-1}>
         {children}
       </main>
-    </>
+    </ThemeProvider>
   );
 
   // Keep required public env checks local in client boot code so Next can inline them.

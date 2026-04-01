@@ -21,7 +21,7 @@ export function Checkbox({
         checked ? "border-primary bg-primary" : "border-border bg-card"
       } ${disabled ? "opacity-50" : ""} ${className ?? ""}`}
     >
-      {checked && <Check size={14} color="#f5f7fa" strokeWidth={3} />}
+      {checked && <Check size={14} color="#ffffff" strokeWidth={3} />}
     </Pressable>
   );
 }

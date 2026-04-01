@@ -70,7 +70,20 @@ function RootLayoutNav() {
   return (
     <AppProviders>
       <AppErrorBoundary>
-        <ThemeProvider value={DefaultTheme}>
+        <ThemeProvider
+          value={{
+            ...DefaultTheme,
+            colors: {
+              ...DefaultTheme.colors,
+              background: "#faf7f2",
+              card: "#faf7f2",
+              text: "#2d2a26",
+              border: "#e2dcd4",
+              primary: "#5b7a5e",
+              notification: "#c45a4a",
+            },
+          }}
+        >
           <Stack>
             <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
             <Stack.Screen

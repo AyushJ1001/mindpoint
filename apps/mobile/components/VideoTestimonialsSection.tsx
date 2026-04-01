@@ -213,7 +213,7 @@ export default function VideoTestimonialsSection() {
           textAlign: "center",
           fontSize: 20,
           fontWeight: "700",
-          color: "#303853",
+          color: "#2d2a26",
         }}
       >
         Hear From Our Students
@@ -223,7 +223,7 @@ export default function VideoTestimonialsSection() {
           marginBottom: 20,
           textAlign: "center",
           fontSize: 13,
-          color: "#717a93",
+          color: "#8a8279",
           paddingHorizontal: 16,
         }}
       >

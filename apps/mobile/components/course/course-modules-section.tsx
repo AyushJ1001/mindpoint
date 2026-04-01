@@ -31,7 +31,7 @@ export function CourseModulesSection({
       <View className="mt-6 gap-3">
         <Card className="flex-row items-center gap-3">
           <View className="rounded-lg bg-primary/10 p-2">
-            <BookOpen size={20} color="#4338ca" />
+            <BookOpen size={20} color="#5b7a5e" />
           </View>
           <View className="flex-1">
             <Text className="text-sm font-semibold text-foreground">
@@ -44,7 +44,7 @@ export function CourseModulesSection({
         </Card>
         <Card className="flex-row items-center gap-3">
           <View className="rounded-lg bg-primary/10 p-2">
-            <Clock size={20} color="#4338ca" />
+            <Clock size={20} color="#5b7a5e" />
           </View>
           <View className="flex-1">
             <Text className="text-sm font-semibold text-foreground">
@@ -57,7 +57,7 @@ export function CourseModulesSection({
         </Card>
         <Card className="flex-row items-center gap-3">
           <View className="rounded-lg bg-primary/10 p-2">
-            <Award size={20} color="#4338ca" />
+            <Award size={20} color="#5b7a5e" />
           </View>
           <View className="flex-1">
             <Text className="text-sm font-semibold text-foreground">

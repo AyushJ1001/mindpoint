@@ -104,7 +104,7 @@ export function BogoSelectionModal({
     return (
       <Dialog open={isOpen} onClose={handleClose}>
         <View className="items-center py-8">
-          <ActivityIndicator size="large" color="#4338ca" />
+          <ActivityIndicator size="large" color="#5b7a5e" />
           <Text className="mt-4 text-sm text-muted-foreground">
             Loading BOGO options...
           </Text>

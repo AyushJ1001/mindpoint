@@ -19,17 +19,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../components/ui/carousel";
-import {
-  Plus,
-  BookOpen,
-  Award,
-  Users,
-  PlayCircle,
-  Lightbulb,
-  Heart,
-  Eye,
-  FileText,
-} from "lucide-react";
+import { Plus, BookOpen } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import type {
   CourseLike,
@@ -39,6 +29,8 @@ import type {
 import { Id } from "@mindpoint/backend/data-model";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { getEnrolledCount } from "@/lib/course-enrollment";
+import { courseTypeContent } from "@/lib/course-content-data";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 // Type for courses with sessions (therapy)
 type TherapyCourse = CourseLike & {
@@ -301,7 +293,7 @@ const CourseGroupCard = ({
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-blue-200/80 bg-gradient-to-b from-white via-blue-50/55 to-white/95 shadow-[0_14px_35px_-24px_rgba(37,99,235,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(37,99,235,0.95)] dark:border-blue-900/50 dark:bg-gradient-to-b dark:from-slate-950/80 dark:via-blue-950/35 dark:to-slate-950/90"
+      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-sage-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(91,122,94,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(91,122,94,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
@@ -666,7 +658,7 @@ const CourseCard = ({
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-blue-200/80 bg-gradient-to-b from-white via-blue-50/55 to-white/95 shadow-[0_14px_35px_-24px_rgba(37,99,235,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(37,99,235,0.95)] dark:border-blue-900/50 dark:bg-gradient-to-b dark:from-slate-950/80 dark:via-blue-950/35 dark:to-slate-950/90"
+      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-sage-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(91,122,94,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(91,122,94,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
@@ -802,98 +794,82 @@ const CourseCard = ({
   );
 };
 
-const iconMap = {
-  Award,
-  Users,
-  BookOpen,
-  PlayCircle,
-  Lightbulb,
-  Heart,
-  Eye,
-  FileText,
-};
-
 interface CourseTypePageProps {
-  title: string;
-  description: string;
-  iconName: keyof typeof iconMap;
+  type: string;
   coursesData: PublicCoursesByTypeResult;
   bogoCourses?: Array<PublicCourse>;
 }
 
 export default function CourseTypePage({
-  title,
-  description,
-  iconName,
+  type,
   coursesData,
   bogoCourses,
 }: CourseTypePageProps) {
-  const Icon = iconMap[iconName];
+  const content = courseTypeContent[type];
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50/80 via-white to-blue-50/60 dark:from-slate-950 dark:via-slate-950 dark:to-indigo-950">
-      <section className="section-padding from-primary/5 via-background to-accent/5 relative bg-gradient-to-br dark:bg-gradient-to-br dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950 dark:text-white">
-        <div className="bg-[url('data:image/svg+xml;utf8,<svg ...>')] pointer-events-none absolute inset-0 bg-repeat opacity-20"></div>
-        <div className="container text-center">
-          <div className="mx-auto max-w-4xl">
-            <div className="bg-primary/10 mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full">
-              {Icon && <Icon className="text-primary h-10 w-10" />}
-            </div>
-            <div>
-              <h1 className="from-foreground to-foreground/70 bg-gradient-to-b bg-clip-text font-serif text-3xl font-bold text-transparent uppercase sm:text-4xl">
-                {title}
-              </h1>
-              <p className="text-muted-foreground mb-8 font-serif text-base leading-relaxed sm:text-lg">
-                {description}
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen">
+      <section className="section-padding">
+        <div className="container mx-auto max-w-4xl">
+          <ScrollReveal>
+            <p className="text-primary text-sm font-semibold tracking-wide uppercase">
+              {content.tagline}
+            </p>
+            <h1 className="font-display text-foreground mt-2 text-4xl font-semibold tracking-tight sm:text-5xl">
+              {content.title}
+            </h1>
+            <p className="text-muted-foreground mt-4 text-lg leading-relaxed">
+              {content.description}
+            </p>
+          </ScrollReveal>
         </div>
       </section>
 
       {/* Courses Section */}
       <section className="pb-16">
         <div className="container">
-          {coursesData.courses && coursesData.courses.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {(() => {
-                // Group courses by name; if multiple with same name, render a grouped card with select
-                const nameToCourses = new Map<string, Array<PublicCourse>>();
-                for (const course of coursesData.courses) {
-                  const list = nameToCourses.get(course.name) ?? [];
-                  list.push(course);
-                  nameToCourses.set(course.name, list);
-                }
-                const groups = Array.from(nameToCourses.values());
-                return groups.map((group) =>
-                  group.length > 1 ? (
-                    <CourseGroupCard
-                      key={group[0]._id}
-                      courses={group}
-                      bogoCourses={bogoCourses}
-                    />
-                  ) : (
-                    <CourseCard
-                      key={group[0]._id}
-                      course={group[0]}
-                      bogoCourses={bogoCourses}
-                    />
-                  ),
-                );
-              })()}
-            </div>
-          ) : (
-            <div className="py-12 text-center">
-              <BookOpen className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
-              <h3 className="mb-2 text-xl font-semibold">
-                No courses available yet
-              </h3>
-              <p className="text-muted-foreground">
-                We&apos;re working on adding new {title.toLowerCase()} courses.
-                Check back soon!
-              </p>
-            </div>
-          )}
+          <ScrollReveal>
+            {coursesData.courses && coursesData.courses.length > 0 ? (
+              <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+                {(() => {
+                  // Group courses by name; if multiple with same name, render a grouped card with select
+                  const nameToCourses = new Map<string, Array<PublicCourse>>();
+                  for (const course of coursesData.courses) {
+                    const list = nameToCourses.get(course.name) ?? [];
+                    list.push(course);
+                    nameToCourses.set(course.name, list);
+                  }
+                  const groups = Array.from(nameToCourses.values());
+                  return groups.map((group) =>
+                    group.length > 1 ? (
+                      <CourseGroupCard
+                        key={group[0]._id}
+                        courses={group}
+                        bogoCourses={bogoCourses}
+                      />
+                    ) : (
+                      <CourseCard
+                        key={group[0]._id}
+                        course={group[0]}
+                        bogoCourses={bogoCourses}
+                      />
+                    ),
+                  );
+                })()}
+              </div>
+            ) : (
+              <div className="py-12 text-center">
+                <BookOpen className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+                <h3 className="mb-2 text-xl font-semibold">
+                  No courses available yet
+                </h3>
+                <p className="text-muted-foreground">
+                  We&apos;re working on adding new{" "}
+                  {content.title.toLowerCase()} courses. Check back soon!
+                </p>
+              </div>
+            )}
+          </ScrollReveal>
         </div>
       </section>
     </div>

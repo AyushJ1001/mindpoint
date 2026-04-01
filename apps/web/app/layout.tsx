@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import {
-  Manrope,
+  Plus_Jakarta_Sans,
   JetBrains_Mono,
-  Syne,
+  Fraunces,
 } from "next/font/google";
 import "./globals.css";
 import "react-phone-number-input/style.css";
@@ -12,7 +12,7 @@ import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 
-const manrope = Manrope({
+const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-manrope",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
@@ -23,10 +23,10 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const syneDisplay = Syne({
+const fraunces = Fraunces({
   variable: "--font-syne",
   subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
 export const metadata: Metadata = {
@@ -82,7 +82,7 @@ export default function RootLayout({
         <Analytics />
       </head>
       <body
-        className={`${manrope.variable} ${jetbrainsMono.variable} ${syneDisplay.variable} flex min-h-screen flex-col antialiased`}
+        className={`${plusJakarta.variable} ${jetbrainsMono.variable} ${fraunces.variable} flex min-h-screen flex-col antialiased`}
       >
         {/* Skip link for keyboard users */}
         <a href="#main-content" className="skip-link">

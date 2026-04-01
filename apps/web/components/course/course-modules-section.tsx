@@ -1,13 +1,7 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { BookOpen, Check } from "lucide-react";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 export default function CourseModulesSection({
   learningOutcomes,
@@ -19,90 +13,86 @@ export default function CourseModulesSection({
 }) {
   return (
     <div className="mx-auto max-w-4xl">
-      <div className="relative overflow-hidden rounded-2xl">
-        <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
-        <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
-          <CardHeader className="pb-6 text-center">
-            <CardTitle className="text-3xl font-bold md:text-4xl">
-              <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                What Will You Learn?
-              </span>
-            </CardTitle>
-            <CardDescription className="text-lg">
+      <ScrollReveal>
+        <div className="rounded-2xl border border-border bg-card p-8">
+          <div className="pb-6 text-center">
+            <h2 className="font-display text-foreground text-3xl font-semibold tracking-tight sm:text-4xl">
+              What Will You Learn?
+            </h2>
+            <p className="text-muted-foreground mt-3 text-lg">
               Essential skills and knowledge you&apos;ll gain from this course
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            {/* Learning Outcomes List */}
-            <div className="space-y-6">
-              {learningOutcomes.map((outcome, index) => (
-                <div key={index} className="group">
-                  <div className="flex items-start gap-6 pb-6">
-                    {/* Content */}
-                    <div className="flex-1">
-                      <p className="text-lg leading-relaxed text-gray-700 md:text-xl">
-                        <span className="mr-3 text-2xl">{outcome.icon}</span>
-                        {outcome.title}
-                      </p>
-                    </div>
+            </p>
+          </div>
 
-                    {/* Checkmark */}
-                    <div className="mt-1 flex-shrink-0">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-gray-800 bg-white transition-all duration-200 group-hover:bg-gray-800">
-                        <Check className="h-4 w-4 text-gray-800 transition-colors duration-200 group-hover:text-white" />
-                      </div>
+          <div className="space-y-6">
+            {learningOutcomes.map((outcome, index) => (
+              <div key={index} className="group">
+                <div className="flex items-start gap-6 pb-6">
+                  <div className="flex-1">
+                    <p className="text-foreground text-lg leading-relaxed md:text-xl">
+                      <span className="mr-3 text-2xl">{outcome.icon}</span>
+                      {outcome.title}
+                    </p>
+                  </div>
+                  <div className="mt-1 flex-shrink-0">
+                    <div className="border-border flex h-8 w-8 items-center justify-center rounded-full border-2 transition-all duration-200 group-hover:bg-foreground">
+                      <Check className="text-foreground h-4 w-4 transition-colors duration-200 group-hover:text-background" />
                     </div>
                   </div>
-
-                  {/* Separator Line */}
-                  {index < learningOutcomes.length - 1 && (
-                    <div className="h-px bg-gray-300"></div>
-                  )}
                 </div>
-              ))}
-            </div>
-
-            {/* Additional Info Cards */}
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full">
-                  <BookOpen className="text-primary h-6 w-6" />
-                </div>
-                <div className="text-left">
-                  <div className="font-semibold">Progressive Learning</div>
-                  <div className="text-muted-foreground text-sm">
-                    Step-by-step curriculum
-                  </div>
-                </div>
+                {index < learningOutcomes.length - 1 && (
+                  <div className="h-px bg-border" />
+                )}
               </div>
+            ))}
+          </div>
 
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full">
-                  <span className="text-xl">🎯</span>
-                </div>
-                <div className="text-left">
-                  <div className="font-semibold">Practical Focus</div>
-                  <div className="text-muted-foreground text-sm">
-                    Real-world applications
-                  </div>
-                </div>
+          {/* Additional Info Cards */}
+          <div className="mt-8 grid grid-cols-1 gap-6 sm:grid-cols-3">
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-xl">
+                <BookOpen className="text-primary h-5 w-5" />
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="bg-primary/10 flex h-12 w-12 items-center justify-center rounded-full">
-                  <span className="text-xl">💡</span>
+              <div className="text-left">
+                <div className="font-semibold text-foreground">
+                  Progressive Learning
                 </div>
-                <div className="text-left">
-                  <div className="font-semibold">Expert Guidance</div>
-                  <div className="text-muted-foreground text-sm">
-                    Industry professionals
-                  </div>
+                <div className="text-muted-foreground text-sm">
+                  Step-by-step curriculum
                 </div>
               </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-xl">
+                <span className="text-lg">{"\uD83C\uDFAF"}</span>
+              </div>
+              <div className="text-left">
+                <div className="font-semibold text-foreground">
+                  Practical Focus
+                </div>
+                <div className="text-muted-foreground text-sm">
+                  Real-world applications
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <div className="bg-primary/10 flex h-10 w-10 items-center justify-center rounded-xl">
+                <span className="text-lg">{"\uD83D\uDCA1"}</span>
+              </div>
+              <div className="text-left">
+                <div className="font-semibold text-foreground">
+                  Expert Guidance
+                </div>
+                <div className="text-muted-foreground text-sm">
+                  Industry professionals
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ScrollReveal>
     </div>
   );
 }

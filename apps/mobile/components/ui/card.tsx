@@ -8,7 +8,7 @@ export function Card({
 }: ViewProps & { className?: string }) {
   return (
     <View
-      className={`border-border/80 bg-card rounded-2xl border p-4 shadow-sm shadow-slate-200/40 ${className ?? ""}`}
+      className={`border-border/50 bg-card rounded-3xl border p-5 shadow-sm shadow-amber-900/5 ${className ?? ""}`}
       {...props}
     >
       {children}

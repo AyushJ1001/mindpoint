@@ -13,7 +13,7 @@ export const Textarea = forwardRef<TextInput, TextareaProps>(
         multiline
         textAlignVertical="top"
         className={`min-h-[100px] rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground ${className ?? ""}`}
-        placeholderTextColor="#6b7280"
+        placeholderTextColor="#8a8279"
         {...props}
       />
     );

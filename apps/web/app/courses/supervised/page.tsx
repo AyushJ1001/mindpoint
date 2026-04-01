@@ -48,9 +48,7 @@ export default async function SupervisedCoursesPage() {
   return (
     <>
       <CourseTypePage
-        title="TMP Supervised Sessions"
-        description="At The Mind Point, our supervised therapy sessions are designed to support psychology students and professionals in developing their therapy skills with expert guidance. Whether you're just starting out or seeking to enhance your practice, our structured supervision packages help you build confidence and competence in a safe, supportive environment."
-        iconName="Eye"
+        type="supervised"
         coursesData={courses}
         bogoCourses={bogoCourses}
       />

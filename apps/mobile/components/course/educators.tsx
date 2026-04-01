@@ -26,7 +26,7 @@ export function Educators() {
   return (
     <View className="mt-8">
       <View className="mb-2 flex-row items-center justify-center gap-2">
-        <Users size={22} color="#4338ca" />
+        <Users size={22} color="#5b7a5e" />
         <Text className="text-xl font-bold text-primary">
           Educators and Supervisors
         </Text>
@@ -41,7 +41,7 @@ export function Educators() {
             key={educator.name}
             className="flex-row items-center gap-3 border-primary/20"
             style={{
-              shadowColor: "#4338ca",
+              shadowColor: "#5b7a5e",
               shadowOffset: { width: 0, height: 2 },
               shadowOpacity: 0.06,
               shadowRadius: 8,
@@ -49,7 +49,7 @@ export function Educators() {
             }}
           >
             <LinearGradient
-              colors={["#4338ca", "#7c3aed"]}
+              colors={["#5b7a5e", "#7a9a7d"]}
               style={{ height: 48, width: 48, alignItems: "center", justifyContent: "center", borderRadius: 24 }}
             >
               <User size={24} color="#ffffff" />

@@ -3,15 +3,15 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer
-      className="border-border z-10 mt-auto border-t bg-gradient-to-b from-blue-100/55 via-white/90 to-indigo-100/55 dark:from-slate-950 dark:via-blue-950/65 dark:to-slate-950"
+      className="border-border z-10 mt-auto border-t bg-secondary/40"
       role="contentinfo"
       aria-label="Footer"
     >
       <div className="container py-10 sm:py-12">
-        <div className="grid grid-cols-1 gap-10 rounded-[1.6rem] border border-blue-200/70 bg-white/75 p-6 shadow-[0_24px_45px_-30px_rgba(37,99,235,0.9)] backdrop-blur sm:p-8 md:grid-cols-4 dark:border-blue-900/45 dark:bg-slate-950/65">
+        <div className="grid grid-cols-1 gap-10 rounded-[1.6rem] border border-border bg-card/75 p-6 shadow-[0_24px_45px_-30px_rgba(91,122,94,0.35)] backdrop-blur sm:p-8 md:grid-cols-4">
           {/* Brand Section */}
           <div className="md:col-span-2">
-            <h3 className="mb-4 bg-gradient-to-r from-blue-950 via-blue-700 to-indigo-600 bg-clip-text text-3xl font-semibold tracking-tight text-transparent dark:from-blue-100 dark:via-blue-200 dark:to-indigo-200">
+            <h3 className="text-foreground font-display mb-4 text-3xl font-semibold tracking-tight">
               The Mind Point
             </h3>
             <p className="text-muted-foreground mb-6 max-w-lg leading-relaxed">
@@ -22,7 +22,7 @@ export default function Footer() {
             <div className="flex gap-4">
               <Link
                 href="https://instagram.com/themindpoint?igshid=YmMyMTA2M2Y="
-                className="transition-smooth inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-blue-200/80 bg-white/80 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 dark:border-blue-800/80 dark:bg-blue-950/55 dark:hover:border-blue-700 dark:hover:bg-blue-900/55"
+                className="transition-smooth inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent"
                 aria-label="Follow us on Instagram"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -38,7 +38,7 @@ export default function Footer() {
               </Link>
               <Link
                 href="https://www.facebook.com/themindpoint?mibextid=LQQJ4d"
-                className="transition-smooth inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-blue-200/80 bg-white/80 hover:-translate-y-0.5 hover:border-blue-300 hover:bg-blue-50 dark:border-blue-800/80 dark:bg-blue-950/55 dark:hover:border-blue-700 dark:hover:bg-blue-900/55"
+                className="transition-smooth inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent"
                 aria-label="Follow us on Facebook"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -57,7 +57,7 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold tracking-[0.14em] text-blue-700 uppercase dark:text-blue-300">
+            <h4 className="text-primary mb-4 text-sm font-semibold tracking-[0.14em] uppercase">
               Quick Links
             </h4>
             <ul className="space-y-2">
@@ -90,7 +90,7 @@ export default function Footer() {
 
           {/* Legal */}
           <div>
-            <h4 className="mb-4 text-sm font-semibold tracking-[0.14em] text-blue-700 uppercase dark:text-blue-300">
+            <h4 className="text-primary mb-4 text-sm font-semibold tracking-[0.14em] uppercase">
               Legal
             </h4>
             <ul className="space-y-2">
@@ -124,7 +124,7 @@ export default function Footer() {
 
         <div className="border-border mt-8 border-t pt-8 text-center">
           <p className="text-muted-foreground">
-            Copyright © {new Date().getFullYear()} The Mind Point. All rights
+            Copyright &copy; {new Date().getFullYear()} The Mind Point. All rights
             reserved.
           </p>
         </div>

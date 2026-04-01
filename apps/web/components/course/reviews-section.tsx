@@ -38,6 +38,7 @@ import {
 
 import { StarRating } from "@/components/course/ratings";
 import ReviewForm from "@/components/course/review-form";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import { Id } from "@mindpoint/backend/data-model";
@@ -150,16 +151,14 @@ export default function ReviewsSection({
     <section className="py-16">
       <div className="container">
         <div className="mx-auto max-w-4xl">
-          <div className="relative overflow-hidden rounded-2xl">
-            <div className="border-primary/30 bg-primary/10 absolute -inset-2 -z-10 translate-x-3 translate-y-3 rounded-2xl border-2" />
-            <Card className="border-primary from-primary/5 to-background border-2 bg-gradient-to-br">
+          <ScrollReveal>
+          <div className="rounded-2xl">
+            <Card className="border border-border bg-card">
               <CardHeader className="pb-6 text-center">
-                <CardTitle className="text-3xl font-bold md:text-4xl">
-                  <span className="from-primary to-accent bg-gradient-to-r bg-clip-text text-transparent">
-                    {courseType === "certificate" || courseType === "internship"
-                      ? "Student Reviews"
-                      : "Client Reviews"}
-                  </span>
+                <CardTitle className="font-display text-foreground text-3xl font-bold md:text-4xl">
+                  {courseType === "certificate" || courseType === "internship"
+                    ? "Student Reviews"
+                    : "Client Reviews"}
                 </CardTitle>
                 <CardDescription className="text-lg">
                   {courseType === "certificate" || courseType === "internship"
@@ -211,7 +210,7 @@ export default function ReviewsSection({
                         return (
                           <Card
                             key={review._id}
-                            className="border-muted border-2 shadow-lg transition-shadow hover:shadow-xl"
+                            className="border border-border bg-card transition-shadow hover:shadow-lg"
                           >
                             <CardHeader className="pb-3">
                               <div className="flex items-center justify-between gap-3">
@@ -329,6 +328,7 @@ export default function ReviewsSection({
               </CardContent>
             </Card>
           </div>
+          </ScrollReveal>
         </div>
       </div>
 
