@@ -23,13 +23,6 @@ interface InternshipCourse extends PublicCourse {
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { Plus } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import {
@@ -82,58 +75,6 @@ function CourseThumbnail({
     </div>
   );
 }
-
-const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
-  if (!imageUrls || imageUrls.length === 0) {
-    return (
-      <div className="bg-muted relative flex h-56 items-center justify-center rounded-t-2xl sm:h-72">
-        <BookOpen className="text-muted-foreground h-12 w-12" />
-      </div>
-    );
-  }
-
-  if (imageUrls.length === 1) {
-    return (
-      <div className="bg-muted relative flex h-56 items-center justify-center overflow-hidden rounded-t-2xl sm:h-72">
-        <Image
-          src={
-            imageUrls[0] ??
-            "https://blocks.astratic.com/img/general-img-landscape.png"
-          }
-          alt="Course image"
-          className="max-h-full max-w-full object-contain"
-          width={400}
-          height={600}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-muted relative h-56 overflow-hidden rounded-t-2xl sm:h-72">
-      <Carousel className="h-full w-full">
-        <CarouselContent>
-          {imageUrls.map((imageUrl, index) => (
-            <CarouselItem
-              key={index}
-              className="flex h-56 items-center justify-center sm:h-72"
-            >
-              <Image
-                src={imageUrl || ""}
-                alt={`Course image ${index + 1}`}
-                className="max-h-full max-w-full object-contain"
-                width={400}
-                height={600}
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="absolute top-1/2 left-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
-        <CarouselNext className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
-      </Carousel>
-    </div>
-  );
-};
 
 // Prefer explicit fields: `sessions` (number) or fallback to `duration` (string) for label
 const extractVariantLabel = (course: PublicCourse): string | null => {
