@@ -10,6 +10,7 @@ type IllustrationProps = {
   className?: string;
   priority?: boolean;
   sizes?: string;
+  decorative?: boolean;
 };
 
 export function Illustration({
@@ -18,11 +19,12 @@ export function Illustration({
   className,
   priority,
   sizes,
+  decorative,
 }: IllustrationProps) {
   return (
     <Image
       src={src}
-      alt={alt}
+      alt={decorative ? "" : alt}
       priority={priority}
       sizes={sizes}
       className={cn("h-auto w-full select-none", className)}
