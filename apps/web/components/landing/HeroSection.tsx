@@ -9,6 +9,9 @@ import {
   Shield,
   Sparkles,
 } from "lucide-react";
+import { Illustration } from "@/components/Illustration";
+import { WarmSparkleCluster } from "@/components/illustrations/WarmSparkleCluster";
+import { SoftLeaf } from "@/components/illustrations/SoftLeaf";
 
 interface HeroSectionProps {
   canAccessAdmin: boolean;
@@ -55,6 +58,20 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
         }}
         aria-hidden="true"
       />
+
+      {/* Warm illustration accents */}
+      <div
+        className="pointer-events-none absolute -top-8 right-[7%] hidden opacity-80 blur-[0.2px] lg:block"
+        aria-hidden="true"
+      >
+        <WarmSparkleCluster className="text-terracotta/30 h-36 w-36" />
+      </div>
+      <div
+        className="pointer-events-none absolute bottom-10 left-[4%] hidden opacity-70 lg:block"
+        aria-hidden="true"
+      >
+        <SoftLeaf className="text-primary/25 h-44 w-44" />
+      </div>
 
       <div className="relative z-10 container">
         <div className="home-shell mx-auto max-w-6xl overflow-hidden px-6 py-8 sm:px-8 sm:py-10 lg:px-10">
@@ -122,6 +139,20 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
                   </article>
                 );
               })}
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 sm:mt-10 sm:grid-cols-[1fr_auto] sm:items-end">
+            <p className="text-muted-foreground text-sm leading-7">
+              A small, steady place to learn. A softer place to begin.
+            </p>
+            <div className="relative">
+              <Illustration
+                src="/illustrations/cup-of-tea-steam-openclipart.png"
+                alt=""
+                decorative
+                className="h-20 w-auto opacity-90 sm:h-24"
+              />
             </div>
           </div>
         </div>

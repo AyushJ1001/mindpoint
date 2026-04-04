@@ -4,6 +4,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import type { PublicCourse } from "@mindpoint/backend";
+import { WavyDivider } from "@/components/illustrations/WavyDivider";
 
 interface CoursePreviewSectionProps {
   upcomingCourses: PublicCourse[];
@@ -17,6 +18,9 @@ export default function CoursePreviewSection({
       <div className="container">
         <ScrollReveal>
           <div className="home-shell-soft mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-8">
+            <div className="mb-8 flex items-center justify-center">
+              <WavyDivider className="text-primary/35 dark:text-primary/25" />
+            </div>
             <div className="mb-10 flex flex-col gap-4 text-center lg:flex-row lg:items-end lg:justify-between lg:text-left">
               <div className="max-w-2xl">
                 <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
