@@ -3,6 +3,7 @@ import { UpcomingCourseCard } from "@/components/course-card";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { LeafAccent } from "@/components/illustrations";
 import type { PublicCourse } from "@mindpoint/backend";
 
 interface CoursePreviewSectionProps {
@@ -13,11 +14,12 @@ export default function CoursePreviewSection({
   upcomingCourses,
 }: CoursePreviewSectionProps) {
   return (
-    <section className="home-section-md">
+    <section className="home-section-md relative">
       <div className="container">
         <ScrollReveal>
-          <div className="home-shell-soft mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-8">
-            <div className="mb-10 flex flex-col gap-4 text-center lg:flex-row lg:items-end lg:justify-between lg:text-left">
+          <div className="mx-auto max-w-6xl">
+            {/* Section header – no card wrapper */}
+            <div className="relative mb-10 flex flex-col gap-4 text-center lg:flex-row lg:items-end lg:justify-between lg:text-left">
               <div className="max-w-2xl">
                 <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                   What&apos;s coming up
@@ -39,8 +41,12 @@ export default function CoursePreviewSection({
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
+
+              {/* Decorative accent */}
+              <LeafAccent className="pointer-events-none absolute -bottom-4 left-[10%] hidden h-8 w-8 -rotate-[20deg] opacity-40 lg:block" />
             </div>
 
+            {/* Course cards – keep cards here (they are functional items) but render without outer shell */}
             {upcomingCourses && upcomingCourses.length > 0 ? (
               <ScrollReveal>
                 <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-2">
@@ -68,6 +74,9 @@ export default function CoursePreviewSection({
           </div>
         </ScrollReveal>
       </div>
+
+      {/* ── Floating leaf accent ── */}
+      <LeafAccent className="pointer-events-none absolute bottom-0 right-[4%] hidden h-9 w-9 rotate-[35deg] opacity-[0.3] select-none lg:block" />
     </section>
   );
 }

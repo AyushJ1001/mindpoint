@@ -1,13 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Users } from "lucide-react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 
@@ -33,53 +26,51 @@ export default function Educators() {
   return (
     <div className="mx-auto max-w-4xl">
       <ScrollReveal>
-      <div className="rounded-2xl">
-        <Card className="border border-border bg-card">
-          <CardHeader className="pb-6 text-center">
-            <CardTitle className="font-display text-foreground flex items-center justify-center gap-3 text-3xl font-bold md:text-4xl">
-              <Users className="text-primary h-10 w-10" />
-              Educators and Supervisors
-            </CardTitle>
-            <CardDescription className="text-lg">
-              Learn from experienced professionals in the field
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-8">
-            <div className="grid grid-cols-1 gap-8 md:grid-cols-2">
-              {EDUCATORS.map((p, idx) => (
-                <Card
-                  key={idx}
-                  className="border border-border bg-card transition-shadow hover:shadow-lg"
-                >
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4">
-                      <div className="relative h-20 w-20 overflow-hidden rounded-full">
-                        <Image
-                          src={
-                            "/placeholder.svg?height=160&width=160&query=educator%20portrait%20avatar"
-                          }
-                          alt={p.name}
-                          fill
-                          className="object-cover"
-                          sizes="80px"
-                        />
-                      </div>
-                      <div className="min-w-0">
-                        <h3 className="text-lg font-semibold">{p.name}</h3>
-                        <p className="text-muted-foreground">{p.role}</p>
-                      </div>
-                    </div>
-                    <p className="text-muted-foreground mt-3 text-sm">
-                      Practical, culturally relevant training with engaging
-                      methods and real case insights.
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
+        {/* Section header – no Card wrapper */}
+        <div className="mb-8 text-center">
+          <div className="bg-primary/8 text-primary mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full">
+            <Users className="h-7 w-7" />
+          </div>
+          <h2 className="font-display text-foreground text-3xl font-bold md:text-4xl">
+            Educators and Supervisors
+          </h2>
+          <p className="text-muted-foreground mt-2 text-lg">
+            Learn from experienced professionals in the field
+          </p>
+        </div>
+
+        {/* Educator list – simple items with avatars, no nested cards */}
+        <div className="space-y-6">
+          {EDUCATORS.map((p, idx) => (
+            <div
+              key={idx}
+              className="flex items-start gap-4 sm:items-center"
+            >
+              {/* Avatar */}
+              <div className="bg-primary/8 relative h-14 w-14 shrink-0 overflow-hidden rounded-full">
+                <Image
+                  src="/placeholder.svg?height=160&width=160&query=educator%20portrait%20avatar"
+                  alt={p.name}
+                  fill
+                  className="object-cover"
+                  sizes="56px"
+                />
+              </div>
+
+              {/* Info */}
+              <div className="min-w-0">
+                <h3 className="text-foreground text-base font-semibold">
+                  {p.name}
+                </h3>
+                <p className="text-muted-foreground text-sm">{p.role}</p>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  Practical, culturally relevant training with engaging
+                  methods and real case insights.
+                </p>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          ))}
+        </div>
       </ScrollReveal>
     </div>
   );

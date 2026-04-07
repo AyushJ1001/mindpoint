@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import {
   ArrowRight,
@@ -15,114 +16,95 @@ interface HeroSectionProps {
 }
 
 const SUPPORT_NOTES = [
-  {
-    title: "Personal support",
-    description:
-      "Therapy and counselling that feels calm, human, and accessible.",
-    icon: HeartHandshake,
-  },
-  {
-    title: "Career growth",
-    description:
-      "Certificates, internships, and supervision that lead to usable skill.",
-    icon: BookOpen,
-  },
-  {
-    title: "A warmer pace",
-    description:
-      "Learning and support designed for real lives, not ideal schedules.",
-    icon: Sparkles,
-  },
+  { text: "Personal support", icon: HeartHandshake },
+  { text: "Career growth", icon: BookOpen },
+  { text: "A warmer pace", icon: Sparkles },
 ];
 
 export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
   return (
-    <section className="home-section-lg relative overflow-hidden pt-14 pb-14 sm:pt-18 lg:pt-20">
-      {/* Decorative gradient blobs */}
-      <div
-        className="pointer-events-none absolute top-18 left-1/2 h-[520px] w-[520px] -translate-x-1/2 rounded-full opacity-[0.18]"
-        style={{
-          background:
-            "radial-gradient(circle, oklch(0.68 0.08 290 / 0.5), transparent 68%)",
-        }}
-        aria-hidden="true"
-      />
-      <div
-        className="pointer-events-none absolute top-24 left-[14%] h-[260px] w-[260px] rounded-full opacity-[0.15]"
-        style={{
-          background:
-            "radial-gradient(circle, oklch(0.92 0.04 25 / 0.85), transparent 70%)",
-        }}
-        aria-hidden="true"
+    <section className="relative min-h-[75vh] overflow-hidden pt-14 pb-14 sm:min-h-[70vh] sm:pt-18 lg:pt-20">
+      {/* ── Full-bleed background image ── */}
+      <Image
+        src="/illustrations/hero.jpg"
+        alt=""
+        fill
+        className="object-cover"
+        priority
+        sizes="100vw"
       />
 
-      <div className="relative z-10 container">
-        <div className="home-shell mx-auto max-w-6xl overflow-hidden px-6 py-8 sm:px-8 sm:py-10 lg:px-10">
-          <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
-            <div className="max-w-3xl text-center lg:text-left">
-              <span className="text-primary/80 text-xs font-semibold tracking-[0.34em] uppercase">
-                Mental health learning, made more human
-              </span>
-              <h1 className="font-display text-foreground mt-5 text-4xl leading-[1.04] font-semibold tracking-tight sm:text-5xl md:text-6xl lg:text-[4.4rem]">
-                Your mind deserves the same care you give to others.
-              </h1>
+      {/* Gradient overlay – strong on the text side, fades to reveal image */}
+      <div
+        className="absolute inset-0 bg-gradient-to-r from-background/[0.92] via-background/75 to-background/40 sm:from-background/[0.88] sm:via-background/65 sm:to-background/30"
+        aria-hidden="true"
+      />
+      {/* Bottom fade into next section */}
+      <div
+        className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent"
+        aria-hidden="true"
+      />
 
-              <p className="text-muted-foreground mt-6 max-w-2xl text-lg leading-8 sm:text-xl">
-                Join a warm, serious learning space for people who want support,
-                direction, and skills they can actually carry into life and
-                work.
-              </p>
+      <div className="relative z-10 container flex min-h-[60vh] items-center sm:min-h-[55vh]">
+        <div className="mx-auto max-w-6xl">
+          <div className="max-w-2xl text-center lg:text-left">
+            <span className="text-primary/90 text-xs font-semibold tracking-[0.34em] uppercase">
+              Mental health learning, made more human
+            </span>
+            <h1 className="font-display text-foreground mt-5 text-4xl leading-[1.04] font-semibold tracking-tight sm:text-5xl md:text-6xl lg:text-[4.4rem]">
+              Your mind deserves the same care you give to others.
+            </h1>
 
-              <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-                <Button size="lg" asChild className="min-w-[12rem]">
-                  <Link href="/courses">
-                    Begin your journey
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-                <Button variant="outline" size="lg" asChild>
-                  <Link href="#paths">Find the right support</Link>
-                </Button>
-              </div>
+            <p className="text-muted-foreground mt-6 max-w-xl text-lg leading-8 sm:text-xl">
+              Join a warm, serious learning space for people who want support,
+              direction, and skills they can actually carry into life and work.
+            </p>
 
-              <p className="text-muted-foreground mt-4 text-sm leading-6 sm:text-base">
-                Start with therapy, training, or a first small step. You do not
-                need to have the whole path figured out yet.
-              </p>
-
-              {canAccessAdmin && (
-                <div className="mt-4">
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link href="/admin">
-                      <Shield className="mr-2 h-4 w-4" />
-                      Admin
-                    </Link>
-                  </Button>
-                </div>
-              )}
+            <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
+              <Button size="lg" asChild className="min-w-[12rem]">
+                <Link href="/courses">
+                  Begin your journey
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link href="#paths">Find the right support</Link>
+              </Button>
             </div>
 
-            <div className="grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <p className="text-muted-foreground mt-4 text-sm leading-6 sm:text-base">
+              Start with therapy, training, or a first small step. You do not
+              need to have the whole path figured out yet.
+            </p>
+
+            {/* Support notes – inline text with icons */}
+            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
               {SUPPORT_NOTES.map((note) => {
                 const Icon = note.icon;
                 return (
-                  <article
-                    key={note.title}
-                    className="home-subpanel rounded-[1.5rem] px-5 py-5 text-left"
+                  <span
+                    key={note.text}
+                    className="text-muted-foreground inline-flex items-center gap-2 text-sm"
                   >
-                    <div className="bg-primary/10 text-primary mb-4 inline-flex rounded-full p-3">
-                      <Icon className="h-5 w-5" />
-                    </div>
-                    <h2 className="text-foreground text-lg font-semibold">
-                      {note.title}
-                    </h2>
-                    <p className="text-muted-foreground mt-2 text-sm leading-6">
-                      {note.description}
-                    </p>
-                  </article>
+                    <span className="bg-primary/8 text-primary/70 inline-flex rounded-full p-1.5">
+                      <Icon className="h-3.5 w-3.5" />
+                    </span>
+                    {note.text}
+                  </span>
                 );
               })}
             </div>
+
+            {canAccessAdmin && (
+              <div className="mt-4">
+                <Button variant="ghost" size="sm" asChild>
+                  <Link href="/admin">
+                    <Shield className="mr-2 h-4 w-4" />
+                    Admin
+                  </Link>
+                </Button>
+              </div>
+            )}
           </div>
         </div>
       </div>

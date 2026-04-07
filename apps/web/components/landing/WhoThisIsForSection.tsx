@@ -1,4 +1,5 @@
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { LeafAccent } from "@/components/illustrations";
 
 const PERSONAS = [
   {
@@ -25,11 +26,12 @@ const PERSONAS = [
 
 export default function WhoThisIsForSection() {
   return (
-    <section className="home-section-sm pt-4 sm:pt-6">
+    <section className="home-section-sm relative pt-4 sm:pt-6">
       <div className="container">
         <ScrollReveal>
-          <div className="home-shell-soft mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-8">
-            <div className="grid gap-6 lg:grid-cols-[0.72fr_1.28fr] lg:gap-8">
+          <div className="mx-auto max-w-6xl">
+            <div className="grid items-start gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
+              {/* Left column – heading */}
               <div>
                 <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                   Who this is for
@@ -45,26 +47,30 @@ export default function WhoThisIsForSection() {
                 </p>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-2">
+              {/* Right column – personas as flowing blockquotes */}
+              <div className="space-y-6">
                 {PERSONAS.map((persona, index) => (
-                  <article
+                  <blockquote
                     key={persona.label}
-                    className="home-subpanel rounded-[1.35rem] px-5 py-5"
-                    style={{ transitionDelay: `${index * 90}ms` }}
+                    className="border-primary/15 relative border-l-2 py-1 pl-5"
+                    style={{ animationDelay: `${index * 90}ms` }}
                   >
-                    <blockquote className="text-foreground/85 text-base leading-7 italic">
+                    <p className="text-foreground/85 text-base leading-7 italic">
                       &ldquo;{persona.quote}&rdquo;
-                    </blockquote>
-                    <p className="text-muted-foreground mt-3 text-sm font-medium tracking-[0.14em] uppercase">
-                      {persona.label}
                     </p>
-                  </article>
+                    <footer className="text-muted-foreground mt-2 text-sm font-medium tracking-[0.14em] uppercase">
+                      {persona.label}
+                    </footer>
+                  </blockquote>
                 ))}
               </div>
             </div>
           </div>
         </ScrollReveal>
       </div>
+
+      {/* ── Floating leaf accent ── */}
+      <LeafAccent className="pointer-events-none absolute -bottom-4 left-[6%] hidden h-10 w-10 -rotate-[25deg] opacity-[0.35] select-none lg:block" />
     </section>
   );
 }

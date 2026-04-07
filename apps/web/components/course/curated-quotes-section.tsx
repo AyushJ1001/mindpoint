@@ -1,5 +1,6 @@
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { curatedQuotes } from "@/lib/course-content-data";
+import { LeafAccent } from "@/components/illustrations";
 
 interface CuratedQuotesSectionProps {
   courseType?: string;
@@ -17,8 +18,9 @@ export default function CuratedQuotesSection({
     <section className="course-section-sm pb-4 sm:pb-5">
       <div className="container">
         <ScrollReveal>
-          <div className="course-shell-soft mx-auto max-w-5xl px-5 py-6 sm:px-7 sm:py-7">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+          <div className="mx-auto max-w-5xl">
+            {/* Section header – no shell wrapper */}
+            <div className="relative mb-8 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
               <div className="max-w-xl">
                 <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                   A few voices before you decide
@@ -31,13 +33,17 @@ export default function CuratedQuotesSection({
               <p className="text-muted-foreground max-w-md text-sm leading-6 sm:text-base">
                 A little reassurance before you get to the practical details.
               </p>
+
+              {/* Decorative accent */}
+              <LeafAccent className="pointer-events-none absolute -top-3 right-0 hidden h-10 w-10 rotate-[30deg] opacity-40 lg:block" />
             </div>
 
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            {/* Quotes as simple blockquotes, not cards */}
+            <div className="grid gap-6 lg:grid-cols-3">
               {quotes.slice(0, 3).map((q, i) => (
                 <blockquote
                   key={i}
-                  className="border-border/70 dark:bg-card/72 rounded-[1.3rem] border bg-white/78 px-4 py-4 dark:border-white/8"
+                  className="border-primary/12 border-l-2 py-1 pl-5"
                 >
                   <p className="text-foreground text-sm leading-6 italic sm:text-base">
                     &ldquo;{q.quote}&rdquo;

@@ -18,15 +18,25 @@ export default function WhatYouGet({ duration, isPreRecorded }: WhatYouGetProps)
     <section className="section-padding">
       <div className="container mx-auto max-w-4xl">
         <ScrollReveal>
-          <h2 className="font-display text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">What you get</h2>
+          <h2 className="font-display text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">
+            What you get
+          </h2>
         </ScrollReveal>
-        <div className="mt-8 grid grid-cols-2 gap-4 md:grid-cols-4">
+
+        {/* Feature items as a clean horizontal row, no card borders */}
+        <div className="mt-8 grid grid-cols-2 gap-6 md:grid-cols-4">
           {items.map((item) => (
             <ScrollReveal key={item.label}>
-              <div className="rounded-2xl border border-border bg-card p-5 text-center">
-                <item.icon className="mx-auto h-6 w-6 text-primary" />
-                <p className="mt-3 text-sm font-medium text-foreground">{item.label}</p>
-                <p className="mt-1 text-xs text-muted-foreground">{item.value}</p>
+              <div className="text-center">
+                <div className="bg-primary/8 text-primary mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full">
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <p className="text-foreground text-sm font-medium">
+                  {item.label}
+                </p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {item.value}
+                </p>
               </div>
             </ScrollReveal>
           ))}

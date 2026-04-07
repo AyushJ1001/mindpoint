@@ -29,7 +29,7 @@ export default function CourseStorySection({
     <section className="course-section-md relative -mt-6 sm:-mt-8">
       <div className="container">
         <ScrollReveal>
-          <div className="course-shell course-shell-strong mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-9 lg:px-10">
+          <div className="mx-auto max-w-6xl px-2 sm:px-4">
             <div className="grid gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-10">
               <div className="space-y-4 lg:pt-2">
                 <span className="text-primary/75 text-xs font-semibold tracking-[0.32em] uppercase">
@@ -48,7 +48,7 @@ export default function CourseStorySection({
 
               <div className="grid gap-4 lg:grid-cols-2">
                 {painPoints.length > 0 && (
-                  <div className="course-subpanel rounded-[1.6rem] px-5 py-6 sm:px-6">
+                  <div className="rounded-2xl bg-card/40 px-5 py-6 backdrop-blur-sm sm:px-6">
                     <div className="mb-4">
                       <p className="text-primary text-sm font-semibold tracking-[0.24em] uppercase">
                         You&apos;re here because
@@ -76,7 +76,7 @@ export default function CourseStorySection({
                 )}
 
                 {keyOutcomes.length > 0 && (
-                  <div className="course-story-outcomes-panel border-primary/14 rounded-[1.6rem] border px-5 py-6 sm:px-6">
+                  <div className="rounded-2xl bg-card/40 px-5 py-6 backdrop-blur-sm sm:px-6">
                     <div className="mb-4">
                       <p className="text-primary text-sm font-semibold tracking-[0.24em] uppercase">
                         What changes after

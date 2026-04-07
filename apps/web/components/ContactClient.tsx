@@ -15,12 +15,32 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Phone, Mail, Clock } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { submitContactForm } from "@mindpoint/services/contact";
 
 import { contactFormSchema } from "@/lib/utils";
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
+
+const CONTACT_INFO = [
+  {
+    icon: Phone,
+    title: "Phone",
+    lines: ["+91 97707 80086"],
+  },
+  {
+    icon: Mail,
+    title: "Email",
+    lines: ["info@themindpoint.org"],
+  },
+  {
+    icon: Clock,
+    title: "Business Hours",
+    lines: [
+      "Monday - Friday: 9:00 AM - 6:00 PM",
+      "Saturday: 10:00 AM - 4:00 PM",
+    ],
+  },
+];
 
 export default function ContactClient() {
   const [status, setStatus] = useState("");
@@ -67,7 +87,7 @@ export default function ContactClient() {
       <section className="section-padding">
         <div className="container max-w-6xl">
           <div className="grid gap-12 lg:grid-cols-2">
-            {/* Contact Information */}
+            {/* Contact Information – simple list items, no cards */}
             <div className="space-y-8">
               <div>
                 <h2 className="mb-6 text-3xl font-bold">Get In Touch</h2>
@@ -77,140 +97,112 @@ export default function ContactClient() {
                 </p>
               </div>
 
-              <div className="grid gap-6">
-                <Card className="card-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-primary/10 inline-flex h-12 w-12 items-center justify-center rounded-full">
-                        <Phone className="text-primary h-6 w-6" />
+              <div className="space-y-6">
+                {CONTACT_INFO.map((item) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.title} className="flex items-start gap-4">
+                      <div className="bg-primary/8 text-primary flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
+                        <Icon className="h-5 w-5" />
                       </div>
                       <div>
-                        <h3 className="mb-2 font-semibold">Phone</h3>
-                        <p className="text-muted-foreground">+91 97707 80086</p>
+                        <h3 className="text-foreground mb-1 font-semibold">
+                          {item.title}
+                        </h3>
+                        {item.lines.map((line) => (
+                          <p
+                            key={line}
+                            className="text-muted-foreground text-sm"
+                          >
+                            {line}
+                          </p>
+                        ))}
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="card-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-primary/10 inline-flex h-12 w-12 items-center justify-center rounded-full">
-                        <Mail className="text-primary h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="mb-2 font-semibold">Email</h3>
-                        <p className="text-muted-foreground">
-                          info@themindpoint.org
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="card-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex items-start gap-4">
-                      <div className="bg-primary/10 inline-flex h-12 w-12 items-center justify-center rounded-full">
-                        <Clock className="text-primary h-6 w-6" />
-                      </div>
-                      <div>
-                        <h3 className="mb-2 font-semibold">Business Hours</h3>
-                        <p className="text-muted-foreground">
-                          Monday - Friday: 9:00 AM - 6:00 PM
-                        </p>
-                        <p className="text-muted-foreground">
-                          Saturday: 10:00 AM - 4:00 PM
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                  );
+                })}
               </div>
+
             </div>
 
-            {/* Contact Form */}
-            <div>
-              <Card className="card-shadow">
-                <CardHeader>
-                  <CardTitle>Send us a Message</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <Form {...form}>
-                    <form
-                      onSubmit={form.handleSubmit(onSubmit)}
-                      className="space-y-6"
+            {/* Contact Form – subtle container, no heavy card */}
+            <div className="rounded-2xl bg-card/50 p-6 shadow-sm backdrop-blur-sm sm:p-8">
+              <h3 className="text-foreground mb-6 text-xl font-semibold">
+                Send us a Message
+              </h3>
+              <Form {...form}>
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                >
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Name</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Your name" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="email"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Email</FormLabel>
+                        <FormControl>
+                          <Input
+                            placeholder="your.email@example.com"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Message</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Tell us how we can help you..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={status === "Sending..."}
+                  >
+                    {status === "Sending..."
+                      ? "Sending..."
+                      : "Send Message"}
+                  </Button>
+
+                  {status && (
+                    <p
+                      className={`text-center text-sm ${status.includes("successfully") ? "text-green-600" : "text-red-600"}`}
                     >
-                      <FormField
-                        control={form.control}
-                        name="name"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Name</FormLabel>
-                            <FormControl>
-                              <Input placeholder="Your name" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input
-                                placeholder="your.email@example.com"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <FormField
-                        control={form.control}
-                        name="message"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Message</FormLabel>
-                            <FormControl>
-                              <Textarea
-                                placeholder="Tell us how we can help you..."
-                                className="min-h-[120px]"
-                                {...field}
-                              />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-
-                      <Button
-                        type="submit"
-                        className="w-full"
-                        disabled={status === "Sending..."}
-                      >
-                        {status === "Sending..."
-                          ? "Sending..."
-                          : "Send Message"}
-                      </Button>
-
-                      {status && (
-                        <p
-                          className={`text-center text-sm ${status.includes("successfully") ? "text-green-600" : "text-red-600"}`}
-                        >
-                          {status}
-                        </p>
-                      )}
-                    </form>
-                  </Form>
-                </CardContent>
-              </Card>
+                      {status}
+                    </p>
+                  )}
+                </form>
+              </Form>
             </div>
           </div>
         </div>

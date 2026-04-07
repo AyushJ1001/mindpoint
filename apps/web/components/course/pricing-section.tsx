@@ -99,7 +99,7 @@ export default function PricingSection({
       <section id="pricing" className="course-section-lg pt-5 sm:pt-6">
         <div className="container">
           <ScrollReveal>
-            <div className="course-shell mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-8">
+            <div className="mx-auto max-w-6xl px-2 sm:px-4">
               <div className="mb-8 max-w-2xl">
                 <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                   Reserve your spot
@@ -126,7 +126,7 @@ export default function PricingSection({
       <section id="pricing" className="course-section-lg pt-5 sm:pt-6">
         <div className="container">
           <ScrollReveal>
-            <div className="course-shell mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-8">
+            <div className="mx-auto max-w-6xl px-2 sm:px-4">
               <div className="mb-8 max-w-2xl">
                 <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                   Reserve your spot
@@ -156,9 +156,9 @@ export default function PricingSection({
     <section id="pricing" className="course-section-lg pt-5 sm:pt-6">
       <div className="container">
         <ScrollReveal>
-          <div className="course-shell course-shell-strong mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-8 lg:px-10">
-            <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr] lg:gap-8">
-              <div className="border-border/75 dark:bg-card/72 rounded-[1.8rem] border bg-white/82 p-6 text-center shadow-sm sm:p-8 lg:text-left dark:border-white/8">
+          <div className="mx-auto max-w-6xl px-2 sm:px-4">
+            <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10">
+              <div className="rounded-2xl bg-card/50 p-6 text-center shadow-sm backdrop-blur-sm sm:p-8 lg:text-left">
                 <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                   Reserve your spot
                 </span>
@@ -324,7 +324,7 @@ export default function PricingSection({
                   {reassuranceItems.map((item) => (
                     <div
                       key={item.title}
-                      className="course-subpanel rounded-[1.35rem] px-5 py-5"
+                      className="border-primary/8 border-l-2 py-3 pl-5"
                     >
                       <p className="text-primary/75 text-xs font-semibold tracking-[0.22em] uppercase">
                         {item.title}

@@ -4,6 +4,8 @@ import { useRef, useEffect, useState } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { VIDEO_TESTIMONIALS } from "@/lib/videoTestimonials";
 import { Play } from "lucide-react";
+import Image from "next/image";
+import { LeafAccent } from "@/components/illustrations";
 
 const TEXT_TESTIMONIALS = [
   {
@@ -63,7 +65,7 @@ function FeaturedVideo() {
   return (
     <div
       ref={containerRef}
-      className="border-border bg-muted relative aspect-[9/16] overflow-hidden rounded-2xl border"
+      className="bg-muted relative aspect-[9/16] overflow-hidden rounded-2xl"
     >
       {isLoaded && (
         <video
@@ -93,11 +95,12 @@ function FeaturedVideo() {
 
 export default function TestimonialsSection() {
   return (
-    <section className="home-section-md">
+    <section className="home-section-md relative">
       <div className="container">
         <ScrollReveal>
-          <div className="home-shell mx-auto max-w-6xl px-6 py-7 sm:px-8 sm:py-8">
-            <div className="mb-10 text-center">
+          <div className="mx-auto max-w-6xl">
+            {/* Section header */}
+            <div className="relative mb-12 text-center">
               <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                 Social proof, without the hard sell
               </span>
@@ -107,23 +110,33 @@ export default function TestimonialsSection() {
               <p className="text-muted-foreground mt-3 text-lg">
                 Real experiences from people who&apos;ve walked this path
               </p>
+              {/* Decorative leaf accent */}
+              <LeafAccent className="pointer-events-none absolute -top-2 right-[15%] hidden h-10 w-10 rotate-[25deg] opacity-60 lg:block" />
             </div>
 
-            <div className="mx-auto grid max-w-5xl gap-6 md:grid-cols-3">
-              <div className="flex flex-col gap-6 md:col-span-2">
+            {/* Testimonials as simple blockquotes + video – NO card wrappers */}
+            <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
+              <div className="flex flex-col gap-8 md:col-span-2">
                 {TEXT_TESTIMONIALS.map((t, index) => (
                   <ScrollReveal key={t.initials}>
-                    <article
-                      className="home-subpanel rounded-[1.4rem] px-6 py-6"
+                    <blockquote
+                      className="border-primary/12 relative border-l-2 py-1 pl-6"
                       style={{ transitionDelay: `${index * 100}ms` }}
                     >
-                      <blockquote className="text-foreground leading-8">
-                        &ldquo;{t.quote}&rdquo;
-                      </blockquote>
-                      <footer className="text-muted-foreground mt-4 text-sm tracking-[0.12em] uppercase">
+                      {/* Decorative quotation mark */}
+                      <span
+                        className="text-primary/8 font-display pointer-events-none absolute -top-3 -left-1 text-5xl font-bold select-none"
+                        aria-hidden="true"
+                      >
+                        &ldquo;
+                      </span>
+                      <p className="text-foreground text-base leading-8">
+                        {t.quote}
+                      </p>
+                      <footer className="text-muted-foreground mt-3 text-sm tracking-[0.12em] uppercase">
                         {t.initials}, {t.context}
                       </footer>
-                    </article>
+                    </blockquote>
                   </ScrollReveal>
                 ))}
               </div>
@@ -134,6 +147,11 @@ export default function TestimonialsSection() {
             </div>
           </div>
         </ScrollReveal>
+      </div>
+
+      {/* ── Floating butterfly accent ── */}
+      <div className="pointer-events-none absolute -top-6 left-[5%] hidden h-14 w-20 -rotate-[12deg] select-none opacity-[0.12] mix-blend-multiply lg:block dark:mix-blend-screen dark:opacity-[0.08]">
+        <Image src="/illustrations/growth.jpg" alt="" fill className="object-contain" sizes="80px" />
       </div>
     </section>
   );
