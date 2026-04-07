@@ -41,3 +41,33 @@
 
 - Never commit `.env*`; use environment variables referenced in `setup-env.sh` and Convex dashboard secrets.
 - Rotate API keys after using local scripts and confirm rate-limit thresholds in `convex/rateLimit.ts` before scaling traffic.
+
+## Cursor Cloud specific instructions
+
+### Architecture overview
+
+This is an npm-workspaces monorepo (`apps/web`, `apps/mobile`, `packages/*`). The primary web app is `@mindpoint/web` (Next.js 15 + App Router). The backend is Convex (cloud BaaS); there is no local database or Docker required.
+
+### Package manager
+
+Despite AGENTS.md mentioning `bun`, the repo declares `"packageManager": "npm@11.11.0"` and uses `package-lock.json`. Use `npm install` (not bun/pnpm/yarn) to install dependencies.
+
+### Running the web dev server
+
+- `npm run dev:web` starts only the Next.js web app on port 3000 (recommended for cloud agents).
+- `npm run dev` starts web + mobile + Convex in parallel; skip this in cloud unless you need Convex dev sync.
+- The `scripts/run-web-with-env.js` helper loads `.env` and `.env.local` from the repo root before forwarding to the `@mindpoint/web` workspace.
+
+### Environment variables
+
+All required secrets (Clerk, Convex, Razorpay, Resend, etc.) are injected as environment variables. The `.env.local` file only needs `CLERK_JWT_ISSUER_DOMAIN` set to the Clerk frontend API URL. The app gracefully handles missing Clerk keys via `isClerkServerConfigured()` and `CLERK_SKIP_KEY_VALIDATION`.
+
+### Lint, type-check, and build
+
+- `npm run lint` — ESLint via Turbo (scoped to `@mindpoint/web`)
+- `npm run build` — Next.js production build (TypeScript and ESLint errors are ignored during builds via `next.config.ts`)
+- Type-checking: `npm run type-check` runs tsc across web, mobile, and backend
+
+### Convex backend
+
+Convex functions live in `/convex/` and are deployed to the cloud. `npx convex dev` syncs local changes to a dev deployment but requires a Convex account login (interactive). For cloud agent work, the Convex backend is already deployed; agents can build/lint/run the Next.js frontend without running `convex dev`.
