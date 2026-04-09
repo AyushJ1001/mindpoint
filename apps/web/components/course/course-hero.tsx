@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { defaultEmotionalHooks } from "@/lib/course-content-data";
+import { formatCourseTimeRange } from "@/lib/course-schedule";
 import type { PublicCourse } from "@mindpoint/backend";
 
 // Keep utility functions for use by other components
@@ -77,6 +78,22 @@ export default function CourseHero({ course }: CourseHeroProps) {
     badges.push({
       icon: Calendar,
       label: `Starts ${formatDateCommon(course.startDate)}`,
+    });
+  }
+
+  const daysLabel = course.daysOfWeek?.length
+    ? course.daysOfWeek.join(", ")
+    : null;
+  const timeLabel = formatCourseTimeRange(course.startTime, course.endTime);
+  const scheduleLabel =
+    !isPreRecorded && !isWorksheet && (daysLabel || timeLabel)
+      ? [daysLabel, timeLabel].filter(Boolean).join(" • ")
+      : null;
+
+  if (scheduleLabel) {
+    badges.push({
+      icon: Clock,
+      label: scheduleLabel,
     });
   }
 

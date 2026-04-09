@@ -78,6 +78,11 @@ export default function AdminEditCoursePage() {
         description="Update metadata, offers, BOGO, lifecycle, and assets."
         actions={
           <>
+            <Button variant="outline" asChild>
+              <Link href={`/courses/${courseId}`} target="_blank">
+                Open Course Page
+              </Link>
+            </Button>
             <Button
               variant="outline"
               onClick={() => void runTransition("draft")}

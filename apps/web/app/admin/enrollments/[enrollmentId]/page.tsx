@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { Id } from "@mindpoint/backend/data-model";
@@ -101,6 +102,18 @@ export default function AdminEnrollmentDetailPage() {
       <AdminPageHeader
         title={`Enrollment ${detail.enrollmentNumber}`}
         description="View complete timeline and execute transfer/cancel operations."
+        actions={
+          <>
+            <Button variant="outline" asChild>
+              <Link href={`/admin/courses/${detail.courseId}`}>Admin Course</Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/courses/${detail.courseId}`} target="_blank">
+                Live Course Page
+              </Link>
+            </Button>
+          </>
+        }
       />
 
       <Card>
@@ -160,6 +173,12 @@ export default function AdminEnrollmentDetailPage() {
           <p>
             <strong>Registration Source:</strong>{" "}
             {detail.registrationSource || "checkout"}
+          </p>
+          <p>
+            <strong>Last Confirmation Email:</strong>{" "}
+            {detail.lastConfirmationSentAt
+              ? formatTimestamp(detail.lastConfirmationSentAt)
+              : "Not resent yet"}
           </p>
         </CardContent>
       </Card>

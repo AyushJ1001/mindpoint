@@ -37,6 +37,16 @@ type CourseTypeFilter =
 
 type OfferFilter = "all" | "discount" | "bogo" | "both" | "none";
 
+type CourseTypeIssue = {
+  courseId: Id<"courses">;
+  name: string;
+  code: string | null;
+  lifecycleStatus: "draft" | "published" | "archived" | null;
+  currentType: Exclude<CourseTypeFilter, "all"> | null;
+  suggestedType: Exclude<CourseTypeFilter, "all">;
+  reason: string;
+};
+
 const courseTypeOptions: CourseTypeFilter[] = [
   "all",
   "certificate",
@@ -65,6 +75,9 @@ export default function AdminCoursesPage() {
     nextStatus: "draft" | "published" | "archived";
   } | null>(null);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [fixingCourseId, setFixingCourseId] = useState<Id<"courses"> | null>(
+    null,
+  );
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -72,9 +85,13 @@ export default function AdminCoursesPage() {
     type: courseType === "all" ? undefined : courseType,
     limit: 500,
   });
+  const courseTypeIssues = useQuery(api.adminCourses.listCourseTypeIssues, {
+    limit: 50,
+  }) as CourseTypeIssue[] | undefined;
   const transitionCourse = useMutation(
     api.adminCourses.transitionCourseLifecycle,
   );
+  const correctCourseType = useMutation(api.adminCourses.correctCourseType);
 
   const rows = useMemo(() => courses ?? [], [courses]);
 
@@ -139,6 +156,26 @@ export default function AdminCoursesPage() {
     }
   };
 
+  const applySuggestedTypeFix = async (issue: CourseTypeIssue) => {
+    try {
+      setFixingCourseId(issue.courseId);
+      await correctCourseType({
+        courseId: issue.courseId,
+        type: issue.suggestedType,
+        reason: issue.reason,
+      });
+      toast.success(
+        `"${issue.name}" updated from ${issue.currentType || "missing"} to ${issue.suggestedType}`,
+      );
+    } catch (error) {
+      toast.error(
+        getUserFacingErrorMessage(error, "Failed to update course type"),
+      );
+    } finally {
+      setFixingCourseId(null);
+    }
+  };
+
   return (
     <div>
       <AdminPageHeader
@@ -177,7 +214,78 @@ export default function AdminCoursesPage() {
         >
           Offers
         </Button>
+        {courseTypeIssues && courseTypeIssues.length > 0 ? (
+          <Badge variant="outline" className="self-center">
+            {courseTypeIssues.length} type issue
+            {courseTypeIssues.length === 1 ? "" : "s"}
+          </Badge>
+        ) : null}
       </div>
+
+      {view === "catalog" &&
+      courseTypeIssues &&
+      courseTypeIssues.length > 0 ? (
+        <div className="mb-4 overflow-hidden rounded-lg border border-amber-200 bg-white">
+          <div className="border-b border-amber-200 bg-amber-50 px-4 py-3">
+            <h2 className="text-sm font-semibold text-amber-950">
+              Course Type Integrity
+            </h2>
+            <p className="mt-0.5 text-xs text-amber-800">
+              Records whose stored type looks inconsistent with their code
+              prefix. Fixes patch the DB record directly.
+            </p>
+          </div>
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
+              <tr>
+                <th className="px-3 py-2">Course</th>
+                <th className="px-3 py-2">Current</th>
+                <th className="px-3 py-2">Suggested</th>
+                <th className="px-3 py-2">Reason</th>
+                <th className="px-3 py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {courseTypeIssues.map((issue) => (
+                <tr key={issue.courseId} className="border-t">
+                  <td className="px-3 py-2">
+                    <p className="font-medium text-slate-900">{issue.name}</p>
+                    <p className="text-xs text-slate-600">
+                      {issue.code || "No code"} •{" "}
+                      {issue.lifecycleStatus || "published"}
+                    </p>
+                  </td>
+                  <td className="px-3 py-2">{issue.currentType || "-"}</td>
+                  <td className="px-3 py-2 font-medium text-amber-950">
+                    {issue.suggestedType}
+                  </td>
+                  <td className="px-3 py-2 text-xs text-slate-700">
+                    {issue.reason}
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/admin/courses/${issue.courseId}`}>
+                          Open
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={fixingCourseId === issue.courseId}
+                        onClick={() => void applySuggestedTypeFix(issue)}
+                      >
+                        {fixingCourseId === issue.courseId
+                          ? "Applying..."
+                          : "Apply Fix"}
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
 
       <div className="mb-4 grid gap-3 md:grid-cols-4">
         <Input
@@ -289,6 +397,11 @@ export default function AdminCoursesPage() {
                         <Button variant="outline" size="sm" asChild>
                           <Link href={`/admin/courses/${course._id}`}>
                             Open
+                          </Link>
+                        </Button>
+                        <Button variant="outline" size="sm" asChild>
+                          <Link href={`/courses/${course._id}`} target="_blank">
+                            View Page
                           </Link>
                         </Button>
                         {(["draft", "published", "archived"] as const).map(
@@ -413,11 +526,18 @@ export default function AdminCoursesPage() {
                         </div>
                       </td>
                       <td className="px-3 py-2">
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/admin/courses/${course._id}`}>
-                            Edit offer
-                          </Link>
-                        </Button>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/admin/courses/${course._id}`}>
+                              Edit offer
+                            </Link>
+                          </Button>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href={`/courses/${course._id}`} target="_blank">
+                              View Page
+                            </Link>
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
