@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { useCart } from "react-use-cart";
 import { useRouter } from "next/navigation";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Sparkles } from "lucide-react";
 import type { PublicCourse } from "@mindpoint/backend";
 import { Id } from "@mindpoint/backend/data-model";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
@@ -22,15 +22,7 @@ interface InternshipCourse extends PublicCourse {
 }
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
 import { Plus } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import {
@@ -43,57 +35,46 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
-  if (!imageUrls || imageUrls.length === 0) {
-    return (
-      <div className="bg-muted relative flex h-56 items-center justify-center rounded-t-2xl sm:h-72">
-        <BookOpen className="text-muted-foreground h-12 w-12" />
-      </div>
-    );
-  }
+const COURSE_TYPE_LABELS: Partial<
+  Record<NonNullable<PublicCourse["type"]>, string>
+> = {
+  therapy: "Therapy",
+  supervised: "Supervised",
+  internship: "Internships",
+  certificate: "Certificates",
+  diploma: "Diplomas",
+  masterclass: "Masterclasses",
+  worksheet: "Worksheets",
+  "pre-recorded": "Self-paced",
+  "resume-studio": "Resume Studio",
+};
 
-  if (imageUrls.length === 1) {
-    return (
-      <div className="bg-muted relative flex h-56 items-center justify-center overflow-hidden rounded-t-2xl sm:h-72">
-        <Image
-          src={
-            imageUrls[0] ??
-            "https://blocks.astratic.com/img/general-img-landscape.png"
-          }
-          alt="Course image"
-          className="max-h-full max-w-full object-contain"
-          width={400}
-          height={600}
-        />
-      </div>
-    );
-  }
-
+function CourseThumbnail({
+  imageUrls,
+  alt,
+}: {
+  imageUrls?: string[] | null;
+  alt: string;
+}) {
+  const src = imageUrls?.[0];
   return (
-    <div className="bg-muted relative h-56 overflow-hidden rounded-t-2xl sm:h-72">
-      <Carousel className="h-full w-full">
-        <CarouselContent>
-          {imageUrls.map((imageUrl, index) => (
-            <CarouselItem
-              key={index}
-              className="flex h-56 items-center justify-center sm:h-72"
-            >
-              <Image
-                src={imageUrl || ""}
-                alt={`Course image ${index + 1}`}
-                className="max-h-full max-w-full object-contain"
-                width={400}
-                height={600}
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="absolute top-1/2 left-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
-        <CarouselNext className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
-      </Carousel>
+    <div className="bg-muted border-border/60 relative h-20 w-20 overflow-hidden rounded-2xl border sm:h-24 sm:w-24">
+      {src ? (
+        <Image
+          src={src}
+          alt={alt}
+          fill
+          sizes="(min-width: 640px) 96px, 80px"
+          className="object-cover"
+        />
+      ) : (
+        <div className="text-muted-foreground flex h-full w-full items-center justify-center">
+          <BookOpen className="h-6 w-6" />
+        </div>
+      )}
     </div>
   );
-};
+}
 
 // Prefer explicit fields: `sessions` (number) or fallback to `duration` (string) for label
 const extractVariantLabel = (course: PublicCourse): string | null => {
@@ -118,7 +99,7 @@ const extractVariantLabel = (course: PublicCourse): string | null => {
   return null;
 };
 
-const CourseGroupCard = ({
+const CourseGroupRow = ({
   courses,
   bogoCoursesByType,
 }: {
@@ -265,175 +246,148 @@ const CourseGroupCard = ({
     router.push(`/courses/${selectedCourse._id}`);
   };
 
-  return (
-    <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
-      onClick={handleCardClick}
-    >
-      <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
+  const seatsLeft = Math.max(
+    0,
+    (selectedCourse.capacity ?? 0) - getEnrolledCount(selectedCourse),
+  );
+  const isOutOfStock = (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
+  const isInCart = mounted ? inCart(selectedCourse._id) : false;
 
-      {offerDetails && (
-        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
-          {offerDetails && (
-            <Badge
-              variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
-            >
-              <span className="sm:hidden">Special Offer</span>
-              <span className="hidden sm:inline">{offerDetails.offerName}</span>
-            </Badge>
-          )}
-          {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
-            <div className="flex max-w-[46%] flex-col items-end gap-1">
-              {offerDetails?.hasDiscount && (
-                <Badge
-                  variant="destructive"
-                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+  return (
+    <>
+      <article
+        className="group border-border/60 bg-card/60 hover:border-border hover:bg-card relative grid cursor-pointer gap-4 rounded-[1.65rem] border p-4 shadow-[0_20px_48px_-40px_rgba(124,111,155,0.7)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:p-5"
+        onClick={handleCardClick}
+      >
+        <CourseThumbnail
+          imageUrls={selectedCourse.imageUrls}
+          alt={selectedCourse.name}
+        />
+
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-foreground group-hover:text-primary line-clamp-2 text-base font-semibold tracking-tight sm:text-lg">
+              {sorted[0].name}
+            </h3>
+            {offerDetails?.hasDiscount && (
+              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-[11px] font-semibold text-white">
+                {offerDetails.discountPercentage}% OFF
+              </Badge>
+            )}
+            {offerDetails?.hasBogo && (
+              <Badge className="bg-emerald-600 text-[11px] font-semibold text-white uppercase">
+                {offerDetails.bogoLabel || "BOGO"}
+              </Badge>
+            )}
+          </div>
+
+          <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,18rem)_1fr] sm:items-center">
+            <div onClick={(e) => e.stopPropagation()}>
+              {useSessionsMode ? (
+                <Select
+                  value={String(selectedSessions)}
+                  onValueChange={(val) =>
+                    setSelectedSessions(parseInt(val, 10))
+                  }
                 >
-                  <span className="sm:hidden">
-                    {offerDetails.discountPercentage}% OFF
-                  </span>
-                  <span className="hidden sm:inline">
-                    🔥 {offerDetails.discountPercentage}% OFF
-                  </span>
-                </Badge>
-              )}
-              {offerDetails?.hasBogo && (
-                <Badge className="max-w-full bg-emerald-500/90 text-[11px] font-semibold whitespace-nowrap text-white uppercase shadow-lg">
-                  <span className="sm:hidden">BOGO</span>
-                  <span className="hidden sm:inline">
-                    🛍️ {offerDetails.bogoLabel || "BOGO"}
-                  </span>
-                </Badge>
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue placeholder="Select sessions" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Sessions</SelectLabel>
+                      {sorted.map((variant) => {
+                        const sessions =
+                          (variant as TherapyCourse).sessions ?? 0;
+                        const label = `${sessions} ${sessions === 1 ? "session" : "sessions"}`;
+                        return (
+                          <SelectItem
+                            key={variant._id}
+                            value={String(sessions)}
+                          >
+                            {label} — {showRupees(getCoursePrice(variant))}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              ) : useDurationMode ? (
+                <Select
+                  value={selectedDuration}
+                  onValueChange={(val) => setSelectedDuration(val)}
+                >
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue placeholder="Select duration" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Duration</SelectLabel>
+                      {sorted.map((variant) => {
+                        const duration =
+                          (variant as InternshipCourse).duration ?? "";
+                        const label = duration?.trim() ?? "Duration";
+                        return (
+                          <SelectItem key={variant._id} value={duration}>
+                            {label} — {showRupees(getCoursePrice(variant))}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              ) : (
+                <Select
+                  value={selectedId as unknown as string}
+                  onValueChange={(val) =>
+                    setSelectedId(val as unknown as Id<"courses">)
+                  }
+                >
+                  <SelectTrigger className="h-10 w-full">
+                    <SelectValue placeholder="Select an option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Options</SelectLabel>
+                      {sorted.map((variant, idx) => {
+                        const extracted = extractVariantLabel(variant);
+                        let label = extracted ?? `Option ${idx + 1}`;
+                        const isTherapy =
+                          (variant.type as string | undefined) === "therapy";
+                        if (!extracted && isTherapy && sorted.length === 3) {
+                          const mapped = [3, 6, 8][idx];
+                          label = `${mapped} ${mapped === 1 ? "session" : "sessions"}`;
+                        }
+                        return (
+                          <SelectItem
+                            key={variant._id}
+                            value={variant._id as unknown as string}
+                          >
+                            {label} — {showRupees(getCoursePrice(variant))}
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               )}
             </div>
-          )}
-        </div>
-      )}
 
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="min-w-0 flex-1">
-            <CardTitle className="group-hover:text-primary transition-smooth line-clamp-2 text-base sm:text-lg">
-              {sorted[0].name}
-            </CardTitle>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0 pb-4">
-        <div className="mb-3">
-          {useSessionsMode ? (
-            <Select
-              value={String(selectedSessions)}
-              onValueChange={(val) => setSelectedSessions(parseInt(val, 10))}
-            >
-              <SelectTrigger
-                className="w-full"
-                onClick={(e) => e.stopPropagation()}
+            <div className="text-muted-foreground flex flex-wrap items-center gap-2 text-xs">
+              <Badge
+                variant="secondary"
+                className="px-3 py-1 text-xs font-semibold"
               >
-                <SelectValue placeholder="Select sessions" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Sessions</SelectLabel>
-                  {sorted.map((variant) => {
-                    const sessions = (variant as TherapyCourse).sessions ?? 0;
-                    const label = `${sessions} ${sessions === 1 ? "session" : "sessions"}`;
-                    return (
-                      <SelectItem key={variant._id} value={String(sessions)}>
-                        {label} — {showRupees(getCoursePrice(variant))}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          ) : useDurationMode ? (
-            <Select
-              value={selectedDuration}
-              onValueChange={(val) => setSelectedDuration(val)}
-            >
-              <SelectTrigger
-                className="w-full"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <SelectValue placeholder="Select duration" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Duration</SelectLabel>
-                  {sorted.map((variant) => {
-                    const duration =
-                      (variant as InternshipCourse).duration ?? "";
-                    const label = duration?.trim() ?? "Duration";
-                    return (
-                      <SelectItem key={variant._id} value={duration}>
-                        {label} — {showRupees(getCoursePrice(variant))}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          ) : (
-            <Select
-              value={selectedId as unknown as string}
-              onValueChange={(val) =>
-                setSelectedId(val as unknown as Id<"courses">)
-              }
-            >
-              <SelectTrigger
-                className="w-full"
-                onClick={(e) => e.stopPropagation()}
-              >
-                <SelectValue placeholder="Select an option" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectLabel>Options</SelectLabel>
-                  {sorted.map((variant, idx) => {
-                    const extracted = extractVariantLabel(variant);
-                    let label = extracted ?? `Option ${idx + 1}`;
-                    const isTherapy =
-                      (variant.type as string | undefined) === "therapy";
-                    if (!extracted && isTherapy && sorted.length === 3) {
-                      const mapped = [3, 6, 8][idx];
-                      label = `${mapped} ${mapped === 1 ? "session" : "sessions"}`;
-                    }
-                    return (
-                      <SelectItem
-                        key={variant._id}
-                        value={variant._id as unknown as string}
-                      >
-                        {label} — {showRupees(getCoursePrice(variant))}
-                      </SelectItem>
-                    );
-                  })}
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-1">
-            <Badge
-              variant="secondary"
-              className="px-3 py-1 text-base font-semibold"
-            >
-              {showRupees(displayPrice)}
-            </Badge>
-            {offerDetails && (
-              <div className="space-y-1 text-xs">
-                {offerDetails.hasDiscount && (
-                  <div className="text-muted-foreground">
-                    <span className="line-through">
-                      {showRupees(offerDetails.originalPrice)}
-                    </span>
-                  </div>
-                )}
-                <div
-                  className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
+                {showRupees(displayPrice)}
+              </Badge>
+              {offerDetails?.hasDiscount && (
+                <span className="line-through">
+                  {showRupees(offerDetails.originalPrice)}
+                </span>
+              )}
+              {offerDetails && (
+                <span
+                  className={`font-medium ${offerDetails.hasBogo ? "text-emerald-700 dark:text-emerald-300" : "text-orange-700 dark:text-orange-300"}`}
                 >
                   {offerDetails.timeLeft.days > 0 &&
                     `${offerDetails.timeLeft.days}d `}
@@ -442,50 +396,37 @@ const CourseGroupCard = ({
                   {offerDetails.timeLeft.minutes > 0 &&
                     `${offerDetails.timeLeft.minutes}m`}{" "}
                   left
-                </div>
-              </div>
-            )}
-            {offerDetails?.hasBogo && (
-              <div className="text-xs font-semibold text-emerald-600">
-                Includes a free bonus course
-              </div>
-            )}
+                </span>
+              )}
+              {offerDetails?.hasBogo && (
+                <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-300">
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Bonus course included
+                </span>
+              )}
+            </div>
           </div>
-          {(() => {
-              const seatsLeft = Math.max(
-                0,
-                (selectedCourse.capacity ?? 0) -
-                  getEnrolledCount(selectedCourse),
-              );
-            const isOutOfStock =
-              (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
-
-            // Use mounted state to prevent hydration mismatch
-            const isInCart = mounted ? inCart(selectedCourse._id) : false;
-
-            return (
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart();
-                }}
-                disabled={isInCart || isOutOfStock}
-                size="sm"
-                className="transition-smooth w-full sm:w-auto"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {isOutOfStock
-                  ? "Out of Stock"
-                  : isInCart
-                    ? "Added"
-                    : "Add to Cart"}
-              </Button>
-            );
-          })()}
         </div>
-      </CardContent>
 
-      {/* BOGO Selection Modal */}
+        <div className="flex flex-col gap-2 sm:items-end">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart();
+            }}
+            disabled={isInCart || isOutOfStock}
+            size="sm"
+            className="w-full sm:w-auto"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {isOutOfStock ? "Out of Stock" : isInCart ? "Added" : "Add to Cart"}
+          </Button>
+          <p className="text-muted-foreground hidden text-xs sm:block">
+            Tap for details
+          </p>
+        </div>
+      </article>
+
       {offerDetails?.hasBogo && selectedCourse.type && (
         <BogoSelectionModal
           isOpen={showBogoModal}
@@ -496,11 +437,11 @@ const CourseGroupCard = ({
           sourceCourseName={selectedCourse.name}
         />
       )}
-    </Card>
+    </>
   );
 };
 
-const CourseCard = ({
+const CourseRow = ({
   course,
   bogoCoursesByType,
 }: {
@@ -618,132 +559,96 @@ const CourseCard = ({
     router.push(`/courses/${course._id}`);
   };
 
+  const seatsLeft = Math.max(
+    0,
+    (course.capacity ?? 0) - getEnrolledCount(course),
+  );
+  const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
+  const isInCart = mounted ? inCart(course._id) : false;
+
   return (
-    <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
-      onClick={handleCardClick}
-    >
-      <CourseImageCarousel imageUrls={course.imageUrls || []} />
+    <>
+      <article
+        className="group border-border/60 bg-card/60 hover:border-border hover:bg-card relative grid cursor-pointer gap-4 rounded-[1.65rem] border p-4 shadow-[0_20px_48px_-40px_rgba(124,111,155,0.7)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 sm:grid-cols-[auto_1fr_auto] sm:items-center sm:p-5"
+        onClick={handleCardClick}
+      >
+        <CourseThumbnail imageUrls={course.imageUrls} alt={course.name} />
 
-      {offerDetails && (
-        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
-          {offerDetails && (
-            <Badge
-              variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
-            >
-              <span className="sm:hidden">Special Offer</span>
-              <span className="hidden sm:inline">{offerDetails.offerName}</span>
-            </Badge>
-          )}
-          {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
-            <div className="flex max-w-[46%] flex-col items-end gap-1">
-              {offerDetails?.hasDiscount && (
-                <Badge
-                  variant="destructive"
-                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
-                >
-                  <span className="sm:hidden">
-                    {offerDetails.discountPercentage}% OFF
-                  </span>
-                  <span className="hidden sm:inline">
-                    🔥 {offerDetails.discountPercentage}% OFF
-                  </span>
-                </Badge>
-              )}
-              {offerDetails?.hasBogo && (
-                <Badge className="max-w-full bg-emerald-500/90 text-[11px] font-semibold whitespace-nowrap text-white uppercase shadow-lg">
-                  <span className="sm:hidden">BOGO</span>
-                  <span className="hidden sm:inline">
-                    🛍️ {offerDetails.bogoLabel || "BOGO"}
-                  </span>
-                </Badge>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between">
-          <div className="min-w-0 flex-1">
-            <CardTitle className="group-hover:text-primary transition-smooth line-clamp-2 text-base sm:text-lg">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="text-foreground group-hover:text-primary line-clamp-2 text-base font-semibold tracking-tight sm:text-lg">
               {course.name}
-            </CardTitle>
+            </h3>
+            {offerDetails?.hasDiscount && (
+              <Badge className="bg-gradient-to-r from-orange-500 to-red-500 text-[11px] font-semibold text-white">
+                {offerDetails.discountPercentage}% OFF
+              </Badge>
+            )}
+            {offerDetails?.hasBogo && (
+              <Badge className="bg-emerald-600 text-[11px] font-semibold text-white uppercase">
+                {offerDetails.bogoLabel || "BOGO"}
+              </Badge>
+            )}
           </div>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0 pb-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1 space-y-1">
+
+          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm leading-6">
+            {course.description ||
+              "A structured program you can carry into real life."}
+          </p>
+
+          <div className="text-muted-foreground mt-3 flex flex-wrap items-center gap-2 text-xs">
             <Badge
               variant="secondary"
-              className="px-3 py-1 text-base font-semibold"
+              className="px-3 py-1 text-xs font-semibold"
             >
               {showRupees(displayPrice)}
             </Badge>
+            {offerDetails?.hasDiscount && (
+              <span className="line-through">
+                {showRupees(offerDetails.originalPrice)}
+              </span>
+            )}
             {offerDetails && (
-              <div className="space-y-1 text-xs">
-                {offerDetails.hasDiscount && (
-                  <div className="text-muted-foreground">
-                    <span className="line-through">
-                      {showRupees(offerDetails.originalPrice)}
-                    </span>
-                  </div>
-                )}
-                <div
-                  className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
-                >
-                  {offerDetails.timeLeft.days > 0 &&
-                    `${offerDetails.timeLeft.days}d `}
-                  {offerDetails.timeLeft.hours > 0 &&
-                    `${offerDetails.timeLeft.hours}h `}
-                  {offerDetails.timeLeft.minutes > 0 &&
-                    `${offerDetails.timeLeft.minutes}m`}{" "}
-                  left
-                </div>
-              </div>
+              <span
+                className={`font-medium ${offerDetails.hasBogo ? "text-emerald-700 dark:text-emerald-300" : "text-orange-700 dark:text-orange-300"}`}
+              >
+                {offerDetails.timeLeft.days > 0 &&
+                  `${offerDetails.timeLeft.days}d `}
+                {offerDetails.timeLeft.hours > 0 &&
+                  `${offerDetails.timeLeft.hours}h `}
+                {offerDetails.timeLeft.minutes > 0 &&
+                  `${offerDetails.timeLeft.minutes}m`}{" "}
+                left
+              </span>
             )}
             {offerDetails?.hasBogo && (
-              <div className="text-xs font-semibold text-emerald-600">
-                Includes a free bonus course
-              </div>
+              <span className="inline-flex items-center gap-1 font-semibold text-emerald-700 dark:text-emerald-300">
+                <Sparkles className="h-3.5 w-3.5" />
+                Bonus course included
+              </span>
             )}
           </div>
-          {(() => {
-            const seatsLeft = Math.max(
-              0,
-              (course.capacity ?? 0) - getEnrolledCount(course),
-            );
-            const isOutOfStock =
-              (course.capacity ?? 0) === 0 || seatsLeft === 0;
-
-            // Use mounted state to prevent hydration mismatch
-            const isInCart = mounted ? inCart(course._id) : false;
-
-            return (
-              <Button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleAddToCart();
-                }}
-                disabled={isInCart || isOutOfStock}
-                size="sm"
-                className="transition-smooth w-full shrink-0 sm:w-auto"
-              >
-                <Plus className="mr-2 h-4 w-4" />
-                {isOutOfStock
-                  ? "Out of Stock"
-                  : isInCart
-                    ? "Added"
-                    : "Add to Cart"}
-              </Button>
-            );
-          })()}
         </div>
-      </CardContent>
 
-      {/* BOGO Selection Modal */}
+        <div className="flex flex-col gap-2 sm:items-end">
+          <Button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleAddToCart();
+            }}
+            disabled={isInCart || isOutOfStock}
+            size="sm"
+            className="w-full sm:w-auto"
+          >
+            <Plus className="mr-2 h-4 w-4" />
+            {isOutOfStock ? "Out of Stock" : isInCart ? "Added" : "Add to Cart"}
+          </Button>
+          <p className="text-muted-foreground hidden text-xs sm:block">
+            Tap for details
+          </p>
+        </div>
+      </article>
+
       {offerDetails?.hasBogo && course.type && (
         <BogoSelectionModal
           isOpen={showBogoModal}
@@ -754,7 +659,7 @@ const CourseCard = ({
           sourceCourseName={course.name}
         />
       )}
-    </Card>
+    </>
   );
 };
 
@@ -788,32 +693,129 @@ export default function CoursesClient({ coursesData }: CoursesClientProps) {
       <section className="section-padding pt-0">
         <div className="container">
           {coursesData && coursesData.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {(() => {
-                const nameToCourses = new Map<string, Array<PublicCourse>>();
-                for (const course of coursesData) {
-                  const list = nameToCourses.get(course.name) ?? [];
-                  list.push(course);
-                  nameToCourses.set(course.name, list);
-                }
-                const groups = Array.from(nameToCourses.values());
-                return groups.map((group) =>
-                  group.length > 1 ? (
-                    <CourseGroupCard
-                      key={group[0]._id}
-                      courses={group}
-                      bogoCoursesByType={bogoCoursesByType}
-                    />
-                  ) : (
-                    <CourseCard
-                      key={group[0]._id}
-                      course={group[0]}
-                      bogoCoursesByType={bogoCoursesByType}
-                    />
-                  ),
-                );
-              })()}
-            </div>
+            (() => {
+              const nameToCourses = new Map<string, Array<PublicCourse>>();
+              for (const course of coursesData) {
+                const list = nameToCourses.get(course.name) ?? [];
+                list.push(course);
+                nameToCourses.set(course.name, list);
+              }
+              const nameGroups = Array.from(nameToCourses.values());
+
+              const featured = nameGroups
+                .filter((group) => {
+                  const c = group[0];
+                  return Boolean(c.offer || c.bogo?.enabled);
+                })
+                .slice(0, 3);
+
+              const rest = nameGroups.filter((g) => !featured.includes(g));
+
+              const byType = new Map<string, Array<Array<PublicCourse>>>();
+              for (const group of rest) {
+                const type = group[0].type ?? "other";
+                const list = byType.get(type) ?? [];
+                list.push(group);
+                byType.set(type, list);
+              }
+
+              const orderedTypes = Array.from(byType.keys()).sort((a, b) => {
+                if (a === "therapy") return -1;
+                if (b === "therapy") return 1;
+                if (a === "certificate") return -1;
+                if (b === "certificate") return 1;
+                return a.localeCompare(b);
+              });
+
+              return (
+                <div className="space-y-10">
+                  {featured.length > 0 && (
+                    <div className="home-shell-soft overflow-hidden px-5 py-5 sm:px-6 sm:py-6">
+                      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                          <p className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
+                            Start here
+                          </p>
+                          <p className="text-muted-foreground mt-2 text-sm leading-6">
+                            A few current highlights with limited-time offers.
+                          </p>
+                        </div>
+                        <p className="text-muted-foreground text-xs tracking-[0.28em] uppercase">
+                          Scroll →
+                        </p>
+                      </div>
+
+                      <div className="-mx-5 overflow-x-auto px-5 pb-2 sm:-mx-6 sm:px-6">
+                        <div className="flex w-max gap-4">
+                          {featured.map((group) => (
+                            <div
+                              key={group[0]._id}
+                              className="w-[22rem] flex-none"
+                            >
+                              {group.length > 1 ? (
+                                <CourseGroupRow
+                                  courses={group}
+                                  bogoCoursesByType={bogoCoursesByType}
+                                />
+                              ) : (
+                                <CourseRow
+                                  course={group[0]}
+                                  bogoCoursesByType={bogoCoursesByType}
+                                />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {orderedTypes.map((type) => {
+                    const groups = byType.get(type) ?? [];
+                    const label =
+                      (
+                        COURSE_TYPE_LABELS as Record<string, string | undefined>
+                      )[type] ?? (type === "other" ? "More" : type);
+
+                    return (
+                      <section key={type} className="space-y-4">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                          <div>
+                            <h2 className="text-foreground text-2xl font-semibold tracking-tight sm:text-3xl">
+                              {label}
+                            </h2>
+                            <p className="text-muted-foreground text-sm">
+                              {groups.length} option
+                              {groups.length === 1 ? "" : "s"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="home-shell mx-auto max-w-6xl px-4 py-4 sm:px-5 sm:py-5">
+                          <div className="space-y-4">
+                            {groups.map((group) =>
+                              group.length > 1 ? (
+                                <CourseGroupRow
+                                  key={group[0]._id}
+                                  courses={group}
+                                  bogoCoursesByType={bogoCoursesByType}
+                                />
+                              ) : (
+                                <CourseRow
+                                  key={group[0]._id}
+                                  course={group[0]}
+                                  bogoCoursesByType={bogoCoursesByType}
+                                />
+                              ),
+                            )}
+                          </div>
+                        </div>
+                      </section>
+                    );
+                  })}
+                </div>
+              );
+            })()
           ) : (
             <div className="py-12 text-center">
               <BookOpen className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
