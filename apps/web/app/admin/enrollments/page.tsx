@@ -23,6 +23,7 @@ import { showRupees } from "@/lib/utils";
 
 export default function AdminEnrollmentsPage() {
   const [search, setSearch] = useState("");
+  const [courseId, setCourseId] = useState("all");
   const [status, setStatus] = useState<
     "all" | "active" | "cancelled" | "transferred"
   >("all");
@@ -49,6 +50,7 @@ export default function AdminEnrollmentsPage() {
   const enrollments = useQuery(api.adminEnrollments.listEnrollments, {
     search: search || undefined,
     status: status === "all" ? undefined : status,
+    courseId: courseId === "all" ? undefined : (courseId as Id<"courses">),
     limit: 500,
   });
 
@@ -76,13 +78,23 @@ export default function AdminEnrollmentsPage() {
         userId: row.userId,
         userName: row.userName,
         userEmail: row.userEmail,
+        userPhone: row.userPhone ?? "",
         courseName: row.courseName,
+        courseType: row.courseType,
         enrollmentNumber: row.enrollmentNumber,
         status: row.status,
+        registrationSource: row.registrationSource ?? "checkout",
         amountPaid: row.amountPaid ?? row.checkoutPrice ?? 0,
+        checkoutPrice: row.checkoutPrice ?? 0,
+        listedPrice: row.listedPrice ?? 0,
         mindPointsRedeemed: row.mindPointsRedeemed ?? 0,
         couponCode: row.couponCode ?? "",
         registeredAt: new Date(row._creationTime).toISOString(),
+        lastConfirmationSentAt: row.lastConfirmationSentAt
+          ? new Date(row.lastConfirmationSentAt).toISOString()
+          : "",
+        adminCourseUrl: `/admin/courses/${row.courseId}`,
+        publicCourseUrl: `/courses/${row.courseId}`,
       })),
     [rows],
   );
@@ -182,7 +194,7 @@ export default function AdminEnrollmentsPage() {
     <div>
       <AdminPageHeader
         title="Enrollments"
-        description="Run manual enrollments, cancellations, and monitor transfer/cancel status."
+        description="Single registration hub for website checkout, admin/manual adds, email resend history, and CSV export for Excel."
         actions={
           <Button
             variant="outline"
@@ -299,6 +311,18 @@ export default function AdminEnrollmentsPage() {
         />
         <select
           className="h-10 rounded-md border bg-white px-3 text-sm"
+          value={courseId}
+          onChange={(e) => setCourseId(e.target.value)}
+        >
+          <option value="all">All courses</option>
+          {(courses || []).map((course) => (
+            <option key={course._id} value={course._id}>
+              {course.name}
+            </option>
+          ))}
+        </select>
+        <select
+          className="h-10 rounded-md border bg-white px-3 text-sm"
           value={status}
           onChange={(e) =>
             setStatus(
@@ -319,24 +343,23 @@ export default function AdminEnrollmentsPage() {
             <tr>
               <th className="px-3 py-2">User</th>
               <th className="px-3 py-2">Course</th>
-              <th className="px-3 py-2">Enrollment #</th>
               <th className="px-3 py-2">Status</th>
               <th className="px-3 py-2">Paid</th>
               <th className="px-3 py-2">Mind Points</th>
-              <th className="px-3 py-2">Registered</th>
+              <th className="px-3 py-2">Registered / Email</th>
               <th className="px-3 py-2">Actions</th>
             </tr>
           </thead>
           <tbody>
             {!enrollments ? (
               <tr>
-                <td className="px-3 py-4 text-slate-600" colSpan={8}>
+                <td className="px-3 py-4 text-slate-600" colSpan={7}>
                   Loading enrollments...
                 </td>
               </tr>
             ) : rows.length === 0 ? (
               <tr>
-                <td className="px-3 py-4 text-slate-600" colSpan={8}>
+                <td className="px-3 py-4 text-slate-600" colSpan={7}>
                   No enrollments found.
                 </td>
               </tr>
@@ -349,12 +372,23 @@ export default function AdminEnrollmentsPage() {
                     </p>
                     <p className="text-xs text-slate-600">
                       {row.userEmail || row.userId}
+                      {row.userPhone ? ` • ${row.userPhone}` : ""}
                     </p>
                   </td>
-                  <td className="px-3 py-2">{row.courseName || "-"}</td>
-                  <td className="px-3 py-2">{row.enrollmentNumber}</td>
+                  <td className="px-3 py-2">
+                    <p className="font-medium text-slate-900">
+                      {row.courseName || "-"}
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      {row.courseType || "course"} • {row.enrollmentNumber}
+                    </p>
+                  </td>
                   <td className="px-3 py-2">
                     <Badge variant="outline">{row.status}</Badge>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {row.registrationSource || "checkout"}
+                      {row.isGuestUser ? " (guest)" : ""}
+                    </p>
                   </td>
                   <td className="px-3 py-2 text-xs text-slate-700">
                     <p>
@@ -385,7 +419,13 @@ export default function AdminEnrollmentsPage() {
                     )}
                   </td>
                   <td className="px-3 py-2 text-xs text-slate-600">
-                    {formatTimestamp(row._creationTime)}
+                    <p>{formatTimestamp(row._creationTime)}</p>
+                    <p className="text-slate-500">
+                      Last resent:{" "}
+                      {row.lastConfirmationSentAt
+                        ? formatTimestamp(row.lastConfirmationSentAt)
+                        : "—"}
+                    </p>
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex gap-2">

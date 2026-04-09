@@ -19,8 +19,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../components/ui/carousel";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, Calendar, Clock } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
+import {
+  getCourseScheduleLines,
+  shouldShowCourseTiming,
+} from "@/lib/course-schedule";
 import type {
   CourseLike,
   PublicCourse,
@@ -290,6 +294,7 @@ const CourseGroupCard = ({
   };
 
   const displayPrice = getCoursePrice(selectedCourse);
+  const scheduleLines = getCourseScheduleLines(selectedCourse);
 
   return (
     <Card
@@ -441,6 +446,21 @@ const CourseGroupCard = ({
             </Select>
           )}
         </div>
+
+        {shouldShowCourseTiming(selectedCourse) && scheduleLines.length > 0 ? (
+          <div className="mb-2 space-y-1 text-xs text-slate-600">
+            {scheduleLines.map((line, index) => (
+              <div key={line} className="flex items-center gap-1.5">
+                {index === 0 ? (
+                  <Calendar className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span className="line-clamp-1">{line}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div className="min-w-0 space-y-1">
@@ -655,6 +675,7 @@ const CourseCard = ({
   };
 
   const displayPrice = getCoursePrice(course);
+  const scheduleLines = getCourseScheduleLines(course);
 
   return (
     <Card
@@ -712,6 +733,20 @@ const CourseCard = ({
         </div>
       </CardHeader>
       <CardContent className="pt-0 pb-6">
+        {shouldShowCourseTiming(course) && scheduleLines.length > 0 ? (
+          <div className="mb-2 space-y-1 text-xs text-slate-600">
+            {scheduleLines.map((line, index) => (
+              <div key={line} className="flex items-center gap-1.5">
+                {index === 0 ? (
+                  <Calendar className="h-3.5 w-3.5 shrink-0" />
+                ) : (
+                  <Clock className="h-3.5 w-3.5 shrink-0" />
+                )}
+                <span className="line-clamp-1">{line}</span>
+              </div>
+            ))}
+          </div>
+        ) : null}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <Badge
             variant="secondary"

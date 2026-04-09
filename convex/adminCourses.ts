@@ -227,6 +227,68 @@ function validatePublishableCourse(course: {
   }
 }
 
+function getUpperCodePrefix(code?: string) {
+  if (typeof code !== "string") {
+    return null;
+  }
+
+  const normalized = code.trim().toUpperCase();
+  return normalized.length >= 2 ? normalized.slice(0, 2) : null;
+}
+
+function getSuggestedCourseType(course: {
+  type?:
+    | "certificate"
+    | "internship"
+    | "diploma"
+    | "pre-recorded"
+    | "masterclass"
+    | "therapy"
+    | "supervised"
+    | "resume-studio"
+    | "worksheet";
+  code?: string;
+}) {
+  const codePrefix = getUpperCodePrefix(course.code);
+
+  if (codePrefix === "IN" && course.type !== "internship") {
+    return {
+      suggestedType: "internship" as const,
+      reason: "Course code uses the internship prefix `IN`.",
+    };
+  }
+
+  if (codePrefix === "PR" && course.type !== "pre-recorded") {
+    return {
+      suggestedType: "pre-recorded" as const,
+      reason: "Course code uses the pre-recorded prefix `PR`.",
+    };
+  }
+
+  if (codePrefix === "WS" && course.type !== "worksheet") {
+    return {
+      suggestedType: "worksheet" as const,
+      reason: "Course code uses the worksheet prefix `WS`.",
+    };
+  }
+
+  if (codePrefix === "DP" && course.type !== "diploma") {
+    return {
+      suggestedType: "diploma" as const,
+      reason: "Course code uses the diploma prefix `DP`.",
+    };
+  }
+
+  if (codePrefix === "CC" && course.type !== "certificate") {
+    return {
+      suggestedType: "certificate" as const,
+      reason: "Course code uses the certificate prefix `CC`.",
+    };
+  }
+
+  return null;
+}
+
 export const listCourses = query({
   args: {
     search: v.optional(v.string()),
@@ -376,6 +438,53 @@ export const listCourses = query({
   },
 });
 
+export const listCourseTypeIssues = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  returns: v.array(
+    v.object({
+      courseId: v.id("courses"),
+      name: v.string(),
+      code: v.union(v.string(), v.null()),
+      lifecycleStatus: v.union(CourseLifecycleStatus, v.null()),
+      currentType: v.union(CourseType, v.null()),
+      suggestedType: CourseType,
+      reason: v.string(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+
+    const courses = await ctx.db.query("courses").order("desc").take(2000);
+    const issues = courses
+      .map((course) => {
+        const suggestion = getSuggestedCourseType(course);
+        if (!suggestion) {
+          return null;
+        }
+
+        return {
+          courseId: course._id,
+          name: course.name,
+          code: course.code ?? null,
+          lifecycleStatus: normalizeCourseLifecycleStatus(course.lifecycleStatus),
+          currentType: course.type ?? null,
+          suggestedType: suggestion.suggestedType,
+          reason: suggestion.reason,
+        };
+      })
+      .filter((issue): issue is NonNullable<typeof issue> => issue !== null)
+      .sort((a, b) => {
+        if (a.currentType === null && b.currentType !== null) return -1;
+        if (a.currentType !== null && b.currentType === null) return 1;
+        return a.name.localeCompare(b.name);
+      });
+
+    return issues.slice(0, args.limit ?? 100);
+  },
+});
+
 export const getCourseById = query({
   args: {
     courseId: v.id("courses"),
@@ -508,6 +617,47 @@ export const updateCourse = mutation({
       entityId: String(args.courseId),
       before: existing,
       after: updated,
+    });
+
+    return updated;
+  },
+});
+
+export const correctCourseType = mutation({
+  args: {
+    courseId: v.id("courses"),
+    type: CourseType,
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const existing = await ctx.db.get(args.courseId);
+    if (!existing) {
+      throw new Error("Course not found");
+    }
+
+    const patch = {
+      type: args.type,
+      updatedByAdminId: admin.userId,
+      updatedAt: Date.now(),
+    };
+
+    await ctx.db.patch(args.courseId, patch);
+    const updated = await ctx.db.get(args.courseId);
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "course.correct_type",
+      entityType: "course",
+      entityId: String(args.courseId),
+      before: {
+        type: existing.type ?? null,
+      },
+      after: {
+        type: args.type,
+        reason: args.reason ?? "Manual course type correction",
+      },
     });
 
     return updated;
