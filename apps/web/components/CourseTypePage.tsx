@@ -19,8 +19,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../components/ui/carousel";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, Calendar, Clock } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
+import {
+  getCourseScheduleLines,
+  shouldShowCourseTiming,
+} from "@/lib/course-schedule";
 import type {
   CourseLike,
   PublicCourse,
@@ -290,6 +294,7 @@ const CourseGroupCard = ({
   };
 
   const displayPrice = getCoursePrice(selectedCourse);
+  const scheduleLines = getCourseScheduleLines(selectedCourse);
 
   return (
     <Card
@@ -655,6 +660,7 @@ const CourseCard = ({
   };
 
   const displayPrice = getCoursePrice(course);
+  const scheduleLines = getCourseScheduleLines(course);
 
   return (
     <Card

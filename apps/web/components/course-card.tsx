@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { CourseImageCarousel } from "@/components/CourseTypePage";
+import {
+  getCourseScheduleLines,
+  shouldShowCourseTiming,
+} from "@/lib/course-schedule";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import type { CourseLike } from "@mindpoint/backend";
 import { useEffect, useState } from "react";
@@ -174,6 +178,7 @@ export function CourseCard({
   };
 
   const displayPrice = getCoursePrice(course);
+  const scheduleLines = getCourseScheduleLines(course);
 
   return (
     <Card
@@ -229,6 +234,20 @@ export function CourseCard({
       </CardHeader>
       <CardContent className="flex flex-col gap-3 pt-0 pb-4 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
         <div className="min-w-0 flex-1 space-y-1">
+          {shouldShowCourseTiming(course) && scheduleLines.length > 0 ? (
+            <div className="mb-2 space-y-1 text-xs text-slate-600">
+              {scheduleLines.map((line, index) => (
+                <div key={line} className="flex items-center gap-1.5">
+                  {index === 0 ? (
+                    <Calendar className="h-3.5 w-3.5 shrink-0" />
+                  ) : (
+                    <Clock className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span className="line-clamp-1">{line}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
           <Badge
             variant="secondary"
             className="px-3 py-1 text-sm font-semibold"
@@ -438,6 +457,7 @@ export function UpcomingCourseCard({
   const timeUntilStart = getTimeUntilStart(course.startDate || "");
   const formattedDate = formatDate(course.startDate || "");
   const displayPrice = getCoursePrice(course);
+  const scheduleLines = getCourseScheduleLines(course);
 
   return (
     <Card
@@ -507,6 +527,17 @@ export function UpcomingCourseCard({
             <Calendar className="mr-2 h-4 w-4" />
             <span className="font-medium">{formattedDate}</span>
           </div>
+          {shouldShowCourseTiming(course)
+            ? scheduleLines.slice(1).map((line) => (
+                <div
+                  key={line}
+                  className="text-muted-foreground flex items-center text-xs"
+                >
+                  <Clock className="mr-2 h-3.5 w-3.5" />
+                  <span>{line}</span>
+                </div>
+              ))
+            : null}
           <div className="text-xs font-medium text-orange-600 dark:text-orange-400">
             {timeUntilStart}
           </div>

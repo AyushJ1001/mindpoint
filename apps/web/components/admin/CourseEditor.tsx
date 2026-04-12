@@ -1,6 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { Doc, Id } from "@mindpoint/backend/data-model";
@@ -13,6 +20,12 @@ import { toast } from "sonner";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { getUserFacingErrorMessage } from "@/lib/convex-error";
 import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
+import {
+  defaultEmotionalHooks,
+  defaultOutcomes,
+  defaultPainPoints,
+  defaultWhyDifferent,
+} from "@/lib/course-content-data";
 import {
   convertPlainDateTimeBetweenTimeZones,
   formatDateWindow,
@@ -185,8 +198,26 @@ function hasText(value: string | undefined | null): boolean {
   return typeof value === "string" && value.trim().length > 0;
 }
 
+function getDefaultMarketingState(type: CourseType) {
+  return {
+    emotionalHook: defaultEmotionalHooks[type] || "",
+    painPoints: [...(defaultPainPoints[type] || [])],
+    outcomes: [...(defaultOutcomes[type] || [])],
+    whyDifferent: [...(defaultWhyDifferent[type] || [])],
+  };
+}
+
+function matchesStringArray(value: string[], other: string[]): boolean {
+  if (value.length !== other.length) {
+    return false;
+  }
+
+  return value.every((item, index) => item === other[index]);
+}
+
 function toInitialState(course?: Doc<"courses">): CourseFormState {
   const type = (course?.type as CourseType) || "certificate";
+  const defaultMarketing = getDefaultMarketingState(type);
   const defaultVariants =
     sessionTypes.has(type) && !course
       ? defaultSessionVariants()
@@ -234,10 +265,19 @@ function toInitialState(course?: Doc<"courses">): CourseFormState {
     fileUrl: course?.fileUrl || "",
     worksheetDescription: course?.worksheetDescription || "",
     targetAudience: (course?.targetAudience || []).join(", "),
-    emotionalHook: course?.emotionalHook || "",
-    painPoints: course?.painPoints || [],
-    outcomes: course?.outcomes || [],
-    whyDifferent: course?.whyDifferent || [],
+    emotionalHook: course?.emotionalHook || defaultMarketing.emotionalHook,
+    painPoints:
+      course?.painPoints && course.painPoints.length > 0
+        ? course.painPoints
+        : defaultMarketing.painPoints,
+    outcomes:
+      course?.outcomes && course.outcomes.length > 0
+        ? course.outcomes
+        : defaultMarketing.outcomes,
+    whyDifferent:
+      course?.whyDifferent && course.whyDifferent.length > 0
+        ? course.whyDifferent
+        : defaultMarketing.whyDifferent,
     lifecycleStatus:
       (course?.lifecycleStatus as CourseLifecycleStatus | undefined) || "draft",
     offerName: course?.offer?.name || "",
@@ -272,6 +312,8 @@ export function CourseEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [emotionalContentOpen, setEmotionalContentOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [usesPlainTextScheduleInputs, setUsesPlainTextScheduleInputs] =
+    useState(false);
   const courseVersion = course
     ? `${course._id}:${course.updatedAt ?? course._creationTime}`
     : "new";
@@ -279,6 +321,7 @@ export function CourseEditor({
     useAdminTimeZone();
   const previousTimeZoneRef = useRef(timeZone);
   const hasHydratedTimeZoneRef = useRef(false);
+  const previousCourseTypeRef = useRef(state.type);
 
   const campaigns = useQuery(api.adminOffers.listCampaigns, {
     includeArchived: false,
@@ -295,6 +338,18 @@ export function CourseEditor({
     setInitialSnapshot(JSON.stringify(nextInitialState));
     setSelectedCampaignId("");
   }, [course, courseVersion]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const userAgent = window.navigator.userAgent;
+    const isSafari =
+      /Safari/i.test(userAgent) &&
+      !/Chrome|Chromium|CriOS|EdgiOS|FxiOS|Firefox|Android/i.test(userAgent);
+    setUsesPlainTextScheduleInputs(isSafari);
+  }, []);
 
   useEffect(() => {
     if (!isHydrated) {
@@ -342,6 +397,42 @@ export function CourseEditor({
       return nextState;
     });
   }, [isHydrated, timeZone]);
+
+  useEffect(() => {
+    const previousType = previousCourseTypeRef.current;
+    if (previousType === state.type) {
+      return;
+    }
+
+    previousCourseTypeRef.current = state.type;
+
+    const previousDefaults = getDefaultMarketingState(previousType);
+    const nextDefaults = getDefaultMarketingState(state.type);
+
+    setState((current) => ({
+      ...current,
+      emotionalHook:
+        !hasText(current.emotionalHook) ||
+        current.emotionalHook === previousDefaults.emotionalHook
+          ? nextDefaults.emotionalHook
+          : current.emotionalHook,
+      painPoints:
+        current.painPoints.length === 0 ||
+        matchesStringArray(current.painPoints, previousDefaults.painPoints)
+          ? nextDefaults.painPoints
+          : current.painPoints,
+      outcomes:
+        current.outcomes.length === 0 ||
+        matchesStringArray(current.outcomes, previousDefaults.outcomes)
+          ? nextDefaults.outcomes
+          : current.outcomes,
+      whyDifferent:
+        current.whyDifferent.length === 0 ||
+        matchesStringArray(current.whyDifferent, previousDefaults.whyDifferent)
+          ? nextDefaults.whyDifferent
+          : current.whyDifferent,
+    }));
+  }, [state.type]);
 
   const isWorksheet = state.type === "worksheet";
   const isInternship = state.type === "internship";
@@ -837,6 +928,19 @@ export function CourseEditor({
     }
   };
 
+  const buildScheduleInputProps = (
+    key: "startDate" | "endDate" | "startTime" | "endTime",
+  ) => ({
+    value: state[key],
+    onChange: (e: ChangeEvent<HTMLInputElement>) =>
+      setState((prev) => ({ ...prev, [key]: e.target.value })),
+    onInput: (e: FormEvent<HTMLInputElement>) =>
+      setState((prev) => ({
+        ...prev,
+        [key]: e.currentTarget.value,
+      })),
+  });
+
   return (
     <div className="space-y-6">
       <div className="sticky top-4 z-20 rounded-lg border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur">
@@ -1009,47 +1113,78 @@ export function CourseEditor({
             <div className="space-y-2">
               <Label>Start Date</Label>
               <Input
-                type="date"
-                value={state.startDate}
-                onChange={(e) =>
-                  setState((prev) => ({ ...prev, startDate: e.target.value }))
+                type={usesPlainTextScheduleInputs ? "text" : "date"}
+                inputMode={usesPlainTextScheduleInputs ? "numeric" : undefined}
+                placeholder={
+                  usesPlainTextScheduleInputs ? "YYYY-MM-DD" : undefined
                 }
+                pattern={
+                  usesPlainTextScheduleInputs
+                    ? "\\d{4}-\\d{2}-\\d{2}"
+                    : undefined
+                }
+                lang="en-CA"
+                autoComplete="off"
+                {...buildScheduleInputProps("startDate")}
               />
             </div>
 
             <div className="space-y-2">
               <Label>End Date</Label>
               <Input
-                type="date"
-                value={state.endDate}
-                onChange={(e) =>
-                  setState((prev) => ({ ...prev, endDate: e.target.value }))
+                type={usesPlainTextScheduleInputs ? "text" : "date"}
+                inputMode={usesPlainTextScheduleInputs ? "numeric" : undefined}
+                placeholder={
+                  usesPlainTextScheduleInputs ? "YYYY-MM-DD" : undefined
                 }
+                pattern={
+                  usesPlainTextScheduleInputs
+                    ? "\\d{4}-\\d{2}-\\d{2}"
+                    : undefined
+                }
+                lang="en-CA"
+                autoComplete="off"
+                {...buildScheduleInputProps("endDate")}
               />
             </div>
 
             <div className="space-y-2">
               <Label>Start Time</Label>
               <Input
-                type="time"
-                value={state.startTime}
-                onChange={(e) =>
-                  setState((prev) => ({ ...prev, startTime: e.target.value }))
+                type={usesPlainTextScheduleInputs ? "text" : "time"}
+                inputMode={usesPlainTextScheduleInputs ? "numeric" : undefined}
+                placeholder={usesPlainTextScheduleInputs ? "HH:MM" : undefined}
+                pattern={
+                  usesPlainTextScheduleInputs ? "\\d{2}:\\d{2}" : undefined
                 }
+                step="60"
+                autoComplete="off"
+                {...buildScheduleInputProps("startTime")}
               />
             </div>
 
             <div className="space-y-2">
               <Label>End Time</Label>
               <Input
-                type="time"
-                value={state.endTime}
-                onChange={(e) =>
-                  setState((prev) => ({ ...prev, endTime: e.target.value }))
+                type={usesPlainTextScheduleInputs ? "text" : "time"}
+                inputMode={usesPlainTextScheduleInputs ? "numeric" : undefined}
+                placeholder={usesPlainTextScheduleInputs ? "HH:MM" : undefined}
+                pattern={
+                  usesPlainTextScheduleInputs ? "\\d{2}:\\d{2}" : undefined
                 }
+                step="60"
+                autoComplete="off"
+                {...buildScheduleInputProps("endTime")}
               />
             </div>
           </div>
+
+          {usesPlainTextScheduleInputs ? (
+            <p className="text-xs text-slate-500">
+              Safari fallback is active. Enter dates as `YYYY-MM-DD` and times
+              as `HH:MM`.
+            </p>
+          ) : null}
 
           {scheduleStartPreview || scheduleEndPreview ? (
             <div className="rounded-md border border-sky-200 bg-sky-50 px-3 py-2 text-sm text-sky-900">
