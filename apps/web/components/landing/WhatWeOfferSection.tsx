@@ -35,7 +35,8 @@ export default function WhatWeOfferSection() {
     <section className="home-section-md">
       <div className="container">
         <ScrollReveal>
-          <div className="grid gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-10">
+          <div className="grid items-start gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
+            {/* Left column – heading, no image */}
             <div className="max-w-xl space-y-4 lg:pt-2">
               <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                 What we offer
@@ -45,26 +46,23 @@ export default function WhatWeOfferSection() {
                 a catalog.
               </h2>
               <p className="text-muted-foreground text-base leading-7 sm:text-lg">
-                Instead of listing products in a row, the homepage should help
-                people connect what they are struggling with to the kind of
-                support or structure that actually fits.
+                We pair what you&apos;re struggling with to the kind of support
+                or structure that actually fits — clearly, without the overwhelm
+                of a product catalogue.
               </p>
             </div>
 
-            <div className="home-shell mx-auto w-full max-w-4xl px-4 py-4 sm:px-5 sm:py-5">
-              {OFFERINGS.map((item, index) => (
+            {/* Right column – offerings as a clean flowing list */}
+            <div className="w-full max-w-4xl divide-y divide-border/40">
+              {OFFERINGS.map((item) => (
                 <div
                   key={item.struggle}
-                  className={`grid gap-3 rounded-[1.2rem] px-4 py-4 sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:px-5 ${
-                    index < OFFERINGS.length - 1
-                      ? "border-border/60 border-b"
-                      : ""
-                  }`}
+                  className="grid gap-2 py-5 first:pt-0 last:pb-0 sm:grid-cols-[1fr_auto_1fr] sm:items-center sm:gap-4"
                 >
                   <span className="text-foreground leading-7">
                     {item.struggle}
                   </span>
-                  <ArrowRight className="text-muted-foreground hidden h-4 w-4 shrink-0 sm:block" />
+                  <ArrowRight className="text-primary/40 hidden h-4 w-4 shrink-0 sm:block" />
                   <Link
                     href={item.href}
                     className="text-primary font-medium hover:underline sm:text-right"

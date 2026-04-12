@@ -182,7 +182,7 @@ export function CourseCard({
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="@container group relative h-full cursor-pointer overflow-hidden rounded-2xl border-none bg-card/50 shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
       onClick={handleCardClick}
     >
       {/* Course Image */}
@@ -193,7 +193,7 @@ export function CourseCard({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
+              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -232,7 +232,7 @@ export function CourseCard({
           {course.name}
         </CardTitle>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3 pt-0 pb-4 sm:flex-row sm:items-start sm:justify-between">
+      <CardContent className="flex flex-col gap-3 pt-0 pb-4 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
         <div className="min-w-0 flex-1 space-y-1">
           {shouldShowCourseTiming(course) && scheduleLines.length > 0 ? (
             <div className="mb-2 space-y-1 text-xs text-slate-600">
@@ -303,7 +303,7 @@ export function CourseCard({
               onClick={handleAddToCart}
               disabled={isInCart || isOutOfStock}
               size="sm"
-              className="w-full shrink-0 sm:w-auto"
+              className="w-full shrink-0 @min-[300px]:w-auto"
             >
               <Plus className="mr-2 h-4 w-4" />
               {isOutOfStock
@@ -461,7 +461,7 @@ export function UpcomingCourseCard({
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="@container group relative h-full cursor-pointer overflow-hidden rounded-2xl border-none bg-card/50 shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
       onClick={handleCardClick}
     >
       <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
@@ -469,7 +469,7 @@ export function UpcomingCourseCard({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
+              className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -545,8 +545,8 @@ export function UpcomingCourseCard({
       </CardHeader>
 
       <CardContent className="pt-0 pb-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 flex-1 space-y-1 sm:pr-3">
+        <div className="flex flex-col gap-3 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
+          <div className="min-w-0 flex-1 space-y-1 @min-[300px]:pr-3">
             <Badge
               variant="secondary"
               className="px-3 py-1 text-sm font-semibold"
@@ -597,7 +597,7 @@ export function UpcomingCourseCard({
                 onClick={handleAddToCart}
                 disabled={isInCart || isOutOfStock}
                 size="sm"
-                className="relative z-10 w-full shrink-0 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 sm:w-auto"
+                className="relative z-10 w-full shrink-0 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 @min-[300px]:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock

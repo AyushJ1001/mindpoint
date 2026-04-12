@@ -267,7 +267,7 @@ const CourseGroupCard = ({
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="@container group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
@@ -277,7 +277,7 @@ const CourseGroupCard = ({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
+              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -415,8 +415,8 @@ const CourseGroupCard = ({
           )}
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-1">
+        <div className="flex flex-col gap-3 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
+          <div className="min-w-0 flex-1 space-y-1">
             <Badge
               variant="secondary"
               className="px-3 py-1 text-base font-semibold"
@@ -471,7 +471,7 @@ const CourseGroupCard = ({
                 }}
                 disabled={isInCart || isOutOfStock}
                 size="sm"
-                className="transition-smooth w-full sm:w-auto"
+                className="transition-smooth w-full shrink-0 @min-[300px]:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock
@@ -620,7 +620,7 @@ const CourseCard = ({
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="@container group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
@@ -630,7 +630,7 @@ const CourseCard = ({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
+              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -674,7 +674,7 @@ const CourseCard = ({
         </div>
       </CardHeader>
       <CardContent className="pt-0 pb-4">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
           <div className="min-w-0 flex-1 space-y-1">
             <Badge
               variant="secondary"
@@ -729,7 +729,7 @@ const CourseCard = ({
                 }}
                 disabled={isInCart || isOutOfStock}
                 size="sm"
-                className="transition-smooth w-full shrink-0 sm:w-auto"
+                className="transition-smooth w-full shrink-0 @min-[300px]:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock

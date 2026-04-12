@@ -3,7 +3,6 @@
 import type React from "react";
 
 import { useState, useCallback, forwardRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -34,6 +33,14 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { submitCareersApplication } from "@mindpoint/services/careers";
+
+const PhoneInputField = forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>(({ value, ...rest }, ref) => (
+  <Input ref={ref} value={value ?? ""} {...rest} />
+));
+PhoneInputField.displayName = "PhoneInputField";
 
 const ApplicationSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
@@ -81,14 +88,6 @@ export default function CareersClient() {
     mode: "onBlur",
   });
 
-  const PhoneInputField = forwardRef<
-    HTMLInputElement,
-    React.InputHTMLAttributes<HTMLInputElement>
-  >(({ value, ...rest }, ref) => (
-    <Input ref={ref} value={value ?? ""} {...rest} />
-  ));
-  PhoneInputField.displayName = "PhoneInputField";
-
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(true);
@@ -127,7 +126,7 @@ export default function CareersClient() {
         simulateAutoFill();
         toast.success("Resume uploaded successfully", {
           description:
-            "We&apos;ve auto-filled some fields based on your resume.",
+            "We've auto-filled some fields based on your resume.",
         });
       } else {
         toast.error("Invalid file type", {
@@ -144,7 +143,7 @@ export default function CareersClient() {
       setSelectedFile(file);
       simulateAutoFill();
       toast.success("Resume uploaded successfully", {
-        description: "We&apos;ve auto-filled some fields based on your resume.",
+        description: "We've auto-filled some fields based on your resume.",
       });
     }
   };
@@ -176,7 +175,7 @@ export default function CareersClient() {
 
       toast.success("Application submitted successfully!", {
         description:
-          "We&apos;ll review your application and get back to you within 5-7 business days.",
+          "We'll review your application and get back to you within 5-7 business days.",
       });
 
       // Reset form
@@ -195,7 +194,7 @@ export default function CareersClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-10% via-lavender-50 to-lavender-100">
+    <div className="min-h-screen bg-gradient-to-br from-background via-lavender-50 to-lavender-100">
       <div className="container py-12">
         {/* Header Section */}
         <div className="mb-12 text-center">
@@ -208,7 +207,7 @@ export default function CareersClient() {
             real difference in people&apos;s lives.
           </p>
 
-          {/* Values */}
+          {/* Values – already clean, no cards needed */}
           <div className="mx-auto grid max-w-4xl grid-cols-1 gap-6 md:grid-cols-4">
             {[
               {
@@ -233,8 +232,8 @@ export default function CareersClient() {
               },
             ].map(({ icon: Icon, title, desc }) => (
               <div key={title} className="text-center">
-                <div className="bg-primary/10 mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full">
-                  <Icon className="text-primary h-8 w-8" />
+                <div className="bg-primary/8 mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full">
+                  <Icon className="text-primary h-7 w-7" />
                 </div>
                 <h3 className="mb-1 font-semibold text-foreground">
                   {title}
@@ -243,190 +242,110 @@ export default function CareersClient() {
               </div>
             ))}
           </div>
+
         </div>
 
-        {/* Application Form */}
-        <Card className="mx-auto max-w-4xl">
-          <CardHeader>
-            <CardTitle className="text-2xl text-foreground">
+        {/* Application Form – soft container instead of hard Card */}
+        <div className="mx-auto max-w-4xl rounded-2xl bg-card/50 p-6 shadow-sm backdrop-blur-sm sm:p-8 lg:p-10">
+          <div className="mb-6">
+            <h2 className="text-foreground text-2xl font-semibold">
               Apply Now
-            </CardTitle>
-            <p className="text-muted-foreground">
+            </h2>
+            <p className="text-muted-foreground mt-1">
               Upload your resume and fill in your details to apply for a
               position with us.
             </p>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-8"
-              >
-                {/* Resume Upload */}
-                <div className="space-y-4">
-                  <Label className="text-base font-semibold">Resume/CV *</Label>
-                  <div
-                    className={cn(
-                      "rounded-lg border-2 border-dashed p-8 text-center transition-colors",
-                      isDragOver
-                        ? "border-primary bg-primary/5"
-                        : "border-muted-foreground/25",
-                      selectedFile && "border-primary bg-primary/5",
-                    )}
-                    onDragOver={handleDragOver}
-                    onDragLeave={handleDragLeave}
-                    onDrop={handleDrop}
-                  >
-                    {selectedFile ? (
-                      <div className="flex items-center justify-center gap-4">
-                        <FileText className="text-primary h-8 w-8" />
-                        <div className="text-left">
-                          <p className="font-medium">{selectedFile.name}</p>
-                          <p className="text-muted-foreground text-sm">
-                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={removeFile}
-                          className="text-muted-foreground hover:text-destructive"
+          </div>
+
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-8"
+            >
+              {/* Resume Upload */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">Resume/CV *</Label>
+                <div
+                  className={cn(
+                    "rounded-lg border-2 border-dashed p-8 text-center transition-colors",
+                    isDragOver
+                      ? "border-primary bg-primary/5"
+                      : "border-muted-foreground/25",
+                    selectedFile && "border-primary bg-primary/5",
+                  )}
+                  onDragOver={handleDragOver}
+                  onDragLeave={handleDragLeave}
+                  onDrop={handleDrop}
+                >
+                  {selectedFile ? (
+                    <div className="flex items-center justify-center gap-4">
+                      <FileText className="text-primary h-8 w-8" />
+                      <div className="text-left">
+                        <p className="font-medium">{selectedFile.name}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={removeFile}
+                        className="text-muted-foreground hover:text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ) : (
+                    <div>
+                      <Upload className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
+                      <p className="mb-2 text-lg font-medium">
+                        Drop your resume here
+                      </p>
+                      <p className="text-muted-foreground mb-4">
+                        or click to browse files
+                      </p>
+                      <input
+                        type="file"
+                        accept=".pdf,.doc,.docx"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        id="resume-upload"
+                      />
+                      <Button type="button" variant="outline" asChild>
+                        <label
+                          htmlFor="resume-upload"
+                          className="cursor-pointer"
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div>
-                        <Upload className="text-muted-foreground mx-auto mb-4 h-12 w-12" />
-                        <p className="mb-2 text-lg font-medium">
-                          Drop your resume here
-                        </p>
-                        <p className="text-muted-foreground mb-4">
-                          or click to browse files
-                        </p>
-                        <input
-                          type="file"
-                          accept=".pdf,.doc,.docx"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                          id="resume-upload"
-                        />
-                        <Button type="button" variant="outline" asChild>
-                          <label
-                            htmlFor="resume-upload"
-                            className="cursor-pointer"
-                          >
-                            Choose File
-                          </label>
-                        </Button>
-                        <p className="text-muted-foreground mt-2 text-xs">
-                          Supported formats: PDF, DOC, DOCX (Max 10MB)
-                        </p>
-                      </div>
-                    )}
-                  </div>
+                          Choose File
+                        </label>
+                      </Button>
+                      <p className="text-muted-foreground mt-2 text-xs">
+                        Supported formats: PDF, DOC, DOCX (Max 10MB)
+                      </p>
+                    </div>
+                  )}
                 </div>
+              </div>
 
-                {/* Personal Details */}
-                <div className="space-y-6">
-                  <h3 className="text-lg font-semibold text-foreground">
-                    Personal Details
-                  </h3>
+              {/* Personal Details */}
+              <div className="space-y-6">
+                <h3 className="text-lg font-semibold text-foreground">
+                  Personal Details
+                </h3>
 
-                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <FormField
-                      control={form.control}
-                      name="fullName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name *</FormLabel>
-                          <FormControl>
-                            <Input
-                              id="fullName"
-                              placeholder="Enter your full name"
-                              required
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email Address *</FormLabel>
-                          <FormControl>
-                            <Input
-                              id="email"
-                              type="email"
-                              placeholder="your.email@example.com"
-                              required
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone Number *</FormLabel>
-                          <FormControl>
-                            <PhoneInput
-                              id="phone"
-                              placeholder="+1 555 123 4567"
-                              international
-                              defaultCountry="IN"
-                              inputComponent={PhoneInputField}
-                              value={field.value}
-                              onChange={field.onChange}
-                              onBlur={field.onBlur}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="location"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Location *</FormLabel>
-                          <FormControl>
-                            <Input
-                              id="location"
-                              placeholder="City, State/Country"
-                              required
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                   <FormField
                     control={form.control}
-                    name="linkedIn"
+                    name="fullName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>LinkedIn Profile (Optional)</FormLabel>
+                        <FormLabel>Full Name *</FormLabel>
                         <FormControl>
                           <Input
-                            id="linkedIn"
-                            placeholder="https://linkedin.com/in/yourprofile"
+                            id="fullName"
+                            placeholder="Enter your full name"
+                            required
                             {...field}
                           />
                         </FormControl>
@@ -435,44 +354,60 @@ export default function CareersClient() {
                     )}
                   />
 
-                  <div className="space-y-2">
-                    <Label htmlFor="experience">
-                      Which role are you interested in?{" "}
-                    </Label>
-                    {[
-                      "Administration",
-                      "Teaching Faculty",
-                      "Session Supervisor",
-                      "Counsellor/Therapist",
-                      "Social Media Intern",
-                    ].map((role, idx) => (
-                      <div className="flex items-center gap-2" key={idx}>
-                        <Checkbox
-                          id={role}
-                          checked={selectedRoles.includes(role)}
-                          onCheckedChange={(checked) => {
-                            setSelectedRoles((prev) =>
-                              checked
-                                ? [...prev, role]
-                                : prev.filter((r) => r !== role),
-                            );
-                          }}
-                        />
-                        <Label htmlFor={role}>{role}</Label>
-                      </div>
-                    ))}
-                  </div>
                   <FormField
                     control={form.control}
-                    name="coverLetter"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel>Cover Letter (Optional)</FormLabel>
+                        <FormLabel>Email Address *</FormLabel>
                         <FormControl>
-                          <Textarea
-                            id="coverLetter"
-                            placeholder="Tell us why you're interested in joining The Mind Point..."
-                            rows={6}
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="your.email@example.com"
+                            required
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Phone Number *</FormLabel>
+                        <FormControl>
+                          <PhoneInput
+                            id="phone"
+                            placeholder="+1 555 123 4567"
+                            international
+                            defaultCountry="IN"
+                            inputComponent={PhoneInputField}
+                            value={field.value}
+                            onChange={field.onChange}
+                            onBlur={field.onBlur}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="location"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Location *</FormLabel>
+                        <FormControl>
+                          <Input
+                            id="location"
+                            placeholder="City, State/Country"
+                            required
                             {...field}
                           />
                         </FormControl>
@@ -482,21 +417,85 @@ export default function CareersClient() {
                   />
                 </div>
 
-                {/* Submit Button */}
-                <div className="flex justify-end">
-                  <Button
-                    type="submit"
-                    size="lg"
-                    disabled={!selectedFile || isSubmitting}
-                    className="min-w-[200px]"
-                  >
-                    {isSubmitting ? "Submitting..." : "Submit Application"}
-                  </Button>
+                <FormField
+                  control={form.control}
+                  name="linkedIn"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>LinkedIn Profile (Optional)</FormLabel>
+                      <FormControl>
+                        <Input
+                          id="linkedIn"
+                          placeholder="https://linkedin.com/in/yourprofile"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="space-y-2">
+                  <Label htmlFor="experience">
+                    Which role are you interested in?{" "}
+                  </Label>
+                  {[
+                    "Administration",
+                    "Teaching Faculty",
+                    "Session Supervisor",
+                    "Counsellor/Therapist",
+                    "Social Media Intern",
+                  ].map((role) => (
+                    <div className="flex items-center gap-2" key={role}>
+                      <Checkbox
+                        id={role}
+                        checked={selectedRoles.includes(role)}
+                        onCheckedChange={(checked) => {
+                          setSelectedRoles((prev) =>
+                            checked
+                              ? [...prev, role]
+                              : prev.filter((r) => r !== role),
+                          );
+                        }}
+                      />
+                      <Label htmlFor={role}>{role}</Label>
+                    </div>
+                  ))}
                 </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+                <FormField
+                  control={form.control}
+                  name="coverLetter"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cover Letter (Optional)</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          id="coverLetter"
+                          placeholder="Tell us why you're interested in joining The Mind Point..."
+                          rows={6}
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Submit Button */}
+              <div className="flex justify-end">
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={!selectedFile || isSubmitting}
+                  className="min-w-[200px]"
+                >
+                  {isSubmitting ? "Submitting..." : "Submit Application"}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
       </div>
     </div>
   );

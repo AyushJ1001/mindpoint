@@ -19,12 +19,8 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../components/ui/carousel";
-import { Plus, BookOpen, Calendar, Clock } from "lucide-react";
+import { Plus, BookOpen } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
-import {
-  getCourseScheduleLines,
-  shouldShowCourseTiming,
-} from "@/lib/course-schedule";
 import type {
   CourseLike,
   PublicCourse,
@@ -294,11 +290,10 @@ const CourseGroupCard = ({
   };
 
   const displayPrice = getCoursePrice(selectedCourse);
-  const scheduleLines = getCourseScheduleLines(selectedCourse);
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="@container group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
@@ -308,7 +303,7 @@ const CourseGroupCard = ({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
+              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -447,23 +442,8 @@ const CourseGroupCard = ({
           )}
         </div>
 
-        {shouldShowCourseTiming(selectedCourse) && scheduleLines.length > 0 ? (
-          <div className="mb-2 space-y-1 text-xs text-slate-600">
-            {scheduleLines.map((line, index) => (
-              <div key={line} className="flex items-center gap-1.5">
-                {index === 0 ? (
-                  <Calendar className="h-3.5 w-3.5 shrink-0" />
-                ) : (
-                  <Clock className="h-3.5 w-3.5 shrink-0" />
-                )}
-                <span className="line-clamp-1">{line}</span>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="min-w-0 space-y-1">
+        <div className="flex flex-col gap-3 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
+          <div className="min-w-0 flex-1 space-y-1">
             <Badge
               variant="secondary"
               className="px-3 py-1 text-base font-semibold"
@@ -518,7 +498,7 @@ const CourseGroupCard = ({
                 }}
                 disabled={isInCart || isOutOfStock}
                 size="sm"
-                className="transition-smooth w-full sm:w-auto"
+                className="transition-smooth w-full shrink-0 @min-[300px]:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock
@@ -675,11 +655,10 @@ const CourseCard = ({
   };
 
   const displayPrice = getCoursePrice(course);
-  const scheduleLines = getCourseScheduleLines(course);
 
   return (
     <Card
-      className="group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="@container group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
@@ -689,7 +668,7 @@ const CourseCard = ({
           {offerDetails && (
             <Badge
               variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap shadow-sm"
+              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
             >
               <span className="sm:hidden">Special Offer</span>
               <span className="hidden sm:inline">{offerDetails.offerName}</span>
@@ -733,21 +712,7 @@ const CourseCard = ({
         </div>
       </CardHeader>
       <CardContent className="pt-0 pb-6">
-        {shouldShowCourseTiming(course) && scheduleLines.length > 0 ? (
-          <div className="mb-2 space-y-1 text-xs text-slate-600">
-            {scheduleLines.map((line, index) => (
-              <div key={line} className="flex items-center gap-1.5">
-                {index === 0 ? (
-                  <Calendar className="h-3.5 w-3.5 shrink-0" />
-                ) : (
-                  <Clock className="h-3.5 w-3.5 shrink-0" />
-                )}
-                <span className="line-clamp-1">{line}</span>
-              </div>
-            ))}
-          </div>
-        ) : null}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="flex flex-col gap-3 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
           <Badge
             variant="secondary"
             className="w-fit px-3 py-1 text-base font-semibold"
@@ -773,7 +738,7 @@ const CourseCard = ({
                 }}
                 disabled={isInCart || isOutOfStock}
                 size="sm"
-                className="transition-smooth w-full sm:w-auto"
+                className="transition-smooth w-full shrink-0 @min-[300px]:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock

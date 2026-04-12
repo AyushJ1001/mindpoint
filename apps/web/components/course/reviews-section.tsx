@@ -153,7 +153,7 @@ export default function ReviewsSection({
         <div className="mx-auto max-w-4xl">
           <ScrollReveal>
             <div className="rounded-2xl">
-              <Card className="course-shell-soft border-border/70 overflow-hidden bg-transparent">
+              <Card className="overflow-hidden border-none bg-transparent shadow-none">
                 <CardHeader className="pb-6 text-center">
                   <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                     More voices, if you need them
@@ -213,7 +213,7 @@ export default function ReviewsSection({
                           return (
                             <Card
                               key={review._id}
-                              className="border-border/70 dark:bg-card/72 border bg-white/82 transition-shadow hover:shadow-lg dark:border-white/8"
+                              className="border-none bg-card/50 shadow-sm backdrop-blur-sm transition-shadow hover:shadow-md"
                             >
                               <CardHeader className="pb-3">
                                 <div className="flex items-center justify-between gap-3">

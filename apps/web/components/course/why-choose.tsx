@@ -53,22 +53,36 @@ export default function WhyChoose({
           </h2>
           <p className="text-muted-foreground mt-3 text-lg">{description}</p>
         </ScrollReveal>
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
-          {items.map((item, idx) => (
-            <ScrollReveal key={idx}>
-              <div className="rounded-2xl border border-border bg-card p-6">
-                <div className="bg-primary/10 mb-4 flex h-10 w-10 items-center justify-center rounded-xl">
-                  <item.icon className="text-primary h-5 w-5" />
+
+        {/* Alternating feature rows instead of card grid */}
+        <div className="mt-10 space-y-10">
+          {items.map((item, idx) => {
+            const isReversed = idx % 2 !== 0;
+            return (
+              <ScrollReveal key={idx}>
+                <div
+                  className={`flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6 ${
+                    isReversed ? "sm:flex-row-reverse" : ""
+                  }`}
+                >
+                  {/* Icon */}
+                  <div className="bg-primary/8 flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
+                    <item.icon className="text-primary h-5 w-5" />
+                  </div>
+
+                  {/* Text */}
+                  <div className={isReversed ? "sm:text-right" : ""}>
+                    <h3 className="text-foreground text-lg font-semibold">
+                      {item.title}
+                    </h3>
+                    <p className="text-muted-foreground mt-1 max-w-md leading-relaxed">
+                      {item.description}
+                    </p>
+                  </div>
                 </div>
-                <h3 className="text-lg font-semibold text-foreground">
-                  {item.title}
-                </h3>
-                <p className="text-muted-foreground mt-1 leading-relaxed">
-                  {item.description}
-                </p>
-              </div>
-            </ScrollReveal>
-          ))}
+              </ScrollReveal>
+            );
+          })}
         </div>
       </div>
     </section>
