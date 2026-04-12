@@ -30,7 +30,6 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
         alt=""
         fill
         className="object-cover"
-        priority
         sizes="100vw"
       />
 

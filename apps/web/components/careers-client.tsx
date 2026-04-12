@@ -34,6 +34,14 @@ import {
 } from "@/components/ui/form";
 import { submitCareersApplication } from "@mindpoint/services/careers";
 
+const PhoneInputField = forwardRef<
+  HTMLInputElement,
+  React.InputHTMLAttributes<HTMLInputElement>
+>(({ value, ...rest }, ref) => (
+  <Input ref={ref} value={value ?? ""} {...rest} />
+));
+PhoneInputField.displayName = "PhoneInputField";
+
 const ApplicationSchema = z.object({
   fullName: z.string().min(1, "Full name is required"),
   email: z.string().email("Enter a valid email address"),
@@ -79,14 +87,6 @@ export default function CareersClient() {
     },
     mode: "onBlur",
   });
-
-  const PhoneInputField = forwardRef<
-    HTMLInputElement,
-    React.InputHTMLAttributes<HTMLInputElement>
-  >(({ value, ...rest }, ref) => (
-    <Input ref={ref} value={value ?? ""} {...rest} />
-  ));
-  PhoneInputField.displayName = "PhoneInputField";
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
@@ -445,8 +445,8 @@ export default function CareersClient() {
                     "Session Supervisor",
                     "Counsellor/Therapist",
                     "Social Media Intern",
-                  ].map((role, idx) => (
-                    <div className="flex items-center gap-2" key={idx}>
+                  ].map((role) => (
+                    <div className="flex items-center gap-2" key={role}>
                       <Checkbox
                         id={role}
                         checked={selectedRoles.includes(role)}

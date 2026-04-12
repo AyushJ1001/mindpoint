@@ -41,9 +41,9 @@ export default function Educators() {
 
         {/* Educator list – simple items with avatars, no nested cards */}
         <div className="space-y-6">
-          {EDUCATORS.map((p, idx) => (
+          {EDUCATORS.map((p) => (
             <div
-              key={idx}
+              key={p.name}
               className="flex items-start gap-4 sm:items-center"
             >
               {/* Avatar */}

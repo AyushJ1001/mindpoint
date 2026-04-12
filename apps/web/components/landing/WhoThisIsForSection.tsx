@@ -26,7 +26,7 @@ const PERSONAS = [
 
 export default function WhoThisIsForSection() {
   return (
-    <section className="home-section-sm relative pt-4 sm:pt-6">
+    <section className="home-section-sm relative overflow-hidden pt-4 sm:pt-6">
       <div className="container">
         <ScrollReveal>
           <div className="mx-auto max-w-6xl">
@@ -50,18 +50,19 @@ export default function WhoThisIsForSection() {
               {/* Right column – personas as flowing blockquotes */}
               <div className="space-y-6">
                 {PERSONAS.map((persona, index) => (
-                  <blockquote
+                  <ScrollReveal
                     key={persona.label}
-                    className="border-primary/15 relative border-l-2 py-1 pl-5"
-                    style={{ animationDelay: `${index * 90}ms` }}
+                    transitionDelayMs={index * 90}
                   >
-                    <p className="text-foreground/85 text-base leading-7 italic">
-                      &ldquo;{persona.quote}&rdquo;
-                    </p>
-                    <footer className="text-muted-foreground mt-2 text-sm font-medium tracking-[0.14em] uppercase">
-                      {persona.label}
-                    </footer>
-                  </blockquote>
+                    <blockquote className="border-primary/15 relative border-l-2 py-1 pl-5">
+                      <p className="text-foreground/85 text-base leading-7 italic">
+                        &ldquo;{persona.quote}&rdquo;
+                      </p>
+                      <footer className="text-muted-foreground mt-2 text-sm font-medium tracking-[0.14em] uppercase">
+                        {persona.label}
+                      </footer>
+                    </blockquote>
+                  </ScrollReveal>
                 ))}
               </div>
             </div>

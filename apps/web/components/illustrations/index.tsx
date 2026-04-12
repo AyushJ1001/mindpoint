@@ -1,9 +1,13 @@
+"use client";
+
+import { useId } from "react";
+
 /**
  * Warm, organic SVG illustrations for MindPoint.
  *
  * Each illustration uses the lavender / terracotta palette and soft organic
  * shapes to create a hand-drawn, welcoming aesthetic. Gradient IDs are
- * prefixed per illustration to avoid collisions on the same page.
+ * prefixed per illustration and per React instance (useId) to avoid collisions.
  *
  * Usage: <HeroIllustration className="w-full max-w-md" />
  *
@@ -20,6 +24,9 @@ interface IllustrationProps {
 /*  leaves and organic blob background.                               */
 /* ------------------------------------------------------------------ */
 export function HeroIllustration({ className }: IllustrationProps) {
+  const uid = useId().replace(/:/g, "");
+  const gid = (name: string) => `${uid}-${name}`;
+
   return (
     <svg
       viewBox="0 0 500 460"
@@ -29,15 +36,15 @@ export function HeroIllustration({ className }: IllustrationProps) {
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="h-g1" x1="0" y1="0" x2="1" y2="1">
+        <linearGradient id={gid("h-g1")} x1="0" y1="0" x2="1" y2="1">
           <stop offset="0%" stopColor="#d4c8e8" stopOpacity="0.45" />
           <stop offset="100%" stopColor="#b8a5d4" stopOpacity="0.2" />
         </linearGradient>
-        <linearGradient id="h-g2" x1="1" y1="0" x2="0" y2="1">
+        <linearGradient id={gid("h-g2")} x1="1" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor="#e8cfc0" stopOpacity="0.5" />
           <stop offset="100%" stopColor="#c8916e" stopOpacity="0.18" />
         </linearGradient>
-        <radialGradient id="h-glow" cx="0.5" cy="0.48" r="0.42">
+        <radialGradient id={gid("h-glow")} cx="0.5" cy="0.48" r="0.42">
           <stop offset="0%" stopColor="#e8e0f0" stopOpacity="0.35" />
           <stop offset="100%" stopColor="#e8e0f0" stopOpacity="0" />
         </radialGradient>
@@ -46,17 +53,17 @@ export function HeroIllustration({ className }: IllustrationProps) {
       {/* Large organic blob */}
       <path
         d="M95,85 C155,18 335,2 415,72 C495,142 485,248 445,328 C405,408 310,448 210,435 C110,422 45,358 28,268 C11,178 35,152 95,85Z"
-        fill="url(#h-g1)"
+        fill={`url(#${gid("h-g1")})`}
       />
 
       {/* Warm secondary blob */}
       <path
         d="M295,115 C358,82 432,128 418,202 C404,276 338,308 278,285 C218,262 232,148 295,115Z"
-        fill="url(#h-g2)"
+        fill={`url(#${gid("h-g2")})`}
       />
 
       {/* Soft glow behind the person */}
-      <circle cx="260" cy="250" r="150" fill="url(#h-glow)" />
+      <circle cx="260" cy="250" r="150" fill={`url(#${gid("h-glow")})`} />
 
       {/* --- Seated person silhouette --- */}
       {/* Head */}
@@ -146,6 +153,9 @@ export function HeroIllustration({ className }: IllustrationProps) {
 /*  SupportIllustration – heart cradled by gentle hands               */
 /* ------------------------------------------------------------------ */
 export function SupportIllustration({ className }: IllustrationProps) {
+  const uid = useId().replace(/:/g, "");
+  const gid = (name: string) => `${uid}-${name}`;
+
   return (
     <svg
       viewBox="0 0 320 300"
@@ -155,18 +165,18 @@ export function SupportIllustration({ className }: IllustrationProps) {
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id="s-bg" cx="0.5" cy="0.45" r="0.5">
+        <radialGradient id={gid("s-bg")} cx="0.5" cy="0.45" r="0.5">
           <stop offset="0%" stopColor="#ede7f6" stopOpacity="0.4" />
           <stop offset="100%" stopColor="#ede7f6" stopOpacity="0" />
         </radialGradient>
-        <linearGradient id="s-heart" x1="0.5" y1="0" x2="0.5" y2="1">
+        <linearGradient id={gid("s-heart")} x1="0.5" y1="0" x2="0.5" y2="1">
           <stop offset="0%" stopColor="#d4a080" stopOpacity="0.7" />
           <stop offset="100%" stopColor="#c08060" stopOpacity="0.45" />
         </linearGradient>
       </defs>
 
       {/* Background glow */}
-      <circle cx="160" cy="140" r="135" fill="url(#s-bg)" />
+      <circle cx="160" cy="140" r="135" fill={`url(#${gid("s-bg")})`} />
 
       {/* Organic blob behind heart */}
       <path
@@ -178,7 +188,7 @@ export function SupportIllustration({ className }: IllustrationProps) {
       {/* Heart */}
       <path
         d="M160,115 C160,85 125,65 125,95 C125,125 160,160 160,160 C160,160 195,125 195,95 C195,65 160,85 160,115Z"
-        fill="url(#s-heart)"
+        fill={`url(#${gid("s-heart")})`}
       />
 
       {/* Cupped hands */}
@@ -215,6 +225,9 @@ export function SupportIllustration({ className }: IllustrationProps) {
 /*  GrowthIllustration – plant growing upward with butterfly          */
 /* ------------------------------------------------------------------ */
 export function GrowthIllustration({ className }: IllustrationProps) {
+  const uid = useId().replace(/:/g, "");
+  const gid = (name: string) => `${uid}-${name}`;
+
   return (
     <svg
       viewBox="0 0 300 340"
@@ -224,7 +237,7 @@ export function GrowthIllustration({ className }: IllustrationProps) {
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="g-stem" x1="0.5" y1="1" x2="0.5" y2="0">
+        <linearGradient id={gid("g-stem")} x1="0.5" y1="1" x2="0.5" y2="0">
           <stop offset="0%" stopColor="#8b7db0" stopOpacity="0.5" />
           <stop offset="100%" stopColor="#9d8ec0" stopOpacity="0.3" />
         </linearGradient>
@@ -241,7 +254,7 @@ export function GrowthIllustration({ className }: IllustrationProps) {
       <path
         d="M150,310 C148,280 146,240 148,200 C150,160 155,130 152,95"
         fill="none"
-        stroke="url(#g-stem)"
+        stroke={`url(#${gid("g-stem")})`}
         strokeWidth="4"
         strokeLinecap="round"
       />
@@ -315,6 +328,9 @@ export function GrowthIllustration({ className }: IllustrationProps) {
 /*  CommunityIllustration – overlapping people-shapes, togetherness   */
 /* ------------------------------------------------------------------ */
 export function CommunityIllustration({ className }: IllustrationProps) {
+  const uid = useId().replace(/:/g, "");
+  const gid = (name: string) => `${uid}-${name}`;
+
   return (
     <svg
       viewBox="0 0 400 300"
@@ -324,14 +340,14 @@ export function CommunityIllustration({ className }: IllustrationProps) {
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id="c-bg" cx="0.5" cy="0.5" r="0.55">
+        <radialGradient id={gid("c-bg")} cx="0.5" cy="0.5" r="0.55">
           <stop offset="0%" stopColor="#ede7f6" stopOpacity="0.3" />
           <stop offset="100%" stopColor="#ede7f6" stopOpacity="0" />
         </radialGradient>
       </defs>
 
       {/* Background glow */}
-      <circle cx="200" cy="150" r="155" fill="url(#c-bg)" />
+      <circle cx="200" cy="150" r="155" fill={`url(#${gid("c-bg")})`} />
 
       {/* Person 1 – left */}
       <circle cx="135" cy="115" r="22" fill="#8b7db0" fillOpacity="0.4" />
@@ -413,6 +429,9 @@ export function CommunityIllustration({ className }: IllustrationProps) {
 /*  TherapyIllustration – two people in calm conversation             */
 /* ------------------------------------------------------------------ */
 export function TherapyIllustration({ className }: IllustrationProps) {
+  const uid = useId().replace(/:/g, "");
+  const gid = (name: string) => `${uid}-${name}`;
+
   return (
     <svg
       viewBox="0 0 360 300"
@@ -422,7 +441,7 @@ export function TherapyIllustration({ className }: IllustrationProps) {
       aria-hidden="true"
     >
       <defs>
-        <radialGradient id="t-glow" cx="0.5" cy="0.55" r="0.35">
+        <radialGradient id={gid("t-glow")} cx="0.5" cy="0.55" r="0.35">
           <stop offset="0%" stopColor="#f5e6da" stopOpacity="0.45" />
           <stop offset="100%" stopColor="#f5e6da" stopOpacity="0" />
         </radialGradient>
@@ -436,7 +455,7 @@ export function TherapyIllustration({ className }: IllustrationProps) {
       />
 
       {/* Warm glow between them */}
-      <circle cx="180" cy="175" r="75" fill="url(#t-glow)" />
+      <circle cx="180" cy="175" r="75" fill={`url(#${gid("t-glow")})`} />
 
       {/* Person 1 – left, seated */}
       <circle cx="115" cy="125" r="22" fill="#8b7db0" fillOpacity="0.55" />
@@ -491,6 +510,9 @@ export function TherapyIllustration({ className }: IllustrationProps) {
 /*  HopeIllustration – sunrise over gentle hills with birds           */
 /* ------------------------------------------------------------------ */
 export function HopeIllustration({ className }: IllustrationProps) {
+  const uid = useId().replace(/:/g, "");
+  const gid = (name: string) => `${uid}-${name}`;
+
   return (
     <svg
       viewBox="0 0 420 260"
@@ -500,11 +522,11 @@ export function HopeIllustration({ className }: IllustrationProps) {
       aria-hidden="true"
     >
       <defs>
-        <linearGradient id="ho-sky" x1="0.5" y1="0" x2="0.5" y2="1">
+        <linearGradient id={gid("ho-sky")} x1="0.5" y1="0" x2="0.5" y2="1">
           <stop offset="0%" stopColor="#e8cfc0" stopOpacity="0.35" />
           <stop offset="100%" stopColor="#ede7f6" stopOpacity="0.2" />
         </linearGradient>
-        <radialGradient id="ho-sun" cx="0.5" cy="1" r="0.5">
+        <radialGradient id={gid("ho-sun")} cx="0.5" cy="1" r="0.5">
           <stop offset="0%" stopColor="#d4a080" stopOpacity="0.55" />
           <stop offset="40%" stopColor="#e8cfc0" stopOpacity="0.25" />
           <stop offset="100%" stopColor="#e8cfc0" stopOpacity="0" />
@@ -512,10 +534,10 @@ export function HopeIllustration({ className }: IllustrationProps) {
       </defs>
 
       {/* Sky background */}
-      <rect width="420" height="260" fill="url(#ho-sky)" rx="24" />
+      <rect width="420" height="260" fill={`url(#${gid("ho-sky")})`} rx="24" />
 
       {/* Sun glow */}
-      <circle cx="210" cy="175" r="95" fill="url(#ho-sun)" />
+      <circle cx="210" cy="175" r="95" fill={`url(#${gid("ho-sun")})`} />
 
       {/* Sun disc */}
       <circle cx="210" cy="178" r="28" fill="#d4a080" fillOpacity="0.5" />
