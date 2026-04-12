@@ -117,11 +117,11 @@ export default function TestimonialsSection() {
             <div className="mx-auto grid max-w-5xl gap-8 md:grid-cols-3">
               <div className="flex flex-col gap-8 md:col-span-2">
                 {TEXT_TESTIMONIALS.map((t, index) => (
-                  <ScrollReveal key={t.initials}>
-                    <blockquote
-                      className="border-primary/12 relative border-l-2 py-1 pl-6"
-                      style={{ transitionDelay: `${index * 100}ms` }}
-                    >
+                  <ScrollReveal
+                    key={t.initials}
+                    transitionDelayMs={index * 100}
+                  >
+                    <blockquote className="border-primary/12 relative border-l-2 py-1 pl-6">
                       {/* Decorative quotation mark */}
                       <span
                         className="text-primary/8 font-display pointer-events-none absolute -top-3 -left-1 text-5xl font-bold select-none"
