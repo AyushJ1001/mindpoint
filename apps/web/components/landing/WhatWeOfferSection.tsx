@@ -46,9 +46,9 @@ export default function WhatWeOfferSection() {
                 a catalog.
               </h2>
               <p className="text-muted-foreground text-base leading-7 sm:text-lg">
-                Instead of listing products in a row, the homepage should help
-                people connect what they are struggling with to the kind of
-                support or structure that actually fits.
+                We pair what you&apos;re struggling with to the kind of support
+                or structure that actually fits — clearly, without the overwhelm
+                of a product catalogue.
               </p>
             </div>
 

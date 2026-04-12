@@ -126,7 +126,7 @@ export default function CareersClient() {
         simulateAutoFill();
         toast.success("Resume uploaded successfully", {
           description:
-            "We&apos;ve auto-filled some fields based on your resume.",
+            "We've auto-filled some fields based on your resume.",
         });
       } else {
         toast.error("Invalid file type", {
@@ -143,7 +143,7 @@ export default function CareersClient() {
       setSelectedFile(file);
       simulateAutoFill();
       toast.success("Resume uploaded successfully", {
-        description: "We&apos;ve auto-filled some fields based on your resume.",
+        description: "We've auto-filled some fields based on your resume.",
       });
     }
   };
@@ -175,7 +175,7 @@ export default function CareersClient() {
 
       toast.success("Application submitted successfully!", {
         description:
-          "We&apos;ll review your application and get back to you within 5-7 business days.",
+          "We'll review your application and get back to you within 5-7 business days.",
       });
 
       // Reset form
@@ -194,7 +194,7 @@ export default function CareersClient() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-10% via-lavender-50 to-lavender-100">
+    <div className="min-h-screen bg-gradient-to-br from-background via-lavender-50 to-lavender-100">
       <div className="container py-12">
         {/* Header Section */}
         <div className="mb-12 text-center">

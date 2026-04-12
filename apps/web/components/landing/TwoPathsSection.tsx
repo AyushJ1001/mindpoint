@@ -1,7 +1,7 @@
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
+import { GrowthIllustration } from "@/components/illustrations";
 
 const PATHS = [
   {
@@ -62,9 +62,9 @@ export default function TwoPathsSection() {
         </div>
       </div>
 
-      {/* ── Floating butterfly accent ── */}
-      <div className="pointer-events-none absolute -bottom-8 right-[8%] hidden h-16 w-24 rotate-[18deg] select-none opacity-[0.14] mix-blend-multiply lg:block dark:mix-blend-screen dark:opacity-[0.1]">
-        <Image src="/illustrations/growth.jpg" alt="" fill className="object-contain" sizes="96px" />
+      {/* ── Floating growth accent (SVG) ── */}
+      <div className="pointer-events-none absolute -bottom-8 right-[8%] hidden select-none opacity-[0.14] mix-blend-multiply lg:block dark:mix-blend-screen dark:opacity-[0.1]">
+        <GrowthIllustration className="h-16 w-24 rotate-[18deg]" />
       </div>
     </section>
   );

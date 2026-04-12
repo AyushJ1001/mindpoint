@@ -4,8 +4,7 @@ import { useRef, useEffect, useState } from "react";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { VIDEO_TESTIMONIALS } from "@/lib/videoTestimonials";
 import { Play } from "lucide-react";
-import Image from "next/image";
-import { LeafAccent } from "@/components/illustrations";
+import { GrowthIllustration, LeafAccent } from "@/components/illustrations";
 
 const TEXT_TESTIMONIALS = [
   {
@@ -149,9 +148,9 @@ export default function TestimonialsSection() {
         </ScrollReveal>
       </div>
 
-      {/* ── Floating butterfly accent ── */}
-      <div className="pointer-events-none absolute -top-6 left-[5%] hidden h-14 w-20 -rotate-[12deg] select-none opacity-[0.12] mix-blend-multiply lg:block dark:mix-blend-screen dark:opacity-[0.08]">
-        <Image src="/illustrations/growth.jpg" alt="" fill className="object-contain" sizes="80px" />
+      {/* ── Floating growth accent (SVG) ── */}
+      <div className="pointer-events-none absolute -top-6 left-[5%] hidden select-none opacity-[0.12] mix-blend-multiply lg:block dark:mix-blend-screen dark:opacity-[0.08]">
+        <GrowthIllustration className="h-14 w-20 -rotate-[12deg]" />
       </div>
     </section>
   );
