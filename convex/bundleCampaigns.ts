@@ -30,6 +30,36 @@ function isBundleCampaignActive(campaign: {
   return true;
 }
 
+/**
+ * Returns all active (enabled, not archived, within date window) bundle campaigns.
+ * Used by course listing pages to show bundle-eligibility badges on cards.
+ */
+export const listAllActiveBundleCampaigns = query({
+  args: {},
+  handler: async (ctx) => {
+    const campaigns = await ctx.db
+      .query("bundleCampaigns")
+      .withIndex("by_enabled_isArchived_priority", (q) =>
+        q.eq("enabled", true).eq("isArchived", false),
+      )
+      .order("desc")
+      .take(500);
+
+    return campaigns
+      .filter((campaign) => isBundleCampaignActive(campaign))
+      .map((campaign) => ({
+        _id: campaign._id,
+        name: campaign.name,
+        description: campaign.description,
+        flatFee: campaign.flatFee,
+        requiredCourseCountMin: campaign.requiredCourseCountMin,
+        requiredCourseCountMax: campaign.requiredCourseCountMax,
+        eligibleCourseIds: campaign.eligibleCourseIds,
+        priority: campaign.priority,
+      }));
+  },
+});
+
 export const listActiveBundleCampaignsForCourses = query({
   args: {
     courseIds: v.array(v.id("courses")),

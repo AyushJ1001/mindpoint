@@ -19,6 +19,9 @@ import {
   Minus,
   Sparkles,
   Gift,
+  Layers,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/nextjs";
@@ -43,6 +46,105 @@ import { useNow } from "@/hooks/use-now";
 import { useMemo } from "react";
 
 export const dynamic = "force-dynamic";
+
+import type { EvaluatedBundleCampaign } from "@mindpoint/domain/bundles";
+
+/**
+ * Collapsible progress section shown when a bundle is partially fulfilled.
+ * Lists the eligible items already in the cart, shows a progress bar, and
+ * tells the user how many more courses they need.
+ */
+function BundleProgressSection({
+  campaign,
+  items,
+  eligibleCourseIdSet,
+}: {
+  campaign: EvaluatedBundleCampaign;
+  items: Array<{ id: string; name: string; [key: string]: unknown }>;
+  eligibleCourseIdSet: Set<string>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const remaining =
+    campaign.progress.minCount - campaign.progress.selectedCount;
+  const progressPct = Math.min(
+    100,
+    Math.round(
+      (campaign.progress.selectedCount / campaign.progress.minCount) * 100,
+    ),
+  );
+
+  const eligibleItems = items.filter((item) =>
+    eligibleCourseIdSet.has(String(item.id)),
+  );
+
+  return (
+    <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+      <div className="flex items-center gap-2 font-semibold">
+        <Layers className="h-4 w-4" />
+        <span className="flex-1">{campaign.campaignName}</span>
+        <span className="text-xs font-medium text-amber-700">
+          {showRupees(campaign.flatFee)}
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-2 w-full overflow-hidden rounded-full bg-amber-200">
+        <div
+          className="h-full rounded-full bg-amber-500 transition-all duration-300"
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+
+      <p className="text-xs">
+        <span className="font-semibold">
+          {campaign.progress.selectedCount} of {campaign.progress.minCount}
+        </span>{" "}
+        eligible courses in cart.{" "}
+        <span className="font-medium">
+          Add {remaining} more to unlock the bundle!
+        </span>
+      </p>
+
+      {/* Expandable eligible item list */}
+      {eligibleItems.length > 0 && (
+        <>
+          <button
+            type="button"
+            onClick={() => setExpanded((prev) => !prev)}
+            className="flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900"
+          >
+            {expanded ? (
+              <ChevronUp className="h-3 w-3" />
+            ) : (
+              <ChevronDown className="h-3 w-3" />
+            )}
+            {expanded ? "Hide" : "Show"} eligible items in cart
+          </button>
+          {expanded && (
+            <div className="space-y-1 border-t border-amber-200 pt-2">
+              {eligibleItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <Check className="h-3 w-3 shrink-0 text-amber-600" />
+                  <span className="truncate">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      <p className="text-xs text-amber-700">
+        <Link href="/courses" className="underline hover:text-amber-900">
+          Browse courses
+        </Link>{" "}
+        to find more eligible courses for this deal.
+      </p>
+    </div>
+  );
+}
 
 const getReferralCookie = () => {
   if (typeof document === "undefined") return null;
@@ -127,6 +229,12 @@ const CartContent = () => {
   const coveredCourseIdSet = useMemo(
     () => new Set(appliedBundle?.coveredCourseIds ?? []),
     [appliedBundle],
+  );
+
+  // Set of course IDs eligible for the in-progress bundle (for per-item tagging)
+  const progressEligibleCourseIdSet = useMemo(
+    () => new Set(bundleProgressCampaign?.coveredCourseIds ?? []),
+    [bundleProgressCampaign],
   );
 
   // Update offer details for cart items using shared time
@@ -1000,11 +1108,27 @@ const CartContent = () => {
                         </p>
                         {itemHasBundle && pricingItem?.bundleCampaignName ? (
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                            <span className="rounded bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-800">
+                            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-800">
+                              <Layers className="h-3 w-3" />
                               Bundle Applied
                             </span>
                             <span className="font-medium text-blue-700">
                               {pricingItem.bundleCampaignName}
+                            </span>
+                            {pricingItem.redemptionDiscountAmount > 0 && (
+                              <span className="font-medium text-blue-600">
+                                (save {showRupees(pricingItem.redemptionDiscountAmount)})
+                              </span>
+                            )}
+                          </div>
+                        ) : !itemHasBundle && progressEligibleCourseIdSet.has(String(item.id)) ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                            <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800">
+                              <Layers className="h-3 w-3" />
+                              Bundle Eligible
+                            </span>
+                            <span className="font-medium text-amber-700">
+                              {bundleProgressCampaign?.campaignName}
                             </span>
                           </div>
                         ) : null}
@@ -1153,7 +1277,7 @@ const CartContent = () => {
               {appliedBundle ? (
                 <div className="space-y-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
                   <div className="flex items-center gap-2 font-semibold">
-                    <Sparkles className="h-4 w-4" />
+                    <Layers className="h-4 w-4" />
                     <span>{appliedBundle.campaignName}</span>
                   </div>
                   <p>
@@ -1163,23 +1287,41 @@ const CartContent = () => {
                       : "s"}{" "}
                     covered for {showRupees(appliedBundle.flatFee)}.
                   </p>
+                  {/* List covered courses with per-item savings */}
+                  <div className="space-y-1 border-t border-blue-200 pt-2">
+                    {appliedBundle.allocations.map((alloc) => {
+                      const cartItem = items.find(
+                        (i) => String(i.id) === String(alloc.courseId),
+                      );
+                      return (
+                        <div
+                          key={alloc.courseId}
+                          className="flex items-start gap-2 text-xs"
+                        >
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-blue-600" />
+                          <span className="min-w-0 flex-1 truncate">
+                            {cartItem?.name ?? "Course"}
+                          </span>
+                          {alloc.savings > 0 && (
+                            <span className="shrink-0 font-medium text-blue-700">
+                              -{showRupees(alloc.savings)}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
                   <p className="text-xs text-blue-700">
                     Existing discounts, BOGO, and coupon reductions do not apply
                     to the covered courses.
                   </p>
                 </div>
               ) : bundleProgressCampaign ? (
-                <div className="space-y-1 rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
-                  <div className="flex items-center gap-2 font-semibold">
-                    <Sparkles className="h-4 w-4" />
-                    <span>{bundleProgressCampaign.campaignName}</span>
-                  </div>
-                  <p>
-                    {bundleProgressCampaign.progress.selectedCount} of{" "}
-                    {bundleProgressCampaign.progress.minCount} selected for the
-                    flat-fee bundle.
-                  </p>
-                </div>
+                <BundleProgressSection
+                  campaign={bundleProgressCampaign}
+                  items={items}
+                  eligibleCourseIdSet={progressEligibleCourseIdSet}
+                />
               ) : null}
               {hasBogoItems && (
                 <div className="space-y-2">

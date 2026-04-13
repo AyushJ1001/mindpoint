@@ -19,8 +19,9 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "../components/ui/carousel";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, Layers } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
+import { useBundleEligibility } from "@/hooks/use-bundle-eligibility";
 import type {
   CourseLike,
   PublicCourse,
@@ -171,6 +172,9 @@ const CourseGroupCard = ({
     getOfferDetails(selectedCourse),
   );
 
+  // Bundle eligibility (shared subscription, cached across cards)
+  const bundleInfo = useBundleEligibility(selectedCourse._id);
+
   // Use pre-fetched BOGO courses from props
   const availableCourses = bogoCourses;
 
@@ -298,17 +302,26 @@ const CourseGroupCard = ({
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
 
-      {offerDetails && (
+      {(offerDetails || bundleInfo) && (
         <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
-          {offerDetails && (
-            <Badge
-              variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
-            >
-              <span className="sm:hidden">Special Offer</span>
-              <span className="hidden sm:inline">{offerDetails.offerName}</span>
-            </Badge>
-          )}
+          <div className="flex max-w-[52%] flex-col gap-1">
+            {offerDetails && (
+              <Badge
+                variant="secondary"
+                className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
+              >
+                <span className="sm:hidden">Special Offer</span>
+                <span className="hidden sm:inline">{offerDetails.offerName}</span>
+              </Badge>
+            )}
+            {bundleInfo && (
+              <Badge className="max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+                <Layers className="mr-1 h-3 w-3" />
+                <span className="sm:hidden">Bundle</span>
+                <span className="hidden sm:inline">Bundle Deal</span>
+              </Badge>
+            )}
+          </div>
           {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
             <div className="flex max-w-[46%] flex-col items-end gap-1">
               {offerDetails?.hasDiscount && (
@@ -477,6 +490,12 @@ const CourseGroupCard = ({
                 )}
               </div>
             )}
+            {bundleInfo && (
+              <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+                <Layers className="h-3 w-3 shrink-0" />
+                <span className="truncate">{bundleInfo.dealSummary}</span>
+              </div>
+            )}
           </div>
           {(() => {
               const seatsLeft = Math.max(
@@ -539,6 +558,9 @@ const CourseCard = ({
   const [offerDetails, setOfferDetails] = useState(getOfferDetails(course));
   const [mounted, setMounted] = useState(false);
   const [showBogoModal, setShowBogoModal] = useState(false);
+
+  // Bundle eligibility (shared subscription, cached across cards)
+  const bundleInfo = useBundleEligibility(course._id);
 
   // Use pre-fetched BOGO courses from props
   const availableCourses = bogoCourses;
@@ -663,17 +685,26 @@ const CourseCard = ({
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
-      {offerDetails && (
+      {(offerDetails || bundleInfo) && (
         <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
-          {offerDetails && (
-            <Badge
-              variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
-            >
-              <span className="sm:hidden">Special Offer</span>
-              <span className="hidden sm:inline">{offerDetails.offerName}</span>
-            </Badge>
-          )}
+          <div className="flex max-w-[52%] flex-col gap-1">
+            {offerDetails && (
+              <Badge
+                variant="secondary"
+                className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
+              >
+                <span className="sm:hidden">Special Offer</span>
+                <span className="hidden sm:inline">{offerDetails.offerName}</span>
+              </Badge>
+            )}
+            {bundleInfo && (
+              <Badge className="max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+                <Layers className="mr-1 h-3 w-3" />
+                <span className="sm:hidden">Bundle</span>
+                <span className="hidden sm:inline">Bundle Deal</span>
+              </Badge>
+            )}
+          </div>
           {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
             <div className="flex max-w-[46%] flex-col items-end gap-1">
               {offerDetails?.hasDiscount && (
@@ -775,6 +806,12 @@ const CourseCard = ({
                 Includes a free bonus course
               </div>
             )}
+          </div>
+        )}
+        {bundleInfo && (
+          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-blue-700">
+            <Layers className="h-3 w-3 shrink-0" />
+            <span className="truncate">{bundleInfo.dealSummary}</span>
           </div>
         )}
       </CardContent>
