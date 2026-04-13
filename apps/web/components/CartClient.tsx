@@ -854,11 +854,7 @@ const CartContent = () => {
     } else {
       // User is not signed in, show Clerk sign-in modal
       setPendingCheckout(true);
-      const returnUrl = window.location.href;
-      openSignIn({
-        forceRedirectUrl: returnUrl,
-        signUpForceRedirectUrl: returnUrl,
-      });
+      openSignIn();
     }
   };
 
