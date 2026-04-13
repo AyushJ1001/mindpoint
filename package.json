@@ -33,7 +33,6 @@
     "test:admin-route-protection": "node scripts/test-admin-route-protection.js"
   },
   "dependencies": {
-    "@clerk/clerk-react": "^5.61.3",
     "@clerk/nextjs": "^7.0.12",
     "@hookform/resolvers": "^5.2.1",
     "@icons-pack/react-simple-icons": "^13.7.0",
