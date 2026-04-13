@@ -220,7 +220,12 @@ export default defineSchema({
   bundleCampaigns: defineTable(BundleCampaignValue)
     .index("by_updatedAt", ["updatedAt"])
     .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"])
-    .index("by_enabled_priority", ["enabled", "priority"]),
+    .index("by_enabled_priority", ["enabled", "priority"])
+    .index("by_enabled_isArchived_priority", [
+      "enabled",
+      "isArchived",
+      "priority",
+    ]),
 
   reviews: defineTable({
     userId: v.string(),

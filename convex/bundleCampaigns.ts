@@ -45,7 +45,9 @@ export const listActiveBundleCampaignsForCourses = query({
     const courseIdSet = new Set(uniqueCourseIds);
     const campaigns = await ctx.db
       .query("bundleCampaigns")
-      .withIndex("by_enabled_priority", (q) => q.eq("enabled", true))
+      .withIndex("by_enabled_isArchived_priority", (q) =>
+        q.eq("enabled", true).eq("isArchived", false),
+      )
       .order("desc")
       .take(500);
 

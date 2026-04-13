@@ -222,7 +222,9 @@ export function evaluateBundleCampaigns(
     };
     const qualifies =
       progress.selectedCount >= progress.minCount &&
-      progress.selectedCount <= progress.maxCount;
+      progress.selectedCount <= progress.maxCount &&
+      coveredListedSubtotal > 0 &&
+      Math.max(0, Math.round(campaign.flatFee)) < coveredListedSubtotal;
     const allocations = qualifies
       ? allocateFlatFeeAcrossCourses(coveredItems, campaign.flatFee)
       : [];
@@ -249,18 +251,18 @@ export function evaluateBundleCampaigns(
     .map(({ qualifies: _qualifies, ...campaign }) => campaign);
 
   const appliedCampaign = pickWinningBundleCampaign(qualifyingCampaigns);
-  const progressCampaign =
-    appliedCampaign ??
-    evaluated
-      .filter(
-        (campaign) =>
-          !campaign.qualifies &&
-          campaign.progress.selectedCount > 0 &&
-          campaign.progress.selectedCount < campaign.progress.minCount,
-      )
-      .map(({ qualifies: _qualifies, ...campaign }) => campaign)
-      .sort(compareEvaluatedPrecedence)[0] ??
-    null;
+  const progressCampaign = appliedCampaign
+    ? null
+    : evaluated
+        .filter(
+          (campaign) =>
+            !campaign.qualifies &&
+            campaign.progress.selectedCount > 0 &&
+            campaign.progress.selectedCount < campaign.progress.minCount,
+        )
+        .map(({ qualifies: _qualifies, ...campaign }) => campaign)
+        .sort(compareEvaluatedPrecedence)[0] ??
+      null;
 
   return {
     qualifyingCampaigns,
