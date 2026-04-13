@@ -1,12 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import {
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { Doc, Id } from "@mindpoint/backend/data-model";
@@ -206,6 +201,15 @@ function defaultSessionVariants(): SessionVariantInput[] {
 
 function hasText(value: string | undefined | null): boolean {
   return typeof value === "string" && value.trim().length > 0;
+}
+
+function getUpperCodePrefix(code?: string) {
+  if (typeof code !== "string") {
+    return null;
+  }
+
+  const normalized = code.trim().toUpperCase();
+  return normalized.length >= 2 ? normalized.slice(0, 2) : null;
 }
 
 function getDefaultMarketingState(type: CourseType) {
@@ -781,6 +785,29 @@ export function CourseEditor({
   const validateForPublish = () => {
     if (state.lifecycleStatus !== "published") return;
 
+    const codePrefix = getUpperCodePrefix(state.code);
+    if (!hasText(state.code)) {
+      throw new Error("Course code is required before publishing");
+    }
+    if (state.type === "masterclass" && codePrefix !== "MC") {
+      throw new Error(
+        "Masterclass and workshop course codes must start with MC before publishing.",
+      );
+    }
+    if (state.type === "worksheet" && codePrefix !== "WS") {
+      throw new Error(
+        "Worksheet course codes must start with WS before publishing.",
+      );
+    }
+    if (codePrefix === "WS" && state.type !== "worksheet") {
+      throw new Error("Only worksheet course codes can start with WS.");
+    }
+    if (codePrefix === "MC" && state.type !== "masterclass") {
+      throw new Error(
+        "Only masterclass and workshop course codes can start with MC.",
+      );
+    }
+
     if (!hasText(state.description)) {
       throw new Error("Description is required before publishing");
     }
@@ -1069,6 +1096,16 @@ export function CourseEditor({
                   setState((prev) => ({ ...prev, code: e.target.value }))
                 }
               />
+              {state.type === "masterclass" ? (
+                <p className="text-xs text-slate-600">
+                  Use MC for masterclass and workshop courses.
+                </p>
+              ) : null}
+              {state.type === "worksheet" ? (
+                <p className="text-xs text-slate-600">
+                  Use WS for worksheet courses.
+                </p>
+              ) : null}
             </div>
 
             <div className="space-y-2">
@@ -1572,9 +1609,7 @@ export function CourseEditor({
                 </Button>
               </div>
               {state.outcomes.length === 0 ? (
-                <p className="text-sm text-slate-600">
-                  No outcomes added yet.
-                </p>
+                <p className="text-sm text-slate-600">No outcomes added yet.</p>
               ) : (
                 <div className="space-y-2">
                   {state.outcomes.map((item, index) => (
@@ -1633,9 +1668,7 @@ export function CourseEditor({
                 </Button>
               </div>
               {state.whyDifferent.length === 0 ? (
-                <p className="text-sm text-slate-600">
-                  No items added yet.
-                </p>
+                <p className="text-sm text-slate-600">No items added yet.</p>
               ) : (
                 <div className="space-y-2">
                   {state.whyDifferent.map((item, index) => (
@@ -2010,7 +2043,7 @@ export function CourseEditor({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-destructive text-white hover:bg-destructive/90"
+              className="bg-destructive hover:bg-destructive/90 text-white"
               onClick={confirmRemoveImage}
             >
               Remove image

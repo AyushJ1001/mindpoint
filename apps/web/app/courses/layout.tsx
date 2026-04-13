@@ -6,6 +6,7 @@ import {
   Award,
   Briefcase,
   CirclePlay,
+  FileText,
   FileUser,
   GraduationCap,
   LayoutGrid,
@@ -63,6 +64,12 @@ const courseTypes = [
     href: "/courses/masterclass",
     label: "Masterclass",
     icon: Mic2,
+  },
+  {
+    name: "Worksheets",
+    href: "/courses/worksheet",
+    label: "Worksheets",
+    icon: FileText,
   },
   {
     name: "Therapy",

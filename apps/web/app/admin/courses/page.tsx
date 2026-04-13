@@ -47,6 +47,17 @@ type CourseTypeIssue = {
   reason: string;
 };
 
+type MasterclassCodeRepairCandidate = {
+  courseId: Id<"courses">;
+  name: string;
+  lifecycleStatus: "draft" | "published" | "archived";
+  currentType: Exclude<CourseTypeFilter, "all"> | null;
+  suggestedType: "masterclass";
+  currentCode: string;
+  suggestedCode: string;
+  reason: string;
+};
+
 const courseTypeOptions: CourseTypeFilter[] = [
   "all",
   "certificate",
@@ -78,6 +89,9 @@ export default function AdminCoursesPage() {
   const [fixingCourseId, setFixingCourseId] = useState<Id<"courses"> | null>(
     null,
   );
+  const [repairingCourseId, setRepairingCourseId] =
+    useState<Id<"courses"> | null>(null);
+  const [isRepairingAll, setIsRepairingAll] = useState(false);
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -88,10 +102,19 @@ export default function AdminCoursesPage() {
   const courseTypeIssues = useQuery(api.adminCourses.listCourseTypeIssues, {
     limit: 50,
   }) as CourseTypeIssue[] | undefined;
+  const masterclassCodeRepairCandidates = useQuery(
+    api.adminCourses.listMasterclassCodeRepairCandidates,
+    {
+      limit: 100,
+    },
+  ) as MasterclassCodeRepairCandidate[] | undefined;
   const transitionCourse = useMutation(
     api.adminCourses.transitionCourseLifecycle,
   );
   const correctCourseType = useMutation(api.adminCourses.correctCourseType);
+  const repairMasterclassCourseCodes = useMutation(
+    api.adminCourses.repairMasterclassCourseCodes,
+  );
 
   const rows = useMemo(() => courses ?? [], [courses]);
 
@@ -176,6 +199,48 @@ export default function AdminCoursesPage() {
     }
   };
 
+  const applyMasterclassCodeRepair = async (
+    candidate: MasterclassCodeRepairCandidate,
+  ) => {
+    try {
+      setRepairingCourseId(candidate.courseId);
+      const result = await repairMasterclassCourseCodes({
+        courseIds: [candidate.courseId],
+      });
+      toast.success(
+        `Updated ${result.updated} course code${result.updated === 1 ? "" : "s"}; skipped ${result.skipped}`,
+      );
+    } catch (error) {
+      toast.error(
+        getUserFacingErrorMessage(error, "Failed to repair course code"),
+      );
+    } finally {
+      setRepairingCourseId(null);
+    }
+  };
+
+  const applyAllMasterclassCodeRepairs = async () => {
+    if (!masterclassCodeRepairCandidates?.length) return;
+
+    try {
+      setIsRepairingAll(true);
+      const result = await repairMasterclassCourseCodes({
+        courseIds: masterclassCodeRepairCandidates.map(
+          (candidate) => candidate.courseId,
+        ),
+      });
+      toast.success(
+        `Updated ${result.updated} course code${result.updated === 1 ? "" : "s"}; skipped ${result.skipped}`,
+      );
+    } catch (error) {
+      toast.error(
+        getUserFacingErrorMessage(error, "Failed to repair course codes"),
+      );
+    } finally {
+      setIsRepairingAll(false);
+    }
+  };
+
   return (
     <div>
       <AdminPageHeader
@@ -220,11 +285,103 @@ export default function AdminCoursesPage() {
             {courseTypeIssues.length === 1 ? "" : "s"}
           </Badge>
         ) : null}
+        {masterclassCodeRepairCandidates &&
+        masterclassCodeRepairCandidates.length > 0 ? (
+          <Badge variant="outline" className="self-center">
+            {masterclassCodeRepairCandidates.length} code repair
+            {masterclassCodeRepairCandidates.length === 1 ? "" : "s"}
+          </Badge>
+        ) : null}
       </div>
 
       {view === "catalog" &&
-      courseTypeIssues &&
-      courseTypeIssues.length > 0 ? (
+      masterclassCodeRepairCandidates &&
+      masterclassCodeRepairCandidates.length > 0 ? (
+        <div className="mb-4 overflow-hidden rounded-lg border border-amber-200 bg-white">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3">
+            <div>
+              <h2 className="text-sm font-semibold text-amber-950">
+                Course Code Integrity
+              </h2>
+              <p className="mt-0.5 text-xs text-amber-800">
+                Review likely workshops using the legacy WS prefix. Fixes update
+                the stored type to masterclass and rewrite only the code prefix
+                to MC.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              disabled={isRepairingAll}
+              onClick={() => void applyAllMasterclassCodeRepairs()}
+            >
+              {isRepairingAll ? "Applying..." : "Apply All"}
+            </Button>
+          </div>
+          <table className="w-full text-left text-sm">
+            <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
+              <tr>
+                <th className="px-3 py-2">Course</th>
+                <th className="px-3 py-2">Current</th>
+                <th className="px-3 py-2">Proposed</th>
+                <th className="px-3 py-2">Reason</th>
+                <th className="px-3 py-2">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {masterclassCodeRepairCandidates.map((candidate) => (
+                <tr key={candidate.courseId} className="border-t">
+                  <td className="px-3 py-2">
+                    <p className="font-medium text-slate-900">
+                      {candidate.name}
+                    </p>
+                    <p className="text-xs text-slate-600">
+                      {candidate.lifecycleStatus}
+                    </p>
+                  </td>
+                  <td className="px-3 py-2">
+                    <p>{candidate.currentType || "-"}</p>
+                    <p className="text-xs text-slate-600">
+                      {candidate.currentCode}
+                    </p>
+                  </td>
+                  <td className="px-3 py-2 font-medium text-amber-950">
+                    <p>{candidate.suggestedType}</p>
+                    <p className="text-xs">{candidate.suggestedCode}</p>
+                  </td>
+                  <td className="px-3 py-2 text-xs text-slate-700">
+                    {candidate.reason}
+                  </td>
+                  <td className="px-3 py-2">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/admin/courses/${candidate.courseId}`}>
+                          Open
+                        </Link>
+                      </Button>
+                      <Button
+                        size="sm"
+                        disabled={
+                          isRepairingAll ||
+                          repairingCourseId === candidate.courseId
+                        }
+                        onClick={() =>
+                          void applyMasterclassCodeRepair(candidate)
+                        }
+                      >
+                        {repairingCourseId === candidate.courseId
+                          ? "Applying..."
+                          : "Apply Fix"}
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+
+      {view === "catalog" && courseTypeIssues && courseTypeIssues.length > 0 ? (
         <div className="mb-4 overflow-hidden rounded-lg border border-amber-200 bg-white">
           <div className="border-b border-amber-200 bg-amber-50 px-4 py-3">
             <h2 className="text-sm font-semibold text-amber-950">
@@ -533,7 +690,10 @@ export default function AdminCoursesPage() {
                             </Link>
                           </Button>
                           <Button variant="outline" size="sm" asChild>
-                            <Link href={`/courses/${course._id}`} target="_blank">
+                            <Link
+                              href={`/courses/${course._id}`}
+                              target="_blank"
+                            >
                               View Page
                             </Link>
                           </Button>
