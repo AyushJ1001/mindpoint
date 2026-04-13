@@ -1712,11 +1712,14 @@ export function CourseEditor({
         <UploadDropzone
           endpoint="courseImageUploader"
           onClientUploadComplete={(files) => {
+            const uploadedUrls = files
+              .map((file) => file.serverData?.url ?? file.url ?? file.ufsUrl)
+              .filter((url): url is string => typeof url === "string" && url !== "");
             setState((prev) => ({
               ...prev,
               imageUrls: [
                 ...prev.imageUrls,
-                ...files.map((file) => file.ufsUrl),
+                ...uploadedUrls,
               ],
             }));
             toast.success("Images uploaded");
@@ -1754,7 +1757,9 @@ export function CourseEditor({
             onClientUploadComplete={(files) => {
               const first = files[0];
               if (!first) return;
-              setState((prev) => ({ ...prev, fileUrl: first.ufsUrl }));
+              const fileUrl =
+                first.serverData?.url ?? first.url ?? first.ufsUrl ?? "";
+              setState((prev) => ({ ...prev, fileUrl }));
               toast.success("Worksheet uploaded");
             }}
             onUploadError={(error: Error) => {
