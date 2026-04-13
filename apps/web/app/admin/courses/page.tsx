@@ -58,6 +58,18 @@ type MasterclassCodeRepairCandidate = {
   reason: string;
 };
 
+type CourseTypeIssuesResult = {
+  issues: CourseTypeIssue[];
+  scanned: number;
+  truncated: boolean;
+};
+
+type MasterclassCodeRepairResult = {
+  candidates: MasterclassCodeRepairCandidate[];
+  scanned: number;
+  truncated: boolean;
+};
+
 const courseTypeOptions: CourseTypeFilter[] = [
   "all",
   "certificate",
@@ -92,6 +104,7 @@ export default function AdminCoursesPage() {
   const [repairingCourseId, setRepairingCourseId] =
     useState<Id<"courses"> | null>(null);
   const [isRepairingAll, setIsRepairingAll] = useState(false);
+  const [isRepairAllConfirmOpen, setIsRepairAllConfirmOpen] = useState(false);
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -101,13 +114,13 @@ export default function AdminCoursesPage() {
   });
   const courseTypeIssues = useQuery(api.adminCourses.listCourseTypeIssues, {
     limit: 50,
-  }) as CourseTypeIssue[] | undefined;
-  const masterclassCodeRepairCandidates = useQuery(
+  }) as CourseTypeIssuesResult | undefined;
+  const masterclassCodeRepairResult = useQuery(
     api.adminCourses.listMasterclassCodeRepairCandidates,
     {
       limit: 100,
     },
-  ) as MasterclassCodeRepairCandidate[] | undefined;
+  ) as MasterclassCodeRepairResult | undefined;
   const transitionCourse = useMutation(
     api.adminCourses.transitionCourseLifecycle,
   );
@@ -117,6 +130,9 @@ export default function AdminCoursesPage() {
   );
 
   const rows = useMemo(() => courses ?? [], [courses]);
+  const courseTypeIssueRows = courseTypeIssues?.issues ?? [];
+  const masterclassCodeRepairCandidates =
+    masterclassCodeRepairResult?.candidates ?? [];
 
   const exportRows = useMemo(
     () =>
@@ -220,7 +236,7 @@ export default function AdminCoursesPage() {
   };
 
   const applyAllMasterclassCodeRepairs = async () => {
-    if (!masterclassCodeRepairCandidates?.length) return;
+    if (masterclassCodeRepairCandidates.length === 0) return;
 
     try {
       setIsRepairingAll(true);
@@ -232,6 +248,7 @@ export default function AdminCoursesPage() {
       toast.success(
         `Updated ${result.updated} course code${result.updated === 1 ? "" : "s"}; skipped ${result.skipped}`,
       );
+      setIsRepairAllConfirmOpen(false);
     } catch (error) {
       toast.error(
         getUserFacingErrorMessage(error, "Failed to repair course codes"),
@@ -279,14 +296,13 @@ export default function AdminCoursesPage() {
         >
           Offers
         </Button>
-        {courseTypeIssues && courseTypeIssues.length > 0 ? (
+        {courseTypeIssueRows.length > 0 ? (
           <Badge variant="outline" className="self-center">
-            {courseTypeIssues.length} type issue
-            {courseTypeIssues.length === 1 ? "" : "s"}
+            {courseTypeIssueRows.length} type issue
+            {courseTypeIssueRows.length === 1 ? "" : "s"}
           </Badge>
         ) : null}
-        {masterclassCodeRepairCandidates &&
-        masterclassCodeRepairCandidates.length > 0 ? (
+        {masterclassCodeRepairCandidates.length > 0 ? (
           <Badge variant="outline" className="self-center">
             {masterclassCodeRepairCandidates.length} code repair
             {masterclassCodeRepairCandidates.length === 1 ? "" : "s"}
@@ -294,9 +310,7 @@ export default function AdminCoursesPage() {
         ) : null}
       </div>
 
-      {view === "catalog" &&
-      masterclassCodeRepairCandidates &&
-      masterclassCodeRepairCandidates.length > 0 ? (
+      {view === "catalog" && masterclassCodeRepairCandidates.length > 0 ? (
         <div className="mb-4 overflow-hidden rounded-lg border border-amber-200 bg-white">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-amber-200 bg-amber-50 px-4 py-3">
             <div>
@@ -312,11 +326,17 @@ export default function AdminCoursesPage() {
             <Button
               size="sm"
               disabled={isRepairingAll}
-              onClick={() => void applyAllMasterclassCodeRepairs()}
+              onClick={() => setIsRepairAllConfirmOpen(true)}
             >
-              {isRepairingAll ? "Applying..." : "Apply All"}
+              Apply All
             </Button>
           </div>
+          {masterclassCodeRepairResult?.truncated ? (
+            <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-900">
+              Scanned the latest {masterclassCodeRepairResult.scanned} courses;
+              more courses exist, so additional candidates may not be shown.
+            </div>
+          ) : null}
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
               <tr>
@@ -381,7 +401,7 @@ export default function AdminCoursesPage() {
         </div>
       ) : null}
 
-      {view === "catalog" && courseTypeIssues && courseTypeIssues.length > 0 ? (
+      {view === "catalog" && courseTypeIssueRows.length > 0 ? (
         <div className="mb-4 overflow-hidden rounded-lg border border-amber-200 bg-white">
           <div className="border-b border-amber-200 bg-amber-50 px-4 py-3">
             <h2 className="text-sm font-semibold text-amber-950">
@@ -392,6 +412,12 @@ export default function AdminCoursesPage() {
               prefix. Fixes patch the DB record directly.
             </p>
           </div>
+          {courseTypeIssues?.truncated ? (
+            <div className="border-b border-amber-200 bg-amber-50 px-4 py-2 text-xs font-medium text-amber-900">
+              Scanned the latest {courseTypeIssues.scanned} courses; more
+              courses exist, so additional type issues may not be shown.
+            </div>
+          ) : null}
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
               <tr>
@@ -403,7 +429,7 @@ export default function AdminCoursesPage() {
               </tr>
             </thead>
             <tbody>
-              {courseTypeIssues.map((issue) => (
+              {courseTypeIssueRows.map((issue) => (
                 <tr key={issue.courseId} className="border-t">
                   <td className="px-3 py-2">
                     <p className="font-medium text-slate-900">{issue.name}</p>
@@ -707,6 +733,37 @@ export default function AdminCoursesPage() {
           </table>
         </div>
       )}
+
+      <AlertDialog
+        open={isRepairAllConfirmOpen}
+        onOpenChange={(open) => {
+          if (!open && !isRepairingAll) {
+            setIsRepairAllConfirmOpen(false);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply all code repairs?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will update up to 50 visible repair candidates in this batch,
+              including any published courses that still pass publish
+              validation. Codes will keep their suffix and switch from WS to MC.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isRepairingAll}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              disabled={isRepairingAll}
+              onClick={() => void applyAllMasterclassCodeRepairs()}
+            >
+              {isRepairingAll ? "Applying..." : "Apply Repairs"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <AlertDialog
         open={pendingTransition !== null}

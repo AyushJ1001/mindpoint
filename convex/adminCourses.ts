@@ -6,6 +6,9 @@ import { requireAdmin } from "./adminAuth";
 import { normalizeCourseLifecycleStatus } from "./adminUtils";
 import { createAdminAuditLog } from "./adminAudit";
 
+const COURSE_INTEGRITY_SCAN_LIMIT = 2000;
+const MASTERCLASS_REPAIR_BATCH_LIMIT = 50;
+
 const coursePatchValidator = {
   name: v.optional(v.string()),
   description: v.optional(v.string()),
@@ -560,22 +563,30 @@ export const listCourseTypeIssues = query({
   args: {
     limit: v.optional(v.number()),
   },
-  returns: v.array(
-    v.object({
-      courseId: v.id("courses"),
-      name: v.string(),
-      code: v.union(v.string(), v.null()),
-      lifecycleStatus: v.union(CourseLifecycleStatus, v.null()),
-      currentType: v.union(CourseType, v.null()),
-      suggestedType: CourseType,
-      reason: v.string(),
-    }),
-  ),
+  returns: v.object({
+    issues: v.array(
+      v.object({
+        courseId: v.id("courses"),
+        name: v.string(),
+        code: v.union(v.string(), v.null()),
+        lifecycleStatus: v.union(CourseLifecycleStatus, v.null()),
+        currentType: v.union(CourseType, v.null()),
+        suggestedType: CourseType,
+        reason: v.string(),
+      }),
+    ),
+    scanned: v.number(),
+    truncated: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
-    const courses = await ctx.db.query("courses").order("desc").take(2000);
-    const issues = courses
+    const courses = await ctx.db
+      .query("courses")
+      .order("desc")
+      .take(COURSE_INTEGRITY_SCAN_LIMIT + 1);
+    const scannedCourses = courses.slice(0, COURSE_INTEGRITY_SCAN_LIMIT);
+    const issues = scannedCourses
       .map((course) => {
         const suggestion = getSuggestedCourseType(course);
         if (!suggestion) {
@@ -601,7 +612,11 @@ export const listCourseTypeIssues = query({
         return a.name.localeCompare(b.name);
       });
 
-    return issues.slice(0, args.limit ?? 100);
+    return {
+      issues: issues.slice(0, args.limit ?? 100),
+      scanned: scannedCourses.length,
+      truncated: courses.length > COURSE_INTEGRITY_SCAN_LIMIT,
+    };
   },
 });
 
@@ -609,18 +624,22 @@ export const listMasterclassCodeRepairCandidates = query({
   args: {
     limit: v.optional(v.number()),
   },
-  returns: v.array(
-    v.object({
-      courseId: v.id("courses"),
-      name: v.string(),
-      lifecycleStatus: CourseLifecycleStatus,
-      currentType: v.union(CourseType, v.null()),
-      suggestedType: v.literal("masterclass"),
-      currentCode: v.string(),
-      suggestedCode: v.string(),
-      reason: v.string(),
-    }),
-  ),
+  returns: v.object({
+    candidates: v.array(
+      v.object({
+        courseId: v.id("courses"),
+        name: v.string(),
+        lifecycleStatus: CourseLifecycleStatus,
+        currentType: v.union(CourseType, v.null()),
+        suggestedType: v.literal("masterclass"),
+        currentCode: v.string(),
+        suggestedCode: v.string(),
+        reason: v.string(),
+      }),
+    ),
+    scanned: v.number(),
+    truncated: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
@@ -629,8 +648,12 @@ export const listMasterclassCodeRepairCandidates = query({
       draft: 1,
       archived: 2,
     } as const;
-    const courses = await ctx.db.query("courses").order("desc").take(2000);
-    const candidates = courses
+    const courses = await ctx.db
+      .query("courses")
+      .order("desc")
+      .take(COURSE_INTEGRITY_SCAN_LIMIT + 1);
+    const scannedCourses = courses.slice(0, COURSE_INTEGRITY_SCAN_LIMIT);
+    const candidates = scannedCourses
       .map((course) => {
         if (!hasText(course.code)) {
           return null;
@@ -651,7 +674,11 @@ export const listMasterclassCodeRepairCandidates = query({
         return lifecycleDelta || a.name.localeCompare(b.name);
       });
 
-    return candidates.slice(0, args.limit ?? 100);
+    return {
+      candidates: candidates.slice(0, args.limit ?? 100),
+      scanned: scannedCourses.length,
+      truncated: courses.length > COURSE_INTEGRITY_SCAN_LIMIT,
+    };
   },
 });
 
@@ -841,10 +868,14 @@ export const repairMasterclassCourseCodes = mutation({
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
     const uniqueCourseIds = Array.from(new Set(args.courseIds));
+    const courseIdsToProcess = uniqueCourseIds.slice(
+      0,
+      MASTERCLASS_REPAIR_BATCH_LIMIT,
+    );
     let updated = 0;
-    let skipped = 0;
+    let skipped = uniqueCourseIds.length - courseIdsToProcess.length;
 
-    for (const courseId of uniqueCourseIds) {
+    for (const courseId of courseIdsToProcess) {
       const existing = await ctx.db.get(courseId);
       if (!existing || !hasText(existing.code)) {
         skipped += 1;
@@ -858,6 +889,22 @@ export const repairMasterclassCourseCodes = mutation({
       if (!candidate) {
         skipped += 1;
         continue;
+      }
+
+      const currentLifecycleStatus = normalizeCourseLifecycleStatus(
+        existing.lifecycleStatus,
+      );
+      if (currentLifecycleStatus === "published") {
+        try {
+          validatePublishableCourse({
+            ...existing,
+            type: "masterclass",
+            code: candidate.suggestedCode,
+          });
+        } catch {
+          skipped += 1;
+          continue;
+        }
       }
 
       const now = Date.now();
@@ -890,6 +937,7 @@ export const repairMasterclassCourseCodes = mutation({
 
     return {
       requested: args.courseIds.length,
+      processed: courseIdsToProcess.length,
       updated,
       skipped,
     };
