@@ -5,8 +5,8 @@ import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@mindpoint/backend/data-model";
 import Script from "next/script";
 
-// Create a Convex client for server-side data fetching
-const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL!);
+const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+const convex = convexUrl ? new ConvexHttpClient(convexUrl) : null;
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -14,6 +14,14 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   try {
+    if (!convex) {
+      return {
+        title: "Course - The Mind Point",
+        description:
+          "Learn about our mental health courses and professional development programs.",
+      };
+    }
+
     const { id } = await params;
     const course = await convex.query(api.courses.getCourseById, {
       id: id as Id<"courses">,
@@ -83,6 +91,19 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function CoursePage({ params }: Props) {
   try {
+    if (!convex) {
+      return (
+        <div className="flex min-h-screen items-center justify-center">
+          <div className="text-center">
+            <h1 className="mb-4 text-2xl font-bold">Course Unavailable</h1>
+            <p className="text-muted-foreground">
+              Course data is currently unavailable.
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     const { id } = await params;
     const course = await convex.query(api.courses.getCourseById, {
       id: id as Id<"courses">,

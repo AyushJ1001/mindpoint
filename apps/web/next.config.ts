@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+const nextConfig = {
   /* config options here */
   transpilePackages: [
     "@mindpoint/backend",
@@ -10,9 +10,6 @@ const nextConfig: NextConfig = {
   ],
   typescript: {
     ignoreBuildErrors: true,
-  },
-  eslint: {
-    ignoreDuringBuilds: true,
   },
   // Disable Clerk key validation during build if keys are dummy
   env: {
@@ -80,6 +77,6 @@ const nextConfig: NextConfig = {
   },
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
-};
+} satisfies NextConfig;
 
 export default nextConfig;
