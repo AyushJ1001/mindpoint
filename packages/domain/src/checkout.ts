@@ -8,6 +8,8 @@ export type CheckoutPricingItem = {
   redemptionDiscountAmount?: number;
   couponCode?: string;
   mindPointsRedeemed?: number;
+  bundleCampaignId?: Id<"bundleCampaigns">;
+  bundleCampaignName?: string;
 };
 
 export type CheckoutPricing = {

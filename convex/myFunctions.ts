@@ -254,6 +254,8 @@ const checkoutPricingItemValidator = v.object({
   redemptionDiscountAmount: v.optional(v.number()),
   couponCode: v.optional(v.string()),
   mindPointsRedeemed: v.optional(v.number()),
+  bundleCampaignId: v.optional(v.id("bundleCampaigns")),
+  bundleCampaignName: v.optional(v.string()),
 });
 
 const checkoutPricingValidator = v.object({
@@ -305,6 +307,8 @@ function buildEnrollmentPricingFields(
       pricingItem?.mindPointsRedeemed && pricingItem.mindPointsRedeemed > 0
         ? roundCurrency(pricingItem.mindPointsRedeemed)
         : undefined,
+    bundleCampaignId: pricingItem?.bundleCampaignId,
+    bundleCampaignName: pricingItem?.bundleCampaignName?.trim() || undefined,
   };
 }
 

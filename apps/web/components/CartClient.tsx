@@ -2,6 +2,7 @@
 
 import type { Id } from "@mindpoint/backend/data-model";
 import { REFERRAL_COOKIE_KEY } from "@mindpoint/domain/referrals";
+import { evaluateBundleCampaigns } from "@mindpoint/domain/bundles";
 import { requestPaymentOrder } from "@mindpoint/services/payments";
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
@@ -58,7 +59,6 @@ const CartContent = () => {
     items,
     removeItem,
     updateItemQuantity,
-    cartTotal,
     isEmpty,
     emptyCart,
   } = useCart();
@@ -99,6 +99,39 @@ const CartContent = () => {
 
   const markCouponUsed = useMutation(api.mindPoints.markCouponUsed);
   const now = useNow();
+  const cartCourseIds = useMemo(
+    () => items.map((item) => item.id as Id<"courses">),
+    [items],
+  );
+  const bundleCampaigns = useQuery(
+    api.bundleCampaigns.listActiveBundleCampaignsForCourses,
+    cartCourseIds.length > 0 ? { courseIds: cartCourseIds } : "skip",
+  );
+  const bundleEvaluation = useMemo(
+    () =>
+      evaluateBundleCampaigns(
+        items.map((item) => ({
+          courseId: String(item.id),
+          listedPrice: Math.round(item.originalPrice ?? item.price ?? 0),
+          quantity: item.quantity ?? 1,
+        })),
+        (bundleCampaigns ?? []).map((campaign) => ({
+          ...campaign,
+          _id: String(campaign._id),
+          eligibleCourseIds: campaign.eligibleCourseIds.map((courseId) =>
+            String(courseId),
+          ),
+        })),
+      ),
+    [bundleCampaigns, items],
+  );
+  const appliedBundle = bundleEvaluation.appliedCampaign;
+  const bundleProgressCampaign =
+    appliedBundle ? null : bundleEvaluation.progressCampaign;
+  const coveredCourseIdSet = useMemo(
+    () => new Set(appliedBundle?.coveredCourseIds ?? []),
+    [appliedBundle],
+  );
 
   // Update offer details for cart items using shared time
   // Use now to create a minute-based key that changes every minute, forcing recalculation
@@ -142,29 +175,41 @@ const CartContent = () => {
     return newOfferDetails;
   }, [items, minuteKey]);
 
-  const hasBogoItems = items.some((item) => itemOfferDetails[item.id]?.hasBogo);
+  const hasBogoItems = items.some(
+    (item) =>
+      !coveredCourseIdSet.has(String(item.id)) &&
+      itemOfferDetails[item.id]?.hasBogo,
+  );
 
   const activeBogoTypes = useMemo(() => {
     const types = new Set<string>();
     items.forEach((item) => {
       const details = itemOfferDetails[item.id];
-      if (details?.hasBogo && item.courseType) {
+      if (
+        !coveredCourseIdSet.has(String(item.id)) &&
+        details?.hasBogo &&
+        item.courseType
+      ) {
         types.add(item.courseType);
       }
     });
     return Array.from(types);
-  }, [items, itemOfferDetails]);
+  }, [coveredCourseIdSet, items, itemOfferDetails]);
 
   const bogoLabels = useMemo(() => {
     const labels = new Set<string>();
     items.forEach((item) => {
       const details = itemOfferDetails[item.id];
-      if (details?.hasBogo && details.bogoLabel) {
+      if (
+        !coveredCourseIdSet.has(String(item.id)) &&
+        details?.hasBogo &&
+        details.bogoLabel
+      ) {
         labels.add(details.bogoLabel);
       }
     });
     return Array.from(labels);
-  }, [items, itemOfferDetails]);
+  }, [coveredCourseIdSet, items, itemOfferDetails]);
 
   const couponEligible = useMemo(() => {
     if (!appliedCoupon) {
@@ -173,10 +218,11 @@ const CartContent = () => {
 
     return items.some(
       (item) =>
+        !coveredCourseIdSet.has(String(item.id)) &&
         item.courseType === appliedCoupon.courseType &&
         Math.round(item.price ?? 0) > 0,
     );
-  }, [appliedCoupon, items]);
+  }, [appliedCoupon, coveredCourseIdSet, items]);
 
   useEffect(() => {
     if (appliedCoupon && !couponEligible) {
@@ -186,19 +232,42 @@ const CartContent = () => {
   }, [appliedCoupon, couponEligible]);
 
   const checkoutPricing = useMemo(() => {
+    const bundleAllocationMap = new Map(
+      (appliedBundle?.allocations ?? []).map((allocation) => [
+        String(allocation.courseId),
+        allocation,
+      ]),
+    );
+
     const baseItems = items.map((item) => {
       const listedPrice = Math.round(item.originalPrice ?? item.price ?? 0);
-      const checkoutPrice = Math.round(item.price ?? 0);
+      const defaultCheckoutPrice = Math.round(item.price ?? 0);
+      const bundleAllocation = bundleAllocationMap.get(String(item.id));
+      const checkoutPrice = bundleAllocation
+        ? Math.round(bundleAllocation.checkoutPrice)
+        : defaultCheckoutPrice;
+      const amountPaid = bundleAllocation
+        ? Math.round(bundleAllocation.amountPaid)
+        : defaultCheckoutPrice;
+      const redemptionDiscountAmount = bundleAllocation
+        ? Math.max(0, checkoutPrice - amountPaid)
+        : 0;
 
       return {
         courseId: item.id as Id<"courses">,
         courseType: item.courseType,
         listedPrice,
         checkoutPrice,
-        amountPaid: checkoutPrice,
-        redemptionDiscountAmount: 0,
+        amountPaid,
+        redemptionDiscountAmount,
         couponCode: undefined as string | undefined,
         mindPointsRedeemed: undefined as number | undefined,
+        bundleCampaignId: bundleAllocation
+          ? (appliedBundle!.campaignId as Id<"bundleCampaigns">)
+          : undefined,
+        bundleCampaignName: bundleAllocation
+          ? appliedBundle!.campaignName
+          : undefined,
       };
     });
 
@@ -210,6 +279,8 @@ const CartContent = () => {
       redemptionDiscountAmount: item.redemptionDiscountAmount,
       couponCode: item.couponCode,
       mindPointsRedeemed: item.mindPointsRedeemed,
+      bundleCampaignId: item.bundleCampaignId,
+      bundleCampaignName: item.bundleCampaignName,
     });
 
     if (!appliedCoupon) {
@@ -228,6 +299,7 @@ const CartContent = () => {
 
       baseItems.forEach((item, index) => {
         if (
+          !item.bundleCampaignId &&
           item.courseType === appliedCoupon.courseType &&
           item.checkoutPrice > 0 &&
           item.checkoutPrice > bestPrice
@@ -279,9 +351,28 @@ const CartContent = () => {
       ),
       items: pricedItems,
     };
-  }, [items, appliedCoupon]);
+  }, [items, appliedBundle, appliedCoupon]);
 
   const discountedTotal = checkoutPricing.totalAmountPaid;
+  const checkoutPricingByCourseId = useMemo(
+    () =>
+      new Map(
+        checkoutPricing.items.map((pricingItem) => [
+          String(pricingItem.courseId),
+          pricingItem,
+        ]),
+      ),
+    [checkoutPricing.items],
+  );
+  const listedCartTotal = useMemo(
+    () =>
+      items.reduce(
+        (total, item) =>
+          total + Math.round(item.originalPrice ?? item.price ?? 0),
+        0,
+      ),
+    [items],
+  );
   const totalPointsEarned = useMemo(() => {
     if (!user?.id) return 0;
 
@@ -414,7 +505,11 @@ const CartContent = () => {
 
               // Extract BOGO selections from cart items
               const bogoSelections = items
-                .filter((item) => item.selectedFreeCourse)
+                .filter(
+                  (item) =>
+                    item.selectedFreeCourse &&
+                    !coveredCourseIdSet.has(String(item.id)),
+                )
                 .map((item) => ({
                   sourceCourseId: item.id as Id<"courses">,
                   selectedFreeCourseId: item.selectedFreeCourse!.id,
@@ -725,6 +820,7 @@ const CartContent = () => {
       emptyCart,
       setIsProcessing,
       Razorpay,
+      coveredCourseIdSet,
     ],
   );
 
@@ -869,9 +965,20 @@ const CartContent = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {items.map((item) => {
-                const offerDetails = itemOfferDetails[item.id];
+                const pricingItem = checkoutPricingByCourseId.get(
+                  String(item.id),
+                );
+                const itemHasBundle = Boolean(pricingItem?.bundleCampaignId);
+                const offerDetails = itemHasBundle
+                  ? undefined
+                  : itemOfferDetails[item.id];
                 const itemTotal = Math.round(
-                  (item.price || 0) * (item.quantity || 1),
+                  pricingItem?.amountPaid ??
+                    (item.price || 0) * (item.quantity || 1),
+                );
+                const originalLinePrice = Math.round(
+                  pricingItem?.checkoutPrice ??
+                    (item.originalPrice ?? item.price ?? 0),
                 );
 
                 return (
@@ -896,6 +1003,16 @@ const CartContent = () => {
                         <p className="text-muted-foreground text-sm capitalize">
                           {item.courseType}
                         </p>
+                        {itemHasBundle && pricingItem?.bundleCampaignName ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                            <span className="rounded bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-800">
+                              Bundle Applied
+                            </span>
+                            <span className="font-medium text-blue-700">
+                              {pricingItem.bundleCampaignName}
+                            </span>
+                          </div>
+                        ) : null}
                         {offerDetails && (
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                             {offerDetails.hasDiscount && (
@@ -927,13 +1044,12 @@ const CartContent = () => {
                         <div className="font-semibold">
                           {showRupees(itemTotal)}
                         </div>
-                        {offerDetails?.hasDiscount && (
+                        {(itemHasBundle ||
+                          (offerDetails?.hasDiscount &&
+                            originalLinePrice > itemTotal)) && (
                           <div className="text-muted-foreground text-xs">
                             <span className="line-through">
-                              {showRupees(
-                                (offerDetails.originalPrice || 0) *
-                                  (item.quantity || 1),
-                              )}
+                              {showRupees(originalLinePrice)}
                             </span>
                           </div>
                         )}
@@ -977,7 +1093,11 @@ const CartContent = () => {
               })}
               {/* Display selected free course if BOGO is applied */}
               {items
-                .filter((item) => item.selectedFreeCourse)
+                .filter(
+                  (item) =>
+                    item.selectedFreeCourse &&
+                    !coveredCourseIdSet.has(String(item.id)),
+                )
                 .map((item) => (
                   <div
                     key={`bogo-${item.id}`}
@@ -1035,6 +1155,35 @@ const CartContent = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              {appliedBundle ? (
+                <div className="space-y-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <Sparkles className="h-4 w-4" />
+                    <span>{appliedBundle.campaignName}</span>
+                  </div>
+                  <p>
+                    {appliedBundle.coveredCourseIds.length} course
+                    {appliedBundle.coveredCourseIds.length === 1 ? "" : "s"}{" "}
+                    covered for {showRupees(appliedBundle.flatFee)}.
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    Existing discounts, BOGO, and coupon reductions do not
+                    apply to the covered courses.
+                  </p>
+                </div>
+              ) : bundleProgressCampaign ? (
+                <div className="space-y-1 rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <Sparkles className="h-4 w-4" />
+                    <span>{bundleProgressCampaign.campaignName}</span>
+                  </div>
+                  <p>
+                    {bundleProgressCampaign.progress.selectedCount} of{" "}
+                    {bundleProgressCampaign.progress.minCount} selected for the
+                    flat-fee bundle.
+                  </p>
+                </div>
+              ) : null}
               {hasBogoItems && (
                 <div className="space-y-2">
                   <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
@@ -1051,7 +1200,11 @@ const CartContent = () => {
                   {/* List specific free courses */}
                   <div className="space-y-1">
                     {items
-                      .filter((item) => item.selectedFreeCourse)
+                      .filter(
+                        (item) =>
+                          item.selectedFreeCourse &&
+                          !coveredCourseIdSet.has(String(item.id)),
+                      )
                       .map((item) => (
                         <div
                           key={`free-${item.id}`}
@@ -1071,8 +1224,30 @@ const CartContent = () => {
               )}
               <div className="flex justify-between">
                 <span>Subtotal ({items.length} items)</span>
-                <span>{showRupees(Math.round(cartTotal))}</span>
+                <span>{showRupees(listedCartTotal)}</span>
               </div>
+              {appliedBundle ? (
+                <div className="flex justify-between text-blue-700">
+                  <span>Bundle savings</span>
+                  <span>-{showRupees(appliedBundle.coveredSavings)}</span>
+                </div>
+              ) : null}
+              {appliedCoupon ? (
+                <div className="flex justify-between text-green-700">
+                  <span>Coupon savings</span>
+                  <span>
+                    -
+                    {showRupees(
+                      checkoutPricing.items.reduce(
+                        (total, item) =>
+                          total +
+                          (item.couponCode ? item.redemptionDiscountAmount ?? 0 : 0),
+                        0,
+                      ),
+                    )}
+                  </span>
+                </div>
+              ) : null}
               <div className="flex justify-between">
                 <span>Tax</span>
                 <span>₹0.00</span>
@@ -1101,6 +1276,7 @@ const CartContent = () => {
                         ) {
                           const hasEligibleCourse = items.some(
                             (item) =>
+                              !coveredCourseIdSet.has(String(item.id)) &&
                               item.courseType ===
                                 couponValidation.coupon.courseType &&
                               Math.round(item.price ?? 0) > 0,

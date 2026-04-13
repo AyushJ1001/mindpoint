@@ -171,6 +171,9 @@ export default function AdminEnrollmentDetailPage() {
             <strong>Coupon Code:</strong> {detail.couponCode || "-"}
           </p>
           <p>
+            <strong>Bundle Campaign:</strong> {detail.bundleCampaignName || "-"}
+          </p>
+          <p>
             <strong>Registration Source:</strong>{" "}
             {detail.registrationSource || "checkout"}
           </p>

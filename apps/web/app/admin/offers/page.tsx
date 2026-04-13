@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
+import { BundleCampaignManager } from "@/components/admin/BundleCampaignManager";
 import { toast } from "sonner";
 import { formatDateWindow } from "@/lib/admin-timezone";
 import { isBogoActive, isDiscountActive, showRupees } from "@/lib/utils";
@@ -79,6 +80,9 @@ const courseTypeOptions: CourseTypeFilter[] = [
 const MAX_COURSES_PER_APPLY = 150;
 
 export default function AdminOffersPage() {
+  const [pricingMode, setPricingMode] = useState<"offers" | "bundles">(
+    "offers",
+  );
   const [search, setSearch] = useState("");
   const [courseType, setCourseType] = useState<CourseTypeFilter>("all");
   const [selectedCourseIds, setSelectedCourseIds] = useState<string[]>([]);
@@ -416,7 +420,25 @@ export default function AdminOffersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <Button
+          variant={pricingMode === "offers" ? "default" : "outline"}
+          onClick={() => setPricingMode("offers")}
+        >
+          Course Offers
+        </Button>
+        <Button
+          variant={pricingMode === "bundles" ? "default" : "outline"}
+          onClick={() => setPricingMode("bundles")}
+        >
+          Bundle Campaigns
+        </Button>
+      </div>
+      {pricingMode === "bundles" ? (
+        <BundleCampaignManager />
+      ) : (
+        <div className="space-y-6">
       <AdminPageHeader
         title="Offer Manager"
         description="Use a saved campaign or a simple draft, then apply it to selected courses."
@@ -889,6 +911,8 @@ export default function AdminOffersPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+        </div>
+      )}
     </div>
   );
 }

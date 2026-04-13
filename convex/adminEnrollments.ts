@@ -284,6 +284,7 @@ export const listEnrollments = query({
           row.courseName ?? "",
           row.enrollmentNumber,
           row.couponCode ?? "",
+          row.bundleCampaignName ?? "",
         ];
 
         return fields.some((field) => field.toLowerCase().includes(search));
@@ -960,6 +961,8 @@ export const transferEnrollment = mutation({
       redemptionDiscountAmount: sourceEnrollment.redemptionDiscountAmount,
       couponCode: sourceEnrollment.couponCode,
       mindPointsRedeemed: sourceEnrollment.mindPointsRedeemed,
+      bundleCampaignId: sourceEnrollment.bundleCampaignId,
+      bundleCampaignName: sourceEnrollment.bundleCampaignName,
       registrationSource: "admin_transfer",
       status: "active",
       statusReason: `Transfer from ${sourceEnrollment.courseName || String(sourceEnrollment.courseId)}`,

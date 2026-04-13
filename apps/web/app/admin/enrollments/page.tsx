@@ -89,6 +89,7 @@ export default function AdminEnrollmentsPage() {
         listedPrice: row.listedPrice ?? 0,
         mindPointsRedeemed: row.mindPointsRedeemed ?? 0,
         couponCode: row.couponCode ?? "",
+        bundleCampaignName: row.bundleCampaignName ?? "",
         registeredAt: new Date(row._creationTime).toISOString(),
         lastConfirmationSentAt: row.lastConfirmationSentAt
           ? new Date(row.lastConfirmationSentAt).toISOString()
@@ -404,6 +405,9 @@ export default function AdminEnrollmentsPage() {
                       <p className="text-slate-500">
                         from {showRupees(row.checkoutPrice)}
                       </p>
+                    ) : null}
+                    {row.bundleCampaignName ? (
+                      <p className="text-blue-700">{row.bundleCampaignName}</p>
                     ) : null}
                   </td>
                   <td className="px-3 py-2 text-xs text-slate-700">

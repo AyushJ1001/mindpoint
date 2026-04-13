@@ -46,6 +46,24 @@ export const CourseBogoValue = v.object({
   label: v.optional(v.string()),
 });
 
+export const BundleCampaignValue = v.object({
+  name: v.string(),
+  description: v.optional(v.string()),
+  flatFee: v.number(),
+  requiredCourseCountMin: v.number(),
+  requiredCourseCountMax: v.number(),
+  eligibleCourseIds: v.array(v.id("courses")),
+  priority: v.number(),
+  enabled: v.boolean(),
+  isArchived: v.boolean(),
+  startDate: v.optional(v.string()),
+  endDate: v.optional(v.string()),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  createdByAdminId: v.string(),
+  updatedByAdminId: v.string(),
+});
+
 export const EnrollmentSessionType = v.union(
   v.literal("focus"),
   v.literal("flow"),
@@ -149,6 +167,8 @@ const publicEnrollmentFields = {
   redemptionDiscountAmount: v.optional(v.number()),
   couponCode: v.optional(v.string()),
   mindPointsRedeemed: v.optional(v.number()),
+  bundleCampaignId: v.optional(v.id("bundleCampaigns")),
+  bundleCampaignName: v.optional(v.string()),
   registrationSource: v.optional(EnrollmentRegistrationSource),
   status: v.optional(EnrollmentStatus),
   statusReason: v.optional(v.string()),
@@ -196,6 +216,11 @@ export default defineSchema({
   })
     .index("by_updatedAt", ["updatedAt"])
     .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"]),
+
+  bundleCampaigns: defineTable(BundleCampaignValue)
+    .index("by_updatedAt", ["updatedAt"])
+    .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"])
+    .index("by_enabled_priority", ["enabled", "priority"]),
 
   reviews: defineTable({
     userId: v.string(),

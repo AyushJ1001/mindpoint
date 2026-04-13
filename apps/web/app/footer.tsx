@@ -3,7 +3,7 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer
-      className="border-border z-10 mt-auto border-t bg-secondary/40"
+      className="border-border relative z-20 mt-auto border-t bg-secondary/40"
       role="contentinfo"
       aria-label="Footer"
     >
