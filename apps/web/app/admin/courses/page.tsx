@@ -318,9 +318,9 @@ export default function AdminCoursesPage() {
                 Course Code Integrity
               </h2>
               <p className="mt-0.5 text-xs text-amber-800">
-                Review likely workshops using the legacy WS prefix. Fixes update
-                the stored type to masterclass and rewrite only the code prefix
-                to MC.
+                Review MC-coded courses with the wrong stored type and likely
+                workshops using the legacy WS prefix. Fixes store them as
+                masterclass courses and only rewrite WS prefixes to MC.
               </p>
             </div>
             <Button
@@ -748,7 +748,8 @@ export default function AdminCoursesPage() {
             <AlertDialogDescription>
               This will update up to 50 visible repair candidates in this batch,
               including any published courses that still pass publish
-              validation. Codes will keep their suffix and switch from WS to MC.
+              validation. Existing MC codes keep their code; legacy WS workshop
+              codes keep their suffix and switch to MC.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
