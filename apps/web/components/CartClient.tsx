@@ -21,7 +21,7 @@ import {
   Gift,
 } from "lucide-react";
 import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
-import { useUser, useClerk } from "@clerk/clerk-react";
+import { useUser, useClerk } from "@clerk/nextjs";
 import { handlePaymentSuccess } from "@/app/actions/payment";
 import { toast } from "sonner";
 import { WhatsAppModal } from "@/components/whatsapp-modal";
@@ -55,13 +55,8 @@ const getReferralCookie = () => {
 };
 
 const CartContent = () => {
-  const {
-    items,
-    removeItem,
-    updateItemQuantity,
-    isEmpty,
-    emptyCart,
-  } = useCart();
+  const { items, removeItem, updateItemQuantity, isEmpty, emptyCart } =
+    useCart();
 
   const [isMounted, setIsMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -126,8 +121,9 @@ const CartContent = () => {
     [bundleCampaigns, items],
   );
   const appliedBundle = bundleEvaluation.appliedCampaign;
-  const bundleProgressCampaign =
-    appliedBundle ? null : bundleEvaluation.progressCampaign;
+  const bundleProgressCampaign = appliedBundle
+    ? null
+    : bundleEvaluation.progressCampaign;
   const coveredCourseIdSet = useMemo(
     () => new Set(appliedBundle?.coveredCourseIds ?? []),
     [appliedBundle],
@@ -858,9 +854,10 @@ const CartContent = () => {
     } else {
       // User is not signed in, show Clerk sign-in modal
       setPendingCheckout(true);
+      const returnUrl = window.location.href;
       openSignIn({
-        afterSignInUrl: window.location.href,
-        afterSignUpUrl: window.location.href,
+        forceRedirectUrl: returnUrl,
+        signUpForceRedirectUrl: returnUrl,
       });
     }
   };
@@ -879,7 +876,7 @@ const CartContent = () => {
   // Show loading state during hydration to prevent mismatch
   if (!isMounted) {
     return (
-      <div className="container mx-auto py-16 ">
+      <div className="container mx-auto py-16">
         <div className="text-center">
           <ShoppingCart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
           <h2 className="mb-2 text-2xl font-semibold">Loading cart...</h2>
@@ -890,7 +887,7 @@ const CartContent = () => {
 
   if (isEmpty) {
     return (
-      <div className="container mx-auto py-16 ">
+      <div className="container mx-auto py-16">
         <div className="text-center">
           <ShoppingCart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
           <h2 className="mb-2 text-2xl font-semibold">Your cart is empty</h2>
@@ -906,7 +903,7 @@ const CartContent = () => {
   }
 
   return (
-    <div className="container py-6 sm:py-8 ">
+    <div className="container py-6 sm:py-8">
       <div className="mb-6 sm:mb-8">
         <h1 className="mb-2 text-4xl font-bold tracking-tight sm:text-5xl">
           Shopping Cart
@@ -978,13 +975,15 @@ const CartContent = () => {
                 );
                 const originalLinePrice = Math.round(
                   pricingItem?.checkoutPrice ??
-                    (item.originalPrice ?? item.price ?? 0),
+                    item.originalPrice ??
+                    item.price ??
+                    0,
                 );
 
                 return (
                   <div
                     key={item.id}
-                    className="rounded-xl border border-lavender-200 bg-card p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.7)]"
+                    className="border-lavender-200 bg-card rounded-xl border p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.7)]"
                   >
                     <div className="flex items-start gap-3">
                       <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md sm:h-16 sm:w-16">
@@ -1163,12 +1162,14 @@ const CartContent = () => {
                   </div>
                   <p>
                     {appliedBundle.coveredCourseIds.length} course
-                    {appliedBundle.coveredCourseIds.length === 1 ? "" : "s"}{" "}
+                    {appliedBundle.coveredCourseIds.length === 1
+                      ? ""
+                      : "s"}{" "}
                     covered for {showRupees(appliedBundle.flatFee)}.
                   </p>
                   <p className="text-xs text-blue-700">
-                    Existing discounts, BOGO, and coupon reductions do not
-                    apply to the covered courses.
+                    Existing discounts, BOGO, and coupon reductions do not apply
+                    to the covered courses.
                   </p>
                 </div>
               ) : bundleProgressCampaign ? (
@@ -1241,7 +1242,9 @@ const CartContent = () => {
                       checkoutPricing.items.reduce(
                         (total, item) =>
                           total +
-                          (item.couponCode ? item.redemptionDiscountAmount ?? 0 : 0),
+                          (item.couponCode
+                            ? (item.redemptionDiscountAmount ?? 0)
+                            : 0),
                         0,
                       ),
                     )}
