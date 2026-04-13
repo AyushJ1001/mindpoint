@@ -17,8 +17,9 @@ import { useEffect, useState } from "react";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { Id } from "@mindpoint/backend/data-model";
 import { calculatePointsEarned } from "@/lib/mind-points";
-import { Gift } from "lucide-react";
+import { Gift, Layers } from "lucide-react";
 import { getEnrolledCount } from "@/lib/course-enrollment";
+import { useBundleEligibility } from "@/hooks/use-bundle-eligibility";
 
 // Helper function to format date
 const formatDate = (dateString: string) => {
@@ -80,6 +81,9 @@ export function CourseCard({
   // Use shared time for offer details - updates automatically via useNow hook
   // now triggers re-renders every minute, getOfferDetails uses Date.now() internally
   const offerDetails = getOfferDetails(course);
+
+  // Bundle eligibility (shared subscription, cached across cards)
+  const bundleInfo = useBundleEligibility(course._id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -188,17 +192,26 @@ export function CourseCard({
       {/* Course Image */}
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
-      {offerDetails && (
+      {(offerDetails || bundleInfo) && (
         <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
-          {offerDetails && (
-            <Badge
-              variant="secondary"
-              className="max-w-[52%] truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
-            >
-              <span className="sm:hidden">Special Offer</span>
-              <span className="hidden sm:inline">{offerDetails.offerName}</span>
-            </Badge>
-          )}
+          <div className="flex max-w-[52%] flex-col gap-1">
+            {offerDetails && (
+              <Badge
+                variant="secondary"
+                className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
+              >
+                <span className="sm:hidden">Special Offer</span>
+                <span className="hidden sm:inline">{offerDetails.offerName}</span>
+              </Badge>
+            )}
+            {bundleInfo && (
+              <Badge className="max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+                <Layers className="mr-1 h-3 w-3" />
+                <span className="sm:hidden">Bundle</span>
+                <span className="hidden sm:inline">Bundle Deal</span>
+              </Badge>
+            )}
+          </div>
           {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
             <div className="flex max-w-[46%] flex-col items-end gap-1">
               {offerDetails?.hasDiscount && (
@@ -281,6 +294,12 @@ export function CourseCard({
               Includes a free bonus course
             </div>
           )}
+          {bundleInfo && (
+            <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+              <Layers className="h-3 w-3 shrink-0" />
+              <span className="truncate">{bundleInfo.dealSummary}</span>
+            </div>
+          )}
           <div className="text-muted-foreground flex items-center gap-1 text-xs">
             <Gift className="h-3 w-3 shrink-0" />
             <span className="truncate">
@@ -357,6 +376,9 @@ export function UpcomingCourseCard({
   // Use shared time for offer details - updates automatically via useNow hook
   // now triggers re-renders every minute, getOfferDetails uses Date.now() internally
   const offerDetails = getOfferDetails(course);
+
+  // Bundle eligibility (shared subscription, cached across cards)
+  const bundleInfo = useBundleEligibility(course._id);
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -482,6 +504,13 @@ export function UpcomingCourseCard({
             <Clock className="mr-1 h-3 w-3" />
             Upcoming
           </Badge>
+          {bundleInfo && (
+            <Badge className="w-fit max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Layers className="mr-1 h-3 w-3" />
+              <span className="sm:hidden">Bundle</span>
+              <span className="hidden sm:inline">Bundle Deal</span>
+            </Badge>
+          )}
         </div>
 
         {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
@@ -578,6 +607,12 @@ export function UpcomingCourseCard({
             {offerDetails?.hasBogo && (
               <div className="text-xs font-semibold text-emerald-600">
                 Includes a free bonus course
+              </div>
+            )}
+            {bundleInfo && (
+              <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+                <Layers className="h-3 w-3 shrink-0" />
+                <span className="truncate">{bundleInfo.dealSummary}</span>
               </div>
             )}
           </div>

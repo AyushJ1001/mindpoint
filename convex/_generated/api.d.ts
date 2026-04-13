@@ -28,6 +28,7 @@ import type * as adminUsers from "../adminUsers.js";
 import type * as adminUtils from "../adminUtils.js";
 import type * as bundleCampaigns from "../bundleCampaigns.js";
 import type * as courses from "../courses.js";
+import type * as crons from "../crons.js";
 import type * as emailActions from "../emailActions.js";
 import type * as emailActionsWithRateLimit from "../emailActionsWithRateLimit.js";
 import type * as googleSheets from "../googleSheets.js";
@@ -63,6 +64,7 @@ declare const fullApi: ApiFromModules<{
   adminUtils: typeof adminUtils;
   bundleCampaigns: typeof bundleCampaigns;
   courses: typeof courses;
+  crons: typeof crons;
   emailActions: typeof emailActions;
   emailActionsWithRateLimit: typeof emailActionsWithRateLimit;
   googleSheets: typeof googleSheets;
