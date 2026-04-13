@@ -183,6 +183,14 @@ function hasMasterclassWorkshopSignal(course: {
 function isMasterclassRepairEligible(
   course: CourseCodeConventionCandidateInput,
 ) {
+  if (
+    hasText(course.code) &&
+    getUpperCodePrefix(course.code) === "MC" &&
+    course.type !== "masterclass"
+  ) {
+    return true;
+  }
+
   return (
     hasText(course.code) &&
     getUpperCodePrefix(course.code) === "WS" &&
@@ -202,6 +210,12 @@ function getMasterclassRepairCandidate(
     return null;
   }
 
+  const codePrefix = getUpperCodePrefix(course.code);
+  const suggestedCode =
+    codePrefix === "MC"
+      ? course.code.trim()
+      : replaceCodePrefix(course.code, "MC");
+
   return {
     courseId: course._id,
     name: course.name,
@@ -209,9 +223,11 @@ function getMasterclassRepairCandidate(
     currentType: course.type ?? null,
     suggestedType: "masterclass" as const,
     currentCode: course.code.trim(),
-    suggestedCode: replaceCodePrefix(course.code, "MC"),
+    suggestedCode,
     reason:
-      "Course uses the legacy workshop `WS` prefix but matches masterclass/workshop signals and has no worksheet-only fields.",
+      codePrefix === "MC"
+        ? "Course uses the masterclass/workshop `MC` prefix but is not stored as masterclass."
+        : "Course uses the legacy workshop `WS` prefix but matches masterclass/workshop signals and has no worksheet-only fields.",
   };
 }
 
@@ -711,12 +727,13 @@ export const createCourse = mutation({
       .replace(/-/g, "")
       .slice(0, 6)
       .toUpperCase()}`;
+    const code = args.data?.code || generatedCode;
 
     const payload = {
       ...args.data,
       name: args.name,
       type: args.type ?? args.data?.type ?? "certificate",
-      code: args.data?.code || generatedCode,
+      code,
       price: args.data?.price ?? 0,
       capacity: args.data?.capacity ?? 1,
       enrolledUsers: [],
