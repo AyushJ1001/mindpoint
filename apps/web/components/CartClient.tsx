@@ -64,8 +64,10 @@ function BundleProgressSection({
   eligibleCourseIdSet: Set<string>;
 }) {
   const [expanded, setExpanded] = useState(false);
-  const remaining =
-    campaign.progress.minCount - campaign.progress.selectedCount;
+  const remaining = Math.max(
+    0,
+    campaign.progress.minCount - campaign.progress.selectedCount,
+  );
   const progressPct = Math.min(
     100,
     Math.round(

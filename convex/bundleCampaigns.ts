@@ -1,5 +1,8 @@
 import { v } from "convex/values";
-import { query } from "./_generated/server";
+import { query, internalMutation } from "./_generated/server";
+
+/** Reasonable upper bound for active campaigns. */
+const MAX_ACTIVE_CAMPAIGNS = 50;
 
 function isBundleCampaignActive(campaign: {
   enabled: boolean;
@@ -43,7 +46,13 @@ export const listAllActiveBundleCampaigns = query({
         q.eq("enabled", true).eq("isArchived", false),
       )
       .order("desc")
-      .take(500);
+      .take(MAX_ACTIVE_CAMPAIGNS);
+
+    if (campaigns.length === MAX_ACTIVE_CAMPAIGNS) {
+      console.warn(
+        `[bundleCampaigns] Hit ${MAX_ACTIVE_CAMPAIGNS} campaign cap — some may be missing from badge display`,
+      );
+    }
 
     return campaigns
       .filter((campaign) => isBundleCampaignActive(campaign))
@@ -79,7 +88,13 @@ export const listActiveBundleCampaignsForCourses = query({
         q.eq("enabled", true).eq("isArchived", false),
       )
       .order("desc")
-      .take(500);
+      .take(MAX_ACTIVE_CAMPAIGNS);
+
+    if (campaigns.length === MAX_ACTIVE_CAMPAIGNS) {
+      console.warn(
+        `[bundleCampaigns] Hit ${MAX_ACTIVE_CAMPAIGNS} campaign cap in listActiveBundleCampaignsForCourses`,
+      );
+    }
 
     return campaigns
       .filter((campaign) => isBundleCampaignActive(campaign))
@@ -103,5 +118,44 @@ export const listActiveBundleCampaignsForCourses = query({
         startDate: campaign.startDate,
         endDate: campaign.endDate,
       }));
+  },
+});
+
+/**
+ * Disables bundle campaigns whose endDate has passed.
+ * Called by the cron in convex/crons.ts to ensure Convex subscriptions
+ * re-evaluate when a campaign expires (document change triggers update).
+ */
+export const disableExpiredCampaigns = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const campaigns = await ctx.db
+      .query("bundleCampaigns")
+      .withIndex("by_enabled_isArchived_priority", (q) =>
+        q.eq("enabled", true).eq("isArchived", false),
+      )
+      .collect();
+
+    const now = Date.now();
+    let disabled = 0;
+
+    for (const campaign of campaigns) {
+      if (!campaign.endDate) continue;
+      const end = new Date(campaign.endDate).getTime();
+      if (Number.isNaN(end) || now <= end) continue;
+
+      await ctx.db.patch(campaign._id, {
+        enabled: false,
+        updatedAt: now,
+        updatedByAdminId: "system:cron",
+      });
+      disabled += 1;
+    }
+
+    if (disabled > 0) {
+      console.log(
+        `[bundleCampaigns] Cron disabled ${disabled} expired campaign(s)`,
+      );
+    }
   },
 });
