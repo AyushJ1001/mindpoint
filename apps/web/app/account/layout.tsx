@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, Suspense } from "react";
-import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/nextjs";
+import { RedirectToSignIn, Show } from "@clerk/nextjs";
 import { useSearchParams, useRouter } from "next/navigation";
 import { BookOpen, Gift, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,7 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <SignedIn>
+      <Show when="signed-in">
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold">My Account</h1>
@@ -92,10 +92,10 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
             <main className="flex-1">{children}</main>
           </div>
         </div>
-      </SignedIn>
-      <SignedOut>
+      </Show>
+      <Show when="signed-out">
         <RedirectToSignIn />
-      </SignedOut>
+      </Show>
     </>
   );
 }

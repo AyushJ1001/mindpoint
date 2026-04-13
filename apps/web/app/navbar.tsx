@@ -12,7 +12,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import Image from "next/image";
-import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
+import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import { useCart } from "react-use-cart";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -618,14 +618,14 @@ export default function Navbar() {
               </SheetContent>
             </Sheet>
             <div className="flex items-center gap-2">
-              <SignedIn>
+              <Show when="signed-in">
                 <MindPointsBadge />
                 <UserButton
                   userProfileMode="navigation"
                   userProfileUrl="/account"
                 />
-              </SignedIn>
-              <SignedOut>
+              </Show>
+              <Show when="signed-out">
                 <SignInButton>
                   <Button
                     variant="ghost"
@@ -636,7 +636,7 @@ export default function Navbar() {
                     <span className="sm:hidden">Sign in</span>
                   </Button>
                 </SignInButton>
-              </SignedOut>
+              </Show>
             </div>
           </div>
         </div>

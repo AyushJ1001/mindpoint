@@ -11,13 +11,15 @@ export default function ConvexClientProvider({
   children: ReactNode;
 }) {
   // Keep required public env checks local in client boot code so Next can inline them.
-  const convex = process.env.NEXT_PUBLIC_CONVEX_URL
-    ? new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL)
-    : null;
+  // If Convex isn't configured (e.g. Vercel previews for Dependabot), fall back to a
+  // dummy deployment URL so hooks like `useQuery` don't crash during prerender.
+  const convexUrl =
+    process.env.NEXT_PUBLIC_CONVEX_URL ?? "https://dummy.convex.cloud";
+  const isDummyConvexUrl = !process.env.NEXT_PUBLIC_CONVEX_URL;
+  const convex = new ConvexReactClient(convexUrl);
 
-  // If no Convex URL is available, render children without Convex providers
-  if (!convex) {
-    return <>{children}</>;
+  if (isDummyConvexUrl) {
+    return <ConvexProvider client={convex}>{children}</ConvexProvider>;
   }
 
   // If Clerk keys are available, use ConvexProviderWithClerk for authentication

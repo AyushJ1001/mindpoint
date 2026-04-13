@@ -15,6 +15,24 @@ export const metadata = {
 };
 
 export default async function ServerPage() {
+  // This page demonstrates server-side Convex. During builds (e.g. CI/Vercel previews),
+  // the Convex deployment URL may be intentionally omitted. In that case, render a
+  // non-interactive fallback instead of failing prerender.
+  if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
+    return (
+      <main className="mx-auto flex max-w-2xl flex-col gap-4 p-8">
+        <h1 className="text-center text-4xl font-bold">Convex + Next.js</h1>
+        <div className="flex flex-col gap-2 rounded-md bg-lavender-100 p-4 dark:bg-card">
+          <h2 className="text-xl font-bold">Server data disabled</h2>
+          <p className="text-muted-foreground text-sm">
+            This preview was built without a Convex deployment URL, so server-side
+            data fetching is skipped.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
   const preloaded = await preloadQuery(api.myFunctions.listNumbers, {
     count: 3,
   });
