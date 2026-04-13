@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import {
   useEffect,
   useMemo,
@@ -9,11 +10,22 @@ import {
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
 import type { Doc, Id } from "@mindpoint/backend/data-model";
+import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { UploadDropzone } from "@/lib/uploadthing";
 import { getUserFacingErrorMessage } from "@/lib/convex-error";
@@ -310,6 +322,9 @@ export function CourseEditor({
   const [isSaving, setIsSaving] = useState(false);
   const [emotionalContentOpen, setEmotionalContentOpen] = useState(false);
   const [selectedCampaignId, setSelectedCampaignId] = useState("");
+  const [imagePendingRemoval, setImagePendingRemoval] = useState<string | null>(
+    null,
+  );
   const [usesPlainTextScheduleInputs, setUsesPlainTextScheduleInputs] =
     useState(false);
   const courseVersion = course
@@ -941,6 +956,19 @@ export function CourseEditor({
       onInput: (e: React.FormEvent<HTMLInputElement>) =>
         updateScheduleField(e.currentTarget?.value),
     };
+  };
+
+  const confirmRemoveImage = () => {
+    if (!imagePendingRemoval) {
+      return;
+    }
+
+    setState((prev) => ({
+      ...prev,
+      imageUrls: prev.imageUrls.filter((url) => url !== imagePendingRemoval),
+    }));
+    setImagePendingRemoval(null);
+    toast.success("Image removed from this draft");
   };
 
   return (
@@ -1711,6 +1739,7 @@ export function CourseEditor({
 
         <UploadDropzone
           endpoint="courseImageUploader"
+          config={{ mode: "auto" }}
           onClientUploadComplete={(files) => {
             setState((prev) => ({
               ...prev,
@@ -1731,15 +1760,37 @@ export function CourseEditor({
         />
 
         {state.imageUrls.length > 0 ? (
-          <div className="flex flex-wrap gap-2">
-            {state.imageUrls.map((url) => (
-              <Badge
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {state.imageUrls.map((url, index) => (
+              <div
                 key={url}
-                variant="outline"
-                className="max-w-full truncate"
+                className="overflow-hidden rounded-md border bg-slate-50"
               >
-                {url}
-              </Badge>
+                <div className="relative aspect-[4/5] w-full bg-white">
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon-sm"
+                    className="absolute top-2 right-2 z-10 shadow-sm"
+                    onClick={() => setImagePendingRemoval(url)}
+                    aria-label={`Remove course image ${index + 1}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                  <Image
+                    src={url}
+                    alt={`Course image ${index + 1}`}
+                    fill
+                    className="object-contain"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                  />
+                </div>
+                <div className="border-t bg-white px-3 py-2 text-xs text-slate-600">
+                  <p className="truncate" title={url}>
+                    {url}
+                  </p>
+                </div>
+              </div>
             ))}
           </div>
         ) : null}
@@ -1751,6 +1802,7 @@ export function CourseEditor({
 
           <UploadDropzone
             endpoint="worksheetPdfUploader"
+            config={{ mode: "auto" }}
             onClientUploadComplete={(files) => {
               const first = files[0];
               if (!first) return;
@@ -1937,6 +1989,35 @@ export function CourseEditor({
           {isSaving ? "Saving..." : "Save Course"}
         </Button>
       </div>
+
+      <AlertDialog
+        open={imagePendingRemoval !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setImagePendingRemoval(null);
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remove image?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This removes the image from the course draft. The file stays in
+              UploadThing, but it will no longer appear on the course after you
+              save.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-white hover:bg-destructive/90"
+              onClick={confirmRemoveImage}
+            >
+              Remove image
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
