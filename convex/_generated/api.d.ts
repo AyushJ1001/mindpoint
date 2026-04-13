@@ -16,6 +16,7 @@ import type {
 import type * as _publicCourse from "../_publicCourse.js";
 import type * as adminAudit from "../adminAudit.js";
 import type * as adminAuth from "../adminAuth.js";
+import type * as adminBundles from "../adminBundles.js";
 import type * as adminCourses from "../adminCourses.js";
 import type * as adminDashboard from "../adminDashboard.js";
 import type * as adminEnrollments from "../adminEnrollments.js";
@@ -25,6 +26,7 @@ import type * as adminOffers from "../adminOffers.js";
 import type * as adminReviews from "../adminReviews.js";
 import type * as adminUsers from "../adminUsers.js";
 import type * as adminUtils from "../adminUtils.js";
+import type * as bundleCampaigns from "../bundleCampaigns.js";
 import type * as courses from "../courses.js";
 import type * as emailActions from "../emailActions.js";
 import type * as emailActionsWithRateLimit from "../emailActionsWithRateLimit.js";
@@ -49,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   _publicCourse: typeof _publicCourse;
   adminAudit: typeof adminAudit;
   adminAuth: typeof adminAuth;
+  adminBundles: typeof adminBundles;
   adminCourses: typeof adminCourses;
   adminDashboard: typeof adminDashboard;
   adminEnrollments: typeof adminEnrollments;
@@ -58,6 +61,7 @@ declare const fullApi: ApiFromModules<{
   adminReviews: typeof adminReviews;
   adminUsers: typeof adminUsers;
   adminUtils: typeof adminUtils;
+  bundleCampaigns: typeof bundleCampaigns;
   courses: typeof courses;
   emailActions: typeof emailActions;
   emailActionsWithRateLimit: typeof emailActionsWithRateLimit;

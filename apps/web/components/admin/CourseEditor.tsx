@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  type ChangeEvent,
-  type FormEvent,
   useEffect,
   useMemo,
   useRef,
@@ -930,16 +928,20 @@ export function CourseEditor({
 
   const buildScheduleInputProps = (
     key: "startDate" | "endDate" | "startTime" | "endTime",
-  ) => ({
-    value: state[key],
-    onChange: (e: ChangeEvent<HTMLInputElement>) =>
-      setState((prev) => ({ ...prev, [key]: e.target.value })),
-    onInput: (e: FormEvent<HTMLInputElement>) =>
-      setState((prev) => ({
-        ...prev,
-        [key]: e.currentTarget.value,
-      })),
-  });
+  ) => {
+    const updateScheduleField = (nextValue: string | null | undefined) => {
+      const normalizedValue = nextValue ?? "";
+      setState((prev) => ({ ...prev, [key]: normalizedValue }));
+    };
+
+    return {
+      value: state[key],
+      onChange: (e: React.ChangeEvent<HTMLInputElement>) =>
+        updateScheduleField(e.currentTarget?.value),
+      onInput: (e: React.FormEvent<HTMLInputElement>) =>
+        updateScheduleField(e.currentTarget?.value),
+    };
+  };
 
   return (
     <div className="space-y-6">
