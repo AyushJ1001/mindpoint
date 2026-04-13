@@ -1,9 +1,13 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { CourseLifecycleStatus, CourseType } from "./schema";
+import type { Id } from "./_generated/dataModel";
 import { requireAdmin } from "./adminAuth";
 import { normalizeCourseLifecycleStatus } from "./adminUtils";
 import { createAdminAuditLog } from "./adminAudit";
+
+const COURSE_INTEGRITY_SCAN_LIMIT = 2000;
+const MASTERCLASS_REPAIR_BATCH_LIMIT = 50;
 
 const coursePatchValidator = {
   name: v.optional(v.string()),
@@ -105,19 +109,145 @@ function hasRequiredSchedule(course: {
   );
 }
 
+type AdminCourseType =
+  | "certificate"
+  | "internship"
+  | "diploma"
+  | "pre-recorded"
+  | "masterclass"
+  | "therapy"
+  | "supervised"
+  | "resume-studio"
+  | "worksheet";
+
+type CourseCodeConventionCandidateInput = {
+  _id?: Id<"courses">;
+  name?: string;
+  code?: string;
+  type?: AdminCourseType;
+  lifecycleStatus?: "draft" | "published" | "archived";
+  description?: string;
+  content?: string;
+  fileUrl?: string;
+  worksheetDescription?: string;
+  targetAudience?: string[];
+};
+
+function getUpperCodePrefix(code?: string) {
+  if (typeof code !== "string") {
+    return null;
+  }
+
+  const normalized = code.trim().toUpperCase();
+  return normalized.length >= 2 ? normalized.slice(0, 2) : null;
+}
+
+function replaceCodePrefix(code: string, nextPrefix: string) {
+  const trimmed = code.trim();
+  return `${nextPrefix.toUpperCase()}${trimmed.slice(2)}`;
+}
+
+function hasWorksheetOnlyFields(course: {
+  fileUrl?: string;
+  worksheetDescription?: string;
+  targetAudience?: string[];
+}) {
+  return (
+    hasText(course.fileUrl) ||
+    hasText(course.worksheetDescription) ||
+    (Array.isArray(course.targetAudience) && course.targetAudience.length > 0)
+  );
+}
+
+function hasMasterclassWorkshopSignal(course: {
+  type?: AdminCourseType;
+  name?: string;
+  description?: string;
+  content?: string;
+}) {
+  if (course.type === "masterclass") {
+    return true;
+  }
+
+  const searchableText = [
+    course.name ?? "",
+    course.description ?? "",
+    course.content ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  return /\b(masterclass|master class|workshop)\b/.test(searchableText);
+}
+
+function isMasterclassRepairEligible(
+  course: CourseCodeConventionCandidateInput,
+) {
+  return (
+    hasText(course.code) &&
+    getUpperCodePrefix(course.code) === "WS" &&
+    !hasWorksheetOnlyFields(course) &&
+    hasMasterclassWorkshopSignal(course)
+  );
+}
+
+function getMasterclassRepairCandidate(
+  course: CourseCodeConventionCandidateInput & {
+    _id: Id<"courses">;
+    name: string;
+    code: string;
+  },
+) {
+  if (!isMasterclassRepairEligible(course)) {
+    return null;
+  }
+
+  return {
+    courseId: course._id,
+    name: course.name,
+    lifecycleStatus: normalizeCourseLifecycleStatus(course.lifecycleStatus),
+    currentType: course.type ?? null,
+    suggestedType: "masterclass" as const,
+    currentCode: course.code.trim(),
+    suggestedCode: replaceCodePrefix(course.code, "MC"),
+    reason:
+      "Course uses the legacy workshop `WS` prefix but matches masterclass/workshop signals and has no worksheet-only fields.",
+  };
+}
+
+function validatePublishedCourseCodeConvention(course: {
+  type?: AdminCourseType;
+  code?: string;
+}) {
+  const codePrefix = getUpperCodePrefix(course.code);
+
+  if (course.type === "masterclass" && codePrefix !== "MC") {
+    throw new Error(
+      "Masterclass and workshop course codes must start with MC before publishing.",
+    );
+  }
+
+  if (course.type === "worksheet" && codePrefix !== "WS") {
+    throw new Error(
+      "Worksheet course codes must start with WS before publishing.",
+    );
+  }
+
+  if (codePrefix === "WS" && course.type !== "worksheet") {
+    throw new Error("Only worksheet course codes can start with WS.");
+  }
+
+  if (codePrefix === "MC" && course.type !== "masterclass") {
+    throw new Error(
+      "Only masterclass and workshop course codes can start with MC.",
+    );
+  }
+}
+
 function validatePublishableCourse(course: {
   name?: string;
   code?: string;
-  type?:
-    | "certificate"
-    | "internship"
-    | "diploma"
-    | "pre-recorded"
-    | "masterclass"
-    | "therapy"
-    | "supervised"
-    | "resume-studio"
-    | "worksheet";
+  type?: AdminCourseType;
   content?: string;
   description?: string;
   learningOutcomes?: Array<{ icon: string; title: string }>;
@@ -142,6 +272,7 @@ function validatePublishableCourse(course: {
   if (!course.type) {
     throw new Error("Course type is required before publishing");
   }
+  validatePublishedCourseCodeConvention(course);
   if (!hasText(course.description)) {
     throw new Error("Course description is required before publishing");
   }
@@ -227,29 +358,12 @@ function validatePublishableCourse(course: {
   }
 }
 
-function getUpperCodePrefix(code?: string) {
-  if (typeof code !== "string") {
+function getSuggestedCourseType(course: CourseCodeConventionCandidateInput) {
+  const codePrefix = getUpperCodePrefix(course.code);
+
+  if (isMasterclassRepairEligible(course)) {
     return null;
   }
-
-  const normalized = code.trim().toUpperCase();
-  return normalized.length >= 2 ? normalized.slice(0, 2) : null;
-}
-
-function getSuggestedCourseType(course: {
-  type?:
-    | "certificate"
-    | "internship"
-    | "diploma"
-    | "pre-recorded"
-    | "masterclass"
-    | "therapy"
-    | "supervised"
-    | "resume-studio"
-    | "worksheet";
-  code?: string;
-}) {
-  const codePrefix = getUpperCodePrefix(course.code);
 
   if (codePrefix === "IN" && course.type !== "internship") {
     return {
@@ -262,6 +376,13 @@ function getSuggestedCourseType(course: {
     return {
       suggestedType: "pre-recorded" as const,
       reason: "Course code uses the pre-recorded prefix `PR`.",
+    };
+  }
+
+  if (codePrefix === "MC" && course.type !== "masterclass") {
+    return {
+      suggestedType: "masterclass" as const,
+      reason: "Course code uses the masterclass/workshop prefix `MC`.",
     };
   }
 
@@ -442,22 +563,30 @@ export const listCourseTypeIssues = query({
   args: {
     limit: v.optional(v.number()),
   },
-  returns: v.array(
-    v.object({
-      courseId: v.id("courses"),
-      name: v.string(),
-      code: v.union(v.string(), v.null()),
-      lifecycleStatus: v.union(CourseLifecycleStatus, v.null()),
-      currentType: v.union(CourseType, v.null()),
-      suggestedType: CourseType,
-      reason: v.string(),
-    }),
-  ),
+  returns: v.object({
+    issues: v.array(
+      v.object({
+        courseId: v.id("courses"),
+        name: v.string(),
+        code: v.union(v.string(), v.null()),
+        lifecycleStatus: v.union(CourseLifecycleStatus, v.null()),
+        currentType: v.union(CourseType, v.null()),
+        suggestedType: CourseType,
+        reason: v.string(),
+      }),
+    ),
+    scanned: v.number(),
+    truncated: v.boolean(),
+  }),
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
 
-    const courses = await ctx.db.query("courses").order("desc").take(2000);
-    const issues = courses
+    const courses = await ctx.db
+      .query("courses")
+      .order("desc")
+      .take(COURSE_INTEGRITY_SCAN_LIMIT + 1);
+    const scannedCourses = courses.slice(0, COURSE_INTEGRITY_SCAN_LIMIT);
+    const issues = scannedCourses
       .map((course) => {
         const suggestion = getSuggestedCourseType(course);
         if (!suggestion) {
@@ -468,7 +597,9 @@ export const listCourseTypeIssues = query({
           courseId: course._id,
           name: course.name,
           code: course.code ?? null,
-          lifecycleStatus: normalizeCourseLifecycleStatus(course.lifecycleStatus),
+          lifecycleStatus: normalizeCourseLifecycleStatus(
+            course.lifecycleStatus,
+          ),
           currentType: course.type ?? null,
           suggestedType: suggestion.suggestedType,
           reason: suggestion.reason,
@@ -481,7 +612,73 @@ export const listCourseTypeIssues = query({
         return a.name.localeCompare(b.name);
       });
 
-    return issues.slice(0, args.limit ?? 100);
+    return {
+      issues: issues.slice(0, args.limit ?? 100),
+      scanned: scannedCourses.length,
+      truncated: courses.length > COURSE_INTEGRITY_SCAN_LIMIT,
+    };
+  },
+});
+
+export const listMasterclassCodeRepairCandidates = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  returns: v.object({
+    candidates: v.array(
+      v.object({
+        courseId: v.id("courses"),
+        name: v.string(),
+        lifecycleStatus: CourseLifecycleStatus,
+        currentType: v.union(CourseType, v.null()),
+        suggestedType: v.literal("masterclass"),
+        currentCode: v.string(),
+        suggestedCode: v.string(),
+        reason: v.string(),
+      }),
+    ),
+    scanned: v.number(),
+    truncated: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+
+    const lifecycleOrder = {
+      published: 0,
+      draft: 1,
+      archived: 2,
+    } as const;
+    const courses = await ctx.db
+      .query("courses")
+      .order("desc")
+      .take(COURSE_INTEGRITY_SCAN_LIMIT + 1);
+    const scannedCourses = courses.slice(0, COURSE_INTEGRITY_SCAN_LIMIT);
+    const candidates = scannedCourses
+      .map((course) => {
+        if (!hasText(course.code)) {
+          return null;
+        }
+
+        return getMasterclassRepairCandidate({
+          ...course,
+          code: course.code,
+        });
+      })
+      .filter(
+        (candidate): candidate is NonNullable<typeof candidate> =>
+          candidate !== null,
+      )
+      .sort((a, b) => {
+        const lifecycleDelta =
+          lifecycleOrder[a.lifecycleStatus] - lifecycleOrder[b.lifecycleStatus];
+        return lifecycleDelta || a.name.localeCompare(b.name);
+      });
+
+    return {
+      candidates: candidates.slice(0, args.limit ?? 100),
+      scanned: scannedCourses.length,
+      truncated: courses.length > COURSE_INTEGRITY_SCAN_LIMIT,
+    };
   },
 });
 
@@ -661,6 +858,89 @@ export const correctCourseType = mutation({
     });
 
     return updated;
+  },
+});
+
+export const repairMasterclassCourseCodes = mutation({
+  args: {
+    courseIds: v.array(v.id("courses")),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const uniqueCourseIds = Array.from(new Set(args.courseIds));
+    const courseIdsToProcess = uniqueCourseIds.slice(
+      0,
+      MASTERCLASS_REPAIR_BATCH_LIMIT,
+    );
+    let updated = 0;
+    let skipped = uniqueCourseIds.length - courseIdsToProcess.length;
+
+    for (const courseId of courseIdsToProcess) {
+      const existing = await ctx.db.get(courseId);
+      if (!existing || !hasText(existing.code)) {
+        skipped += 1;
+        continue;
+      }
+
+      const candidate = getMasterclassRepairCandidate({
+        ...existing,
+        code: existing.code,
+      });
+      if (!candidate) {
+        skipped += 1;
+        continue;
+      }
+
+      const currentLifecycleStatus = normalizeCourseLifecycleStatus(
+        existing.lifecycleStatus,
+      );
+      if (currentLifecycleStatus === "published") {
+        try {
+          validatePublishableCourse({
+            ...existing,
+            type: "masterclass",
+            code: candidate.suggestedCode,
+          });
+        } catch {
+          skipped += 1;
+          continue;
+        }
+      }
+
+      const now = Date.now();
+      await ctx.db.patch(courseId, {
+        type: "masterclass",
+        code: candidate.suggestedCode,
+        updatedByAdminId: admin.userId,
+        updatedAt: now,
+      });
+
+      await createAdminAuditLog(ctx, {
+        actorAdminId: admin.userId,
+        actorEmail: admin.email,
+        action: "course.repair_masterclass_code",
+        entityType: "course",
+        entityId: String(courseId),
+        before: {
+          type: existing.type ?? null,
+          code: existing.code,
+        },
+        after: {
+          type: "masterclass",
+          code: candidate.suggestedCode,
+          reason: candidate.reason,
+        },
+      });
+
+      updated += 1;
+    }
+
+    return {
+      requested: args.courseIds.length,
+      processed: courseIdsToProcess.length,
+      updated,
+      skipped,
+    };
   },
 });
 
