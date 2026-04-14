@@ -164,6 +164,9 @@ export default async function CoursePage({ params }: Props) {
       batches = await convex.query(api.courseBatches.listPublicBatchesForCourse, {
         courseId,
       });
+      if (batches.length === 0) {
+        batches = [buildLegacyFallbackBatch(course, courseId)];
+      }
     } catch (batchError) {
       console.error("Batch query unavailable, using legacy fallback:", batchError);
       batches = [buildLegacyFallbackBatch(course, courseId)];
