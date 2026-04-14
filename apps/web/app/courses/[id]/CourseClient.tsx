@@ -92,6 +92,10 @@ export default function CourseClient({
     () => batches.find((batch) => String(batch._id) === selectedBatchId),
     [batches, selectedBatchId],
   );
+  const selectedBatchIdForCheckout =
+    selectedBatch && !String(selectedBatch._id).startsWith("legacy-")
+      ? selectedBatch._id
+      : undefined;
 
   // Get available courses for BOGO selection
   const availableCourses = useQuery(
@@ -120,7 +124,7 @@ export default function CourseClient({
     addItem({
       id: displayCourse._id,
       courseId: displayCourse._id,
-      batchId: selectedBatch?._id,
+      batchId: selectedBatchIdForCheckout,
       batchCode: selectedBatch?.batchCode,
       batchLabel: selectedBatch?.label,
       name: displayCourse.name,
@@ -190,7 +194,7 @@ export default function CourseClient({
     addItem({
       id: displayCourse._id,
       courseId: displayCourse._id,
-      batchId: effectiveBatch?._id,
+      batchId: selectedBatchIdForCheckout,
       batchCode: effectiveBatch?.batchCode,
       batchLabel: effectiveBatch?.label,
       name: displayCourse.name,
@@ -246,7 +250,7 @@ export default function CourseClient({
       addItem({
         id: course._id,
         courseId: course._id,
-        batchId: effectiveBatch?._id,
+        batchId: selectedBatchIdForCheckout,
         batchCode: effectiveBatch?.batchCode,
         batchLabel: effectiveBatch?.label,
         name: course.name,

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { api } from "@mindpoint/backend/api";
+import type { PublicCourse, PublicCourseBatch } from "@mindpoint/backend";
 import CourseClient from "./CourseClient";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@mindpoint/backend/data-model";
@@ -7,6 +8,37 @@ import Script from "next/script";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 const convex = convexUrl ? new ConvexHttpClient(convexUrl) : null;
+
+function buildLegacyFallbackBatch(
+  course: PublicCourse,
+  courseId: Id<"courses">,
+): PublicCourseBatch {
+  const capacity = course?.capacity ?? 0;
+  const seatsFilled = Math.max(0, course?.enrolledCount ?? 0);
+  const availableSeats = Math.max(0, capacity - seatsFilled);
+
+  return {
+    _id: `legacy-${String(courseId)}` as Id<"courseBatches">,
+    _creationTime: Date.now(),
+    courseId,
+    batchCode: `${course?.code ?? "COURSE"}-LEGACY`,
+    label: "Current schedule",
+    timezone: "Asia/Kolkata",
+    startDate: course?.startDate ?? "",
+    endDate: course?.endDate ?? course?.startDate ?? "",
+    startTime: course?.startTime ?? "",
+    endTime: course?.endTime ?? "",
+    daysOfWeek: [],
+    enrollmentCutoffAt: undefined,
+    capacity,
+    seatsFilled,
+    availableSeats,
+    waitlistEnabled: false,
+    lifecycleStatus: "open",
+    isPurchasable: availableSeats > 0,
+    isDefault: true,
+  };
+}
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -126,9 +158,16 @@ export default async function CoursePage({ params }: Props) {
     const variants = await convex.query(api.courses.getRelatedVariants, {
       id: id as Id<"courses">,
     });
-    const batches = await convex.query(api.courseBatches.listPublicBatchesForCourse, {
-      courseId: id as Id<"courses">,
-    });
+    const courseId = id as Id<"courses">;
+    let batches: PublicCourseBatch[] = [];
+    try {
+      batches = await convex.query(api.courseBatches.listPublicBatchesForCourse, {
+        courseId,
+      });
+    } catch (batchError) {
+      console.error("Batch query unavailable, using legacy fallback:", batchError);
+      batches = [buildLegacyFallbackBatch(course, courseId)];
+    }
 
     // Generate structured data for the course
     const courseStructuredData = {
