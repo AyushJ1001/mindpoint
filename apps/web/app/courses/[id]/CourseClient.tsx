@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useCart } from "react-use-cart";
 import { useQuery } from "convex/react";
 import { api } from "@mindpoint/backend/api";
-import type { PublicCourse } from "@mindpoint/backend";
+import type { PublicCourse, PublicCourseBatch } from "@mindpoint/backend";
 import { Id } from "@mindpoint/backend/data-model";
 
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,6 @@ import {
   getCoursePrice,
   hasActivePromotion,
 } from "@/lib/utils";
-import { getEnrolledCount } from "@/lib/course-enrollment";
 
 type CourseVariant = PublicCourse;
 
@@ -53,17 +52,27 @@ interface InternshipCourse extends PublicCourse {
 export default function CourseClient({
   course,
   variants = [],
+  batches = [],
 }: {
   course: PublicCourse;
   variants?: CourseVariant[];
+  batches?: PublicCourseBatch[];
 }) {
   const router = useRouter();
   const [activeCourse, setActiveCourse] = useState<PublicCourse>(course);
+  const [selectedBatchId, setSelectedBatchId] = useState<string>("");
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setActiveCourse(course);
   }, [course]);
+
+  useEffect(() => {
+    const firstPurchasable = batches.find((batch) => batch.isPurchasable);
+    const fallbackBatch = batches[0];
+    const nextBatch = firstPurchasable ?? fallbackBatch;
+    setSelectedBatchId(nextBatch?._id ? String(nextBatch._id) : "");
+  }, [batches]);
 
   // Set mounted state after hydration
   useEffect(() => {
@@ -79,6 +88,10 @@ export default function CourseClient({
   const [showBogoModal, setShowBogoModal] = useState(false);
 
   const displayCourse = activeCourse ?? course;
+  const selectedBatch = useMemo(
+    () => batches.find((batch) => String(batch._id) === selectedBatchId),
+    [batches, selectedBatchId],
+  );
 
   // Get available courses for BOGO selection
   const availableCourses = useQuery(
@@ -106,6 +119,10 @@ export default function CourseClient({
 
     addItem({
       id: displayCourse._id,
+      courseId: displayCourse._id,
+      batchId: selectedBatch?._id,
+      batchCode: selectedBatch?.batchCode,
+      batchLabel: selectedBatch?.label,
       name: displayCourse.name,
       description: displayCourse.description,
       price: getCoursePrice(displayCourse),
@@ -153,6 +170,11 @@ export default function CourseClient({
 
   // Helper function to confirm buy now action
   const handleBuyNowConfirm = (course: PublicCourse) => {
+    const effectiveBatch = selectedBatch;
+    if (batches.length > 0 && !effectiveBatch) {
+      return;
+    }
+
     // Use utility function to get the correct price
     const priceToUse = getCoursePrice(course);
 
@@ -164,23 +186,23 @@ export default function CourseClient({
     });
 
     // If the current course is not in cart, add it
-    if (!inCart(displayCourse._id)) {
-      addItem({
-        id: displayCourse._id,
-        name: displayCourse.name,
-        description: displayCourse.description,
-        price: priceToUse,
-        originalPrice: displayCourse.price, // Store original price for discount calculations
-        imageUrls: displayCourse.imageUrls || [],
-        capacity: displayCourse.capacity || 1,
-        quantity: 1,
-        offer: displayCourse.offer,
-        bogo: displayCourse.bogo,
-      });
-    } else {
-      // If it's already in cart, ensure it has the correct price and quantity
-      updateItemQuantity(displayCourse._id, 1);
-    }
+    removeItem(displayCourse._id);
+    addItem({
+      id: displayCourse._id,
+      courseId: displayCourse._id,
+      batchId: effectiveBatch?._id,
+      batchCode: effectiveBatch?.batchCode,
+      batchLabel: effectiveBatch?.label,
+      name: displayCourse.name,
+      description: displayCourse.description,
+      price: priceToUse,
+      originalPrice: displayCourse.price, // Store original price for discount calculations
+      imageUrls: displayCourse.imageUrls || [],
+      capacity: effectiveBatch?.availableSeats ?? (displayCourse.capacity || 1),
+      quantity: 1,
+      offer: displayCourse.offer,
+      bogo: displayCourse.bogo,
+    });
 
     // Navigate to cart
     router.push("/cart");
@@ -188,8 +210,14 @@ export default function CourseClient({
 
   // Helper function to handle quantity increase
   const handleIncreaseQuantity = (course: PublicCourse) => {
+    const effectiveBatch = selectedBatch;
+    if (batches.length > 0 && !effectiveBatch) {
+      return;
+    }
+
     const currentQuantity = getCurrentQuantity(course._id);
-    const maxQuantity = course.capacity || 1;
+    const maxQuantity =
+      effectiveBatch?.availableSeats ?? (course.capacity || 1);
 
     // Use utility function to get the correct price
     const priceToUse = getCoursePrice(course);
@@ -217,12 +245,16 @@ export default function CourseClient({
       // Add to cart if not already there
       addItem({
         id: course._id,
+        courseId: course._id,
+        batchId: effectiveBatch?._id,
+        batchCode: effectiveBatch?.batchCode,
+        batchLabel: effectiveBatch?.label,
         name: course.name,
         description: course.description,
         price: priceToUse,
         originalPrice: course.price, // Store original price for discount calculations
         imageUrls: course.imageUrls || [],
-        capacity: course.capacity || 1,
+        capacity: effectiveBatch?.availableSeats ?? (course.capacity || 1),
         quantity: 1, // Explicitly set initial quantity to 1
         offer: course.offer,
         bogo: course.bogo,
@@ -245,13 +277,15 @@ export default function CourseClient({
     }
   };
 
-  const seatsLeft = Math.max(
-    0,
-    (displayCourse.capacity ?? 0) - getEnrolledCount(displayCourse),
-  );
+  const seatsLeft =
+    selectedBatch?.availableSeats ??
+    Math.max(0, (displayCourse.capacity ?? 0) - (displayCourse.enrolledCount ?? 0));
 
   // Check if course is out of stock (capacity 0 or no seats left)
-  const isOutOfStock = (displayCourse.capacity ?? 0) === 0 || seatsLeft === 0;
+  const isOutOfStock =
+    batches.length > 0
+      ? !selectedBatch || !selectedBatch.isPurchasable || seatsLeft === 0
+      : (displayCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
   // Build variant options only for internship or therapy
   const normalizedVariants: CourseVariant[] = useMemo(() => {
@@ -357,6 +391,13 @@ export default function CourseClient({
     }
   };
 
+  const handleBatchSelect = (batchId: string) => {
+    setSelectedBatchId(batchId);
+    if (inCart(displayCourse._id)) {
+      removeItem(displayCourse._id);
+    }
+  };
+
   return (
     <div className="course-page relative overflow-hidden pb-28">
       {/* 1. Hero — emotional hook + badges + CTA */}
@@ -383,6 +424,9 @@ export default function CourseClient({
         seatsLeft={seatsLeft}
         hasValidOffer={hasValidOffer}
         offerDetails={offerDetails}
+        batches={batches}
+        selectedBatchId={selectedBatchId}
+        handleBatchSelect={handleBatchSelect}
         shouldShowVariantSelect={shouldShowVariantSelect}
         normalizedVariants={normalizedVariants}
         variantLabel={variantLabel}
@@ -470,9 +514,10 @@ export default function CourseClient({
           onBuyNow={() => handleBuyNow(activeCourse)}
           disabled={
             isOutOfStock ||
+            (batches.length > 0 && !selectedBatch) ||
             (inCart(activeCourse._id) &&
               getCurrentQuantity(activeCourse._id) >=
-                (activeCourse.capacity || 1))
+                (selectedBatch?.availableSeats ?? (activeCourse.capacity || 1)))
           }
           inCart={inCart(activeCourse._id)}
           quantity={getCurrentQuantity(activeCourse._id)}

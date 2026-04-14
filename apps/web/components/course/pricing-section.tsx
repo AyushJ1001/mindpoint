@@ -18,7 +18,7 @@ import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import ChoosePlan from "@/components/therapy/choose-plan";
 import ChooseSupervisedPlan from "@/components/therapy/choose-supervised-plan";
-import type { PublicCourse } from "@mindpoint/backend";
+import type { PublicCourse, PublicCourseBatch } from "@mindpoint/backend";
 
 interface PricingSectionProps {
   course: PublicCourse;
@@ -28,6 +28,9 @@ interface PricingSectionProps {
   seatsLeft: number;
   hasValidOffer: boolean;
   offerDetails: OfferDetails | null;
+  batches: PublicCourseBatch[];
+  selectedBatchId: string;
+  handleBatchSelect: (batchId: string) => void;
   shouldShowVariantSelect: boolean;
   normalizedVariants: PublicCourse[];
   variantLabel: (v: PublicCourse) => string;
@@ -49,6 +52,9 @@ export default function PricingSection({
   seatsLeft,
   hasValidOffer,
   offerDetails,
+  batches,
+  selectedBatchId,
+  handleBatchSelect,
   shouldShowVariantSelect,
   normalizedVariants,
   variantLabel,
@@ -151,6 +157,7 @@ export default function PricingSection({
   const displayCourse = activeCourse ?? course;
   const isInCart = mounted && inCart(displayCourse._id);
   const quantity = mounted ? getCurrentQuantity(displayCourse._id) : 0;
+  const isBatchSelectionMissing = batches.length > 0 && !selectedBatchId;
 
   return (
     <section id="pricing" className="course-section-lg pt-5 sm:pt-6">
@@ -204,6 +211,45 @@ export default function PricingSection({
                   </p>
                 )}
 
+                {batches.length > 0 && (
+                  <div className="mt-6 space-y-2 text-left">
+                    <p className="text-foreground text-sm font-medium">
+                      Select a batch
+                    </p>
+                    <div className="grid gap-2">
+                      {batches.map((batch) => {
+                        const isSelected = String(batch._id) === selectedBatchId;
+                        const isDisabled = !batch.isPurchasable;
+                        const status = batch.isPurchasable
+                          ? `${batch.availableSeats} seat${batch.availableSeats === 1 ? "" : "s"} left`
+                          : "Unavailable";
+
+                        return (
+                          <button
+                            key={batch._id}
+                            type="button"
+                            onClick={() => handleBatchSelect(String(batch._id))}
+                            disabled={isDisabled}
+                            className={`w-full rounded-lg border px-3 py-2 text-left transition ${
+                              isSelected
+                                ? "border-primary bg-primary/5"
+                                : "border-border hover:border-primary/40"
+                            } ${isDisabled ? "cursor-not-allowed opacity-60" : ""}`}
+                          >
+                            <p className="text-sm font-medium">
+                              {batch.label || batch.batchCode}
+                            </p>
+                            <p className="text-muted-foreground text-xs">
+                              {batch.startDate} • {batch.startTime} - {batch.endTime}
+                            </p>
+                            <p className="text-muted-foreground text-xs">{status}</p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {shouldShowVariantSelect && (
                   <div className="mt-6">
                     <Select
@@ -237,9 +283,9 @@ export default function PricingSection({
                 )}
 
                 <div className="mt-8 space-y-3">
-                  {isOutOfStock ? (
+                  {isOutOfStock || isBatchSelectionMissing ? (
                     <Button disabled className="h-12 w-full text-base">
-                      Currently full
+                      {isBatchSelectionMissing ? "Select a batch" : "Currently full"}
                     </Button>
                   ) : isInCart ? (
                     <div className="space-y-3">
@@ -294,7 +340,7 @@ export default function PricingSection({
                   <Button
                     variant="ghost"
                     className="h-12 w-full text-base font-semibold"
-                    disabled={isOutOfStock}
+                    disabled={isOutOfStock || isBatchSelectionMissing}
                     onClick={() => handleBuyNow(displayCourse)}
                   >
                     Go to checkout

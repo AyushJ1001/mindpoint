@@ -28,6 +28,8 @@ type CheckoutResult = {
 
 export type EnrollmentSummary = {
   courseId?: string;
+  batchId?: string;
+  batchCode?: string;
   courseName: string;
   enrollmentId: string;
   enrollmentNumber: string;
@@ -222,12 +224,18 @@ export async function handlePaymentSuccess(
   options: { convexUrl?: string } = {},
 ): Promise<CheckoutResult & { enrollments?: EnrollmentSummary[] }> {
   try {
+    const checkoutItems = checkoutPricing?.items.map((item) => ({
+      courseId: item.courseId,
+      batchId: item.batchId,
+    }));
+
     const enrollments = await runCheckoutMutation<EnrollmentSummary[]>(
       api.myFunctions.handleCartCheckout,
       {
         bogoSelections,
         checkoutPricing,
         courseIds,
+        items: checkoutItems,
         referrerClerkUserId,
         sessionType,
         studentName,
@@ -319,12 +327,18 @@ export async function handleGuestUserPaymentSuccessWithData(
   options: { convexUrl?: string } = {},
 ): Promise<CheckoutResult & { enrollments?: EnrollmentSummary[] }> {
   try {
+    const checkoutItems = checkoutPricing?.items.map((item) => ({
+      courseId: item.courseId,
+      batchId: item.batchId,
+    }));
+
     const enrollments = await runCheckoutMutation<EnrollmentSummary[]>(
       api.myFunctions.handleGuestUserCartCheckoutWithData,
       {
         bogoSelections,
         checkoutPricing,
         courseIds,
+        items: checkoutItems,
         sessionType,
         userData,
       },

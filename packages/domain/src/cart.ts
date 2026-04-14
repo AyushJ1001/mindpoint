@@ -14,6 +14,10 @@ export interface SelectedFreeCourse {
 
 export interface ExtendedCartItem {
   id: string;
+  courseId?: Id<"courses">;
+  batchId?: Id<"courseBatches">;
+  batchCode?: string;
+  batchLabel?: string;
   name: string;
   description?: string;
   price: number;

@@ -361,6 +361,9 @@ const CartContent = () => {
 
       return {
         courseId: item.id as Id<"courses">,
+        batchId: item.batchId as Id<"courseBatches"> | undefined,
+        batchCode:
+          typeof item.batchCode === "string" ? item.batchCode : undefined,
         courseType: item.courseType,
         listedPrice,
         checkoutPrice,
@@ -1108,6 +1111,11 @@ const CartContent = () => {
                         <p className="text-muted-foreground text-sm capitalize">
                           {item.courseType}
                         </p>
+                        {(item.batchLabel || item.batchCode) && (
+                          <p className="text-muted-foreground text-xs">
+                            Batch: {item.batchLabel || item.batchCode}
+                          </p>
+                        )}
                         {itemHasBundle && pricingItem?.bundleCampaignName ? (
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                             <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-800">

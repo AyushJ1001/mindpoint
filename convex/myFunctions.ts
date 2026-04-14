@@ -234,6 +234,8 @@ interface EnrollmentSummary {
   enrollmentNumber: string;
   courseName: string;
   courseId: Id<"courses">;
+  batchId?: Id<"courseBatches">;
+  batchCode?: string;
   courseType?: CourseDoc["type"];
   startDate?: string;
   endDate?: string;
@@ -248,6 +250,8 @@ interface EnrollmentSummary {
 
 const checkoutPricingItemValidator = v.object({
   courseId: v.id("courses"),
+  batchId: v.optional(v.id("courseBatches")),
+  batchCode: v.optional(v.string()),
   listedPrice: v.number(),
   checkoutPrice: v.number(),
   amountPaid: v.number(),
@@ -278,6 +282,70 @@ function getCheckoutPricingItem(
   return checkoutPricing?.items.find(
     (item) => String(item.courseId) === String(courseId),
   );
+}
+
+async function resolveBatchForCheckoutLine(
+  ctx: MutationCtx,
+  courseId: Id<"courses">,
+  pricingItem: CheckoutPricingItem | undefined,
+  fallbackBatchId?: Id<"courseBatches">,
+) {
+  const requestedBatchId =
+    (pricingItem?.batchId as Id<"courseBatches"> | undefined) ?? fallbackBatchId;
+
+  if (requestedBatchId) {
+    const requestedBatch = await ctx.db.get(requestedBatchId);
+    if (!requestedBatch || String(requestedBatch.courseId) !== String(courseId)) {
+      throw new Error("batch_required");
+    }
+    return requestedBatch;
+  }
+
+  const courseBatches = await ctx.db
+    .query("courseBatches")
+    .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
+    .collect();
+
+  if (courseBatches.length === 0) {
+    return null;
+  }
+
+  if (process.env.ENFORCE_BATCH_SELECTION === "true") {
+    throw new Error("batch_required");
+  }
+
+  const defaultBatch = courseBatches.find((batch) => batch.isDefault);
+  if (defaultBatch) {
+    return defaultBatch;
+  }
+
+  return courseBatches.sort((a, b) => a.startDate.localeCompare(b.startDate))[0];
+}
+
+function assertBatchPurchasable(selectedBatch: Doc<"courseBatches"> | null) {
+  if (!selectedBatch) {
+    return;
+  }
+
+  if (selectedBatch.lifecycleStatus !== "open") {
+    throw new Error("batch_unavailable");
+  }
+
+  const hasCutoff =
+    selectedBatch.enrollmentCutoffAt &&
+    Number.isFinite(new Date(selectedBatch.enrollmentCutoffAt).getTime()) &&
+    Date.now() > new Date(selectedBatch.enrollmentCutoffAt).getTime();
+  if (hasCutoff) {
+    throw new Error("batch_closed");
+  }
+
+  const availableSeats = Math.max(
+    0,
+    selectedBatch.capacity - selectedBatch.seatsFilled,
+  );
+  if (availableSeats <= 0) {
+    throw new Error("batch_full");
+  }
 }
 
 function buildEnrollmentPricingFields(
@@ -1081,6 +1149,14 @@ export const handleCartCheckout = mutation({
   args: {
     userId: v.string(),
     courseIds: v.array(v.id("courses")),
+    items: v.optional(
+      v.array(
+        v.object({
+          courseId: v.id("courses"),
+          batchId: v.optional(v.id("courseBatches")),
+        }),
+      ),
+    ),
     userEmail: v.string(),
     userPhone: v.optional(v.string()),
     studentName: v.optional(v.string()),
@@ -1107,7 +1183,13 @@ export const handleCartCheckout = mutation({
     let totalPointsEarnedForOrder = 0;
     let firstPaidEnrollmentId: Id<"enrollments"> | null = null;
 
-    for (const courseId of args.courseIds) {
+    const checkoutItems =
+      args.items && args.items.length > 0
+        ? args.items
+        : args.courseIds.map((courseId) => ({ courseId, batchId: undefined }));
+
+    for (const checkoutItem of checkoutItems) {
+      const courseId = checkoutItem.courseId;
       // Get the course details
       const course = await ctx.db.get(courseId);
       if (!course) {
@@ -1138,11 +1220,27 @@ export const handleCartCheckout = mutation({
         args.checkoutPricing,
         courseId,
       );
+      const selectedBatch = await resolveBatchForCheckoutLine(
+        ctx,
+        courseId,
+        pricingItem,
+        checkoutItem.batchId,
+      );
+      assertBatchPurchasable(selectedBatch);
+
+      if (enrollmentNumber !== "N/A" && selectedBatch?.startDate) {
+        enrollmentNumber = generateEnrollmentNumber(
+          course.code,
+          selectedBatch.startDate,
+        );
+      }
 
       // Create enrollment record
       const enrollmentId = await ctx.db.insert("enrollments", {
         userId: args.userId,
         courseId: courseId,
+        batchId: selectedBatch?._id,
+        batchCode: selectedBatch?.batchCode,
         courseName: course.name,
         userName: args.studentName || args.userEmail,
         userEmail: args.userEmail,
@@ -1175,6 +1273,12 @@ export const handleCartCheckout = mutation({
       await ctx.db.patch(courseId, {
         enrolledUsers: [...course.enrolledUsers, args.userId],
       });
+      if (selectedBatch) {
+        await ctx.db.patch(selectedBatch._id, {
+          seatsFilled: selectedBatch.seatsFilled + 1,
+          updatedAt: Date.now(),
+        });
+      }
 
       // Award Mind Points for authenticated users only (not guest users)
       // Check if user is authenticated by checking if userId is a Clerk ID (not an email)
@@ -1197,9 +1301,12 @@ export const handleCartCheckout = mutation({
       }
 
       // Calculate end date for internship courses
-      let endDate = course.endDate;
+      let endDate = selectedBatch?.endDate ?? course.endDate;
       if (course.type === "internship" && internshipPlan) {
-        endDate = calculateInternshipEndDate(course.startDate, internshipPlan);
+        endDate = calculateInternshipEndDate(
+          selectedBatch?.startDate ?? course.startDate,
+          internshipPlan,
+        );
       }
 
       const enrollmentData = {
@@ -1207,11 +1314,13 @@ export const handleCartCheckout = mutation({
         enrollmentNumber,
         courseName: course.name,
         courseId: courseId,
+        batchId: selectedBatch?._id,
+        batchCode: selectedBatch?.batchCode,
         courseType: course.type,
-        startDate: course.startDate,
+        startDate: selectedBatch?.startDate ?? course.startDate,
         endDate: endDate,
-        startTime: course.startTime,
-        endTime: course.endTime,
+        startTime: selectedBatch?.startTime ?? course.startTime,
+        endTime: selectedBatch?.endTime ?? course.endTime,
         internshipPlan: internshipPlan,
         sessions: course.sessions, // Include sessions for therapy courses
         sessionType: args.sessionType, // Include session type for supervised courses
@@ -2004,6 +2113,14 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       phone: v.string(),
     }),
     courseIds: v.array(v.id("courses")),
+    items: v.optional(
+      v.array(
+        v.object({
+          courseId: v.id("courses"),
+          batchId: v.optional(v.id("courseBatches")),
+        }),
+      ),
+    ),
     internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
@@ -2057,7 +2174,13 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     const worksheetEnrollments = [];
     const processedBogoSourceCourses = new Set<string>(); // Track processed BOGO source courses
 
-    for (const courseId of args.courseIds) {
+    const checkoutItems =
+      args.items && args.items.length > 0
+        ? args.items
+        : args.courseIds.map((courseId) => ({ courseId, batchId: undefined }));
+
+    for (const checkoutItem of checkoutItems) {
+      const courseId = checkoutItem.courseId;
       // Get the course details
       const course = await ctx.db.get(courseId);
       if (!course) {
@@ -2090,6 +2213,20 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         args.checkoutPricing,
         courseId,
       );
+      const selectedBatch = await resolveBatchForCheckoutLine(
+        ctx,
+        courseId,
+        pricingItem,
+        checkoutItem.batchId,
+      );
+      assertBatchPurchasable(selectedBatch);
+
+      if (enrollmentNumber !== "N/A" && selectedBatch?.startDate) {
+        enrollmentNumber = generateEnrollmentNumber(
+          course.code,
+          selectedBatch.startDate,
+        );
+      }
 
       // Create enrollment record
       const enrollmentId = await ctx.db.insert("enrollments", {
@@ -2098,6 +2235,8 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         userEmail: args.userData.email,
         userPhone: args.userData.phone,
         courseId: courseId,
+        batchId: selectedBatch?._id,
+        batchCode: selectedBatch?.batchCode,
         courseName: course.name,
         enrollmentNumber: enrollmentNumber,
         isGuestUser: true,
@@ -2129,11 +2268,20 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       await ctx.db.patch(courseId, {
         enrolledUsers: [...course.enrolledUsers, args.userData.email],
       });
+      if (selectedBatch) {
+        await ctx.db.patch(selectedBatch._id, {
+          seatsFilled: selectedBatch.seatsFilled + 1,
+          updatedAt: Date.now(),
+        });
+      }
 
       // Calculate end date for internship courses
-      let endDate = course.endDate;
+      let endDate = selectedBatch?.endDate ?? course.endDate;
       if (course.type === "internship" && internshipPlan) {
-        endDate = calculateInternshipEndDate(course.startDate, internshipPlan);
+        endDate = calculateInternshipEndDate(
+          selectedBatch?.startDate ?? course.startDate,
+          internshipPlan,
+        );
       }
 
       const enrollmentData = {
@@ -2141,11 +2289,13 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         enrollmentNumber,
         courseName: course.name,
         courseId: courseId,
+        batchId: selectedBatch?._id,
+        batchCode: selectedBatch?.batchCode,
         courseType: course.type,
-        startDate: course.startDate,
+        startDate: selectedBatch?.startDate ?? course.startDate,
         endDate: endDate,
-        startTime: course.startTime,
-        endTime: course.endTime,
+        startTime: selectedBatch?.startTime ?? course.startTime,
+        endTime: selectedBatch?.endTime ?? course.endTime,
         internshipPlan: internshipPlan,
         sessions: course.sessions, // Include sessions for therapy courses
         sessionType: args.sessionType, // Include session type for supervised courses

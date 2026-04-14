@@ -126,6 +126,9 @@ export default async function CoursePage({ params }: Props) {
     const variants = await convex.query(api.courses.getRelatedVariants, {
       id: id as Id<"courses">,
     });
+    const batches = await convex.query(api.courseBatches.listPublicBatchesForCourse, {
+      courseId: id as Id<"courses">,
+    });
 
     // Generate structured data for the course
     const courseStructuredData = {
@@ -189,7 +192,11 @@ export default async function CoursePage({ params }: Props) {
             __html: JSON.stringify(courseStructuredData),
           }}
         />
-        <CourseClient course={course} variants={variants ?? []} />
+        <CourseClient
+          course={course}
+          variants={variants ?? []}
+          batches={batches ?? []}
+        />
       </>
     );
   } catch (error) {

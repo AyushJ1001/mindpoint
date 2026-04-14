@@ -19,6 +19,14 @@ export const CourseLifecycleStatus = v.union(
   v.literal("archived"),
 );
 
+export const CourseBatchLifecycleStatus = v.union(
+  v.literal("draft"),
+  v.literal("open"),
+  v.literal("closed"),
+  v.literal("cancelled"),
+  v.literal("completed"),
+);
+
 export const EnrollmentStatus = v.union(
   v.literal("active"),
   v.literal("cancelled"),
@@ -151,6 +159,8 @@ const publicEnrollmentFields = {
   userEmail: v.optional(v.string()),
   userPhone: v.optional(v.string()),
   courseId: v.id("courses"),
+  batchId: v.optional(v.id("courseBatches")),
+  batchCode: v.optional(v.string()),
   courseName: v.optional(v.string()),
   enrollmentNumber: v.string(),
   isGuestUser: v.optional(v.boolean()),
@@ -200,6 +210,32 @@ export default defineSchema({
     .index("by_type", ["type"])
     .index("by_lifecycleStatus", ["lifecycleStatus"])
     .index("by_type_and_lifecycleStatus", ["type", "lifecycleStatus"]),
+
+  courseBatches: defineTable({
+    courseId: v.id("courses"),
+    batchCode: v.string(),
+    label: v.optional(v.string()),
+    timezone: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    startTime: v.string(),
+    endTime: v.string(),
+    daysOfWeek: v.array(v.string()),
+    enrollmentCutoffAt: v.optional(v.string()),
+    capacity: v.number(),
+    seatsFilled: v.number(),
+    waitlistEnabled: v.boolean(),
+    lifecycleStatus: CourseBatchLifecycleStatus,
+    isDefault: v.optional(v.boolean()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdByAdminId: v.optional(v.string()),
+    updatedByAdminId: v.optional(v.string()),
+  })
+    .index("by_courseId", ["courseId"])
+    .index("by_courseId_and_lifecycleStatus", ["courseId", "lifecycleStatus"])
+    .index("by_courseId_and_startDate", ["courseId", "startDate"])
+    .index("by_courseId_and_batchCode", ["courseId", "batchCode"]),
 
   offerCampaigns: defineTable({
     name: v.string(),
@@ -262,7 +298,9 @@ export default defineSchema({
       "courseId",
       "status",
       "userId",
-    ]),
+    ])
+    .index("by_batchId", ["batchId"])
+    .index("by_courseId_and_batchId", ["courseId", "batchId"]),
 
   // User Mind Points balance
   mindPoints: defineTable({
