@@ -171,7 +171,6 @@ export default async function CoursePage({ params }: Props) {
       console.error("Batch query unavailable, using legacy fallback:", batchError);
       batches = [buildLegacyFallbackBatch(course, courseId)];
     }
-
     // Generate structured data for the course
     const courseStructuredData = {
       "@context": "https://schema.org",

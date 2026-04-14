@@ -49,6 +49,36 @@ interface InternshipCourse extends PublicCourse {
   duration?: string;
 }
 
+const FALLBACK_BATCH_PREFIX = "legacy-client-";
+
+function buildClientFallbackBatch(course: PublicCourse): PublicCourseBatch {
+  const capacity = course.capacity ?? 0;
+  const seatsFilled = Math.max(0, course.enrolledCount ?? 0);
+  const availableSeats = Math.max(0, capacity - seatsFilled);
+
+  return {
+    _id: `${FALLBACK_BATCH_PREFIX}${String(course._id)}` as Id<"courseBatches">,
+    _creationTime: Date.now(),
+    courseId: course._id as Id<"courses">,
+    batchCode: `${course.code ?? "COURSE"}-CURRENT`,
+    label: "Current schedule",
+    timezone: "Asia/Kolkata",
+    startDate: course.startDate ?? "",
+    endDate: course.endDate ?? course.startDate ?? "",
+    startTime: course.startTime ?? "",
+    endTime: course.endTime ?? "",
+    daysOfWeek: [],
+    enrollmentCutoffAt: undefined,
+    capacity,
+    seatsFilled,
+    availableSeats,
+    waitlistEnabled: false,
+    lifecycleStatus: "open",
+    isPurchasable: availableSeats > 0,
+    isDefault: true,
+  };
+}
+
 export default function CourseClient({
   course,
   variants = [],
@@ -67,13 +97,6 @@ export default function CourseClient({
     setActiveCourse(course);
   }, [course]);
 
-  useEffect(() => {
-    const firstPurchasable = batches.find((batch) => batch.isPurchasable);
-    const fallbackBatch = batches[0];
-    const nextBatch = firstPurchasable ?? fallbackBatch;
-    setSelectedBatchId(nextBatch?._id ? String(nextBatch._id) : "");
-  }, [batches]);
-
   // Set mounted state after hydration
   useEffect(() => {
     setMounted(true);
@@ -88,12 +111,27 @@ export default function CourseClient({
   const [showBogoModal, setShowBogoModal] = useState(false);
 
   const displayCourse = activeCourse ?? course;
-  const selectedBatch = useMemo(
-    () => batches.find((batch) => String(batch._id) === selectedBatchId),
-    [batches, selectedBatchId],
+  const derivedBatches = useMemo(
+    () =>
+      batches.length > 0 ? batches : [buildClientFallbackBatch(displayCourse)],
+    [batches, displayCourse],
   );
+
+  useEffect(() => {
+    const firstPurchasable = derivedBatches.find((batch) => batch.isPurchasable);
+    const fallbackBatch = derivedBatches[0];
+    const nextBatch = firstPurchasable ?? fallbackBatch;
+    setSelectedBatchId(nextBatch?._id ? String(nextBatch._id) : "");
+  }, [derivedBatches]);
+
+  const selectedBatch = useMemo(
+    () => derivedBatches.find((batch) => String(batch._id) === selectedBatchId),
+    [derivedBatches, selectedBatchId],
+  );
+  const isSyntheticBatchId = (batchId: string) =>
+    batchId.startsWith("legacy-") || batchId.startsWith(FALLBACK_BATCH_PREFIX);
   const selectedBatchIdForCheckout =
-    selectedBatch && !String(selectedBatch._id).startsWith("legacy-")
+    selectedBatch && !isSyntheticBatchId(String(selectedBatch._id))
       ? selectedBatch._id
       : undefined;
 
@@ -175,7 +213,7 @@ export default function CourseClient({
   // Helper function to confirm buy now action
   const handleBuyNowConfirm = (course: PublicCourse) => {
     const effectiveBatch = selectedBatch;
-    if (batches.length > 0 && !effectiveBatch) {
+    if (derivedBatches.length > 0 && !effectiveBatch) {
       return;
     }
 
@@ -215,7 +253,7 @@ export default function CourseClient({
   // Helper function to handle quantity increase
   const handleIncreaseQuantity = (course: PublicCourse) => {
     const effectiveBatch = selectedBatch;
-    if (batches.length > 0 && !effectiveBatch) {
+    if (derivedBatches.length > 0 && !effectiveBatch) {
       return;
     }
 
@@ -287,7 +325,7 @@ export default function CourseClient({
 
   // Check if course is out of stock (capacity 0 or no seats left)
   const isOutOfStock =
-    batches.length > 0
+    derivedBatches.length > 0
       ? !selectedBatch || !selectedBatch.isPurchasable || seatsLeft === 0
       : (displayCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
@@ -428,7 +466,7 @@ export default function CourseClient({
         seatsLeft={seatsLeft}
         hasValidOffer={hasValidOffer}
         offerDetails={offerDetails}
-        batches={batches}
+        batches={derivedBatches}
         selectedBatchId={selectedBatchId}
         handleBatchSelect={handleBatchSelect}
         shouldShowVariantSelect={shouldShowVariantSelect}
@@ -518,7 +556,7 @@ export default function CourseClient({
           onBuyNow={() => handleBuyNow(activeCourse)}
           disabled={
             isOutOfStock ||
-            (batches.length > 0 && !selectedBatch) ||
+            (derivedBatches.length > 0 && !selectedBatch) ||
             (inCart(activeCourse._id) &&
               getCurrentQuantity(activeCourse._id) >=
                 (selectedBatch?.availableSeats ?? (activeCourse.capacity || 1)))
