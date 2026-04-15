@@ -1,7 +1,7 @@
 "use client";
 
 import { ReactNode } from "react";
-import { ClerkProvider } from "@clerk/nextjs";
+import ClerkAppProvider from "@/components/ClerkAppProvider";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
 import { CartProvider } from "@/components/CartProvider";
 import { ReferralTracker } from "@/components/ReferralTracker";
@@ -17,7 +17,12 @@ interface ClientProvidersProps {
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
   const appShell = (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
       <RouteBodyClass />
       <StructuredData />
       <ClientNavbar />
@@ -30,7 +35,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   // Keep required public env checks local in client boot code so Next can inline them.
   if (process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     return (
-      <ClerkProvider>
+      <ClerkAppProvider>
         <ConvexClientProvider>
           <MindPointsProvider>
             <CartProvider>
@@ -39,7 +44,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
             </CartProvider>
           </MindPointsProvider>
         </ConvexClientProvider>
-      </ClerkProvider>
+      </ClerkAppProvider>
     );
   }
 

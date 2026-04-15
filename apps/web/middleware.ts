@@ -1,12 +1,12 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
-import { isClerkServerConfigured } from "@mindpoint/config/server";
+import { isClerkMiddlewareEnabled } from "@mindpoint/config/server";
 import { NextResponse, NextRequest } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/server"]);
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
-// Only use Clerk middleware if keys are available
-const middleware = isClerkServerConfigured()
+// Run Clerk on the edge whenever the publishable key is set (matches the client bundle).
+const middleware = isClerkMiddlewareEnabled()
   ? clerkMiddleware(async (auth, req) => {
       // Handle redirects for legacy routes
       if (req.nextUrl.pathname === "/terms") {

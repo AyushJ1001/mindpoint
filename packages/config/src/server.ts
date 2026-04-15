@@ -8,6 +8,8 @@ export function isClerkServerConfigured(env: EnvSource = process.env): boolean {
   );
 }
 
+export { isClerkMiddlewareEnabled } from "./clerk";
+
 export function getRazorpayServerConfig(env: EnvSource = process.env): {
   razorpayKeyId: string;
   razorpayKeySecret: string;
