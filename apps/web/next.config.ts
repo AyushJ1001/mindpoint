@@ -36,6 +36,10 @@ const nextConfig = {
   // Optimize production builds
   poweredByHeader: false,
   reactStrictMode: true,
+  // Next.js blocks dev HMR / RSC payloads from alternate loopback hosts by default.
+  // Automated browsers and some agents open 127.0.0.1 while `next dev` advertises localhost,
+  // which breaks hydration and leaves Clerk (and other client islands) blank in dev.
+  allowedDevOrigins: ["127.0.0.1", "[::1]"],
   images: {
     remotePatterns: [
       {
