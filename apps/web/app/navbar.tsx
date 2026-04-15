@@ -12,7 +12,7 @@ import {
   NavigationMenuTrigger,
 } from "@/components/ui/navigation-menu";
 import Image from "next/image";
-import { Show, SignInButton, UserButton } from "@clerk/nextjs";
+import { AuthNavbarActions } from "@/components/AuthNavbarActions";
 import { useCart } from "react-use-cart";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -23,7 +23,6 @@ import {
   Menu,
   X,
   Sparkles,
-  Gift,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -49,34 +48,7 @@ import { usePathname } from "next/navigation";
 import { toast } from "sonner";
 import { useNow } from "@/hooks/use-now";
 import { useMemo } from "react";
-import { useMindPoints } from "@/contexts/MindPointsContext";
 import { ModeToggle } from "@/components/theme-toggle";
-
-function MindPointsBadge() {
-  const { pointsData, isLoading } = useMindPoints();
-
-  if (isLoading || pointsData === undefined) {
-    return null;
-  }
-
-  const balance = pointsData.balance || 0;
-
-  return (
-    <Link href="/account?tab=points">
-      <Button
-        variant="outline"
-        size="sm"
-        className="transition-smooth hover:bg-accent/50 cursor-pointer"
-      >
-        <Gift className="mr-2 h-4 w-4" />
-        <span className="font-semibold">{balance}</span>
-        <span className="text-muted-foreground ml-1 hidden sm:inline">
-          Points
-        </span>
-      </Button>
-    </Link>
-  );
-}
 
 export default function Navbar() {
   const {
@@ -168,13 +140,17 @@ export default function Navbar() {
       <div className="container">
         <div className="flex items-center justify-between py-2.5 sm:py-3">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2.5" aria-label="Home">
+          <Link
+            href="/"
+            className="flex items-center gap-2.5"
+            aria-label="Home"
+          >
             <Image
               src="/logo.png"
               alt="The Mind Point"
               width={36}
               height={36}
-              className="transition-smooth h-8 w-8 rounded-xl ring-1 ring-border hover:scale-105 sm:h-9 sm:w-9"
+              className="transition-smooth ring-border h-8 w-8 rounded-xl ring-1 hover:scale-105 sm:h-9 sm:w-9"
               priority
             />
             <span className="text-foreground font-display text-base font-bold tracking-tight sm:text-xl">
@@ -187,7 +163,7 @@ export default function Navbar() {
             <NavigationMenu viewport={false} aria-label="Site sections">
               <NavigationMenuList className="space-x-2">
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="transition-smooth rounded-full border border-transparent bg-transparent px-4 hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent">
+                  <NavigationMenuTrigger className="transition-smooth hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent rounded-full border border-transparent bg-transparent px-4">
                     Home
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -250,7 +226,7 @@ export default function Navbar() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="transition-smooth rounded-full border border-transparent bg-transparent px-4 hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent">
+                  <NavigationMenuTrigger className="transition-smooth hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent rounded-full border border-transparent bg-transparent px-4">
                     TMP Academy
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -299,7 +275,7 @@ export default function Navbar() {
                   </NavigationMenuContent>
                 </NavigationMenuItem>
                 <NavigationMenuItem>
-                  <NavigationMenuTrigger className="transition-smooth rounded-full border border-transparent bg-transparent px-4 hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent">
+                  <NavigationMenuTrigger className="transition-smooth hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent rounded-full border border-transparent bg-transparent px-4">
                     Therapy & Career
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
@@ -345,7 +321,7 @@ export default function Navbar() {
               variant="ghost"
               size="sm"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="rounded-xl border border-transparent p-2 hover:border-border hover:bg-accent"
+              className="hover:border-border hover:bg-accent rounded-xl border border-transparent p-2"
               aria-expanded={isMobileMenuOpen}
               aria-controls="mobile-menu"
               aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
@@ -366,7 +342,7 @@ export default function Navbar() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="transition-smooth relative rounded-xl border border-transparent hover:border-border hover:bg-accent"
+                  className="transition-smooth hover:border-border hover:bg-accent relative rounded-xl border border-transparent"
                   aria-label="Open cart"
                 >
                   <ShoppingCart className="h-5 w-5" />
@@ -384,7 +360,7 @@ export default function Navbar() {
               </SheetTrigger>
               <SheetContent
                 side="right"
-                className="w-[min(24rem,calc(100vw-1rem))] rounded-l-2xl border-l border-border bg-background/98 p-3 sm:p-4"
+                className="border-border bg-background/98 w-[min(24rem,calc(100vw-1rem))] rounded-l-2xl border-l p-3 sm:p-4"
                 aria-label="Shopping cart panel"
               >
                 <SheetHeader className="pb-4">
@@ -472,9 +448,9 @@ export default function Navbar() {
                                     {offerDetails && (
                                       <div className="mb-2 flex flex-wrap items-center gap-2 text-xs">
                                         {offerDetails.hasDiscount && (
-                                          <span className="rounded bg-terracotta-light px-2 py-1 text-[11px] font-semibold text-destructive">
-                                            {offerDetails.discountPercentage}
-                                            % OFF
+                                          <span className="bg-terracotta-light text-destructive rounded px-2 py-1 text-[11px] font-semibold">
+                                            {offerDetails.discountPercentage}%
+                                            OFF
                                           </span>
                                         )}
                                         <span
@@ -491,7 +467,7 @@ export default function Navbar() {
                                       </div>
                                     )}
                                     {offerDetails?.hasBogo && (
-                                      <div className="mb-2 flex items-center gap-1 text-xs font-semibold text-primary">
+                                      <div className="text-primary mb-2 flex items-center gap-1 text-xs font-semibold">
                                         <Sparkles className="h-3 w-3" />
                                         {"Bonus enrollment included"}
                                       </div>
@@ -589,7 +565,7 @@ export default function Navbar() {
                       </div>
                       <div className="bg-background/95 sticky right-0 bottom-0 left-0 space-y-4 border-t pt-4 backdrop-blur">
                         {hasBogoItems && (
-                          <div className="flex items-start gap-2 rounded-md border border-primary/30 bg-lavender-50 px-3 py-2 text-[11px] font-medium text-primary">
+                          <div className="border-primary/30 bg-lavender-50 text-primary flex items-start gap-2 rounded-md border px-3 py-2 text-[11px] font-medium">
                             <Sparkles className="mt-0.5 h-3.5 w-3.5 flex-shrink-0" />
                             <span>
                               BOGO applied: bonus enrollments are added during
@@ -617,27 +593,7 @@ export default function Navbar() {
                 </div>
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-2">
-              <Show when="signed-in">
-                <MindPointsBadge />
-                <UserButton
-                  userProfileMode="navigation"
-                  userProfileUrl="/account"
-                />
-              </Show>
-              <Show when="signed-out">
-                <SignInButton>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="transition-smooth hover:bg-accent/50 cursor-pointer"
-                  >
-                    <span className="hidden sm:inline">Sign In</span>
-                    <span className="sm:hidden">Sign in</span>
-                  </Button>
-                </SignInButton>
-              </Show>
-            </div>
+            <AuthNavbarActions />
           </div>
         </div>
 
