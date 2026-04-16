@@ -4,15 +4,20 @@ import CourseClient from "./CourseClient";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@mindpoint/backend/data-model";
 import Script from "next/script";
+import { redirect } from "next/navigation";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 const convex = convexUrl ? new ConvexHttpClient(convexUrl) : null;
 
 type Props = {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ batch?: string }>;
 };
 
-export async function generateMetadata({ params }: Props): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+  searchParams,
+}: Props): Promise<Metadata> {
   try {
     if (!convex) {
       return {
@@ -22,10 +27,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       };
     }
 
-    const { id } = await params;
-    const course = await convex.query(api.courses.getCourseById, {
+    const [{ id }, { batch }] = await Promise.all([params, searchParams]);
+    const pageData = await convex.query(api.courses.getCoursePageData, {
       id: id as Id<"courses">,
+      batchId: batch as Id<"courseBatches"> | undefined,
     });
+    const course = pageData?.course;
 
     if (!course) {
       return {
@@ -89,7 +96,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 }
 
-export default async function CoursePage({ params }: Props) {
+export default async function CoursePage({ params, searchParams }: Props) {
   try {
     if (!convex) {
       return (
@@ -104,10 +111,19 @@ export default async function CoursePage({ params }: Props) {
       );
     }
 
-    const { id } = await params;
-    const course = await convex.query(api.courses.getCourseById, {
+    const [{ id }, { batch }] = await Promise.all([params, searchParams]);
+    const pageData = await convex.query(api.courses.getCoursePageData, {
       id: id as Id<"courses">,
+      batchId: batch as Id<"courseBatches"> | undefined,
     });
+    const course = pageData?.course;
+
+    if (pageData?.redirectToCourseId) {
+      const query = pageData.redirectToBatchId
+        ? `?batch=${pageData.redirectToBatchId}`
+        : "";
+      redirect(`/courses/${pageData.redirectToCourseId}${query}`);
+    }
 
     if (!course) {
       return (
@@ -123,9 +139,11 @@ export default async function CoursePage({ params }: Props) {
     }
 
     // Prefetch related variants (same name & type) to enable instant switching
-    const variants = await convex.query(api.courses.getRelatedVariants, {
-      id: id as Id<"courses">,
-    });
+    const variants = course.usesBatches
+      ? []
+      : await convex.query(api.courses.getRelatedVariants, {
+          id: id as Id<"courses">,
+        });
 
     // Generate structured data for the course
     const courseStructuredData = {
@@ -189,7 +207,12 @@ export default async function CoursePage({ params }: Props) {
             __html: JSON.stringify(courseStructuredData),
           }}
         />
-        <CourseClient course={course} variants={variants ?? []} />
+        <CourseClient
+          course={course}
+          variants={variants ?? []}
+          batches={pageData?.batches ?? []}
+          selectedBatch={pageData?.selectedBatch ?? null}
+        />
       </>
     );
   } catch (error) {

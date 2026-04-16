@@ -48,6 +48,17 @@ type CourseType =
   | "resume-studio"
   | "worksheet";
 
+type BatchFormState = {
+  capacity: string;
+  daysOfWeek: string;
+  endDate: string;
+  endTime: string;
+  label: string;
+  lifecycleStatus: CourseLifecycleStatus;
+  startDate: string;
+  startTime: string;
+};
+
 type LearningOutcomeInput = {
   icon: string;
   title: string;
@@ -190,6 +201,39 @@ const prerequisiteTypes = new Set<CourseType>([
   "masterclass",
   "resume-studio",
 ]);
+const batchBackedTypes = new Set<CourseType>([
+  "certificate",
+  "diploma",
+  "masterclass",
+  "resume-studio",
+]);
+
+function emptyBatchFormState(): BatchFormState {
+  return {
+    capacity: "1",
+    daysOfWeek: "",
+    endDate: "",
+    endTime: "",
+    label: "",
+    lifecycleStatus: "draft",
+    startDate: "",
+    startTime: "",
+  };
+}
+
+function toBatchFormState(batch?: Doc<"courseBatches">): BatchFormState {
+  return {
+    capacity: batch?.capacity != null ? String(batch.capacity) : "1",
+    daysOfWeek: (batch?.daysOfWeek || []).join(", "),
+    endDate: batch?.endDate || "",
+    endTime: batch?.endTime || "",
+    label: batch?.label || "",
+    lifecycleStatus:
+      (batch?.lifecycleStatus as CourseLifecycleStatus | undefined) || "draft",
+    startDate: batch?.startDate || "",
+    startTime: batch?.startTime || "",
+  };
+}
 
 function defaultSessionVariants(): SessionVariantInput[] {
   return [
@@ -329,6 +373,12 @@ export function CourseEditor({
   const [imagePendingRemoval, setImagePendingRemoval] = useState<string | null>(
     null,
   );
+  const [batchDrafts, setBatchDrafts] = useState<
+    Record<string, BatchFormState>
+  >({});
+  const [newBatch, setNewBatch] = useState<BatchFormState>(() =>
+    emptyBatchFormState(),
+  );
   const [usesPlainTextScheduleInputs, setUsesPlainTextScheduleInputs] =
     useState(false);
   const courseVersion = course
@@ -346,15 +396,39 @@ export function CourseEditor({
   }) as OfferCampaignRecord[] | undefined;
 
   const createCourse = useMutation(api.adminCourses.createCourse);
+  const createBatch = useMutation(api.adminCourses.createBatch);
   const deleteCourse = useMutation(api.adminCourses.deleteCourse);
+  const duplicateBatch = useMutation(api.adminCourses.duplicateBatch);
+  const archiveBatch = useMutation(api.adminCourses.archiveBatch);
   const updateCourse = useMutation(api.adminCourses.updateCourse);
+  const updateBatch = useMutation(api.adminCourses.updateBatch);
+  const courseBatches = useQuery(
+    api.adminCourses.listCourseBatches,
+    course?._id && batchBackedTypes.has(state.type)
+      ? { courseId: course._id }
+      : "skip",
+  );
 
   useEffect(() => {
     const nextInitialState = toInitialState(course);
     setState(nextInitialState);
     setInitialSnapshot(JSON.stringify(nextInitialState));
     setSelectedCampaignId("");
+    setNewBatch(emptyBatchFormState());
   }, [course, courseVersion]);
+
+  useEffect(() => {
+    if (!courseBatches) {
+      setBatchDrafts({});
+      return;
+    }
+
+    setBatchDrafts(
+      Object.fromEntries(
+        courseBatches.map((batch) => [String(batch._id), toBatchFormState(batch)]),
+      ),
+    );
+  }, [courseBatches]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -458,7 +532,9 @@ export function CourseEditor({
   const supportsModules = moduleTypes.has(state.type);
   const supportsDuration = durationTypes.has(state.type);
   const supportsPrerequisites = prerequisiteTypes.has(state.type);
+  const supportsBatchManagement = batchBackedTypes.has(state.type);
   const showSchedule = scheduleTypes.has(state.type);
+  const showCourseSchedule = showSchedule && !supportsBatchManagement;
   const isSessionBatchCreate = !course && usesSessions;
 
   const parsedDays = useMemo(
@@ -529,10 +605,10 @@ export function CourseEditor({
     () => JSON.stringify(state) !== initialSnapshot,
     [initialSnapshot, state],
   );
-  const scheduleStartPreview = showSchedule
+  const scheduleStartPreview = showCourseSchedule
     ? formatDateTime(state.startDate, state.startTime)
     : null;
-  const scheduleEndPreview = showSchedule
+  const scheduleEndPreview = showCourseSchedule
     ? formatDateTime(state.endDate, state.endTime)
     : null;
   const offerWindowPreview = formatDateWindow(
@@ -726,14 +802,17 @@ export function CourseEditor({
       name: state.name,
       description: state.description || undefined,
       type: state.type,
+      usesBatches: supportsBatchManagement,
       code: overrides?.code ?? state.code,
       price: overrides?.price ?? Number(state.price),
-      capacity: overrides?.capacity ?? Number(state.capacity),
-      startDate: showSchedule ? state.startDate || undefined : undefined,
-      endDate: showSchedule ? state.endDate || undefined : undefined,
-      startTime: showSchedule ? state.startTime || undefined : undefined,
-      endTime: showSchedule ? state.endTime || undefined : undefined,
-      daysOfWeek: showSchedule ? parsedDays : undefined,
+      capacity: supportsBatchManagement
+        ? undefined
+        : overrides?.capacity ?? Number(state.capacity),
+      startDate: showCourseSchedule ? state.startDate || undefined : undefined,
+      endDate: showCourseSchedule ? state.endDate || undefined : undefined,
+      startTime: showCourseSchedule ? state.startTime || undefined : undefined,
+      endTime: showCourseSchedule ? state.endTime || undefined : undefined,
+      daysOfWeek: showCourseSchedule ? parsedDays : undefined,
       content: state.content,
       duration: supportsDuration ? state.duration || undefined : undefined,
       sessions:
@@ -816,7 +895,7 @@ export function CourseEditor({
       throw new Error("Add at least one learning outcome before publishing");
     }
 
-    if (showSchedule) {
+    if (showCourseSchedule) {
       if (
         !hasText(state.startDate) ||
         !hasText(state.endDate) ||
@@ -826,6 +905,24 @@ export function CourseEditor({
       ) {
         throw new Error(
           "Start/end date, time, and days of week are required for this course type",
+        );
+      }
+    }
+
+    if (supportsBatchManagement) {
+      if (!course && state.lifecycleStatus === "published") {
+        throw new Error(
+          "Save this canonical course as a draft first, then add its batches before publishing.",
+        );
+      }
+
+      if (
+        course &&
+        state.lifecycleStatus === "published" &&
+        (courseBatches?.length ?? 0) === 0
+      ) {
+        throw new Error(
+          "Add at least one batch before publishing a batch-backed course.",
         );
       }
     }
@@ -998,6 +1095,89 @@ export function CourseEditor({
     toast.success("Image removed from this draft");
   };
 
+  const updateBatchDraft = (
+    batchId: string,
+    key: keyof BatchFormState,
+    value: string,
+  ) => {
+    setBatchDrafts((current) => ({
+      ...current,
+      [batchId]: {
+        ...current[batchId],
+        [key]: value,
+      },
+    }));
+  };
+
+  const buildBatchPatch = (draft: BatchFormState) => ({
+    capacity: Number(draft.capacity),
+    daysOfWeek: draft.daysOfWeek
+      .split(",")
+      .map((day) => day.trim())
+      .filter(Boolean),
+    endDate: draft.endDate,
+    endTime: draft.endTime,
+    label: draft.label.trim(),
+    lifecycleStatus: draft.lifecycleStatus,
+    startDate: draft.startDate,
+    startTime: draft.startTime,
+  });
+
+  const validateBatchDraft = (draft: BatchFormState) => {
+    if (
+      !hasText(draft.label) ||
+      !hasText(draft.startDate) ||
+      !hasText(draft.endDate) ||
+      !hasText(draft.startTime) ||
+      !hasText(draft.endTime) ||
+      draft.daysOfWeek
+        .split(",")
+        .map((day) => day.trim())
+        .filter(Boolean).length === 0 ||
+      !Number.isFinite(Number(draft.capacity)) ||
+      Number(draft.capacity) <= 0
+    ) {
+      throw new Error(
+        "Each batch needs a label, schedule, days of week, and capacity.",
+      );
+    }
+  };
+
+  const handleCreateBatch = async () => {
+    if (!course?._id) {
+      toast.error("Save the course first before adding batches.");
+      return;
+    }
+
+    try {
+      validateBatchDraft(newBatch);
+      await createBatch({
+        courseId: course._id,
+        data: buildBatchPatch(newBatch),
+      });
+      setNewBatch(emptyBatchFormState());
+      toast.success("Batch created");
+    } catch (error) {
+      toast.error(getUserFacingErrorMessage(error, "Failed to create batch"));
+    }
+  };
+
+  const handleSaveBatch = async (batchId: Id<"courseBatches">) => {
+    const draft = batchDrafts[String(batchId)];
+    if (!draft) return;
+
+    try {
+      validateBatchDraft(draft);
+      await updateBatch({
+        batchId,
+        patch: buildBatchPatch(draft),
+      });
+      toast.success("Batch updated");
+    } catch (error) {
+      toast.error(getUserFacingErrorMessage(error, "Failed to update batch"));
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="sticky top-4 z-20 rounded-lg border border-slate-200 bg-white/95 p-4 shadow-sm backdrop-blur">
@@ -1127,6 +1307,7 @@ export function CourseEditor({
               <Input
                 type="number"
                 value={state.capacity}
+                disabled={supportsBatchManagement}
                 onChange={(e) =>
                   setState((prev) => ({
                     ...prev,
@@ -1134,6 +1315,11 @@ export function CourseEditor({
                   }))
                 }
               />
+              {supportsBatchManagement ? (
+                <p className="text-xs text-slate-600">
+                  Capacity is set per batch for this course type.
+                </p>
+              ) : null}
             </div>
           </>
         ) : (
@@ -1174,7 +1360,7 @@ export function CourseEditor({
         />
       </div>
 
-      {showSchedule ? (
+      {showCourseSchedule ? (
         <>
           <div className="grid gap-4 md:grid-cols-4">
             <div className="space-y-2">
@@ -1293,6 +1479,232 @@ export function CourseEditor({
             ) : null}
           </div>
         </>
+      ) : null}
+
+      {supportsBatchManagement ? (
+        <div className="space-y-4 rounded-lg border border-slate-200 p-4">
+          <div className="space-y-1">
+            <h3 className="text-base font-semibold">Batches</h3>
+            <p className="text-sm text-slate-600">
+              Schedule and seats live on batches for this course type.
+            </p>
+          </div>
+
+          {!course?._id ? (
+            <div className="rounded-md border border-dashed border-slate-300 p-4 text-sm text-slate-600">
+              Save the canonical course first, then add one or more batches.
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {(courseBatches ?? []).map((batch) => {
+                const draft = batchDrafts[String(batch._id)] ?? toBatchFormState(batch);
+                return (
+                  <div
+                    key={batch._id}
+                    className="grid gap-3 rounded-md border border-slate-200 p-3 md:grid-cols-7"
+                  >
+                    <Input
+                      placeholder="Label"
+                      value={draft.label}
+                      onChange={(e) =>
+                        updateBatchDraft(String(batch._id), "label", e.target.value)
+                      }
+                    />
+                    <Input
+                      type="date"
+                      value={draft.startDate}
+                      onChange={(e) =>
+                        updateBatchDraft(
+                          String(batch._id),
+                          "startDate",
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      type="date"
+                      value={draft.endDate}
+                      onChange={(e) =>
+                        updateBatchDraft(String(batch._id), "endDate", e.target.value)
+                      }
+                    />
+                    <Input
+                      type="time"
+                      value={draft.startTime}
+                      onChange={(e) =>
+                        updateBatchDraft(
+                          String(batch._id),
+                          "startTime",
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      type="time"
+                      value={draft.endTime}
+                      onChange={(e) =>
+                        updateBatchDraft(String(batch._id), "endTime", e.target.value)
+                      }
+                    />
+                    <Input
+                      placeholder="Days (Mon, Wed)"
+                      value={draft.daysOfWeek}
+                      onChange={(e) =>
+                        updateBatchDraft(
+                          String(batch._id),
+                          "daysOfWeek",
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <Input
+                      type="number"
+                      placeholder="Capacity"
+                      value={draft.capacity}
+                      onChange={(e) =>
+                        updateBatchDraft(
+                          String(batch._id),
+                          "capacity",
+                          e.target.value,
+                        )
+                      }
+                    />
+                    <select
+                      className="h-10 rounded-md border bg-white px-3 text-sm md:col-span-2"
+                      value={draft.lifecycleStatus}
+                      onChange={(e) =>
+                        updateBatchDraft(
+                          String(batch._id),
+                          "lifecycleStatus",
+                          e.target.value,
+                        )
+                      }
+                    >
+                      <option value="draft">Draft</option>
+                      <option value="published">Published</option>
+                      <option value="archived">Archived</option>
+                    </select>
+                    <div className="flex gap-2 md:col-span-5 md:justify-end">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => void duplicateBatch({ batchId: batch._id })}
+                      >
+                        Duplicate
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => void handleSaveBatch(batch._id)}
+                      >
+                        Save Batch
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        onClick={() =>
+                          void archiveBatch({ batchId: batch._id })
+                        }
+                      >
+                        Archive
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <div className="grid gap-3 rounded-md border border-dashed border-slate-300 p-3 md:grid-cols-7">
+                <Input
+                  placeholder="New batch label"
+                  value={newBatch.label}
+                  onChange={(e) =>
+                    setNewBatch((current) => ({ ...current, label: e.target.value }))
+                  }
+                />
+                <Input
+                  type="date"
+                  value={newBatch.startDate}
+                  onChange={(e) =>
+                    setNewBatch((current) => ({
+                      ...current,
+                      startDate: e.target.value,
+                    }))
+                  }
+                />
+                <Input
+                  type="date"
+                  value={newBatch.endDate}
+                  onChange={(e) =>
+                    setNewBatch((current) => ({
+                      ...current,
+                      endDate: e.target.value,
+                    }))
+                  }
+                />
+                <Input
+                  type="time"
+                  value={newBatch.startTime}
+                  onChange={(e) =>
+                    setNewBatch((current) => ({
+                      ...current,
+                      startTime: e.target.value,
+                    }))
+                  }
+                />
+                <Input
+                  type="time"
+                  value={newBatch.endTime}
+                  onChange={(e) =>
+                    setNewBatch((current) => ({
+                      ...current,
+                      endTime: e.target.value,
+                    }))
+                  }
+                />
+                <Input
+                  placeholder="Days (Mon, Wed)"
+                  value={newBatch.daysOfWeek}
+                  onChange={(e) =>
+                    setNewBatch((current) => ({
+                      ...current,
+                      daysOfWeek: e.target.value,
+                    }))
+                  }
+                />
+                <Input
+                  type="number"
+                  placeholder="Capacity"
+                  value={newBatch.capacity}
+                  onChange={(e) =>
+                    setNewBatch((current) => ({
+                      ...current,
+                      capacity: e.target.value,
+                    }))
+                  }
+                />
+                <select
+                  className="h-10 rounded-md border bg-white px-3 text-sm md:col-span-2"
+                  value={newBatch.lifecycleStatus}
+                  onChange={(e) =>
+                    setNewBatch((current) => ({
+                      ...current,
+                      lifecycleStatus: e.target.value as CourseLifecycleStatus,
+                    }))
+                  }
+                >
+                  <option value="draft">Draft</option>
+                  <option value="published">Published</option>
+                  <option value="archived">Archived</option>
+                </select>
+                <div className="flex md:col-span-5 md:justify-end">
+                  <Button type="button" onClick={() => void handleCreateBatch()}>
+                    Add Batch
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
       ) : null}
 
       {usesSessions && !isSessionBatchCreate ? (

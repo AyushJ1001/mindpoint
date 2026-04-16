@@ -68,10 +68,10 @@ export default function CoursesHero() {
       <section className="section-padding">
         <div className="container mx-auto max-w-4xl text-center">
           <ScrollReveal>
-            <h1 className="font-display text-foreground text-4xl font-semibold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="calm-catalog-hero-title mx-auto max-w-3xl">
               Find your path in mental health.
             </h1>
-            <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg leading-relaxed sm:text-xl">
+            <p className="calm-catalog-hero-lead mx-auto mt-6 max-w-2xl">
               Structured programs, live workshops, self-paced learning, and
               professional support — all in one place. Start wherever feels right
               for you.

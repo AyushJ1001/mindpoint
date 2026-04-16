@@ -208,19 +208,22 @@ async function runCheckoutMutation<TResult>(
 
 export async function handlePaymentSuccess(
   userId: string,
-  courseIds: Id<"courses">[],
+  lineItems: Array<{ courseId: Id<"courses">; batchId?: Id<"courseBatches"> }>,
   userEmail: string,
   userPhone?: string,
   studentName?: string,
   sessionType?: "focus" | "flow" | "elevate",
   bogoSelections?: Array<{
     sourceCourseId: Id<"courses">;
+    sourceBatchId?: Id<"courseBatches">;
     selectedFreeCourseId: Id<"courses">;
+    selectedFreeBatchId?: Id<"courseBatches">;
   }>,
   referrerClerkUserId?: string,
   checkoutPricing?: CheckoutPricing,
   options: { convexUrl?: string } = {},
 ): Promise<CheckoutResult & { enrollments?: EnrollmentSummary[] }> {
+  const courseIds = lineItems.map((item) => item.courseId);
   try {
     const enrollments = await runCheckoutMutation<EnrollmentSummary[]>(
       api.myFunctions.handleCartCheckout,
@@ -228,6 +231,7 @@ export async function handlePaymentSuccess(
         bogoSelections,
         checkoutPricing,
         courseIds,
+        lineItems,
         referrerClerkUserId,
         sessionType,
         studentName,
@@ -309,15 +313,18 @@ export async function handleGuestUserPaymentSuccess(
 
 export async function handleGuestUserPaymentSuccessWithData(
   userData: { email: string; name: string; phone: string },
-  courseIds: Id<"courses">[],
+  lineItems: Array<{ courseId: Id<"courses">; batchId?: Id<"courseBatches"> }>,
   sessionType?: "focus" | "flow" | "elevate",
   bogoSelections?: Array<{
     sourceCourseId: Id<"courses">;
+    sourceBatchId?: Id<"courseBatches">;
     selectedFreeCourseId: Id<"courses">;
+    selectedFreeBatchId?: Id<"courseBatches">;
   }>,
   checkoutPricing?: CheckoutPricing,
   options: { convexUrl?: string } = {},
 ): Promise<CheckoutResult & { enrollments?: EnrollmentSummary[] }> {
+  const courseIds = lineItems.map((item) => item.courseId);
   try {
     const enrollments = await runCheckoutMutation<EnrollmentSummary[]>(
       api.myFunctions.handleGuestUserCartCheckoutWithData,
@@ -325,6 +332,7 @@ export async function handleGuestUserPaymentSuccessWithData(
         bogoSelections,
         checkoutPricing,
         courseIds,
+        lineItems,
         sessionType,
         userData,
       },
@@ -361,6 +369,7 @@ export async function handleGuestUserPaymentSuccessWithData(
 export async function handleSingleCourseEnrollment(
   userId: string,
   courseId: Id<"courses">,
+  batchId: Id<"courseBatches"> | undefined,
   userEmail: string,
   userPhone?: string,
   studentName?: string,
@@ -375,6 +384,7 @@ export async function handleSingleCourseEnrollment(
     }>(
       api.myFunctions.handleSuccessfulPayment,
       {
+        batchId,
         courseId,
         sessionType,
         studentName,

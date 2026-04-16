@@ -49,14 +49,16 @@ export default function TherapyFAQSection({
       <div className="container">
         <div className="mx-auto max-w-4xl">
           <ScrollReveal>
-            <div className="mb-12 text-center">
+            <div className="mb-10 text-center">
               <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
                 Helpful details
               </span>
-              <h2 className="font-display mt-3 mb-4 text-3xl font-semibold tracking-tight md:text-4xl">
+              <h2 className="calm-section-title mx-auto mt-3 mb-3 max-w-xl">
                 {title}
               </h2>
-              <p className="text-muted-foreground text-lg">{description}</p>
+              <p className="text-muted-foreground mx-auto max-w-xl text-sm leading-relaxed sm:text-[0.9375rem]">
+                {description}
+              </p>
             </div>
           </ScrollReveal>
 
@@ -73,7 +75,7 @@ export default function TherapyFAQSection({
                     const items = parseFaqMarkdown(faqMarkdown);
                     if (items.length === 0) {
                       return (
-                        <div className="prose prose-lg dark:prose-invert max-w-none">
+                        <div className="prose prose-sm dark:prose-invert max-w-none sm:prose-base">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {faqMarkdown}
                           </ReactMarkdown>
@@ -84,11 +86,11 @@ export default function TherapyFAQSection({
                       <Accordion type="single" collapsible className="w-full">
                         {items.map((item, idx) => (
                           <AccordionItem key={idx} value={`faq-${idx + 1}`}>
-                            <AccordionTrigger className="hover:text-primary text-left text-lg font-semibold">
+                            <AccordionTrigger className="hover:text-primary text-left text-[0.95rem] font-semibold leading-snug sm:text-base">
                               {item.q}
                             </AccordionTrigger>
                             <AccordionContent>
-                              <div className="prose dark:prose-invert max-w-none pt-2">
+                              <div className="prose prose-sm dark:prose-invert max-w-none pt-2 sm:prose-base">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                   {item.a}
                                 </ReactMarkdown>

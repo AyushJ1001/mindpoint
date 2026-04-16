@@ -1,4 +1,5 @@
 import type { Doc } from "./_generated/dataModel";
+import type { PublicCourseBatch } from "./courseBatchHelpers";
 
 export type PublicCourse = {
   _id: Doc<"courses">["_id"];
@@ -33,9 +34,19 @@ export type PublicCourse = {
   painPoints?: string[];
   outcomes?: string[];
   whyDifferent?: string[];
+  usesBatches: boolean;
+  batchCount: number;
+  nextAvailableBatch?: PublicCourseBatch;
 };
 
-export function pickPublicCourse(course: Doc<"courses">): PublicCourse {
+export function pickPublicCourse(
+  course: Doc<"courses">,
+  options?: {
+    batchCount?: number;
+    nextAvailableBatch?: PublicCourseBatch | null;
+  },
+): PublicCourse {
+  const nextAvailableBatch = options?.nextAvailableBatch ?? null;
   return {
     _id: course._id,
     _creationTime: course._creationTime,
@@ -47,13 +58,13 @@ export function pickPublicCourse(course: Doc<"courses">): PublicCourse {
     offer: course.offer,
     bogo: course.bogo,
     sessions: course.sessions,
-    capacity: course.capacity,
-    enrolledCount: course.enrolledUsers.length,
-    startDate: course.startDate,
-    endDate: course.endDate,
-    startTime: course.startTime,
-    endTime: course.endTime,
-    daysOfWeek: course.daysOfWeek,
+    capacity: nextAvailableBatch?.capacity ?? course.capacity ?? 0,
+    enrolledCount: nextAvailableBatch?.enrolledCount ?? course.enrolledUsers.length,
+    startDate: nextAvailableBatch?.startDate ?? course.startDate ?? "",
+    endDate: nextAvailableBatch?.endDate ?? course.endDate ?? "",
+    startTime: nextAvailableBatch?.startTime ?? course.startTime ?? "",
+    endTime: nextAvailableBatch?.endTime ?? course.endTime ?? "",
+    daysOfWeek: nextAvailableBatch?.daysOfWeek ?? course.daysOfWeek ?? [],
     content: course.content,
     reviews: course.reviews,
     duration: course.duration,
@@ -69,5 +80,8 @@ export function pickPublicCourse(course: Doc<"courses">): PublicCourse {
     painPoints: course.painPoints,
     outcomes: course.outcomes,
     whyDifferent: course.whyDifferent,
+    usesBatches: course.usesBatches ?? false,
+    batchCount: options?.batchCount ?? 0,
+    nextAvailableBatch: nextAvailableBatch ?? undefined,
   };
 }

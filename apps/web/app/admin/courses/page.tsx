@@ -105,6 +105,10 @@ export default function AdminCoursesPage() {
     useState<Id<"courses"> | null>(null);
   const [isRepairingAll, setIsRepairingAll] = useState(false);
   const [isRepairAllConfirmOpen, setIsRepairAllConfirmOpen] = useState(false);
+  const [isApplyingBatchMigration, setIsApplyingBatchMigration] =
+    useState(false);
+  const [isBatchMigrationConfirmOpen, setIsBatchMigrationConfirmOpen] =
+    useState(false);
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -124,15 +128,26 @@ export default function AdminCoursesPage() {
   const transitionCourse = useMutation(
     api.adminCourses.transitionCourseLifecycle,
   );
+  const applyBatchBackfillMigration = useMutation(
+    api.adminCourses.applyBatchBackfillMigration,
+  );
   const correctCourseType = useMutation(api.adminCourses.correctCourseType);
   const repairMasterclassCourseCodes = useMutation(
     api.adminCourses.repairMasterclassCourseCodes,
+  );
+  const batchMigrationPreview = useQuery(
+    api.adminCourses.previewBatchBackfillMigration,
+    {},
   );
 
   const rows = useMemo(() => courses ?? [], [courses]);
   const courseTypeIssueRows = courseTypeIssues?.issues ?? [];
   const masterclassCodeRepairCandidates =
     masterclassCodeRepairResult?.candidates ?? [];
+  const batchMigrationPreviewRows =
+    batchMigrationPreview?.migratableGroups ?? [];
+  const batchMigrationAmbiguousRows =
+    batchMigrationPreview?.ambiguousGroups ?? [];
 
   const exportRows = useMemo(
     () =>
@@ -255,6 +270,23 @@ export default function AdminCoursesPage() {
       );
     } finally {
       setIsRepairingAll(false);
+    }
+  };
+
+  const handleApplyBatchMigration = async () => {
+    try {
+      setIsApplyingBatchMigration(true);
+      const result = await applyBatchBackfillMigration({});
+      toast.success(
+        `Created ${result.createdBatches} batches and repointed ${result.movedEnrollments} enrollments.`,
+      );
+      setIsBatchMigrationConfirmOpen(false);
+    } catch (error) {
+      toast.error(
+        getUserFacingErrorMessage(error, "Failed to apply batch migration"),
+      );
+    } finally {
+      setIsApplyingBatchMigration(false);
     }
   };
 
@@ -398,6 +430,113 @@ export default function AdminCoursesPage() {
               ))}
             </tbody>
           </table>
+        </div>
+      ) : null}
+
+      {view === "catalog" && batchMigrationPreview ? (
+        <div className="mb-4 overflow-hidden rounded-lg border border-blue-200 bg-white">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-blue-200 bg-blue-50 px-4 py-3">
+            <div>
+              <h2 className="text-sm font-semibold text-blue-950">
+                Course Batch Backfill
+              </h2>
+              <p className="mt-0.5 text-xs text-blue-900">
+                Dry-run for converting duplicate scheduled certificate, diploma,
+                masterclass, and resume-studio rows into canonical courses with
+                child batches.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              disabled={
+                isApplyingBatchMigration ||
+                batchMigrationPreviewRows.length === 0
+              }
+              onClick={() => setIsBatchMigrationConfirmOpen(true)}
+            >
+              Apply Migration
+            </Button>
+          </div>
+          <div className="grid gap-3 border-b border-blue-100 px-4 py-3 md:grid-cols-4">
+            <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2">
+              <p className="text-xs text-blue-900">Eligible groups</p>
+              <p className="text-lg font-semibold text-blue-950">
+                {batchMigrationPreview.eligibleGroupCount}
+              </p>
+            </div>
+            <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2">
+              <p className="text-xs text-blue-900">Courses affected</p>
+              <p className="text-lg font-semibold text-blue-950">
+                {batchMigrationPreview.estimatedAffectedCourses}
+              </p>
+            </div>
+            <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2">
+              <p className="text-xs text-blue-900">Enrollments affected</p>
+              <p className="text-lg font-semibold text-blue-950">
+                {batchMigrationPreview.estimatedAffectedEnrollments}
+              </p>
+            </div>
+            <div className="rounded-md border border-blue-100 bg-blue-50 px-3 py-2">
+              <p className="text-xs text-blue-900">Ambiguous groups</p>
+              <p className="text-lg font-semibold text-blue-950">
+                {batchMigrationAmbiguousRows.length}
+              </p>
+            </div>
+          </div>
+          {batchMigrationPreviewRows.length > 0 ? (
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
+                <tr>
+                  <th className="px-3 py-2">Canonical course</th>
+                  <th className="px-3 py-2">Rows</th>
+                  <th className="px-3 py-2">Enrollments</th>
+                  <th className="px-3 py-2">Reviews</th>
+                </tr>
+              </thead>
+              <tbody>
+                {batchMigrationPreviewRows.map((group) => (
+                  <tr key={group.key} className="border-t">
+                    <td className="px-3 py-2">
+                      <p className="font-medium text-slate-900">{group.name}</p>
+                      <p className="text-xs text-slate-600">{group.type}</p>
+                    </td>
+                    <td className="px-3 py-2 text-xs text-slate-700">
+                      {group.legacyRows.map((row) => row.label).join(", ")}
+                    </td>
+                    <td className="px-3 py-2">
+                      {group.estimatedEnrollmentCount}
+                    </td>
+                    <td className="px-3 py-2">{group.estimatedReviewCount}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="px-4 py-3 text-sm text-slate-600">
+              No eligible duplicate groups found.
+            </div>
+          )}
+          {batchMigrationAmbiguousRows.length > 0 ? (
+            <div className="border-t border-blue-100 px-4 py-3">
+              <h3 className="text-sm font-semibold text-slate-900">
+                Manual review required
+              </h3>
+              <div className="mt-2 space-y-2">
+                {batchMigrationAmbiguousRows.slice(0, 8).map((group) => (
+                  <div
+                    key={group.key}
+                    className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900"
+                  >
+                    <p className="font-medium">
+                      {group.name} ({group.type})
+                    </p>
+                    <p>{group.reason}</p>
+                    <p>Mismatched fields: {group.mismatchFields.join(", ")}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
 
@@ -792,6 +931,33 @@ export default function AdminCoursesPage() {
               onClick={() => void confirmTransition()}
             >
               {isTransitioning ? "Updating..." : "Confirm"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={isBatchMigrationConfirmOpen}
+        onOpenChange={setIsBatchMigrationConfirmOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Apply batch backfill migration?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will convert all currently eligible duplicate groups into
+              canonical courses with batches, repoint enrollments and reviews,
+              and rewrite bundle campaign eligibility to canonical course IDs.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isApplyingBatchMigration}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              disabled={isApplyingBatchMigration}
+              onClick={() => void handleApplyBatchMigration()}
+            >
+              {isApplyingBatchMigration ? "Applying..." : "Apply Migration"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
