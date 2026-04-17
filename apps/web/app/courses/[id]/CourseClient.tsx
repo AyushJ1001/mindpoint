@@ -474,8 +474,6 @@ export default function CourseClient({
         mounted={mounted}
         usesBatches={usesBatches}
         batchOptions={batchOptions}
-        activeBatchId={activeBatch?._id ?? null}
-        handleBatchSelect={handleBatchSelect}
       />
 
       <CourseFromStudents

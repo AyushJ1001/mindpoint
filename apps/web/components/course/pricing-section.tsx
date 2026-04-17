@@ -46,8 +46,6 @@ interface PricingSectionProps {
   // Batch handling (optional; courses without batches simply skip the select).
   usesBatches?: boolean;
   batchOptions?: BatchOption[];
-  activeBatchId?: string | null;
-  handleBatchSelect?: (id: string) => void;
 }
 
 // Inclusions shown as a three-line list, type-aware.
@@ -113,8 +111,6 @@ export default function PricingSection({
   mounted,
   usesBatches = false,
   batchOptions = [],
-  activeBatchId = null,
-  handleBatchSelect,
 }: PricingSectionProps) {
   // Therapy and supervised keep their bespoke plan pickers — we just wrap them
   // in the new calm container so they inherit the section rhythm.
