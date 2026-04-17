@@ -85,7 +85,7 @@ export function CourseImageCarousel({
             fill={variant === "hero"}
             width={variant === "card" ? 400 : undefined}
             height={variant === "card" ? 600 : undefined}
-            priority
+            priority={variant === "hero"}
             sizes={
               variant === "hero"
                 ? "(max-width: 768px) 100vw, 72vw"
