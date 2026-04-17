@@ -214,63 +214,6 @@ export default function PricingSection({
               </p>
             )}
 
-            {usesBatches && batchOptions.length > 0 && handleBatchSelect && (
-              <div className="mt-8 border-t border-foreground/10 pt-7">
-                <p className="calm-kbd mb-4 text-foreground/55">
-                  Choose a batch
-                </p>
-                <div
-                  className="calm-batch-grid"
-                  role="radiogroup"
-                  aria-label="Choose a batch"
-                >
-                  {batchOptions.map((batch) => {
-                    const selected = activeBatchId === batch._id;
-                    const disabled = !batch.isSelectable;
-                    const statusLabel = !batch.isSelectable
-                      ? batch.availabilityStatus === "upcoming_full"
-                        ? "Full"
-                        : "Closed"
-                      : null;
-                    const main =
-                      batch.label || batch.startDate || "Batch option";
-                    const sub = [batch.startDate, batch.startTime]
-                      .filter((v) => Boolean(v) && v !== batch.label)
-                      .join(" \u00b7 ");
-                    return (
-                      <button
-                        key={batch._id}
-                        type="button"
-                        role="radio"
-                        aria-checked={selected}
-                        disabled={disabled}
-                        data-selected={selected ? "true" : "false"}
-                        data-disabled={disabled ? "true" : "false"}
-                        onClick={() => !disabled && handleBatchSelect(batch._id)}
-                        className="calm-batch-chip"
-                      >
-                        <span className="min-w-0">
-                          <span className="calm-batch-main block truncate">
-                            {main}
-                          </span>
-                          {sub && (
-                            <span className="calm-batch-sub block truncate">
-                              {sub}
-                            </span>
-                          )}
-                        </span>
-                        {statusLabel && (
-                          <span className="calm-batch-status">
-                            {statusLabel}
-                          </span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
             {shouldShowVariantSelect && (
               <div className="mt-6">
                 <label className="calm-kbd mb-3 block text-foreground/55">

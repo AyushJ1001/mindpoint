@@ -140,8 +140,26 @@ function tintClassFor(type?: string): string {
   }
 }
 
+interface BatchOption {
+  _id: string;
+  label: string;
+  startDate: string;
+  endDate: string;
+  startTime: string;
+  endTime: string;
+  daysOfWeek: string[];
+  capacity: number;
+  enrolledCount: number;
+  isSelectable: boolean;
+  availabilityStatus: string;
+}
+
 interface CourseHeroProps {
   course: PublicCourse;
+  batches?: BatchOption[];
+  activeBatchId?: string | null;
+  onBatchSelect?: (id: string) => void;
+  onAddToCart?: () => void;
 }
 
 function StarRow({ value, count }: { value: number; count: number }) {
@@ -170,7 +188,13 @@ function StarRow({ value, count }: { value: number; count: number }) {
   );
 }
 
-export default function CourseHero({ course }: CourseHeroProps) {
+export default function CourseHero({
+  course,
+  batches = [],
+  activeBatchId = null,
+  onBatchSelect,
+  onAddToCart,
+}: CourseHeroProps) {
   const emotionalHook =
     course.emotionalHook ||
     defaultEmotionalHooks[course.type || "certificate"] ||
@@ -230,7 +254,7 @@ export default function CourseHero({ course }: CourseHeroProps) {
   }
 
   if (!isWorksheet) {
-    metaChips.push({ icon: <Award />, label: "Certificate included" });
+    metaChips.push({ icon: <Award />, label: "Live Classes + On-Demand Recordings + Official Certificate" });
   }
 
   if (seatsLeft > 0 && seatsLeft <= 8 && !isPreRecorded && !isWorksheet) {
@@ -242,7 +266,7 @@ export default function CourseHero({ course }: CourseHeroProps) {
 
   return (
     <section className="calm-section pt-14 sm:pt-20 lg:pt-24">
-      <div className="calm-container-wide">
+      <div className="mx-auto w-full max-w-5xl px-5 sm:px-6">
         <ScrollReveal>
           <nav
             aria-label="Breadcrumb"
@@ -266,9 +290,10 @@ export default function CourseHero({ course }: CourseHeroProps) {
                 <Image
                   src={poster}
                   alt={`${course.name} poster`}
-                  width={640}
-                  height={800}
+                  width={800}
+                  height={600}
                   priority
+                  sizes="(min-width: 768px) 72vw, 100vw"
                   className="h-auto w-full"
                 />
               ) : (
@@ -307,7 +332,7 @@ export default function CourseHero({ course }: CourseHeroProps) {
               )}
 
               {metaChips.length > 0 && (
-                <ul className="mt-8 flex flex-wrap gap-3">
+                <ul className="mt-6 flex flex-wrap gap-2">
                   {metaChips.map((chip, i) => (
                     <li key={i} className="calm-meta-chip">
                       <span aria-hidden="true">{chip.icon}</span>
@@ -317,8 +342,93 @@ export default function CourseHero({ course }: CourseHeroProps) {
                 </ul>
               )}
 
+              {batches.length > 0 && onBatchSelect && (
+                <div className="mt-8 border-t border-foreground/10 pt-6">
+                  <p className="mb-4 text-[0.95rem] font-medium text-foreground/70">
+                    Choose a batch
+                  </p>
+                  <div
+                    className="flex flex-col gap-2.5"
+                    role="radiogroup"
+                    aria-label="Choose a batch"
+                  >
+                    {batches.map((batch) => {
+                      const selected = activeBatchId === batch._id;
+                      const disabled = !batch.isSelectable;
+                      const statusLabel = !batch.isSelectable
+                        ? batch.availabilityStatus === "upcoming_full"
+                          ? "Full"
+                          : "Closed"
+                        : null;
+                      const title = batch.label || "Batch option";
+                      const dateStr = batch.startDate
+                        ? `Starts ${formatDateCommon(batch.startDate)}`
+                        : null;
+                      const timeStr = formatCourseTimeRange(
+                        batch.startTime,
+                        batch.endTime,
+                      );
+                      const daysStr = batch.daysOfWeek?.length
+                        ? batch.daysOfWeek.join(", ")
+                        : null;
+                      const detail = [daysStr, timeStr]
+                        .filter(Boolean)
+                        .join(" \u00b7 ");
+                      const seatsRemaining = Math.max(
+                        0,
+                        batch.capacity - (batch.enrolledCount ?? 0),
+                      );
+                      return (
+                        <button
+                          key={batch._id}
+                          type="button"
+                          role="radio"
+                          aria-checked={selected}
+                          disabled={disabled}
+                          data-selected={selected ? "true" : "false"}
+                          data-disabled={disabled ? "true" : "false"}
+                          onClick={() =>
+                            !disabled && onBatchSelect(batch._id)
+                          }
+                          className="calm-batch-chip"
+                        >
+                          <span className="min-w-0">
+                            <span className="calm-batch-main block">
+                              {title}
+                            </span>
+                            {dateStr && (
+                              <span className="calm-batch-sub block">
+                                {dateStr}
+                              </span>
+                            )}
+                            {detail && (
+                              <span className="calm-batch-sub block">
+                                {detail}
+                              </span>
+                            )}
+                            {batch.isSelectable &&
+                              seatsRemaining > 0 &&
+                              seatsRemaining <= 8 && (
+                                <span className="calm-batch-sub mt-0.5 block text-primary/70">
+                                  {seatsRemaining} seat
+                                  {seatsRemaining === 1 ? "" : "s"} left
+                                </span>
+                              )}
+                          </span>
+                          {statusLabel && (
+                            <span className="calm-batch-status">
+                              {statusLabel}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
               {!isWorksheet && course.type !== "therapy" && course.type !== "supervised" && (
-                <div className="mt-10 flex flex-wrap items-center gap-6 border-t border-foreground/10 pt-8">
+                <div className="mt-8 space-y-4 border-t border-foreground/10 pt-6">
                   <div className="calm-hero-price-row">
                     <span className="calm-price-big">{formatINR(price)}</span>
                     {offerDetails?.hasDiscount && (
@@ -328,24 +438,22 @@ export default function CourseHero({ course }: CourseHeroProps) {
                     )}
                   </div>
                   <Button
-                    asChild
                     size="lg"
                     disabled={isSoldOut}
-                    className="h-12 px-7 text-base font-medium"
+                    onClick={onAddToCart}
+                    className="h-11 w-full text-base font-medium"
                   >
-                    <a href="#pricing">
-                      {isSoldOut ? "Currently full" : "Add to cart"}
-                    </a>
+                    {isSoldOut ? "Currently full" : "Add to cart"}
                   </Button>
                 </div>
               )}
 
               {(course.type === "therapy" || course.type === "supervised") && (
-                <div className="mt-10 border-t border-foreground/10 pt-8">
+                <div className="mt-8 border-t border-foreground/10 pt-6">
                   <Button
                     asChild
                     size="lg"
-                    className="h-12 px-7 text-base font-medium"
+                    className="h-11 w-full text-base font-medium"
                   >
                     <a href="#pricing">Choose a plan</a>
                   </Button>

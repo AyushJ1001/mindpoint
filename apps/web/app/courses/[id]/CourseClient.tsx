@@ -30,6 +30,7 @@ import FAQSection from "@/components/course/faq-section";
 import CourseFooterNote from "@/components/course/course-footer-note";
 import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
+import { LeafAccent, WaveDivider } from "@/components/illustrations";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import {
   getOfferDetails,
@@ -421,16 +422,33 @@ export default function CourseClient({
 
   return (
     <div className="calm-page">
-      <CourseHero course={displayCourse} />
+      <CourseHero
+        course={displayCourse}
+        batches={usesBatches ? batchOptions : []}
+        activeBatchId={activeBatch?._id ?? null}
+        onBatchSelect={usesBatches ? handleBatchSelect : undefined}
+        onAddToCart={() => handleIncreaseQuantity(displayCourse)}
+      />
+
+      <WaveDivider className="mx-auto w-full max-w-3xl opacity-50" />
 
       <div className="calm-section-warm">
         <CourseWhyThisExists course={displayCourse} />
       </div>
 
-      <CourseCurriculum course={displayCourse} />
+      <div className="relative">
+        <LeafAccent className="pointer-events-none absolute -top-3 right-[8%] w-8 rotate-12 opacity-25 sm:w-10" />
+        <CourseCurriculum course={displayCourse} />
+      </div>
+
+      <WaveDivider className="mx-auto w-full max-w-3xl opacity-40" />
 
       <div className="calm-section-cool">
         <CourseOutcomes course={displayCourse} />
+      </div>
+
+      <div className="relative">
+        <LeafAccent className="pointer-events-none absolute -top-2 left-[6%] w-7 -rotate-[20deg] -scale-x-100 opacity-20 sm:w-9" />
       </div>
 
       <PricingSection
@@ -479,6 +497,8 @@ export default function CourseClient({
           handleIncreaseQuantity(displayCourse);
         }}
       />
+
+      <WaveDivider className="mx-auto w-full max-w-3xl opacity-40" />
 
       {displayCourse.type === "therapy" ? (
         <TherapyFAQSection />

@@ -151,6 +151,7 @@ export const PublicCourseFields = {
   batchCount: v.number(),
   nextAvailableBatch: v.optional(
     v.object({
+      _creationTime: v.number(),
       _id: v.id("courseBatches"),
       courseId: v.id("courses"),
       label: v.string(),
