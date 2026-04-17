@@ -627,15 +627,15 @@ export const whyChooseByType: Record<string, WhyChooseData> = {
 // ---------------------------------------------------------------------------
 
 export const defaultEmotionalHooks: Record<string, string> = {
-  certificate: "Want real skills — not just another certificate?",
-  therapy: "Struggling with overthinking or anxiety?",
-  supervised: "Ready to grow as a therapist — with someone in your corner?",
-  diploma: "Ready to go deeper into psychology?",
-  internship: "Want hands-on experience, not just theory?",
-  "pre-recorded": "Want to learn at your own pace?",
-  masterclass: "Want to learn one topic really well?",
-  "resume-studio": "Want a resume that actually gets noticed?",
-  worksheet: "Need practical tools you can use right now?",
+  certificate: "A practical, gentle way in.",
+  therapy: "A space to come back to yourself.",
+  supervised: "Grow with someone in your corner.",
+  diploma: "Depth, taken one week at a time.",
+  internship: "Learning that actually sits in your hands.",
+  "pre-recorded": "Learn on your time, without the rush.",
+  masterclass: "One topic. Taught well.",
+  "resume-studio": "Let your work speak clearly.",
+  worksheet: "A resource you can keep returning to.",
 };
 
 // ---------------------------------------------------------------------------
@@ -821,54 +821,3 @@ export const defaultWhyDifferent: Record<string, string[]> = {
   ],
 };
 
-// ---------------------------------------------------------------------------
-// Curated Quotes Per Type
-// ---------------------------------------------------------------------------
-
-export const curatedQuotes: Record<string, Array<{ quote: string; initials: string }>> = {
-  certificate: [
-    { quote: "I finally understood why I overthink — and how to stop it.", initials: "S.K." },
-    { quote: "This made psychology so simple and practical.", initials: "R.M." },
-    { quote: "I felt a real difference within weeks.", initials: "A.P." },
-  ],
-  therapy: [
-    { quote: "I finally feel heard. The sessions gave me clarity I couldn't find on my own.", initials: "N.R." },
-    { quote: "I was skeptical about online therapy. Now I look forward to every session.", initials: "P.S." },
-    { quote: "My therapist helped me see patterns I'd been stuck in for years.", initials: "D.K." },
-  ],
-  supervised: [
-    { quote: "The feedback I got here was more useful than my entire grad program.", initials: "M.L." },
-    { quote: "I went from nervous to confident in my clinical work.", initials: "R.S." },
-    { quote: "Having a mentor who actually practices made all the difference.", initials: "A.N." },
-  ],
-  diploma: [
-    { quote: "This diploma changed my career trajectory completely.", initials: "K.P." },
-    { quote: "The depth of learning here is unmatched by any short course.", initials: "V.R." },
-    { quote: "I built connections with peers who are now my professional network.", initials: "S.M." },
-  ],
-  internship: [
-    { quote: "Working with real cases gave me confidence no textbook could.", initials: "T.K." },
-    { quote: "My mentor caught mistakes I didn't even know I was making.", initials: "P.R." },
-    { quote: "This internship was the bridge between studying and actually practicing.", initials: "N.S." },
-  ],
-  "pre-recorded": [
-    { quote: "I could finally learn without rearranging my entire schedule.", initials: "D.M." },
-    { quote: "The content is clear, practical, and easy to revisit.", initials: "A.K." },
-    { quote: "Perfect for someone who wants to learn at their own pace.", initials: "R.J." },
-  ],
-  masterclass: [
-    { quote: "I learned more in one session than in weeks of self-study.", initials: "S.R." },
-    { quote: "The instructor answered my specific questions — that was invaluable.", initials: "K.M." },
-    { quote: "Focused, practical, and immediately useful.", initials: "P.D." },
-  ],
-  "resume-studio": [
-    { quote: "My resume finally reflects what I'm actually capable of.", initials: "N.K." },
-    { quote: "I got interview callbacks within a week of updating my CV.", initials: "R.P." },
-    { quote: "They understood exactly what psychology employers look for.", initials: "A.S." },
-  ],
-  worksheet: [
-    { quote: "I use these worksheets in every client session now.", initials: "D.R." },
-    { quote: "Evidence-based, well-designed, and immediately usable.", initials: "M.K." },
-    { quote: "These saved me hours of creating my own materials.", initials: "S.P." },
-  ],
-};

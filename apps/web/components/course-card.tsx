@@ -88,6 +88,11 @@ export function CourseCard({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
 
+    if (course.usesBatches) {
+      router.push(`/courses/${course._id}`);
+      return;
+    }
+
     // Check if course is out of stock
     const seatsLeft = Math.max(
       0,
@@ -129,17 +134,21 @@ export function CourseCard({
     });
   };
 
-  const handleBogoSelection = (selectedCourseId: Id<"courses">) => {
+  const handleBogoSelection = (selection: {
+    batchId?: Id<"courseBatches">;
+    batchLabel?: string;
+    courseId: Id<"courses">;
+  }) => {
     // Find the selected course from available courses
     const selectedFreeCourse = availableCourses?.find(
-      (course) => course._id === selectedCourseId,
+      (course) => course._id === selection.courseId,
     );
 
     // Validate that the selected course exists
     if (!selectedFreeCourse) {
       console.error(
         "Selected course not found in available courses:",
-        selectedCourseId,
+        selection.courseId,
       );
       return; // Don't add to cart if course doesn't exist
     }
@@ -157,7 +166,10 @@ export function CourseCard({
       bogo: course.bogo,
       courseType: course.type,
       selectedFreeCourse: {
-        id: selectedFreeCourse._id,
+        id: selection.courseId,
+        courseId: selection.courseId,
+        batchId: selection.batchId,
+        batchLabel: selection.batchLabel,
         name: selectedFreeCourse.name,
         description:
           selectedFreeCourse.description ||
@@ -383,6 +395,11 @@ export function UpcomingCourseCard({
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation();
 
+    if (course.usesBatches) {
+      router.push(`/courses/${course._id}`);
+      return;
+    }
+
     // Check if course is out of stock
     const seatsLeft = Math.max(
       0,
@@ -424,17 +441,21 @@ export function UpcomingCourseCard({
     });
   };
 
-  const handleBogoSelection = (selectedCourseId: Id<"courses">) => {
+  const handleBogoSelection = (selection: {
+    batchId?: Id<"courseBatches">;
+    batchLabel?: string;
+    courseId: Id<"courses">;
+  }) => {
     // Find the selected course from available courses
     const selectedFreeCourse = availableCourses?.find(
-      (course) => course._id === selectedCourseId,
+      (course) => course._id === selection.courseId,
     );
 
     // Validate that the selected course exists
     if (!selectedFreeCourse) {
       console.error(
         "Selected course not found in available courses:",
-        selectedCourseId,
+        selection.courseId,
       );
       return; // Don't add to cart if course doesn't exist
     }
@@ -452,7 +473,10 @@ export function UpcomingCourseCard({
       bogo: course.bogo,
       courseType: course.type,
       selectedFreeCourse: {
-        id: selectedFreeCourse._id,
+        id: selection.courseId,
+        courseId: selection.courseId,
+        batchId: selection.batchId,
+        batchLabel: selection.batchLabel,
         name: selectedFreeCourse.name,
         description:
           selectedFreeCourse.description ||

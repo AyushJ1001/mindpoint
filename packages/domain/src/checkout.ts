@@ -2,6 +2,7 @@ import type { Id } from "@mindpoint/backend/data-model";
 
 export type CheckoutPricingItem = {
   courseId: Id<"courses">;
+  batchId?: Id<"courseBatches">;
   listedPrice: number;
   checkoutPrice: number;
   amountPaid: number;

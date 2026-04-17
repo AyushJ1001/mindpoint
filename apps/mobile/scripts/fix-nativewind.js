@@ -20,11 +20,23 @@ const packages = ["nativewind", "react-native-css-interop"];
 for (const pkg of packages) {
   const localPath = path.join(mobileNodeModules, pkg);
   const rootPath = path.join(rootNodeModules, pkg);
+  const localPackageJson = path.join(localPath, "package.json");
+  const rootPackageJson = path.join(rootPath, "package.json");
 
-  // Skip if already exists locally or doesn't exist at root
-  if (fs.existsSync(path.join(localPath, "package.json"))) continue;
-  if (!fs.existsSync(path.join(rootPath, "package.json"))) continue;
+  if (!fs.existsSync(rootPackageJson)) continue;
+
+  const rootVersion = JSON.parse(fs.readFileSync(rootPackageJson, "utf8")).version;
+  const localVersion = fs.existsSync(localPackageJson)
+    ? JSON.parse(fs.readFileSync(localPackageJson, "utf8")).version
+    : null;
+
+  if (localVersion === rootVersion) continue;
+
+  fs.rmSync(localPath, { recursive: true, force: true });
+  fs.mkdirSync(path.dirname(localPath), { recursive: true });
 
   fs.cpSync(rootPath, localPath, { recursive: true });
-  console.log(`[fix-nativewind] Copied ${pkg} to mobile node_modules`);
+  console.log(
+    `[fix-nativewind] Synced ${pkg} ${localVersion ?? "(missing)"} -> ${rootVersion}`,
+  );
 }

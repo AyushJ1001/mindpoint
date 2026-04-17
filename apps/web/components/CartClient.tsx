@@ -1,6 +1,7 @@
 "use client";
 
 import type { Id } from "@mindpoint/backend/data-model";
+import { buildCartItemId } from "@mindpoint/domain/cart";
 import { REFERRAL_COOKIE_KEY } from "@mindpoint/domain/referrals";
 import { evaluateBundleCampaigns } from "@mindpoint/domain/bundles";
 import { requestPaymentOrder } from "@mindpoint/services/payments";
@@ -60,7 +61,12 @@ function BundleProgressSection({
   eligibleCourseIdSet,
 }: {
   campaign: EvaluatedBundleCampaign;
-  items: Array<{ id: string; name: string; [key: string]: unknown }>;
+  items: Array<{
+    id: string;
+    name: string;
+    courseId?: string;
+    [key: string]: unknown;
+  }>;
   eligibleCourseIdSet: Set<string>;
 }) {
   const [expanded, setExpanded] = useState(false);
@@ -76,7 +82,7 @@ function BundleProgressSection({
   );
 
   const eligibleItems = items.filter((item) =>
-    eligibleCourseIdSet.has(String(item.id)),
+    eligibleCourseIdSet.has(String(item.courseId ?? item.id)),
   );
 
   return (
@@ -158,6 +164,20 @@ const getReferralCookie = () => {
   return value ? decodeURIComponent(value) : null;
 };
 
+const getCartCourseId = (item: {
+  id: string;
+  courseId?: Id<"courses">;
+}): Id<"courses"> => (item.courseId ?? item.id) as Id<"courses">;
+
+const getCartLineKey = (item: {
+  id: string;
+  courseId?: Id<"courses">;
+  batchId?: Id<"courseBatches">;
+}): string =>
+  item.courseId
+    ? buildCartItemId(String(item.courseId), item.batchId ? String(item.batchId) : undefined)
+    : String(item.id);
+
 const CartContent = () => {
   const { items, removeItem, updateItemQuantity, isEmpty, emptyCart } =
     useCart();
@@ -199,7 +219,9 @@ const CartContent = () => {
   const markCouponUsed = useMutation(api.mindPoints.markCouponUsed);
   const now = useNow();
   const cartCourseIds = useMemo(
-    () => items.map((item) => item.id as Id<"courses">),
+    () => Array.from(new Set(items.map((item) => String(getCartCourseId(item))))).map(
+      (courseId) => courseId as Id<"courses">,
+    ),
     [items],
   );
   const bundleCampaigns = useQuery(
@@ -210,7 +232,7 @@ const CartContent = () => {
     () =>
       evaluateBundleCampaigns(
         items.map((item) => ({
-          courseId: String(item.id),
+          courseId: String(getCartCourseId(item)),
           listedPrice: Math.round(item.originalPrice ?? item.price ?? 0),
           quantity: item.quantity ?? 1,
         })),
@@ -274,7 +296,7 @@ const CartContent = () => {
           bogo: item.bogo ?? null,
         });
         if (offerDetails) {
-          newOfferDetails[item.id] = offerDetails;
+          newOfferDetails[getCartLineKey(item)] = offerDetails;
         }
       }
     });
@@ -283,16 +305,16 @@ const CartContent = () => {
 
   const hasBogoItems = items.some(
     (item) =>
-      !coveredCourseIdSet.has(String(item.id)) &&
-      itemOfferDetails[item.id]?.hasBogo,
+      !coveredCourseIdSet.has(String(getCartCourseId(item))) &&
+      itemOfferDetails[getCartLineKey(item)]?.hasBogo,
   );
 
   const activeBogoTypes = useMemo(() => {
     const types = new Set<string>();
     items.forEach((item) => {
-      const details = itemOfferDetails[item.id];
+      const details = itemOfferDetails[getCartLineKey(item)];
       if (
-        !coveredCourseIdSet.has(String(item.id)) &&
+        !coveredCourseIdSet.has(String(getCartCourseId(item))) &&
         details?.hasBogo &&
         item.courseType
       ) {
@@ -305,9 +327,9 @@ const CartContent = () => {
   const bogoLabels = useMemo(() => {
     const labels = new Set<string>();
     items.forEach((item) => {
-      const details = itemOfferDetails[item.id];
+      const details = itemOfferDetails[getCartLineKey(item)];
       if (
-        !coveredCourseIdSet.has(String(item.id)) &&
+        !coveredCourseIdSet.has(String(getCartCourseId(item))) &&
         details?.hasBogo &&
         details.bogoLabel
       ) {
@@ -324,7 +346,7 @@ const CartContent = () => {
 
     return items.some(
       (item) =>
-        !coveredCourseIdSet.has(String(item.id)) &&
+        !coveredCourseIdSet.has(String(getCartCourseId(item))) &&
         item.courseType === appliedCoupon.courseType &&
         Math.round(item.price ?? 0) > 0,
     );
@@ -338,17 +360,26 @@ const CartContent = () => {
   }, [appliedCoupon, couponEligible]);
 
   const checkoutPricing = useMemo(() => {
-    const bundleAllocationMap = new Map(
-      (appliedBundle?.allocations ?? []).map((allocation) => [
-        String(allocation.courseId),
-        allocation,
-      ]),
-    );
+    const bundleAllocationQueue = new Map<
+      string,
+      Array<EvaluatedBundleCampaign["allocations"][number]>
+    >();
+    for (const allocation of appliedBundle?.allocations ?? []) {
+      const existing = bundleAllocationQueue.get(String(allocation.courseId));
+      if (existing) {
+        existing.push(allocation);
+      } else {
+        bundleAllocationQueue.set(String(allocation.courseId), [allocation]);
+      }
+    }
 
     const baseItems = items.map((item) => {
       const listedPrice = Math.round(item.originalPrice ?? item.price ?? 0);
       const defaultCheckoutPrice = Math.round(item.price ?? 0);
-      const bundleAllocation = bundleAllocationMap.get(String(item.id));
+      const courseId = getCartCourseId(item);
+      const batchId = item.batchId as Id<"courseBatches"> | undefined;
+      const allocationQueue = bundleAllocationQueue.get(String(courseId));
+      const bundleAllocation = allocationQueue?.shift();
       const checkoutPrice = bundleAllocation
         ? Math.round(bundleAllocation.checkoutPrice)
         : defaultCheckoutPrice;
@@ -360,7 +391,9 @@ const CartContent = () => {
         : 0;
 
       return {
-        courseId: item.id as Id<"courses">,
+        batchId,
+        cartItemId: getCartLineKey(item),
+        courseId,
         courseType: item.courseType,
         listedPrice,
         checkoutPrice,
@@ -378,6 +411,7 @@ const CartContent = () => {
     });
 
     const toCheckoutPricingItem = (item: (typeof baseItems)[number]) => ({
+      batchId: item.batchId,
       courseId: item.courseId,
       listedPrice: item.listedPrice,
       checkoutPrice: item.checkoutPrice,
@@ -460,11 +494,14 @@ const CartContent = () => {
   }, [items, appliedBundle, appliedCoupon]);
 
   const discountedTotal = checkoutPricing.totalAmountPaid;
-  const checkoutPricingByCourseId = useMemo(
+  const checkoutPricingByLineKey = useMemo(
     () =>
       new Map(
         checkoutPricing.items.map((pricingItem) => [
-          String(pricingItem.courseId),
+          buildCartItemId(
+            String(pricingItem.courseId),
+            pricingItem.batchId ? String(pricingItem.batchId) : undefined,
+          ),
           pricingItem,
         ]),
       ),
@@ -483,7 +520,13 @@ const CartContent = () => {
     if (!user?.id) return 0;
 
     const pricingMap = new Map(
-      checkoutPricing.items.map((item) => [String(item.courseId), item]),
+      checkoutPricing.items.map((item) => [
+        buildCartItemId(
+          String(item.courseId),
+          item.batchId ? String(item.batchId) : undefined,
+        ),
+        item,
+      ]),
     );
 
     return items.reduce((total, item) => {
@@ -491,7 +534,7 @@ const CartContent = () => {
         return total;
       }
 
-      const pricingItem = pricingMap.get(String(item.id));
+      const pricingItem = pricingMap.get(getCartLineKey(item));
       if (!pricingItem || pricingItem.amountPaid <= 0) {
         return total;
       }
@@ -606,19 +649,27 @@ const CartContent = () => {
           handler: async () => {
             // Handle signed-in user
             try {
-              // Get course IDs from cart items
-              const courseIds = items.map((item) => item.id as Id<"courses">);
+              const lineItems = items.map((item) => ({
+                batchId: item.batchId as Id<"courseBatches"> | undefined,
+                courseId: getCartCourseId(item),
+              }));
 
               // Extract BOGO selections from cart items
               const bogoSelections = items
                 .filter(
                   (item) =>
                     item.selectedFreeCourse &&
-                    !coveredCourseIdSet.has(String(item.id)),
+                    !coveredCourseIdSet.has(String(getCartCourseId(item))),
                 )
                 .map((item) => ({
-                  sourceCourseId: item.id as Id<"courses">,
-                  selectedFreeCourseId: item.selectedFreeCourse!.id,
+                  selectedFreeBatchId: item.selectedFreeCourse!.batchId,
+                  selectedFreeCourseId:
+                    item.selectedFreeCourse!.courseId ??
+                    item.selectedFreeCourse!.id,
+                  sourceBatchId: item.batchId as
+                    | Id<"courseBatches">
+                    | undefined,
+                  sourceCourseId: getCartCourseId(item),
                 }));
 
               // Use the WhatsApp number from user profile or the one just collected
@@ -634,7 +685,7 @@ const CartContent = () => {
               // Call server action to handle enrollment
               const result = await handlePaymentSuccess(
                 user.id,
-                courseIds as Id<"courses">[],
+                lineItems,
                 user.primaryEmailAddress?.emailAddress || "",
                 userPhone,
                 user.fullName || undefined, // studentName
@@ -1068,13 +1119,13 @@ const CartContent = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {items.map((item) => {
-                const pricingItem = checkoutPricingByCourseId.get(
-                  String(item.id),
+                const pricingItem = checkoutPricingByLineKey.get(
+                  getCartLineKey(item),
                 );
                 const itemHasBundle = Boolean(pricingItem?.bundleCampaignId);
                 const offerDetails = itemHasBundle
                   ? undefined
-                  : itemOfferDetails[item.id];
+                  : itemOfferDetails[getCartLineKey(item)];
                 const itemTotal = Math.round(
                   pricingItem?.amountPaid ??
                     (item.price || 0) * (item.quantity || 1),
@@ -1123,7 +1174,10 @@ const CartContent = () => {
                               </span>
                             )}
                           </div>
-                        ) : !itemHasBundle && progressEligibleCourseIdSet.has(String(item.id)) ? (
+                        ) : !itemHasBundle &&
+                          progressEligibleCourseIdSet.has(
+                            String(getCartCourseId(item)),
+                          ) ? (
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                             <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800">
                               <Layers className="h-3 w-3" />
@@ -1217,7 +1271,7 @@ const CartContent = () => {
                 .filter(
                   (item) =>
                     item.selectedFreeCourse &&
-                    !coveredCourseIdSet.has(String(item.id)),
+                    !coveredCourseIdSet.has(String(getCartCourseId(item))),
                 )
                 .map((item) => (
                   <div
@@ -1344,7 +1398,9 @@ const CartContent = () => {
                       .filter(
                         (item) =>
                           item.selectedFreeCourse &&
-                          !coveredCourseIdSet.has(String(item.id)),
+                          !coveredCourseIdSet.has(
+                            String(getCartCourseId(item)),
+                          ),
                       )
                       .map((item) => (
                         <div
@@ -1419,7 +1475,9 @@ const CartContent = () => {
                         ) {
                           const hasEligibleCourse = items.some(
                             (item) =>
-                              !coveredCourseIdSet.has(String(item.id)) &&
+                              !coveredCourseIdSet.has(
+                                String(getCartCourseId(item)),
+                              ) &&
                               item.courseType ===
                                 couponValidation.coupon.courseType &&
                               Math.round(item.price ?? 0) > 0,

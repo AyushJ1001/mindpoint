@@ -119,6 +119,55 @@ async function removeUserFromCourseIfNoActiveEnrollment(
   }
 }
 
+async function removeUserFromBatchIfNoActiveEnrollment(
+  ctx: MutationCtx,
+  args: {
+    batchId: Id<"courseBatches">;
+    enrollmentIdToIgnore: Id<"enrollments">;
+    userId: string;
+  },
+) {
+  const activeEnrollments = await ctx.db
+    .query("enrollments")
+    .withIndex("by_batchId_and_status", (q) =>
+      q.eq("batchId", args.batchId).eq("status", "active"),
+    )
+    .collect();
+
+  const hasOtherActiveEnrollment = activeEnrollments.some(
+    (row) =>
+      String(row._id) !== String(args.enrollmentIdToIgnore) &&
+      row.userId === args.userId,
+  );
+
+  if (hasOtherActiveEnrollment) {
+    return;
+  }
+
+  const batch = await ctx.db.get(args.batchId);
+  if (!batch) {
+    return;
+  }
+
+  await ctx.db.patch(args.batchId, {
+    enrolledUsers: (batch.enrolledUsers ?? []).filter(
+      (user) => user !== args.userId,
+    ),
+  });
+}
+
+function getBatchSnapshot(batch: Doc<"courseBatches">) {
+  return {
+    batchDaysOfWeek: batch.daysOfWeek,
+    batchEndDate: batch.endDate,
+    batchEndTime: batch.endTime,
+    batchId: batch._id,
+    batchLabel: batch.label,
+    batchStartDate: batch.startDate,
+    batchStartTime: batch.startTime,
+  };
+}
+
 export const listEnrollments = query({
   args: {
     search: v.optional(v.string()),
@@ -626,10 +675,14 @@ export const resendEnrollmentConfirmationEmail = mutation({
     const userName = enrollment.userName || recipientEmail;
     const courseName = enrollment.courseName || course.name;
     const courseType = course.type || enrollment.courseType;
-    const startDate = course.startDate;
-    const endDate = course.endDate;
-    const startTime = course.startTime;
-    const endTime = course.endTime;
+    const startDate =
+      enrollment.batchStartDate ??
+      course.startDate ??
+      new Date().toISOString().split("T")[0];
+    const endDate = enrollment.batchEndDate ?? course.endDate ?? startDate;
+    const startTime =
+      enrollment.batchStartTime ?? course.startTime ?? "00:00";
+    const endTime = enrollment.batchEndTime ?? course.endTime ?? "23:59";
 
     let emailAction = "generic";
     let usedFallback = false;
@@ -827,6 +880,107 @@ export const resendEnrollmentConfirmationEmail = mutation({
       emailAction,
       usedFallback,
     };
+  },
+});
+
+export const changeEnrollmentBatch = mutation({
+  args: {
+    batchId: v.id("courseBatches"),
+    enrollmentId: v.id("enrollments"),
+    reason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const enrollment = await ctx.db.get(args.enrollmentId);
+    if (!enrollment) {
+      throw new Error("Enrollment not found");
+    }
+
+    const status = normalizeEnrollmentStatus(enrollment.status);
+    if (status !== "active") {
+      throw new Error(`Cannot change batch for a ${status} enrollment.`);
+    }
+
+    const [course, targetBatch] = await Promise.all([
+      ctx.db.get(enrollment.courseId),
+      ctx.db.get(args.batchId),
+    ]);
+
+    if (!course) {
+      throw new Error("Course not found for this enrollment");
+    }
+    if (!course.usesBatches) {
+      throw new Error("This course does not use batches.");
+    }
+    if (!targetBatch) {
+      throw new Error("Target batch not found.");
+    }
+    if (String(targetBatch.courseId) !== String(enrollment.courseId)) {
+      throw new Error("Target batch must belong to the same course.");
+    }
+    if ((targetBatch.lifecycleStatus ?? "published") !== "published") {
+      throw new Error("Only published batches can receive enrollments.");
+    }
+    if (String(enrollment.batchId) === String(targetBatch._id)) {
+      return enrollment;
+    }
+
+    const targetUsers = targetBatch.enrolledUsers ?? [];
+    const targetCapacity = targetBatch.capacity ?? 0;
+    if (
+      targetCapacity > 0 &&
+      targetUsers.length >= targetCapacity &&
+      !targetUsers.includes(enrollment.userId)
+    ) {
+      throw new Error(`Batch "${targetBatch.label}" is full.`);
+    }
+
+    const previousBatch = enrollment.batchId
+      ? await ctx.db.get(enrollment.batchId)
+      : null;
+
+    if (!targetUsers.includes(enrollment.userId)) {
+      await ctx.db.patch(targetBatch._id, {
+        enrolledUsers: [...targetUsers, enrollment.userId],
+      });
+    }
+
+    if (previousBatch) {
+      await removeUserFromBatchIfNoActiveEnrollment(ctx, {
+        batchId: previousBatch._id,
+        enrollmentIdToIgnore: enrollment._id,
+        userId: enrollment.userId,
+      });
+    }
+
+    const snapshot = getBatchSnapshot(targetBatch);
+    const nextCourseName = `${course.name} (${targetBatch.label})`;
+
+    await ctx.db.patch(enrollment._id, {
+      ...snapshot,
+      courseName: nextCourseName,
+    });
+
+    const updatedEnrollment = await ctx.db.get(enrollment._id);
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "enrollment.change_batch",
+      entityType: "enrollment",
+      entityId: String(enrollment._id),
+      before: enrollment,
+      after: updatedEnrollment,
+      metadata: {
+        fromBatchId: enrollment.batchId,
+        fromBatchLabel: enrollment.batchLabel,
+        reason: args.reason,
+        toBatchId: targetBatch._id,
+        toBatchLabel: targetBatch.label,
+      },
+    });
+
+    return updatedEnrollment;
   },
 });
 

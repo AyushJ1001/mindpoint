@@ -1,7 +1,6 @@
 "use client";
 
-import { Plus, Minus, Trash2, Gift } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -18,7 +17,12 @@ import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import ChoosePlan from "@/components/therapy/choose-plan";
 import ChooseSupervisedPlan from "@/components/therapy/choose-supervised-plan";
-import type { PublicCourse } from "@mindpoint/backend";
+import type { PublicCourse, PublicCourseBatch } from "@mindpoint/backend";
+
+interface BatchOption extends PublicCourseBatch {
+  isSelectable: boolean;
+  summary: string;
+}
 
 interface PricingSectionProps {
   course: PublicCourse;
@@ -39,6 +43,51 @@ interface PricingSectionProps {
   inCart: (id: string) => boolean;
   removeItem: (id: string) => void;
   mounted: boolean;
+  // Batch handling (optional; courses without batches simply skip the select).
+  usesBatches?: boolean;
+  batchOptions?: BatchOption[];
+}
+
+// Inclusions shown as a three-line list, type-aware.
+function inclusionsFor(type?: string): string[] {
+  switch (type) {
+    case "worksheet":
+      return [
+        "Instant download after purchase",
+        "Use in sessions or for personal practice",
+        "Lifetime access to future updates",
+      ];
+    case "pre-recorded":
+      return [
+        "Full self-paced access",
+        "Downloadable prompts and resources",
+        "Lifetime access",
+      ];
+    case "therapy":
+      return [
+        "Sessions with a licensed therapist",
+        "Flexible scheduling around your life",
+        "Guided, evidence-based approaches",
+      ];
+    case "supervised":
+      return [
+        "Structured supervision on real cases",
+        "Feedback you can actually use",
+        "Cohort of peers at the same stage",
+      ];
+    case "internship":
+      return [
+        "Real cases under steady guidance",
+        "Structured milestones and feedback",
+        "A certificate at the end",
+      ];
+    default:
+      return [
+        "Live classes and practical exercises",
+        "Recordings you can revisit",
+        "A certificate on completion",
+      ];
+  }
 }
 
 export default function PricingSection({
@@ -60,58 +109,27 @@ export default function PricingSection({
   inCart,
   removeItem,
   mounted,
+  usesBatches = false,
+  batchOptions = [],
 }: PricingSectionProps) {
-  const formatDeliveryLabel = () => {
-    if (course.type === "pre-recorded") return "Self-paced with repeat access";
-    if (course.type === "worksheet")
-      return "A practical resource you can revisit";
-    if (course.type === "therapy")
-      return "Guided sessions tailored to your pace";
-    if (course.type === "supervised")
-      return "Live supervision with room for reflection";
-    return "Live guidance with practical takeaways";
-  };
-
-  const reassuranceItems = [
-    {
-      title: "What this includes",
-      value:
-        course.type === "worksheet"
-          ? "Structured prompts and a resource you can keep returning to."
-          : "Clear teaching, useful materials, and a pace built for real people.",
-    },
-    {
-      title: course.type === "worksheet" ? "How to use it" : "How it works",
-      value: formatDeliveryLabel(),
-    },
-    {
-      title: "Why it feels worth it",
-      value:
-        course.type === "therapy" || course.type === "supervised"
-          ? "You are paying for attentive guidance, not just access."
-          : "You leave with something more usable than a folder of notes.",
-    },
-  ];
-
-  // Therapy courses get their own plan selection UI
+  // Therapy and supervised keep their bespoke plan pickers — we just wrap them
+  // in the new calm container so they inherit the section rhythm.
   if (course.type === "therapy") {
     return (
-      <section id="pricing" className="course-section-lg pt-5 sm:pt-6">
-        <div className="container">
+      <section id="pricing" className="calm-section-tight">
+        <div className="calm-container-wide">
           <ScrollReveal>
-            <div className="mx-auto max-w-6xl px-2 sm:px-4">
-              <div className="mb-8 max-w-2xl">
-                <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
-                  Reserve your spot
-                </span>
-                <h2 className="font-display text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                  Choose the version of support that fits the season you are in.
-                </h2>
-                <p className="text-muted-foreground mt-3 text-base leading-7 sm:text-lg">
-                  The next step should feel reassuring, not rushed. Pick the
-                  format that gives you the right level of care and continuity.
-                </p>
-              </div>
+            <div>
+              <p className="calm-section-number">Add to cart</p>
+              <h2 className="calm-section-title mt-5">
+                Choose the version that fits this season.
+              </h2>
+            </div>
+            <p className="calm-section-lead mt-5 max-w-[58ch]">
+              Pick the format that gives you the right level of care and
+              continuity. No rush, no pressure.
+            </p>
+            <div className="mt-12">
               <ChoosePlan course={course} variants={variants} />
             </div>
           </ScrollReveal>
@@ -120,26 +138,22 @@ export default function PricingSection({
     );
   }
 
-  // Supervised courses get their own plan selection UI
   if (course.type === "supervised") {
     return (
-      <section id="pricing" className="course-section-lg pt-5 sm:pt-6">
-        <div className="container">
+      <section id="pricing" className="calm-section-tight">
+        <div className="calm-container-wide">
           <ScrollReveal>
-            <div className="mx-auto max-w-6xl px-2 sm:px-4">
-              <div className="mb-8 max-w-2xl">
-                <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
-                  Reserve your spot
-                </span>
-                <h2 className="font-display text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                  Choose the supervised path that matches the depth you need.
-                </h2>
-                <p className="text-muted-foreground mt-3 text-base leading-7 sm:text-lg">
-                  This is meant to feel like a thoughtful commitment, with
-                  clearer expectations and the right amount of structure around
-                  you.
-                </p>
-              </div>
+            <div>
+              <p className="calm-section-number">Add to cart</p>
+              <h2 className="calm-section-title mt-5">
+                Choose the supervised path that fits your depth.
+              </h2>
+            </div>
+            <p className="calm-section-lead mt-5 max-w-[58ch]">
+              Clearer expectations, steadier structure, and the right amount of
+              scaffolding around real clinical work.
+            </p>
+            <div className="mt-12">
               <ChooseSupervisedPlan course={course} variants={variants} />
             </div>
           </ScrollReveal>
@@ -151,192 +165,174 @@ export default function PricingSection({
   const displayCourse = activeCourse ?? course;
   const isInCart = mounted && inCart(displayCourse._id);
   const quantity = mounted ? getCurrentQuantity(displayCourse._id) : 0;
+  const maxQty = displayCourse.capacity ?? 1;
+
+  const inclusions = inclusionsFor(course.type);
+  const price = getCoursePrice(displayCourse);
+  const mindPoints = calculatePointsEarned(displayCourse);
 
   return (
-    <section id="pricing" className="course-section-lg pt-5 sm:pt-6">
-      <div className="container">
+    <section id="pricing" className="calm-section-tight">
+      <div className="calm-container-wide">
         <ScrollReveal>
-          <div className="mx-auto max-w-6xl px-2 sm:px-4">
-            <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:gap-10">
-              <div className="rounded-2xl bg-card/50 p-6 text-center shadow-sm backdrop-blur-sm sm:p-8 lg:text-left">
-                <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
-                  Reserve your spot
+          <div>
+            <p className="calm-section-number">Add to cart</p>
+            <h2 className="calm-section-title mt-5">
+              {usesBatches && batchOptions.length > 0
+                ? "Pick a batch that fits your week."
+                : "A steady next step."}
+            </h2>
+          </div>
+
+          <div className="calm-pricing-stage mt-12">
+          <div className="calm-card p-7 sm:p-10">
+            <div className="flex flex-wrap items-baseline gap-4">
+              <span className="calm-price-big">{formatINR(price)}</span>
+              {offerDetails?.hasDiscount && (
+                <span className="calm-price-strike">
+                  {formatINR(offerDetails.originalPrice)}
                 </span>
-                <h2 className="font-display text-foreground mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-                  A steady next step, without the hard sell.
-                </h2>
-                <p className="text-muted-foreground mt-3 text-base leading-7">
-                  If this already feels like the right fit, you can keep the
-                  next move simple. Everything below is here to make the
-                  decision clearer.
-                </p>
+              )}
+              {hasValidOffer && offerDetails && (
+                <span className="calm-kbd text-primary/90">
+                  {offerDetails.offerName}
+                  {offerDetails.hasDiscount
+                    ? ` \u00b7 ${offerDetails.discountPercentage}% off`
+                    : ""}
+                </span>
+              )}
+            </div>
 
-                <div className="mt-7 space-y-2">
-                  <div className="flex items-baseline justify-center gap-3 lg:justify-start">
-                    <span className="text-foreground text-4xl font-semibold">
-                      {formatINR(getCoursePrice(displayCourse))}
-                    </span>
-                    {offerDetails?.hasDiscount && (
-                      <span className="text-muted-foreground text-lg line-through">
-                        {formatINR(offerDetails.originalPrice)}
-                      </span>
-                    )}
-                  </div>
+            {seatsLeft > 0 && seatsLeft <= 5 && (
+              <p className="mt-3 text-sm text-foreground/55">
+                Only {seatsLeft} seat{seatsLeft === 1 ? "" : "s"} left in this
+                intake.
+              </p>
+            )}
 
-                  {hasValidOffer && offerDetails && (
-                    <div className="space-y-2">
-                      <Badge
-                        variant="secondary"
-                        className="rounded-full text-xs"
-                      >
-                        {offerDetails.offerName}
-                        {offerDetails.hasDiscount &&
-                          ` · ${offerDetails.discountPercentage}% off`}
-                      </Badge>
-                    </div>
-                  )}
-                </div>
-
-                {seatsLeft > 0 && seatsLeft <= 5 && (
-                  <p className="text-muted-foreground mt-4 text-sm">
-                    Only {seatsLeft} seat{seatsLeft !== 1 ? "s" : ""} left in
-                    this intake.
-                  </p>
-                )}
-
-                {shouldShowVariantSelect && (
-                  <div className="mt-6">
-                    <Select
-                      key={displayCourse._id as unknown as string}
-                      value={displayCourse._id as unknown as string}
-                      onValueChange={handleVariantSelect}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Choose option" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectGroup>
-                          <SelectLabel>Duration</SelectLabel>
-                          {normalizedVariants.map((v) => (
-                            <SelectItem
-                              key={v._id}
-                              value={v._id as unknown as string}
-                            >
-                              <span className="font-medium">
-                                {variantLabel(v)}
-                              </span>{" "}
-                              <span className="text-muted-foreground">
-                                &mdash; {formatINR(getCoursePrice(v))}
-                              </span>
-                            </SelectItem>
-                          ))}
-                        </SelectGroup>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
-
-                <div className="mt-8 space-y-3">
-                  {isOutOfStock ? (
-                    <Button disabled className="h-12 w-full text-base">
-                      Currently full
-                    </Button>
-                  ) : isInCart ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-center gap-3 lg:justify-start">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDecreaseQuantity(displayCourse)}
-                          className="h-10 w-10 p-0"
+            {shouldShowVariantSelect && (
+              <div className="mt-6">
+                <label className="calm-kbd mb-3 block text-foreground/55">
+                  Choose duration
+                </label>
+                <Select
+                  key={displayCourse._id as unknown as string}
+                  value={displayCourse._id as unknown as string}
+                  onValueChange={handleVariantSelect}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose option" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectGroup>
+                      <SelectLabel>Options</SelectLabel>
+                      {normalizedVariants.map((v) => (
+                        <SelectItem
+                          key={v._id}
+                          value={v._id as unknown as string}
                         >
-                          <Minus className="h-4 w-4" />
-                        </Button>
-                        <span className="min-w-[3rem] text-center font-medium">
-                          {quantity}
-                        </span>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleIncreaseQuantity(displayCourse)}
-                          disabled={quantity >= (displayCourse.capacity || 1)}
-                          className="h-10 w-10 p-0"
-                        >
-                          <Plus className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeItem(displayCourse._id)}
-                          className="text-red-600 hover:bg-red-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                      <Button
-                        className="h-12 w-full text-base font-semibold"
-                        size="lg"
-                        disabled
-                      >
-                        In your cart
-                      </Button>
-                    </div>
-                  ) : (
+                          <span className="font-medium">{variantLabel(v)}</span>
+                          <span className="ml-2 text-foreground/55">
+                            &mdash; {formatINR(getCoursePrice(v))}
+                          </span>
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="mt-8">
+              {isOutOfStock ? (
+                <Button disabled className="h-12 w-full text-base">
+                  Currently full
+                </Button>
+              ) : isInCart ? (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
                     <Button
-                      onClick={() => handleIncreaseQuantity(displayCourse)}
-                      className="h-12 w-full text-base font-semibold"
-                      size="lg"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDecreaseQuantity(displayCourse)}
+                      className="h-10 w-10 p-0"
+                      aria-label="Decrease quantity"
                     >
-                      Reserve your spot
+                      <Minus className="h-4 w-4" />
                     </Button>
-                  )}
-
+                    <span className="min-w-[2.5rem] text-center font-medium">
+                      {quantity}
+                    </span>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleIncreaseQuantity(displayCourse)}
+                      disabled={quantity >= maxQty}
+                      className="h-10 w-10 p-0"
+                      aria-label="Increase quantity"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeItem(displayCourse._id)}
+                      className="ml-auto text-foreground/60 hover:text-destructive"
+                      aria-label="Remove from cart"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                   <Button
-                    variant="ghost"
-                    className="h-12 w-full text-base font-semibold"
-                    disabled={isOutOfStock}
+                    className="h-12 w-full text-base font-medium"
+                    size="lg"
                     onClick={() => handleBuyNow(displayCourse)}
                   >
                     Go to checkout
                   </Button>
                 </div>
-
-                <p className="text-muted-foreground mt-6 flex items-center justify-center gap-1.5 text-sm lg:justify-start">
-                  <Gift className="h-3.5 w-3.5" />
-                  Earn {calculatePointsEarned(displayCourse)} Mind Points with
-                  this purchase
-                </p>
-              </div>
-
-              <div className="flex flex-col justify-between gap-4">
-                <div className="max-w-2xl">
-                  <span className="text-primary/70 text-xs font-semibold tracking-[0.28em] uppercase">
-                    Why people feel comfortable saying yes
-                  </span>
-                  <p className="text-foreground mt-3 text-lg leading-8 sm:text-xl">
-                    The value here is not just access. It is the feeling of
-                    being held by a clearer structure, better questions, and
-                    learning you can actually use.
-                  </p>
-                </div>
-
-                <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-                  {reassuranceItems.map((item) => (
-                    <div
-                      key={item.title}
-                      className="border-primary/8 border-l-2 py-3 pl-5"
-                    >
-                      <p className="text-primary/75 text-xs font-semibold tracking-[0.22em] uppercase">
-                        {item.title}
-                      </p>
-                      <p className="text-foreground mt-3 text-sm leading-6 sm:text-base">
-                        {item.value}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              ) : (
+                <>
+                  <Button
+                    onClick={() => handleIncreaseQuantity(displayCourse)}
+                    className="h-12 w-full text-base font-medium"
+                    size="lg"
+                  >
+                    Add to cart
+                  </Button>
+                  <button
+                    type="button"
+                    onClick={() => handleBuyNow(displayCourse)}
+                    disabled={isOutOfStock}
+                    className="calm-link mt-4 block w-full text-center text-sm text-foreground/60 hover:text-foreground"
+                  >
+                    Or go straight to checkout
+                  </button>
+                </>
+              )}
             </div>
+
+            <ul className="mt-9 space-y-2.5 border-t border-foreground/10 pt-7">
+              {inclusions.map((item) => (
+                <li
+                  key={item}
+                  className="flex gap-3 text-[0.95rem] leading-[1.55] text-foreground/70"
+                >
+                  <span
+                    aria-hidden="true"
+                    className="mt-[0.7rem] h-px w-3 flex-none bg-foreground/35"
+                  />
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+
+            {mindPoints > 0 && (
+              <p className="mt-6 text-xs text-foreground/45">
+                You&rsquo;ll earn {mindPoints} Mind Points with this purchase.
+              </p>
+            )}
+          </div>
           </div>
         </ScrollReveal>
       </div>

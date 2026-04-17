@@ -23,7 +23,11 @@ import { Gift, Sparkles } from "lucide-react";
 interface BogoSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSelect: (courseId: Id<"courses">) => void;
+  onSelect: (selection: {
+    batchId?: Id<"courseBatches">;
+    batchLabel?: string;
+    courseId: Id<"courses">;
+  }) => void;
   courseType:
     | "certificate"
     | "internship"
@@ -48,6 +52,8 @@ export function BogoSelectionModal({
 }: BogoSelectionModalProps) {
   const [selectedCourseId, setSelectedCourseId] =
     useState<Id<"courses"> | null>(null);
+  const [selectedBatchId, setSelectedBatchId] =
+    useState<Id<"courseBatches"> | null>(null);
 
   const availableCourses = useQuery(api.courses.getBogoCoursesByType, {
     courseType: courseType as
@@ -79,6 +85,22 @@ export function BogoSelectionModal({
       availableCourses?.filter((course) => course._id !== sourceCourseId) || [],
     [availableCourses, sourceCourseId],
   );
+  const selectedCourse = useMemo(
+    () =>
+      selectableCourses.find((course) => course._id === selectedCourseId) ||
+      null,
+    [selectableCourses, selectedCourseId],
+  );
+  const selectedCourseBatches = useQuery(
+    api.courses.listCourseBatchesForCourse,
+    selectedCourse?.usesBatches
+      ? { courseId: selectedCourse._id }
+      : "skip",
+  );
+  const availableBatches = useMemo(
+    () => selectedCourseBatches || [],
+    [selectedCourseBatches],
+  );
 
   useEffect(() => {
     if (selectableCourses.length > 0 && !selectedCourseId) {
@@ -89,15 +111,40 @@ export function BogoSelectionModal({
     }
   }, [selectableCourses, selectedCourseId]);
 
+  useEffect(() => {
+    setSelectedBatchId(null);
+  }, [selectedCourseId]);
+
+  useEffect(() => {
+    if (!selectedCourse?.usesBatches) {
+      return;
+    }
+
+    const firstOpenBatch = availableBatches.find(
+      (batch) => batch.availabilityStatus === "upcoming_open",
+    );
+    if (firstOpenBatch && !selectedBatchId) {
+      setSelectedBatchId(firstOpenBatch._id);
+    }
+  }, [availableBatches, selectedBatchId, selectedCourse?.usesBatches]);
+
   const handleConfirm = () => {
     if (selectedCourseId) {
-      onSelect(selectedCourseId);
+      const batch = availableBatches.find(
+        (candidate) => candidate._id === selectedBatchId,
+      );
+      onSelect({
+        batchId: batch?._id,
+        batchLabel: batch?.label,
+        courseId: selectedCourseId,
+      });
       onClose();
     }
   };
 
   const handleClose = () => {
     setSelectedCourseId(null);
+    setSelectedBatchId(null);
     onClose();
   };
 
@@ -211,6 +258,61 @@ export function BogoSelectionModal({
               </div>
             ))}
           </RadioGroup>
+
+          {selectedCourse?.usesBatches ? (
+            <div className="space-y-3 rounded-lg border border-slate-200 p-4">
+              <div>
+                <h3 className="text-sm font-semibold">Choose batch</h3>
+                <p className="text-muted-foreground text-xs">
+                  The free course is added only after you pick its batch.
+                </p>
+              </div>
+              <RadioGroup
+                value={selectedBatchId || ""}
+                onValueChange={(value) =>
+                  setSelectedBatchId(value as Id<"courseBatches">)
+                }
+                className="space-y-2"
+              >
+                {availableBatches.map((batch) => {
+                  const disabled =
+                    batch.availabilityStatus !== "upcoming_open";
+                  return (
+                    <Label
+                      key={batch._id}
+                      htmlFor={batch._id}
+                      className={`flex cursor-pointer items-center justify-between rounded-md border p-3 ${
+                        disabled ? "opacity-60" : ""
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <RadioGroupItem
+                          value={batch._id}
+                          id={batch._id}
+                          disabled={disabled}
+                        />
+                        <div>
+                          <p className="text-sm font-medium">{batch.label}</p>
+                          <p className="text-muted-foreground text-xs">
+                            {[batch.startDate, batch.startTime]
+                              .filter(Boolean)
+                              .join(" • ")}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge variant={disabled ? "secondary" : "outline"}>
+                        {batch.availabilityStatus === "upcoming_open"
+                          ? "Open"
+                          : batch.availabilityStatus === "upcoming_full"
+                            ? "Full"
+                            : "Closed"}
+                      </Badge>
+                    </Label>
+                  );
+                })}
+              </RadioGroup>
+            </div>
+          ) : null}
         </div>
 
         <DialogFooter className="gap-2">
@@ -219,7 +321,7 @@ export function BogoSelectionModal({
           </Button>
           <Button
             onClick={handleConfirm}
-            disabled={!selectedCourseId}
+            disabled={!selectedCourseId || (selectedCourse?.usesBatches && !selectedBatchId)}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             <Gift className="mr-2 h-4 w-4" />

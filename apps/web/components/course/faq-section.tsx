@@ -1,106 +1,110 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { useEffect, useState } from "react";
+import { Plus, Minus } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ScrollReveal } from "@/components/ScrollReveal";
-
-import { parseFaqMarkdown } from "@/components/course/faq";
+import { parseFaqMarkdown, type FaqItem } from "@/components/course/faq";
 
 interface FAQSectionProps {
   title?: string;
-  description?: string;
 }
 
+// A calm, editorial FAQ. Default view shows only the question + short answer.
+// Clicking the row reveals the longer markdown body only when the short and
+// long answers actually differ.
 export default function FAQSection({
-  title = "Questions, answered with care",
-  description = "A few practical things people usually want to know before they commit.",
+  title = "Questions",
 }: FAQSectionProps) {
-  const [faqMarkdown, setFaqMarkdown] = useState<string | null>(null);
+  const [items, setItems] = useState<FaqItem[] | null>(null);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   useEffect(() => {
     let cancelled = false;
-    const load = async () => {
+    (async () => {
       try {
         const res = await fetch("/faq/course.md", { cache: "force-cache" });
         if (!res.ok) throw new Error("Failed to load faq/course.md");
         const text = await res.text();
-        if (!cancelled) setFaqMarkdown(text);
+        if (!cancelled) setItems(parseFaqMarkdown(text));
       } catch (err) {
         console.error("Error loading FAQ:", err);
-        if (!cancelled) setFaqMarkdown(null);
+        if (!cancelled) setItems([]);
       }
-    };
-    load();
+    })();
     return () => {
       cancelled = true;
     };
   }, []);
 
-  return (
-    <section className="course-section-md pt-8 sm:pt-10">
-      <div className="container">
-        <div className="mx-auto max-w-4xl">
-          <ScrollReveal>
-            <div className="mb-12 text-center">
-              <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
-                Helpful details
-              </span>
-              <h2 className="font-display text-foreground mt-3 mb-4 text-3xl font-semibold tracking-tight sm:text-4xl">
-                {title}
-              </h2>
-              <p className="text-muted-foreground text-lg">{description}</p>
-            </div>
-          </ScrollReveal>
+  if (!items || items.length === 0) return null;
 
-          <ScrollReveal>
-            <div className="course-shell-soft rounded-[1.8rem] p-8">
-              {faqMarkdown == null ? (
-                <div className="py-8 text-center">
-                  <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-t-transparent" />
-                  <p className="text-muted-foreground">Loading FAQs...</p>
+  return (
+    <section className="calm-section-tight">
+      <div className="calm-container">
+        <ScrollReveal>
+          <div>
+            <p className="calm-section-number">{title}</p>
+            <h2 className="calm-section-title mt-5">
+              In case you&rsquo;re wondering.
+            </h2>
+          </div>
+
+          <div className="mt-10">
+            {items.map((item, i) => {
+              const hasLongForm =
+                item.a.trim().length > 0 &&
+                item.a.trim() !== item.shortAnswer.trim();
+              const isOpen = openIndex === i;
+              return (
+                <div
+                  key={i}
+                  className="border-b border-foreground/10 py-5"
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      hasLongForm ? setOpenIndex(isOpen ? null : i) : undefined
+                    }
+                    className={`flex w-full items-start justify-between gap-6 text-left ${
+                      hasLongForm ? "cursor-pointer" : "cursor-default"
+                    }`}
+                    aria-expanded={hasLongForm ? isOpen : undefined}
+                  >
+                    <div className="flex-1">
+                      <h3 className="text-[0.95rem] font-semibold leading-snug text-foreground sm:text-base">
+                        {item.q}
+                      </h3>
+                      <p className="mt-2 max-w-[58ch] text-sm leading-relaxed text-foreground/70 sm:text-[0.9375rem]">
+                        {item.shortAnswer}
+                      </p>
+                    </div>
+                    {hasLongForm && (
+                      <span
+                        aria-hidden="true"
+                        className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border border-foreground/15 text-foreground/55 transition-colors group-hover:text-foreground"
+                      >
+                        {isOpen ? (
+                          <Minus className="h-3 w-3" />
+                        ) : (
+                          <Plus className="h-3 w-3" />
+                        )}
+                      </span>
+                    )}
+                  </button>
+                  {hasLongForm && isOpen && (
+                    <div className="mt-4 max-w-[58ch] text-sm leading-relaxed text-foreground/75 sm:text-[0.9375rem] [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:my-2 [&_li]:text-sm">
+                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                        {item.a}
+                      </ReactMarkdown>
+                    </div>
+                  )}
                 </div>
-              ) : (
-                (() => {
-                  const items = parseFaqMarkdown(faqMarkdown);
-                  if (items.length === 0) {
-                    return (
-                      <div className="prose prose-lg dark:prose-invert max-w-none">
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {faqMarkdown}
-                        </ReactMarkdown>
-                      </div>
-                    );
-                  }
-                  return (
-                    <Accordion type="single" collapsible className="w-full">
-                      {items.map((item, idx) => (
-                        <AccordionItem key={idx} value={`faq-${idx + 1}`}>
-                          <AccordionTrigger className="hover:text-primary text-left text-lg font-semibold">
-                            {item.q}
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            <div className="prose dark:prose-invert max-w-none pt-2">
-                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                                {item.a}
-                              </ReactMarkdown>
-                            </div>
-                          </AccordionContent>
-                        </AccordionItem>
-                      ))}
-                    </Accordion>
-                  );
-                })()
-              )}
-            </div>
-          </ScrollReveal>
-        </div>
+              );
+            })}
+          </div>
+        </ScrollReveal>
       </div>
     </section>
   );

@@ -124,7 +124,9 @@ export const getDashboardSummary = query({
 
     const urgentCourses = publishedCourses
       .map((course) => {
-        const start = new Date(course.startDate).getTime();
+        const start = course.startDate
+          ? new Date(course.startDate).getTime()
+          : Number.NaN;
         const seatsLeft = Math.max(
           0,
           (course.capacity ?? 0) - (course.enrolledUsers ?? []).length,

@@ -1,9 +1,36 @@
-export function parseFaqMarkdown(md: string): Array<{ q: string; a: string }> {
+export interface FaqItem {
+  q: string;
+  /** Short answer (one-liner) always visible when available. */
+  shortAnswer: string;
+  /** Full markdown answer shown when the reader expands the row. */
+  a: string;
+}
+
+// Split a parsed answer into a {shortAnswer, full} pair. The CMS convention:
+// either (a) the first line is the short answer and following lines are the
+// long-form body, separated by a `|||` line; or (b) the entire answer is
+// treated as both short and full (no separator) — in which case the row only
+// expands if the answer is long enough to warrant it.
+function splitShortLong(answer: string): { shortAnswer: string; full: string } {
+  const normalized = answer.trim();
+  if (!normalized) return { shortAnswer: "", full: "" };
+
+  const separatorMatch = normalized.split(/\n\s*\|\|\|\s*\n?/);
+  if (separatorMatch.length >= 2) {
+    const shortAnswer = separatorMatch[0].trim();
+    const full = separatorMatch.slice(1).join("\n").trim();
+    return { shortAnswer, full };
+  }
+
+  return { shortAnswer: normalized, full: normalized };
+}
+
+export function parseFaqMarkdown(md: string): FaqItem[] {
   const normalized = md.replace(/\r\n?/g, "\n");
   const lines = normalized.split("\n");
-  const tableItems: Array<{ q: string; a: string }> = [];
+  const tableItems: FaqItem[] = [];
 
-  // First try to parse table format (existing logic)
+  // Table format.
   for (let i = 0; i < lines.length - 1; i++) {
     const header = lines[i].trim();
     const separator = lines[i + 1]?.trim() ?? "";
@@ -21,7 +48,10 @@ export function parseFaqMarkdown(md: string): Array<{ q: string; a: string }> {
         if (cols.length >= 2) {
           const questionCol = cols[0].trim().replace(/\*\*/g, "");
           const answerCol = cols.slice(1).join("|").trim();
-          if (questionCol) tableItems.push({ q: questionCol, a: answerCol });
+          if (questionCol) {
+            const { shortAnswer, full } = splitShortLong(answerCol);
+            tableItems.push({ q: questionCol, shortAnswer, a: full });
+          }
         }
       }
       break;
@@ -29,57 +59,50 @@ export function parseFaqMarkdown(md: string): Array<{ q: string; a: string }> {
   }
   if (tableItems.length > 0) return tableItems;
 
-  // Try to parse numbered list format (for course.md and therapy.md)
-  const numberedItems: Array<{ q: string; a: string }> = [];
+  // Numbered list format.
+  const numberedItems: FaqItem[] = [];
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i].trim();
-    // Check if line starts with a number followed by a dot and space
     const numberedMatch = /^(\d+)\.\s+(.+)$/.exec(line);
     if (numberedMatch) {
       const question = numberedMatch[2].trim();
       let answer = "";
       let hasStartedAnswer = false;
 
-      // Look for the answer on the next line(s)
       let j = i + 1;
       while (j < lines.length) {
-        const nextLine = lines[j]; // Keep original line with whitespace for markdown formatting
+        const nextLine = lines[j];
 
-        // If we hit another numbered item, stop
         if (/^\d+\.\s+/.test(nextLine.trim())) {
           break;
         }
 
-        // If this line is not empty, it's part of the answer
         if (nextLine.trim() !== "") {
           hasStartedAnswer = true;
-          // Preserve original formatting including indentation and markdown elements
           answer += (answer ? "\n" : "") + nextLine;
         } else if (hasStartedAnswer) {
-          // If we've already started the answer and hit an empty line,
-          // check if the next non-empty line is another numbered item
           let k = j + 1;
           while (k < lines.length && lines[k].trim() === "") {
             k++;
           }
           if (k < lines.length && /^\d+\.\s+/.test(lines[k].trim())) {
-            break; // Stop if next non-empty line is a numbered item
+            break;
           }
-          // Otherwise, add the empty line to preserve formatting
           answer += "\n";
         }
         j++;
       }
 
       if (question) {
-        numberedItems.push({ q: question, a: answer.trim() });
+        const { shortAnswer, full } = splitShortLong(answer.trim());
+        numberedItems.push({ q: question, shortAnswer, a: full });
       }
     }
   }
   if (numberedItems.length > 0) return numberedItems;
 
-  // Fallback to heading-based parsing (existing logic)
-  const items: Array<{ q: string; a: string }> = [];
+  // Heading-based fallback.
+  const items: FaqItem[] = [];
   let currentQuestion: string | null = null;
   let currentAnswerLines: string[] = [];
   for (const line of lines) {
@@ -89,10 +112,10 @@ export function parseFaqMarkdown(md: string): Array<{ q: string; a: string }> {
         currentQuestion &&
         !/^(additional information)$/i.test(currentQuestion.trim())
       ) {
-        items.push({
-          q: currentQuestion,
-          a: currentAnswerLines.join("\n").trim(),
-        });
+        const { shortAnswer, full } = splitShortLong(
+          currentAnswerLines.join("\n").trim(),
+        );
+        items.push({ q: currentQuestion, shortAnswer, a: full });
       }
       currentQuestion = headingMatch[2].trim();
       currentAnswerLines = [];
@@ -104,7 +127,10 @@ export function parseFaqMarkdown(md: string): Array<{ q: string; a: string }> {
     currentQuestion &&
     !/^(additional information)$/i.test(currentQuestion.trim())
   ) {
-    items.push({ q: currentQuestion, a: currentAnswerLines.join("\n").trim() });
+    const { shortAnswer, full } = splitShortLong(
+      currentAnswerLines.join("\n").trim(),
+    );
+    items.push({ q: currentQuestion, shortAnswer, a: full });
   }
   return items;
 }

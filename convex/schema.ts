@@ -19,6 +19,13 @@ export const CourseLifecycleStatus = v.union(
   v.literal("archived"),
 );
 
+export const CourseBatchAvailabilityStatus = v.union(
+  v.literal("upcoming_open"),
+  v.literal("upcoming_full"),
+  v.literal("past"),
+  v.literal("archived"),
+);
+
 export const EnrollmentStatus = v.union(
   v.literal("active"),
   v.literal("cancelled"),
@@ -79,12 +86,12 @@ const sharedCourseFields = {
   offer: v.optional(CourseOfferValue),
   bogo: v.optional(CourseBogoValue),
   sessions: v.optional(v.number()),
-  capacity: v.number(),
-  startDate: v.string(),
-  endDate: v.string(),
-  startTime: v.string(),
-  endTime: v.string(),
-  daysOfWeek: v.array(v.string()),
+  capacity: v.optional(v.number()),
+  startDate: v.optional(v.string()),
+  endDate: v.optional(v.string()),
+  startTime: v.optional(v.string()),
+  endTime: v.optional(v.string()),
+  daysOfWeek: v.optional(v.array(v.string())),
   content: v.string(),
   reviews: v.array(v.id("reviews")),
   duration: v.optional(v.string()),
@@ -126,6 +133,9 @@ const sharedCourseFields = {
 const courseTableFields = {
   ...sharedCourseFields,
   enrolledUsers: v.array(v.string()),
+  usesBatches: v.optional(v.boolean()),
+  mergedIntoCourseId: v.optional(v.id("courses")),
+  mergedIntoBatchId: v.optional(v.id("courseBatches")),
   lifecycleStatus: v.optional(CourseLifecycleStatus),
   createdByAdminId: v.optional(v.string()),
   updatedByAdminId: v.optional(v.string()),
@@ -137,7 +147,48 @@ const courseTableFields = {
 export const PublicCourseFields = {
   ...sharedCourseFields,
   enrolledCount: v.number(),
+  usesBatches: v.boolean(),
+  batchCount: v.number(),
+  nextAvailableBatch: v.optional(
+    v.object({
+      _creationTime: v.number(),
+      _id: v.id("courseBatches"),
+      courseId: v.id("courses"),
+      label: v.string(),
+      startDate: v.string(),
+      endDate: v.string(),
+      startTime: v.string(),
+      endTime: v.string(),
+      daysOfWeek: v.array(v.string()),
+      capacity: v.number(),
+      enrolledCount: v.number(),
+      lifecycleStatus: CourseLifecycleStatus,
+      availabilityStatus: CourseBatchAvailabilityStatus,
+      sortOrder: v.number(),
+    }),
+  ),
 };
+
+export const PublicCourseBatchFields = {
+  courseId: v.id("courses"),
+  label: v.string(),
+  startDate: v.string(),
+  endDate: v.string(),
+  startTime: v.string(),
+  endTime: v.string(),
+  daysOfWeek: v.array(v.string()),
+  capacity: v.number(),
+  enrolledCount: v.number(),
+  lifecycleStatus: CourseLifecycleStatus,
+  availabilityStatus: CourseBatchAvailabilityStatus,
+  sortOrder: v.number(),
+};
+
+export const PublicCourseBatchDocumentValue = v.object({
+  _id: v.id("courseBatches"),
+  _creationTime: v.number(),
+  ...PublicCourseBatchFields,
+});
 
 export const PublicCourseDocumentValue = v.object({
   _id: v.id("courses"),
@@ -156,6 +207,13 @@ const publicEnrollmentFields = {
   isGuestUser: v.optional(v.boolean()),
   sessionType: v.optional(EnrollmentSessionType),
   courseType: v.optional(CourseType),
+  batchId: v.optional(v.id("courseBatches")),
+  batchLabel: v.optional(v.string()),
+  batchStartDate: v.optional(v.string()),
+  batchEndDate: v.optional(v.string()),
+  batchStartTime: v.optional(v.string()),
+  batchEndTime: v.optional(v.string()),
+  batchDaysOfWeek: v.optional(v.array(v.string())),
   internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   sessions: v.optional(v.number()),
   isBogoFree: v.optional(v.boolean()),
@@ -199,7 +257,29 @@ export default defineSchema({
     .index("by_startDate", ["startDate"])
     .index("by_type", ["type"])
     .index("by_lifecycleStatus", ["lifecycleStatus"])
-    .index("by_type_and_lifecycleStatus", ["type", "lifecycleStatus"]),
+    .index("by_type_and_lifecycleStatus", ["type", "lifecycleStatus"])
+    .index("by_mergedIntoCourseId", ["mergedIntoCourseId"]),
+
+  courseBatches: defineTable({
+    courseId: v.id("courses"),
+    label: v.string(),
+    startDate: v.string(),
+    endDate: v.string(),
+    startTime: v.string(),
+    endTime: v.string(),
+    daysOfWeek: v.array(v.string()),
+    capacity: v.number(),
+    enrolledUsers: v.array(v.string()),
+    lifecycleStatus: v.optional(CourseLifecycleStatus),
+    sortOrder: v.number(),
+    legacySourceCourseId: v.optional(v.id("courses")),
+    createdByAdminId: v.optional(v.string()),
+    updatedByAdminId: v.optional(v.string()),
+    updatedAt: v.optional(v.number()),
+  })
+    .index("by_courseId", ["courseId"])
+    .index("by_courseId_and_lifecycleStatus", ["courseId", "lifecycleStatus"])
+    .index("by_legacySourceCourseId", ["legacySourceCourseId"]),
 
   offerCampaigns: defineTable({
     name: v.string(),
@@ -256,6 +336,8 @@ export default defineSchema({
     .index("by_userId_and_courseId", ["userId", "courseId"])
     .index("by_enrollmentNumber", ["enrollmentNumber"])
     .index("by_courseId", ["courseId"])
+    .index("by_batchId", ["batchId"])
+    .index("by_batchId_and_status", ["batchId", "status"])
     .index("by_status", ["status"])
     .index("by_courseId_and_status", ["courseId", "status"])
     .index("by_courseId_and_status_and_userId", [

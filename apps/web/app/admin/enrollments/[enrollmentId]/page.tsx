@@ -27,8 +27,9 @@ export default function AdminEnrollmentDetailPage() {
   const enrollmentId = params.enrollmentId as Id<"enrollments">;
 
   const [targetCourseId, setTargetCourseId] = useState("");
+  const [targetBatchId, setTargetBatchId] = useState("");
   const [pendingAction, setPendingAction] = useState<
-    "transfer" | "cancel" | null
+    "change_batch" | "transfer" | "cancel" | null
   >(null);
   const [actionReason, setActionReason] = useState("Cancelled by admin");
   const { formatTimestamp } = useAdminTimeZone();
@@ -37,9 +38,16 @@ export default function AdminEnrollmentDetailPage() {
     enrollmentId,
   });
   const courses = useQuery(api.adminCourses.listCourses, { limit: 500 });
+  const batches = useQuery(
+    api.adminCourses.listCourseBatches,
+    detail?.course?.usesBatches ? { courseId: detail.courseId } : "skip",
+  );
 
   const transferEnrollment = useMutation(
     api.adminEnrollments.transferEnrollment,
+  );
+  const changeEnrollmentBatch = useMutation(
+    api.adminEnrollments.changeEnrollmentBatch,
   );
   const cancelEnrollment = useMutation(api.adminEnrollments.cancelEnrollment);
 
@@ -62,10 +70,26 @@ export default function AdminEnrollmentDetailPage() {
     setPendingAction("cancel");
   };
 
+  const handleChangeBatch = () => {
+    if (!targetBatchId) {
+      toast.error("Select a target batch");
+      return;
+    }
+    setActionReason("Batch changed by admin");
+    setPendingAction("change_batch");
+  };
+
   const handleConfirmAction = async () => {
     if (!pendingAction || !actionReason.trim()) return;
     try {
-      if (pendingAction === "transfer") {
+      if (pendingAction === "change_batch") {
+        await changeEnrollmentBatch({
+          enrollmentId,
+          batchId: targetBatchId as Id<"courseBatches">,
+          reason: actionReason.trim(),
+        });
+        toast.success("Enrollment batch updated");
+      } else if (pendingAction === "transfer") {
         await transferEnrollment({
           enrollmentId,
           targetCourseId: targetCourseId as Id<"courses">,
@@ -78,11 +102,14 @@ export default function AdminEnrollmentDetailPage() {
       }
       setPendingAction(null);
       setActionReason("Cancelled by admin");
+      setTargetBatchId("");
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : pendingAction === "transfer"
+          : pendingAction === "change_batch"
+            ? "Batch update failed"
+            : pendingAction === "transfer"
             ? "Transfer failed"
             : "Cancellation failed",
       );
@@ -132,6 +159,15 @@ export default function AdminEnrollmentDetailPage() {
           </p>
           <p>
             <strong>Course:</strong> {detail.courseName || "-"}
+          </p>
+          <p>
+            <strong>Batch:</strong> {detail.batchLabel || "—"}
+          </p>
+          <p>
+            <strong>Batch Schedule:</strong>{" "}
+            {[detail.batchStartDate, detail.batchEndDate]
+              .filter(Boolean)
+              .join(" to ") || "—"}
           </p>
           <p>
             <strong>Status:</strong>{" "}
@@ -191,6 +227,30 @@ export default function AdminEnrollmentDetailPage() {
           <CardTitle>Transfer / Cancel</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {detail.course?.usesBatches ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              <select
+                className="h-10 rounded-md border bg-white px-3 text-sm"
+                value={targetBatchId}
+                onChange={(e) => setTargetBatchId(e.target.value)}
+              >
+                <option value="">Select replacement batch</option>
+                {(batches ?? [])
+                  .filter((batch) => batch._id !== detail.batchId)
+                  .map((batch) => (
+                    <option key={batch._id} value={batch._id}>
+                      {batch.label} ({batch.startDate})
+                    </option>
+                  ))}
+              </select>
+              <Button
+                onClick={handleChangeBatch}
+                disabled={detail.status !== "active"}
+              >
+                Change Batch
+              </Button>
+            </div>
+          ) : null}
           <div className="grid gap-3 md:grid-cols-3">
             <select
               className="h-10 rounded-md border bg-white px-3 text-sm"
@@ -222,6 +282,11 @@ export default function AdminEnrollmentDetailPage() {
             <p className="text-xs text-slate-600">
               This enrollment is {detail.status}. Transfer/cancel actions are
               only available for active enrollments.
+            </p>
+          ) : detail.course?.usesBatches ? (
+            <p className="text-xs text-slate-600">
+              Batch changes keep the canonical course the same and rebalance
+              seats between the old and new batches.
             </p>
           ) : null}
         </CardContent>
@@ -257,16 +322,20 @@ export default function AdminEnrollmentDetailPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {pendingAction === "transfer"
-                ? "Transfer Enrollment"
-                : "Cancel Enrollment"}
+              {pendingAction === "change_batch"
+                ? "Change Batch"
+                : pendingAction === "transfer"
+                  ? "Transfer Enrollment"
+                  : "Cancel Enrollment"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-2">
             <p className="text-sm text-slate-600">
-              {pendingAction === "transfer"
-                ? "Provide a reason for transferring this enrollment."
-                : "Provide a reason for cancelling this enrollment."}
+              {pendingAction === "change_batch"
+                ? "Provide a reason for changing this enrollment's batch."
+                : pendingAction === "transfer"
+                  ? "Provide a reason for transferring this enrollment."
+                  : "Provide a reason for cancelling this enrollment."}
             </p>
             <Input
               placeholder="Reason"
@@ -289,13 +358,16 @@ export default function AdminEnrollmentDetailPage() {
               disabled={
                 !pendingAction ||
                 !actionReason.trim() ||
+                (pendingAction === "change_batch" && !targetBatchId) ||
                 (pendingAction === "transfer" && !targetCourseId)
               }
               onClick={handleConfirmAction}
             >
-              {pendingAction === "transfer"
-                ? "Confirm Transfer"
-                : "Confirm Cancel"}
+              {pendingAction === "change_batch"
+                ? "Confirm Batch Change"
+                : pendingAction === "transfer"
+                  ? "Confirm Transfer"
+                  : "Confirm Cancel"}
             </Button>
           </DialogFooter>
         </DialogContent>
