@@ -1,14 +1,13 @@
 "use client";
-
-import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { Calendar, Clock, Award, Users, Star, BookOpen } from "lucide-react";
+import { Calendar, Clock, Award, Users, Star } from "lucide-react";
 import { api } from "@mindpoint/backend/api";
 import type { PublicCourse } from "@mindpoint/backend";
 
 import { Button } from "@/components/ui/button";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { CourseImageCarousel } from "@/components/course-image-carousel";
 import { defaultEmotionalHooks } from "@/lib/course-content-data";
 import { formatCourseTimeRange } from "@/lib/course-schedule";
 import { getEnrolledCount } from "@/lib/course-enrollment";
@@ -224,7 +223,6 @@ export default function CourseHero({
   );
   const isSoldOut = (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
-  const poster = course.imageUrls?.[0] ?? null;
   const tintClass = tintClassFor(course.type);
 
   const metaChips: { icon: React.ReactNode; label: string }[] = [];
@@ -254,7 +252,10 @@ export default function CourseHero({
   }
 
   if (!isWorksheet) {
-    metaChips.push({ icon: <Award />, label: "Live Classes + On-Demand Recordings + Official Certificate" });
+    metaChips.push({
+      icon: <Award />,
+      label: "Live Classes + On-Demand Recordings + Official Certificate",
+    });
   }
 
   if (seatsLeft > 0 && seatsLeft <= 8 && !isPreRecorded && !isWorksheet) {
@@ -274,7 +275,7 @@ export default function CourseHero({
           >
             <Link
               href="/courses"
-              className="transition-colors hover:text-primary"
+              className="hover:text-primary transition-colors"
             >
               Courses
             </Link>
@@ -286,24 +287,10 @@ export default function CourseHero({
 
           <div className="calm-hero-stage">
             <div className={`calm-hero-art ${tintClass}`}>
-              {poster ? (
-                <Image
-                  src={poster}
-                  alt={`${course.name} poster`}
-                  width={800}
-                  height={600}
-                  priority
-                  sizes="(min-width: 768px) 72vw, 100vw"
-                  className="h-auto w-full"
-                />
-              ) : (
-                <BookOpen
-                  className="text-foreground/40"
-                  strokeWidth={1}
-                  aria-hidden="true"
-                  style={{ width: "4rem", height: "4rem" }}
-                />
-              )}
+              <CourseImageCarousel
+                imageUrls={course.imageUrls ?? []}
+                variant="hero"
+              />
             </div>
 
             <div className="calm-hero-copy">
@@ -311,7 +298,7 @@ export default function CourseHero({
                 {prettyCourseType(course.type)}
               </p>
 
-              <h1 className="calm-hero-title mt-4 text-foreground">
+              <h1 className="calm-hero-title text-foreground mt-4">
                 {course.name}
               </h1>
 
@@ -343,8 +330,8 @@ export default function CourseHero({
               )}
 
               {batches.length > 0 && onBatchSelect && (
-                <div className="mt-8 border-t border-foreground/10 pt-6">
-                  <p className="mb-4 text-[0.95rem] font-medium text-foreground/70">
+                <div className="border-foreground/10 mt-8 border-t pt-6">
+                  <p className="text-foreground/70 mb-4 text-[0.95rem] font-medium">
                     Choose a batch
                   </p>
                   <div
@@ -387,9 +374,7 @@ export default function CourseHero({
                           disabled={disabled}
                           data-selected={selected ? "true" : "false"}
                           data-disabled={disabled ? "true" : "false"}
-                          onClick={() =>
-                            !disabled && onBatchSelect(batch._id)
-                          }
+                          onClick={() => !disabled && onBatchSelect(batch._id)}
                           className="calm-batch-chip"
                         >
                           <span className="min-w-0">
@@ -409,7 +394,7 @@ export default function CourseHero({
                             {batch.isSelectable &&
                               seatsRemaining > 0 &&
                               seatsRemaining <= 8 && (
-                                <span className="calm-batch-sub mt-0.5 block text-primary/70">
+                                <span className="calm-batch-sub text-primary/70 mt-0.5 block">
                                   {seatsRemaining} seat
                                   {seatsRemaining === 1 ? "" : "s"} left
                                 </span>
@@ -427,29 +412,31 @@ export default function CourseHero({
                 </div>
               )}
 
-              {!isWorksheet && course.type !== "therapy" && course.type !== "supervised" && (
-                <div className="mt-8 space-y-4 border-t border-foreground/10 pt-6">
-                  <div className="calm-hero-price-row">
-                    <span className="calm-price-big">{formatINR(price)}</span>
-                    {offerDetails?.hasDiscount && (
-                      <span className="calm-price-strike">
-                        {formatINR(offerDetails.originalPrice)}
-                      </span>
-                    )}
+              {!isWorksheet &&
+                course.type !== "therapy" &&
+                course.type !== "supervised" && (
+                  <div className="border-foreground/10 mt-8 space-y-4 border-t pt-6">
+                    <div className="calm-hero-price-row">
+                      <span className="calm-price-big">{formatINR(price)}</span>
+                      {offerDetails?.hasDiscount && (
+                        <span className="calm-price-strike">
+                          {formatINR(offerDetails.originalPrice)}
+                        </span>
+                      )}
+                    </div>
+                    <Button
+                      size="lg"
+                      disabled={isSoldOut}
+                      onClick={onAddToCart}
+                      className="h-11 w-full text-base font-medium"
+                    >
+                      {isSoldOut ? "Currently full" : "Add to cart"}
+                    </Button>
                   </div>
-                  <Button
-                    size="lg"
-                    disabled={isSoldOut}
-                    onClick={onAddToCart}
-                    className="h-11 w-full text-base font-medium"
-                  >
-                    {isSoldOut ? "Currently full" : "Add to cart"}
-                  </Button>
-                </div>
-              )}
+                )}
 
               {(course.type === "therapy" || course.type === "supervised") && (
-                <div className="mt-8 border-t border-foreground/10 pt-6">
+                <div className="border-foreground/10 mt-8 border-t pt-6">
                   <Button
                     asChild
                     size="lg"

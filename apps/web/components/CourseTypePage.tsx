@@ -12,13 +12,6 @@ import {
   CardTitle,
 } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "../components/ui/carousel";
 import { Plus, BookOpen, Layers } from "lucide-react";
 import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
 import { useBundleEligibility } from "@/hooks/use-bundle-eligibility";
@@ -42,7 +35,6 @@ type TherapyCourse = CourseLike & {
 type InternshipCourse = CourseLike & {
   duration?: string;
 };
-import Image from "next/image";
 import {
   Select,
   SelectContent,
@@ -52,58 +44,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "./ui/select";
-
-export const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
-  if (!imageUrls || imageUrls.length === 0) {
-    return (
-      <div className="bg-muted relative flex h-56 items-center justify-center rounded-t-2xl sm:h-72">
-        <BookOpen className="text-muted-foreground h-12 w-12" />
-      </div>
-    );
-  }
-
-  if (imageUrls.length === 1) {
-    return (
-      <div className="bg-muted relative flex h-56 items-center justify-center overflow-hidden rounded-t-2xl sm:h-72">
-        <Image
-          src={
-            imageUrls[0] ??
-            "https://blocks.astratic.com/img/general-img-landscape.png"
-          }
-          alt="Course image"
-          className="max-h-full max-w-full object-contain"
-          width={400}
-          height={600}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="bg-muted relative h-56 overflow-hidden rounded-t-2xl sm:h-72">
-      <Carousel className="h-full w-full">
-        <CarouselContent>
-          {imageUrls.map((imageUrl, index) => (
-            <CarouselItem
-              key={index}
-              className="flex h-56 items-center justify-center sm:h-72"
-            >
-              <Image
-                src={imageUrl || ""}
-                alt={`Course image ${index + 1}`}
-                className="max-h-full max-w-full object-contain"
-                width={400}
-                height={600}
-              />
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="absolute top-1/2 left-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
-        <CarouselNext className="absolute top-1/2 right-2 h-8 w-8 -translate-y-1/2 transform rounded-full bg-black/50 text-white hover:bg-black/70" />
-      </Carousel>
-    </div>
-  );
-};
+import { CourseImageCarousel } from "@/components/course-image-carousel";
 
 // Prefer explicit fields: `sessions` (number) or fallback to `duration` (string)
 const extractVariantLabel = (course: CourseLike): string | null => {
@@ -309,7 +250,7 @@ const CourseGroupCard = ({
 
   return (
     <Card
-      className="@container group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="group border-lavender-200 bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
@@ -323,7 +264,9 @@ const CourseGroupCard = ({
                 className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
               >
                 <span className="sm:hidden">Special Offer</span>
-                <span className="hidden sm:inline">{offerDetails.offerName}</span>
+                <span className="hidden sm:inline">
+                  {offerDetails.offerName}
+                </span>
               </Badge>
             )}
             {bundleInfo && (
@@ -510,11 +453,10 @@ const CourseGroupCard = ({
             )}
           </div>
           {(() => {
-              const seatsLeft = Math.max(
-                0,
-                (selectedCourse.capacity ?? 0) -
-                  getEnrolledCount(selectedCourse),
-              );
+            const seatsLeft = Math.max(
+              0,
+              (selectedCourse.capacity ?? 0) - getEnrolledCount(selectedCourse),
+            );
             const isOutOfStock =
               (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
@@ -704,7 +646,7 @@ const CourseCard = ({
 
   return (
     <Card
-      className="@container group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="group border-lavender-200 bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
@@ -718,7 +660,9 @@ const CourseCard = ({
                 className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
               >
                 <span className="sm:hidden">Special Offer</span>
-                <span className="hidden sm:inline">{offerDetails.offerName}</span>
+                <span className="hidden sm:inline">
+                  {offerDetails.offerName}
+                </span>
               </Badge>
             )}
             {bundleInfo && (
@@ -876,9 +820,7 @@ export default function CourseTypePage({
             <p className="text-primary text-sm font-semibold tracking-wide uppercase">
               {content.tagline}
             </p>
-            <h1 className="calm-catalog-hero-title mt-2">
-              {content.title}
-            </h1>
+            <h1 className="calm-catalog-hero-title mt-2">{content.title}</h1>
             <p className="calm-catalog-hero-lead mt-4 max-w-2xl">
               {content.description}
             </p>
@@ -925,8 +867,8 @@ export default function CourseTypePage({
                   No courses available yet
                 </h3>
                 <p className="text-muted-foreground">
-                  We&apos;re working on adding new{" "}
-                  {content.title.toLowerCase()} courses. Check back soon!
+                  We&apos;re working on adding new {content.title.toLowerCase()}{" "}
+                  courses. Check back soon!
                 </p>
               </div>
             )}

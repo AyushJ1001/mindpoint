@@ -6,7 +6,7 @@ import { Plus, Calendar, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CourseImageCarousel } from "@/components/CourseTypePage";
+import { CourseImageCarousel } from "@/components/course-image-carousel";
 import {
   getCourseScheduleLines,
   shouldShowCourseTiming,
@@ -198,7 +198,7 @@ export function CourseCard({
 
   return (
     <Card
-      className="@container group relative h-full cursor-pointer overflow-hidden rounded-2xl border-none bg-card/50 shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
+      className="group bg-card/50 @container relative h-full cursor-pointer overflow-hidden rounded-2xl border-none shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
       onClick={handleCardClick}
     >
       {/* Course Image */}
@@ -213,7 +213,9 @@ export function CourseCard({
                 className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
               >
                 <span className="sm:hidden">Special Offer</span>
-                <span className="hidden sm:inline">{offerDetails.offerName}</span>
+                <span className="hidden sm:inline">
+                  {offerDetails.offerName}
+                </span>
               </Badge>
             )}
             {bundleInfo && (
@@ -507,7 +509,7 @@ export function UpcomingCourseCard({
 
   return (
     <Card
-      className="@container group relative h-full cursor-pointer overflow-hidden rounded-2xl border-none bg-card/50 shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
+      className="group bg-card/50 @container relative h-full cursor-pointer overflow-hidden rounded-2xl border-none shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
       onClick={handleCardClick}
     >
       <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
@@ -565,9 +567,7 @@ export function UpcomingCourseCard({
       </div>
 
       {/* Course Image */}
-      <div className="pointer-events-none">
-        <CourseImageCarousel imageUrls={course.imageUrls || []} />
-      </div>
+      <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
       <CardHeader className="pb-3">
         <CardTitle className="group-hover:text-primary line-clamp-2 text-base font-semibold transition-colors group-hover:underline">
