@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { Calendar, Clock, Award, Users, Star, BookOpen } from "lucide-react";
+import { Calendar, Clock, Award, Users, Star } from "lucide-react";
 import { api } from "@mindpoint/backend/api";
 import type { PublicCourse } from "@mindpoint/backend";
 
@@ -287,19 +287,10 @@ export default function CourseHero({
 
           <div className="calm-hero-stage">
             <div className={`calm-hero-art ${tintClass}`}>
-              {course.imageUrls?.length ? (
-                <CourseImageCarousel
-                  imageUrls={course.imageUrls}
-                  variant="hero"
-                />
-              ) : (
-                <BookOpen
-                  className="text-foreground/40"
-                  strokeWidth={1}
-                  aria-hidden="true"
-                  style={{ width: "4rem", height: "4rem" }}
-                />
-              )}
+              <CourseImageCarousel
+                imageUrls={course.imageUrls ?? []}
+                variant="hero"
+              />
             </div>
 
             <div className="calm-hero-copy">

@@ -62,7 +62,10 @@ export function CourseImageCarousel({
         className={cn(styles.frame, styles.placeholder, className)}
         onClick={stopEvent}
       >
-        <BookOpen className="text-muted-foreground h-12 w-12" />
+        <BookOpen
+          className="text-muted-foreground h-12 w-12"
+          aria-hidden="true"
+        />
       </div>
     );
   }

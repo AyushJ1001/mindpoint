@@ -567,9 +567,7 @@ export function UpcomingCourseCard({
       </div>
 
       {/* Course Image */}
-      <div className="pointer-events-none">
-        <CourseImageCarousel imageUrls={course.imageUrls || []} />
-      </div>
+      <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
       <CardHeader className="pb-3">
         <CardTitle className="group-hover:text-primary line-clamp-2 text-base font-semibold transition-colors group-hover:underline">
