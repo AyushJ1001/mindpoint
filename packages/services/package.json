@@ -18,7 +18,7 @@
     "@mindpoint/config": "*",
     "@mindpoint/domain": "*",
     "client-only": "^0.0.1",
-    "convex": "^1.23.0",
+    "convex": "^1.35.1",
     "razorpay": "^2.9.6",
     "resend": "^5.0.0",
     "server-only": "^0.0.1"
