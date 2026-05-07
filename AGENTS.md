@@ -71,3 +71,17 @@ All required secrets (Clerk, Convex, Razorpay, Resend, etc.) are injected as env
 ### Convex backend
 
 Convex functions live in `/convex/` and are deployed to the cloud. `npx convex dev` syncs local changes to a dev deployment but requires a Convex account login (interactive). For cloud agent work, the Convex backend is already deployed; agents can build/lint/run the Next.js frontend without running `convex dev`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues for `AyushJ1001/mindpoint`. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Triage uses the default canonical label vocabulary. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This repo uses a single-context domain documentation layout. See `docs/agents/domain.md`.
