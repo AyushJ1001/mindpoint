@@ -1,6 +1,6 @@
 # The Mind Point
 
-[![Next.js](https://img.shields.io/badge/Next.js-15.2-black?logo=next.js)](https://nextjs.org/)
+[![Next.js](https://img.shields.io/badge/Next.js-16.2-black?logo=next.js)](https://nextjs.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react)](https://react.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
@@ -73,7 +73,7 @@ The Mind Point is a full-stack e-commerce platform for mental health education, 
 
 | Technology                                        | Purpose                         |
 | ------------------------------------------------- | ------------------------------- |
-| [Next.js 15](https://nextjs.org/)                 | React framework with App Router |
+| [Next.js 16](https://nextjs.org/)                 | React framework with App Router |
 | [React 19](https://react.dev/)                    | UI library                      |
 | [TypeScript 5](https://www.typescriptlang.org/)   | Type safety                     |
 | [Tailwind CSS 4](https://tailwindcss.com/)        | Utility-first styling           |
@@ -125,15 +125,13 @@ The Mind Point is a full-stack e-commerce platform for mental health education, 
 
 ```
 mindpoint/
-├── apps/
-│   └── web/                      # Next.js customer-facing app
-│       ├── app/                  # App Router routes and loaders
-│       ├── components/           # React components
-│       ├── contexts/             # React contexts
-│       ├── hooks/                # Custom React hooks
-│       ├── lib/                  # Utility functions
-│       ├── public/               # Static assets
-│       └── types/                # TypeScript type definitions
+├── app/                          # App Router routes and loaders
+├── components/                   # React components
+├── contexts/                     # React contexts
+├── hooks/                        # Custom React hooks
+├── lib/                          # App utilities and domain/service modules
+├── public/                       # Static assets
+├── types/                        # TypeScript type definitions
 ├── convex/                       # Convex backend
 │   ├── _generated/               # Auto-generated types
 │   ├── schema.ts                 # Database schema
@@ -171,7 +169,7 @@ mindpoint/
 2. **Install dependencies**
 
    ```bash
-   bun install
+   npm install
    ```
 
 3. **Set up environment variables**
@@ -189,7 +187,7 @@ mindpoint/
 5. **Start the development server**
 
    ```bash
-   bun dev
+   npm run dev
    ```
 
    Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -252,11 +250,14 @@ Before anyone can use `/admin`, seed at least one active admin record in product
 
 | Command                     | Description                                      |
 | --------------------------- | ------------------------------------------------ |
-| `npm run dev`               | Start Next.js and Convex dev servers in parallel |
+| `npm run dev`               | Start the Next.js dev server                      |
 | `npm run build`             | Create production build                          |
 | `npm start`                 | Start production server                          |
 | `npm run lint`              | Run ESLint                                       |
-| `npm run type-check`        | Run TypeScript type checking                     |
+| `npm run type-check`        | Run Next.js app TypeScript type checking         |
+| `npm run type-check:convex` | Run Convex TypeScript type checking              |
+| `npm run dev:convex`        | Start Convex dev sync                            |
+| `npm run doctor`            | Check for stale workspace/mobile artifacts       |
 | `npm run test:email`        | Test email functionality                         |
 | `npm run test:email:direct` | Test direct email sending                        |
 

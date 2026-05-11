@@ -6,8 +6,8 @@ import type { Doc, Id } from "./_generated/dataModel";
 import type {
   CheckoutPricing,
   CheckoutPricingItem,
-} from "@mindpoint/domain/checkout";
-import { calculatePointsEarned } from "@mindpoint/domain/mind-points";
+} from "./_shared/checkout";
+import { calculatePointsEarned } from "./_shared/mind-points";
 import {
   PublicCourseDocumentValue,
   PublicEnrollmentFields,

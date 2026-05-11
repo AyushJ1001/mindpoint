@@ -1,0 +1,1594 @@
+"use client";
+
+import type { Id } from "@/lib/backend/data-model";
+import { buildCartItemId } from "@/lib/domain/cart";
+import { REFERRAL_COOKIE_KEY } from "@/lib/domain/referrals";
+import { evaluateBundleCampaigns } from "@/lib/domain/bundles";
+import { requestPaymentOrder } from "@/lib/services/payments";
+import { useCart } from "react-use-cart";
+import { Suspense } from "react";
+import Image from "next/image";
+import { useState, useEffect, useCallback } from "react";
+import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Trash2,
+  ShoppingCart,
+  CreditCard,
+  Plus,
+  Minus,
+  Sparkles,
+  Gift,
+  Layers,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
+import { useUser, useClerk } from "@clerk/nextjs";
+import { handlePaymentSuccess } from "@/app/actions/payment";
+import { toast } from "sonner";
+import { WhatsAppModal } from "@/components/whatsapp-modal";
+import { useConvexAuth, useQuery, useMutation } from "convex/react";
+import { api } from "@/lib/backend/api";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { Check, X } from "lucide-react";
+import { useNow } from "@/hooks/use-now";
+import { useMemo } from "react";
+
+export const dynamic = "force-dynamic";
+
+import type { EvaluatedBundleCampaign } from "@/lib/domain/bundles";
+
+/**
+ * Collapsible progress section shown when a bundle is partially fulfilled.
+ * Lists the eligible items already in the cart, shows a progress bar, and
+ * tells the user how many more courses they need.
+ */
+function BundleProgressSection({
+  campaign,
+  items,
+  eligibleCourseIdSet,
+}: {
+  campaign: EvaluatedBundleCampaign;
+  items: Array<{
+    id: string;
+    name: string;
+    courseId?: string;
+    [key: string]: unknown;
+  }>;
+  eligibleCourseIdSet: Set<string>;
+}) {
+  const [expanded, setExpanded] = useState(false);
+  const remaining = Math.max(
+    0,
+    campaign.progress.minCount - campaign.progress.selectedCount,
+  );
+  const progressPct = Math.min(
+    100,
+    Math.round(
+      (campaign.progress.selectedCount / campaign.progress.minCount) * 100,
+    ),
+  );
+
+  const eligibleItems = items.filter((item) =>
+    eligibleCourseIdSet.has(String(item.courseId ?? item.id)),
+  );
+
+  return (
+    <div className="space-y-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+      <div className="flex items-center gap-2 font-semibold">
+        <Layers className="h-4 w-4" />
+        <span className="flex-1">{campaign.campaignName}</span>
+        <span className="text-xs font-medium text-amber-700">
+          {showRupees(campaign.flatFee)}
+        </span>
+      </div>
+
+      {/* Progress bar */}
+      <div className="h-2 w-full overflow-hidden rounded-full bg-amber-200">
+        <div
+          className="h-full rounded-full bg-amber-500 transition-all duration-300"
+          style={{ width: `${progressPct}%` }}
+        />
+      </div>
+
+      <p className="text-xs">
+        <span className="font-semibold">
+          {campaign.progress.selectedCount} of {campaign.progress.minCount}
+        </span>{" "}
+        eligible courses in cart.{" "}
+        <span className="font-medium">
+          Add {remaining} more to unlock the bundle!
+        </span>
+      </p>
+
+      {/* Expandable eligible item list */}
+      {eligibleItems.length > 0 && (
+        <>
+          <button
+            type="button"
+            onClick={() => setExpanded((prev) => !prev)}
+            className="flex items-center gap-1 text-xs font-medium text-amber-700 hover:text-amber-900"
+          >
+            {expanded ? (
+              <ChevronUp className="h-3 w-3" />
+            ) : (
+              <ChevronDown className="h-3 w-3" />
+            )}
+            {expanded ? "Hide" : "Show"} eligible items in cart
+          </button>
+          {expanded && (
+            <div className="space-y-1 border-t border-amber-200 pt-2">
+              {eligibleItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center gap-2 text-xs"
+                >
+                  <Check className="h-3 w-3 shrink-0 text-amber-600" />
+                  <span className="truncate">{item.name}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+
+      <p className="text-xs text-amber-700">
+        <Link href="/courses" className="underline hover:text-amber-900">
+          Browse courses
+        </Link>{" "}
+        to find more eligible courses for this deal.
+      </p>
+    </div>
+  );
+}
+
+const getReferralCookie = () => {
+  if (typeof document === "undefined") return null;
+  const match = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith(`${REFERRAL_COOKIE_KEY}=`));
+  if (!match) return null;
+  const value = match.split("=")[1];
+  return value ? decodeURIComponent(value) : null;
+};
+
+const getCartCourseId = (item: {
+  id: string;
+  courseId?: Id<"courses">;
+}): Id<"courses"> => (item.courseId ?? item.id) as Id<"courses">;
+
+const getCartLineKey = (item: {
+  id: string;
+  courseId?: Id<"courses">;
+  batchId?: Id<"courseBatches">;
+}): string =>
+  item.courseId
+    ? buildCartItemId(String(item.courseId), item.batchId ? String(item.batchId) : undefined)
+    : String(item.id);
+
+const CartContent = () => {
+  const { items, removeItem, updateItemQuantity, isEmpty, emptyCart } =
+    useCart();
+
+  const [isMounted, setIsMounted] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
+  const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [pendingCheckout, setPendingCheckout] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{
+    code: string;
+    discount: number;
+    courseType: string;
+    pointsCost: number;
+  } | null>(null);
+  const { Razorpay, isLoading } = useRazorpay();
+  const { user, isLoaded: isUserLoaded } = useUser();
+  const { openSignIn } = useClerk();
+  const { isAuthenticated } = useConvexAuth();
+
+  // Ensure hydration matches server render
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  // Query user profile to check if WhatsApp number exists
+  const userProfile = useQuery(
+    api.myFunctions.getUserProfile,
+    user?.id ? { clerkUserId: user.id } : "skip",
+  );
+
+  // Validate coupon code
+  const couponValidation = useQuery(
+    api.mindPoints.validateCoupon,
+    couponCode && isAuthenticated ? { code: couponCode } : "skip",
+  );
+
+  const markCouponUsed = useMutation(api.mindPoints.markCouponUsed);
+  const now = useNow();
+  const cartCourseIds = useMemo(
+    () => Array.from(new Set(items.map((item) => String(getCartCourseId(item))))).map(
+      (courseId) => courseId as Id<"courses">,
+    ),
+    [items],
+  );
+  const bundleCampaigns = useQuery(
+    api.bundleCampaigns.listActiveBundleCampaignsForCourses,
+    cartCourseIds.length > 0 ? { courseIds: cartCourseIds } : "skip",
+  );
+  const bundleEvaluation = useMemo(
+    () =>
+      evaluateBundleCampaigns(
+        items.map((item) => ({
+          courseId: String(getCartCourseId(item)),
+          listedPrice: Math.round(item.originalPrice ?? item.price ?? 0),
+          quantity: item.quantity ?? 1,
+        })),
+        (bundleCampaigns ?? []).map((campaign) => ({
+          ...campaign,
+          _id: String(campaign._id),
+          eligibleCourseIds: campaign.eligibleCourseIds.map((courseId) =>
+            String(courseId),
+          ),
+        })),
+      ),
+    [bundleCampaigns, items],
+  );
+  const appliedBundle = bundleEvaluation.appliedCampaign;
+  const bundleProgressCampaign = appliedBundle
+    ? null
+    : bundleEvaluation.progressCampaign;
+  const coveredCourseIdSet = useMemo(
+    () => new Set(appliedBundle?.coveredCourseIds ?? []),
+    [appliedBundle],
+  );
+
+  // Set of course IDs eligible for the in-progress bundle (for per-item tagging)
+  const progressEligibleCourseIdSet = useMemo(
+    () => new Set(bundleProgressCampaign?.coveredCourseIds ?? []),
+    [bundleProgressCampaign],
+  );
+
+  // Update offer details for cart items using shared time
+  // Use now to create a minute-based key that changes every minute, forcing recalculation
+  const minuteKey = Math.floor(now / 60000);
+  const itemOfferDetails = useMemo(() => {
+    const newOfferDetails: Record<string, OfferDetails> = {};
+    // minuteKey ensures recalculation every minute when time updates
+    // Reference minuteKey to satisfy eslint dependency check
+    if (minuteKey < 0) {
+      // This will never execute, but ensures minuteKey is used
+      return {};
+    }
+    items.forEach((item) => {
+      if (item.offer || item.bogo) {
+        const offerPrice = item.price || 0;
+        const discountPercentage = item.offer?.discount ?? 0;
+
+        // Use stored originalPrice if available, otherwise calculate it
+        let originalPrice = item.originalPrice || offerPrice;
+        if (
+          !item.originalPrice &&
+          discountPercentage > 0 &&
+          discountPercentage < 100
+        ) {
+          const denominator = 1 - discountPercentage / 100;
+          if (Math.abs(denominator) > 1e-6) {
+            originalPrice = offerPrice / denominator;
+          }
+        }
+
+        const offerDetails = getOfferDetails({
+          price: originalPrice,
+          offer: item.offer ?? null,
+          bogo: item.bogo ?? null,
+        });
+        if (offerDetails) {
+          newOfferDetails[getCartLineKey(item)] = offerDetails;
+        }
+      }
+    });
+    return newOfferDetails;
+  }, [items, minuteKey]);
+
+  const hasBogoItems = items.some(
+    (item) =>
+      !coveredCourseIdSet.has(String(getCartCourseId(item))) &&
+      itemOfferDetails[getCartLineKey(item)]?.hasBogo,
+  );
+
+  const activeBogoTypes = useMemo(() => {
+    const types = new Set<string>();
+    items.forEach((item) => {
+      const details = itemOfferDetails[getCartLineKey(item)];
+      if (
+        !coveredCourseIdSet.has(String(getCartCourseId(item))) &&
+        details?.hasBogo &&
+        item.courseType
+      ) {
+        types.add(item.courseType);
+      }
+    });
+    return Array.from(types);
+  }, [coveredCourseIdSet, items, itemOfferDetails]);
+
+  const bogoLabels = useMemo(() => {
+    const labels = new Set<string>();
+    items.forEach((item) => {
+      const details = itemOfferDetails[getCartLineKey(item)];
+      if (
+        !coveredCourseIdSet.has(String(getCartCourseId(item))) &&
+        details?.hasBogo &&
+        details.bogoLabel
+      ) {
+        labels.add(details.bogoLabel);
+      }
+    });
+    return Array.from(labels);
+  }, [coveredCourseIdSet, items, itemOfferDetails]);
+
+  const couponEligible = useMemo(() => {
+    if (!appliedCoupon) {
+      return true;
+    }
+
+    return items.some(
+      (item) =>
+        !coveredCourseIdSet.has(String(getCartCourseId(item))) &&
+        item.courseType === appliedCoupon.courseType &&
+        Math.round(item.price ?? 0) > 0,
+    );
+  }, [appliedCoupon, coveredCourseIdSet, items]);
+
+  useEffect(() => {
+    if (appliedCoupon && !couponEligible) {
+      setAppliedCoupon(null);
+      setCouponCode("");
+    }
+  }, [appliedCoupon, couponEligible]);
+
+  const checkoutPricing = useMemo(() => {
+    const bundleAllocationQueue = new Map<
+      string,
+      Array<EvaluatedBundleCampaign["allocations"][number]>
+    >();
+    for (const allocation of appliedBundle?.allocations ?? []) {
+      const existing = bundleAllocationQueue.get(String(allocation.courseId));
+      if (existing) {
+        existing.push(allocation);
+      } else {
+        bundleAllocationQueue.set(String(allocation.courseId), [allocation]);
+      }
+    }
+
+    const baseItems = items.map((item) => {
+      const listedPrice = Math.round(item.originalPrice ?? item.price ?? 0);
+      const defaultCheckoutPrice = Math.round(item.price ?? 0);
+      const courseId = getCartCourseId(item);
+      const batchId = item.batchId as Id<"courseBatches"> | undefined;
+      const allocationQueue = bundleAllocationQueue.get(String(courseId));
+      const bundleAllocation = allocationQueue?.shift();
+      const checkoutPrice = bundleAllocation
+        ? Math.round(bundleAllocation.checkoutPrice)
+        : defaultCheckoutPrice;
+      const amountPaid = bundleAllocation
+        ? Math.round(bundleAllocation.amountPaid)
+        : defaultCheckoutPrice;
+      const redemptionDiscountAmount = bundleAllocation
+        ? Math.max(0, checkoutPrice - amountPaid)
+        : 0;
+
+      return {
+        batchId,
+        cartItemId: getCartLineKey(item),
+        courseId,
+        courseType: item.courseType,
+        listedPrice,
+        checkoutPrice,
+        amountPaid,
+        redemptionDiscountAmount,
+        couponCode: undefined as string | undefined,
+        mindPointsRedeemed: undefined as number | undefined,
+        bundleCampaignId: bundleAllocation
+          ? (appliedBundle!.campaignId as Id<"bundleCampaigns">)
+          : undefined,
+        bundleCampaignName: bundleAllocation
+          ? appliedBundle!.campaignName
+          : undefined,
+      };
+    });
+
+    const toCheckoutPricingItem = (item: (typeof baseItems)[number]) => ({
+      batchId: item.batchId,
+      courseId: item.courseId,
+      listedPrice: item.listedPrice,
+      checkoutPrice: item.checkoutPrice,
+      amountPaid: item.amountPaid,
+      redemptionDiscountAmount: item.redemptionDiscountAmount,
+      couponCode: item.couponCode,
+      mindPointsRedeemed: item.mindPointsRedeemed,
+      bundleCampaignId: item.bundleCampaignId,
+      bundleCampaignName: item.bundleCampaignName,
+    });
+
+    if (!appliedCoupon) {
+      return {
+        totalAmountPaid: baseItems.reduce(
+          (total, item) => total + item.amountPaid,
+          0,
+        ),
+        items: baseItems.map(toCheckoutPricingItem),
+      };
+    }
+
+    const eligibleIndex = (() => {
+      let bestIndex = -1;
+      let bestPrice = -1;
+
+      baseItems.forEach((item, index) => {
+        if (
+          !item.bundleCampaignId &&
+          item.courseType === appliedCoupon.courseType &&
+          item.checkoutPrice > 0 &&
+          item.checkoutPrice > bestPrice
+        ) {
+          bestIndex = index;
+          bestPrice = item.checkoutPrice;
+        }
+      });
+
+      return bestIndex;
+    })();
+
+    if (eligibleIndex === -1) {
+      return {
+        totalAmountPaid: baseItems.reduce(
+          (total, item) => total + item.amountPaid,
+          0,
+        ),
+        items: baseItems.map(toCheckoutPricingItem),
+      };
+    }
+
+    const pricedItems = baseItems.map((item, index) => {
+      if (index !== eligibleIndex) {
+        return toCheckoutPricingItem(item);
+      }
+
+      const discountAmount = Math.min(
+        item.checkoutPrice,
+        Math.round(item.checkoutPrice * (appliedCoupon.discount / 100)),
+      );
+      const amountPaid = Math.max(0, item.checkoutPrice - discountAmount);
+      const rest = toCheckoutPricingItem(item);
+
+      return {
+        ...rest,
+        amountPaid,
+        redemptionDiscountAmount: discountAmount,
+        couponCode: appliedCoupon.code,
+        mindPointsRedeemed:
+          discountAmount > 0 ? appliedCoupon.pointsCost : undefined,
+      };
+    });
+
+    return {
+      totalAmountPaid: pricedItems.reduce(
+        (total, item) => total + item.amountPaid,
+        0,
+      ),
+      items: pricedItems,
+    };
+  }, [items, appliedBundle, appliedCoupon]);
+
+  const discountedTotal = checkoutPricing.totalAmountPaid;
+  const checkoutPricingByLineKey = useMemo(
+    () =>
+      new Map(
+        checkoutPricing.items.map((pricingItem) => [
+          buildCartItemId(
+            String(pricingItem.courseId),
+            pricingItem.batchId ? String(pricingItem.batchId) : undefined,
+          ),
+          pricingItem,
+        ]),
+      ),
+    [checkoutPricing.items],
+  );
+  const listedCartTotal = useMemo(
+    () =>
+      items.reduce(
+        (total, item) =>
+          total + Math.round(item.originalPrice ?? item.price ?? 0),
+        0,
+      ),
+    [items],
+  );
+  const totalPointsEarned = useMemo(() => {
+    if (!user?.id) return 0;
+
+    const pricingMap = new Map(
+      checkoutPricing.items.map((item) => [
+        buildCartItemId(
+          String(item.courseId),
+          item.batchId ? String(item.batchId) : undefined,
+        ),
+        item,
+      ]),
+    );
+
+    return items.reduce((total, item) => {
+      if (item.selectedFreeCourse || !item.courseType) {
+        return total;
+      }
+
+      const pricingItem = pricingMap.get(getCartLineKey(item));
+      if (!pricingItem || pricingItem.amountPaid <= 0) {
+        return total;
+      }
+
+      const pointsMap: Record<string, number> = {
+        certificate: 120,
+        diploma: 200,
+        worksheet: 20,
+        masterclass: 20,
+        "pre-recorded": 100,
+      };
+
+      if (item.courseType === "internship") {
+        return total + 60;
+      }
+
+      return total + (pointsMap[item.courseType] || 0);
+    }, 0);
+  }, [checkoutPricing.items, items, user?.id]);
+
+  const showEnrollmentToast = (
+    enrollments:
+      | Array<{
+          enrollmentNumber: string;
+          isBogoFree?: boolean;
+        }>
+      | undefined,
+  ) => {
+    if (!enrollments || enrollments.length === 0) {
+      toast.success(
+        "Payment successful! Check your email for enrollment confirmation.",
+      );
+      return;
+    }
+
+    const bonusCount = enrollments.filter((e) => e.isBogoFree).length;
+    const paidCount = enrollments.length - bonusCount;
+    const parts: string[] = [];
+    if (paidCount > 0) {
+      parts.push(`${paidCount} course${paidCount === 1 ? "" : "s"}`);
+    }
+    if (bonusCount > 0) {
+      parts.push(`${bonusCount} bonus course${bonusCount === 1 ? "" : "s"}`);
+    }
+
+    const message = parts.length
+      ? `Payment successful! ${parts.join(" + ")} added to your account.`
+      : "Payment successful!";
+
+    const enrollmentNumbers = enrollments
+      .filter((e) => e.enrollmentNumber && e.enrollmentNumber !== "N/A")
+      .map((e) => e.enrollmentNumber);
+
+    const hasValidEnrollments = enrollmentNumbers.length > 0;
+
+    toast.success(message, {
+      description: hasValidEnrollments
+        ? `Enrollment numbers: ${enrollmentNumbers.join(", ")}`
+        : "Check your email for enrollment confirmation.",
+    });
+  };
+
+  const handleClearCart = () => {
+    emptyCart();
+    setShowClearCartDialog(false);
+    toast.success("Cart cleared successfully");
+  };
+
+  // Reset processing state when component unmounts or user navigates away
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      setIsProcessing(false);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        // User navigated away or closed tab, reset processing state
+        setTimeout(() => {
+          setIsProcessing(false);
+        }, 1000);
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      setIsProcessing(false);
+    };
+  }, []);
+
+  const handlePayment = useCallback(
+    async (whatsappNumber?: string) => {
+      if (isEmpty || !user?.id) return;
+
+      setIsProcessing(true);
+
+      try {
+        const data = await requestPaymentOrder({
+          amount: discountedTotal,
+        });
+
+        const options: RazorpayOrderOptions = {
+          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
+          amount: data.amount,
+          currency: data.currency as RazorpayOrderOptions["currency"],
+          name: "The Mind Point",
+          description: `Payment for ${items.length} course(s)`,
+          order_id: data.id,
+          handler: async () => {
+            // Handle signed-in user
+            try {
+              const lineItems = items.map((item) => ({
+                batchId: item.batchId as Id<"courseBatches"> | undefined,
+                courseId: getCartCourseId(item),
+              }));
+
+              // Extract BOGO selections from cart items
+              const bogoSelections = items
+                .filter(
+                  (item) =>
+                    item.selectedFreeCourse &&
+                    !coveredCourseIdSet.has(String(getCartCourseId(item))),
+                )
+                .map((item) => ({
+                  selectedFreeBatchId: item.selectedFreeCourse!.batchId,
+                  selectedFreeCourseId:
+                    item.selectedFreeCourse!.courseId ??
+                    item.selectedFreeCourse!.id,
+                  sourceBatchId: item.batchId as
+                    | Id<"courseBatches">
+                    | undefined,
+                  sourceCourseId: getCartCourseId(item),
+                }));
+
+              // Use the WhatsApp number from user profile or the one just collected
+              const userPhone =
+                whatsappNumber || userProfile?.whatsappNumber || undefined;
+
+              const referralCookie = getReferralCookie();
+              const referrerClerkUserId =
+                referralCookie && referralCookie !== user.id
+                  ? referralCookie
+                  : undefined;
+
+              // Call server action to handle enrollment
+              const result = await handlePaymentSuccess(
+                user.id,
+                lineItems,
+                user.primaryEmailAddress?.emailAddress || "",
+                userPhone,
+                user.fullName || undefined, // studentName
+                undefined, // sessionType
+                bogoSelections.length > 0 ? bogoSelections : undefined,
+                referrerClerkUserId,
+                checkoutPricing,
+              );
+
+              if (result.success) {
+                // Mark coupon as used if applied
+                if (appliedCoupon) {
+                  try {
+                    await markCouponUsed({ couponCode: appliedCoupon.code });
+                    setAppliedCoupon(null);
+                    setCouponCode("");
+                  } catch (error) {
+                    console.error("Failed to mark coupon as used:", error);
+                  }
+                }
+
+                const pointsEarned = totalPointsEarned;
+
+                if (pointsEarned > 0 && user?.id) {
+                  setTimeout(() => {
+                    toast.success(
+                      `🎉 You earned ${pointsEarned} Mind Points!`,
+                      {
+                        description:
+                          "Points have been added to your account. Visit your account to redeem them.",
+                        duration: 6000,
+                        action: {
+                          label: "View Points",
+                          onClick: () => {
+                            window.location.href = "/account?tab=points";
+                          },
+                        },
+                      },
+                    );
+                  }, 2000);
+                }
+
+                showEnrollmentToast(result.enrollments);
+              } else {
+                toast.error(
+                  "Payment successful but enrollment failed. Please contact support.",
+                  {
+                    description: result.error,
+                  },
+                );
+              }
+            } catch {
+              toast.error(
+                "Payment successful but enrollment failed. Please contact support.",
+              );
+            }
+
+            // Clear cart after successful payment
+            emptyCart();
+            setIsProcessing(false);
+          },
+          prefill: {
+            name: user?.fullName || "",
+            email: user?.primaryEmailAddress?.emailAddress || "",
+            contact: whatsappNumber || userProfile?.whatsappNumber || "",
+          },
+          theme: {
+            color: "#7C6F9B",
+          },
+        };
+
+        const rzp = new Razorpay(options);
+
+        // Add event handlers for payment modal
+        rzp.on("payment.failed", (response) => {
+          console.error("Payment failed:", response.error);
+          toast.error("Payment failed. Please try again.");
+          setIsProcessing(false);
+          if (modalCheckInterval) clearInterval(modalCheckInterval);
+          if (observer) observer.disconnect();
+        });
+
+        // Note: These event handlers are commented out as they may not be supported in the current version
+        // The payment success is handled in the main handler function above
+
+        // Add a timeout to reset processing state in case events don't fire
+        const timeoutId = setTimeout(() => {
+          console.log("Payment timeout - resetting processing state");
+          setIsProcessing(false);
+        }, 60000); // 1 minute timeout
+
+        // Clear timeout when payment is successful (handled in main handler)
+        const clearTimeoutAndCleanup = () => {
+          clearTimeout(timeoutId);
+          if (modalCheckInterval) clearInterval(modalCheckInterval);
+          if (observer) observer.disconnect();
+        };
+
+        // Monitor Razorpay modal state with comprehensive detection
+        let modalCheckInterval: NodeJS.Timeout;
+        let observer: MutationObserver;
+
+        const startModalMonitoring = () => {
+          console.log("Starting Razorpay modal monitoring...");
+
+          // More comprehensive selectors for Razorpay elements
+          const razorpaySelectors = [
+            "#razorpay-payment-button",
+            ".razorpay-container",
+            'iframe[src*="razorpay"]',
+            'iframe[src*="checkout"]',
+            '[id*="razorpay"]',
+            '[class*="razorpay"]',
+            ".razorpay-checkout",
+            "#razorpay-checkout",
+            'div[style*="position: fixed"][style*="z-index"]', // Common modal styling
+            'div[style*="position: fixed"][style*="top: 0"]', // Full screen modal
+          ];
+
+          const checkForRazorpayModal = () => {
+            const foundElements = [];
+            razorpaySelectors.forEach((selector) => {
+              const elements = document.querySelectorAll(selector);
+              if (elements.length > 0) {
+                foundElements.push(...Array.from(elements));
+              }
+            });
+
+            // Also check for any iframe that might be Razorpay
+            const allIframes = document.querySelectorAll("iframe");
+            const razorpayIframes = Array.from(allIframes).filter((iframe) => {
+              const src = (iframe as HTMLIFrameElement).src || "";
+              return (
+                src.includes("razorpay") ||
+                src.includes("checkout") ||
+                src.includes("pay")
+              );
+            });
+            foundElements.push(...razorpayIframes);
+
+            console.log(
+              `Found ${foundElements.length} potential Razorpay elements:`,
+              foundElements,
+            );
+
+            // Check if any of the found elements are actually visible and interactive
+            const visibleElements = foundElements.filter((element) => {
+              const style = window.getComputedStyle(element);
+              const rect = element.getBoundingClientRect();
+
+              // Check if element is visible (not hidden, has dimensions, not transparent)
+              const isVisible =
+                style.display !== "none" &&
+                style.visibility !== "hidden" &&
+                rect.width > 0 &&
+                rect.height > 0 &&
+                parseFloat(style.opacity) > 0;
+
+              // Check if element is in viewport
+              const isInViewport =
+                rect.top < window.innerHeight &&
+                rect.bottom > 0 &&
+                rect.left < window.innerWidth &&
+                rect.right > 0;
+
+              return isVisible && isInViewport;
+            });
+
+            console.log(
+              `Found ${visibleElements.length} visible Razorpay elements:`,
+              visibleElements,
+            );
+
+            // If no visible elements, consider modal closed
+            if (visibleElements.length === 0) {
+              console.log(
+                "No visible Razorpay elements found - resetting processing state",
+              );
+              setIsProcessing(false);
+              clearTimeoutAndCleanup();
+              return true; // Modal is closed
+            }
+
+            // Additional check: look for modal backdrop/overlay
+            const modalBackdrop = document.querySelector(
+              '.razorpay-backdrop, div[style*="position: fixed"][style*="background"]',
+            );
+            if (modalBackdrop) {
+              const backdropStyle = window.getComputedStyle(modalBackdrop);
+              const backdropRect = modalBackdrop.getBoundingClientRect();
+
+              // Check if backdrop is visible and covers the screen
+              const isBackdropVisible =
+                backdropStyle.display !== "none" &&
+                backdropStyle.visibility !== "hidden" &&
+                backdropRect.width > 0 &&
+                backdropRect.height > 0 &&
+                parseFloat(backdropStyle.opacity) > 0;
+
+              console.log(
+                `Modal backdrop visible: ${isBackdropVisible}`,
+                backdropStyle,
+              );
+
+              if (!isBackdropVisible) {
+                console.log(
+                  "Modal backdrop not visible - resetting processing state",
+                );
+                setIsProcessing(false);
+                clearTimeoutAndCleanup();
+                return true; // Modal is closed
+              }
+            }
+
+            return false; // Modal is still open
+          };
+
+          // Interval-based monitoring
+          modalCheckInterval = setInterval(() => {
+            checkForRazorpayModal();
+          }, 1000); // Check every second for faster response
+
+          // DOM mutation observer for immediate detection
+          observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+              if (mutation.type === "childList") {
+                // Check if any removed nodes were Razorpay elements
+                const removedNodes = Array.from(mutation.removedNodes);
+                const hadRazorpayElements = removedNodes.some((node) => {
+                  if (node.nodeType === Node.ELEMENT_NODE) {
+                    const element = node as Element;
+                    return (
+                      razorpaySelectors.some((selector) =>
+                        element.matches(selector),
+                      ) ||
+                      (element.tagName === "IFRAME" &&
+                        ((element as HTMLIFrameElement).src?.includes(
+                          "razorpay",
+                        ) ||
+                          (element as HTMLIFrameElement).src?.includes(
+                            "checkout",
+                          )))
+                    );
+                  }
+                  return false;
+                });
+
+                if (hadRazorpayElements) {
+                  console.log(
+                    "Razorpay elements removed from DOM - checking if modal is closed",
+                  );
+                  setTimeout(() => {
+                    if (checkForRazorpayModal()) {
+                      console.log("Confirmed: Razorpay modal is closed");
+                    }
+                  }, 500); // Small delay to ensure DOM is updated
+                }
+              }
+            });
+          });
+
+          observer.observe(document.body, { childList: true, subtree: true });
+        };
+
+        // Start monitoring after modal opens
+        setTimeout(startModalMonitoring, 2000);
+
+        rzp.open();
+      } catch (error) {
+        console.error("Error creating order:", error);
+        toast.error("Failed to create order. Please try again.");
+        setIsProcessing(false);
+      }
+    },
+    [
+      isEmpty,
+      user?.id,
+      user?.fullName,
+      user?.primaryEmailAddress?.emailAddress,
+      discountedTotal,
+      checkoutPricing,
+      items,
+      userProfile,
+      markCouponUsed,
+      appliedCoupon,
+      setAppliedCoupon,
+      setCouponCode,
+      totalPointsEarned,
+      emptyCart,
+      setIsProcessing,
+      Razorpay,
+      coveredCourseIdSet,
+    ],
+  );
+
+  // Check for WhatsApp number after sign-in and proceed with checkout
+  const proceedWithCheckoutAfterAuth = useCallback(() => {
+    if (!user?.id) return;
+
+    // Check if user has WhatsApp number
+    if (!userProfile?.whatsappNumber) {
+      // Show WhatsApp modal to collect the number
+      setShowWhatsAppModal(true);
+    } else {
+      // User has WhatsApp number, proceed with payment
+      handlePayment();
+    }
+  }, [user?.id, userProfile?.whatsappNumber, handlePayment]);
+
+  // Effect to handle checkout after sign-in
+  useEffect(() => {
+    if (pendingCheckout && user?.id && userProfile !== undefined) {
+      setPendingCheckout(false);
+      proceedWithCheckoutAfterAuth();
+    }
+  }, [pendingCheckout, user?.id, userProfile, proceedWithCheckoutAfterAuth]);
+
+  const handleCheckoutClick = () => {
+    if (!isUserLoaded) {
+      // Still loading user state
+      return;
+    }
+
+    if (user) {
+      // User is signed in, check for WhatsApp number
+      proceedWithCheckoutAfterAuth();
+    } else {
+      // User is not signed in, show Clerk sign-in modal
+      setPendingCheckout(true);
+      openSignIn();
+    }
+  };
+
+  const handleWhatsAppComplete = (whatsappNumber: string) => {
+    setShowWhatsAppModal(false);
+    handlePayment(whatsappNumber);
+  };
+
+  const handleWhatsAppSkip = () => {
+    setShowWhatsAppModal(false);
+    // Proceed with payment even without WhatsApp number
+    handlePayment();
+  };
+
+  // Show loading state during hydration to prevent mismatch
+  if (!isMounted) {
+    return (
+      <div className="container mx-auto py-16">
+        <div className="text-center">
+          <ShoppingCart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+          <h2 className="mb-2 text-2xl font-semibold">Loading cart...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  if (isEmpty) {
+    return (
+      <div className="container mx-auto py-16">
+        <div className="text-center">
+          <ShoppingCart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
+          <h2 className="mb-2 text-2xl font-semibold">Your cart is empty</h2>
+          <p className="text-muted-foreground mb-6">
+            Add some courses to get started with your learning journey.
+          </p>
+          <Button asChild>
+            <Link href="/courses">Browse Courses</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="container py-6 sm:py-8">
+      <div className="mb-6 sm:mb-8">
+        <h1 className="mb-2 text-4xl font-bold tracking-tight sm:text-5xl">
+          Shopping Cart
+        </h1>
+        <p className="text-muted-foreground">
+          Review your selected courses and proceed to checkout.
+        </p>
+      </div>
+
+      <div className="grid gap-5 lg:grid-cols-3 lg:gap-8">
+        {/* Cart Items */}
+        <div className="min-w-0 lg:col-span-2">
+          <Card className="overflow-hidden">
+            <CardHeader>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <ShoppingCart className="h-5 w-5" />
+                  Cart Items ({items.length})
+                </CardTitle>
+                <Dialog
+                  open={showClearCartDialog}
+                  onOpenChange={setShowClearCartDialog}
+                >
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive hover:text-destructive hover:bg-destructive/10 w-full sm:w-auto"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Clear Cart
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Clear Cart</DialogTitle>
+                      <DialogDescription>
+                        Are you sure you want to remove all items from your
+                        cart? This action cannot be undone.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setShowClearCartDialog(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button variant="destructive" onClick={handleClearCart}>
+                        Clear Cart
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {items.map((item) => {
+                const pricingItem = checkoutPricingByLineKey.get(
+                  getCartLineKey(item),
+                );
+                const itemHasBundle = Boolean(pricingItem?.bundleCampaignId);
+                const offerDetails = itemHasBundle
+                  ? undefined
+                  : itemOfferDetails[getCartLineKey(item)];
+                const itemTotal = Math.round(
+                  pricingItem?.amountPaid ??
+                    (item.price || 0) * (item.quantity || 1),
+                );
+                const originalLinePrice = Math.round(
+                  pricingItem?.checkoutPrice ??
+                    item.originalPrice ??
+                    item.price ??
+                    0,
+                );
+
+                return (
+                  <div
+                    key={item.id}
+                    className="border-lavender-200 bg-card rounded-xl border p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.7)]"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md sm:h-16 sm:w-16">
+                        <Image
+                          src={item.imageUrls?.[0] || "/placeholder-image.jpg"}
+                          alt={item.name || "Course"}
+                          className="h-full w-full object-cover"
+                          width={64}
+                          height={64}
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <h3 className="line-clamp-3 text-base font-semibold tracking-tight sm:line-clamp-2 sm:text-xl">
+                          {item.name}
+                        </h3>
+                        <p className="text-muted-foreground text-sm capitalize">
+                          {item.courseType}
+                        </p>
+                        {itemHasBundle && pricingItem?.bundleCampaignName ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-800">
+                              <Layers className="h-3 w-3" />
+                              Bundle Applied
+                            </span>
+                            <span className="font-medium text-blue-700">
+                              {pricingItem.bundleCampaignName}
+                            </span>
+                            {pricingItem.redemptionDiscountAmount > 0 && (
+                              <span className="font-medium text-blue-600">
+                                (save {showRupees(pricingItem.redemptionDiscountAmount)})
+                              </span>
+                            )}
+                          </div>
+                        ) : !itemHasBundle &&
+                          progressEligibleCourseIdSet.has(
+                            String(getCartCourseId(item)),
+                          ) ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                            <span className="inline-flex items-center gap-1 rounded bg-amber-100 px-2 py-1 text-[11px] font-semibold text-amber-800">
+                              <Layers className="h-3 w-3" />
+                              Bundle Eligible
+                            </span>
+                            <span className="font-medium text-amber-700">
+                              {bundleProgressCampaign?.campaignName}
+                            </span>
+                          </div>
+                        ) : null}
+                        {offerDetails && (
+                          <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                            {offerDetails.hasDiscount && (
+                              <span className="rounded bg-orange-100 px-2 py-1 text-[11px] font-semibold text-orange-800">
+                                🔥 {offerDetails.discountPercentage}% OFF
+                              </span>
+                            )}
+                            <span
+                              className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-muted-foreground"}`}
+                            >
+                              {offerDetails.timeLeft.days > 0 &&
+                                `${offerDetails.timeLeft.days}d `}
+                              {offerDetails.timeLeft.hours > 0 &&
+                                `${offerDetails.timeLeft.hours}h `}
+                              {offerDetails.timeLeft.minutes > 0 &&
+                                `${offerDetails.timeLeft.minutes}m`}{" "}
+                              left
+                            </span>
+                          </div>
+                        )}
+                        {offerDetails?.hasBogo && (
+                          <div className="mt-1 flex items-center gap-1 text-xs font-semibold text-emerald-600">
+                            <Sparkles className="h-3 w-3" />
+                            {"Bonus enrollment included"}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex flex-shrink-0 flex-col items-end gap-2 text-right">
+                        <div className="font-semibold">
+                          {showRupees(itemTotal)}
+                        </div>
+                        {(itemHasBundle ||
+                          (offerDetails?.hasDiscount &&
+                            originalLinePrice > itemTotal)) && (
+                          <div className="text-muted-foreground text-xs">
+                            <span className="line-through">
+                              {showRupees(originalLinePrice)}
+                            </span>
+                          </div>
+                        )}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeItem(item.id)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          aria-label={`Remove ${item.name} from cart`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center justify-center gap-2 sm:justify-start">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          updateItemQuantity(item.id, (item.quantity || 1) - 1)
+                        }
+                        disabled={(item.quantity || 1) <= 1}
+                      >
+                        <Minus className="h-3 w-3" />
+                      </Button>
+                      <span className="w-8 text-center font-medium">
+                        {item.quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          updateItemQuantity(item.id, (item.quantity || 1) + 1)
+                        }
+                      >
+                        <Plus className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+              {/* Display selected free course if BOGO is applied */}
+              {items
+                .filter(
+                  (item) =>
+                    item.selectedFreeCourse &&
+                    !coveredCourseIdSet.has(String(getCartCourseId(item))),
+                )
+                .map((item) => (
+                  <div
+                    key={`bogo-${item.id}`}
+                    className="mt-2 ml-0 rounded-lg border border-emerald-200 bg-emerald-50 p-3 sm:ml-20 dark:border-emerald-800 dark:bg-emerald-950/30"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-md">
+                        <Image
+                          src={
+                            item.selectedFreeCourse?.imageUrls?.[0] ||
+                            "/placeholder-image.jpg"
+                          }
+                          alt={item.selectedFreeCourse?.name || "Free Course"}
+                          className="h-full w-full object-cover"
+                          width={48}
+                          height={48}
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <Sparkles className="h-4 w-4 text-emerald-600" />
+                          <h4 className="line-clamp-2 font-semibold text-emerald-800 dark:text-emerald-200">
+                            {item.selectedFreeCourse?.name || "Free Course"}
+                          </h4>
+                          <span className="rounded bg-emerald-200 px-2 py-1 text-xs font-semibold text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200">
+                            FREE
+                          </span>
+                        </div>
+
+                        <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400">
+                          <span>BOGO Free Course</span>
+                          <span>•</span>
+                          <span className="line-through">
+                            {showRupees(
+                              item.selectedFreeCourse?.originalPrice || 0,
+                            )}
+                          </span>
+                          <span className="font-semibold">{showRupees(0)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Order Summary */}
+        <div className="min-w-0 lg:col-span-1">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Order Summary
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {appliedBundle ? (
+                <div className="space-y-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
+                  <div className="flex items-center gap-2 font-semibold">
+                    <Layers className="h-4 w-4" />
+                    <span>{appliedBundle.campaignName}</span>
+                  </div>
+                  <p>
+                    {appliedBundle.coveredCourseIds.length} course
+                    {appliedBundle.coveredCourseIds.length === 1
+                      ? ""
+                      : "s"}{" "}
+                    covered for {showRupees(appliedBundle.flatFee)}.
+                  </p>
+                  {/* List covered courses with per-item savings */}
+                  <div className="space-y-1 border-t border-blue-200 pt-2">
+                    {appliedBundle.allocations.map((alloc) => {
+                      const cartItem = items.find(
+                        (i) => String(i.id) === String(alloc.courseId),
+                      );
+                      return (
+                        <div
+                          key={alloc.courseId}
+                          className="flex items-start gap-2 text-xs"
+                        >
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-blue-600" />
+                          <span className="min-w-0 flex-1 truncate">
+                            {cartItem?.name ?? "Course"}
+                          </span>
+                          {alloc.savings > 0 && (
+                            <span className="shrink-0 font-medium text-blue-700">
+                              -{showRupees(alloc.savings)}
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <p className="text-xs text-blue-700">
+                    Existing discounts, BOGO, and coupon reductions do not apply
+                    to the covered courses.
+                  </p>
+                </div>
+              ) : bundleProgressCampaign ? (
+                <BundleProgressSection
+                  campaign={bundleProgressCampaign}
+                  items={items}
+                  eligibleCourseIdSet={progressEligibleCourseIdSet}
+                />
+              ) : null}
+              {hasBogoItems && (
+                <div className="space-y-2">
+                  <div className="flex items-start gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-700">
+                    <Sparkles className="mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <span className="break-words">
+                      {bogoLabels.length > 0 ? bogoLabels.join(", ") : "BOGO"}{" "}
+                      applied:{" "}
+                      {activeBogoTypes.length > 0
+                        ? `${activeBogoTypes.join(", ")}`
+                        : "complimentary course enrollments"}
+                      {" will be added automatically during checkout."}
+                    </span>
+                  </div>
+                  {/* List specific free courses */}
+                  <div className="space-y-1">
+                    {items
+                      .filter(
+                        (item) =>
+                          item.selectedFreeCourse &&
+                          !coveredCourseIdSet.has(
+                            String(getCartCourseId(item)),
+                          ),
+                      )
+                      .map((item) => (
+                        <div
+                          key={`free-${item.id}`}
+                          className="bg-emerald-25 flex items-center gap-2 rounded-md border border-emerald-100 px-2 py-1 text-xs text-emerald-600 dark:border-emerald-800 dark:bg-emerald-950/20 dark:text-emerald-400"
+                        >
+                          <Sparkles className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">
+                            {item.selectedFreeCourse!.name}
+                          </span>
+                          <span className="ml-auto font-semibold text-emerald-700 dark:text-emerald-300">
+                            FREE
+                          </span>
+                        </div>
+                      ))}
+                  </div>
+                </div>
+              )}
+              <div className="flex justify-between">
+                <span>Subtotal ({items.length} items)</span>
+                <span>{showRupees(listedCartTotal)}</span>
+              </div>
+              {appliedBundle ? (
+                <div className="flex justify-between text-blue-700">
+                  <span>Bundle savings</span>
+                  <span>-{showRupees(appliedBundle.coveredSavings)}</span>
+                </div>
+              ) : null}
+              {appliedCoupon ? (
+                <div className="flex justify-between text-green-700">
+                  <span>Coupon savings</span>
+                  <span>
+                    -
+                    {showRupees(
+                      checkoutPricing.items.reduce(
+                        (total, item) =>
+                          total +
+                          (item.couponCode
+                            ? (item.redemptionDiscountAmount ?? 0)
+                            : 0),
+                        0,
+                      ),
+                    )}
+                  </span>
+                </div>
+              ) : null}
+              <div className="flex justify-between">
+                <span>Tax</span>
+                <span>₹0.00</span>
+              </div>
+
+              {/* Coupon Code Input */}
+              <div className="space-y-2 border-t pt-4">
+                {!appliedCoupon ? (
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Input
+                      placeholder="Enter coupon code"
+                      value={couponCode}
+                      onChange={(e) =>
+                        setCouponCode(e.target.value.toUpperCase())
+                      }
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={async () => {
+                        if (!couponCode.trim()) return;
+                        if (
+                          couponValidation?.valid &&
+                          couponValidation.coupon
+                        ) {
+                          const hasEligibleCourse = items.some(
+                            (item) =>
+                              !coveredCourseIdSet.has(
+                                String(getCartCourseId(item)),
+                              ) &&
+                              item.courseType ===
+                                couponValidation.coupon.courseType &&
+                              Math.round(item.price ?? 0) > 0,
+                          );
+                          if (!hasEligibleCourse) {
+                            toast.error(
+                              `This coupon can only be used on ${couponValidation.coupon.courseType} courses currently in your cart.`,
+                            );
+                            return;
+                          }
+                          setAppliedCoupon({
+                            code: couponCode,
+                            discount: couponValidation.coupon.discount,
+                            courseType: couponValidation.coupon.courseType,
+                            pointsCost: couponValidation.coupon.pointsCost,
+                          });
+                          toast.success("Coupon applied successfully!");
+                        } else if (couponValidation?.error) {
+                          toast.error(couponValidation.error);
+                        }
+                      }}
+                      disabled={
+                        !couponCode.trim() || couponValidation === undefined
+                      }
+                      className="w-full sm:w-auto"
+                    >
+                      Apply
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2 dark:border-green-800 dark:bg-green-950/30">
+                    <div className="flex items-center gap-2">
+                      <Gift className="h-4 w-4 text-green-600" />
+                      <span className="font-mono text-sm font-semibold">
+                        {appliedCoupon.code}
+                      </span>
+                      <span className="text-xs text-green-600">
+                        {appliedCoupon.discount}% off
+                      </span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setAppliedCoupon(null);
+                        setCouponCode("");
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                )}
+                {couponValidation && !couponValidation.valid && couponCode && (
+                  <p className="text-xs text-red-600">
+                    {couponValidation.error}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2 border-t pt-4">
+                <div className="flex justify-between font-semibold">
+                  <span>Total</span>
+                  <span>{showRupees(discountedTotal)}</span>
+                </div>
+                {appliedCoupon && (
+                  <div className="text-sm text-green-600">
+                    <Check className="mr-1 inline h-4 w-4" />
+                    {appliedCoupon.discount === 100
+                      ? `Coupon applied to one ${appliedCoupon.courseType} course`
+                      : `Coupon applied - ${appliedCoupon.discount}% off one ${appliedCoupon.courseType} course`}
+                  </div>
+                )}
+                {user?.id && totalPointsEarned > 0 && (
+                  <div className="flex items-center gap-2 rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400">
+                    <Gift className="h-4 w-4 flex-shrink-0" />
+                    <span className="font-medium">
+                      You&apos;ll earn {totalPointsEarned} Mind Points
+                    </span>
+                  </div>
+                )}
+              </div>
+              <Button
+                onClick={handleCheckoutClick}
+                disabled={isProcessing || isLoading}
+                className="w-full"
+              >
+                {isProcessing ? "Processing..." : "Proceed to Checkout"}
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {user?.id && (
+        <WhatsAppModal
+          isOpen={showWhatsAppModal}
+          onClose={handleWhatsAppSkip}
+          onComplete={handleWhatsAppComplete}
+          clerkUserId={user.id}
+        />
+      )}
+    </div>
+  );
+};
+
+const CartPage = () => {
+  return (
+    <Suspense fallback={<div>Loading cart...</div>}>
+      <CartContent />
+    </Suspense>
+  );
+};
+
+export default CartPage;

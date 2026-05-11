@@ -11,15 +11,18 @@
 
 ## Build, Test, and Development Commands
 
-- Install dependencies with `bun install` after syncing `.env` (see `setup-env.sh` for required keys).
-- `bun dev` launches Next.js and Convex dev servers in parallel; open <http://localhost:3000>.
-- `bun build` compiles the production bundle; `bun start` serves it.
-- `bun lint` applies ESLint’s Next.js rules; `bun type-check` runs `tsc --noEmit`.
-- Email-related smoke tests run via `bun test:email` or `bun test:email:direct` against a configured Resend sandbox.
+- Install dependencies with `npm install` after syncing `.env` (see `setup-env.sh` for required keys).
+- `npm run dev` launches the Next.js app on <http://localhost:3000>.
+- `npm run dev:convex` starts Convex dev sync when needed.
+- `npm run build` compiles the production bundle; `npm start` serves it.
+- `npm run lint` runs ESLint; `npm run type-check` runs `tsc --noEmit`.
+- `npm run type-check:convex` checks Convex functions.
+- `npm run doctor` verifies that stale mobile/workspace artifacts have not returned.
+- Email-related smoke tests run via `npm run test:email` or `npm run test:email:direct` against a configured Resend sandbox.
 
 ## Coding Style & Naming Conventions
 
-- TypeScript-first codebase with 2-space indentation and Prettier + `prettier-plugin-tailwindcss`; run `bunx prettier --write` on touched files.
+- TypeScript-first codebase with 2-space indentation and Prettier + `prettier-plugin-tailwindcss`; run `npx prettier --write` on touched files.
 - Favor PascalCase for React components/files, camelCase for hooks/utilities, and snake_case only inside Convex table names.
 - Keep Tailwind utility groupings logical (layout → spacing → color) and prefer shared variants via `class-variance-authority`.
 - Guard network calls with environment checks (see `app/page.tsx` for `NEXT_PUBLIC_CONVEX_URL` pattern).
@@ -46,17 +49,16 @@
 
 ### Architecture overview
 
-This is an npm-workspaces monorepo (`apps/web`, `apps/mobile`, `packages/*`). The primary web app is `@mindpoint/web` (Next.js 15 + App Router). The backend is Convex (cloud BaaS); there is no local database or Docker required.
+This is a single root Next.js app. The web app lives in `app/`, shared UI in `components/`, reusable modules in `lib/`, and Convex functions in `convex/`. The backend is Convex (cloud BaaS); there is no local database or Docker required.
 
 ### Package manager
 
-Despite AGENTS.md mentioning `bun`, the repo declares `"packageManager": "npm@11.11.0"` and uses `package-lock.json`. Use `npm install` (not bun/pnpm/yarn) to install dependencies.
+The repo declares `"packageManager": "npm@11.11.0"` and uses `package-lock.json`. Use `npm install` (not bun/pnpm/yarn) to install dependencies.
 
 ### Running the web dev server
 
-- `npm run dev:web` starts only the Next.js web app on port 3000 (recommended for cloud agents).
-- `npm run dev` starts web + mobile + Convex in parallel; skip this in cloud unless you need Convex dev sync.
-- The `scripts/run-web-with-env.js` helper loads `.env` and `.env.local` from the repo root before forwarding to the `@mindpoint/web` workspace.
+- `npm run dev` starts the Next.js app on port 3000.
+- `npm run dev:convex` starts Convex dev sync; skip this in cloud unless you need Convex deployment syncing.
 
 ### Environment variables
 
@@ -64,9 +66,9 @@ All required secrets (Clerk, Convex, Razorpay, Resend, etc.) are injected as env
 
 ### Lint, type-check, and build
 
-- `npm run lint` — ESLint via Turbo (scoped to `@mindpoint/web`)
+- `npm run lint` — ESLint for the root app
 - `npm run build` — Next.js production build (TypeScript and ESLint errors are ignored during builds via `next.config.ts`)
-- Type-checking: `npm run type-check` runs tsc across web, mobile, and backend
+- Type-checking: `npm run type-check` runs the root Next.js app; `npm run type-check:convex` runs Convex type checks
 
 ### Convex backend
 

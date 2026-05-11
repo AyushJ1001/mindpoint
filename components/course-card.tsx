@@ -1,0 +1,686 @@
+"use client";
+
+import { useRouter } from "next/navigation";
+import { useCart } from "react-use-cart";
+import { Plus, Calendar, Clock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CourseImageCarousel } from "@/components/course-image-carousel";
+import {
+  getCourseScheduleLines,
+  shouldShowCourseTiming,
+} from "@/lib/course-schedule";
+import { showRupees, getOfferDetails, getCoursePrice } from "@/lib/utils";
+import type { CourseLike } from "@/lib/backend";
+import { useEffect, useState } from "react";
+import { BogoSelectionModal } from "@/components/bogo-selection-modal";
+import { Id } from "@/lib/backend/data-model";
+import { calculatePointsEarned } from "@/lib/mind-points";
+import { Gift, Layers } from "lucide-react";
+import { getEnrolledCount } from "@/lib/course-enrollment";
+import { useBundleEligibility } from "@/hooks/use-bundle-eligibility";
+
+// Helper function to format date
+const formatDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-US", {
+      weekday: "short",
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    });
+  } catch {
+    return dateString;
+  }
+};
+
+// Helper function to get time until start date
+const getTimeUntilStart = (dateString: string) => {
+  try {
+    const startDate = new Date(dateString);
+    const now = new Date();
+    const diffTime = startDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+
+    if (diffDays < 0) return "Started";
+    if (diffDays === 0) return "Starts today";
+    if (diffDays === 1) return "Starts tomorrow";
+    if (diffDays < 7) return `Starts in ${diffDays} days`;
+    if (diffDays < 30) return `Starts in ${Math.ceil(diffDays / 7)} weeks`;
+    return `Starts in ${Math.ceil(diffDays / 30)} months`;
+  } catch {
+    return "Date TBD";
+  }
+};
+
+export function CourseCard({
+  course,
+  bogoCoursesByType,
+}: {
+  course: CourseLike;
+  bogoCoursesByType?: Record<string, CourseLike[]>;
+}) {
+  const { addItem, inCart } = useCart();
+  const router = useRouter();
+  const [showBogoModal, setShowBogoModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Get available courses for BOGO selection from props
+  const availableCourses =
+    course.bogo && course.type && bogoCoursesByType
+      ? (bogoCoursesByType[course.type] ?? undefined)
+      : undefined;
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use shared time for offer details - updates automatically via useNow hook
+  // now triggers re-renders every minute, getOfferDetails uses Date.now() internally
+  const offerDetails = getOfferDetails(course);
+
+  // Bundle eligibility (shared subscription, cached across cards)
+  const bundleInfo = useBundleEligibility(course._id);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (course.usesBatches) {
+      router.push(`/courses/${course._id}`);
+      return;
+    }
+
+    // Check if course is out of stock
+    const seatsLeft = Math.max(
+      0,
+      (course.capacity ?? 0) - getEnrolledCount(course),
+    );
+    const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
+
+    if (isOutOfStock) {
+      return; // Don't add to cart if out of stock
+    }
+
+    // Check if BOGO is active and there are other courses of the same type
+    // Only check BOGO if availableCourses has loaded and there are selectable courses
+    if (offerDetails?.hasBogo && availableCourses) {
+      // Filter out the source course to get only selectable courses
+      const selectableCourses = availableCourses.filter(
+        (c) => c._id !== course._id,
+      );
+      if (selectableCourses.length > 0) {
+        // There are other courses available, show BOGO modal
+        setShowBogoModal(true);
+        return;
+      }
+      // No other courses of same type with BOGO, proceed normally without BOGO
+    }
+
+    addItem({
+      id: course._id,
+      name: course.name,
+      description: course.description,
+      price: getCoursePrice(course),
+      originalPrice: course.price, // Store original price for discount calculations
+      imageUrls: course.imageUrls || [],
+      capacity: course.capacity || 1,
+      quantity: 1, // Explicitly set initial quantity to 1
+      offer: course.offer, // Store discount offer data in cart item
+      bogo: course.bogo, // Store BOGO data in cart item
+      courseType: course.type,
+    });
+  };
+
+  const handleBogoSelection = (selection: {
+    batchId?: Id<"courseBatches">;
+    batchLabel?: string;
+    courseId: Id<"courses">;
+  }) => {
+    // Find the selected course from available courses
+    const selectedFreeCourse = availableCourses?.find(
+      (course) => course._id === selection.courseId,
+    );
+
+    // Validate that the selected course exists
+    if (!selectedFreeCourse) {
+      console.error(
+        "Selected course not found in available courses:",
+        selection.courseId,
+      );
+      return; // Don't add to cart if course doesn't exist
+    }
+
+    addItem({
+      id: course._id,
+      name: course.name,
+      description: course.description,
+      price: getCoursePrice(course),
+      originalPrice: course.price, // Store original price for discount calculations
+      imageUrls: course.imageUrls || [],
+      capacity: course.capacity || 1,
+      quantity: 1,
+      offer: course.offer,
+      bogo: course.bogo,
+      courseType: course.type,
+      selectedFreeCourse: {
+        id: selection.courseId,
+        courseId: selection.courseId,
+        batchId: selection.batchId,
+        batchLabel: selection.batchLabel,
+        name: selectedFreeCourse.name,
+        description:
+          selectedFreeCourse.description ||
+          "Free course selected via BOGO offer",
+        price: 0,
+        originalPrice: selectedFreeCourse.price, // Store original price for the free course
+        imageUrls: selectedFreeCourse.imageUrls || [],
+        courseType: selectedFreeCourse.type,
+      },
+    });
+
+    // Close the modal after successful selection
+    setShowBogoModal(false);
+  };
+
+  const handleCardClick = () => {
+    // Don't navigate if BOGO modal is open
+    if (showBogoModal) {
+      return;
+    }
+    router.push(`/courses/${course._id}`);
+  };
+
+  const displayPrice = getCoursePrice(course);
+  const scheduleLines = getCourseScheduleLines(course);
+
+  return (
+    <Card
+      className="group bg-card/50 @container relative h-full cursor-pointer overflow-hidden rounded-2xl border-none shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
+      onClick={handleCardClick}
+    >
+      {/* Course Image */}
+      <CourseImageCarousel imageUrls={course.imageUrls || []} />
+
+      {(offerDetails || bundleInfo) && (
+        <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
+          <div className="flex max-w-[52%] flex-col gap-1">
+            {offerDetails && (
+              <Badge
+                variant="secondary"
+                className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
+              >
+                <span className="sm:hidden">Special Offer</span>
+                <span className="hidden sm:inline">
+                  {offerDetails.offerName}
+                </span>
+              </Badge>
+            )}
+            {bundleInfo && (
+              <Badge className="max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+                <Layers className="mr-1 h-3 w-3" />
+                <span className="sm:hidden">Bundle</span>
+                <span className="hidden sm:inline">Bundle Deal</span>
+              </Badge>
+            )}
+          </div>
+          {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+            <div className="flex max-w-[46%] flex-col items-end gap-1">
+              {offerDetails?.hasDiscount && (
+                <Badge
+                  variant="destructive"
+                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+                >
+                  <span className="sm:hidden">
+                    {offerDetails.discountPercentage}% OFF
+                  </span>
+                  <span className="hidden sm:inline">
+                    🔥 {offerDetails.discountPercentage}% OFF
+                  </span>
+                </Badge>
+              )}
+              {offerDetails?.hasBogo && (
+                <Badge className="max-w-full bg-emerald-500/90 text-[11px] font-semibold whitespace-nowrap text-white uppercase shadow-lg">
+                  <span className="sm:hidden">BOGO</span>
+                  <span className="hidden sm:inline">
+                    🛍️ {offerDetails.bogoLabel || "BOGO"}
+                  </span>
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      <CardHeader className="pb-3">
+        <CardTitle className="group-hover:text-primary line-clamp-2 text-base font-semibold transition-colors">
+          {course.name}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3 pt-0 pb-4 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
+        <div className="min-w-0 flex-1 space-y-1">
+          {shouldShowCourseTiming(course) && scheduleLines.length > 0 ? (
+            <div className="mb-2 space-y-1 text-xs text-slate-600">
+              {scheduleLines.map((line, index) => (
+                <div key={line} className="flex items-center gap-1.5">
+                  {index === 0 ? (
+                    <Calendar className="h-3.5 w-3.5 shrink-0" />
+                  ) : (
+                    <Clock className="h-3.5 w-3.5 shrink-0" />
+                  )}
+                  <span className="line-clamp-1">{line}</span>
+                </div>
+              ))}
+            </div>
+          ) : null}
+          <Badge
+            variant="secondary"
+            className="px-3 py-1 text-sm font-semibold"
+          >
+            {showRupees(displayPrice)}
+          </Badge>
+          {offerDetails && (
+            <div className="space-y-1 text-xs">
+              {offerDetails.hasDiscount && (
+                <div className="text-muted-foreground">
+                  <span className="line-through">
+                    {showRupees(offerDetails.originalPrice)}
+                  </span>
+                </div>
+              )}
+              <div
+                className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
+              >
+                {offerDetails.timeLeft.days > 0 &&
+                  `${offerDetails.timeLeft.days}d `}
+                {offerDetails.timeLeft.hours > 0 &&
+                  `${offerDetails.timeLeft.hours}h `}
+                {offerDetails.timeLeft.minutes > 0 &&
+                  `${offerDetails.timeLeft.minutes}m`}{" "}
+                left
+              </div>
+            </div>
+          )}
+          {offerDetails?.hasBogo && (
+            <div className="text-xs font-semibold text-emerald-600">
+              Includes a free bonus course
+            </div>
+          )}
+          {bundleInfo && (
+            <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+              <Layers className="h-3 w-3 shrink-0" />
+              <span className="truncate">{bundleInfo.dealSummary}</span>
+            </div>
+          )}
+          <div className="text-muted-foreground flex items-center gap-1 text-xs">
+            <Gift className="h-3 w-3 shrink-0" />
+            <span className="truncate">
+              Earn {calculatePointsEarned(course)} Mind Points
+            </span>
+          </div>
+        </div>
+        {(() => {
+          const seatsLeft = Math.max(
+            0,
+            (course.capacity ?? 0) - getEnrolledCount(course),
+          );
+          const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
+
+          // Use mounted state to prevent hydration mismatch
+          const isInCart = mounted ? inCart(course._id) : false;
+
+          return (
+            <Button
+              onClick={handleAddToCart}
+              disabled={isInCart || isOutOfStock}
+              size="sm"
+              className="w-full shrink-0 @min-[300px]:w-auto"
+            >
+              <Plus className="mr-2 h-4 w-4" />
+              {isOutOfStock
+                ? "Out of Stock"
+                : isInCart
+                  ? "Added"
+                  : "Add to Cart"}
+            </Button>
+          );
+        })()}
+      </CardContent>
+
+      {/* BOGO Selection Modal */}
+      {offerDetails?.hasBogo && course.type && (
+        <BogoSelectionModal
+          isOpen={showBogoModal}
+          onClose={() => setShowBogoModal(false)}
+          onSelect={handleBogoSelection}
+          courseType={course.type}
+          sourceCourseId={course._id}
+          sourceCourseName={course.name}
+        />
+      )}
+    </Card>
+  );
+}
+
+export function UpcomingCourseCard({
+  course,
+  bogoCoursesByType,
+}: {
+  course: CourseLike;
+  bogoCoursesByType?: Record<string, CourseLike[]>;
+}) {
+  const { addItem, inCart } = useCart();
+  const router = useRouter();
+  const [showBogoModal, setShowBogoModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  // Get available courses for BOGO selection from props
+  const availableCourses =
+    course.bogo && course.type && bogoCoursesByType
+      ? (bogoCoursesByType[course.type] ?? undefined)
+      : undefined;
+
+  // Set mounted state after hydration
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Use shared time for offer details - updates automatically via useNow hook
+  // now triggers re-renders every minute, getOfferDetails uses Date.now() internally
+  const offerDetails = getOfferDetails(course);
+
+  // Bundle eligibility (shared subscription, cached across cards)
+  const bundleInfo = useBundleEligibility(course._id);
+
+  const handleAddToCart = (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (course.usesBatches) {
+      router.push(`/courses/${course._id}`);
+      return;
+    }
+
+    // Check if course is out of stock
+    const seatsLeft = Math.max(
+      0,
+      (course.capacity ?? 0) - getEnrolledCount(course),
+    );
+    const isOutOfStock = (course.capacity ?? 0) === 0 || seatsLeft === 0;
+
+    if (isOutOfStock) {
+      return; // Don't add to cart if out of stock
+    }
+
+    // Check if BOGO is active and there are other courses of the same type
+    // Only check BOGO if availableCourses has loaded and there are selectable courses
+    if (offerDetails?.hasBogo && availableCourses) {
+      // Filter out the source course to get only selectable courses
+      const selectableCourses = availableCourses.filter(
+        (c) => c._id !== course._id,
+      );
+      if (selectableCourses.length > 0) {
+        // There are other courses available, show BOGO modal
+        setShowBogoModal(true);
+        return;
+      }
+      // No other courses of same type with BOGO, proceed normally without BOGO
+    }
+
+    addItem({
+      id: course._id,
+      name: course.name,
+      description: course.description,
+      price: getCoursePrice(course),
+      originalPrice: course.price, // Store original price for discount calculations
+      imageUrls: course.imageUrls || [],
+      capacity: course.capacity || 1,
+      quantity: 1,
+      offer: course.offer,
+      bogo: course.bogo,
+      courseType: course.type,
+    });
+  };
+
+  const handleBogoSelection = (selection: {
+    batchId?: Id<"courseBatches">;
+    batchLabel?: string;
+    courseId: Id<"courses">;
+  }) => {
+    // Find the selected course from available courses
+    const selectedFreeCourse = availableCourses?.find(
+      (course) => course._id === selection.courseId,
+    );
+
+    // Validate that the selected course exists
+    if (!selectedFreeCourse) {
+      console.error(
+        "Selected course not found in available courses:",
+        selection.courseId,
+      );
+      return; // Don't add to cart if course doesn't exist
+    }
+
+    addItem({
+      id: course._id,
+      name: course.name,
+      description: course.description,
+      price: getCoursePrice(course),
+      originalPrice: course.price, // Store original price for discount calculations
+      imageUrls: course.imageUrls || [],
+      capacity: course.capacity || 1,
+      quantity: 1,
+      offer: course.offer,
+      bogo: course.bogo,
+      courseType: course.type,
+      selectedFreeCourse: {
+        id: selection.courseId,
+        courseId: selection.courseId,
+        batchId: selection.batchId,
+        batchLabel: selection.batchLabel,
+        name: selectedFreeCourse.name,
+        description:
+          selectedFreeCourse.description ||
+          "Free course selected via BOGO offer",
+        price: 0,
+        originalPrice: selectedFreeCourse.price, // Store original price for the free course
+        imageUrls: selectedFreeCourse.imageUrls || [],
+        courseType: selectedFreeCourse.type,
+      },
+    });
+
+    // Close the modal after successful selection
+    setShowBogoModal(false);
+  };
+
+  const handleCardClick = () => {
+    // Don't navigate if BOGO modal is open
+    if (showBogoModal) {
+      return;
+    }
+    router.push(`/courses/${course._id}`);
+  };
+
+  const timeUntilStart = getTimeUntilStart(course.startDate || "");
+  const formattedDate = formatDate(course.startDate || "");
+  const displayPrice = getCoursePrice(course);
+  const scheduleLines = getCourseScheduleLines(course);
+
+  return (
+    <Card
+      className="group bg-card/50 @container relative h-full cursor-pointer overflow-hidden rounded-2xl border-none shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
+      onClick={handleCardClick}
+    >
+      <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
+        <div className="flex max-w-[56%] flex-col gap-1">
+          {offerDetails && (
+            <Badge
+              variant="secondary"
+              className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
+            >
+              <span className="sm:hidden">Special Offer</span>
+              <span className="hidden sm:inline">{offerDetails.offerName}</span>
+            </Badge>
+          )}
+          <Badge
+            variant="default"
+            className="w-fit max-w-full bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+          >
+            <Clock className="mr-1 h-3 w-3" />
+            Upcoming
+          </Badge>
+          {bundleInfo && (
+            <Badge className="w-fit max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Layers className="mr-1 h-3 w-3" />
+              <span className="sm:hidden">Bundle</span>
+              <span className="hidden sm:inline">Bundle Deal</span>
+            </Badge>
+          )}
+        </div>
+
+        {(offerDetails?.hasDiscount || offerDetails?.hasBogo) && (
+          <div className="flex max-w-[46%] flex-col items-end gap-1">
+            {offerDetails?.hasDiscount && (
+              <Badge
+                variant="destructive"
+                className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+              >
+                <span className="sm:hidden">
+                  {offerDetails.discountPercentage}% OFF
+                </span>
+                <span className="hidden sm:inline">
+                  🔥 {offerDetails.discountPercentage}% OFF
+                </span>
+              </Badge>
+            )}
+            {offerDetails?.hasBogo && (
+              <Badge className="max-w-full bg-emerald-500/90 text-[11px] font-semibold whitespace-nowrap text-white uppercase shadow-lg">
+                <span className="sm:hidden">BOGO</span>
+                <span className="hidden sm:inline">
+                  🛍️ {offerDetails.bogoLabel || "BOGO"}
+                </span>
+              </Badge>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Course Image */}
+      <CourseImageCarousel imageUrls={course.imageUrls || []} />
+
+      <CardHeader className="pb-3">
+        <CardTitle className="group-hover:text-primary line-clamp-2 text-base font-semibold transition-colors group-hover:underline">
+          {course.name}
+        </CardTitle>
+
+        {/* Start Date Information */}
+        <div className="mt-2 space-y-1">
+          <div className="text-muted-foreground flex items-center text-sm">
+            <Calendar className="mr-2 h-4 w-4" />
+            <span className="font-medium">{formattedDate}</span>
+          </div>
+          {shouldShowCourseTiming(course)
+            ? scheduleLines.slice(1).map((line) => (
+                <div
+                  key={line}
+                  className="text-muted-foreground flex items-center text-xs"
+                >
+                  <Clock className="mr-2 h-3.5 w-3.5" />
+                  <span>{line}</span>
+                </div>
+              ))
+            : null}
+          <div className="text-xs font-medium text-orange-600 dark:text-orange-400">
+            {timeUntilStart}
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0 pb-4">
+        <div className="flex flex-col gap-3 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
+          <div className="min-w-0 flex-1 space-y-1 @min-[300px]:pr-3">
+            <Badge
+              variant="secondary"
+              className="px-3 py-1 text-sm font-semibold"
+            >
+              {showRupees(displayPrice)}
+            </Badge>
+            {offerDetails && (
+              <div className="space-y-1 text-xs">
+                {offerDetails.hasDiscount && (
+                  <div className="text-muted-foreground">
+                    <span className="line-through">
+                      {showRupees(offerDetails.originalPrice)}
+                    </span>
+                  </div>
+                )}
+                <div
+                  className={`font-medium ${offerDetails.hasBogo ? "text-emerald-600" : "text-orange-600"}`}
+                >
+                  {offerDetails.timeLeft.days > 0 &&
+                    `${offerDetails.timeLeft.days}d `}
+                  {offerDetails.timeLeft.hours > 0 &&
+                    `${offerDetails.timeLeft.hours}h `}
+                  {offerDetails.timeLeft.minutes > 0 &&
+                    `${offerDetails.timeLeft.minutes}m`}{" "}
+                  left
+                </div>
+              </div>
+            )}
+            {offerDetails?.hasBogo && (
+              <div className="text-xs font-semibold text-emerald-600">
+                Includes a free bonus course
+              </div>
+            )}
+            {bundleInfo && (
+              <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+                <Layers className="h-3 w-3 shrink-0" />
+                <span className="truncate">{bundleInfo.dealSummary}</span>
+              </div>
+            )}
+          </div>
+          {(() => {
+            const seatsLeft = Math.max(
+              0,
+              (course.capacity ?? 0) - getEnrolledCount(course),
+            );
+            const isOutOfStock =
+              (course.capacity ?? 0) === 0 || seatsLeft === 0;
+
+            // Use mounted state to prevent hydration mismatch
+            const isInCart = mounted ? inCart(course._id) : false;
+
+            return (
+              <Button
+                onClick={handleAddToCart}
+                disabled={isInCart || isOutOfStock}
+                size="sm"
+                className="relative z-10 w-full shrink-0 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 @min-[300px]:w-auto"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                {isOutOfStock
+                  ? "Out of Stock"
+                  : isInCart
+                    ? "Added"
+                    : "Enroll Now"}
+              </Button>
+            );
+          })()}
+        </div>
+      </CardContent>
+
+      {/* BOGO Selection Modal */}
+      {offerDetails?.hasBogo && course.type && (
+        <BogoSelectionModal
+          isOpen={showBogoModal}
+          onClose={() => setShowBogoModal(false)}
+          onSelect={handleBogoSelection}
+          courseType={course.type}
+          sourceCourseId={course._id}
+          sourceCourseName={course.name}
+        />
+      )}
+    </Card>
+  );
+}

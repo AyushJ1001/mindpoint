@@ -6,7 +6,7 @@ async function main() {
     evaluateBundleCampaigns,
     isBundleCampaignActive,
     pickWinningBundleCampaign,
-  } = await import("./packages/domain/src/bundles.ts");
+  } = await import("./lib/domain/bundles.ts");
 
   assert.equal(
     isBundleCampaignActive(

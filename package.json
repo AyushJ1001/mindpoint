@@ -3,34 +3,22 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "npm@11.11.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "overrides": {
     "lightningcss": "1.31.1"
   },
   "scripts": {
-    "dev": "npm-run-all --parallel dev:web dev:mobile dev:backend",
-    "dev:web": "node scripts/run-web-with-env.js dev",
-    "dev:mobile": "cd apps/mobile && bun run start",
-    "ios:mobile": "node scripts/run-mobile-with-env.js ios",
-    "ios:mobile:build": "node scripts/run-mobile-with-env.js run:ios",
-    "android:mobile": "node scripts/run-mobile-with-env.js android",
-    "android:mobile:build": "node scripts/run-mobile-with-env.js run:android",
-    "dev:backend": "convex dev",
-    "predev": "convex dev --until-success && convex dashboard",
-    "build": "node scripts/run-web-with-env.js build",
-    "build:turbo": "turbo run build --filter=@mindpoint/web",
-    "start": "node scripts/run-web-with-env.js start",
-    "lint": "turbo run lint --filter=@mindpoint/web",
-    "type-check": "npm-run-all type-check:web type-check:mobile type-check:backend",
-    "type-check:web": "turbo run type-check --filter=@mindpoint/web",
-    "type-check:mobile": "turbo run type-check --filter=@mindpoint/mobile",
-    "type-check:backend": "tsc --project convex/tsconfig.json --noEmit",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit",
+    "type-check:convex": "tsc --project convex/tsconfig.json --noEmit",
+    "dev:convex": "convex dev",
+    "doctor": "node scripts/check-root-web-app.js",
     "test:email": "node test-resend-email.js",
     "test:email:direct": "node test-resend-direct.js",
-    "test:admin-route-protection": "node scripts/test-admin-route-protection.js"
+    "test:admin-route-protection": "node scripts/test-admin-route-protection.js",
+    "test:root-web-doctor": "node test-root-web-doctor.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^7.0.12",
@@ -57,6 +45,7 @@
     "@upstash/redis": "^1.35.3",
     "@vercel/analytics": "^1.5.0",
     "class-variance-authority": "^0.7.1",
+    "client-only": "^0.0.1",
     "clsx": "^2.1.1",
     "convex": "^1.35.1",
     "dotenv": "^17.2.1",
@@ -77,6 +66,7 @@
     "react-use-cart": "^1.14.0",
     "remark-gfm": "^4.0.1",
     "resend": "^5.0.0",
+    "server-only": "^0.0.1",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.3.1",
     "uploadthing": "^7.7.4",
@@ -92,11 +82,9 @@
     "eslint": "^9",
     "eslint-config-next": "15.2.3",
     "eslint-plugin-react-hooks": "^7.0.1",
-    "npm-run-all": "^4.1.5",
     "prettier": "^3.6.2",
     "prettier-plugin-tailwindcss": "^0.6.14",
     "tailwindcss": "^4",
-    "turbo": "^2.8.17",
     "tw-animate-css": "^1.3.6",
     "typescript": "^5"
   }

@@ -1,6 +1,5 @@
 "use node";
 
-import { getSiteUrl } from "@mindpoint/config";
 import { v } from "convex/values";
 import { action } from "./_generated/server";
 import { Resend } from "resend";
@@ -15,6 +14,10 @@ if (!resendApiKey) {
 }
 
 const resend = new Resend(resendApiKey);
+
+function getSiteUrl(): string {
+  return process.env.NEXT_PUBLIC_SITE_URL || "https://www.themindpoint.org";
+}
 
 // Helper function to ensure all emails are also sent to contact.themindpoint@gmail.com
 const sendEmailWithCopy = async (emailConfig: {

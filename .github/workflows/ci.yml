@@ -33,8 +33,8 @@ jobs:
       - name: Run TypeScript type checking
         run: npm run type-check
 
-      - name: Type-check mobile app
-        run: npm run type-check:mobile
+      - name: Type-check Convex backend
+        run: npm run type-check:convex
 
       - name: Run ESLint
         run: npm run lint
@@ -71,5 +71,5 @@ jobs:
         if: success()
         with:
           name: build-artifacts
-          path: apps/web/.next/
+          path: .next/
           retention-days: 7
