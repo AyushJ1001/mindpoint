@@ -125,9 +125,12 @@ function buildAdminCheckoutPricingItem(
   const listedPrice = roundCurrency(pricing?.listedPrice ?? course.price);
   const checkoutPrice = roundCurrency(pricing?.checkoutPrice ?? listedPrice);
   const amountPaid = roundCurrency(pricing?.amountPaid ?? checkoutPrice);
+  if (amountPaid > checkoutPrice) {
+    throw new Error("Amount paid cannot exceed checkout price.");
+  }
+
   const redemptionDiscountAmount = roundCurrency(
-    pricing?.redemptionDiscountAmount ??
-      Math.max(0, checkoutPrice - amountPaid),
+    Math.max(0, checkoutPrice - amountPaid),
   );
   const couponCode = pricing?.couponCode?.trim() || undefined;
   const mindPointsRedeemed = roundCurrency(pricing?.mindPointsRedeemed);
@@ -646,8 +649,12 @@ export const updateEnrollmentPricing = mutation({
     const listedPrice = roundCurrency(args.listedPrice);
     const checkoutPrice = roundCurrency(args.checkoutPrice);
     const amountPaid = roundCurrency(args.amountPaid);
+    if (amountPaid > checkoutPrice) {
+      throw new Error("Amount paid cannot exceed checkout price.");
+    }
+
     const redemptionDiscountAmount = roundCurrency(
-      args.redemptionDiscountAmount ?? Math.max(0, checkoutPrice - amountPaid),
+      Math.max(0, checkoutPrice - amountPaid),
     );
     const mindPointsRedeemed = roundCurrency(args.mindPointsRedeemed);
     const couponCode = args.couponCode?.trim() || undefined;

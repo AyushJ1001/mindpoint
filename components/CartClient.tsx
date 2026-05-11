@@ -29,7 +29,7 @@ import { useUser, useClerk } from "@clerk/nextjs";
 import { handlePaymentSuccess } from "@/app/actions/payment";
 import { toast } from "sonner";
 import { WhatsAppModal } from "@/components/whatsapp-modal";
-import { useConvexAuth, useQuery, useMutation } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
 import {
   Dialog,
@@ -216,7 +216,6 @@ const CartContent = () => {
     couponCode && isAuthenticated ? { code: couponCode } : "skip",
   );
 
-  const markCouponUsed = useMutation(api.mindPoints.markCouponUsed);
   const now = useNow();
   const cartCourseIds = useMemo(
     () =>
@@ -695,13 +694,8 @@ const CartContent = () => {
       }
 
       if (appliedCoupon) {
-        try {
-          await markCouponUsed({ couponCode: appliedCoupon.code });
-          setAppliedCoupon(null);
-          setCouponCode("");
-        } catch (error) {
-          console.error("Failed to mark coupon as used:", error);
-        }
+        setAppliedCoupon(null);
+        setCouponCode("");
       }
 
       const pointsEarned = totalPointsEarned;
@@ -733,7 +727,6 @@ const CartContent = () => {
       coveredCourseIdSet,
       discountedTotal,
       items,
-      markCouponUsed,
       showEnrollmentToast,
       totalPointsEarned,
       user,

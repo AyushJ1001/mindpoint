@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
@@ -41,6 +41,7 @@ export default function AdminEnrollmentDetailPage() {
   const [pricingEditReason, setPricingEditReason] =
     useState("Corrected by admin");
   const [isSavingPricing, setIsSavingPricing] = useState(false);
+  const initializedPricingEnrollmentId = useRef<string | null>(null);
   const { formatTimestamp } = useAdminTimeZone();
 
   const detail = useQuery(api.adminEnrollments.getEnrollmentDetail, {
@@ -70,6 +71,9 @@ export default function AdminEnrollmentDetailPage() {
 
   useEffect(() => {
     if (!detail) return;
+    if (initializedPricingEnrollmentId.current === String(detail._id)) {
+      return;
+    }
 
     const fallbackListedPrice = detail.listedPrice ?? detail.course?.price ?? 0;
     const fallbackCheckoutPrice = detail.checkoutPrice ?? fallbackListedPrice;
@@ -81,6 +85,7 @@ export default function AdminEnrollmentDetailPage() {
       detail.mindPointsRedeemed ? String(detail.mindPointsRedeemed) : "",
     );
     setPricingCouponCode(detail.couponCode ?? "");
+    initializedPricingEnrollmentId.current = String(detail._id);
   }, [detail]);
 
   const parsePricingNumber = (value: string) => {

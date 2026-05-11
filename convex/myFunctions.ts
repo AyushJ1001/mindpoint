@@ -3,15 +3,9 @@ import { query, mutation, action } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
-import type {
-  CheckoutPricing,
-  CheckoutPricingItem,
-} from "./_shared/checkout";
+import type { CheckoutPricing, CheckoutPricingItem } from "./_shared/checkout";
 import { calculatePointsEarned } from "./_shared/mind-points";
-import {
-  PublicCourseDocumentValue,
-  PublicEnrollmentFields,
-} from "./schema";
+import { PublicCourseDocumentValue, PublicEnrollmentFields } from "./schema";
 import { pickPublicCourse } from "./_publicCourse";
 
 // Write your Convex functions in any file inside this directory (`convex`).
@@ -297,7 +291,8 @@ function getCheckoutPricingItem(
     ) ??
     checkoutPricing?.items.find(
       (item) =>
-        String(item.courseId) === String(courseId) && item.batchId === undefined,
+        String(item.courseId) === String(courseId) &&
+        item.batchId === undefined,
     )
   );
 }
@@ -332,6 +327,84 @@ function buildEnrollmentPricingFields(
     bundleCampaignId: pricingItem?.bundleCampaignId,
     bundleCampaignName: pricingItem?.bundleCampaignName?.trim() || undefined,
   };
+}
+
+async function validateCheckoutPricingItem(
+  ctx: MutationCtx,
+  args: {
+    userId: string;
+    course: CourseDoc;
+    pricingItem?: CheckoutPricingItem;
+  },
+) {
+  const pricingItem = args.pricingItem;
+  if (!pricingItem) {
+    return;
+  }
+
+  const checkoutPrice = roundCurrency(
+    pricingItem.checkoutPrice ?? args.course.price,
+  );
+  const amountPaid = roundCurrency(pricingItem.amountPaid ?? checkoutPrice);
+  if (amountPaid > checkoutPrice) {
+    throw new Error("Amount paid cannot exceed checkout price.");
+  }
+
+  const couponCode = pricingItem.couponCode?.trim();
+  if (!couponCode && amountPaid === 0 && checkoutPrice > 0) {
+    throw new Error("Free checkout requires a valid coupon.");
+  }
+
+  if (!couponCode) {
+    return;
+  }
+
+  const coupon = await ctx.db
+    .query("coupons")
+    .withIndex("by_code", (q) => q.eq("code", couponCode))
+    .first();
+
+  if (!coupon) {
+    throw new Error("Invalid coupon code.");
+  }
+  if (coupon.isUsed) {
+    throw new Error("This coupon has already been used.");
+  }
+  if (coupon.clerkUserId !== args.userId) {
+    throw new Error("This coupon does not belong to this user.");
+  }
+  if (coupon.courseType !== args.course.type) {
+    throw new Error("This coupon is not valid for this course type.");
+  }
+
+  const expectedDiscountAmount = Math.min(
+    checkoutPrice,
+    Math.round(checkoutPrice * (coupon.discount / 100)),
+  );
+  const expectedAmountPaid = Math.max(
+    0,
+    checkoutPrice - expectedDiscountAmount,
+  );
+  const redemptionDiscountAmount = roundCurrency(
+    pricingItem.redemptionDiscountAmount,
+  );
+  const mindPointsRedeemed = roundCurrency(pricingItem.mindPointsRedeemed);
+
+  if (
+    redemptionDiscountAmount !== expectedDiscountAmount ||
+    amountPaid !== expectedAmountPaid
+  ) {
+    throw new Error("Coupon pricing does not match the coupon discount.");
+  }
+
+  if (mindPointsRedeemed > 0 && mindPointsRedeemed !== coupon.pointsCost) {
+    throw new Error("Mind Points redeemed does not match the coupon cost.");
+  }
+
+  await ctx.db.patch(coupon._id, {
+    isUsed: true,
+    usedAt: Date.now(),
+  });
 }
 
 function isCourseBatchBacked(course: CourseDoc) {
@@ -416,7 +489,10 @@ function buildScheduleSnapshot(
     batchEndTime: undefined,
     batchDaysOfWeek: undefined,
     startDate: course.startDate ?? new Date().toISOString().split("T")[0],
-    endDate: course.endDate ?? course.startDate ?? new Date().toISOString().split("T")[0],
+    endDate:
+      course.endDate ??
+      course.startDate ??
+      new Date().toISOString().split("T")[0],
     startTime: course.startTime ?? "00:00",
     endTime: course.endTime ?? "23:59",
     daysOfWeek: course.daysOfWeek ?? [],
@@ -468,7 +544,11 @@ async function ensureEnrollmentCapacity(
     }
     const enrolledUsers = latestBatch.enrolledUsers ?? [];
     const capacity = latestBatch.capacity ?? 0;
-    if (capacity > 0 && enrolledUsers.length >= capacity && !enrolledUsers.includes(userId)) {
+    if (
+      capacity > 0 &&
+      enrolledUsers.length >= capacity &&
+      !enrolledUsers.includes(userId)
+    ) {
       throw new Error(`Batch "${latestBatch.label}" is full.`);
     }
     return latestBatch;
@@ -480,7 +560,11 @@ async function ensureEnrollmentCapacity(
   }
   const enrolledUsers = latestCourse.enrolledUsers ?? [];
   const capacity = latestCourse.capacity ?? 0;
-  if (capacity > 0 && enrolledUsers.length >= capacity && !enrolledUsers.includes(userId)) {
+  if (
+    capacity > 0 &&
+    enrolledUsers.length >= capacity &&
+    !enrolledUsers.includes(userId)
+  ) {
     throw new Error(`Course "${latestCourse.name}" is full.`);
   }
   return null;
@@ -534,7 +618,8 @@ async function scheduleEnrollmentConfirmationForSummary(
     args.course.startDate ??
     new Date().toISOString().split("T")[0];
   const endDate = args.enrollment.endDate ?? args.course.endDate ?? startDate;
-  const startTime = args.enrollment.startTime ?? args.course.startTime ?? "00:00";
+  const startTime =
+    args.enrollment.startTime ?? args.course.startTime ?? "00:00";
   const endTime = args.enrollment.endTime ?? args.course.endTime ?? "23:59";
 
   if (args.course.type === "supervised" && args.sessionType) {
@@ -593,7 +678,10 @@ async function scheduleEnrollmentConfirmationForSummary(
     return;
   }
 
-  if (args.course.type === "certificate" || args.course.type === "resume-studio") {
+  if (
+    args.course.type === "certificate" ||
+    args.course.type === "resume-studio"
+  ) {
     await ctx.scheduler.runAfter(
       0,
       api.emailActions.sendCertificateEnrollmentConfirmation,
@@ -665,20 +753,16 @@ async function scheduleEnrollmentConfirmationForSummary(
     return;
   }
 
-  await ctx.scheduler.runAfter(
-    0,
-    api.emailActions.sendEnrollmentConfirmation,
-    {
-      userEmail: args.recipientEmail,
-      userPhone: args.userPhone,
-      courseName: args.enrollment.courseName,
-      enrollmentNumber: args.enrollment.enrollmentNumber,
-      startDate,
-      endDate,
-      startTime,
-      endTime,
-    },
-  );
+  await ctx.scheduler.runAfter(0, api.emailActions.sendEnrollmentConfirmation, {
+    userEmail: args.recipientEmail,
+    userPhone: args.userPhone,
+    courseName: args.enrollment.courseName,
+    enrollmentNumber: args.enrollment.enrollmentNumber,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+  });
 }
 
 function getEnrollmentEmailSchedule(
@@ -826,14 +910,10 @@ async function grantBogoEnrollments(
     }
 
     // Validate the BOGO selection
-    const validation = validateBogoSelection(
-      sourceCourse,
-      freeCourse,
-      {
-        ...bogoSelection,
-        selectedFreeCourseId,
-      },
-    );
+    const validation = validateBogoSelection(sourceCourse, freeCourse, {
+      ...bogoSelection,
+      selectedFreeCourseId,
+    });
 
     if (!validation.isValid) {
       console.warn(
@@ -1107,10 +1187,7 @@ async function createBogoEnrollment(
     freeCourse.type === "internship" &&
     (internshipPlan === "120" || internshipPlan === "240")
   ) {
-    computedEndDate = calculateInternshipEndDate(
-      startDate,
-      internshipPlan,
-    );
+    computedEndDate = calculateInternshipEndDate(startDate, internshipPlan);
   }
 
   return [
@@ -1158,7 +1235,11 @@ export const handleSuccessfulPayment = mutation({
     if (!course) {
       throw new Error("Course not found");
     }
-    const batchResolution = await resolveEnrollmentBatch(ctx, course, args.batchId);
+    const batchResolution = await resolveEnrollmentBatch(
+      ctx,
+      course,
+      args.batchId,
+    );
     const batch = batchResolution.batch;
     await ensureEnrollmentCapacity(ctx, course, args.userId, batch);
 
@@ -1192,6 +1273,11 @@ export const handleSuccessfulPayment = mutation({
       args.courseId,
       args.batchId,
     );
+    await validateCheckoutPricingItem(ctx, {
+      userId: args.userId,
+      course,
+      pricingItem,
+    });
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
@@ -1251,17 +1337,22 @@ export const handleSuccessfulPayment = mutation({
 
     const userName = args.studentName || args.userEmail;
 
-    const bogoEnrollments = await grantBogoEnrollments(ctx, course, {
-      userId: args.userId,
-      userName: userName,
-      userEmail: args.userEmail,
-      userPhone: args.userPhone,
-      sessionType: args.sessionType,
-      isGuestUser: false,
-    }, {
-      sourceCourseId: args.courseId,
-      sourceBatchId: args.batchId,
-    });
+    const bogoEnrollments = await grantBogoEnrollments(
+      ctx,
+      course,
+      {
+        userId: args.userId,
+        userName: userName,
+        userEmail: args.userEmail,
+        userPhone: args.userPhone,
+        sessionType: args.sessionType,
+        isGuestUser: false,
+      },
+      {
+        sourceCourseId: args.courseId,
+        sourceBatchId: args.batchId,
+      },
+    );
 
     // Send appropriate email based on course type
     console.log("Checking email conditions:");
@@ -1579,6 +1670,11 @@ export const handleCartCheckout = mutation({
         lineItem.courseId,
         lineItem.batchId,
       );
+      await validateCheckoutPricingItem(ctx, {
+        userId: args.userId,
+        course,
+        pricingItem,
+      });
 
       const enrollmentId = await ctx.db.insert("enrollments", {
         userId: args.userId,
@@ -1706,14 +1802,19 @@ export const handleCartCheckout = mutation({
             console.warn(
               `Invalid BOGO selection for course ${course.name}: ${validation.error}. Attempting fallback to predefined free course.`,
             );
-            bogoEnrollments = await grantBogoEnrollments(ctx, course, {
-              userId: args.userId,
-              userName: args.studentName || args.userEmail,
-              userEmail: args.userEmail,
-              userPhone: args.userPhone,
-              sessionType: args.sessionType,
-              isGuestUser: false,
-            }, bogoSelection);
+            bogoEnrollments = await grantBogoEnrollments(
+              ctx,
+              course,
+              {
+                userId: args.userId,
+                userName: args.studentName || args.userEmail,
+                userEmail: args.userEmail,
+                userPhone: args.userPhone,
+                sessionType: args.sessionType,
+                isGuestUser: false,
+              },
+              bogoSelection,
+            );
           } else {
             bogoEnrollments = await grantBogoEnrollments(
               ctx,
@@ -1730,17 +1831,22 @@ export const handleCartCheckout = mutation({
             );
           }
         } else {
-          bogoEnrollments = await grantBogoEnrollments(ctx, course, {
-            userId: args.userId,
-            userName: args.studentName || args.userEmail,
-            userEmail: args.userEmail,
-            userPhone: args.userPhone,
-            sessionType: args.sessionType,
-            isGuestUser: false,
-          }, {
-            sourceCourseId: lineItem.courseId,
-            sourceBatchId: lineItem.batchId,
-          });
+          bogoEnrollments = await grantBogoEnrollments(
+            ctx,
+            course,
+            {
+              userId: args.userId,
+              userName: args.studentName || args.userEmail,
+              userEmail: args.userEmail,
+              userPhone: args.userPhone,
+              sessionType: args.sessionType,
+              isGuestUser: false,
+            },
+            {
+              sourceCourseId: lineItem.courseId,
+              sourceBatchId: lineItem.batchId,
+            },
+          );
         }
       }
 
@@ -2486,14 +2592,19 @@ export const handleGuestUserCartCheckoutWithData = mutation({
             console.warn(
               `Invalid BOGO selection for course ${course.name}: ${validation.error}. Attempting fallback to predefined free course.`,
             );
-            bogoEnrollments = await grantBogoEnrollments(ctx, course, {
-              userId: args.userData.email,
-              userName: args.userData.name,
-              userEmail: args.userData.email,
-              userPhone: args.userData.phone,
-              sessionType: args.sessionType,
-              isGuestUser: true,
-            }, bogoSelection);
+            bogoEnrollments = await grantBogoEnrollments(
+              ctx,
+              course,
+              {
+                userId: args.userData.email,
+                userName: args.userData.name,
+                userEmail: args.userData.email,
+                userPhone: args.userData.phone,
+                sessionType: args.sessionType,
+                isGuestUser: true,
+              },
+              bogoSelection,
+            );
           } else {
             bogoEnrollments = await grantBogoEnrollments(
               ctx,
@@ -2510,17 +2621,22 @@ export const handleGuestUserCartCheckoutWithData = mutation({
             );
           }
         } else {
-          bogoEnrollments = await grantBogoEnrollments(ctx, course, {
-            userId: args.userData.email,
-            userName: args.userData.name,
-            userEmail: args.userData.email,
-            userPhone: args.userData.phone,
-            sessionType: args.sessionType,
-            isGuestUser: true,
-          }, {
-            sourceCourseId: lineItem.courseId,
-            sourceBatchId: lineItem.batchId,
-          });
+          bogoEnrollments = await grantBogoEnrollments(
+            ctx,
+            course,
+            {
+              userId: args.userData.email,
+              userName: args.userData.name,
+              userEmail: args.userData.email,
+              userPhone: args.userData.phone,
+              sessionType: args.sessionType,
+              isGuestUser: true,
+            },
+            {
+              sourceCourseId: lineItem.courseId,
+              sourceBatchId: lineItem.batchId,
+            },
+          );
         }
       }
 
