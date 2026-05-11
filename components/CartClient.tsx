@@ -29,7 +29,7 @@ import { useUser, useClerk } from "@clerk/nextjs";
 import { handlePaymentSuccess } from "@/app/actions/payment";
 import { toast } from "sonner";
 import { WhatsAppModal } from "@/components/whatsapp-modal";
-import { useConvexAuth, useQuery, useMutation } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
 import {
   Dialog,
@@ -131,10 +131,7 @@ function BundleProgressSection({
           {expanded && (
             <div className="space-y-1 border-t border-amber-200 pt-2">
               {eligibleItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center gap-2 text-xs"
-                >
+                <div key={item.id} className="flex items-center gap-2 text-xs">
                   <Check className="h-3 w-3 shrink-0 text-amber-600" />
                   <span className="truncate">{item.name}</span>
                 </div>
@@ -175,7 +172,10 @@ const getCartLineKey = (item: {
   batchId?: Id<"courseBatches">;
 }): string =>
   item.courseId
-    ? buildCartItemId(String(item.courseId), item.batchId ? String(item.batchId) : undefined)
+    ? buildCartItemId(
+        String(item.courseId),
+        item.batchId ? String(item.batchId) : undefined,
+      )
     : String(item.id);
 
 const CartContent = () => {
@@ -216,12 +216,12 @@ const CartContent = () => {
     couponCode && isAuthenticated ? { code: couponCode } : "skip",
   );
 
-  const markCouponUsed = useMutation(api.mindPoints.markCouponUsed);
   const now = useNow();
   const cartCourseIds = useMemo(
-    () => Array.from(new Set(items.map((item) => String(getCartCourseId(item))))).map(
-      (courseId) => courseId as Id<"courses">,
-    ),
+    () =>
+      Array.from(
+        new Set(items.map((item) => String(getCartCourseId(item)))),
+      ).map((courseId) => courseId as Id<"courses">),
     [items],
   );
   const bundleCampaigns = useQuery(
@@ -555,47 +555,54 @@ const CartContent = () => {
     }, 0);
   }, [checkoutPricing.items, items, user?.id]);
 
-  const showEnrollmentToast = (
-    enrollments:
-      | Array<{
-          enrollmentNumber: string;
-          isBogoFree?: boolean;
-        }>
-      | undefined,
-  ) => {
-    if (!enrollments || enrollments.length === 0) {
-      toast.success(
-        "Payment successful! Check your email for enrollment confirmation.",
-      );
-      return;
-    }
+  const showEnrollmentToast = useCallback(
+    (
+      enrollments:
+        | Array<{
+            enrollmentNumber: string;
+            isBogoFree?: boolean;
+          }>
+        | undefined,
+      options: { paidCheckout?: boolean } = {},
+    ) => {
+      const successLabel =
+        options.paidCheckout === false ? "Checkout" : "Payment";
 
-    const bonusCount = enrollments.filter((e) => e.isBogoFree).length;
-    const paidCount = enrollments.length - bonusCount;
-    const parts: string[] = [];
-    if (paidCount > 0) {
-      parts.push(`${paidCount} course${paidCount === 1 ? "" : "s"}`);
-    }
-    if (bonusCount > 0) {
-      parts.push(`${bonusCount} bonus course${bonusCount === 1 ? "" : "s"}`);
-    }
+      if (!enrollments || enrollments.length === 0) {
+        toast.success(
+          `${successLabel} successful! Check your email for enrollment confirmation.`,
+        );
+        return;
+      }
 
-    const message = parts.length
-      ? `Payment successful! ${parts.join(" + ")} added to your account.`
-      : "Payment successful!";
+      const bonusCount = enrollments.filter((e) => e.isBogoFree).length;
+      const paidCount = enrollments.length - bonusCount;
+      const parts: string[] = [];
+      if (paidCount > 0) {
+        parts.push(`${paidCount} course${paidCount === 1 ? "" : "s"}`);
+      }
+      if (bonusCount > 0) {
+        parts.push(`${bonusCount} bonus course${bonusCount === 1 ? "" : "s"}`);
+      }
 
-    const enrollmentNumbers = enrollments
-      .filter((e) => e.enrollmentNumber && e.enrollmentNumber !== "N/A")
-      .map((e) => e.enrollmentNumber);
+      const message = parts.length
+        ? `${successLabel} successful! ${parts.join(" + ")} added to your account.`
+        : `${successLabel} successful!`;
 
-    const hasValidEnrollments = enrollmentNumbers.length > 0;
+      const enrollmentNumbers = enrollments
+        .filter((e) => e.enrollmentNumber && e.enrollmentNumber !== "N/A")
+        .map((e) => e.enrollmentNumber);
 
-    toast.success(message, {
-      description: hasValidEnrollments
-        ? `Enrollment numbers: ${enrollmentNumbers.join(", ")}`
-        : "Check your email for enrollment confirmation.",
-    });
-  };
+      const hasValidEnrollments = enrollmentNumbers.length > 0;
+
+      toast.success(message, {
+        description: hasValidEnrollments
+          ? `Enrollment numbers: ${enrollmentNumbers.join(", ")}`
+          : "Check your email for enrollment confirmation.",
+      });
+    },
+    [],
+  );
 
   const handleClearCart = () => {
     emptyCart();
@@ -628,6 +635,105 @@ const CartContent = () => {
     };
   }, []);
 
+  const completeCheckoutEnrollment = useCallback(
+    async (whatsappNumber?: string) => {
+      if (!user?.id) {
+        return false;
+      }
+
+      const lineItems = items.map((item) => ({
+        batchId: item.batchId as Id<"courseBatches"> | undefined,
+        courseId: getCartCourseId(item),
+      }));
+
+      const bogoSelections = items
+        .filter(
+          (item) =>
+            item.selectedFreeCourse &&
+            !coveredCourseIdSet.has(String(getCartCourseId(item))),
+        )
+        .map((item) => ({
+          selectedFreeBatchId: item.selectedFreeCourse!.batchId,
+          selectedFreeCourseId:
+            item.selectedFreeCourse!.courseId ?? item.selectedFreeCourse!.id,
+          sourceBatchId: item.batchId as Id<"courseBatches"> | undefined,
+          sourceCourseId: getCartCourseId(item),
+        }));
+
+      const userPhone =
+        whatsappNumber || userProfile?.whatsappNumber || undefined;
+
+      const referralCookie = getReferralCookie();
+      const referrerClerkUserId =
+        referralCookie && referralCookie !== user.id
+          ? referralCookie
+          : undefined;
+
+      const result = await handlePaymentSuccess(
+        user.id,
+        lineItems,
+        user.primaryEmailAddress?.emailAddress || "",
+        userPhone,
+        user.fullName || undefined,
+        undefined,
+        bogoSelections.length > 0 ? bogoSelections : undefined,
+        referrerClerkUserId,
+        checkoutPricing,
+      );
+
+      if (!result.success) {
+        toast.error(
+          discountedTotal <= 0
+            ? "Checkout failed. Please try again."
+            : "Payment successful but enrollment failed. Please contact support.",
+          {
+            description: result.error,
+          },
+        );
+        return false;
+      }
+
+      if (appliedCoupon) {
+        setAppliedCoupon(null);
+        setCouponCode("");
+      }
+
+      const pointsEarned = totalPointsEarned;
+
+      if (pointsEarned > 0 && user?.id) {
+        setTimeout(() => {
+          toast.success(`🎉 You earned ${pointsEarned} Mind Points!`, {
+            description:
+              "Points have been added to your account. Visit your account to redeem them.",
+            duration: 6000,
+            action: {
+              label: "View Points",
+              onClick: () => {
+                window.location.href = "/account?tab=points";
+              },
+            },
+          });
+        }, 2000);
+      }
+
+      showEnrollmentToast(result.enrollments, {
+        paidCheckout: discountedTotal > 0,
+      });
+      return true;
+    },
+    [
+      appliedCoupon,
+      checkoutPricing,
+      coveredCourseIdSet,
+      discountedTotal,
+      items,
+      showEnrollmentToast,
+      totalPointsEarned,
+      user,
+      userProfile?.whatsappNumber,
+    ],
+  );
+
   const handlePayment = useCallback(
     async (whatsappNumber?: string) => {
       if (isEmpty || !user?.id) return;
@@ -635,6 +741,18 @@ const CartContent = () => {
       setIsProcessing(true);
 
       try {
+        if (discountedTotal <= 0) {
+          const enrollmentCompleted =
+            await completeCheckoutEnrollment(whatsappNumber);
+
+          if (enrollmentCompleted) {
+            emptyCart();
+          }
+
+          setIsProcessing(false);
+          return;
+        }
+
         const data = await requestPaymentOrder({
           amount: discountedTotal,
         });
@@ -649,94 +767,7 @@ const CartContent = () => {
           handler: async () => {
             // Handle signed-in user
             try {
-              const lineItems = items.map((item) => ({
-                batchId: item.batchId as Id<"courseBatches"> | undefined,
-                courseId: getCartCourseId(item),
-              }));
-
-              // Extract BOGO selections from cart items
-              const bogoSelections = items
-                .filter(
-                  (item) =>
-                    item.selectedFreeCourse &&
-                    !coveredCourseIdSet.has(String(getCartCourseId(item))),
-                )
-                .map((item) => ({
-                  selectedFreeBatchId: item.selectedFreeCourse!.batchId,
-                  selectedFreeCourseId:
-                    item.selectedFreeCourse!.courseId ??
-                    item.selectedFreeCourse!.id,
-                  sourceBatchId: item.batchId as
-                    | Id<"courseBatches">
-                    | undefined,
-                  sourceCourseId: getCartCourseId(item),
-                }));
-
-              // Use the WhatsApp number from user profile or the one just collected
-              const userPhone =
-                whatsappNumber || userProfile?.whatsappNumber || undefined;
-
-              const referralCookie = getReferralCookie();
-              const referrerClerkUserId =
-                referralCookie && referralCookie !== user.id
-                  ? referralCookie
-                  : undefined;
-
-              // Call server action to handle enrollment
-              const result = await handlePaymentSuccess(
-                user.id,
-                lineItems,
-                user.primaryEmailAddress?.emailAddress || "",
-                userPhone,
-                user.fullName || undefined, // studentName
-                undefined, // sessionType
-                bogoSelections.length > 0 ? bogoSelections : undefined,
-                referrerClerkUserId,
-                checkoutPricing,
-              );
-
-              if (result.success) {
-                // Mark coupon as used if applied
-                if (appliedCoupon) {
-                  try {
-                    await markCouponUsed({ couponCode: appliedCoupon.code });
-                    setAppliedCoupon(null);
-                    setCouponCode("");
-                  } catch (error) {
-                    console.error("Failed to mark coupon as used:", error);
-                  }
-                }
-
-                const pointsEarned = totalPointsEarned;
-
-                if (pointsEarned > 0 && user?.id) {
-                  setTimeout(() => {
-                    toast.success(
-                      `🎉 You earned ${pointsEarned} Mind Points!`,
-                      {
-                        description:
-                          "Points have been added to your account. Visit your account to redeem them.",
-                        duration: 6000,
-                        action: {
-                          label: "View Points",
-                          onClick: () => {
-                            window.location.href = "/account?tab=points";
-                          },
-                        },
-                      },
-                    );
-                  }, 2000);
-                }
-
-                showEnrollmentToast(result.enrollments);
-              } else {
-                toast.error(
-                  "Payment successful but enrollment failed. Please contact support.",
-                  {
-                    description: result.error,
-                  },
-                );
-              }
+              await completeCheckoutEnrollment(whatsappNumber);
             } catch {
               toast.error(
                 "Payment successful but enrollment failed. Please contact support.",
@@ -966,18 +997,12 @@ const CartContent = () => {
       user?.fullName,
       user?.primaryEmailAddress?.emailAddress,
       discountedTotal,
-      checkoutPricing,
       items,
-      userProfile,
-      markCouponUsed,
-      appliedCoupon,
-      setAppliedCoupon,
-      setCouponCode,
-      totalPointsEarned,
+      userProfile?.whatsappNumber,
       emptyCart,
       setIsProcessing,
       Razorpay,
-      coveredCourseIdSet,
+      completeCheckoutEnrollment,
     ],
   );
 
@@ -1170,7 +1195,11 @@ const CartContent = () => {
                             </span>
                             {pricingItem.redemptionDiscountAmount > 0 && (
                               <span className="font-medium text-blue-600">
-                                (save {showRupees(pricingItem.redemptionDiscountAmount)})
+                                (save{" "}
+                                {showRupees(
+                                  pricingItem.redemptionDiscountAmount,
+                                )}
+                                )
                               </span>
                             )}
                           </div>
@@ -1561,7 +1590,7 @@ const CartContent = () => {
               </div>
               <Button
                 onClick={handleCheckoutClick}
-                disabled={isProcessing || isLoading}
+                disabled={isProcessing || (discountedTotal > 0 && isLoading)}
                 className="w-full"
               >
                 {isProcessing ? "Processing..." : "Proceed to Checkout"}
