@@ -223,6 +223,7 @@ export default function AdminEditCoursePage() {
                 <tr>
                   <th className="px-3 py-2">Learner</th>
                   <th className="px-3 py-2">Enrollment</th>
+                  <th className="px-3 py-2">Batch</th>
                   <th className="px-3 py-2">Paid</th>
                   <th className="px-3 py-2">Registered</th>
                   <th className="px-3 py-2">Actions</th>
@@ -231,13 +232,13 @@ export default function AdminEditCoursePage() {
               <tbody>
                 {!enrollments ? (
                   <tr>
-                    <td className="px-3 py-4 text-slate-600" colSpan={5}>
+                    <td className="px-3 py-4 text-slate-600" colSpan={6}>
                       Loading registrations...
                     </td>
                   </tr>
                 ) : registrationRows.length === 0 ? (
                   <tr>
-                    <td className="px-3 py-4 text-slate-600" colSpan={5}>
+                    <td className="px-3 py-4 text-slate-600" colSpan={6}>
                       No registrations found for this course.
                     </td>
                   </tr>
@@ -257,6 +258,18 @@ export default function AdminEditCoursePage() {
                           {row.enrollmentNumber}
                         </p>
                         <Badge variant="outline">{row.status}</Badge>
+                      </td>
+                      <td className="px-3 py-2 text-xs text-slate-700">
+                        <p className="font-medium">{row.batchLabel || "—"}</p>
+                        {[row.batchStartDate, row.batchEndDate].some(
+                          Boolean,
+                        ) ? (
+                          <p className="text-slate-500">
+                            {[row.batchStartDate, row.batchEndDate]
+                              .filter(Boolean)
+                              .join(" to ")}
+                          </p>
+                        ) : null}
                       </td>
                       <td className="px-3 py-2 text-xs text-slate-700">
                         <p>

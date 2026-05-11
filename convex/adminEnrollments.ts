@@ -89,8 +89,59 @@ function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
 }
 
+function roundCurrency(value: number | undefined): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+
+  return Math.max(0, Math.round(value!));
+}
+
 function isAuthenticatedUserId(userId: string): boolean {
   return userId.startsWith("user_");
+}
+
+const adminEnrollmentPricingValidator = v.object({
+  listedPrice: v.optional(v.number()),
+  checkoutPrice: v.optional(v.number()),
+  amountPaid: v.optional(v.number()),
+  redemptionDiscountAmount: v.optional(v.number()),
+  couponCode: v.optional(v.string()),
+  mindPointsRedeemed: v.optional(v.number()),
+});
+
+function buildAdminCheckoutPricingItem(
+  course: Doc<"courses">,
+  courseId: Id<"courses">,
+  pricing?: {
+    listedPrice?: number;
+    checkoutPrice?: number;
+    amountPaid?: number;
+    redemptionDiscountAmount?: number;
+    couponCode?: string;
+    mindPointsRedeemed?: number;
+  },
+) {
+  const listedPrice = roundCurrency(pricing?.listedPrice ?? course.price);
+  const checkoutPrice = roundCurrency(pricing?.checkoutPrice ?? listedPrice);
+  const amountPaid = roundCurrency(pricing?.amountPaid ?? checkoutPrice);
+  const redemptionDiscountAmount = roundCurrency(
+    pricing?.redemptionDiscountAmount ??
+      Math.max(0, checkoutPrice - amountPaid),
+  );
+  const couponCode = pricing?.couponCode?.trim() || undefined;
+  const mindPointsRedeemed = roundCurrency(pricing?.mindPointsRedeemed);
+
+  return {
+    courseId,
+    listedPrice,
+    checkoutPrice,
+    amountPaid,
+    redemptionDiscountAmount:
+      redemptionDiscountAmount > 0 ? redemptionDiscountAmount : undefined,
+    couponCode,
+    mindPointsRedeemed: mindPointsRedeemed > 0 ? mindPointsRedeemed : undefined,
+  };
 }
 
 async function removeUserFromCourseIfNoActiveEnrollment(
@@ -428,6 +479,7 @@ export const createManualEnrollment = mutation({
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
     internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
+    pricing: v.optional(adminEnrollmentPricingValidator),
   },
   handler: async (ctx, args): Promise<Doc<"enrollments"> | null> => {
     const admin = await requireAdmin(ctx);
@@ -457,6 +509,11 @@ export const createManualEnrollment = mutation({
     }
 
     const isGuestUser = args.isGuestUser ?? !isAuthenticatedUserId(args.userId);
+    const pricingItem = buildAdminCheckoutPricingItem(
+      course,
+      args.courseId,
+      args.pricing,
+    );
 
     let enrollmentId: Id<"enrollments"> | null = null;
 
@@ -473,15 +530,8 @@ export const createManualEnrollment = mutation({
           sessionType: args.sessionType,
           internshipPlan: args.internshipPlan,
           checkoutPricing: {
-            totalAmountPaid: 0,
-            items: [
-              {
-                courseId: args.courseId,
-                listedPrice: course.price,
-                checkoutPrice: 0,
-                amountPaid: 0,
-              },
-            ],
+            totalAmountPaid: pricingItem.amountPaid,
+            items: [pricingItem],
           },
         },
       )) as GuestCheckoutResult;
@@ -516,15 +566,8 @@ export const createManualEnrollment = mutation({
             sessionType: args.sessionType,
             internshipPlan: args.internshipPlan,
             checkoutPricing: {
-              totalAmountPaid: 0,
-              items: [
-                {
-                  courseId: args.courseId,
-                  listedPrice: course.price,
-                  checkoutPrice: 0,
-                  amountPaid: 0,
-                },
-              ],
+              totalAmountPaid: pricingItem.amountPaid,
+              items: [pricingItem],
             },
           },
         );
@@ -555,6 +598,7 @@ export const createManualEnrollment = mutation({
         metadata: {
           source: "admin",
           isGuestUser,
+          pricing: pricingItem,
         },
       });
     } catch (error) {
@@ -577,6 +621,64 @@ export const createManualEnrollment = mutation({
     });
 
     return await ctx.db.get(enrollmentId);
+  },
+});
+
+export const updateEnrollmentPricing = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    listedPrice: v.number(),
+    checkoutPrice: v.number(),
+    amountPaid: v.number(),
+    redemptionDiscountAmount: v.optional(v.number()),
+    couponCode: v.optional(v.string()),
+    mindPointsRedeemed: v.optional(v.number()),
+    reason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+
+    const enrollment = await ctx.db.get(args.enrollmentId);
+    if (!enrollment) {
+      throw new Error("Enrollment not found");
+    }
+
+    const listedPrice = roundCurrency(args.listedPrice);
+    const checkoutPrice = roundCurrency(args.checkoutPrice);
+    const amountPaid = roundCurrency(args.amountPaid);
+    const redemptionDiscountAmount = roundCurrency(
+      args.redemptionDiscountAmount ?? Math.max(0, checkoutPrice - amountPaid),
+    );
+    const mindPointsRedeemed = roundCurrency(args.mindPointsRedeemed);
+    const couponCode = args.couponCode?.trim() || undefined;
+
+    await ctx.db.patch(args.enrollmentId, {
+      listedPrice,
+      checkoutPrice,
+      amountPaid,
+      redemptionDiscountAmount:
+        redemptionDiscountAmount > 0 ? redemptionDiscountAmount : undefined,
+      couponCode,
+      mindPointsRedeemed:
+        mindPointsRedeemed > 0 ? mindPointsRedeemed : undefined,
+    });
+
+    const updated = await ctx.db.get(args.enrollmentId);
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "enrollment.update_pricing",
+      entityType: "enrollment",
+      entityId: String(args.enrollmentId),
+      before: enrollment,
+      after: updated,
+      metadata: {
+        reason: args.reason?.trim() || undefined,
+      },
+    });
+
+    return updated;
   },
 });
 
@@ -680,8 +782,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
       course.startDate ??
       new Date().toISOString().split("T")[0];
     const endDate = enrollment.batchEndDate ?? course.endDate ?? startDate;
-    const startTime =
-      enrollment.batchStartTime ?? course.startTime ?? "00:00";
+    const startTime = enrollment.batchStartTime ?? course.startTime ?? "00:00";
     const endTime = enrollment.batchEndTime ?? course.endTime ?? "23:59";
 
     let emailAction = "generic";

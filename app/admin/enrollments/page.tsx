@@ -40,6 +40,14 @@ export default function AdminEnrollmentsPage() {
   const [manualName, setManualName] = useState("");
   const [manualPhone, setManualPhone] = useState("");
   const [manualCourseId, setManualCourseId] = useState("");
+  const [manualPricingMode, setManualPricingMode] = useState<
+    "cash" | "mind_points" | "mixed" | "complimentary"
+  >("cash");
+  const [manualListedPrice, setManualListedPrice] = useState("");
+  const [manualCheckoutPrice, setManualCheckoutPrice] = useState("");
+  const [manualAmountPaid, setManualAmountPaid] = useState("");
+  const [manualMindPointsRedeemed, setManualMindPointsRedeemed] = useState("");
+  const [manualCouponCode, setManualCouponCode] = useState("");
   const [manualInternshipPlan, setManualInternshipPlan] = useState<
     "" | "120" | "240"
   >("");
@@ -70,6 +78,25 @@ export default function AdminEnrollmentsPage() {
       (courses || []).find((course) => String(course._id) === manualCourseId),
     [courses, manualCourseId],
   );
+  const parseManualMoney = (value: string) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
+  };
+  const resetManualPricingForCourse = (
+    course?: NonNullable<typeof selectedManualCourse>,
+    mode: typeof manualPricingMode = manualPricingMode,
+  ) => {
+    const coursePrice = Math.max(0, Math.round(course?.price ?? 0));
+    setManualListedPrice(String(coursePrice));
+    setManualCheckoutPrice(
+      mode === "complimentary" ? "0" : String(coursePrice),
+    );
+    setManualAmountPaid(
+      mode === "cash" || mode === "mixed" ? String(coursePrice) : "0",
+    );
+    setManualMindPointsRedeemed("");
+    setManualCouponCode("");
+  };
 
   const exportRows = useMemo(
     () =>
@@ -82,6 +109,7 @@ export default function AdminEnrollmentsPage() {
         courseName: row.courseName,
         courseType: row.courseType,
         enrollmentNumber: row.enrollmentNumber,
+        batch: row.batchLabel ?? "",
         status: row.status,
         registrationSource: row.registrationSource ?? "checkout",
         amountPaid: row.amountPaid ?? row.checkoutPrice ?? 0,
@@ -133,6 +161,20 @@ export default function AdminEnrollmentsPage() {
         userPhone: manualPhone || undefined,
         courseId: manualCourseId as Id<"courses">,
         isGuestUser: manualUserIdLooksLikeEmail,
+        pricing: {
+          listedPrice: parseManualMoney(manualListedPrice),
+          checkoutPrice: parseManualMoney(manualCheckoutPrice),
+          amountPaid: parseManualMoney(manualAmountPaid),
+          redemptionDiscountAmount: Math.max(
+            0,
+            parseManualMoney(manualCheckoutPrice) -
+              parseManualMoney(manualAmountPaid),
+          ),
+          mindPointsRedeemed: manualMindPointsRedeemed
+            ? parseManualMoney(manualMindPointsRedeemed)
+            : undefined,
+          couponCode: manualCouponCode.trim() || undefined,
+        },
         internshipPlan:
           selectedManualCourse?.type === "internship"
             ? manualInternshipPlan === "120" || manualInternshipPlan === "240"
@@ -146,6 +188,12 @@ export default function AdminEnrollmentsPage() {
       setManualName("");
       setManualPhone("");
       setManualCourseId("");
+      setManualPricingMode("cash");
+      setManualListedPrice("");
+      setManualCheckoutPrice("");
+      setManualAmountPaid("");
+      setManualMindPointsRedeemed("");
+      setManualCouponCode("");
       setManualInternshipPlan("");
     } catch (error) {
       toast.error(
@@ -255,6 +303,7 @@ export default function AdminEnrollmentsPage() {
               if (nextCourse?.type !== "internship") {
                 setManualInternshipPlan("");
               }
+              resetManualPricingForCourse(nextCourse);
             }}
           >
             <option value="">Select course</option>
@@ -287,6 +336,70 @@ export default function AdminEnrollmentsPage() {
             </select>
           ) : null}
         </div>
+        <div className="mt-3 grid gap-3 md:grid-cols-6">
+          <select
+            className="h-10 rounded-md border bg-white px-3 text-sm"
+            value={manualPricingMode}
+            onChange={(e) => {
+              const mode = e.target.value as typeof manualPricingMode;
+              setManualPricingMode(mode);
+              resetManualPricingForCourse(selectedManualCourse, mode);
+            }}
+          >
+            <option value="cash">Actual money</option>
+            <option value="mind_points">Mind Points</option>
+            <option value="mixed">Money + Mind Points</option>
+            <option value="complimentary">Complimentary/admin</option>
+          </select>
+          <Input
+            type="number"
+            min="0"
+            aria-label="Listed price"
+            placeholder="Listed price"
+            value={manualListedPrice}
+            onChange={(e) => setManualListedPrice(e.target.value)}
+          />
+          <Input
+            type="number"
+            min="0"
+            aria-label="Checkout price"
+            placeholder="Checkout price"
+            value={manualCheckoutPrice}
+            onChange={(e) => setManualCheckoutPrice(e.target.value)}
+          />
+          <Input
+            type="number"
+            min="0"
+            aria-label="Actual money paid"
+            placeholder="Actual money paid"
+            value={manualAmountPaid}
+            onChange={(e) => setManualAmountPaid(e.target.value)}
+          />
+          <Input
+            type="number"
+            min="0"
+            aria-label="Mind Points used"
+            placeholder="Mind Points used"
+            value={manualMindPointsRedeemed}
+            onChange={(e) => setManualMindPointsRedeemed(e.target.value)}
+          />
+          <Input
+            placeholder="Coupon code"
+            value={manualCouponCode}
+            onChange={(e) => setManualCouponCode(e.target.value)}
+          />
+        </div>
+        <p className="mt-2 text-xs text-slate-600">
+          Redemption discount will be recorded as{" "}
+          {showRupees(
+            Math.max(
+              0,
+              parseManualMoney(manualCheckoutPrice) -
+                parseManualMoney(manualAmountPaid),
+            ),
+          )}
+          .
+        </p>
         <div className="mt-3">
           <Button
             onClick={handleManualCreate}

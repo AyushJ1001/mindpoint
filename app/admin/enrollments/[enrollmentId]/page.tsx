@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
@@ -32,6 +32,15 @@ export default function AdminEnrollmentDetailPage() {
     "change_batch" | "transfer" | "cancel" | null
   >(null);
   const [actionReason, setActionReason] = useState("Cancelled by admin");
+  const [pricingListedPrice, setPricingListedPrice] = useState("");
+  const [pricingCheckoutPrice, setPricingCheckoutPrice] = useState("");
+  const [pricingAmountPaid, setPricingAmountPaid] = useState("");
+  const [pricingMindPointsRedeemed, setPricingMindPointsRedeemed] =
+    useState("");
+  const [pricingCouponCode, setPricingCouponCode] = useState("");
+  const [pricingEditReason, setPricingEditReason] =
+    useState("Corrected by admin");
+  const [isSavingPricing, setIsSavingPricing] = useState(false);
   const { formatTimestamp } = useAdminTimeZone();
 
   const detail = useQuery(api.adminEnrollments.getEnrollmentDetail, {
@@ -50,11 +59,40 @@ export default function AdminEnrollmentDetailPage() {
     api.adminEnrollments.changeEnrollmentBatch,
   );
   const cancelEnrollment = useMutation(api.adminEnrollments.cancelEnrollment);
+  const updateEnrollmentPricing = useMutation(
+    api.adminEnrollments.updateEnrollmentPricing,
+  );
 
   const transferableCourses = useMemo(() => {
     if (!detail || !courses) return [];
     return courses.filter((course) => course._id !== detail.courseId);
   }, [detail, courses]);
+
+  useEffect(() => {
+    if (!detail) return;
+
+    const fallbackListedPrice = detail.listedPrice ?? detail.course?.price ?? 0;
+    const fallbackCheckoutPrice = detail.checkoutPrice ?? fallbackListedPrice;
+
+    setPricingListedPrice(String(fallbackListedPrice));
+    setPricingCheckoutPrice(String(fallbackCheckoutPrice));
+    setPricingAmountPaid(String(detail.amountPaid ?? fallbackCheckoutPrice));
+    setPricingMindPointsRedeemed(
+      detail.mindPointsRedeemed ? String(detail.mindPointsRedeemed) : "",
+    );
+    setPricingCouponCode(detail.couponCode ?? "");
+  }, [detail]);
+
+  const parsePricingNumber = (value: string) => {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? Math.max(0, Math.round(parsed)) : 0;
+  };
+
+  const computedRedemptionDiscount = Math.max(
+    0,
+    parsePricingNumber(pricingCheckoutPrice) -
+      parsePricingNumber(pricingAmountPaid),
+  );
 
   const handleTransfer = () => {
     if (!targetCourseId) {
@@ -110,9 +148,38 @@ export default function AdminEnrollmentDetailPage() {
           : pendingAction === "change_batch"
             ? "Batch update failed"
             : pendingAction === "transfer"
-            ? "Transfer failed"
-            : "Cancellation failed",
+              ? "Transfer failed"
+              : "Cancellation failed",
       );
+    }
+  };
+
+  const handleSavePricing = async () => {
+    if (isSavingPricing) return;
+
+    setIsSavingPricing(true);
+    try {
+      await updateEnrollmentPricing({
+        enrollmentId,
+        listedPrice: parsePricingNumber(pricingListedPrice),
+        checkoutPrice: parsePricingNumber(pricingCheckoutPrice),
+        amountPaid: parsePricingNumber(pricingAmountPaid),
+        redemptionDiscountAmount: computedRedemptionDiscount,
+        mindPointsRedeemed: pricingMindPointsRedeemed
+          ? parsePricingNumber(pricingMindPointsRedeemed)
+          : undefined,
+        couponCode: pricingCouponCode.trim() || undefined,
+        reason: pricingEditReason.trim() || undefined,
+      });
+      toast.success("Enrollment pricing updated");
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to update enrollment pricing",
+      );
+    } finally {
+      setIsSavingPricing(false);
     }
   };
 
@@ -132,7 +199,9 @@ export default function AdminEnrollmentDetailPage() {
         actions={
           <>
             <Button variant="outline" asChild>
-              <Link href={`/admin/courses/${detail.courseId}`}>Admin Course</Link>
+              <Link href={`/admin/courses/${detail.courseId}`}>
+                Admin Course
+              </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link href={`/courses/${detail.courseId}`} target="_blank">
@@ -218,6 +287,69 @@ export default function AdminEnrollmentDetailPage() {
             {detail.lastConfirmationSentAt
               ? formatTimestamp(detail.lastConfirmationSentAt)
               : "Not resent yet"}
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Edit Purchase Split</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid gap-3 md:grid-cols-5">
+            <Input
+              type="number"
+              min="0"
+              aria-label="Listed price"
+              placeholder="Listed price"
+              value={pricingListedPrice}
+              onChange={(e) => setPricingListedPrice(e.target.value)}
+            />
+            <Input
+              type="number"
+              min="0"
+              aria-label="Checkout price"
+              placeholder="Checkout price"
+              value={pricingCheckoutPrice}
+              onChange={(e) => setPricingCheckoutPrice(e.target.value)}
+            />
+            <Input
+              type="number"
+              min="0"
+              aria-label="Actual money paid"
+              placeholder="Actual money paid"
+              value={pricingAmountPaid}
+              onChange={(e) => setPricingAmountPaid(e.target.value)}
+            />
+            <Input
+              type="number"
+              min="0"
+              aria-label="Mind Points used"
+              placeholder="Mind Points used"
+              value={pricingMindPointsRedeemed}
+              onChange={(e) => setPricingMindPointsRedeemed(e.target.value)}
+            />
+            <Input
+              placeholder="Coupon code"
+              value={pricingCouponCode}
+              onChange={(e) => setPricingCouponCode(e.target.value)}
+            />
+          </div>
+          <div className="grid gap-3 md:grid-cols-[1fr_auto]">
+            <Input
+              placeholder="Audit reason"
+              value={pricingEditReason}
+              onChange={(e) => setPricingEditReason(e.target.value)}
+            />
+            <Button onClick={handleSavePricing} disabled={isSavingPricing}>
+              {isSavingPricing ? "Saving..." : "Save Purchase Split"}
+            </Button>
+          </div>
+          <p className="text-xs text-slate-600">
+            Redemption discount will be stored as{" "}
+            {showRupees(computedRedemptionDiscount)}. This corrects enrollment
+            reporting only; it does not create or reverse Mind Points ledger
+            transactions.
           </p>
         </CardContent>
       </Card>
