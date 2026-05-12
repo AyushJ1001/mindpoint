@@ -15,9 +15,9 @@ export type CreatePaymentOrderInput = {
       clientListedPrice?: number;
       clientCheckoutPrice?: number;
       couponCode?: string;
+      mindPointsRedeemed?: number;
     }>;
   };
-  buyerUserId?: string;
   buyerEmail?: string;
   referrerClerkUserId?: string;
 };

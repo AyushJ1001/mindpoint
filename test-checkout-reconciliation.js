@@ -87,7 +87,7 @@ async function main() {
     bundleCampaigns: [],
   });
 
-  assert.equal(fullBatchResult.status, "changed");
+  assert.equal(fullBatchResult.status, "blocked");
   assert.equal(fullBatchResult.items.length, 0);
   assert.equal(fullBatchResult.removedItems[0].reason, "BATCH_FULL");
 
@@ -127,6 +127,31 @@ async function main() {
   assert.equal(expiredBogoResult.status, "changed");
   assert.equal(expiredBogoResult.items[0].selectedFreeCourseId, undefined);
   assert.deepEqual(expiredBogoResult.updatedItems[0].reasons, ["BOGO_EXPIRED"]);
+
+  const couponResult = reconcileCheckoutIntent({
+    now,
+    items: [
+      {
+        cartItemId: "course-a",
+        courseId: "course-a",
+        clientListedPrice: 3600,
+        clientCheckoutPrice: 0,
+        couponCode: "MP-100",
+        couponDiscount: 100,
+        couponCourseType: "certificate",
+        couponPointsCost: 120,
+        mindPointsRedeemed: 120,
+      },
+    ],
+    courses: [baseCourse],
+    batches: [],
+    bundleCampaigns: [],
+  });
+
+  assert.equal(couponResult.status, "valid");
+  assert.equal(couponResult.totalAmountPaid, 0);
+  assert.equal(couponResult.items[0].couponCode, "MP-100");
+  assert.equal(couponResult.items[0].mindPointsRedeemed, 120);
 
   const attemptPayload = buildCheckoutAttemptPayload({
     reconciliation: expiredOfferResult,

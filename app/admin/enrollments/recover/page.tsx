@@ -72,7 +72,7 @@ export default function RecoverPaidOrderPage() {
     razorpayPaymentId.trim() &&
     buyerUserId.trim() &&
     buyerEmail.trim() &&
-    lines.every((line) => line.courseId && parseMoney(line.amountPaid) >= 0) &&
+    lines.every((line) => line.courseId && parseMoney(line.amountPaid) > 0) &&
     (!overrideAvailability || overrideReason.trim());
 
   const updateLine = (

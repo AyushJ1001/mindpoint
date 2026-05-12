@@ -540,6 +540,7 @@ const CartContent = () => {
           clientListedPrice: pricingItem?.listedPrice,
           clientCheckoutPrice: pricingItem?.amountPaid,
           couponCode: pricingItem?.couponCode,
+          mindPointsRedeemed: pricingItem?.mindPointsRedeemed,
         };
       }),
     }),
@@ -582,6 +583,15 @@ const CartContent = () => {
 
     for (const removed of cartReconciliation.removedItems ?? []) {
       removeItem(removed.cartItemId);
+    }
+
+    const couponRejected = (cartReconciliation.updatedItems ?? []).some(
+      (updated) =>
+        updated.reasons.some((reason) => reason.startsWith("COUPON_")),
+    );
+    if (couponRejected) {
+      setAppliedCoupon(null);
+      setCouponCode("");
     }
 
     for (const reconciledItem of cartReconciliation.items ?? []) {
@@ -872,7 +882,6 @@ const CartContent = () => {
 
         const data = await requestPaymentOrder({
           cartIntent: buildCartIntent(),
-          buyerUserId: user.id,
           buyerEmail: user.primaryEmailAddress?.emailAddress || undefined,
           referrerClerkUserId:
             getReferralCookie() && getReferralCookie() !== user.id

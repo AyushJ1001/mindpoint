@@ -21,11 +21,14 @@ const cartIntentItemValidator = v.object({
   clientListedPrice: v.optional(v.number()),
   clientCheckoutPrice: v.optional(v.number()),
   couponCode: v.optional(v.string()),
+  mindPointsRedeemed: v.optional(v.number()),
 });
 
 const cartIntentValidator = v.object({
   items: v.array(cartIntentItemValidator),
 });
+
+const MAX_BATCHES_PER_CART_COURSE = 200;
 
 function courseToReconciliationCourse(
   course: Doc<"courses">,
@@ -97,6 +100,7 @@ function normalizeCartIntentItems(
     clientListedPrice?: number;
     clientCheckoutPrice?: number;
     couponCode?: string;
+    mindPointsRedeemed?: number;
   }>,
 ): ReconciliationCartItem[] {
   return items.map((item) => ({
@@ -115,6 +119,7 @@ function normalizeCartIntentItems(
 async function collectCheckoutContext(
   ctx: QueryCtx | MutationCtx,
   cartItems: ReconciliationCartItem[],
+  buyerUserId?: string,
 ) {
   const courseIdSet = new Set<string>();
   const batchIdSet = new Set<string>();
@@ -140,7 +145,7 @@ async function collectCheckoutContext(
       ctx.db
         .query("courseBatches")
         .withIndex("by_courseId", (q) => q.eq("courseId", course._id))
-        .collect(),
+        .take(MAX_BATCHES_PER_CART_COURSE),
     ),
   );
   const directBatches = (
@@ -163,7 +168,48 @@ async function collectCheckoutContext(
     .order("desc")
     .take(50);
 
+  const couponCodes = Array.from(
+    new Set(
+      cartItems
+        .map((item) => item.couponCode?.trim())
+        .filter((code): code is string => Boolean(code)),
+    ),
+  );
+  const coupons = await Promise.all(
+    couponCodes.map((code) =>
+      ctx.db
+        .query("coupons")
+        .withIndex("by_code", (q) => q.eq("code", code))
+        .first(),
+    ),
+  );
+  const couponsByCode = new Map(
+    coupons
+      .filter(
+        (coupon): coupon is NonNullable<typeof coupon> =>
+          coupon !== null &&
+          !!buyerUserId &&
+          coupon.clerkUserId === buyerUserId &&
+          !coupon.isUsed,
+      )
+      .map((coupon) => [coupon.code, coupon]),
+  );
+  const enrichedCartItems = cartItems.map((item) => {
+    const coupon = item.couponCode
+      ? couponsByCode.get(item.couponCode.trim())
+      : null;
+
+    return {
+      ...item,
+      couponDiscount: coupon?.discount,
+      couponCourseType: coupon?.courseType,
+      couponPointsCost: coupon?.pointsCost,
+      mindPointsRedeemed: item.mindPointsRedeemed,
+    };
+  });
+
   return {
+    cartItems: enrichedCartItems,
     courses: courses.map(courseToReconciliationCourse),
     batches: Array.from(batchesById.values()).map(batchToReconciliationBatch),
     bundleCampaigns: bundleCampaigns.map(campaignToReconciliationCampaign),
@@ -174,13 +220,18 @@ async function runReconciliation(
   ctx: QueryCtx | MutationCtx,
   args: {
     cartIntent: { items: Parameters<typeof normalizeCartIntentItems>[0] };
+    buyerUserId?: string;
   },
 ) {
   const cartItems = normalizeCartIntentItems(args.cartIntent.items);
-  const context = await collectCheckoutContext(ctx, cartItems);
+  const context = await collectCheckoutContext(
+    ctx,
+    cartItems,
+    args.buyerUserId,
+  );
 
   return reconcileCheckoutIntent({
-    items: cartItems,
+    items: context.cartItems,
     courses: context.courses,
     batches: context.batches,
     bundleCampaigns: context.bundleCampaigns,
@@ -193,19 +244,30 @@ export const reconcileCart = query({
     requestedAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
-    return await runReconciliation(ctx, args);
+    const identity = await ctx.auth.getUserIdentity();
+    return await runReconciliation(ctx, {
+      ...args,
+      buyerUserId: identity?.subject,
+    });
   },
 });
 
 export const createCheckoutAttempt = mutation({
   args: {
     cartIntent: cartIntentValidator,
-    buyerUserId: v.optional(v.string()),
     buyerEmail: v.optional(v.string()),
     referrerClerkUserId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    const reconciliation = await runReconciliation(ctx, args);
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated checkout attempt.");
+    }
+
+    const reconciliation = await runReconciliation(ctx, {
+      cartIntent: args.cartIntent,
+      buyerUserId: identity.subject,
+    });
     if (
       reconciliation.status !== "valid" ||
       reconciliation.totalAmountPaid <= 0
@@ -219,7 +281,7 @@ export const createCheckoutAttempt = mutation({
     const now = Date.now();
     const payload = buildCheckoutAttemptPayload({
       reconciliation,
-      buyerUserId: args.buyerUserId,
+      buyerUserId: identity.subject,
       buyerEmail: args.buyerEmail,
       referrerClerkUserId: args.referrerClerkUserId,
     });
@@ -244,9 +306,20 @@ export const markCheckoutAttemptPaymentOrdered = mutation({
     razorpayOrderId: v.string(),
   },
   handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Unauthenticated checkout attempt update.");
+    }
+
     const attempt = await ctx.db.get(args.checkoutAttemptId);
     if (!attempt) {
       throw new Error("Checkout attempt not found.");
+    }
+    if (attempt.buyerUserId !== identity.subject) {
+      throw new Error("Checkout attempt does not belong to this user.");
+    }
+    if (attempt.status !== "created") {
+      throw new Error("Checkout attempt is not ready for payment ordering.");
     }
 
     await ctx.db.patch(args.checkoutAttemptId, {

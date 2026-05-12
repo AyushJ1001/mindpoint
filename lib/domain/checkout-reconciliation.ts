@@ -96,6 +96,10 @@ export type ReconciliationCartItem = {
   clientListedPrice?: number;
   clientCheckoutPrice?: number;
   couponCode?: string;
+  couponDiscount?: number;
+  couponCourseType?: string;
+  couponPointsCost?: number;
+  mindPointsRedeemed?: number;
 };
 
 export type ReconciledCheckoutItem = {
@@ -407,9 +411,36 @@ export function reconcileCheckoutIntent(input: {
       discount > 0
         ? Math.max(0, Math.round(listedPrice * (1 - discount / 100)))
         : listedPrice;
-    const amountPaid = checkoutPrice;
+    let amountPaid = checkoutPrice;
+    let redemptionDiscountAmount: number | undefined;
+    let couponCode: string | undefined;
+    let mindPointsRedeemed: number | undefined;
     const reasons: CheckoutUpdateReason[] = [];
     const clientCheckoutPrice = roundCurrency(item.clientCheckoutPrice);
+
+    if (item.couponCode) {
+      const normalizedCoupon = item.couponCode.trim();
+      if (
+        !Number.isFinite(item.couponDiscount) ||
+        !item.couponCourseType ||
+        !Number.isFinite(item.couponPointsCost)
+      ) {
+        reasons.push("COUPON_INVALID");
+      } else if (item.couponCourseType !== course.type) {
+        reasons.push("COUPON_TYPE_MISMATCH");
+      } else {
+        const couponDiscount = Math.min(
+          checkoutPrice,
+          Math.round(checkoutPrice * (item.couponDiscount! / 100)),
+        );
+        amountPaid = Math.max(0, checkoutPrice - couponDiscount);
+        redemptionDiscountAmount =
+          couponDiscount > 0 ? couponDiscount : undefined;
+        couponCode = normalizedCoupon;
+        mindPointsRedeemed =
+          couponDiscount > 0 ? roundCurrency(item.couponPointsCost) : undefined;
+      }
+    }
 
     if (course.offer && !activeOffer) {
       reasons.push("DISCOUNT_EXPIRED");
@@ -460,9 +491,9 @@ export function reconcileCheckoutIntent(input: {
       listedPrice,
       checkoutPrice,
       amountPaid,
-      redemptionDiscountAmount:
-        Math.max(0, checkoutPrice - amountPaid) || undefined,
-      couponCode: item.couponCode?.trim() || undefined,
+      redemptionDiscountAmount,
+      couponCode,
+      mindPointsRedeemed,
       courseName: course.name,
       batchLabel: selectedBatch?.label,
       offerName: activeOffer?.name,
@@ -551,7 +582,11 @@ export function reconcileCheckoutIntent(input: {
     0,
   );
   const status: CheckoutReconciliationStatus =
-    removedItems.length > 0 || updatedItems.length > 0 ? "changed" : "valid";
+    blockingReasons.length > 0
+      ? "blocked"
+      : removedItems.length > 0 || updatedItems.length > 0
+        ? "changed"
+        : "valid";
 
   return {
     status,

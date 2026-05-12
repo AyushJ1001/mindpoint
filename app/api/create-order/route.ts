@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { auth } from "@clerk/nextjs/server";
+import { resolveAuthEmail } from "@/lib/clerk-email";
+import { isClerkServerConfigured } from "@/lib/clerk-env";
 import { createPaymentOrder } from "@/lib/services/payments.server";
 import {
   createCheckoutAttempt,
@@ -21,18 +24,45 @@ async function handleCreateOrder(req: NextRequest) {
         { status: 400 },
       );
     }
+    if (!isClerkServerConfigured()) {
+      return NextResponse.json(
+        { error: "Checkout authentication is not configured." },
+        { status: 401 },
+      );
+    }
 
-    const attempt = await createCheckoutAttempt({
-      cartIntent,
-      buyerUserId:
-        typeof body?.buyerUserId === "string" ? body.buyerUserId : undefined,
-      buyerEmail:
-        typeof body?.buyerEmail === "string" ? body.buyerEmail : undefined,
-      referrerClerkUserId:
-        typeof body?.referrerClerkUserId === "string"
-          ? body.referrerClerkUserId
-          : undefined,
-    });
+    const { userId, sessionClaims, getToken } = await auth();
+    if (!userId) {
+      return NextResponse.json(
+        { error: "Sign in before checkout." },
+        { status: 401 },
+      );
+    }
+
+    const convexAuthToken = await getToken({ template: "convex" });
+    if (!convexAuthToken) {
+      return NextResponse.json(
+        { error: "Unable to authorize checkout." },
+        { status: 401 },
+      );
+    }
+
+    const sessionEmail = await resolveAuthEmail(sessionClaims);
+    const buyerEmail =
+      sessionEmail ||
+      (typeof body?.buyerEmail === "string" ? body.buyerEmail : undefined);
+
+    const attempt = await createCheckoutAttempt(
+      {
+        cartIntent,
+        buyerEmail,
+        referrerClerkUserId:
+          typeof body?.referrerClerkUserId === "string"
+            ? body.referrerClerkUserId
+            : undefined,
+      },
+      { convexAuthToken },
+    );
 
     if (!attempt.ok) {
       return NextResponse.json(
@@ -54,10 +84,13 @@ async function handleCreateOrder(req: NextRequest) {
       receipt: String(attempt.checkoutAttemptId).slice(0, 40),
     });
 
-    await markCheckoutAttemptPaymentOrdered({
-      checkoutAttemptId: attempt.checkoutAttemptId,
-      razorpayOrderId: order.id,
-    });
+    await markCheckoutAttemptPaymentOrdered(
+      {
+        checkoutAttemptId: attempt.checkoutAttemptId,
+        razorpayOrderId: order.id,
+      },
+      { convexAuthToken },
+    );
 
     return NextResponse.json({
       ...order,

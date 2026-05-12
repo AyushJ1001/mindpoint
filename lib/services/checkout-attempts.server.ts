@@ -18,6 +18,11 @@ type CreateCheckoutAttemptResult =
       reconciliation: unknown;
     };
 
+type CheckoutAttemptServiceOptions = {
+  convexUrl?: string;
+  convexAuthToken?: string;
+};
+
 function resolveConvexUrl(convexUrl?: string): string {
   const resolvedConvexUrl = convexUrl || process.env.NEXT_PUBLIC_CONVEX_URL;
 
@@ -30,11 +35,20 @@ function resolveConvexUrl(convexUrl?: string): string {
   return resolvedConvexUrl;
 }
 
+function createAuthedConvexClient(options: CheckoutAttemptServiceOptions) {
+  const convex = new ConvexHttpClient(resolveConvexUrl(options.convexUrl));
+  if (options.convexAuthToken) {
+    convex.setAuth(options.convexAuthToken);
+  }
+
+  return convex;
+}
+
 export async function createCheckoutAttempt(
   input: CreatePaymentOrderInput,
-  options: { convexUrl?: string } = {},
+  options: CheckoutAttemptServiceOptions = {},
 ): Promise<CreateCheckoutAttemptResult> {
-  const convex = new ConvexHttpClient(resolveConvexUrl(options.convexUrl));
+  const convex = createAuthedConvexClient(options);
 
   return (await convex.mutation(api.checkout.createCheckoutAttempt, {
     cartIntent: {
@@ -46,7 +60,6 @@ export async function createCheckoutAttempt(
         selectedFreeBatchId: item.selectedFreeBatchId as never,
       })),
     },
-    buyerUserId: input.buyerUserId,
     buyerEmail: input.buyerEmail,
     referrerClerkUserId: input.referrerClerkUserId,
   })) as CreateCheckoutAttemptResult;
@@ -57,9 +70,9 @@ export async function markCheckoutAttemptPaymentOrdered(
     checkoutAttemptId: string;
     razorpayOrderId: string;
   },
-  options: { convexUrl?: string } = {},
+  options: CheckoutAttemptServiceOptions = {},
 ) {
-  const convex = new ConvexHttpClient(resolveConvexUrl(options.convexUrl));
+  const convex = createAuthedConvexClient(options);
 
   return await convex.mutation(api.checkout.markCheckoutAttemptPaymentOrdered, {
     checkoutAttemptId: input.checkoutAttemptId as never,
