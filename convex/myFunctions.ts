@@ -4,7 +4,7 @@ import { api, internal } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { CheckoutPricing, CheckoutPricingItem } from "./_shared/checkout";
-import { calculatePointsEarned } from "./_shared/mind-points";
+import { calculatePointsEarned } from "./_shared/mindPoints";
 import { PublicCourseDocumentValue, PublicEnrollmentFields } from "./schema";
 import { pickPublicCourse } from "./_publicCourse";
 
@@ -1614,6 +1614,9 @@ export const handleCartCheckout = mutation({
       ),
     ),
     checkoutPricing: v.optional(checkoutPricingValidator),
+    checkoutAttemptId: v.optional(v.id("checkoutAttempts")),
+    razorpayOrderId: v.optional(v.string()),
+    razorpayPaymentId: v.optional(v.string()),
   },
 
   handler: async (ctx, args) => {
@@ -1632,6 +1635,29 @@ export const handleCartCheckout = mutation({
     const processedBogoSourceCourses = new Set<string>();
     let totalPointsEarnedForOrder = 0;
     let firstPaidEnrollmentId: Id<"enrollments"> | null = null;
+
+    if (args.checkoutAttemptId) {
+      const attempt = await ctx.db.get(args.checkoutAttemptId);
+      if (!attempt) {
+        throw new Error("Checkout attempt not found.");
+      }
+
+      if (attempt.status === "finalized") {
+        return await ctx.db
+          .query("enrollments")
+          .withIndex("by_checkoutAttemptId", (q) =>
+            q.eq("checkoutAttemptId", args.checkoutAttemptId),
+          )
+          .collect();
+      }
+
+      await ctx.db.patch(args.checkoutAttemptId, {
+        razorpayOrderId: args.razorpayOrderId ?? attempt.razorpayOrderId,
+        razorpayPaymentId: args.razorpayPaymentId ?? attempt.razorpayPaymentId,
+        status: "payment_captured",
+        updatedAt: Date.now(),
+      });
+    }
 
     for (const lineItem of lineItems) {
       const course = await ctx.db.get(lineItem.courseId);
@@ -1697,6 +1723,10 @@ export const handleCartCheckout = mutation({
         sessions: course.sessions,
         ...buildEnrollmentPricingFields(course, pricingItem),
         registrationSource: "checkout",
+        checkoutAttemptId: args.checkoutAttemptId,
+        razorpayOrderId: args.razorpayOrderId,
+        razorpayPaymentId: args.razorpayPaymentId,
+        referrerClerkUserId: args.referrerClerkUserId,
       });
 
       await addEnrollmentToGoogleSheets(ctx, {
@@ -1969,6 +1999,14 @@ export const handleCartCheckout = mutation({
           sessionType: args.sessionType,
         });
       }
+    }
+
+    if (args.checkoutAttemptId) {
+      await ctx.db.patch(args.checkoutAttemptId, {
+        status: "finalized",
+        finalizedAt: Date.now(),
+        updatedAt: Date.now(),
+      });
     }
 
     return [...enrollments, ...supervisedEnrollments, ...worksheetEnrollments];

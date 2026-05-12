@@ -36,6 +36,7 @@ export const EnrollmentRegistrationSource = v.union(
   v.literal("checkout"),
   v.literal("guest_checkout"),
   v.literal("admin_manual"),
+  v.literal("admin_paid_recovery"),
   v.literal("admin_transfer"),
 );
 
@@ -234,6 +235,10 @@ const publicEnrollmentFields = {
   transferredAt: v.optional(v.number()),
   transferredToCourseId: v.optional(v.id("courses")),
   lastConfirmationSentAt: v.optional(v.number()),
+  checkoutAttemptId: v.optional(v.id("checkoutAttempts")),
+  razorpayOrderId: v.optional(v.string()),
+  razorpayPaymentId: v.optional(v.string()),
+  referrerClerkUserId: v.optional(v.string()),
 };
 
 const enrollmentTableFields = {
@@ -338,6 +343,8 @@ export default defineSchema({
     .index("by_courseId", ["courseId"])
     .index("by_batchId", ["batchId"])
     .index("by_batchId_and_status", ["batchId", "status"])
+    .index("by_checkoutAttemptId", ["checkoutAttemptId"])
+    .index("by_razorpayPaymentId", ["razorpayPaymentId"])
     .index("by_status", ["status"])
     .index("by_courseId_and_status", ["courseId", "status"])
     .index("by_courseId_and_status_and_userId", [
@@ -394,6 +401,41 @@ export default defineSchema({
   })
     .index("by_referredClerkUserId", ["referredClerkUserId"])
     .index("by_referrerClerkUserId", ["referrerClerkUserId"]),
+
+  checkoutAttempts: defineTable({
+    cartIntent: v.any(),
+    authoritativeAmount: v.number(),
+    authoritativeLineItems: v.array(v.any()),
+    validationStatus: v.union(
+      v.literal("valid"),
+      v.literal("changed"),
+      v.literal("blocked"),
+    ),
+    validationSummary: v.any(),
+    razorpayOrderId: v.optional(v.string()),
+    razorpayPaymentId: v.optional(v.string()),
+    buyerUserId: v.optional(v.string()),
+    buyerEmail: v.optional(v.string()),
+    referrerClerkUserId: v.optional(v.string()),
+    status: v.union(
+      v.literal("created"),
+      v.literal("payment_ordered"),
+      v.literal("payment_captured"),
+      v.literal("finalized"),
+      v.literal("recovery_required"),
+      v.literal("recovered"),
+      v.literal("failed"),
+    ),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    finalizedAt: v.optional(v.number()),
+    recoveredByAdminId: v.optional(v.string()),
+    recoveryReason: v.optional(v.string()),
+  })
+    .index("by_razorpayOrderId", ["razorpayOrderId"])
+    .index("by_razorpayPaymentId", ["razorpayPaymentId"])
+    .index("by_buyerUserId", ["buyerUserId"])
+    .index("by_status", ["status"]),
 
   adminAuditLogs: defineTable({
     actorAdminId: v.string(),

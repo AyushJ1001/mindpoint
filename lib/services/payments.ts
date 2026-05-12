@@ -1,15 +1,36 @@
 import "client-only";
 
+import type { CheckoutPricing } from "@/lib/domain/checkout";
 import { postJson, type FetchImpl } from "./http";
 
 export type CreatePaymentOrderInput = {
-  amount: number;
+  cartIntent: {
+    items: Array<{
+      cartItemId: string;
+      courseId: string;
+      batchId?: string;
+      quantity?: number;
+      selectedFreeCourseId?: string;
+      selectedFreeBatchId?: string;
+      clientListedPrice?: number;
+      clientCheckoutPrice?: number;
+      couponCode?: string;
+    }>;
+  };
+  buyerUserId?: string;
+  buyerEmail?: string;
+  referrerClerkUserId?: string;
 };
 
 export type PaymentOrder = {
   amount: number;
   currency: string;
   id: string;
+  checkoutAttemptId?: string;
+  reconciliation?: {
+    checkoutPricing?: CheckoutPricing;
+    status?: "valid" | "changed" | "blocked";
+  };
 };
 
 export type VerifyPaymentInput = {

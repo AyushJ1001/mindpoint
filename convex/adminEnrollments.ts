@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { EnrollmentStatus } from "./schema";
 import type { FunctionReturnType } from "convex/server";
 import { requireAdmin } from "./adminAuth";
@@ -8,6 +8,7 @@ import { normalizeEnrollmentStatus } from "./adminUtils";
 import { createAdminAuditLog } from "./adminAudit";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
+import { calculatePointsEarned } from "./_shared/mindPoints";
 
 function generateEnrollmentNumber(
   courseCode: string,
@@ -108,6 +109,14 @@ const adminEnrollmentPricingValidator = v.object({
   redemptionDiscountAmount: v.optional(v.number()),
   couponCode: v.optional(v.string()),
   mindPointsRedeemed: v.optional(v.number()),
+});
+
+const paidRecoveryCourseValidator = v.object({
+  courseId: v.id("courses"),
+  batchId: v.optional(v.id("courseBatches")),
+  listedPrice: v.number(),
+  checkoutPrice: v.number(),
+  amountPaid: v.number(),
 });
 
 function buildAdminCheckoutPricingItem(
@@ -624,6 +633,225 @@ export const createManualEnrollment = mutation({
     });
 
     return await ctx.db.get(enrollmentId);
+  },
+});
+
+export const recoverPaidOrder = mutation({
+  args: {
+    recoveryReason: v.string(),
+    razorpayOrderId: v.string(),
+    razorpayPaymentId: v.string(),
+    amountPaid: v.number(),
+    paymentCapturedAt: v.optional(v.number()),
+    buyerUserId: v.string(),
+    buyerEmail: v.string(),
+    buyerName: v.optional(v.string()),
+    buyerPhone: v.optional(v.string()),
+    referrerClerkUserId: v.optional(v.string()),
+    courses: v.array(paidRecoveryCourseValidator),
+    backfillBuyerMindPoints: v.boolean(),
+    backfillReferralReward: v.boolean(),
+    overrideAvailability: v.boolean(),
+    overrideReason: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const reason = args.recoveryReason.trim();
+    const overrideReason = args.overrideReason?.trim();
+
+    if (!reason) {
+      throw new Error("Recovery reason is required.");
+    }
+    if (!args.razorpayPaymentId.trim()) {
+      throw new Error("Razorpay payment ID is required.");
+    }
+    if (!args.buyerUserId.trim() || !args.buyerEmail.trim()) {
+      throw new Error("Buyer user ID and email are required.");
+    }
+    if (args.courses.length === 0) {
+      throw new Error("At least one course is required.");
+    }
+    if (args.overrideAvailability && !overrideReason) {
+      throw new Error("Override reason is required.");
+    }
+
+    const duplicate = await ctx.db
+      .query("enrollments")
+      .withIndex("by_razorpayPaymentId", (q) =>
+        q.eq("razorpayPaymentId", args.razorpayPaymentId.trim()),
+      )
+      .first();
+    if (duplicate) {
+      throw new Error("This Razorpay payment ID is already recovered.");
+    }
+
+    const enrollmentIds: Id<"enrollments">[] = [];
+    let buyerPointsAwarded = 0;
+    let firstEnrollmentId: Id<"enrollments"> | undefined;
+
+    for (const item of args.courses) {
+      const course = await ctx.db.get(item.courseId);
+      if (!course) {
+        throw new Error(`Course ${item.courseId} not found.`);
+      }
+      const batch = item.batchId ? await ctx.db.get(item.batchId) : null;
+      if (item.batchId && (!batch || batch.courseId !== item.courseId)) {
+        throw new Error(`Batch ${item.batchId} does not belong to the course.`);
+      }
+
+      const capacity = batch?.capacity ?? course.capacity ?? 0;
+      const enrolledCount = (batch?.enrolledUsers ?? course.enrolledUsers ?? [])
+        .length;
+      if (
+        !args.overrideAvailability &&
+        capacity > 0 &&
+        enrolledCount >= capacity
+      ) {
+        throw new Error(
+          `${batch ? `Batch "${batch.label}"` : `Course "${course.name}"`} is full. Enable override to recover into it.`,
+        );
+      }
+
+      const schedule = batch
+        ? getBatchSnapshot(batch)
+        : {
+            batchDaysOfWeek: undefined,
+            batchEndDate: undefined,
+            batchEndTime: undefined,
+            batchId: undefined,
+            batchLabel: undefined,
+            batchStartDate: undefined,
+            batchStartTime: undefined,
+          };
+      const startDate =
+        schedule.batchStartDate ??
+        course.startDate ??
+        new Date().toISOString().split("T")[0];
+      const enrollmentNumber =
+        course.type === "therapy" ||
+        course.type === "supervised" ||
+        course.type === "worksheet"
+          ? "N/A"
+          : await generateUniqueEnrollmentNumber(ctx, course.code, startDate);
+
+      const enrollmentId = await ctx.db.insert("enrollments", {
+        userId: args.buyerUserId.trim(),
+        userName: args.buyerName?.trim() || args.buyerEmail.trim(),
+        userEmail: args.buyerEmail.trim(),
+        userPhone: args.buyerPhone?.trim() || undefined,
+        courseId: item.courseId,
+        courseName: batch ? `${course.name} (${batch.label})` : course.name,
+        enrollmentNumber,
+        courseType: course.type,
+        internshipPlan:
+          course.type === "internship"
+            ? (extractInternshipPlanFromDuration(course.duration) ?? undefined)
+            : undefined,
+        sessions: course.sessions,
+        ...schedule,
+        listedPrice: roundCurrency(item.listedPrice),
+        checkoutPrice: roundCurrency(item.checkoutPrice),
+        amountPaid: roundCurrency(item.amountPaid),
+        redemptionDiscountAmount: Math.max(
+          0,
+          roundCurrency(item.checkoutPrice) - roundCurrency(item.amountPaid),
+        ),
+        registrationSource: "admin_paid_recovery",
+        status: "active",
+        razorpayOrderId: args.razorpayOrderId.trim(),
+        razorpayPaymentId: args.razorpayPaymentId.trim(),
+        referrerClerkUserId: args.referrerClerkUserId?.trim() || undefined,
+      });
+
+      enrollmentIds.push(enrollmentId);
+      firstEnrollmentId = firstEnrollmentId ?? enrollmentId;
+
+      if (batch) {
+        const users = batch.enrolledUsers ?? [];
+        if (!users.includes(args.buyerUserId.trim())) {
+          await ctx.db.patch(batch._id, {
+            enrolledUsers: [...users, args.buyerUserId.trim()],
+          });
+        }
+      } else {
+        const users = course.enrolledUsers ?? [];
+        if (!users.includes(args.buyerUserId.trim())) {
+          await ctx.db.patch(course._id, {
+            enrolledUsers: [...users, args.buyerUserId.trim()],
+          });
+        }
+      }
+
+      if (
+        args.backfillBuyerMindPoints &&
+        isAuthenticatedUserId(args.buyerUserId)
+      ) {
+        const points = calculatePointsEarned(course);
+        if (points > 0 && roundCurrency(item.amountPaid) > 0) {
+          await ctx.runMutation(internal.mindPoints.awardPoints, {
+            clerkUserId: args.buyerUserId.trim(),
+            points,
+            description: `Recovered paid order: ${course.name}`,
+            enrollmentId,
+          });
+          buyerPointsAwarded += points;
+        }
+      }
+    }
+
+    if (
+      args.backfillReferralReward &&
+      args.referrerClerkUserId &&
+      isAuthenticatedUserId(args.buyerUserId) &&
+      args.referrerClerkUserId !== args.buyerUserId &&
+      buyerPointsAwarded > 0
+    ) {
+      const existingReward = await ctx.db
+        .query("referralRewards")
+        .withIndex("by_referredClerkUserId", (q) =>
+          q.eq("referredClerkUserId", args.buyerUserId.trim()),
+        )
+        .first();
+      if (!existingReward) {
+        await ctx.db.insert("referralRewards", {
+          referrerClerkUserId: args.referrerClerkUserId.trim(),
+          referredClerkUserId: args.buyerUserId.trim(),
+          awardedPoints: buyerPointsAwarded,
+          createdAt: Date.now(),
+          firstEnrollmentId,
+        });
+        await ctx.runMutation(internal.mindPoints.awardPoints, {
+          clerkUserId: args.referrerClerkUserId.trim(),
+          points: buyerPointsAwarded,
+          description: `Recovered referral reward for ${args.buyerEmail.trim()}`,
+          enrollmentId: firstEnrollmentId,
+        });
+      }
+    }
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "enrollment.recover_paid_order",
+      entityType: "razorpay_payment",
+      entityId: args.razorpayPaymentId.trim(),
+      after: { enrollmentIds: enrollmentIds.map(String) },
+      metadata: {
+        recoveryReason: reason,
+        overrideAvailability: args.overrideAvailability,
+        overrideReason,
+        amountPaid: roundCurrency(args.amountPaid),
+        buyerUserId: args.buyerUserId.trim(),
+        buyerEmail: args.buyerEmail.trim(),
+        referrerClerkUserId: args.referrerClerkUserId?.trim() || undefined,
+        buyerPointsAwarded,
+      },
+    });
+
+    return {
+      enrollmentIds,
+      buyerPointsAwarded,
+    };
   },
 });
 

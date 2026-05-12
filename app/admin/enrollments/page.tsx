@@ -245,17 +245,22 @@ export default function AdminEnrollmentsPage() {
         title="Enrollments"
         description="Single registration hub for website checkout, admin/manual adds, email resend history, and CSV export for Excel."
         actions={
-          <Button
-            variant="outline"
-            onClick={() =>
-              downloadCsv(
-                `admin-enrollments-${new Date().toISOString().slice(0, 10)}.csv`,
-                toCsv(exportRows),
-              )
-            }
-          >
-            Export CSV
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" asChild>
+              <Link href="/admin/enrollments/recover">Recover paid order</Link>
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() =>
+                downloadCsv(
+                  `admin-enrollments-${new Date().toISOString().slice(0, 10)}.csv`,
+                  toCsv(exportRows),
+                )
+              }
+            >
+              Export CSV
+            </Button>
+          </div>
         }
       />
 
