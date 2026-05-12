@@ -4,11 +4,12 @@ import crypto from "node:crypto";
 import { getRazorpayServerConfig } from "@/lib/config/server";
 import Razorpay from "razorpay";
 
-import type {
-  CreatePaymentOrderInput,
-  PaymentOrder,
-  VerifyPaymentInput,
-} from "./payments";
+import type { PaymentOrder, VerifyPaymentInput } from "./payments";
+
+type CreatePaymentOrderInput = {
+  amount: number;
+  receipt?: string;
+};
 
 export class InvalidPaymentAmountError extends Error {
   constructor() {
@@ -36,6 +37,7 @@ export async function createPaymentOrder(
   return (await razorpay.orders.create({
     amount: roundedAmount * 100,
     currency: "INR",
+    receipt: input.receipt,
   })) as PaymentOrder;
 }
 

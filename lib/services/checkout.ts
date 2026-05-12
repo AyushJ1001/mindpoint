@@ -221,7 +221,12 @@ export async function handlePaymentSuccess(
   }>,
   referrerClerkUserId?: string,
   checkoutPricing?: CheckoutPricing,
-  options: { convexUrl?: string } = {},
+  options: {
+    convexUrl?: string;
+    checkoutAttemptId?: string;
+    razorpayOrderId?: string;
+    razorpayPaymentId?: string;
+  } = {},
 ): Promise<CheckoutResult & { enrollments?: EnrollmentSummary[] }> {
   const courseIds = lineItems.map((item) => item.courseId);
   try {
@@ -238,6 +243,9 @@ export async function handlePaymentSuccess(
         userEmail,
         userId,
         userPhone,
+        checkoutAttemptId: options.checkoutAttemptId,
+        razorpayOrderId: options.razorpayOrderId,
+        razorpayPaymentId: options.razorpayPaymentId,
       },
       {
         courseIds: courseIds.map((id) => id),

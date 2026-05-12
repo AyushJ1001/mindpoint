@@ -179,14 +179,25 @@ const getCartLineKey = (item: {
     : String(item.id);
 
 const CartContent = () => {
-  const { items, removeItem, updateItemQuantity, isEmpty, emptyCart } =
-    useCart();
+  const {
+    items,
+    removeItem,
+    updateItem,
+    updateItemQuantity,
+    isEmpty,
+    emptyCart,
+  } = useCart();
 
   const [isMounted, setIsMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const [pendingCheckout, setPendingCheckout] = useState(false);
+  const [cartReviewRequired, setCartReviewRequired] = useState(false);
+  const [cartSyncNotice, setCartSyncNotice] = useState<string | null>(null);
+  const [lastReconciliationSignature, setLastReconciliationSignature] =
+    useState<string | null>(null);
+  const [reconciliationRequestedAt, setReconciliationRequestedAt] = useState(0);
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{
     code: string;
@@ -507,6 +518,113 @@ const CartContent = () => {
       ),
     [checkoutPricing.items],
   );
+  const buildCartIntent = useCallback(
+    () => ({
+      items: items.map((item) => {
+        const lineKey = getCartLineKey(item);
+        const pricingItem = checkoutPricingByLineKey.get(lineKey);
+
+        return {
+          cartItemId: lineKey,
+          courseId: String(getCartCourseId(item)),
+          batchId: item.batchId ? String(item.batchId) : undefined,
+          quantity: item.quantity ?? 1,
+          selectedFreeCourseId: item.selectedFreeCourse
+            ? String(
+                item.selectedFreeCourse.courseId ?? item.selectedFreeCourse.id,
+              )
+            : undefined,
+          selectedFreeBatchId: item.selectedFreeCourse?.batchId
+            ? String(item.selectedFreeCourse.batchId)
+            : undefined,
+          clientListedPrice: pricingItem?.listedPrice,
+          clientCheckoutPrice: pricingItem?.amountPaid,
+          couponCode: pricingItem?.couponCode,
+          mindPointsRedeemed: pricingItem?.mindPointsRedeemed,
+        };
+      }),
+    }),
+    [checkoutPricingByLineKey, items],
+  );
+  const currentCartIntent = useMemo(() => buildCartIntent(), [buildCartIntent]);
+  const cartReconciliation = useQuery(
+    api.checkout.reconcileCart,
+    isMounted && currentCartIntent.items.length > 0
+      ? ({
+          cartIntent: currentCartIntent,
+          requestedAt: reconciliationRequestedAt,
+        } as never)
+      : "skip",
+  );
+
+  useEffect(() => {
+    const handleFocus = () => {
+      setReconciliationRequestedAt(Date.now());
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
+  }, []);
+
+  useEffect(() => {
+    if (!cartReconciliation || cartReconciliation.status === "valid") {
+      return;
+    }
+
+    const signature = JSON.stringify({
+      removedItems: cartReconciliation.removedItems,
+      updatedItems: cartReconciliation.updatedItems,
+      totalAmountPaid: cartReconciliation.totalAmountPaid,
+    });
+    if (signature === lastReconciliationSignature) {
+      return;
+    }
+    setLastReconciliationSignature(signature);
+
+    for (const removed of cartReconciliation.removedItems ?? []) {
+      removeItem(removed.cartItemId);
+    }
+
+    const couponRejected = (cartReconciliation.updatedItems ?? []).some(
+      (updated) =>
+        updated.reasons.some((reason) => reason.startsWith("COUPON_")),
+    );
+    if (couponRejected) {
+      setAppliedCoupon(null);
+      setCouponCode("");
+    }
+
+    for (const reconciledItem of cartReconciliation.items ?? []) {
+      const changed = (cartReconciliation.updatedItems ?? []).some(
+        (updated) => updated.cartItemId === reconciledItem.cartItemId,
+      );
+      if (!changed) {
+        continue;
+      }
+
+      const payload: Record<string, unknown> = {
+        price: reconciledItem.checkoutPrice,
+        originalPrice: reconciledItem.listedPrice,
+      };
+      if (!reconciledItem.selectedFreeCourseId) {
+        payload.selectedFreeCourse = undefined;
+      }
+
+      updateItem(reconciledItem.cartItemId, payload);
+    }
+
+    const removedCount = cartReconciliation.removedItems?.length ?? 0;
+    const updatedCount = cartReconciliation.updatedItems?.length ?? 0;
+    const notice =
+      removedCount > 0
+        ? `${removedCount} item${removedCount === 1 ? "" : "s"} removed because pricing or availability changed.`
+        : `${updatedCount} item${updatedCount === 1 ? "" : "s"} updated because pricing or availability changed.`;
+    setCartSyncNotice(notice);
+    setCartReviewRequired(true);
+    toast.info(
+      "Your cart was updated because pricing or availability changed.",
+    );
+  }, [cartReconciliation, lastReconciliationSignature, removeItem, updateItem]);
   const listedCartTotal = useMemo(
     () =>
       items.reduce(
@@ -636,7 +754,15 @@ const CartContent = () => {
   }, []);
 
   const completeCheckoutEnrollment = useCallback(
-    async (whatsappNumber?: string) => {
+    async (
+      whatsappNumber?: string,
+      paymentContext: {
+        checkoutAttemptId?: string;
+        razorpayOrderId?: string;
+        razorpayPaymentId?: string;
+        checkoutPricingOverride?: typeof checkoutPricing;
+      } = {},
+    ) => {
       if (!user?.id) {
         return false;
       }
@@ -678,7 +804,8 @@ const CartContent = () => {
         undefined,
         bogoSelections.length > 0 ? bogoSelections : undefined,
         referrerClerkUserId,
-        checkoutPricing,
+        paymentContext.checkoutPricingOverride ?? checkoutPricing,
+        paymentContext,
       );
 
       if (!result.success) {
@@ -754,7 +881,12 @@ const CartContent = () => {
         }
 
         const data = await requestPaymentOrder({
-          amount: discountedTotal,
+          cartIntent: buildCartIntent(),
+          buyerEmail: user.primaryEmailAddress?.emailAddress || undefined,
+          referrerClerkUserId:
+            getReferralCookie() && getReferralCookie() !== user.id
+              ? getReferralCookie()!
+              : undefined,
         });
 
         const options: RazorpayOrderOptions = {
@@ -764,10 +896,20 @@ const CartContent = () => {
           name: "The Mind Point",
           description: `Payment for ${items.length} course(s)`,
           order_id: data.id,
-          handler: async () => {
+          handler: async (response: {
+            razorpay_order_id?: string;
+            razorpay_payment_id?: string;
+            razorpay_signature?: string;
+          }) => {
             // Handle signed-in user
             try {
-              await completeCheckoutEnrollment(whatsappNumber);
+              await completeCheckoutEnrollment(whatsappNumber, {
+                checkoutAttemptId: data.checkoutAttemptId,
+                razorpayOrderId: response.razorpay_order_id ?? data.id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                checkoutPricingOverride: data.reconciliation
+                  ?.checkoutPricing as typeof checkoutPricing | undefined,
+              });
             } catch {
               toast.error(
                 "Payment successful but enrollment failed. Please contact support.",
@@ -1003,6 +1145,7 @@ const CartContent = () => {
       setIsProcessing,
       Razorpay,
       completeCheckoutEnrollment,
+      buildCartIntent,
     ],
   );
 
@@ -1029,6 +1172,12 @@ const CartContent = () => {
   }, [pendingCheckout, user?.id, userProfile, proceedWithCheckoutAfterAuth]);
 
   const handleCheckoutClick = () => {
+    if (cartReviewRequired) {
+      setCartReviewRequired(false);
+      setCartSyncNotice("Review complete. You can proceed to checkout.");
+      return;
+    }
+
     if (!isUserLoaded) {
       // Still loading user state
       return;
@@ -1094,6 +1243,17 @@ const CartContent = () => {
           Review your selected courses and proceed to checkout.
         </p>
       </div>
+
+      {cartSyncNotice ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="mb-5 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+        >
+          <div className="font-semibold">Your cart was updated</div>
+          <div>{cartSyncNotice}</div>
+        </div>
+      ) : null}
 
       <div className="grid gap-5 lg:grid-cols-3 lg:gap-8">
         {/* Cart Items */}
@@ -1593,7 +1753,11 @@ const CartContent = () => {
                 disabled={isProcessing || (discountedTotal > 0 && isLoading)}
                 className="w-full"
               >
-                {isProcessing ? "Processing..." : "Proceed to Checkout"}
+                {isProcessing
+                  ? "Processing..."
+                  : cartReviewRequired
+                    ? "Review changes"
+                    : "Proceed to Checkout"}
               </Button>
             </CardContent>
           </Card>
