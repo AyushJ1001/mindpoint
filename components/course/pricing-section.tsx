@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -12,7 +13,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ScrollReveal } from "@/components/ScrollReveal";
-import { formatINR } from "@/components/course/course-hero";
+import { formatDateCommon, formatINR } from "@/components/course/course-hero";
+import { formatCourseTimeRange } from "@/lib/course-schedule";
 import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import ChoosePlan from "@/components/therapy/choose-plan";
@@ -46,6 +48,8 @@ interface PricingSectionProps {
   // Batch handling (optional; courses without batches simply skip the select).
   usesBatches?: boolean;
   batchOptions?: BatchOption[];
+  activeBatchId?: string | null;
+  onBatchSelect?: (id: string) => void;
 }
 
 // Inclusions shown as a three-line list, type-aware.
@@ -111,6 +115,8 @@ export default function PricingSection({
   mounted,
   usesBatches = false,
   batchOptions = [],
+  activeBatchId = null,
+  onBatchSelect,
 }: PricingSectionProps) {
   // Therapy and supervised keep their bespoke plan pickers — we just wrap them
   // in the new calm container so they inherit the section rhythm.
@@ -170,6 +176,15 @@ export default function PricingSection({
   const inclusions = inclusionsFor(course.type);
   const price = getCoursePrice(displayCourse);
   const mindPoints = calculatePointsEarned(displayCourse);
+  const selectableBatchCount = batchOptions.filter(
+    (batch) => batch.isSelectable,
+  ).length;
+  const requiresBatchSelection = usesBatches && batchOptions.length > 0;
+  const hasSelectedBatch = !requiresBatchSelection || Boolean(activeBatchId);
+  const canPurchase =
+    !isOutOfStock &&
+    (!usesBatches || (hasSelectedBatch && selectableBatchCount > 0));
+  const noOpenBatches = usesBatches && selectableBatchCount === 0;
 
   return (
     <section id="pricing" className="calm-section-tight">
@@ -185,154 +200,283 @@ export default function PricingSection({
           </div>
 
           <div className="calm-pricing-stage mt-12">
-          <div className="calm-card p-7 sm:p-10">
-            <div className="flex flex-wrap items-baseline gap-4">
-              <span className="calm-price-big">{formatINR(price)}</span>
-              {offerDetails?.hasDiscount && (
-                <span className="calm-price-strike">
-                  {formatINR(offerDetails.originalPrice)}
-                </span>
-              )}
-              {hasValidOffer && offerDetails && (
-                <span className="calm-kbd text-primary/90">
-                  {offerDetails.offerName}
-                  {offerDetails.hasDiscount
-                    ? ` \u00b7 ${offerDetails.discountPercentage}% off`
-                    : ""}
-                </span>
-              )}
-            </div>
-
-            {seatsLeft > 0 && seatsLeft <= 5 && (
-              <p className="mt-3 text-sm text-foreground/55">
-                Only {seatsLeft} seat{seatsLeft === 1 ? "" : "s"} left in this
-                intake.
-              </p>
-            )}
-
-            {shouldShowVariantSelect && (
-              <div className="mt-6">
-                <label className="calm-kbd mb-3 block text-foreground/55">
-                  Choose duration
-                </label>
-                <Select
-                  key={displayCourse._id as unknown as string}
-                  value={displayCourse._id as unknown as string}
-                  onValueChange={handleVariantSelect}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Choose option" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectGroup>
-                      <SelectLabel>Options</SelectLabel>
-                      {normalizedVariants.map((v) => (
-                        <SelectItem
-                          key={v._id}
-                          value={v._id as unknown as string}
-                        >
-                          <span className="font-medium">{variantLabel(v)}</span>
-                          <span className="ml-2 text-foreground/55">
-                            &mdash; {formatINR(getCoursePrice(v))}
-                          </span>
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  </SelectContent>
-                </Select>
+            <div className="calm-card p-7 sm:p-10">
+              <div className="flex flex-wrap items-baseline gap-4">
+                <span className="calm-price-big">{formatINR(price)}</span>
+                {offerDetails?.hasDiscount && (
+                  <span className="calm-price-strike">
+                    {formatINR(offerDetails.originalPrice)}
+                  </span>
+                )}
+                {hasValidOffer && offerDetails && (
+                  <span className="calm-kbd text-primary/90">
+                    {offerDetails.offerName}
+                    {offerDetails.hasDiscount
+                      ? ` \u00b7 ${offerDetails.discountPercentage}% off`
+                      : ""}
+                  </span>
+                )}
               </div>
-            )}
 
-            <div className="mt-8">
-              {isOutOfStock ? (
-                <Button disabled className="h-12 w-full text-base">
-                  Currently full
-                </Button>
-              ) : isInCart ? (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDecreaseQuantity(displayCourse)}
-                      className="h-10 w-10 p-0"
-                      aria-label="Decrease quantity"
+              {seatsLeft > 0 && seatsLeft <= 5 && (
+                <p className="text-foreground/55 mt-3 text-sm">
+                  Only {seatsLeft} seat{seatsLeft === 1 ? "" : "s"} left in this
+                  intake.
+                </p>
+              )}
+
+              {shouldShowVariantSelect && (
+                <div className="mt-6">
+                  <label className="calm-kbd text-foreground/55 mb-3 block">
+                    Choose duration
+                  </label>
+                  <Select
+                    key={displayCourse._id as unknown as string}
+                    value={displayCourse._id as unknown as string}
+                    onValueChange={handleVariantSelect}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Choose option" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectGroup>
+                        <SelectLabel>Options</SelectLabel>
+                        {normalizedVariants.map((v) => (
+                          <SelectItem
+                            key={v._id}
+                            value={v._id as unknown as string}
+                          >
+                            <span className="font-medium">
+                              {variantLabel(v)}
+                            </span>
+                            <span className="text-foreground/55 ml-2">
+                              &mdash; {formatINR(getCoursePrice(v))}
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              {usesBatches && (
+                <div className="border-foreground/10 mt-7 border-t pt-7">
+                  <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+                    <div>
+                      <p className="calm-kbd text-foreground/55">
+                        Choose your cohort
+                      </p>
+                      <p className="text-foreground/65 mt-2 text-sm leading-6">
+                        Select the batch you want before checkout.
+                      </p>
+                    </div>
+                    {noOpenBatches ? (
+                      <span className="calm-batch-status">No open batch</span>
+                    ) : null}
+                  </div>
+
+                  {batchOptions.length > 0 ? (
+                    <div
+                      className="flex flex-col gap-2.5"
+                      role="radiogroup"
+                      aria-label="Choose your cohort"
                     >
-                      <Minus className="h-4 w-4" />
-                    </Button>
-                    <span className="min-w-[2.5rem] text-center font-medium">
-                      {quantity}
-                    </span>
+                      {batchOptions.map((batch) => {
+                        const selected = activeBatchId === batch._id;
+                        const disabled = !batch.isSelectable;
+                        const statusLabel = !batch.isSelectable
+                          ? batch.availabilityStatus === "upcoming_full"
+                            ? "Full"
+                            : "Closed"
+                          : selected
+                            ? "Selected"
+                            : null;
+                        const seatsRemaining = Math.max(
+                          0,
+                          batch.capacity - (batch.enrolledCount ?? 0),
+                        );
+                        const dateLabel =
+                          batch.startDate && batch.endDate
+                            ? batch.startDate === batch.endDate
+                              ? formatDateCommon(batch.startDate)
+                              : `${formatDateCommon(batch.startDate)} to ${formatDateCommon(batch.endDate)}`
+                            : batch.startDate
+                              ? formatDateCommon(batch.startDate)
+                              : null;
+                        const scheduleLabel = [
+                          batch.daysOfWeek?.length
+                            ? batch.daysOfWeek.join(", ")
+                            : null,
+                          formatCourseTimeRange(batch.startTime, batch.endTime),
+                        ]
+                          .filter(Boolean)
+                          .join(" · ");
+
+                        return (
+                          <button
+                            key={batch._id}
+                            type="button"
+                            role="radio"
+                            aria-checked={selected}
+                            disabled={disabled}
+                            data-selected={selected ? "true" : "false"}
+                            data-disabled={disabled ? "true" : "false"}
+                            onClick={() =>
+                              !disabled && onBatchSelect?.(batch._id)
+                            }
+                            className="calm-batch-chip"
+                          >
+                            <span className="min-w-0">
+                              <span className="calm-batch-main block">
+                                {batch.label || "Upcoming batch"}
+                              </span>
+                              {dateLabel ? (
+                                <span className="calm-batch-sub block">
+                                  {dateLabel}
+                                </span>
+                              ) : null}
+                              {scheduleLabel ? (
+                                <span className="calm-batch-sub block">
+                                  {scheduleLabel}
+                                </span>
+                              ) : null}
+                              {batch.isSelectable &&
+                              seatsRemaining > 0 &&
+                              seatsRemaining <= 8 ? (
+                                <span className="calm-batch-sub text-primary/70 mt-0.5 block">
+                                  {seatsRemaining} seat
+                                  {seatsRemaining === 1 ? "" : "s"} left
+                                </span>
+                              ) : null}
+                            </span>
+                            {statusLabel ? (
+                              <span className="calm-batch-status">
+                                {statusLabel}
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="border-foreground/20 text-foreground/65 rounded-md border border-dashed px-4 py-5 text-sm">
+                      No batches have been published for this course yet.
+                    </div>
+                  )}
+
+                  {noOpenBatches ? (
+                    <div className="border-foreground/10 bg-foreground/[0.025] text-foreground/65 mt-4 rounded-md border px-4 py-4 text-sm leading-6">
+                      <p>
+                        This cohort is not open for checkout right now. Contact
+                        us and we will help you with the next available batch.
+                      </p>
+                      <Button asChild variant="outline" className="mt-3 h-10">
+                        <Link href="/contact">Contact us</Link>
+                      </Button>
+                    </div>
+                  ) : !hasSelectedBatch ? (
+                    <p className="text-foreground/55 mt-3 text-sm">
+                      Choose a cohort to enable checkout.
+                    </p>
+                  ) : null}
+                </div>
+              )}
+
+              <div className="mt-8">
+                {!canPurchase ? (
+                  <Button disabled className="h-12 w-full text-base">
+                    {noOpenBatches
+                      ? "No open batch"
+                      : usesBatches && !hasSelectedBatch
+                        ? "Choose a cohort"
+                        : "Currently full"}
+                  </Button>
+                ) : isInCart ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDecreaseQuantity(displayCourse)}
+                        className="h-10 w-10 p-0"
+                        aria-label="Decrease quantity"
+                      >
+                        <Minus className="h-4 w-4" />
+                      </Button>
+                      <span className="min-w-[2.5rem] text-center font-medium">
+                        {quantity}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleIncreaseQuantity(displayCourse)}
+                        disabled={quantity >= maxQty}
+                        className="h-10 w-10 p-0"
+                        aria-label="Increase quantity"
+                      >
+                        <Plus className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeItem(displayCourse._id)}
+                        className="text-foreground/60 hover:text-destructive ml-auto"
+                        aria-label="Remove from cart"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                     <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleIncreaseQuantity(displayCourse)}
-                      disabled={quantity >= maxQty}
-                      className="h-10 w-10 p-0"
-                      aria-label="Increase quantity"
+                      className="h-12 w-full text-base font-medium"
+                      size="lg"
+                      onClick={() => handleBuyNow(displayCourse)}
                     >
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeItem(displayCourse._id)}
-                      className="ml-auto text-foreground/60 hover:text-destructive"
-                      aria-label="Remove from cart"
-                    >
-                      <Trash2 className="h-4 w-4" />
+                      Go to checkout
                     </Button>
                   </div>
-                  <Button
-                    className="h-12 w-full text-base font-medium"
-                    size="lg"
-                    onClick={() => handleBuyNow(displayCourse)}
+                ) : (
+                  <>
+                    <Button
+                      onClick={() => handleIncreaseQuantity(displayCourse)}
+                      className="h-12 w-full text-base font-medium"
+                      size="lg"
+                    >
+                      Add to cart
+                    </Button>
+                    <button
+                      type="button"
+                      onClick={() => handleBuyNow(displayCourse)}
+                      disabled={!canPurchase}
+                      className="calm-link text-foreground/60 hover:text-foreground mt-4 block w-full text-center text-sm"
+                    >
+                      Or go straight to checkout
+                    </button>
+                  </>
+                )}
+              </div>
+
+              <ul className="border-foreground/10 mt-9 space-y-2.5 border-t pt-7">
+                {inclusions.map((item) => (
+                  <li
+                    key={item}
+                    className="text-foreground/70 flex gap-3 text-[0.95rem] leading-[1.55]"
                   >
-                    Go to checkout
-                  </Button>
-                </div>
-              ) : (
-                <>
-                  <Button
-                    onClick={() => handleIncreaseQuantity(displayCourse)}
-                    className="h-12 w-full text-base font-medium"
-                    size="lg"
-                  >
-                    Add to cart
-                  </Button>
-                  <button
-                    type="button"
-                    onClick={() => handleBuyNow(displayCourse)}
-                    disabled={isOutOfStock}
-                    className="calm-link mt-4 block w-full text-center text-sm text-foreground/60 hover:text-foreground"
-                  >
-                    Or go straight to checkout
-                  </button>
-                </>
+                    <span
+                      aria-hidden="true"
+                      className="bg-foreground/35 mt-[0.7rem] h-px w-3 flex-none"
+                    />
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ul>
+
+              {mindPoints > 0 && (
+                <p className="text-foreground/45 mt-6 text-xs">
+                  You&rsquo;ll earn {mindPoints} Mind Points with this purchase.
+                </p>
               )}
             </div>
-
-            <ul className="mt-9 space-y-2.5 border-t border-foreground/10 pt-7">
-              {inclusions.map((item) => (
-                <li
-                  key={item}
-                  className="flex gap-3 text-[0.95rem] leading-[1.55] text-foreground/70"
-                >
-                  <span
-                    aria-hidden="true"
-                    className="mt-[0.7rem] h-px w-3 flex-none bg-foreground/35"
-                  />
-                  <span>{item}</span>
-                </li>
-              ))}
-            </ul>
-
-            {mindPoints > 0 && (
-              <p className="mt-6 text-xs text-foreground/45">
-                You&rsquo;ll earn {mindPoints} Mind Points with this purchase.
-              </p>
-            )}
-          </div>
           </div>
         </ScrollReveal>
       </div>

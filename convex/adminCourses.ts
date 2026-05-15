@@ -133,9 +133,30 @@ function isBatchEnabledType(type?: AdminCourseType) {
   return (
     type === "certificate" ||
     type === "diploma" ||
+    type === "internship" ||
     type === "masterclass" ||
     type === "resume-studio"
   );
+}
+
+async function assertPublishedBatchBackedCourseHasBatch(
+  ctx: QueryCtx | MutationCtx,
+  courseId: Id<"courses">,
+) {
+  const batches = await ctx.db
+    .query("courseBatches")
+    .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
+    .collect();
+  const batch = batches.find(
+    (row) =>
+      normalizeCourseLifecycleStatus(row.lifecycleStatus) === "published",
+  );
+
+  if (!batch) {
+    throw new Error(
+      "Add at least one published batch before publishing this course.",
+    );
+  }
 }
 
 function validateBatchPatch(batch: {
@@ -213,6 +234,24 @@ type BatchMigrationDryRunResult = {
   migratableGroups: BatchMigrationDryRunGroup[];
 };
 
+type LegacyInternshipArchiveCandidate = {
+  courseId: Id<"courses">;
+  name: string;
+  code?: string;
+  duration?: string;
+  lifecycleStatus: "draft" | "published" | "archived";
+  enrollmentCount: number;
+  campaignCount: number;
+  reason: string;
+};
+
+type LegacyInternshipArchivePreview = {
+  candidates: LegacyInternshipArchiveCandidate[];
+  candidateCount: number;
+  estimatedAffectedEnrollments: number;
+  estimatedCampaignReferences: number;
+};
+
 function isBatchMigrationSupportedType(
   type?: AdminCourseType,
 ): type is BatchMigrationSupportedType {
@@ -223,9 +262,11 @@ function isBatchMigrationSupportedType(
 
 function stableSort(value: unknown): unknown {
   if (Array.isArray(value)) {
-    return value.map((item) => stableSort(item)).sort((left, right) =>
-      JSON.stringify(left).localeCompare(JSON.stringify(right)),
-    );
+    return value
+      .map((item) => stableSort(item))
+      .sort((left, right) =>
+        JSON.stringify(left).localeCompare(JSON.stringify(right)),
+      );
   }
 
   if (value && typeof value === "object") {
@@ -273,6 +314,41 @@ function getCourseSharedContentComparable(course: Doc<"courses">) {
     worksheetDescription: course.worksheetDescription ?? "",
     whyDifferent: course.whyDifferent ?? [],
   };
+}
+
+function getLegacyInternshipPlanSignal(course: Doc<"courses">) {
+  if (course.type !== "internship" || course.usesBatches) {
+    return null;
+  }
+
+  const searchableText = [
+    course.name ?? "",
+    course.code ?? "",
+    course.duration ?? "",
+    course.description ?? "",
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  if (
+    searchableText.includes("120") ||
+    searchableText.includes("120hr") ||
+    searchableText.includes("120 hour") ||
+    searchableText.includes("2 week")
+  ) {
+    return "Legacy 120-hour internship signal";
+  }
+
+  if (
+    searchableText.includes("240") ||
+    searchableText.includes("240hr") ||
+    searchableText.includes("240 hour") ||
+    searchableText.includes("4 week")
+  ) {
+    return "Legacy 240-hour internship signal";
+  }
+
+  return null;
 }
 
 function getCourseSharedContentSignature(course: Doc<"courses">) {
@@ -403,7 +479,13 @@ async function buildBatchMigrationDryRun(
       ambiguousGroups.push({
         courseIds: group.courses.map((course) => course._id),
         key: group.key,
-        mismatchFields: ["startDate", "endDate", "startTime", "endTime", "daysOfWeek"],
+        mismatchFields: [
+          "startDate",
+          "endDate",
+          "startTime",
+          "endTime",
+          "daysOfWeek",
+        ],
         name: group.name,
         reason:
           "One or more rows are missing schedule fields required to create batches.",
@@ -434,7 +516,10 @@ async function buildBatchMigrationDryRun(
     migratableGroups.push({
       canonicalCourseId: canonical._id,
       courseIds,
-      estimatedEnrollmentCount: await countEnrollmentsForCourses(ctx, courseIds),
+      estimatedEnrollmentCount: await countEnrollmentsForCourses(
+        ctx,
+        courseIds,
+      ),
       estimatedReviewCount: await countReviewsForCourses(ctx, courseIds),
       key: group.key,
       legacyRows: group.courses.map((course) => ({
@@ -466,6 +551,72 @@ async function buildBatchMigrationDryRun(
     ),
     supportedTypes: [...BATCH_MIGRATION_SUPPORTED_TYPES],
     migratableGroups,
+  };
+}
+
+async function countCampaignReferencesForCourse(
+  ctx: QueryCtx | MutationCtx,
+  courseId: Id<"courses">,
+) {
+  const bundles = await ctx.db.query("bundleCampaigns").collect();
+  return bundles.filter((campaign) =>
+    campaign.eligibleCourseIds.some(
+      (eligibleCourseId) => String(eligibleCourseId) === String(courseId),
+    ),
+  ).length;
+}
+
+async function buildLegacyInternshipArchivePreview(
+  ctx: QueryCtx | MutationCtx,
+): Promise<LegacyInternshipArchivePreview> {
+  const courses = await ctx.db.query("courses").collect();
+  const candidates: LegacyInternshipArchiveCandidate[] = [];
+
+  for (const course of courses) {
+    const reason = getLegacyInternshipPlanSignal(course);
+    const lifecycleStatus = normalizeCourseLifecycleStatus(
+      course.lifecycleStatus,
+    );
+    if (!reason || lifecycleStatus === "archived") {
+      continue;
+    }
+
+    const [enrollmentCount, campaignCount] = await Promise.all([
+      countEnrollmentsForCourses(ctx, [course._id]),
+      countCampaignReferencesForCourse(ctx, course._id),
+    ]);
+
+    candidates.push({
+      courseId: course._id,
+      name: course.name,
+      code: course.code,
+      duration: course.duration,
+      lifecycleStatus,
+      enrollmentCount,
+      campaignCount:
+        campaignCount + (course.offer || course.bogo?.enabled ? 1 : 0),
+      reason,
+    });
+  }
+
+  candidates.sort((left, right) => {
+    const statusOrder = { published: 0, draft: 1, archived: 2 } as const;
+    const statusDelta =
+      statusOrder[left.lifecycleStatus] - statusOrder[right.lifecycleStatus];
+    return statusDelta || left.name.localeCompare(right.name);
+  });
+
+  return {
+    candidates,
+    candidateCount: candidates.length,
+    estimatedAffectedEnrollments: candidates.reduce(
+      (total, candidate) => total + candidate.enrollmentCount,
+      0,
+    ),
+    estimatedCampaignReferences: candidates.reduce(
+      (total, candidate) => total + candidate.campaignCount,
+      0,
+    ),
   };
 }
 
@@ -690,10 +841,10 @@ function validatePublishableCourse(course: {
       if (!Array.isArray(course.allocation) || course.allocation.length === 0) {
         throw new Error("Internship allocation is required before publishing");
       }
-      if (!hasText(course.duration)) {
+      if (!course.usesBatches && !hasText(course.duration)) {
         throw new Error("Internship duration is required before publishing");
       }
-      if (!hasRequiredSchedule(course)) {
+      if (!course.usesBatches && !hasRequiredSchedule(course)) {
         throw new Error(
           "Start/end date, time, and days of week are required before publishing",
         );
@@ -1095,7 +1246,8 @@ export const listCourseBatches = query({
         return sortDelta;
       }
       const startDelta =
-        new Date(left.startDate).getTime() - new Date(right.startDate).getTime();
+        new Date(left.startDate).getTime() -
+        new Date(right.startDate).getTime();
       if (Number.isFinite(startDelta) && startDelta !== 0) {
         return startDelta;
       }
@@ -1332,6 +1484,111 @@ export const previewBatchBackfillMigration = query({
   },
 });
 
+export const previewLegacyInternshipArchive = query({
+  args: {},
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+    return await buildLegacyInternshipArchivePreview(ctx);
+  },
+});
+
+export const applyLegacyInternshipArchive = mutation({
+  args: {
+    courseIds: v.array(v.id("courses")),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const preview = await buildLegacyInternshipArchivePreview(ctx);
+    const selectedCourseIds = new Set(
+      args.courseIds.map((courseId) => String(courseId)),
+    );
+    const selectedCandidates = preview.candidates.filter((candidate) =>
+      selectedCourseIds.has(String(candidate.courseId)),
+    );
+    if (selectedCandidates.length === 0) {
+      throw new Error(
+        "Select at least one legacy internship course to archive.",
+      );
+    }
+
+    const now = Date.now();
+    let archivedCourses = 0;
+    let clearedCourseCampaigns = 0;
+    let updatedBundleCampaigns = 0;
+    const estimatedAffectedEnrollments = selectedCandidates.reduce(
+      (total, candidate) => total + candidate.enrollmentCount,
+      0,
+    );
+    const archivedCourseIds = new Set(
+      selectedCandidates.map((candidate) => String(candidate.courseId)),
+    );
+
+    for (const candidate of selectedCandidates) {
+      const course = await ctx.db.get(candidate.courseId);
+      if (
+        !course ||
+        normalizeCourseLifecycleStatus(course.lifecycleStatus) === "archived"
+      ) {
+        continue;
+      }
+
+      await ctx.db.patch(candidate.courseId, {
+        lifecycleStatus: "archived",
+        offer: undefined,
+        bogo: undefined,
+        archivedAt: now,
+        updatedAt: now,
+        updatedByAdminId: admin.userId,
+      });
+      archivedCourses += 1;
+      if (course.offer || course.bogo?.enabled) {
+        clearedCourseCampaigns += 1;
+      }
+    }
+
+    const bundleCampaigns = await ctx.db.query("bundleCampaigns").collect();
+    for (const campaign of bundleCampaigns) {
+      const nextEligibleCourseIds = campaign.eligibleCourseIds.filter(
+        (courseId) => !archivedCourseIds.has(String(courseId)),
+      );
+      if (nextEligibleCourseIds.length === campaign.eligibleCourseIds.length) {
+        continue;
+      }
+
+      await ctx.db.patch(campaign._id, {
+        eligibleCourseIds: nextEligibleCourseIds,
+        updatedAt: now,
+        updatedByAdminId: admin.userId,
+      });
+      updatedBundleCampaigns += 1;
+    }
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "legacy_internship_archive.apply",
+      entityType: "course",
+      entityId: "legacy-internship-archive",
+      metadata: {
+        archivedCourses,
+        clearedCourseCampaigns,
+        estimatedAffectedEnrollments,
+        selectedCourseIds: selectedCandidates.map((candidate) =>
+          String(candidate.courseId),
+        ),
+        updatedBundleCampaigns,
+      },
+    });
+
+    return {
+      archivedCourses,
+      clearedCourseCampaigns,
+      estimatedAffectedEnrollments,
+      updatedBundleCampaigns,
+    };
+  },
+});
+
 export const applyBatchBackfillMigration = mutation({
   args: {},
   handler: async (ctx) => {
@@ -1346,7 +1603,9 @@ export const applyBatchBackfillMigration = mutation({
     for (const group of dryRun.migratableGroups) {
       const groupCourses = sortBatchMigrationCourses(
         (
-          await Promise.all(group.courseIds.map((courseId) => ctx.db.get(courseId)))
+          await Promise.all(
+            group.courseIds.map((courseId) => ctx.db.get(courseId)),
+          )
         ).filter((course): course is Doc<"courses"> => !!course),
       );
       if (groupCourses.length < 2) {
@@ -1360,7 +1619,9 @@ export const applyBatchBackfillMigration = mutation({
         continue;
       }
 
-      const canonicalReviewIds = new Set<Id<"reviews">>(canonical.reviews ?? []);
+      const canonicalReviewIds = new Set<Id<"reviews">>(
+        canonical.reviews ?? [],
+      );
 
       for (let index = 0; index < groupCourses.length; index += 1) {
         const sourceCourse = groupCourses[index]!;
@@ -1478,14 +1739,14 @@ export const applyBatchBackfillMigration = mutation({
       const rewrittenEligibleCourseIds = Array.from(
         new Set(
           campaign.eligibleCourseIds.map(
-            (courseId) =>
-              sourceToCanonical.get(String(courseId)) ?? courseId,
+            (courseId) => sourceToCanonical.get(String(courseId)) ?? courseId,
           ),
         ),
       );
 
       const changed =
-        rewrittenEligibleCourseIds.length !== campaign.eligibleCourseIds.length ||
+        rewrittenEligibleCourseIds.length !==
+          campaign.eligibleCourseIds.length ||
         rewrittenEligibleCourseIds.some(
           (courseId, index) =>
             String(courseId) !== String(campaign.eligibleCourseIds[index]),
@@ -1586,6 +1847,10 @@ export const createCourse = mutation({
 
     const courseId = await ctx.db.insert("courses", payload);
 
+    if (lifecycleStatus === "published" && payload.usesBatches) {
+      await assertPublishedBatchBackedCourseHasBatch(ctx, courseId);
+    }
+
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
       actorEmail: admin.email,
@@ -1655,6 +1920,12 @@ export const updateCourse = mutation({
 
     if (nextLifecycle === "published") {
       validatePublishableCourse(preview);
+      if (
+        (patch.usesBatches ?? existing.usesBatches) &&
+        isBatchEnabledType(preview.type)
+      ) {
+        await assertPublishedBatchBackedCourseHasBatch(ctx, args.courseId);
+      }
     }
 
     await ctx.db.patch(args.courseId, patch);
@@ -1889,6 +2160,9 @@ export const transitionCourseLifecycle = mutation({
 
     if (args.lifecycleStatus === "published") {
       validatePublishableCourse(existing);
+      if (existing.usesBatches && isBatchEnabledType(existing.type)) {
+        await assertPublishedBatchBackedCourseHasBatch(ctx, args.courseId);
+      }
     }
 
     await ctx.db.patch(args.courseId, {

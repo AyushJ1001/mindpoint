@@ -88,20 +88,8 @@ export default function CourseClient({
 
   const activeBatch = useMemo(() => {
     if (!usesBatches) return null;
-    return (
-      batches.find((batch) => batch._id === selectedBatchId) ??
-      selectedBatch ??
-      course.nextAvailableBatch ??
-      batches[0] ??
-      null
-    );
-  }, [
-    batches,
-    course.nextAvailableBatch,
-    selectedBatch,
-    selectedBatchId,
-    usesBatches,
-  ]);
+    return batches.find((batch) => batch._id === selectedBatchId) ?? null;
+  }, [batches, selectedBatchId, usesBatches]);
 
   const displayCourse = useMemo(() => {
     const baseCourse = activeCourse ?? course;
@@ -426,11 +414,39 @@ export default function CourseClient({
         course={displayCourse}
         batches={usesBatches ? batchOptions : []}
         activeBatchId={activeBatch?._id ?? null}
-        onBatchSelect={usesBatches ? handleBatchSelect : undefined}
         onAddToCart={() => handleIncreaseQuantity(displayCourse)}
       />
 
       <WaveDivider className="mx-auto w-full max-w-3xl opacity-50" />
+
+      {displayCourse.type === "internship" ? (
+        <PricingSection
+          course={course}
+          activeCourse={displayCourse}
+          variants={variants}
+          isOutOfStock={isOutOfStock}
+          seatsLeft={seatsLeft}
+          hasValidOffer={hasValidOffer}
+          offerDetails={offerDetails}
+          shouldShowVariantSelect={shouldShowVariantSelect}
+          normalizedVariants={normalizedVariants}
+          variantLabel={variantLabel}
+          handleVariantSelect={handleVariantSelect}
+          handleIncreaseQuantity={handleIncreaseQuantity}
+          handleDecreaseQuantity={handleDecreaseQuantity}
+          handleBuyNow={handleBuyNow}
+          getCurrentQuantity={getCurrentQuantity}
+          inCart={(id) =>
+            mounted ? inCart(usesBatches ? cartLineId : id) : false
+          }
+          removeItem={removeCurrentCartLine}
+          mounted={mounted}
+          usesBatches={usesBatches}
+          batchOptions={batchOptions}
+          activeBatchId={activeBatch?._id ?? null}
+          onBatchSelect={usesBatches ? handleBatchSelect : undefined}
+        />
+      ) : null}
 
       <div className="calm-section-warm">
         <CourseWhyThisExists course={displayCourse} />
@@ -448,33 +464,37 @@ export default function CourseClient({
       </div>
 
       <div className="relative">
-        <LeafAccent className="pointer-events-none absolute -top-2 left-[6%] w-7 -rotate-[20deg] -scale-x-100 opacity-20 sm:w-9" />
+        <LeafAccent className="pointer-events-none absolute -top-2 left-[6%] w-7 -scale-x-100 -rotate-[20deg] opacity-20 sm:w-9" />
       </div>
 
-      <PricingSection
-        course={course}
-        activeCourse={displayCourse}
-        variants={variants}
-        isOutOfStock={isOutOfStock}
-        seatsLeft={seatsLeft}
-        hasValidOffer={hasValidOffer}
-        offerDetails={offerDetails}
-        shouldShowVariantSelect={shouldShowVariantSelect}
-        normalizedVariants={normalizedVariants}
-        variantLabel={variantLabel}
-        handleVariantSelect={handleVariantSelect}
-        handleIncreaseQuantity={handleIncreaseQuantity}
-        handleDecreaseQuantity={handleDecreaseQuantity}
-        handleBuyNow={handleBuyNow}
-        getCurrentQuantity={getCurrentQuantity}
-        inCart={(id) =>
-          mounted ? inCart(usesBatches ? cartLineId : id) : false
-        }
-        removeItem={removeCurrentCartLine}
-        mounted={mounted}
-        usesBatches={usesBatches}
-        batchOptions={batchOptions}
-      />
+      {displayCourse.type !== "internship" ? (
+        <PricingSection
+          course={course}
+          activeCourse={displayCourse}
+          variants={variants}
+          isOutOfStock={isOutOfStock}
+          seatsLeft={seatsLeft}
+          hasValidOffer={hasValidOffer}
+          offerDetails={offerDetails}
+          shouldShowVariantSelect={shouldShowVariantSelect}
+          normalizedVariants={normalizedVariants}
+          variantLabel={variantLabel}
+          handleVariantSelect={handleVariantSelect}
+          handleIncreaseQuantity={handleIncreaseQuantity}
+          handleDecreaseQuantity={handleDecreaseQuantity}
+          handleBuyNow={handleBuyNow}
+          getCurrentQuantity={getCurrentQuantity}
+          inCart={(id) =>
+            mounted ? inCart(usesBatches ? cartLineId : id) : false
+          }
+          removeItem={removeCurrentCartLine}
+          mounted={mounted}
+          usesBatches={usesBatches}
+          batchOptions={batchOptions}
+          activeBatchId={activeBatch?._id ?? null}
+          onBatchSelect={usesBatches ? handleBatchSelect : undefined}
+        />
+      ) : null}
 
       <CourseFromStudents
         courseId={displayCourse._id}

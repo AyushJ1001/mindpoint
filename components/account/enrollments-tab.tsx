@@ -87,6 +87,7 @@ export function EnrollmentsTab() {
                   {enrollment.internshipPlan && (
                     <div>
                       <Badge variant="outline">
+                        Legacy internship:{" "}
                         {enrollment.internshipPlan === "120"
                           ? "120 hours"
                           : "240 hours"}

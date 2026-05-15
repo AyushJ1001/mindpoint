@@ -7,8 +7,7 @@ export type MindPointsCourseInput = {
 export const POINTS_EARN_CONFIG = {
   certificate: 120,
   diploma: 200,
-  internship_120: 60,
-  internship_240: 80,
+  internship: 80,
   worksheet: 20,
   masterclass: 20,
   "pre-recorded": 100,
@@ -19,8 +18,7 @@ export const POINTS_REDEEM_CONFIG = {
   worksheet: 80,
   certificate: 300,
   diploma: 500,
-  internship_120: 120,
-  internship_240: 200,
+  internship: 200,
   masterclass: 100,
   "pre-recorded": 250,
 } as const;
@@ -29,14 +27,7 @@ export function calculatePointsEarned(course: MindPointsCourseInput): number {
   if (!course.type) return 0;
 
   if (course.type === "internship") {
-    const duration = course.duration?.toLowerCase() || "";
-    if (duration.includes("120") || duration.includes("2 week")) {
-      return POINTS_EARN_CONFIG.internship_120;
-    }
-    if (duration.includes("240") || duration.includes("4 week")) {
-      return POINTS_EARN_CONFIG.internship_240;
-    }
-    return POINTS_EARN_CONFIG.internship_120;
+    return POINTS_EARN_CONFIG.internship;
   }
 
   const typeMap: Record<string, keyof typeof POINTS_EARN_CONFIG> = {
@@ -57,21 +48,13 @@ export function getPointsRequiredForRedemption(
   courseType: string,
   internshipPlan?: "120" | "240",
 ): number {
-  if (courseType === "internship_120") {
-    return POINTS_REDEEM_CONFIG.internship_120;
-  }
-  if (courseType === "internship_240") {
-    return POINTS_REDEEM_CONFIG.internship_240;
+  if (courseType === "internship_120" || courseType === "internship_240") {
+    return POINTS_REDEEM_CONFIG.internship;
   }
 
   if (courseType === "internship") {
-    if (internshipPlan === "120") {
-      return POINTS_REDEEM_CONFIG.internship_120;
-    }
-    if (internshipPlan === "240") {
-      return POINTS_REDEEM_CONFIG.internship_240;
-    }
-    return POINTS_REDEEM_CONFIG.internship_120;
+    void internshipPlan;
+    return POINTS_REDEEM_CONFIG.internship;
   }
 
   const typeMap: Record<string, keyof typeof POINTS_REDEEM_CONFIG> = {
@@ -110,14 +93,9 @@ export function getRedemptionOptions(): Array<{
       label: "Free Diploma",
     },
     {
-      courseType: "internship_120",
-      pointsRequired: POINTS_REDEEM_CONFIG.internship_120,
-      label: "Free 120hr Internship",
-    },
-    {
-      courseType: "internship_240",
-      pointsRequired: POINTS_REDEEM_CONFIG.internship_240,
-      label: "Free 240hr Internship",
+      courseType: "internship",
+      pointsRequired: POINTS_REDEEM_CONFIG.internship,
+      label: "Free Internship",
     },
     {
       courseType: "masterclass",

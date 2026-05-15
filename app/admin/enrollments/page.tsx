@@ -51,6 +51,7 @@ export default function AdminEnrollmentsPage() {
   const [manualInternshipPlan, setManualInternshipPlan] = useState<
     "" | "120" | "240"
   >("");
+  const [manualBatchId, setManualBatchId] = useState("");
   const [isCreatingEnrollment, setIsCreatingEnrollment] = useState(false);
   const manualUserIdLooksLikeEmail = manualUserId.includes("@");
   const { formatTimestamp } = useAdminTimeZone();
@@ -77,6 +78,12 @@ export default function AdminEnrollmentsPage() {
     () =>
       (courses || []).find((course) => String(course._id) === manualCourseId),
     [courses, manualCourseId],
+  );
+  const manualCourseBatches = useQuery(
+    api.adminCourses.listCourseBatches,
+    selectedManualCourse?.usesBatches
+      ? { courseId: selectedManualCourse._id }
+      : "skip",
   );
   const parseManualMoney = (value: string) => {
     const parsed = Number(value);
@@ -138,7 +145,16 @@ export default function AdminEnrollmentsPage() {
       return;
     }
 
-    if (selectedManualCourse?.type === "internship" && !manualInternshipPlan) {
+    if (selectedManualCourse?.usesBatches && !manualBatchId) {
+      toast.error("Select a batch before creating the enrollment");
+      return;
+    }
+
+    if (
+      selectedManualCourse?.type === "internship" &&
+      !selectedManualCourse.usesBatches &&
+      !manualInternshipPlan
+    ) {
       toast.error("Select internship hours before creating the enrollment");
       return;
     }
@@ -160,6 +176,9 @@ export default function AdminEnrollmentsPage() {
         userName: manualName || undefined,
         userPhone: manualPhone || undefined,
         courseId: manualCourseId as Id<"courses">,
+        batchId: manualBatchId
+          ? (manualBatchId as Id<"courseBatches">)
+          : undefined,
         isGuestUser: manualUserIdLooksLikeEmail,
         pricing: {
           listedPrice: parseManualMoney(manualListedPrice),
@@ -176,7 +195,8 @@ export default function AdminEnrollmentsPage() {
           couponCode: manualCouponCode.trim() || undefined,
         },
         internshipPlan:
-          selectedManualCourse?.type === "internship"
+          selectedManualCourse?.type === "internship" &&
+          !selectedManualCourse.usesBatches
             ? manualInternshipPlan === "120" || manualInternshipPlan === "240"
               ? manualInternshipPlan
               : undefined
@@ -195,6 +215,7 @@ export default function AdminEnrollmentsPage() {
       setManualMindPointsRedeemed("");
       setManualCouponCode("");
       setManualInternshipPlan("");
+      setManualBatchId("");
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to create enrollment",
@@ -308,6 +329,7 @@ export default function AdminEnrollmentsPage() {
               if (nextCourse?.type !== "internship") {
                 setManualInternshipPlan("");
               }
+              setManualBatchId("");
               resetManualPricingForCourse(nextCourse);
             }}
           >
@@ -327,7 +349,25 @@ export default function AdminEnrollmentsPage() {
             />
             Treat as guest user
           </label>
-          {selectedManualCourse?.type === "internship" ? (
+          {selectedManualCourse?.usesBatches ? (
+            <select
+              className="h-10 rounded-md border bg-white px-3 text-sm"
+              value={manualBatchId}
+              onChange={(e) => setManualBatchId(e.target.value)}
+            >
+              <option value="">Select batch</option>
+              {(manualCourseBatches ?? [])
+                .filter(
+                  (batch) =>
+                    (batch.lifecycleStatus ?? "published") === "published",
+                )
+                .map((batch) => (
+                  <option key={batch._id} value={batch._id}>
+                    {batch.label} ({batch.startDate})
+                  </option>
+                ))}
+            </select>
+          ) : selectedManualCourse?.type === "internship" ? (
             <select
               className="h-10 rounded-md border bg-white px-3 text-sm"
               value={manualInternshipPlan}
@@ -413,7 +453,9 @@ export default function AdminEnrollmentsPage() {
               !manualCourseId ||
               !manualEmail ||
               !manualUserId ||
+              (selectedManualCourse?.usesBatches && !manualBatchId) ||
               (selectedManualCourse?.type === "internship" &&
+                !selectedManualCourse.usesBatches &&
                 !manualInternshipPlan)
             }
           >

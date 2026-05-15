@@ -516,13 +516,18 @@ async function resolveEnrollmentBatch(
     throw new Error(`Course "${course.name}" has no published batches.`);
   }
 
-  const batch =
-    (requestedBatchId
-      ? batches.find((row) => String(row._id) === String(requestedBatchId))
-      : null) ?? pickDefaultBatch(batches);
+  if (!requestedBatchId) {
+    throw new Error(`Select a batch for "${course.name}" before checkout.`);
+  }
+
+  const batch = batches.find(
+    (row) => String(row._id) === String(requestedBatchId),
+  );
 
   if (!batch) {
-    throw new Error(`Course "${course.name}" has no selectable batch.`);
+    throw new Error(
+      `Selected batch for "${course.name}" is no longer available.`,
+    );
   }
 
   return {
@@ -652,10 +657,11 @@ async function scheduleEnrollmentConfirmationForSummary(
   }
 
   if (args.course.type === "internship") {
-    const internshipPlan =
-      args.enrollment.internshipPlan ||
-      extractInternshipPlanFromDuration(args.course.duration) ||
-      "120";
+    const internshipPlan = args.course.usesBatches
+      ? undefined
+      : args.enrollment.internshipPlan ||
+        extractInternshipPlanFromDuration(args.course.duration) ||
+        "120";
     await ctx.scheduler.runAfter(
       0,
       api.emailActions.sendInternshipEnrollmentConfirmation,
@@ -1048,8 +1054,6 @@ async function createBogoEnrollment(
     );
     return [];
   }
-  const internshipPlan =
-    extractInternshipPlanFromDuration(freeCourse.duration) || undefined;
   const batchResolution = await resolveEnrollmentBatch(
     ctx,
     freeCourse,
@@ -1089,16 +1093,6 @@ async function createBogoEnrollment(
       }
     }
     // Build summary using existing enrollment
-    let computedEndDate = freeCourse.endDate;
-    if (
-      freeCourse.type === "internship" &&
-      (internshipPlan === "120" || internshipPlan === "240")
-    ) {
-      computedEndDate = calculateInternshipEndDate(
-        freeCourse.startDate,
-        internshipPlan,
-      );
-    }
     return [
       {
         enrollmentId: existingBogo._id as Id<"enrollments">,
@@ -1109,10 +1103,10 @@ async function createBogoEnrollment(
         batchLabel: existingBogo.batchLabel,
         courseType: freeCourse.type,
         startDate,
-        endDate: computedEndDate,
+        endDate: existingBogo.batchEndDate ?? startDate,
         startTime,
         endTime,
-        internshipPlan,
+        internshipPlan: existingBogo.internshipPlan,
         sessions: freeCourse.sessions,
         sessionType:
           freeCourse.type === "supervised"
@@ -1128,6 +1122,10 @@ async function createBogoEnrollment(
     freeCourse.type === "therapy" || freeCourse.type === "supervised"
       ? "N/A"
       : generateEnrollmentNumber(freeCourse.code, startDate);
+  const legacyFreeInternshipPlan =
+    freeCourse.usesBatches || freeCourse.type !== "internship"
+      ? undefined
+      : (extractInternshipPlanFromDuration(freeCourse.duration) ?? undefined);
 
   const enrollmentId = await ctx.db.insert("enrollments", {
     userId: userContext.userId,
@@ -1147,7 +1145,7 @@ async function createBogoEnrollment(
     sessionType:
       freeCourse.type === "supervised" ? userContext.sessionType : undefined,
     courseType: freeCourse.type,
-    internshipPlan,
+    internshipPlan: legacyFreeInternshipPlan,
     sessions: freeCourse.sessions,
     isGuestUser: userContext.isGuestUser,
     isBogoFree: true,
@@ -1172,7 +1170,7 @@ async function createBogoEnrollment(
     sessionType:
       freeCourse.type === "supervised" ? userContext.sessionType : undefined,
     courseType: freeCourse.type,
-    internshipPlan,
+    internshipPlan: legacyFreeInternshipPlan,
     sessions: freeCourse.sessions,
     isGuestUser: userContext.isGuestUser,
     isBogoFree: true,
@@ -1181,14 +1179,6 @@ async function createBogoEnrollment(
   });
 
   await addUserToEnrollmentTarget(ctx, freeCourse, userContext.userId, batch);
-
-  let computedEndDate = endDateForSchedule;
-  if (
-    freeCourse.type === "internship" &&
-    (internshipPlan === "120" || internshipPlan === "240")
-  ) {
-    computedEndDate = calculateInternshipEndDate(startDate, internshipPlan);
-  }
 
   return [
     {
@@ -1200,10 +1190,10 @@ async function createBogoEnrollment(
       batchLabel: batchResolution.batchLabel,
       courseType: freeCourse.type,
       startDate,
-      endDate: computedEndDate,
+      endDate: endDateForSchedule,
       startTime,
       endTime,
-      internshipPlan,
+      internshipPlan: legacyFreeInternshipPlan,
       sessions: freeCourse.sessions,
       sessionType:
         freeCourse.type === "supervised" ? userContext.sessionType : undefined,
@@ -1265,9 +1255,11 @@ export const handleSuccessfulPayment = mutation({
 
     // Extract internship plan from course duration
     const internshipPlan =
-      args.internshipPlan ||
-      extractInternshipPlanFromDuration(course.duration) ||
-      undefined;
+      course.usesBatches || course.type !== "internship"
+        ? undefined
+        : args.internshipPlan ||
+          extractInternshipPlanFromDuration(course.duration) ||
+          undefined;
     const pricingItem = getCheckoutPricingItem(
       args.checkoutPricing,
       args.courseId,
@@ -1297,7 +1289,7 @@ export const handleSuccessfulPayment = mutation({
       batchDaysOfWeek: batchResolution.batchDaysOfWeek,
       sessionType: args.sessionType, // Store session type if provided
       courseType: course.type, // Store course type
-      internshipPlan: internshipPlan, // Store internship plan if provided
+      internshipPlan,
       sessions: course.sessions, // Store number of sessions for therapy courses
       ...buildEnrollmentPricingFields(course, pricingItem),
       registrationSource: "checkout",
@@ -1314,7 +1306,7 @@ export const handleSuccessfulPayment = mutation({
       enrollmentNumber: enrollmentNumber,
       sessionType: args.sessionType,
       courseType: course.type,
-      internshipPlan: internshipPlan,
+      internshipPlan,
       sessions: course.sessions,
     });
 
@@ -1384,12 +1376,9 @@ export const handleSuccessfulPayment = mutation({
       console.log("- Session type missing:", !args.sessionType);
       console.log("- Student name missing:", !args.studentName);
       console.log("Falling back to generic course email...");
-    } else if (course.type === "internship" && internshipPlan) {
-      // Calculate end date based on internship plan
-      const calculatedEndDate = calculateInternshipEndDate(
-        batchResolution.startDate,
-        internshipPlan,
-      );
+    } else if (course.type === "internship") {
+      const hasLegacyPlan =
+        internshipPlan === "120" || internshipPlan === "240";
 
       // Schedule internship enrollment confirmation email
       await ctx.scheduler.runAfter(
@@ -1402,10 +1391,15 @@ export const handleSuccessfulPayment = mutation({
           courseName: course.name,
           enrollmentNumber: enrollmentNumber,
           startDate: batchResolution.startDate,
-          endDate: calculatedEndDate,
+          endDate: hasLegacyPlan
+            ? calculateInternshipEndDate(
+                batchResolution.startDate,
+                internshipPlan,
+              )
+            : batchResolution.endDate,
           startTime: batchResolution.startTime,
           endTime: batchResolution.endTime,
-          internshipPlan: internshipPlan,
+          internshipPlan: hasLegacyPlan ? internshipPlan : undefined,
         },
       );
     } else if (course.type === "certificate") {
@@ -1537,9 +1531,10 @@ export const handleSuccessfulPayment = mutation({
             },
           );
         } else if (bonusCourse.type === "internship") {
-          const internshipPlan =
-            extractInternshipPlanFromDuration(bonusCourse.duration) ||
-            undefined;
+          const internshipPlan = bonusCourse.usesBatches
+            ? undefined
+            : extractInternshipPlanFromDuration(bonusCourse.duration) ||
+              undefined;
           const hasPlan = internshipPlan === "120" || internshipPlan === "240";
           const calculatedEndDate = hasPlan
             ? calculateInternshipEndDate(
@@ -1561,7 +1556,7 @@ export const handleSuccessfulPayment = mutation({
               endDate: calculatedEndDate,
               startTime: bonusSchedule.startTime,
               endTime: bonusSchedule.endTime,
-              internshipPlan: hasPlan ? internshipPlan : "120",
+              internshipPlan: hasPlan ? internshipPlan : undefined,
             },
           );
         } else {
@@ -1690,7 +1685,9 @@ export const handleCartCheckout = mutation({
       }
 
       const internshipPlan =
-        extractInternshipPlanFromDuration(course.duration) || undefined;
+        course.usesBatches || course.type !== "internship"
+          ? undefined
+          : extractInternshipPlanFromDuration(course.duration) || undefined;
       const pricingItem = getCheckoutPricingItem(
         args.checkoutPricing,
         lineItem.courseId,
@@ -1763,14 +1760,6 @@ export const handleCartCheckout = mutation({
         }
       }
 
-      let endDate = batchResolution.endDate;
-      if (course.type === "internship" && internshipPlan) {
-        endDate = calculateInternshipEndDate(
-          batchResolution.startDate,
-          internshipPlan,
-        );
-      }
-
       const enrollmentData = {
         enrollmentId,
         enrollmentNumber,
@@ -1780,7 +1769,7 @@ export const handleCartCheckout = mutation({
         batchLabel: batchResolution.batchLabel,
         courseType: course.type,
         startDate: batchResolution.startDate,
-        endDate,
+        endDate: batchResolution.endDate,
         startTime: batchResolution.startTime,
         endTime: batchResolution.endTime,
         internshipPlan: internshipPlan,
@@ -2290,7 +2279,6 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         const enrollmentNumber = enrollment.enrollmentNumber;
 
         if (course.type === "internship") {
-          // For guest users, we don't have internship plan info, so use default
           await ctx.scheduler.runAfter(
             0,
             api.emailActions.sendInternshipEnrollmentConfirmation,
@@ -2304,7 +2292,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
               endDate: schedule.endDate,
               startTime: schedule.startTime,
               endTime: schedule.endTime,
-              internshipPlan: "120", // Default to 120 hours
+              internshipPlan: enrollment.internshipPlan,
             },
           );
         } else if (course.type === "certificate") {
@@ -2511,9 +2499,11 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       }
 
       const internshipPlan =
-        args.internshipPlan ||
-        extractInternshipPlanFromDuration(course.duration) ||
-        undefined;
+        course.usesBatches || course.type !== "internship"
+          ? undefined
+          : args.internshipPlan ||
+            extractInternshipPlanFromDuration(course.duration) ||
+            undefined;
       const pricingItem = getCheckoutPricingItem(
         args.checkoutPricing,
         lineItem.courseId,
@@ -2561,14 +2551,6 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
       await addUserToEnrollmentTarget(ctx, course, args.userData.email, batch);
 
-      let endDate = batchResolution.endDate;
-      if (course.type === "internship" && internshipPlan) {
-        endDate = calculateInternshipEndDate(
-          batchResolution.startDate,
-          internshipPlan,
-        );
-      }
-
       const enrollmentData = {
         enrollmentId,
         enrollmentNumber,
@@ -2578,7 +2560,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         batchLabel: batchResolution.batchLabel,
         courseType: course.type,
         startDate: batchResolution.startDate,
-        endDate,
+        endDate: batchResolution.endDate,
         startTime: batchResolution.startTime,
         endTime: batchResolution.endTime,
         internshipPlan: internshipPlan,
