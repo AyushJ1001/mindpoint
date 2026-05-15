@@ -1,13 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
 import type { Id } from "@/lib/backend/data-model";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import {
   AlertDialog,
@@ -70,6 +71,27 @@ type MasterclassCodeRepairResult = {
   truncated: boolean;
 };
 
+type LegacyInternshipArchiveCandidate = {
+  courseId: Id<"courses">;
+  name: string;
+  code?: string;
+  duration?: string;
+  lifecycleStatus: "draft" | "published" | "archived";
+  enrollmentCount: number;
+  campaignCount: number;
+  reason: string;
+};
+
+type LegacyInternshipArchivePreview = {
+  candidates: LegacyInternshipArchiveCandidate[];
+  candidateCount: number;
+  estimatedAffectedEnrollments: number;
+  estimatedCampaignReferences: number;
+};
+
+const EMPTY_LEGACY_INTERNSHIP_ARCHIVE_ROWS: LegacyInternshipArchiveCandidate[] =
+  [];
+
 const courseTypeOptions: CourseTypeFilter[] = [
   "all",
   "certificate",
@@ -109,6 +131,12 @@ export default function AdminCoursesPage() {
     useState(false);
   const [isBatchMigrationConfirmOpen, setIsBatchMigrationConfirmOpen] =
     useState(false);
+  const [isApplyingLegacyArchive, setIsApplyingLegacyArchive] = useState(false);
+  const [isLegacyArchiveConfirmOpen, setIsLegacyArchiveConfirmOpen] =
+    useState(false);
+  const [selectedLegacyArchiveCourseIds, setSelectedLegacyArchiveCourseIds] =
+    useState<Array<Id<"courses">>>([]);
+  const hasAutoSelectedLegacyArchiveRows = useRef(false);
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -131,6 +159,9 @@ export default function AdminCoursesPage() {
   const applyBatchBackfillMigration = useMutation(
     api.adminCourses.applyBatchBackfillMigration,
   );
+  const applyLegacyInternshipArchive = useMutation(
+    api.adminCourses.applyLegacyInternshipArchive,
+  );
   const correctCourseType = useMutation(api.adminCourses.correctCourseType);
   const repairMasterclassCourseCodes = useMutation(
     api.adminCourses.repairMasterclassCourseCodes,
@@ -139,6 +170,10 @@ export default function AdminCoursesPage() {
     api.adminCourses.previewBatchBackfillMigration,
     {},
   );
+  const legacyInternshipArchivePreview = useQuery(
+    api.adminCourses.previewLegacyInternshipArchive,
+    {},
+  ) as LegacyInternshipArchivePreview | undefined;
 
   const rows = useMemo(() => courses ?? [], [courses]);
   const courseTypeIssueRows = courseTypeIssues?.issues ?? [];
@@ -148,6 +183,42 @@ export default function AdminCoursesPage() {
     batchMigrationPreview?.migratableGroups ?? [];
   const batchMigrationAmbiguousRows =
     batchMigrationPreview?.ambiguousGroups ?? [];
+  const legacyInternshipArchiveRows =
+    legacyInternshipArchivePreview?.candidates ??
+    EMPTY_LEGACY_INTERNSHIP_ARCHIVE_ROWS;
+  const legacyInternshipArchiveCourseIds = useMemo(
+    () => legacyInternshipArchiveRows.map((candidate) => candidate.courseId),
+    [legacyInternshipArchiveRows],
+  );
+  const selectedLegacyArchiveRows = legacyInternshipArchiveRows.filter(
+    (candidate) =>
+      selectedLegacyArchiveCourseIds.some(
+        (courseId) => String(courseId) === String(candidate.courseId),
+      ),
+  );
+  const selectedLegacyArchiveEnrollmentCount = selectedLegacyArchiveRows.reduce(
+    (total, candidate) => total + candidate.enrollmentCount,
+    0,
+  );
+
+  useEffect(() => {
+    setSelectedLegacyArchiveCourseIds((current) => {
+      const validIds = new Set(
+        legacyInternshipArchiveCourseIds.map((courseId) => String(courseId)),
+      );
+      const keptIds = current.filter((courseId) =>
+        validIds.has(String(courseId)),
+      );
+      if (
+        !hasAutoSelectedLegacyArchiveRows.current &&
+        legacyInternshipArchiveCourseIds.length > 0
+      ) {
+        hasAutoSelectedLegacyArchiveRows.current = true;
+        return legacyInternshipArchiveCourseIds;
+      }
+      return keptIds.length === current.length ? current : keptIds;
+    });
+  }, [legacyInternshipArchiveCourseIds]);
 
   const exportRows = useMemo(
     () =>
@@ -287,6 +358,30 @@ export default function AdminCoursesPage() {
       );
     } finally {
       setIsApplyingBatchMigration(false);
+    }
+  };
+
+  const handleApplyLegacyArchive = async () => {
+    try {
+      setIsApplyingLegacyArchive(true);
+      const courseIds = selectedLegacyArchiveRows.map(
+        (candidate) => candidate.courseId,
+      );
+      const result = await applyLegacyInternshipArchive({ courseIds });
+      toast.success(
+        `Archived ${result.archivedCourses} legacy internship course${result.archivedCourses === 1 ? "" : "s"}.`,
+      );
+      setSelectedLegacyArchiveCourseIds([]);
+      setIsLegacyArchiveConfirmOpen(false);
+    } catch (error) {
+      toast.error(
+        getUserFacingErrorMessage(
+          error,
+          "Failed to archive legacy internships",
+        ),
+      );
+    } finally {
+      setIsApplyingLegacyArchive(false);
     }
   };
 
@@ -537,6 +632,142 @@ export default function AdminCoursesPage() {
               </div>
             </div>
           ) : null}
+        </div>
+      ) : null}
+
+      {view === "catalog" && legacyInternshipArchivePreview ? (
+        <div className="mb-4 overflow-hidden rounded-lg border border-slate-200 bg-white">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 bg-slate-50 px-4 py-3">
+            <div>
+              <h2 className="text-sm font-semibold text-slate-950">
+                Legacy Internship Archive
+              </h2>
+              <p className="mt-0.5 text-xs text-slate-700">
+                Dry-run for archiving active internship rows that still carry
+                120/240-hour plan signals. Existing enrollments stay readable.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              disabled={
+                isApplyingLegacyArchive ||
+                selectedLegacyArchiveRows.length === 0
+              }
+              onClick={() => setIsLegacyArchiveConfirmOpen(true)}
+            >
+              Archive Selected
+            </Button>
+          </div>
+          <div className="grid gap-3 border-b border-slate-100 px-4 py-3 md:grid-cols-3">
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-700">Candidate courses</p>
+              <p className="text-lg font-semibold text-slate-950">
+                {legacyInternshipArchivePreview.candidateCount}
+              </p>
+            </div>
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-700">Enrollments preserved</p>
+              <p className="text-lg font-semibold text-slate-950">
+                {legacyInternshipArchivePreview.estimatedAffectedEnrollments}
+              </p>
+            </div>
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+              <p className="text-xs text-slate-700">Campaign refs cleaned</p>
+              <p className="text-lg font-semibold text-slate-950">
+                {legacyInternshipArchivePreview.estimatedCampaignReferences}
+              </p>
+            </div>
+          </div>
+          {legacyInternshipArchiveRows.length > 0 ? (
+            <table className="w-full text-left text-sm">
+              <thead className="bg-slate-50 text-xs tracking-wide text-slate-600 uppercase">
+                <tr>
+                  <th className="w-12 px-3 py-2">
+                    <Checkbox
+                      aria-label="Select all legacy internship rows"
+                      checked={
+                        legacyInternshipArchiveRows.length > 0 &&
+                        selectedLegacyArchiveRows.length ===
+                          legacyInternshipArchiveRows.length
+                      }
+                      onCheckedChange={(checked) =>
+                        setSelectedLegacyArchiveCourseIds(
+                          checked === true
+                            ? legacyInternshipArchiveCourseIds
+                            : [],
+                        )
+                      }
+                    />
+                  </th>
+                  <th className="px-3 py-2">Legacy course</th>
+                  <th className="px-3 py-2">Status</th>
+                  <th className="px-3 py-2">Enrollments</th>
+                  <th className="px-3 py-2">Campaign refs</th>
+                  <th className="px-3 py-2">Reason</th>
+                  <th className="px-3 py-2">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {legacyInternshipArchiveRows.map((candidate) => (
+                  <tr key={candidate.courseId} className="border-t">
+                    <td className="px-3 py-2">
+                      <Checkbox
+                        aria-label={`Select ${candidate.name}`}
+                        checked={selectedLegacyArchiveCourseIds.some(
+                          (courseId) =>
+                            String(courseId) === String(candidate.courseId),
+                        )}
+                        onCheckedChange={(checked) =>
+                          setSelectedLegacyArchiveCourseIds((current) =>
+                            checked === true
+                              ? Array.from(
+                                  new Set([...current, candidate.courseId]),
+                                )
+                              : current.filter(
+                                  (courseId) =>
+                                    String(courseId) !==
+                                    String(candidate.courseId),
+                                ),
+                          )
+                        }
+                      />
+                    </td>
+                    <td className="px-3 py-2">
+                      <p className="font-medium text-slate-900">
+                        {candidate.name}
+                      </p>
+                      <p className="text-xs text-slate-600">
+                        {[candidate.code, candidate.duration]
+                          .filter(Boolean)
+                          .join(" · ") || "No code or duration"}
+                      </p>
+                    </td>
+                    <td className="px-3 py-2">
+                      <Badge variant="outline">
+                        {candidate.lifecycleStatus}
+                      </Badge>
+                    </td>
+                    <td className="px-3 py-2">{candidate.enrollmentCount}</td>
+                    <td className="px-3 py-2">{candidate.campaignCount}</td>
+                    <td className="px-3 py-2 text-xs text-slate-700">
+                      {candidate.reason}
+                    </td>
+                    <td className="px-3 py-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href={`/admin/courses/${candidate.courseId}`}>
+                          Open
+                        </Link>
+                      </Button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          ) : (
+            <div className="px-4 py-3 text-sm text-slate-600">
+              No active legacy 120/240-hour internship rows found.
+            </div>
+          )}
         </div>
       ) : null}
 
@@ -958,6 +1189,39 @@ export default function AdminCoursesPage() {
               onClick={() => void handleApplyBatchMigration()}
             >
               {isApplyingBatchMigration ? "Applying..." : "Apply Migration"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog
+        open={isLegacyArchiveConfirmOpen}
+        onOpenChange={setIsLegacyArchiveConfirmOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Archive legacy internships?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will archive the visible 120/240-hour internship candidates,
+              clear their direct offer settings, and remove them from bundle
+              campaign eligibility. Existing enrollments stay attached to their
+              original course records. Selected rows:{" "}
+              {selectedLegacyArchiveRows.length}. Enrollments preserved:{" "}
+              {selectedLegacyArchiveEnrollmentCount}.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isApplyingLegacyArchive}>
+              Cancel
+            </AlertDialogCancel>
+            <Button
+              disabled={
+                isApplyingLegacyArchive ||
+                selectedLegacyArchiveRows.length === 0
+              }
+              onClick={() => void handleApplyLegacyArchive()}
+            >
+              {isApplyingLegacyArchive ? "Archiving..." : "Archive Legacy Rows"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -204,6 +204,7 @@ const prerequisiteTypes = new Set<CourseType>([
 const batchBackedTypes = new Set<CourseType>([
   "certificate",
   "diploma",
+  "internship",
   "masterclass",
   "resume-studio",
 ]);
@@ -425,7 +426,10 @@ export function CourseEditor({
 
     setBatchDrafts(
       Object.fromEntries(
-        courseBatches.map((batch) => [String(batch._id), toBatchFormState(batch)]),
+        courseBatches.map((batch) => [
+          String(batch._id),
+          toBatchFormState(batch),
+        ]),
       ),
     );
   }, [courseBatches]);
@@ -807,7 +811,7 @@ export function CourseEditor({
       price: overrides?.price ?? Number(state.price),
       capacity: supportsBatchManagement
         ? undefined
-        : overrides?.capacity ?? Number(state.capacity),
+        : (overrides?.capacity ?? Number(state.capacity)),
       startDate: showCourseSchedule ? state.startDate || undefined : undefined,
       endDate: showCourseSchedule ? state.endDate || undefined : undefined,
       startTime: showCourseSchedule ? state.startTime || undefined : undefined,
@@ -928,7 +932,7 @@ export function CourseEditor({
     }
 
     if (state.type === "internship") {
-      if (!hasText(state.duration)) {
+      if (!supportsBatchManagement && !hasText(state.duration)) {
         throw new Error("Duration is required for internship courses");
       }
       if (parsedAllocation.length === 0) {
@@ -1467,7 +1471,11 @@ export function CourseEditor({
             {supportsDuration ? (
               <div className="space-y-2">
                 <Label>
-                  {isInternship ? "Duration (Required)" : "Duration"}
+                  {isInternship && !supportsBatchManagement
+                    ? "Duration (Required)"
+                    : isInternship
+                      ? "Duration (legacy optional)"
+                      : "Duration"}
                 </Label>
                 <Input
                   value={state.duration}
@@ -1486,7 +1494,8 @@ export function CourseEditor({
           <div className="space-y-1">
             <h3 className="text-base font-semibold">Batches</h3>
             <p className="text-sm text-slate-600">
-              Schedule and seats live on batches for this course type.
+              Schedule and seats live on batches for this{" "}
+              {state.type === "internship" ? "internship" : "course type"}.
             </p>
           </div>
 
@@ -1497,7 +1506,8 @@ export function CourseEditor({
           ) : (
             <div className="space-y-4">
               {(courseBatches ?? []).map((batch) => {
-                const draft = batchDrafts[String(batch._id)] ?? toBatchFormState(batch);
+                const draft =
+                  batchDrafts[String(batch._id)] ?? toBatchFormState(batch);
                 return (
                   <div
                     key={batch._id}
@@ -1507,7 +1517,11 @@ export function CourseEditor({
                       placeholder="Label"
                       value={draft.label}
                       onChange={(e) =>
-                        updateBatchDraft(String(batch._id), "label", e.target.value)
+                        updateBatchDraft(
+                          String(batch._id),
+                          "label",
+                          e.target.value,
+                        )
                       }
                     />
                     <Input
@@ -1525,7 +1539,11 @@ export function CourseEditor({
                       type="date"
                       value={draft.endDate}
                       onChange={(e) =>
-                        updateBatchDraft(String(batch._id), "endDate", e.target.value)
+                        updateBatchDraft(
+                          String(batch._id),
+                          "endDate",
+                          e.target.value,
+                        )
                       }
                     />
                     <Input
@@ -1543,7 +1561,11 @@ export function CourseEditor({
                       type="time"
                       value={draft.endTime}
                       onChange={(e) =>
-                        updateBatchDraft(String(batch._id), "endTime", e.target.value)
+                        updateBatchDraft(
+                          String(batch._id),
+                          "endTime",
+                          e.target.value,
+                        )
                       }
                     />
                     <Input
@@ -1588,7 +1610,9 @@ export function CourseEditor({
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() => void duplicateBatch({ batchId: batch._id })}
+                        onClick={() =>
+                          void duplicateBatch({ batchId: batch._id })
+                        }
                       >
                         Duplicate
                       </Button>
@@ -1618,7 +1642,10 @@ export function CourseEditor({
                   placeholder="New batch label"
                   value={newBatch.label}
                   onChange={(e) =>
-                    setNewBatch((current) => ({ ...current, label: e.target.value }))
+                    setNewBatch((current) => ({
+                      ...current,
+                      label: e.target.value,
+                    }))
                   }
                 />
                 <Input
@@ -1697,7 +1724,10 @@ export function CourseEditor({
                   <option value="archived">Archived</option>
                 </select>
                 <div className="flex md:col-span-5 md:justify-end">
-                  <Button type="button" onClick={() => void handleCreateBatch()}>
+                  <Button
+                    type="button"
+                    onClick={() => void handleCreateBatch()}
+                  >
                     Add Batch
                   </Button>
                 </div>

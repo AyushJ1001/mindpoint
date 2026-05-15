@@ -3,7 +3,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 
 export const BATCH_SUPPORTED_COURSE_TYPES = new Set<
   NonNullable<Doc<"courses">["type"]>
->(["certificate", "diploma", "masterclass", "resume-studio"]);
+>(["certificate", "diploma", "internship", "masterclass", "resume-studio"]);
 
 export type PublicCourseBatch = {
   _id: Id<"courseBatches">;
@@ -33,7 +33,9 @@ export function isBatchSupportedCourseType(type?: Doc<"courses">["type"]) {
   return !!type && BATCH_SUPPORTED_COURSE_TYPES.has(type);
 }
 
-export function isMergedCourse(course: Pick<Doc<"courses">, "mergedIntoCourseId">) {
+export function isMergedCourse(
+  course: Pick<Doc<"courses">, "mergedIntoCourseId">,
+) {
   return !!course.mergedIntoCourseId;
 }
 
@@ -41,10 +43,15 @@ export function isPublishedCourse(course: {
   lifecycleStatus?: "draft" | "published" | "archived";
   mergedIntoCourseId?: Id<"courses">;
 }) {
-  return !isMergedCourse(course) && normalizeCourseLifecycleStatus(course.lifecycleStatus) === "published";
+  return (
+    !isMergedCourse(course) &&
+    normalizeCourseLifecycleStatus(course.lifecycleStatus) === "published"
+  );
 }
 
-export function getBatchLabel(batch: Pick<Doc<"courseBatches">, "label" | "startDate" | "endDate">) {
+export function getBatchLabel(
+  batch: Pick<Doc<"courseBatches">, "label" | "startDate" | "endDate">,
+) {
   if (batch.label.trim()) {
     return batch.label.trim();
   }
@@ -107,7 +114,8 @@ export function sortPublicCourseBatches(batches: PublicCourseBatch[]) {
       return 2;
     };
     const lifecycleDelta =
-      lifecycleOrder(left.lifecycleStatus) - lifecycleOrder(right.lifecycleStatus);
+      lifecycleOrder(left.lifecycleStatus) -
+      lifecycleOrder(right.lifecycleStatus);
     if (lifecycleDelta !== 0) {
       return lifecycleDelta;
     }
@@ -117,7 +125,8 @@ export function sortPublicCourseBatches(batches: PublicCourseBatch[]) {
       return sortDelta;
     }
 
-    const startDelta = (toTimestamp(left.startDate) || 0) - (toTimestamp(right.startDate) || 0);
+    const startDelta =
+      (toTimestamp(left.startDate) || 0) - (toTimestamp(right.startDate) || 0);
     if (startDelta !== 0) {
       return startDelta;
     }
@@ -139,4 +148,3 @@ export function getDefaultPublicCourseBatch(batches: PublicCourseBatch[]) {
     null
   );
 }
-

@@ -490,6 +490,7 @@ export const createManualEnrollment = mutation({
     sessionType: v.optional(
       v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
     ),
+    batchId: v.optional(v.id("courseBatches")),
     internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
     pricing: v.optional(adminEnrollmentPricingValidator),
   },
@@ -499,6 +500,10 @@ export const createManualEnrollment = mutation({
 
     if (!course) {
       throw new Error("Course not found");
+    }
+
+    if (course.usesBatches && !args.batchId) {
+      throw new Error("Select a batch before creating this enrollment.");
     }
 
     if (args.isGuestUser && isAuthenticatedUserId(args.userId)) {
@@ -538,9 +543,9 @@ export const createManualEnrollment = mutation({
             email: args.userEmail,
             phone: args.userPhone || "",
           },
-          courseIds: [args.courseId],
+          lineItems: [{ courseId: args.courseId, batchId: args.batchId }],
           sessionType: args.sessionType,
-          internshipPlan: args.internshipPlan,
+          internshipPlan: course.usesBatches ? undefined : args.internshipPlan,
           checkoutPricing: {
             totalAmountPaid: pricingItem.amountPaid,
             items: [pricingItem],
@@ -575,8 +580,11 @@ export const createManualEnrollment = mutation({
             userPhone: args.userPhone,
             studentName: args.userName,
             courseId: args.courseId,
+            batchId: args.batchId,
             sessionType: args.sessionType,
-            internshipPlan: args.internshipPlan,
+            internshipPlan: course.usesBatches
+              ? undefined
+              : args.internshipPlan,
             checkoutPricing: {
               totalAmountPaid: pricingItem.amountPaid,
               items: [pricingItem],
@@ -744,7 +752,7 @@ export const recoverPaidOrder = mutation({
         enrollmentNumber,
         courseType: course.type,
         internshipPlan:
-          course.type === "internship"
+          course.type === "internship" && !course.usesBatches
             ? (extractInternshipPlanFromDuration(course.duration) ?? undefined)
             : undefined,
         sessions: course.sessions,
@@ -1068,10 +1076,11 @@ export const resendEnrollmentConfirmationEmail = mutation({
       );
       emailAction = "therapy_confirmation";
     } else if (courseType === "internship") {
-      const internshipPlan =
-        enrollment.internshipPlan ||
-        extractInternshipPlanFromDuration(course.duration) ||
-        "120";
+      const internshipPlan = course.usesBatches
+        ? undefined
+        : enrollment.internshipPlan ||
+          extractInternshipPlanFromDuration(course.duration) ||
+          "120";
       await ctx.scheduler.runAfter(
         0,
         api.emailActions.sendInternshipEnrollmentConfirmation,
@@ -1082,7 +1091,10 @@ export const resendEnrollmentConfirmationEmail = mutation({
           courseName,
           enrollmentNumber: enrollment.enrollmentNumber,
           startDate,
-          endDate: calculateInternshipEndDate(startDate, internshipPlan),
+          endDate:
+            internshipPlan === "120" || internshipPlan === "240"
+              ? calculateInternshipEndDate(startDate, internshipPlan)
+              : endDate,
           startTime,
           endTime,
           internshipPlan,
@@ -1376,6 +1388,12 @@ export const transferEnrollment = mutation({
       );
     }
 
+    if (targetCourse.usesBatches) {
+      throw new Error(
+        `Target course "${targetCourse.name}" uses batches. Create a manual enrollment with a selected batch instead of transferring directly.`,
+      );
+    }
+
     const currentEnrolled = (targetCourse.enrolledUsers ?? []).length;
     const capacity = targetCourse.capacity ?? 0;
     if (
@@ -1390,7 +1408,7 @@ export const transferEnrollment = mutation({
 
     const now = Date.now();
     const transferredInternshipPlan =
-      targetCourse.type === "internship"
+      targetCourse.type === "internship" && !targetCourse.usesBatches
         ? extractInternshipPlanFromDuration(targetCourse.duration) ||
           sourceEnrollment.internshipPlan ||
           undefined

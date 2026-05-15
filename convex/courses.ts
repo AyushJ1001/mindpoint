@@ -40,7 +40,10 @@ async function toPublicCourse(
     return pickPublicCourse(course);
   }
 
-  const visibleBatches = await listVisiblePublicBatchesForCourse(ctx, course._id);
+  const visibleBatches = await listVisiblePublicBatchesForCourse(
+    ctx,
+    course._id,
+  );
   const defaultBatch = getDefaultPublicCourseBatch(visibleBatches);
 
   return pickPublicCourse(course, {
@@ -109,7 +112,9 @@ export const listCourses = query({
   handler: async (ctx, args) => {
     const limit = Math.max(1, args.count ?? 1000);
     const courses = await listPublishedCourses(ctx, limit);
-    return await Promise.all(courses.map((course) => toPublicCourse(ctx, course)));
+    return await Promise.all(
+      courses.map((course) => toPublicCourse(ctx, course)),
+    );
   },
 });
 
@@ -127,7 +132,9 @@ export const listCoursesByType = query({
     const courses = await listPublishedCourses(ctx, limit, args.type);
     return {
       viewer: (await ctx.auth.getUserIdentity())?.name ?? null,
-      courses: await Promise.all(courses.map((course) => toPublicCourse(ctx, course))),
+      courses: await Promise.all(
+        courses.map((course) => toPublicCourse(ctx, course)),
+      ),
     };
   },
 });
@@ -201,10 +208,11 @@ export const getCoursePageData = query({
       ? await listVisiblePublicBatchesForCourse(ctx, canonical._id)
       : [];
     const explicitBatchId = args.batchId ?? redirectToBatchId ?? undefined;
-    const selectedBatch =
-      (explicitBatchId
-        ? batches.find((batch) => String(batch._id) === String(explicitBatchId))
-        : null) ?? getDefaultPublicCourseBatch(batches);
+    const selectedBatch = explicitBatchId
+      ? (batches.find(
+          (batch) => String(batch._id) === String(explicitBatchId),
+        ) ?? null)
+      : null;
 
     return {
       redirectToCourseId,
@@ -394,7 +402,9 @@ export const getBogoCoursesByType = query({
       .filter((course) => isPublishedCourse(course))
       .filter((course) => !isMergedCourse(course));
 
-    return await Promise.all(visible.map((course) => toPublicCourse(ctx, course)));
+    return await Promise.all(
+      visible.map((course) => toPublicCourse(ctx, course)),
+    );
   },
 });
 

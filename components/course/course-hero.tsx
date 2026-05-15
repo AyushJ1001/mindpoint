@@ -157,7 +157,6 @@ interface CourseHeroProps {
   course: PublicCourse;
   batches?: BatchOption[];
   activeBatchId?: string | null;
-  onBatchSelect?: (id: string) => void;
   onAddToCart?: () => void;
 }
 
@@ -191,7 +190,6 @@ export default function CourseHero({
   course,
   batches = [],
   activeBatchId = null,
-  onBatchSelect,
   onAddToCart,
 }: CourseHeroProps) {
   const emotionalHook =
@@ -224,6 +222,10 @@ export default function CourseHero({
   const isSoldOut = (course.capacity ?? 0) === 0 || seatsLeft === 0;
 
   const tintClass = tintClassFor(course.type);
+  const nextOpenBatch = batches.find((batch) => batch.isSelectable) ?? null;
+  const activeBatch =
+    batches.find((batch) => batch._id === activeBatchId) ?? null;
+  const batchSummary = activeBatch ?? nextOpenBatch;
 
   const metaChips: { icon: React.ReactNode; label: string }[] = [];
 
@@ -329,90 +331,52 @@ export default function CourseHero({
                 </ul>
               )}
 
-              {batches.length > 0 && onBatchSelect && (
+              {course.usesBatches && (
                 <div className="border-foreground/10 mt-8 border-t pt-6">
-                  <p className="text-foreground/70 mb-4 text-[0.95rem] font-medium">
-                    Choose a batch
+                  <p className="text-foreground/70 text-[0.95rem] font-medium">
+                    {batchSummary
+                      ? activeBatch
+                        ? `Selected batch: ${batchSummary.label}`
+                        : `Next batch: ${batchSummary.label}`
+                      : "No open batch right now"}
                   </p>
-                  <div
-                    className="flex flex-col gap-2.5"
-                    role="radiogroup"
-                    aria-label="Choose a batch"
-                  >
-                    {batches.map((batch) => {
-                      const selected = activeBatchId === batch._id;
-                      const disabled = !batch.isSelectable;
-                      const statusLabel = !batch.isSelectable
-                        ? batch.availabilityStatus === "upcoming_full"
-                          ? "Full"
-                          : "Closed"
-                        : null;
-                      const title = batch.label || "Batch option";
-                      const dateStr = batch.startDate
-                        ? `Starts ${formatDateCommon(batch.startDate)}`
-                        : null;
-                      const timeStr = formatCourseTimeRange(
-                        batch.startTime,
-                        batch.endTime,
-                      );
-                      const daysStr = batch.daysOfWeek?.length
-                        ? batch.daysOfWeek.join(", ")
-                        : null;
-                      const detail = [daysStr, timeStr]
+                  {batchSummary ? (
+                    <p className="text-foreground/55 mt-2 text-sm leading-6">
+                      {[
+                        batchSummary.startDate
+                          ? `Starts ${formatDateCommon(batchSummary.startDate)}`
+                          : null,
+                        batchSummary.daysOfWeek?.length
+                          ? batchSummary.daysOfWeek.join(", ")
+                          : null,
+                        formatCourseTimeRange(
+                          batchSummary.startTime,
+                          batchSummary.endTime,
+                        ),
+                      ]
                         .filter(Boolean)
-                        .join(" \u00b7 ");
-                      const seatsRemaining = Math.max(
-                        0,
-                        batch.capacity - (batch.enrolledCount ?? 0),
-                      );
-                      return (
-                        <button
-                          key={batch._id}
-                          type="button"
-                          role="radio"
-                          aria-checked={selected}
-                          disabled={disabled}
-                          data-selected={selected ? "true" : "false"}
-                          data-disabled={disabled ? "true" : "false"}
-                          onClick={() => !disabled && onBatchSelect(batch._id)}
-                          className="calm-batch-chip"
-                        >
-                          <span className="min-w-0">
-                            <span className="calm-batch-main block">
-                              {title}
-                            </span>
-                            {dateStr && (
-                              <span className="calm-batch-sub block">
-                                {dateStr}
-                              </span>
-                            )}
-                            {detail && (
-                              <span className="calm-batch-sub block">
-                                {detail}
-                              </span>
-                            )}
-                            {batch.isSelectable &&
-                              seatsRemaining > 0 &&
-                              seatsRemaining <= 8 && (
-                                <span className="calm-batch-sub text-primary/70 mt-0.5 block">
-                                  {seatsRemaining} seat
-                                  {seatsRemaining === 1 ? "" : "s"} left
-                                </span>
-                              )}
-                          </span>
-                          {statusLabel && (
-                            <span className="calm-batch-status">
-                              {statusLabel}
-                            </span>
-                          )}
-                        </button>
-                      );
-                    })}
-                  </div>
+                        .join(" · ")}
+                    </p>
+                  ) : (
+                    <p className="text-foreground/55 mt-2 text-sm leading-6">
+                      Contact us and we will help you with the next cohort.
+                    </p>
+                  )}
+                  <Button
+                    asChild
+                    size="lg"
+                    variant={batchSummary ? "default" : "outline"}
+                    className="mt-4 h-11 w-full text-base font-medium"
+                  >
+                    <a href={batchSummary ? "#pricing" : "/contact"}>
+                      {batchSummary ? "Choose cohort" : "Contact us"}
+                    </a>
+                  </Button>
                 </div>
               )}
 
               {!isWorksheet &&
+                !course.usesBatches &&
                 course.type !== "therapy" &&
                 course.type !== "supervised" && (
                   <div className="border-foreground/10 mt-8 space-y-4 border-t pt-6">

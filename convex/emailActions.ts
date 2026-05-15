@@ -389,15 +389,16 @@ export const sendInternshipEnrollmentConfirmation = action({
     endDate: v.string(),
     startTime: v.string(),
     endTime: v.string(),
-    internshipPlan: v.union(v.literal("120"), v.literal("240")),
+    internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
     try {
-      const planText =
-        args.internshipPlan === "120"
-          ? "2 week (120 hours)"
-          : "4 week (240 hours)";
+      const planText = args.internshipPlan
+        ? args.internshipPlan === "120"
+          ? "Legacy internship: 120 hours"
+          : "Legacy internship: 240 hours"
+        : "1-month internship cohort";
 
       // Send email
       await sendEmailWithCopy({
@@ -418,7 +419,7 @@ export const sendInternshipEnrollmentConfirmation = action({
                 <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(args.courseName)}</td>
               </tr>
               <tr>
-                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Program Plan</td>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Program</td>
                 <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${planText}</td>
               </tr>
               <tr>
@@ -451,7 +452,7 @@ export const sendInternshipEnrollmentConfirmation = action({
           
           <div style="background-color: #E8F5E9; border-left: 4px solid #4CAF50; padding: 15px; margin: 20px 0;">
             <p style="margin: 0; font-weight: bold; color: #2E7D32;">🎁 Mind Points Earned!</p>
-            <p style="margin: 5px 0 0 0;">You've earned <strong>${args.internshipPlan === "120" ? "60" : "80"} Mind Points</strong> for this purchase! Points are automatically added to your account. Visit your account page to view your balance and redeem points for free courses.</p>
+            <p style="margin: 5px 0 0 0;">You've earned <strong>80 Mind Points</strong> for this purchase! Points are automatically added to your account. Visit your account page to view your balance and redeem points for free courses.</p>
           </div>
           
           <p>Thank you for choosing us. We wish you a great learning experience!</p>

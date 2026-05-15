@@ -243,6 +243,15 @@ export default function AdminEnrollmentDetailPage() {
               .filter(Boolean)
               .join(" to ") || "—"}
           </p>
+          {detail.internshipPlan ? (
+            <p>
+              <strong>Legacy plan:</strong>{" "}
+              <Badge variant="outline">
+                Legacy internship:{" "}
+                {detail.internshipPlan === "120" ? "120 hours" : "240 hours"}
+              </Badge>
+            </p>
+          ) : null}
           <p>
             <strong>Status:</strong>{" "}
             <Badge variant="outline">{detail.status}</Badge>
