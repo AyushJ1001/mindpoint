@@ -554,12 +554,11 @@ async function buildBatchMigrationDryRun(
   };
 }
 
-async function countCampaignReferencesForCourse(
-  ctx: QueryCtx | MutationCtx,
+function countCampaignReferencesForCourse(
+  bundleCampaigns: Doc<"bundleCampaigns">[],
   courseId: Id<"courses">,
 ) {
-  const bundles = await ctx.db.query("bundleCampaigns").collect();
-  return bundles.filter((campaign) =>
+  return bundleCampaigns.filter((campaign) =>
     campaign.eligibleCourseIds.some(
       (eligibleCourseId) => String(eligibleCourseId) === String(courseId),
     ),
@@ -569,7 +568,10 @@ async function countCampaignReferencesForCourse(
 async function buildLegacyInternshipArchivePreview(
   ctx: QueryCtx | MutationCtx,
 ): Promise<LegacyInternshipArchivePreview> {
-  const courses = await ctx.db.query("courses").collect();
+  const [courses, bundleCampaigns] = await Promise.all([
+    ctx.db.query("courses").collect(),
+    ctx.db.query("bundleCampaigns").collect(),
+  ]);
   const candidates: LegacyInternshipArchiveCandidate[] = [];
 
   for (const course of courses) {
@@ -581,10 +583,11 @@ async function buildLegacyInternshipArchivePreview(
       continue;
     }
 
-    const [enrollmentCount, campaignCount] = await Promise.all([
-      countEnrollmentsForCourses(ctx, [course._id]),
-      countCampaignReferencesForCourse(ctx, course._id),
-    ]);
+    const enrollmentCount = await countEnrollmentsForCourses(ctx, [course._id]);
+    const campaignCount = countCampaignReferencesForCourse(
+      bundleCampaigns,
+      course._id,
+    );
 
     candidates.push({
       courseId: course._id,

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
 import type { Id } from "@/lib/backend/data-model";
@@ -136,6 +136,7 @@ export default function AdminCoursesPage() {
     useState(false);
   const [selectedLegacyArchiveCourseIds, setSelectedLegacyArchiveCourseIds] =
     useState<Array<Id<"courses">>>([]);
+  const hasAutoSelectedLegacyArchiveRows = useRef(false);
 
   const courses = useQuery(api.adminCourses.listCourses, {
     search: search || undefined,
@@ -208,10 +209,14 @@ export default function AdminCoursesPage() {
       const keptIds = current.filter((courseId) =>
         validIds.has(String(courseId)),
       );
-      if (keptIds.length > 0 || legacyInternshipArchiveCourseIds.length === 0) {
-        return keptIds.length === current.length ? current : keptIds;
+      if (
+        !hasAutoSelectedLegacyArchiveRows.current &&
+        legacyInternshipArchiveCourseIds.length > 0
+      ) {
+        hasAutoSelectedLegacyArchiveRows.current = true;
+        return legacyInternshipArchiveCourseIds;
       }
-      return legacyInternshipArchiveCourseIds;
+      return keptIds.length === current.length ? current : keptIds;
     });
   }, [legacyInternshipArchiveCourseIds]);
 

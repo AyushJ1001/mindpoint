@@ -46,14 +46,14 @@ export function calculatePointsEarned(course: MindPointsCourseInput): number {
 
 export function getPointsRequiredForRedemption(
   courseType: string,
-  internshipPlan?: "120" | "240",
+  _internshipPlan?: "120" | "240",
 ): number {
   if (courseType === "internship_120" || courseType === "internship_240") {
     return POINTS_REDEEM_CONFIG.internship;
   }
 
   if (courseType === "internship") {
-    void internshipPlan;
+    // _internshipPlan is kept for backwards API compatibility; all internships now share one redemption cost.
     return POINTS_REDEEM_CONFIG.internship;
   }
 

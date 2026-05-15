@@ -503,6 +503,7 @@ async function resolveEnrollmentBatch(
   ctx: MutationCtx,
   course: CourseDoc,
   requestedBatchId?: Id<"courseBatches">,
+  options: { allowDefaultBatch?: boolean } = {},
 ) {
   if (!isCourseBatchBacked(course)) {
     return {
@@ -516,13 +517,13 @@ async function resolveEnrollmentBatch(
     throw new Error(`Course "${course.name}" has no published batches.`);
   }
 
-  if (!requestedBatchId) {
+  if (!requestedBatchId && !options.allowDefaultBatch) {
     throw new Error(`Select a batch for "${course.name}" before checkout.`);
   }
 
-  const batch = batches.find(
-    (row) => String(row._id) === String(requestedBatchId),
-  );
+  const batch = requestedBatchId
+    ? batches.find((row) => String(row._id) === String(requestedBatchId))
+    : pickDefaultBatch(batches);
 
   if (!batch) {
     throw new Error(
@@ -1058,6 +1059,7 @@ async function createBogoEnrollment(
     ctx,
     freeCourse,
     bogoSelection?.selectedFreeBatchId,
+    { allowDefaultBatch: true },
   );
   const batch = batchResolution.batch;
   const startDate = batchResolution.startDate;
