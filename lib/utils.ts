@@ -1,11 +1,17 @@
 import { clsx, type ClassValue } from "clsx";
 import {
+  calculateActiveOfferPrice,
+  calculateCourseOfferPrice,
   calculateOfferPrice,
   calculateOfferTimeLeft,
   careerApplicationSchema,
   contactFormSchema,
+  formatOfferAdjustment,
   getCoursePrice,
+  getOfferDiscountType,
+  getOfferDiscountValue,
   getOfferDetails,
+  getOfferSavingsAmount,
   hasActiveBogo,
   hasActivePromotion,
   isBogoActive,
@@ -22,12 +28,18 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export {
+  calculateActiveOfferPrice,
+  calculateCourseOfferPrice,
   calculateOfferPrice,
   calculateOfferTimeLeft,
   careerApplicationSchema,
   contactFormSchema,
+  formatOfferAdjustment,
   getCoursePrice,
+  getOfferDiscountType,
+  getOfferDiscountValue,
   getOfferDetails,
+  getOfferSavingsAmount,
   hasActiveBogo,
   hasActivePromotion,
   isBogoActive,

@@ -40,9 +40,17 @@ export const EnrollmentRegistrationSource = v.union(
   v.literal("admin_transfer"),
 );
 
+export const OfferDiscountType = v.union(
+  v.literal("percentage"),
+  v.literal("fixedPrice"),
+  v.literal("flatOff"),
+);
+
 export const CourseOfferValue = v.object({
   name: v.string(),
   discount: v.optional(v.number()),
+  discountType: v.optional(OfferDiscountType),
+  discountValue: v.optional(v.number()),
   startDate: v.optional(v.string()),
   endDate: v.optional(v.string()),
 });

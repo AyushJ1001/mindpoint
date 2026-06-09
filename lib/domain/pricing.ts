@@ -12,6 +12,10 @@ export interface OfferDetails {
   originalPrice: number;
   offerName: string;
   discountPercentage: number;
+  discountType: OfferDiscountType;
+  discountValue: number;
+  discountLabel: string;
+  savingsAmount: number;
   hasDiscount: boolean;
   hasBogo: boolean;
   bogoLabel?: string;
@@ -22,9 +26,13 @@ export interface OfferDetails {
   };
 }
 
+export type OfferDiscountType = "percentage" | "fixedPrice" | "flatOff";
+
 export type CourseOffer = {
   name: string;
   discount?: number;
+  discountType?: OfferDiscountType;
+  discountValue?: number;
   startDate?: string;
   endDate?: string;
 } | null;
@@ -60,13 +68,29 @@ function isWithinWindow(startDate?: string, endDate?: string): boolean {
   return true;
 }
 
+export function getOfferDiscountType(offer?: CourseOffer): OfferDiscountType {
+  return offer?.discountType ?? "percentage";
+}
+
+export function getOfferDiscountValue(offer?: CourseOffer): number {
+  if (!offer) {
+    return 0;
+  }
+
+  if (typeof offer.discountValue === "number") {
+    return offer.discountValue;
+  }
+
+  return typeof offer.discount === "number" ? offer.discount : 0;
+}
+
 export function isDiscountActive(offer?: CourseOffer): boolean {
   if (!offer) {
     return false;
   }
 
-  const discount = typeof offer.discount === "number" ? offer.discount : 0;
-  if (discount <= 0) {
+  const discountValue = getOfferDiscountValue(offer);
+  if (discountValue <= 0) {
     return false;
   }
 
@@ -92,6 +116,76 @@ export function calculateOfferPrice(
 ): number {
   const discountAmount = originalPrice * (discountPercentage / 100);
   return Math.round(originalPrice - discountAmount);
+}
+
+export function calculateActiveOfferPrice(
+  originalPrice: number,
+  offer?: CourseOffer,
+): number {
+  if (!offer) {
+    return Math.round(originalPrice);
+  }
+
+  const discountType = getOfferDiscountType(offer);
+  const discountValue = getOfferDiscountValue(offer);
+
+  if (discountType === "fixedPrice") {
+    return Math.max(0, Math.round(Math.min(originalPrice, discountValue)));
+  }
+
+  if (discountType === "flatOff") {
+    return Math.max(0, Math.round(originalPrice - discountValue));
+  }
+
+  const boundedPercentage = Math.min(100, Math.max(0, discountValue));
+  return Math.max(0, calculateOfferPrice(originalPrice, boundedPercentage));
+}
+
+export function calculateCourseOfferPrice(
+  originalPrice: number,
+  offer?: CourseOffer,
+): number {
+  if (!isDiscountActive(offer)) {
+    return Math.round(originalPrice);
+  }
+
+  return calculateActiveOfferPrice(originalPrice, offer);
+}
+
+export function getOfferSavingsAmount(
+  originalPrice: number,
+  offer?: CourseOffer,
+): number {
+  return Math.max(
+    0,
+    Math.round(originalPrice) - calculateCourseOfferPrice(originalPrice, offer),
+  );
+}
+
+export function formatOfferAdjustment(
+  offer?: CourseOffer,
+  originalPrice?: number,
+): string {
+  if (!offer) {
+    return "";
+  }
+
+  const discountType = getOfferDiscountType(offer);
+  const discountValue = getOfferDiscountValue(offer);
+
+  if (discountType === "fixedPrice") {
+    return `Fixed at ${showRupees(discountValue)}`;
+  }
+
+  if (discountType === "flatOff") {
+    const savings =
+      typeof originalPrice === "number"
+        ? Math.min(Math.round(originalPrice), Math.round(discountValue))
+        : Math.round(discountValue);
+    return `${showRupees(savings)} off`;
+  }
+
+  return `${Math.round(discountValue)}% off`;
 }
 
 export function calculateOfferTimeLeft(endDate?: string | null): {
@@ -125,18 +219,35 @@ export function getOfferDetails(course: {
   offer?: CourseOffer;
   bogo?: CourseBogo;
 }): OfferDetails | null {
-  const hasDiscount = isDiscountActive(course.offer);
+  const hasActiveDiscount = isDiscountActive(course.offer);
   const hasBogo = isBogoActive(course.bogo);
 
-  if (!hasDiscount && !hasBogo) {
+  if (!hasActiveDiscount && !hasBogo) {
     return null;
   }
 
   const originalPrice = course.price || 0;
-  const discountPercentage = hasDiscount ? (course.offer?.discount ?? 0) : 0;
-  const offerPrice = hasDiscount
-    ? calculateOfferPrice(originalPrice, discountPercentage)
+  const offerPrice = hasActiveDiscount
+    ? calculateCourseOfferPrice(originalPrice, course.offer)
     : originalPrice;
+  const savingsAmount = Math.max(
+    0,
+    Math.round(originalPrice) - Math.round(offerPrice),
+  );
+  const hasDiscount = hasActiveDiscount && savingsAmount > 0;
+  if (!hasDiscount && !hasBogo) {
+    return null;
+  }
+
+  const discountPercentage =
+    originalPrice > 0 ? Math.round((savingsAmount / originalPrice) * 100) : 0;
+  const discountType = getOfferDiscountType(course.offer);
+  const discountValue = hasActiveDiscount
+    ? getOfferDiscountValue(course.offer)
+    : 0;
+  const discountLabel = hasActiveDiscount
+    ? formatOfferAdjustment(course.offer, originalPrice)
+    : "";
 
   const activeEndDates: string[] = [];
   if (hasDiscount && course.offer?.endDate) {
@@ -176,6 +287,10 @@ export function getOfferDetails(course: {
     originalPrice: Math.round(originalPrice),
     offerName,
     discountPercentage: Math.round(discountPercentage),
+    discountType,
+    discountValue: Math.round(discountValue),
+    discountLabel,
+    savingsAmount,
     hasDiscount,
     hasBogo,
     bogoLabel,

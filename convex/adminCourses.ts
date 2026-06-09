@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { CourseLifecycleStatus, CourseType } from "./schema";
+import {
+  CourseBogoValue,
+  CourseLifecycleStatus,
+  CourseOfferValue,
+  CourseType,
+} from "./schema";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
@@ -22,28 +27,8 @@ const coursePatchValidator = {
   type: v.optional(CourseType),
   code: v.optional(v.string()),
   price: v.optional(v.number()),
-  offer: v.optional(
-    v.union(
-      v.null(),
-      v.object({
-        name: v.string(),
-        discount: v.optional(v.number()),
-        startDate: v.optional(v.string()),
-        endDate: v.optional(v.string()),
-      }),
-    ),
-  ),
-  bogo: v.optional(
-    v.union(
-      v.null(),
-      v.object({
-        enabled: v.boolean(),
-        startDate: v.optional(v.string()),
-        endDate: v.optional(v.string()),
-        label: v.optional(v.string()),
-      }),
-    ),
-  ),
+  offer: v.optional(v.union(v.null(), CourseOfferValue)),
+  bogo: v.optional(v.union(v.null(), CourseBogoValue)),
   sessions: v.optional(v.number()),
   capacity: v.optional(v.number()),
   startDate: v.optional(v.string()),
@@ -187,6 +172,36 @@ type AdminCourseType =
   | "supervised"
   | "resume-studio"
   | "worksheet";
+
+type OfferDiscountType = "percentage" | "fixedPrice" | "flatOff";
+
+type CourseOfferPatch = {
+  name: string;
+  discount?: number;
+  discountType?: OfferDiscountType;
+  discountValue?: number;
+};
+
+function assertValidOffer(offer?: CourseOfferPatch | null) {
+  const discountType = offer?.discountType ?? "percentage";
+  const discountValue =
+    typeof offer?.discountValue === "number"
+      ? offer.discountValue
+      : offer?.discount;
+
+  if (
+    discountValue !== undefined &&
+    (!Number.isFinite(discountValue) ||
+      discountValue < 0 ||
+      (discountType === "percentage" && discountValue > 100))
+  ) {
+    throw new Error(
+      discountType === "percentage"
+        ? "Percentage discount must be a number between 0 and 100"
+        : "Offer amount must be a number greater than or equal to 0",
+    );
+  }
+}
 
 type BatchMigrationSupportedType =
   (typeof BATCH_MIGRATION_SUPPORTED_TYPES)[number];
@@ -1827,6 +1842,7 @@ export const createCourse = mutation({
     const type = args.type ?? args.data?.type ?? "certificate";
     const usesBatches =
       args.data?.usesBatches ?? isBatchEnabledType(type) ?? false;
+    assertValidOffer(args.data?.offer);
 
     const payload = {
       ...args.data,
@@ -1892,6 +1908,7 @@ export const updateCourse = mutation({
     const nextLifecycle = args.patch.lifecycleStatus
       ? args.patch.lifecycleStatus
       : normalizeCourseLifecycleStatus(existing.lifecycleStatus);
+    assertValidOffer(args.patch.offer);
 
     const patch = {
       ...args.patch,

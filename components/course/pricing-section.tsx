@@ -212,7 +212,7 @@ export default function PricingSection({
                   <span className="calm-kbd text-primary/90">
                     {offerDetails.offerName}
                     {offerDetails.hasDiscount
-                      ? ` \u00b7 ${offerDetails.discountPercentage}% off`
+                      ? ` \u00b7 ${offerDetails.discountLabel}`
                       : ""}
                   </span>
                 )}

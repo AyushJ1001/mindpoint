@@ -20,7 +20,12 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { downloadCsv, toCsv } from "@/lib/csv";
-import { isBogoActive, isDiscountActive, showRupees } from "@/lib/utils";
+import {
+  formatOfferAdjustment,
+  isBogoActive,
+  isDiscountActive,
+  showRupees,
+} from "@/lib/utils";
 import { getUserFacingErrorMessage } from "@/lib/convex-error";
 import { toast } from "sonner";
 
@@ -1040,8 +1045,11 @@ export default function AdminCoursesPage() {
                           <div className="space-y-1">
                             <p className="font-medium">{course.offer.name}</p>
                             <p>
-                              {course.offer.discount ?? 0}% off •{" "}
-                              {course.offer.startDate || "now"} to{" "}
+                              {formatOfferAdjustment(
+                                course.offer,
+                                course.price,
+                              )}{" "}
+                              • {course.offer.startDate || "now"} to{" "}
                               {course.offer.endDate || "open"}
                             </p>
                           </div>

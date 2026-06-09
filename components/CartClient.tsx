@@ -1377,7 +1377,7 @@ const CartContent = () => {
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
                             {offerDetails.hasDiscount && (
                               <span className="rounded bg-orange-100 px-2 py-1 text-[11px] font-semibold text-orange-800">
-                                🔥 {offerDetails.discountPercentage}% OFF
+                                🔥 {offerDetails.discountLabel}
                               </span>
                             )}
                             <span

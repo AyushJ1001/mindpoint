@@ -25,7 +25,16 @@ import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
 import { BundleCampaignManager } from "@/components/admin/BundleCampaignManager";
 import { toast } from "sonner";
 import { formatDateWindow } from "@/lib/admin-timezone";
-import { isBogoActive, isDiscountActive, showRupees } from "@/lib/utils";
+import {
+  formatOfferAdjustment,
+  getOfferDiscountType,
+  getOfferDiscountValue,
+  isBogoActive,
+  isDiscountActive,
+  showRupees,
+} from "@/lib/utils";
+
+type OfferDiscountType = "percentage" | "fixedPrice" | "flatOff";
 
 type CourseTypeFilter =
   | "all"
@@ -46,6 +55,8 @@ type CampaignRecord = {
   offer?: {
     name: string;
     discount?: number;
+    discountType?: OfferDiscountType;
+    discountValue?: number;
     startDate?: string;
     endDate?: string;
   };
@@ -92,6 +103,8 @@ export default function AdminOffersPage() {
   const [campaignName, setCampaignName] = useState("");
   const [campaignDescription, setCampaignDescription] = useState("");
   const [offerName, setOfferName] = useState("");
+  const [offerDiscountType, setOfferDiscountType] =
+    useState<OfferDiscountType>("percentage");
   const [offerDiscount, setOfferDiscount] = useState("");
   const [offerStartDate, setOfferStartDate] = useState("");
   const [offerEndDate, setOfferEndDate] = useState("");
@@ -158,6 +171,7 @@ export default function AdminOffersPage() {
     setCampaignName("");
     setCampaignDescription("");
     setOfferName("");
+    setOfferDiscountType("percentage");
     setOfferDiscount("");
     setOfferStartDate("");
     setOfferEndDate("");
@@ -172,10 +186,9 @@ export default function AdminOffersPage() {
     setCampaignName(campaign.name);
     setCampaignDescription(campaign.description || "");
     setOfferName(campaign.offer?.name || "");
+    setOfferDiscountType(getOfferDiscountType(campaign.offer ?? null));
     setOfferDiscount(
-      typeof campaign.offer?.discount === "number"
-        ? String(campaign.offer.discount)
-        : "",
+      campaign.offer ? String(getOfferDiscountValue(campaign.offer)) : "",
     );
     setOfferStartDate(campaign.offer?.startDate || "");
     setOfferEndDate(campaign.offer?.endDate || "");
@@ -185,6 +198,32 @@ export default function AdminOffersPage() {
     setBogoEndDate(campaign.bogo?.endDate || "");
   };
 
+  const offerValuePlaceholder =
+    offerDiscountType === "percentage"
+      ? "Discount %"
+      : offerDiscountType === "flatOff"
+        ? "Rupees off"
+        : "Fixed final price";
+
+  const offerValueHelp =
+    offerDiscountType === "percentage"
+      ? "Reduce by a percentage, like 25% off."
+      : offerDiscountType === "flatOff"
+        ? "Reduce by a rupee amount, like ₹500 off."
+        : "Set the final selling price, like ₹1,499.";
+
+  const offerPreview =
+    offerName.trim() && offerDiscount.trim()
+      ? formatOfferAdjustment({
+          name: offerName.trim(),
+          discountType: offerDiscountType,
+          discountValue: Number(offerDiscount),
+          ...(offerDiscountType === "percentage"
+            ? { discount: Number(offerDiscount) }
+            : {}),
+        })
+      : "";
+
   const buildOfferPayload = () => {
     const discountValue =
       offerDiscount.trim() === "" ? undefined : Number(offerDiscount);
@@ -192,16 +231,29 @@ export default function AdminOffersPage() {
       offerDiscount.trim() !== "" &&
       (!Number.isFinite(discountValue) ||
         (discountValue !== undefined &&
-          (discountValue < 0 || discountValue > 100)))
+          (discountValue < 0 ||
+            (offerDiscountType === "percentage" && discountValue > 100))))
     ) {
-      throw new Error("Discount must be a number between 0 and 100");
+      throw new Error(
+        offerDiscountType === "percentage"
+          ? "Percentage discount must be a number between 0 and 100"
+          : "Offer amount must be a number greater than or equal to 0",
+      );
     }
 
     const offer =
       offerName.trim() !== ""
         ? {
             name: offerName.trim(),
-            discount: discountValue,
+            ...(discountValue !== undefined
+              ? {
+                  discountType: offerDiscountType,
+                  discountValue,
+                  ...(offerDiscountType === "percentage"
+                    ? { discount: discountValue }
+                    : {}),
+                }
+              : {}),
             startDate: offerStartDate || undefined,
             endDate: offerEndDate || undefined,
           }
@@ -303,7 +355,7 @@ export default function AdminOffersPage() {
         builderApplyMode === "bogo" || builderApplyMode === "both";
 
       if (applyDiscount && !offer) {
-        throw new Error("Add a discount offer in the builder first");
+        throw new Error("Add a course offer in the builder first");
       }
       if (applyBogo && !bogo) {
         throw new Error("Enable and configure the BOGO campaign first");
@@ -439,478 +491,521 @@ export default function AdminOffersPage() {
         <BundleCampaignManager />
       ) : (
         <div className="space-y-6">
-      <AdminPageHeader
-        title="Offer Manager"
-        description="Use a saved campaign or a simple draft, then apply it to selected courses."
-        actions={
-          <Button variant="outline" onClick={resetBuilder}>
-            New Campaign Draft
-          </Button>
-        }
-      />
+          <AdminPageHeader
+            title="Offer Manager"
+            description="Use a saved campaign or a simple draft, then apply it to selected courses."
+            actions={
+              <Button variant="outline" onClick={resetBuilder}>
+                New Campaign Draft
+              </Button>
+            }
+          />
 
-      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.15fr]">
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle>Saved Campaigns</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <Input
-                placeholder="Search campaign name or notes"
-                value={campaignSearch}
-                onChange={(e) => setCampaignSearch(e.target.value)}
-              />
-              <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-                <Checkbox
-                  id="include-archived-campaigns"
-                  checked={includeArchived}
-                  onCheckedChange={(checked) =>
-                    setIncludeArchived(checked === true)
-                  }
-                />
-                <Label htmlFor="include-archived-campaigns">
-                  Show archived campaigns
-                </Label>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              {!campaigns ? (
-                <p className="text-sm text-slate-600">Loading campaigns...</p>
-              ) : campaignRows.length === 0 ? (
-                <p className="text-sm text-slate-600">
-                  No saved campaigns found.
-                </p>
-              ) : (
-                campaignRows.map((campaign) => {
-                  const campaignId = String(campaign._id);
-                  const isActiveDraft = activeCampaignId === campaignId;
-                  const isBusy = campaignActionId === campaignId;
-
-                  return (
-                    <div
-                      key={campaign._id}
-                      className={`rounded-2xl border p-4 ${
-                        isActiveDraft
-                          ? "border-blue-300 bg-blue-50/70"
-                          : "border-slate-200 bg-white"
-                      }`}
-                    >
-                      <div className="min-w-0 space-y-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <p className="font-medium break-words text-slate-900">
-                            {campaign.name}
-                          </p>
-                          <Badge
-                            variant={
-                              campaign.isArchived ? "outline" : "default"
-                            }
-                          >
-                            {campaign.isArchived ? "Archived" : "Live"}
-                          </Badge>
-                        </div>
-                        {campaign.description ? (
-                          <p className="text-xs leading-5 break-words text-slate-600">
-                            {campaign.description}
-                          </p>
-                        ) : null}
-                        <div className="flex flex-wrap gap-2">
-                          {campaign.offer ? (
-                            <Badge variant="outline" className="max-w-full">
-                              {campaign.offer.name}
-                              {typeof campaign.offer.discount === "number"
-                                ? ` • ${campaign.offer.discount}%`
-                                : ""}
-                            </Badge>
-                          ) : null}
-                          {campaign.bogo?.enabled ? (
-                            <Badge variant="outline" className="max-w-full">
-                              {campaign.bogo.label || "BOGO"}
-                            </Badge>
-                          ) : null}
-                        </div>
-                        <div className="space-y-1 text-xs text-slate-500">
-                          <p>Updated {formatTimestamp(campaign.updatedAt)}</p>
-                          {campaign.lastAppliedAt ? (
-                            <p>
-                              Last applied{" "}
-                              {formatTimestamp(campaign.lastAppliedAt)}
-                            </p>
-                          ) : null}
-                        </div>
-                        <div className="flex flex-wrap gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => loadCampaignIntoBuilder(campaign)}
-                          >
-                            Load
-                          </Button>
-                          <Button
-                            size="sm"
-                            disabled={
-                              campaign.isArchived || isBusy || exceedsApplyLimit
-                            }
-                            title={
-                              exceedsApplyLimit
-                                ? `Select ≤ ${MAX_COURSES_PER_APPLY} courses (currently ${selectedCount})`
-                                : undefined
-                            }
-                            onClick={() => applySavedCampaign(campaignId)}
-                          >
-                            {isBusy ? "Applying..." : "Apply"}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            disabled={isBusy}
-                            onClick={() =>
-                              toggleArchiveCampaign(
-                                campaignId,
-                                !campaign.isArchived,
-                              )
-                            }
-                          >
-                            {campaign.isArchived ? "Restore" : "Archive"}
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="min-w-0">
-          <CardHeader>
-            <CardTitle>
-              {activeCampaignId ? "Campaign Builder" : "New Campaign Builder"}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-5">
-            <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
-              Selected courses: <strong>{selectedCount}</strong>
-              {exceedsApplyLimit ? (
-                <span className="ml-2 text-rose-600">
-                  Select {MAX_COURSES_PER_APPLY} or fewer to apply or clear
-                  offers.
-                </span>
-              ) : null}
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="space-y-3">
-                <Label>Campaign Name</Label>
-                <Input
-                  placeholder="Campaign name"
-                  value={campaignName}
-                  onChange={(e) => setCampaignName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-3">
-                <Label>Internal Notes</Label>
-                <Textarea
-                  rows={3}
-                  placeholder="Optional notes for the admin team"
-                  value={campaignDescription}
-                  onChange={(e) => setCampaignDescription(e.target.value)}
-                />
-              </div>
-            </div>
-
-            <div className="grid gap-4 lg:grid-cols-2">
-              <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
-                <p className="text-sm font-medium text-slate-900">
-                  Discount Offer
-                </p>
-                <Input
-                  placeholder="Offer name"
-                  value={offerName}
-                  onChange={(e) => setOfferName(e.target.value)}
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  placeholder="Discount %"
-                  value={offerDiscount}
-                  onChange={(e) => setOfferDiscount(e.target.value)}
-                />
-                <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-6 xl:grid-cols-[0.95fr_1.15fr]">
+            <Card className="min-w-0">
+              <CardHeader>
+                <CardTitle>Saved Campaigns</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-3">
                   <Input
-                    type="date"
-                    value={offerStartDate}
-                    onChange={(e) => setOfferStartDate(e.target.value)}
+                    placeholder="Search campaign name or notes"
+                    value={campaignSearch}
+                    onChange={(e) => setCampaignSearch(e.target.value)}
                   />
-                  <Input
-                    type="date"
-                    value={offerEndDate}
-                    onChange={(e) => setOfferEndDate(e.target.value)}
-                  />
+                  <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                    <Checkbox
+                      id="include-archived-campaigns"
+                      checked={includeArchived}
+                      onCheckedChange={(checked) =>
+                        setIncludeArchived(checked === true)
+                      }
+                    />
+                    <Label htmlFor="include-archived-campaigns">
+                      Show archived campaigns
+                    </Label>
+                  </div>
                 </div>
-                {offerWindowPreview ? (
-                  <p className="text-xs text-slate-500">
-                    Offer window: {offerWindowPreview}
-                  </p>
-                ) : null}
-              </div>
 
-              <div className="space-y-3 rounded-2xl border border-emerald-200/70 bg-emerald-50/60 p-4">
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    id="bogo-enabled"
-                    checked={bogoEnabled}
-                    onCheckedChange={(checked) =>
-                      setBogoEnabled(checked === true)
-                    }
-                  />
-                  <Label htmlFor="bogo-enabled">Enable BOGO campaign</Label>
-                </div>
-                <Input
-                  placeholder="BOGO label"
-                  value={bogoLabel}
-                  onChange={(e) => setBogoLabel(e.target.value)}
-                />
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Input
-                    type="date"
-                    value={bogoStartDate}
-                    onChange={(e) => setBogoStartDate(e.target.value)}
-                  />
-                  <Input
-                    type="date"
-                    value={bogoEndDate}
-                    onChange={(e) => setBogoEndDate(e.target.value)}
-                  />
-                </div>
-                {bogoWindowPreview ? (
-                  <p className="text-xs text-slate-500">
-                    BOGO window: {bogoWindowPreview}
-                  </p>
-                ) : null}
-              </div>
-            </div>
+                <div className="space-y-3">
+                  {!campaigns ? (
+                    <p className="text-sm text-slate-600">
+                      Loading campaigns...
+                    </p>
+                  ) : campaignRows.length === 0 ? (
+                    <p className="text-sm text-slate-600">
+                      No saved campaigns found.
+                    </p>
+                  ) : (
+                    campaignRows.map((campaign) => {
+                      const campaignId = String(campaign._id);
+                      const isActiveDraft = activeCampaignId === campaignId;
+                      const isBusy = campaignActionId === campaignId;
 
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Button
-                disabled={isSaving}
-                onClick={() => saveCurrentCampaign("create")}
-              >
-                Save New
-              </Button>
-              <Button
-                variant="outline"
-                disabled={isSaving || !activeCampaignId}
-                onClick={() => saveCurrentCampaign("update")}
-              >
-                Update Loaded
-              </Button>
-            </div>
-
-            <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
-              <select
-                className="h-10 rounded-md border bg-white px-3 text-sm"
-                value={builderApplyMode}
-                onChange={(e) =>
-                  setBuilderApplyMode(
-                    e.target.value as "discount" | "bogo" | "both",
-                  )
-                }
-              >
-                <option value="both">Apply discount + BOGO</option>
-                <option value="discount">Apply discount only</option>
-                <option value="bogo">Apply BOGO only</option>
-              </select>
-              <Button
-                disabled={isSaving || selectedCount === 0 || exceedsApplyLimit}
-                title={
-                  exceedsApplyLimit
-                    ? `Select ≤ ${MAX_COURSES_PER_APPLY} courses (currently ${selectedCount})`
-                    : undefined
-                }
-                onClick={applyBuilderToCourses}
-              >
-                Apply Builder To Selected
-              </Button>
-            </div>
-
-            <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
-              <select
-                className="h-10 rounded-md border bg-white px-3 text-sm"
-                value={clearMode}
-                onChange={(e) =>
-                  setClearMode(e.target.value as "discount" | "bogo" | "all")
-                }
-              >
-                <option value="all">Clear all offers</option>
-                <option value="discount">Clear discount only</option>
-                <option value="bogo">Clear BOGO only</option>
-              </select>
-              <Button
-                variant="destructive"
-                disabled={isSaving || selectedCount === 0 || exceedsApplyLimit}
-                title={
-                  exceedsApplyLimit
-                    ? `Select ≤ ${MAX_COURSES_PER_APPLY} courses (currently ${selectedCount})`
-                    : undefined
-                }
-                onClick={() => setShowClearConfirm(true)}
-              >
-                Clear Selected Offers
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card className="min-w-0">
-        <CardHeader>
-          <CardTitle>Course Targeting</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-3 lg:grid-cols-[1.3fr_220px_220px]">
-            <Input
-              placeholder="Search courses, type, code, offer name"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-            />
-            <select
-              className="h-10 rounded-md border bg-white px-3 text-sm"
-              value={courseType}
-              onChange={(e) =>
-                setCourseType(e.target.value as CourseTypeFilter)
-              }
-            >
-              {courseTypeOptions.map((type) => (
-                <option key={type} value={type}>
-                  {type === "all" ? "All course types" : type}
-                </option>
-              ))}
-            </select>
-            <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
-              <Checkbox
-                id="select-all-visible"
-                checked={allVisibleSelected}
-                onCheckedChange={(checked) =>
-                  toggleAllVisible(checked === true)
-                }
-              />
-              <Label htmlFor="select-all-visible">Select all visible</Label>
-            </div>
-          </div>
-
-          <div className="grid gap-3">
-            {!courses ? (
-              <p className="text-sm text-slate-600">Loading courses...</p>
-            ) : rows.length === 0 ? (
-              <p className="text-sm text-slate-600">
-                No courses matched your filter.
-              </p>
-            ) : (
-              rows.map((course) => {
-                const courseId = String(course._id);
-                const isSelected = selectedIdSet.has(courseId);
-                const discountActive = isDiscountActive(course.offer);
-                const bogoActive = isBogoActive(course.bogo);
-
-                return (
-                  <div
-                    key={course._id}
-                    className={`rounded-2xl border p-4 transition-colors ${
-                      isSelected
-                        ? "border-blue-300 bg-blue-50/60"
-                        : "border-slate-200 bg-white"
-                    }`}
-                  >
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="flex flex-wrap items-center gap-3">
-                          <Checkbox
-                            checked={isSelected}
-                            onCheckedChange={(checked) =>
-                              toggleCourse(courseId, checked === true)
-                            }
-                          />
-                          <div className="min-w-0">
-                            <p className="font-medium break-words text-slate-900">
-                              {course.name}
-                            </p>
-                            <p className="text-xs break-words text-slate-600">
-                              {course.type || "course"} • {course.code}
-                            </p>
+                      return (
+                        <div
+                          key={campaign._id}
+                          className={`rounded-2xl border p-4 ${
+                            isActiveDraft
+                              ? "border-blue-300 bg-blue-50/70"
+                              : "border-slate-200 bg-white"
+                          }`}
+                        >
+                          <div className="min-w-0 space-y-3">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <p className="font-medium break-words text-slate-900">
+                                {campaign.name}
+                              </p>
+                              <Badge
+                                variant={
+                                  campaign.isArchived ? "outline" : "default"
+                                }
+                              >
+                                {campaign.isArchived ? "Archived" : "Live"}
+                              </Badge>
+                            </div>
+                            {campaign.description ? (
+                              <p className="text-xs leading-5 break-words text-slate-600">
+                                {campaign.description}
+                              </p>
+                            ) : null}
+                            <div className="flex flex-wrap gap-2">
+                              {campaign.offer ? (
+                                <Badge variant="outline" className="max-w-full">
+                                  {campaign.offer.name}
+                                  {formatOfferAdjustment(campaign.offer)
+                                    ? ` • ${formatOfferAdjustment(campaign.offer)}`
+                                    : ""}
+                                </Badge>
+                              ) : null}
+                              {campaign.bogo?.enabled ? (
+                                <Badge variant="outline" className="max-w-full">
+                                  {campaign.bogo.label || "BOGO"}
+                                </Badge>
+                              ) : null}
+                            </div>
+                            <div className="space-y-1 text-xs text-slate-500">
+                              <p>
+                                Updated {formatTimestamp(campaign.updatedAt)}
+                              </p>
+                              {campaign.lastAppliedAt ? (
+                                <p>
+                                  Last applied{" "}
+                                  {formatTimestamp(campaign.lastAppliedAt)}
+                                </p>
+                              ) : null}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  loadCampaignIntoBuilder(campaign)
+                                }
+                              >
+                                Load
+                              </Button>
+                              <Button
+                                size="sm"
+                                disabled={
+                                  campaign.isArchived ||
+                                  isBusy ||
+                                  exceedsApplyLimit
+                                }
+                                title={
+                                  exceedsApplyLimit
+                                    ? `Select ≤ ${MAX_COURSES_PER_APPLY} courses (currently ${selectedCount})`
+                                    : undefined
+                                }
+                                onClick={() => applySavedCampaign(campaignId)}
+                              >
+                                {isBusy ? "Applying..." : "Apply"}
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={isBusy}
+                                onClick={() =>
+                                  toggleArchiveCampaign(
+                                    campaignId,
+                                    !campaign.isArchived,
+                                  )
+                                }
+                              >
+                                {campaign.isArchived ? "Restore" : "Archive"}
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                        <div className="mt-3 flex flex-wrap gap-2">
-                          {course.offer ? (
-                            <Badge
-                              variant={discountActive ? "default" : "outline"}
-                            >
-                              {course.offer.name}
-                              {typeof course.offer.discount === "number"
-                                ? ` • ${course.offer.discount}%`
-                                : ""}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">No discount</Badge>
-                          )}
-                          {course.bogo?.enabled ? (
-                            <Badge variant={bogoActive ? "default" : "outline"}>
-                              {course.bogo.label || "BOGO"}
-                            </Badge>
-                          ) : (
-                            <Badge variant="outline">No BOGO</Badge>
-                          )}
+                      );
+                    })
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="min-w-0">
+              <CardHeader>
+                <CardTitle>
+                  {activeCampaignId
+                    ? "Campaign Builder"
+                    : "New Campaign Builder"}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <div className="rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+                  Selected courses: <strong>{selectedCount}</strong>
+                  {exceedsApplyLimit ? (
+                    <span className="ml-2 text-rose-600">
+                      Select {MAX_COURSES_PER_APPLY} or fewer to apply or clear
+                      offers.
+                    </span>
+                  ) : null}
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="space-y-3">
+                    <Label>Campaign Name</Label>
+                    <Input
+                      placeholder="Campaign name"
+                      value={campaignName}
+                      onChange={(e) => setCampaignName(e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-3">
+                    <Label>Internal Notes</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder="Optional notes for the admin team"
+                      value={campaignDescription}
+                      onChange={(e) => setCampaignDescription(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="space-y-3 rounded-2xl border border-slate-200 bg-white p-4">
+                    <p className="text-sm font-medium text-slate-900">
+                      Course Offer
+                    </p>
+                    <Input
+                      placeholder="Offer name"
+                      value={offerName}
+                      onChange={(e) => setOfferName(e.target.value)}
+                    />
+                    <select
+                      className="h-10 rounded-md border bg-white px-3 text-sm"
+                      value={offerDiscountType}
+                      onChange={(e) =>
+                        setOfferDiscountType(
+                          e.target.value as OfferDiscountType,
+                        )
+                      }
+                    >
+                      <option value="percentage">Percentage discount</option>
+                      <option value="fixedPrice">Fixed final price</option>
+                      <option value="flatOff">Rupees off</option>
+                    </select>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={offerDiscountType === "percentage" ? 100 : undefined}
+                      placeholder={offerValuePlaceholder}
+                      value={offerDiscount}
+                      onChange={(e) => setOfferDiscount(e.target.value)}
+                    />
+                    <p className="text-xs text-slate-500">
+                      {offerValueHelp}
+                      {offerPreview ? ` Preview: ${offerPreview}.` : ""}
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        type="date"
+                        value={offerStartDate}
+                        onChange={(e) => setOfferStartDate(e.target.value)}
+                      />
+                      <Input
+                        type="date"
+                        value={offerEndDate}
+                        onChange={(e) => setOfferEndDate(e.target.value)}
+                      />
+                    </div>
+                    {offerWindowPreview ? (
+                      <p className="text-xs text-slate-500">
+                        Offer window: {offerWindowPreview}
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="space-y-3 rounded-2xl border border-emerald-200/70 bg-emerald-50/60 p-4">
+                    <div className="flex items-center gap-3">
+                      <Checkbox
+                        id="bogo-enabled"
+                        checked={bogoEnabled}
+                        onCheckedChange={(checked) =>
+                          setBogoEnabled(checked === true)
+                        }
+                      />
+                      <Label htmlFor="bogo-enabled">Enable BOGO campaign</Label>
+                    </div>
+                    <Input
+                      placeholder="BOGO label"
+                      value={bogoLabel}
+                      onChange={(e) => setBogoLabel(e.target.value)}
+                    />
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Input
+                        type="date"
+                        value={bogoStartDate}
+                        onChange={(e) => setBogoStartDate(e.target.value)}
+                      />
+                      <Input
+                        type="date"
+                        value={bogoEndDate}
+                        onChange={(e) => setBogoEndDate(e.target.value)}
+                      />
+                    </div>
+                    {bogoWindowPreview ? (
+                      <p className="text-xs text-slate-500">
+                        BOGO window: {bogoWindowPreview}
+                      </p>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Button
+                    disabled={isSaving}
+                    onClick={() => saveCurrentCampaign("create")}
+                  >
+                    Save New
+                  </Button>
+                  <Button
+                    variant="outline"
+                    disabled={isSaving || !activeCampaignId}
+                    onClick={() => saveCurrentCampaign("update")}
+                  >
+                    Update Loaded
+                  </Button>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
+                  <select
+                    className="h-10 rounded-md border bg-white px-3 text-sm"
+                    value={builderApplyMode}
+                    onChange={(e) =>
+                      setBuilderApplyMode(
+                        e.target.value as "discount" | "bogo" | "both",
+                      )
+                    }
+                  >
+                    <option value="both">Apply course offer + BOGO</option>
+                    <option value="discount">Apply course offer only</option>
+                    <option value="bogo">Apply BOGO only</option>
+                  </select>
+                  <Button
+                    disabled={
+                      isSaving || selectedCount === 0 || exceedsApplyLimit
+                    }
+                    title={
+                      exceedsApplyLimit
+                        ? `Select ≤ ${MAX_COURSES_PER_APPLY} courses (currently ${selectedCount})`
+                        : undefined
+                    }
+                    onClick={applyBuilderToCourses}
+                  >
+                    Apply Builder To Selected
+                  </Button>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-[1fr_auto]">
+                  <select
+                    className="h-10 rounded-md border bg-white px-3 text-sm"
+                    value={clearMode}
+                    onChange={(e) =>
+                      setClearMode(
+                        e.target.value as "discount" | "bogo" | "all",
+                      )
+                    }
+                  >
+                    <option value="all">Clear all offers</option>
+                    <option value="discount">Clear course offer only</option>
+                    <option value="bogo">Clear BOGO only</option>
+                  </select>
+                  <Button
+                    variant="destructive"
+                    disabled={
+                      isSaving || selectedCount === 0 || exceedsApplyLimit
+                    }
+                    title={
+                      exceedsApplyLimit
+                        ? `Select ≤ ${MAX_COURSES_PER_APPLY} courses (currently ${selectedCount})`
+                        : undefined
+                    }
+                    onClick={() => setShowClearConfirm(true)}
+                  >
+                    Clear Selected Offers
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card className="min-w-0">
+            <CardHeader>
+              <CardTitle>Course Targeting</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid gap-3 lg:grid-cols-[1.3fr_220px_220px]">
+                <Input
+                  placeholder="Search courses, type, code, offer name"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                />
+                <select
+                  className="h-10 rounded-md border bg-white px-3 text-sm"
+                  value={courseType}
+                  onChange={(e) =>
+                    setCourseType(e.target.value as CourseTypeFilter)
+                  }
+                >
+                  {courseTypeOptions.map((type) => (
+                    <option key={type} value={type}>
+                      {type === "all" ? "All course types" : type}
+                    </option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 px-3 py-2">
+                  <Checkbox
+                    id="select-all-visible"
+                    checked={allVisibleSelected}
+                    onCheckedChange={(checked) =>
+                      toggleAllVisible(checked === true)
+                    }
+                  />
+                  <Label htmlFor="select-all-visible">Select all visible</Label>
+                </div>
+              </div>
+
+              <div className="grid gap-3">
+                {!courses ? (
+                  <p className="text-sm text-slate-600">Loading courses...</p>
+                ) : rows.length === 0 ? (
+                  <p className="text-sm text-slate-600">
+                    No courses matched your filter.
+                  </p>
+                ) : (
+                  rows.map((course) => {
+                    const courseId = String(course._id);
+                    const isSelected = selectedIdSet.has(courseId);
+                    const discountActive = isDiscountActive(course.offer);
+                    const bogoActive = isBogoActive(course.bogo);
+
+                    return (
+                      <div
+                        key={course._id}
+                        className={`rounded-2xl border p-4 transition-colors ${
+                          isSelected
+                            ? "border-blue-300 bg-blue-50/60"
+                            : "border-slate-200 bg-white"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="min-w-0 flex-1">
+                            <div className="flex flex-wrap items-center gap-3">
+                              <Checkbox
+                                checked={isSelected}
+                                onCheckedChange={(checked) =>
+                                  toggleCourse(courseId, checked === true)
+                                }
+                              />
+                              <div className="min-w-0">
+                                <p className="font-medium break-words text-slate-900">
+                                  {course.name}
+                                </p>
+                                <p className="text-xs break-words text-slate-600">
+                                  {course.type || "course"} • {course.code}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="mt-3 flex flex-wrap gap-2">
+                              {course.offer ? (
+                                <Badge
+                                  variant={
+                                    discountActive ? "default" : "outline"
+                                  }
+                                >
+                                  {course.offer.name}
+                                  {formatOfferAdjustment(
+                                    course.offer,
+                                    course.price,
+                                  )
+                                    ? ` • ${formatOfferAdjustment(course.offer, course.price)}`
+                                    : ""}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">No course offer</Badge>
+                              )}
+                              {course.bogo?.enabled ? (
+                                <Badge
+                                  variant={bogoActive ? "default" : "outline"}
+                                >
+                                  {course.bogo.label || "BOGO"}
+                                </Badge>
+                              ) : (
+                                <Badge variant="outline">No BOGO</Badge>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                            <span className="font-medium text-slate-900">
+                              {showRupees(course.price)}
+                            </span>
+                            <span>
+                              {(course.enrolledUsers || []).length}/
+                              {course.capacity} seats
+                            </span>
+                          </div>
                         </div>
                       </div>
+                    );
+                  })
+                )}
+              </div>
+            </CardContent>
+          </Card>
 
-                      <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                        <span className="font-medium text-slate-900">
-                          {showRupees(course.price)}
-                        </span>
-                        <span>
-                          {(course.enrolledUsers || []).length}/
-                          {course.capacity} seats
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      <AlertDialog
-        open={showClearConfirm}
-        onOpenChange={(open) => {
-          if (!isSaving) {
-            setShowClearConfirm(open);
-          }
-        }}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Clear selected offers?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will clear offers for all selected courses. This cannot be
-              undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isSaving}>Cancel</AlertDialogCancel>
-            <Button
-              variant="destructive"
-              disabled={isSaving}
-              onClick={confirmClearOffers}
-            >
-              {isSaving ? "Clearing..." : "Confirm Clear"}
-            </Button>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+          <AlertDialog
+            open={showClearConfirm}
+            onOpenChange={(open) => {
+              if (!isSaving) {
+                setShowClearConfirm(open);
+              }
+            }}
+          >
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Clear selected offers?</AlertDialogTitle>
+                <AlertDialogDescription>
+                  This will clear offers for all selected courses. This cannot
+                  be undone.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={isSaving}>
+                  Cancel
+                </AlertDialogCancel>
+                <Button
+                  variant="destructive"
+                  disabled={isSaving}
+                  onClick={confirmClearOffers}
+                >
+                  {isSaving ? "Clearing..." : "Confirm Clear"}
+                </Button>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
       )}
     </div>

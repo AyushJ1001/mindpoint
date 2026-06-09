@@ -1,3 +1,5 @@
+import { calculateActiveOfferPrice } from "./pricing";
+
 export type CheckoutRemovalReason =
   | "COURSE_UNAVAILABLE"
   | "COURSE_ARCHIVED"
@@ -32,6 +34,8 @@ export type CheckoutReconciliationStatus = "valid" | "changed" | "blocked";
 type CourseOffer = {
   name: string;
   discount?: number;
+  discountType?: "percentage" | "fixedPrice" | "flatOff";
+  discountValue?: number;
   startDate?: string;
   endDate?: string;
 };
@@ -411,11 +415,9 @@ export function reconcileCheckoutIntent(input: {
 
     const listedPrice = roundCurrency(course.price);
     const activeOffer = isOfferActive(course.offer, now) ? course.offer : null;
-    const discount = Math.min(100, Math.max(0, activeOffer?.discount ?? 0));
-    const checkoutPrice =
-      discount > 0
-        ? Math.max(0, Math.round(listedPrice * (1 - discount / 100)))
-        : listedPrice;
+    const checkoutPrice = activeOffer
+      ? calculateActiveOfferPrice(listedPrice, activeOffer)
+      : listedPrice;
     let amountPaid = checkoutPrice;
     let redemptionDiscountAmount: number | undefined;
     let couponCode: string | undefined;

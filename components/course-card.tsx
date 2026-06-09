@@ -234,10 +234,10 @@ export function CourseCard({
                   className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
-                    {offerDetails.discountPercentage}% OFF
+                    {offerDetails.discountLabel}
                   </span>
                   <span className="hidden sm:inline">
-                    🔥 {offerDetails.discountPercentage}% OFF
+                    🔥 {offerDetails.discountLabel}
                   </span>
                 </Badge>
               )}
@@ -546,11 +546,9 @@ export function UpcomingCourseCard({
                 variant="destructive"
                 className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
               >
-                <span className="sm:hidden">
-                  {offerDetails.discountPercentage}% OFF
-                </span>
+                <span className="sm:hidden">{offerDetails.discountLabel}</span>
                 <span className="hidden sm:inline">
-                  🔥 {offerDetails.discountPercentage}% OFF
+                  🔥 {offerDetails.discountLabel}
                 </span>
               </Badge>
             )}
