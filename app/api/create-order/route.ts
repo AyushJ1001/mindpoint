@@ -31,7 +31,7 @@ async function handleCreateOrder(req: NextRequest) {
       );
     }
 
-    const { userId, sessionClaims, getToken } = await auth();
+    const { userId, sessionClaims } = await auth();
     if (!userId) {
       return NextResponse.json(
         { error: "Sign in before checkout." },
@@ -39,11 +39,11 @@ async function handleCreateOrder(req: NextRequest) {
       );
     }
 
-    const convexAuthToken = await getToken({ template: "convex" });
-    if (!convexAuthToken) {
+    const checkoutServerSecret = process.env.CHECKOUT_SERVER_SECRET;
+    if (!checkoutServerSecret) {
       return NextResponse.json(
-        { error: "Unable to authorize checkout." },
-        { status: 401 },
+        { error: "Checkout server authorization is not configured." },
+        { status: 500 },
       );
     }
 
@@ -61,7 +61,7 @@ async function handleCreateOrder(req: NextRequest) {
             ? body.referrerClerkUserId
             : undefined,
       },
-      { convexAuthToken },
+      { checkoutServerSecret, buyerUserId: userId },
     );
 
     if (!attempt.ok) {
@@ -89,7 +89,7 @@ async function handleCreateOrder(req: NextRequest) {
         checkoutAttemptId: attempt.checkoutAttemptId,
         razorpayOrderId: order.id,
       },
-      { convexAuthToken },
+      { checkoutServerSecret, buyerUserId: userId },
     );
 
     return NextResponse.json({

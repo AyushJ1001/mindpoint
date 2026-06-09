@@ -363,6 +363,11 @@ export function reconcileCheckoutIntent(input: {
   const removedItems: CheckoutReconciliationResult["removedItems"] = [];
   const updatedItems: CheckoutReconciliationResult["updatedItems"] = [];
   const blockingReasons: CheckoutRemovalReason[] = [];
+  const updateReasonsByCartItem = new Map<string, CheckoutUpdateReason[]>();
+  const expiredOfferByCartItem = new Map<string, boolean>();
+  const inputByCartItem = new Map(
+    input.items.map((item) => [item.cartItemId, item]),
+  );
 
   for (const item of input.items) {
     const course = coursesById.get(String(item.courseId));
@@ -416,7 +421,6 @@ export function reconcileCheckoutIntent(input: {
     let couponCode: string | undefined;
     let mindPointsRedeemed: number | undefined;
     const reasons: CheckoutUpdateReason[] = [];
-    const clientCheckoutPrice = roundCurrency(item.clientCheckoutPrice);
 
     if (item.couponCode) {
       const normalizedCoupon = item.couponCode.trim();
@@ -442,12 +446,7 @@ export function reconcileCheckoutIntent(input: {
       }
     }
 
-    if (course.offer && !activeOffer) {
-      reasons.push("DISCOUNT_EXPIRED");
-    }
-    if (clientCheckoutPrice !== amountPaid) {
-      reasons.push("PRICE_CHANGED");
-    }
+    expiredOfferByCartItem.set(item.cartItemId, !!course.offer && !activeOffer);
 
     let selectedFreeCourseId = item.selectedFreeCourseId;
     let selectedFreeBatchId = item.selectedFreeBatchId;
@@ -474,12 +473,7 @@ export function reconcileCheckoutIntent(input: {
     }
 
     if (reasons.length > 0) {
-      updatedItems.push({
-        cartItemId: item.cartItemId,
-        courseId: item.courseId,
-        batchId: item.batchId,
-        reasons,
-      });
+      updateReasonsByCartItem.set(item.cartItemId, reasons);
     }
 
     items.push({
@@ -575,6 +569,34 @@ export function reconcileCheckoutIntent(input: {
       item.bundleCampaignId = bestBundle.campaign._id;
       item.bundleCampaignName = bestBundle.campaign.name;
     });
+  }
+
+  for (const item of items) {
+    const inputItem = inputByCartItem.get(item.cartItemId);
+    if (!inputItem) {
+      continue;
+    }
+
+    const reasons = [...(updateReasonsByCartItem.get(item.cartItemId) ?? [])];
+    const clientCheckoutPrice = roundCurrency(inputItem.clientCheckoutPrice);
+    if (
+      expiredOfferByCartItem.get(item.cartItemId) &&
+      clientCheckoutPrice !== item.amountPaid
+    ) {
+      reasons.push("DISCOUNT_EXPIRED");
+    }
+    if (clientCheckoutPrice !== item.amountPaid) {
+      reasons.push("PRICE_CHANGED");
+    }
+
+    if (reasons.length > 0) {
+      updatedItems.push({
+        cartItemId: item.cartItemId,
+        courseId: item.courseId,
+        batchId: item.batchId,
+        reasons: Array.from(new Set(reasons)),
+      });
+    }
   }
 
   const totalAmountPaid = items.reduce(

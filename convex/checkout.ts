@@ -238,6 +238,82 @@ async function runReconciliation(
   });
 }
 
+function assertCheckoutServerSecret(serverSecret: string) {
+  const expected = process.env.CHECKOUT_SERVER_SECRET;
+  if (!expected || serverSecret !== expected) {
+    throw new Error("Unauthorized checkout server request.");
+  }
+}
+
+async function createCheckoutAttemptForBuyer(
+  ctx: MutationCtx,
+  args: {
+    cartIntent: { items: Parameters<typeof normalizeCartIntentItems>[0] };
+    buyerUserId: string;
+    buyerEmail?: string;
+    referrerClerkUserId?: string;
+  },
+) {
+  const reconciliation = await runReconciliation(ctx, {
+    cartIntent: args.cartIntent,
+    buyerUserId: args.buyerUserId,
+  });
+  if (reconciliation.status !== "valid" || reconciliation.totalAmountPaid <= 0) {
+    return {
+      ok: false,
+      reconciliation,
+    };
+  }
+
+  const now = Date.now();
+  const payload = buildCheckoutAttemptPayload({
+    reconciliation,
+    buyerUserId: args.buyerUserId,
+    buyerEmail: args.buyerEmail,
+    referrerClerkUserId: args.referrerClerkUserId,
+  });
+  const checkoutAttemptId = await ctx.db.insert("checkoutAttempts", {
+    ...payload,
+    status: "created",
+    createdAt: now,
+    updatedAt: now,
+  });
+
+  return {
+    ok: true,
+    checkoutAttemptId,
+    reconciliation,
+  };
+}
+
+async function markCheckoutAttemptPaymentOrderedForBuyer(
+  ctx: MutationCtx,
+  args: {
+    checkoutAttemptId: Id<"checkoutAttempts">;
+    razorpayOrderId: string;
+    buyerUserId: string;
+  },
+) {
+  const attempt = await ctx.db.get(args.checkoutAttemptId);
+  if (!attempt) {
+    throw new Error("Checkout attempt not found.");
+  }
+  if (attempt.buyerUserId !== args.buyerUserId) {
+    throw new Error("Checkout attempt does not belong to this user.");
+  }
+  if (attempt.status !== "created") {
+    throw new Error("Checkout attempt is not ready for payment ordering.");
+  }
+
+  await ctx.db.patch(args.checkoutAttemptId, {
+    razorpayOrderId: args.razorpayOrderId,
+    status: "payment_ordered",
+    updatedAt: Date.now(),
+  });
+
+  return await ctx.db.get(args.checkoutAttemptId);
+}
+
 export const reconcileCart = query({
   args: {
     cartIntent: cartIntentValidator,
@@ -264,39 +340,32 @@ export const createCheckoutAttempt = mutation({
       throw new Error("Unauthenticated checkout attempt.");
     }
 
-    const reconciliation = await runReconciliation(ctx, {
+    return await createCheckoutAttemptForBuyer(ctx, {
       cartIntent: args.cartIntent,
-      buyerUserId: identity.subject,
-    });
-    if (
-      reconciliation.status !== "valid" ||
-      reconciliation.totalAmountPaid <= 0
-    ) {
-      return {
-        ok: false,
-        reconciliation,
-      };
-    }
-
-    const now = Date.now();
-    const payload = buildCheckoutAttemptPayload({
-      reconciliation,
       buyerUserId: identity.subject,
       buyerEmail: args.buyerEmail,
       referrerClerkUserId: args.referrerClerkUserId,
     });
-    const checkoutAttemptId = await ctx.db.insert("checkoutAttempts", {
-      ...payload,
-      status: "created",
-      createdAt: now,
-      updatedAt: now,
-    });
+  },
+});
 
-    return {
-      ok: true,
-      checkoutAttemptId,
-      reconciliation,
-    };
+export const createCheckoutAttemptFromServer = mutation({
+  args: {
+    serverSecret: v.string(),
+    buyerUserId: v.string(),
+    cartIntent: cartIntentValidator,
+    buyerEmail: v.optional(v.string()),
+    referrerClerkUserId: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    assertCheckoutServerSecret(args.serverSecret);
+
+    return await createCheckoutAttemptForBuyer(ctx, {
+      cartIntent: args.cartIntent,
+      buyerUserId: args.buyerUserId,
+      buyerEmail: args.buyerEmail,
+      referrerClerkUserId: args.referrerClerkUserId,
+    });
   },
 });
 
@@ -311,23 +380,28 @@ export const markCheckoutAttemptPaymentOrdered = mutation({
       throw new Error("Unauthenticated checkout attempt update.");
     }
 
-    const attempt = await ctx.db.get(args.checkoutAttemptId);
-    if (!attempt) {
-      throw new Error("Checkout attempt not found.");
-    }
-    if (attempt.buyerUserId !== identity.subject) {
-      throw new Error("Checkout attempt does not belong to this user.");
-    }
-    if (attempt.status !== "created") {
-      throw new Error("Checkout attempt is not ready for payment ordering.");
-    }
-
-    await ctx.db.patch(args.checkoutAttemptId, {
+    return await markCheckoutAttemptPaymentOrderedForBuyer(ctx, {
+      checkoutAttemptId: args.checkoutAttemptId,
       razorpayOrderId: args.razorpayOrderId,
-      status: "payment_ordered",
-      updatedAt: Date.now(),
+      buyerUserId: identity.subject,
     });
+  },
+});
 
-    return await ctx.db.get(args.checkoutAttemptId);
+export const markCheckoutAttemptPaymentOrderedFromServer = mutation({
+  args: {
+    serverSecret: v.string(),
+    buyerUserId: v.string(),
+    checkoutAttemptId: v.id("checkoutAttempts"),
+    razorpayOrderId: v.string(),
+  },
+  handler: async (ctx, args) => {
+    assertCheckoutServerSecret(args.serverSecret);
+
+    return await markCheckoutAttemptPaymentOrderedForBuyer(ctx, {
+      checkoutAttemptId: args.checkoutAttemptId,
+      razorpayOrderId: args.razorpayOrderId,
+      buyerUserId: args.buyerUserId,
+    });
   },
 });

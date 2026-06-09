@@ -21,6 +21,8 @@ type CreateCheckoutAttemptResult =
 type CheckoutAttemptServiceOptions = {
   convexUrl?: string;
   convexAuthToken?: string;
+  checkoutServerSecret?: string;
+  buyerUserId?: string;
 };
 
 function resolveConvexUrl(convexUrl?: string): string {
@@ -49,17 +51,28 @@ export async function createCheckoutAttempt(
   options: CheckoutAttemptServiceOptions = {},
 ): Promise<CreateCheckoutAttemptResult> {
   const convex = createAuthedConvexClient(options);
+  const cartIntent = {
+    items: input.cartIntent.items.map((item) => ({
+      ...item,
+      courseId: item.courseId as never,
+      batchId: item.batchId as never,
+      selectedFreeCourseId: item.selectedFreeCourseId as never,
+      selectedFreeBatchId: item.selectedFreeBatchId as never,
+    })),
+  };
+
+  if (options.checkoutServerSecret && options.buyerUserId) {
+    return (await convex.mutation(api.checkout.createCheckoutAttemptFromServer, {
+      serverSecret: options.checkoutServerSecret,
+      buyerUserId: options.buyerUserId,
+      cartIntent,
+      buyerEmail: input.buyerEmail,
+      referrerClerkUserId: input.referrerClerkUserId,
+    })) as CreateCheckoutAttemptResult;
+  }
 
   return (await convex.mutation(api.checkout.createCheckoutAttempt, {
-    cartIntent: {
-      items: input.cartIntent.items.map((item) => ({
-        ...item,
-        courseId: item.courseId as never,
-        batchId: item.batchId as never,
-        selectedFreeCourseId: item.selectedFreeCourseId as never,
-        selectedFreeBatchId: item.selectedFreeBatchId as never,
-      })),
-    },
+    cartIntent,
     buyerEmail: input.buyerEmail,
     referrerClerkUserId: input.referrerClerkUserId,
   })) as CreateCheckoutAttemptResult;
@@ -73,6 +86,18 @@ export async function markCheckoutAttemptPaymentOrdered(
   options: CheckoutAttemptServiceOptions = {},
 ) {
   const convex = createAuthedConvexClient(options);
+
+  if (options.checkoutServerSecret && options.buyerUserId) {
+    return await convex.mutation(
+      api.checkout.markCheckoutAttemptPaymentOrderedFromServer,
+      {
+        serverSecret: options.checkoutServerSecret,
+        buyerUserId: options.buyerUserId,
+        checkoutAttemptId: input.checkoutAttemptId as never,
+        razorpayOrderId: input.razorpayOrderId,
+      },
+    );
+  }
 
   return await convex.mutation(api.checkout.markCheckoutAttemptPaymentOrdered, {
     checkoutAttemptId: input.checkoutAttemptId as never,

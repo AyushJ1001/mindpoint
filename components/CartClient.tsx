@@ -581,10 +581,6 @@ const CartContent = () => {
     }
     setLastReconciliationSignature(signature);
 
-    for (const removed of cartReconciliation.removedItems ?? []) {
-      removeItem(removed.cartItemId);
-    }
-
     const couponRejected = (cartReconciliation.updatedItems ?? []).some(
       (updated) =>
         updated.reasons.some((reason) => reason.startsWith("COUPON_")),
@@ -617,7 +613,7 @@ const CartContent = () => {
     const updatedCount = cartReconciliation.updatedItems?.length ?? 0;
     const notice =
       removedCount > 0
-        ? `${removedCount} item${removedCount === 1 ? "" : "s"} removed because pricing or availability changed.`
+        ? `${removedCount} item${removedCount === 1 ? "" : "s"} need${removedCount === 1 ? "s" : ""} review because pricing or availability changed.`
         : `${updatedCount} item${updatedCount === 1 ? "" : "s"} updated because pricing or availability changed.`;
     setCartSyncNotice(notice);
     setCartReviewRequired(true);
