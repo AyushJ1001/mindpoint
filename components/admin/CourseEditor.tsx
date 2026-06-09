@@ -642,17 +642,31 @@ export function CourseEditor({
       : state.offerDiscountType === "flatOff"
         ? "Reduce by a rupee amount, like ₹500 off."
         : "Set the final selling price, like ₹1,499.";
-  const offerPreview =
-    state.offerName.trim() && state.offerDiscount.trim()
-      ? formatOfferAdjustment({
-          name: state.offerName.trim(),
-          discountType: state.offerDiscountType,
-          discountValue: Number(state.offerDiscount),
-          ...(state.offerDiscountType === "percentage"
-            ? { discount: Number(state.offerDiscount) }
-            : {}),
-        })
-      : "";
+  const offerPreview = state.offerDiscount.trim()
+    ? formatOfferAdjustment({
+        name: state.offerName.trim(),
+        discountType: state.offerDiscountType,
+        discountValue: Number(state.offerDiscount),
+        ...(state.offerDiscountType === "percentage"
+          ? { discount: Number(state.offerDiscount) }
+          : {}),
+      })
+    : "";
+  const updateOfferDiscountType = (nextType: OfferDiscountType) => {
+    setState((prev) => {
+      const numericValue = Number(prev.offerDiscount);
+      return {
+        ...prev,
+        offerDiscountType: nextType,
+        offerDiscount:
+          nextType === "percentage" &&
+          prev.offerDiscount.trim() !== "" &&
+          (!Number.isFinite(numericValue) || numericValue > 100)
+            ? ""
+            : prev.offerDiscount,
+      };
+    });
+  };
   const bogoWindowPreview = formatDateWindow(
     state.bogoStartDate,
     state.bogoEndDate,
@@ -2438,10 +2452,7 @@ export function CourseEditor({
             className="h-10 w-full rounded-md border bg-white px-3 text-sm"
             value={state.offerDiscountType}
             onChange={(e) =>
-              setState((prev) => ({
-                ...prev,
-                offerDiscountType: e.target.value as OfferDiscountType,
-              }))
+              updateOfferDiscountType(e.target.value as OfferDiscountType)
             }
           >
             <option value="percentage">Percentage discount</option>
@@ -2458,10 +2469,12 @@ export function CourseEditor({
               setState((prev) => ({ ...prev, offerDiscount: e.target.value }))
             }
           />
-          <p className="text-xs text-slate-500">
-            {offerValueHelp}
-            {offerPreview ? ` Preview: ${offerPreview}.` : ""}
-          </p>
+          <p className="text-xs text-slate-500">{offerValueHelp}</p>
+          {offerPreview ? (
+            <p className="text-xs font-medium text-slate-700">
+              Preview: {offerPreview}
+            </p>
+          ) : null}
           <div className="grid grid-cols-2 gap-2">
             <Input
               type="date"

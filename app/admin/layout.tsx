@@ -5,6 +5,7 @@ import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminConvexGate } from "@/components/admin/AdminConvexGate";
 import { AdminRetryButton } from "@/components/admin/AdminRetryButton";
 import { hasAdminAccess } from "@/lib/admin-access";
+import { isAdminDevBypassEnabled } from "@/lib/admin-dev-bypass";
 import { resolveAuthEmail } from "@/lib/clerk-email";
 import { isClerkServerConfigured } from "@/lib/clerk-env";
 
@@ -13,6 +14,16 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const adminDevBypassEnabled = isAdminDevBypassEnabled();
+
+  if (adminDevBypassEnabled) {
+    return (
+      <AdminSidebar>
+        <AdminConvexGate bypassAdminAuth>{children}</AdminConvexGate>
+      </AdminSidebar>
+    );
+  }
+
   if (!isClerkServerConfigured()) {
     redirect("/");
   }

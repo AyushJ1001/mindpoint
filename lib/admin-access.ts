@@ -1,6 +1,7 @@
 import "server-only";
 
 import { api } from "@/lib/backend/api";
+import { isAdminDevBypassEnabled } from "@/lib/admin-dev-bypass";
 import { readPublicEnv } from "@/lib/config";
 import { ConvexHttpClient } from "convex/browser";
 
@@ -14,6 +15,10 @@ export async function hasAdminAccess(
   email?: string | null,
   convexToken?: string | null,
 ): Promise<boolean> {
+  if (isAdminDevBypassEnabled()) {
+    return true;
+  }
+
   const normalizedEmail = normalizeEmail(email);
 
   if (!userId && !normalizedEmail) {

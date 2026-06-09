@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
 import type { Id } from "@/lib/backend/data-model";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -122,18 +122,31 @@ export default function AdminOffersPage() {
   const [campaignActionId, setCampaignActionId] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
   const { formatDate, formatTimestamp } = useAdminTimeZone();
+  const { isAuthenticated } = useConvexAuth();
+  const localUnauthenticatedPreview =
+    process.env.NODE_ENV === "development" && !isAuthenticated;
 
-  const courses = useQuery(api.adminCourses.listCourses, {
-    search: search || undefined,
-    type: courseType === "all" ? undefined : courseType,
-    limit: 500,
-    sortBy: "updatedAt",
-  });
-  const campaigns = useQuery(api.adminOffers.listCampaigns, {
-    search: campaignSearch || undefined,
-    includeArchived,
-    limit: 100,
-  });
+  const courses = useQuery(
+    api.adminCourses.listCourses,
+    localUnauthenticatedPreview
+      ? "skip"
+      : {
+          search: search || undefined,
+          type: courseType === "all" ? undefined : courseType,
+          limit: 500,
+          sortBy: "updatedAt",
+        },
+  );
+  const campaigns = useQuery(
+    api.adminOffers.listCampaigns,
+    localUnauthenticatedPreview
+      ? "skip"
+      : {
+          search: campaignSearch || undefined,
+          includeArchived,
+          limit: 100,
+        },
+  );
 
   const applyOffersToCourses = useMutation(
     api.adminOffers.applyOffersToCourses,
@@ -144,8 +157,14 @@ export default function AdminOffersPage() {
   const saveCampaign = useMutation(api.adminOffers.saveCampaign);
   const setCampaignArchived = useMutation(api.adminOffers.setCampaignArchived);
 
-  const rows = useMemo(() => courses ?? [], [courses]);
-  const campaignRows = useMemo(() => campaigns ?? [], [campaigns]);
+  const rows = useMemo(
+    () => (localUnauthenticatedPreview ? [] : (courses ?? [])),
+    [courses, localUnauthenticatedPreview],
+  );
+  const campaignRows = useMemo(
+    () => (localUnauthenticatedPreview ? [] : (campaigns ?? [])),
+    [campaigns, localUnauthenticatedPreview],
+  );
   const selectedCount = selectedCourseIds.length;
   const exceedsApplyLimit = selectedCount > MAX_COURSES_PER_APPLY;
   const offerWindowPreview = formatDateWindow(
@@ -165,6 +184,17 @@ export default function AdminOffersPage() {
   const allVisibleSelected =
     rows.length > 0 &&
     rows.every((course) => selectedIdSet.has(String(course._id)));
+
+  const ensureBackendWritable = () => {
+    if (!localUnauthenticatedPreview) {
+      return true;
+    }
+
+    toast.info(
+      "Local admin UI preview is active without Convex auth; backend writes are disabled.",
+    );
+    return false;
+  };
 
   const resetBuilder = () => {
     setActiveCampaignId(null);
@@ -212,17 +242,32 @@ export default function AdminOffersPage() {
         ? "Reduce by a rupee amount, like ₹500 off."
         : "Set the final selling price, like ₹1,499.";
 
-  const offerPreview =
-    offerName.trim() && offerDiscount.trim()
-      ? formatOfferAdjustment({
-          name: offerName.trim(),
-          discountType: offerDiscountType,
-          discountValue: Number(offerDiscount),
-          ...(offerDiscountType === "percentage"
-            ? { discount: Number(offerDiscount) }
-            : {}),
-        })
-      : "";
+  const offerPreview = offerDiscount.trim()
+    ? formatOfferAdjustment({
+        name: offerName.trim(),
+        discountType: offerDiscountType,
+        discountValue: Number(offerDiscount),
+        ...(offerDiscountType === "percentage"
+          ? { discount: Number(offerDiscount) }
+          : {}),
+      })
+    : "";
+
+  const updateOfferDiscountType = (nextType: OfferDiscountType) => {
+    setOfferDiscountType(nextType);
+    setOfferDiscount((currentValue) => {
+      const numericValue = Number(currentValue);
+      if (
+        nextType === "percentage" &&
+        currentValue.trim() !== "" &&
+        (!Number.isFinite(numericValue) || numericValue > 100)
+      ) {
+        return "";
+      }
+
+      return currentValue;
+    });
+  };
 
   const buildOfferPayload = () => {
     const discountValue =
@@ -293,6 +338,10 @@ export default function AdminOffersPage() {
   };
 
   const saveCurrentCampaign = async (mode: "create" | "update") => {
+    if (!ensureBackendWritable()) {
+      return;
+    }
+
     const name = campaignName.trim();
     if (!name) {
       toast.error("Campaign name is required");
@@ -334,6 +383,10 @@ export default function AdminOffersPage() {
   };
 
   const applyBuilderToCourses = async () => {
+    if (!ensureBackendWritable()) {
+      return;
+    }
+
     if (selectedCourseIds.length === 0) {
       toast.error("Select at least one course");
       return;
@@ -377,6 +430,10 @@ export default function AdminOffersPage() {
   };
 
   const applySavedCampaign = async (campaignId: string) => {
+    if (!ensureBackendWritable()) {
+      return;
+    }
+
     if (selectedCourseIds.length === 0) {
       toast.error("Select at least one course");
       return;
@@ -406,6 +463,10 @@ export default function AdminOffersPage() {
   };
 
   const clearOffers = async () => {
+    if (!ensureBackendWritable()) {
+      return false;
+    }
+
     if (selectedCourseIds.length === 0) {
       toast.error("Select at least one course");
       return false;
@@ -453,6 +514,10 @@ export default function AdminOffersPage() {
     campaignId: string,
     nextArchivedState: boolean,
   ) => {
+    if (!ensureBackendWritable()) {
+      return;
+    }
+
     setCampaignActionId(campaignId);
     try {
       await setCampaignArchived({
@@ -473,6 +538,14 @@ export default function AdminOffersPage() {
 
   return (
     <div className="space-y-4">
+      {localUnauthenticatedPreview ? (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          Local admin UI preview is active. Clerk sign-in is bypassed, and
+          backend reads/writes are skipped until the Convex dev deployment has
+          the matching admin bypass synced.
+        </div>
+      ) : null}
+
       <div className="flex flex-wrap gap-2">
         <Button
           variant={pricingMode === "offers" ? "default" : "outline"}
@@ -528,7 +601,7 @@ export default function AdminOffersPage() {
                 </div>
 
                 <div className="space-y-3">
-                  {!campaigns ? (
+                  {!localUnauthenticatedPreview && !campaigns ? (
                     <p className="text-sm text-slate-600">
                       Loading campaigns...
                     </p>
@@ -697,7 +770,7 @@ export default function AdminOffersPage() {
                       className="h-10 rounded-md border bg-white px-3 text-sm"
                       value={offerDiscountType}
                       onChange={(e) =>
-                        setOfferDiscountType(
+                        updateOfferDiscountType(
                           e.target.value as OfferDiscountType,
                         )
                       }
@@ -714,10 +787,12 @@ export default function AdminOffersPage() {
                       value={offerDiscount}
                       onChange={(e) => setOfferDiscount(e.target.value)}
                     />
-                    <p className="text-xs text-slate-500">
-                      {offerValueHelp}
-                      {offerPreview ? ` Preview: ${offerPreview}.` : ""}
-                    </p>
+                    <p className="text-xs text-slate-500">{offerValueHelp}</p>
+                    {offerPreview ? (
+                      <p className="text-xs font-medium text-slate-700">
+                        Preview: {offerPreview}
+                      </p>
+                    ) : null}
                     <div className="grid gap-3 sm:grid-cols-2">
                       <Input
                         type="date"
@@ -888,7 +963,7 @@ export default function AdminOffersPage() {
               </div>
 
               <div className="grid gap-3">
-                {!courses ? (
+                {!localUnauthenticatedPreview && !courses ? (
                   <p className="text-sm text-slate-600">Loading courses...</p>
                 ) : rows.length === 0 ? (
                   <p className="text-sm text-slate-600">

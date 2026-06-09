@@ -6,12 +6,18 @@ import { api } from "@/lib/backend/api";
 
 const AUTH_TIMEOUT_MS = 10_000;
 
-export function AdminConvexGate({ children }: { children: React.ReactNode }) {
+export function AdminConvexGate({
+  bypassAdminAuth = false,
+  children,
+}: {
+  bypassAdminAuth?: boolean;
+  children: React.ReactNode;
+}) {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const [timedOut, setTimedOut] = useState(false);
   const isAdmin = useQuery(
     api.adminManagers.isUserAdmin,
-    isAuthenticated ? {} : "skip",
+    !bypassAdminAuth && isAuthenticated ? {} : "skip",
   );
   const isAdminQueryPending = isAuthenticated && isAdmin === undefined;
 
@@ -23,6 +29,10 @@ export function AdminConvexGate({ children }: { children: React.ReactNode }) {
     const id = setTimeout(() => setTimedOut(true), AUTH_TIMEOUT_MS);
     return () => clearTimeout(id);
   }, [isLoading, isAdminQueryPending]);
+
+  if (bypassAdminAuth) {
+    return <>{children}</>;
+  }
 
   if (timedOut) {
     return (

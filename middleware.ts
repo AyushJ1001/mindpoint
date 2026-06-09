@@ -1,6 +1,7 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { isClerkServerConfigured } from "@/lib/config/server";
 import { NextResponse, NextRequest } from "next/server";
+import { isAdminDevBypassEnabled } from "@/lib/admin-dev-bypass";
 
 const isProtectedRoute = createRouteMatcher(["/server"]);
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
@@ -14,14 +15,19 @@ const middleware = isClerkServerConfigured()
       }
 
       if (isProtectedRoute(req)) await auth.protect();
-      if (isAdminRoute(req)) await auth.protect();
+      if (isAdminRoute(req) && !isAdminDevBypassEnabled()) {
+        await auth.protect();
+      }
     })
   : (req: NextRequest) => {
       // Fallback middleware when Clerk keys are not available
       if (req.nextUrl.pathname === "/terms") {
         return NextResponse.redirect(new URL("/toc", req.url));
       }
-      if (req.nextUrl.pathname.startsWith("/admin")) {
+      if (
+        req.nextUrl.pathname.startsWith("/admin") &&
+        !isAdminDevBypassEnabled()
+      ) {
         return NextResponse.redirect(new URL("/", req.url));
       }
       return NextResponse.next();
