@@ -12,8 +12,10 @@ type RateLimiter = {
   limit(identifier: string): Promise<RateLimitResult>;
 };
 
-const upstashUrl = process.env.UPSTASH_REDIS_REST_URL;
-const upstashToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const upstashUrl =
+  process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const upstashToken =
+  process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
 
 export const isRateLimitConfigured = Boolean(upstashUrl && upstashToken);
 
@@ -35,12 +37,15 @@ function createRateLimiter(
   window: Parameters<typeof Ratelimit.slidingWindow>[1],
   prefix: string,
 ): RateLimiter {
-  if (!isRateLimitConfigured) {
+  if (!upstashUrl || !upstashToken) {
     return createNoopLimiter();
   }
 
   return new Ratelimit({
-    redis: Redis.fromEnv(),
+    redis: new Redis({
+      url: upstashUrl,
+      token: upstashToken,
+    }),
     limiter: Ratelimit.slidingWindow(requests, window),
     analytics: true,
     prefix,

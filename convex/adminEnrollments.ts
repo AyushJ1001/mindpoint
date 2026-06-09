@@ -371,7 +371,7 @@ export const listEnrollments = query({
         appendRows(
           await ctx.db
             .query("enrollments")
-            .filter((q) => q.eq(q.field("status"), undefined))
+            .withIndex("by_status", (q) => q.eq("status", undefined))
             .order("desc")
             .take(remainingSlots()),
         );

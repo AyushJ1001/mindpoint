@@ -993,11 +993,21 @@ export const listCourses = query({
 
       const [publishedViaIndex, publishedLegacy] = await Promise.all([
         publishedIndexQuery.order("desc").take(publishedScanLimit),
-        ctx.db
-          .query("courses")
-          .filter((q) => q.eq(q.field("lifecycleStatus"), undefined))
-          .order("desc")
-          .take(publishedScanLimit),
+        args.type
+          ? ctx.db
+              .query("courses")
+              .withIndex("by_type_and_lifecycleStatus", (q) =>
+                q.eq("type", args.type!).eq("lifecycleStatus", undefined),
+              )
+              .order("desc")
+              .take(publishedScanLimit)
+          : ctx.db
+              .query("courses")
+              .withIndex("by_lifecycleStatus", (q) =>
+                q.eq("lifecycleStatus", undefined),
+              )
+              .order("desc")
+              .take(publishedScanLimit),
       ]);
       const mergedMap = new Map<string, any>();
       for (const c of publishedViaIndex) {

@@ -22,14 +22,12 @@ async function listVisiblePublicBatchesForCourse(
 ): Promise<PublicCourseBatch[]> {
   const rows = await ctx.db
     .query("courseBatches")
-    .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
+    .withIndex("by_courseId_and_lifecycleStatus", (q) =>
+      q.eq("courseId", courseId).eq("lifecycleStatus", "published"),
+    )
     .collect();
 
-  return sortPublicCourseBatches(
-    rows
-      .map((row) => getPublicCourseBatch(row))
-      .filter((row) => row.lifecycleStatus === "published"),
-  );
+  return sortPublicCourseBatches(rows.map((row) => getPublicCourseBatch(row)));
 }
 
 async function toPublicCourse(
@@ -84,7 +82,13 @@ async function listPublishedCourses(
           .take(limit * 2),
     ctx.db
       .query("courses")
-      .filter((q) => q.eq(q.field("lifecycleStatus"), undefined))
+      .withIndex(
+        type ? "by_type_and_lifecycleStatus" : "by_lifecycleStatus",
+        (q) =>
+          type
+            ? q.eq("type", type).eq("lifecycleStatus", undefined)
+            : q.eq("lifecycleStatus", undefined),
+      )
       .order("desc")
       .take(limit * 2),
   ]);
@@ -391,15 +395,25 @@ export const getBogoCoursesByType = query({
   args: { courseType: CourseType },
   returns: v.array(PublicCourseDocumentValue),
   handler: async (ctx, args) => {
-    const courses = await ctx.db
-      .query("courses")
-      .withIndex("by_type", (q) => q.eq("type", args.courseType))
-      .filter((q) => q.eq(q.field("bogo.enabled"), true))
-      .order("desc")
-      .collect();
+    const [publishedCourses, legacyPublishedCourses] = await Promise.all([
+      ctx.db
+        .query("courses")
+        .withIndex("by_type_and_lifecycleStatus", (q) =>
+          q.eq("type", args.courseType).eq("lifecycleStatus", "published"),
+        )
+        .order("desc")
+        .collect(),
+      ctx.db
+        .query("courses")
+        .withIndex("by_type_and_lifecycleStatus", (q) =>
+          q.eq("type", args.courseType).eq("lifecycleStatus", undefined),
+        )
+        .order("desc")
+        .collect(),
+    ]);
 
-    const visible = courses
-      .filter((course) => isPublishedCourse(course))
+    const visible = [...publishedCourses, ...legacyPublishedCourses]
+      .filter((course) => course.bogo?.enabled === true)
       .filter((course) => !isMergedCourse(course));
 
     return await Promise.all(
@@ -415,16 +429,26 @@ export const getBogoCoursesByTypes = query({
     const result: Record<string, PublicCourse[]> = {};
 
     for (const courseType of args.courseTypes) {
-      const courses = await ctx.db
-        .query("courses")
-        .withIndex("by_type", (q) => q.eq("type", courseType))
-        .filter((q) => q.eq(q.field("bogo.enabled"), true))
-        .order("desc")
-        .collect();
+      const [publishedCourses, legacyPublishedCourses] = await Promise.all([
+        ctx.db
+          .query("courses")
+          .withIndex("by_type_and_lifecycleStatus", (q) =>
+            q.eq("type", courseType).eq("lifecycleStatus", "published"),
+          )
+          .order("desc")
+          .collect(),
+        ctx.db
+          .query("courses")
+          .withIndex("by_type_and_lifecycleStatus", (q) =>
+            q.eq("type", courseType).eq("lifecycleStatus", undefined),
+          )
+          .order("desc")
+          .collect(),
+      ]);
 
       result[courseType] = await Promise.all(
-        courses
-          .filter((course) => isPublishedCourse(course))
+        [...publishedCourses, ...legacyPublishedCourses]
+          .filter((course) => course.bogo?.enabled === true)
           .filter((course) => !isMergedCourse(course))
           .map((course) => toPublicCourse(ctx, course)),
       );
