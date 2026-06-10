@@ -27,17 +27,24 @@ type BogoValue = {
 const MAX_COURSES_PER_APPLY = 150;
 
 function assertValidOffer(offer?: OfferValue | null) {
-  const discountType = offer?.discountType ?? "percentage";
+  if (!offer) {
+    return;
+  }
+
+  const discountType = offer.discountType ?? "percentage";
   const discountValue =
-    typeof offer?.discountValue === "number"
+    typeof offer.discountValue === "number"
       ? offer.discountValue
-      : offer?.discount;
+      : offer.discount;
+
+  if (discountValue === undefined) {
+    throw new Error("Offer discount value is required");
+  }
 
   if (
-    discountValue !== undefined &&
-    (!Number.isFinite(discountValue) ||
-      discountValue < 0 ||
-      (discountType === "percentage" && discountValue > 100))
+    !Number.isFinite(discountValue) ||
+    discountValue < 0 ||
+    (discountType === "percentage" && discountValue > 100)
   ) {
     throw new Error(
       discountType === "percentage"

@@ -1038,8 +1038,9 @@ export default function AdminOffersPage() {
                               {showRupees(course.price)}
                             </span>
                             <span>
-                              {(course.enrolledUsers || []).length}/
-                              {course.capacity} seats
+                              {course.usesBatches
+                                ? `${(course.enrolledUsers || []).length} enrolled · batch-managed`
+                                : `${(course.enrolledUsers || []).length}/${course.capacity} seats`}
                             </span>
                           </div>
                         </div>

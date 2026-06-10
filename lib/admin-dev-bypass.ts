@@ -9,20 +9,19 @@ function isTruthy(value?: string) {
 export function isAdminDevBypassEnabled(env: EnvSource = process.env): boolean {
   if (
     env.VERCEL_ENV === "production" ||
+    env.CONVEX_DEPLOYMENT?.startsWith("prod:") ||
     isTruthy(env.ADMIN_DEV_BYPASS_DISABLED)
   ) {
     return false;
   }
 
-  if (isTruthy(env.ADMIN_DEV_BYPASS)) {
-    return true;
-  }
-
-  return (
+  const hasDevBackendSignal =
     env.NODE_ENV === "development" ||
     env.VERCEL_ENV === "development" ||
-    env.VERCEL_ENV === "preview"
-  );
+    env.VERCEL_ENV === "preview" ||
+    env.CONVEX_DEPLOYMENT?.startsWith("dev:");
+
+  return isTruthy(env.ADMIN_DEV_BYPASS) && Boolean(hasDevBackendSignal);
 }
 
 export function getAdminDevBypassIdentity() {

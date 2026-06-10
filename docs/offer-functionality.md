@@ -26,7 +26,7 @@ offer: {
 A course has a valid offer if:
 
 1. The course has an `offer` field
-2. It has a positive discount value
+2. It has a non-negative `discountValue` or legacy `discount`; zero-valued fixed prices are valid
 3. Current date is between `startDate` and `endDate` (inclusive)
 
 ### Price Calculation

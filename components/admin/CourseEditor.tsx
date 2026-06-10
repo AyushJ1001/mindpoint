@@ -643,14 +643,17 @@ export function CourseEditor({
         ? "Reduce by a rupee amount, like ₹500 off."
         : "Set the final selling price, like ₹1,499.";
   const offerPreview = state.offerDiscount.trim()
-    ? formatOfferAdjustment({
-        name: state.offerName.trim(),
-        discountType: state.offerDiscountType,
-        discountValue: Number(state.offerDiscount),
-        ...(state.offerDiscountType === "percentage"
-          ? { discount: Number(state.offerDiscount) }
-          : {}),
-      })
+    ? formatOfferAdjustment(
+        {
+          name: state.offerName.trim(),
+          discountType: state.offerDiscountType,
+          discountValue: Number(state.offerDiscount),
+          ...(state.offerDiscountType === "percentage"
+            ? { discount: Number(state.offerDiscount) }
+            : {}),
+        },
+        state.price,
+      )
     : "";
   const updateOfferDiscountType = (nextType: OfferDiscountType) => {
     setState((prev) => {

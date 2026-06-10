@@ -1,4 +1,8 @@
 import type { QueryCtx, MutationCtx } from "./_generated/server";
+import {
+  getAdminDevBypassIdentity,
+  isAdminDevBypassEnabled,
+} from "../lib/admin-dev-bypass";
 
 export type AdminIdentity = {
   userId: string;
@@ -8,44 +12,9 @@ export type AdminIdentity = {
 
 type AuthCtx = QueryCtx | MutationCtx;
 
-function isTruthy(value?: string) {
-  return ["1", "true", "yes", "on"].includes(
-    (value || "").trim().toLowerCase(),
-  );
-}
-
-function isAdminDevBypassEnabled() {
-  if (
-    process.env.VERCEL_ENV === "production" ||
-    isTruthy(process.env.ADMIN_DEV_BYPASS_DISABLED)
-  ) {
-    return false;
-  }
-
-  if (isTruthy(process.env.ADMIN_DEV_BYPASS)) {
-    return true;
-  }
-
-  const convexDeployment = process.env.CONVEX_DEPLOYMENT || "";
-  if (convexDeployment.startsWith("prod:")) {
-    return false;
-  }
-
-  return (
-    process.env.NODE_ENV === "development" ||
-    process.env.VERCEL_ENV === "development" ||
-    process.env.VERCEL_ENV === "preview" ||
-    convexDeployment.startsWith("dev:")
-  );
-}
-
 export async function requireAdmin(ctx: AuthCtx): Promise<AdminIdentity> {
   if (isAdminDevBypassEnabled()) {
-    return {
-      userId: "dev-admin-bypass",
-      email: "dev-admin-bypass@themindpoint.local",
-      name: "Dev Admin Bypass",
-    };
+    return getAdminDevBypassIdentity();
   }
 
   const identity = await ctx.auth.getUserIdentity();
