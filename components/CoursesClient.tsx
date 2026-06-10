@@ -283,7 +283,7 @@ const CourseGroupCard = ({
 
   return (
     <Card
-      className="@container group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="group border-lavender-200 bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
@@ -297,7 +297,9 @@ const CourseGroupCard = ({
                 className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
               >
                 <span className="sm:hidden">Special Offer</span>
-                <span className="hidden sm:inline">{offerDetails.offerName}</span>
+                <span className="hidden sm:inline">
+                  {offerDetails.offerName}
+                </span>
               </Badge>
             )}
             {bundleInfo && (
@@ -316,10 +318,10 @@ const CourseGroupCard = ({
                   className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
-                    {offerDetails.discountPercentage}% OFF
+                    {offerDetails.discountLabel}
                   </span>
                   <span className="hidden sm:inline">
-                    🔥 {offerDetails.discountPercentage}% OFF
+                    🔥 {offerDetails.discountLabel}
                   </span>
                 </Badge>
               )}
@@ -483,11 +485,10 @@ const CourseGroupCard = ({
             )}
           </div>
           {(() => {
-              const seatsLeft = Math.max(
-                0,
-                (selectedCourse.capacity ?? 0) -
-                  getEnrolledCount(selectedCourse),
-              );
+            const seatsLeft = Math.max(
+              0,
+              (selectedCourse.capacity ?? 0) - getEnrolledCount(selectedCourse),
+            );
             const isOutOfStock =
               (selectedCourse.capacity ?? 0) === 0 || seatsLeft === 0;
 
@@ -666,7 +667,7 @@ const CourseCard = ({
 
   return (
     <Card
-      className="@container group relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border border-lavender-200 bg-secondary/50 shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="group border-lavender-200 bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
@@ -680,7 +681,9 @@ const CourseCard = ({
                 className="max-w-full truncate bg-white/95 text-[11px] font-semibold whitespace-nowrap text-neutral-900 shadow-sm"
               >
                 <span className="sm:hidden">Special Offer</span>
-                <span className="hidden sm:inline">{offerDetails.offerName}</span>
+                <span className="hidden sm:inline">
+                  {offerDetails.offerName}
+                </span>
               </Badge>
             )}
             {bundleInfo && (
@@ -699,10 +702,10 @@ const CourseCard = ({
                   className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
-                    {offerDetails.discountPercentage}% OFF
+                    {offerDetails.discountLabel}
                   </span>
                   <span className="hidden sm:inline">
-                    🔥 {offerDetails.discountPercentage}% OFF
+                    🔥 {offerDetails.discountLabel}
                   </span>
                 </Badge>
               )}

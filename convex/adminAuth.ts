@@ -1,4 +1,8 @@
 import type { QueryCtx, MutationCtx } from "./_generated/server";
+import {
+  getAdminDevBypassIdentity,
+  isAdminDevBypassEnabled,
+} from "../lib/admin-dev-bypass";
 
 export type AdminIdentity = {
   userId: string;
@@ -9,6 +13,10 @@ export type AdminIdentity = {
 type AuthCtx = QueryCtx | MutationCtx;
 
 export async function requireAdmin(ctx: AuthCtx): Promise<AdminIdentity> {
+  if (isAdminDevBypassEnabled()) {
+    return getAdminDevBypassIdentity();
+  }
+
   const identity = await ctx.auth.getUserIdentity();
   const userId = identity?.subject;
   const userEmail = identity?.email?.trim().toLowerCase();

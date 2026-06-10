@@ -4,24 +4,15 @@ import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
+import { CourseBogoValue, CourseOfferValue } from "./schema";
 
-const offerValue = v.object({
-  name: v.string(),
-  discount: v.optional(v.number()),
-  startDate: v.optional(v.string()),
-  endDate: v.optional(v.string()),
-});
-
-const bogoValue = v.object({
-  enabled: v.boolean(),
-  startDate: v.optional(v.string()),
-  endDate: v.optional(v.string()),
-  label: v.optional(v.string()),
-});
+type OfferDiscountType = "percentage" | "fixedPrice" | "flatOff";
 
 type OfferValue = {
   name: string;
   discount?: number;
+  discountType?: OfferDiscountType;
+  discountValue?: number;
   startDate?: string;
   endDate?: string;
 };
@@ -36,13 +27,30 @@ type BogoValue = {
 const MAX_COURSES_PER_APPLY = 150;
 
 function assertValidOffer(offer?: OfferValue | null) {
+  if (!offer) {
+    return;
+  }
+
+  const discountType = offer.discountType ?? "percentage";
+  const discountValue =
+    typeof offer.discountValue === "number"
+      ? offer.discountValue
+      : offer.discount;
+
+  if (discountValue === undefined) {
+    throw new Error("Offer discount value is required");
+  }
+
   if (
-    offer?.discount !== undefined &&
-    (!Number.isFinite(offer.discount) ||
-      offer.discount < 0 ||
-      offer.discount > 100)
+    !Number.isFinite(discountValue) ||
+    discountValue < 0 ||
+    (discountType === "percentage" && discountValue > 100)
   ) {
-    throw new Error("Discount must be a number between 0 and 100");
+    throw new Error(
+      discountType === "percentage"
+        ? "Percentage discount must be a number between 0 and 100"
+        : "Offer amount must be a number greater than or equal to 0",
+    );
   }
 }
 
@@ -196,8 +204,8 @@ export const saveCampaign = mutation({
     campaignId: v.optional(v.id("offerCampaigns")),
     name: v.string(),
     description: v.optional(v.string()),
-    offer: v.optional(v.union(v.null(), offerValue)),
-    bogo: v.optional(v.union(v.null(), bogoValue)),
+    offer: v.optional(v.union(v.null(), CourseOfferValue)),
+    bogo: v.optional(v.union(v.null(), CourseBogoValue)),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
@@ -315,8 +323,8 @@ export const setCampaignArchived = mutation({
 export const applyOffersToCourses = mutation({
   args: {
     courseIds: v.array(v.id("courses")),
-    offer: v.optional(v.union(v.null(), offerValue)),
-    bogo: v.optional(v.union(v.null(), bogoValue)),
+    offer: v.optional(v.union(v.null(), CourseOfferValue)),
+    bogo: v.optional(v.union(v.null(), CourseBogoValue)),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
