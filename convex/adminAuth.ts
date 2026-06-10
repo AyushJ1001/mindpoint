@@ -27,19 +27,15 @@ function isAdminDevBypassEnabled() {
   }
 
   const convexDeployment = process.env.CONVEX_DEPLOYMENT || "";
-  const clerkIssuer = process.env.CLERK_JWT_ISSUER_DOMAIN || "";
-  const clerkPublishableKey =
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY || "";
-  const clerkSecretKey = process.env.CLERK_SECRET_KEY || "";
+  if (convexDeployment.startsWith("prod:")) {
+    return false;
+  }
 
   return (
     process.env.NODE_ENV === "development" ||
     process.env.VERCEL_ENV === "development" ||
     process.env.VERCEL_ENV === "preview" ||
-    convexDeployment.startsWith("dev:") ||
-    clerkIssuer.includes("accounts.dev") ||
-    clerkPublishableKey.startsWith("pk_test_") ||
-    clerkSecretKey.startsWith("sk_test_")
+    convexDeployment.startsWith("dev:")
   );
 }
 

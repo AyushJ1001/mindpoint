@@ -21,10 +21,7 @@ export function isAdminDevBypassEnabled(env: EnvSource = process.env): boolean {
   return (
     env.NODE_ENV === "development" ||
     env.VERCEL_ENV === "development" ||
-    env.VERCEL_ENV === "preview" ||
-    Boolean(env.CLERK_JWT_ISSUER_DOMAIN?.includes("accounts.dev")) ||
-    Boolean(env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY?.startsWith("pk_test_")) ||
-    Boolean(env.CLERK_SECRET_KEY?.startsWith("sk_test_"))
+    env.VERCEL_ENV === "preview"
   );
 }
 
