@@ -1632,6 +1632,7 @@ export const handleCartCheckout = mutation({
     const processedBogoSourceCourses = new Set<string>();
     let totalPointsEarnedForOrder = 0;
     let firstPaidEnrollmentId: Id<"enrollments"> | null = null;
+    const paymentReference = args.razorpayPaymentId?.trim();
 
     if (args.checkoutAttemptId) {
       const attempt = await ctx.db.get(args.checkoutAttemptId);
@@ -1648,9 +1649,24 @@ export const handleCartCheckout = mutation({
           .collect();
       }
 
+      if (paymentReference) {
+        const duplicatePayment = await ctx.db
+          .query("enrollments")
+          .withIndex("by_razorpayPaymentId", (q) =>
+            q.eq("razorpayPaymentId", paymentReference),
+          )
+          .first();
+        if (
+          duplicatePayment &&
+          duplicatePayment.checkoutAttemptId !== args.checkoutAttemptId
+        ) {
+          throw new Error("This payment reference has already been used.");
+        }
+      }
+
       await ctx.db.patch(args.checkoutAttemptId, {
         razorpayOrderId: args.razorpayOrderId ?? attempt.razorpayOrderId,
-        razorpayPaymentId: args.razorpayPaymentId ?? attempt.razorpayPaymentId,
+        razorpayPaymentId: paymentReference ?? attempt.razorpayPaymentId,
         status: "payment_captured",
         updatedAt: Date.now(),
       });
@@ -1724,7 +1740,7 @@ export const handleCartCheckout = mutation({
         registrationSource: "checkout",
         checkoutAttemptId: args.checkoutAttemptId,
         razorpayOrderId: args.razorpayOrderId,
-        razorpayPaymentId: args.razorpayPaymentId,
+        razorpayPaymentId: paymentReference,
         referrerClerkUserId: args.referrerClerkUserId,
       });
 

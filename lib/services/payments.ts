@@ -1,7 +1,34 @@
 import "client-only";
 
-import type { CheckoutPricing } from "@/lib/domain/checkout";
 import { postJson, type FetchImpl } from "./http";
+
+export type CheckoutReconciliationPayload = {
+  status?: "valid" | "changed" | "blocked";
+  totalAmountPaid?: number;
+  checkoutPricing?: unknown;
+  items?: Array<{
+    cartItemId: string;
+    courseId: string;
+    batchId?: string;
+    listedPrice: number;
+    checkoutPrice: number;
+    amountPaid: number;
+    selectedFreeCourseId?: string;
+  }>;
+  removedItems?: Array<{
+    cartItemId: string;
+    courseId: string;
+    batchId?: string;
+    reason?: string;
+    message?: string;
+  }>;
+  updatedItems?: Array<{
+    cartItemId: string;
+    courseId: string;
+    batchId?: string;
+    reasons: string[];
+  }>;
+};
 
 export type CreatePaymentOrderInput = {
   cartIntent: {
@@ -22,21 +49,12 @@ export type CreatePaymentOrderInput = {
   referrerClerkUserId?: string;
 };
 
-export type PaymentOrder = {
+export type PaymentSession = {
   amount: number;
   currency: string;
   id: string;
   checkoutAttemptId?: string;
-  reconciliation?: {
-    checkoutPricing?: CheckoutPricing;
-    status?: "valid" | "changed" | "blocked";
-  };
-};
-
-export type VerifyPaymentInput = {
-  razorpayOrderId: string;
-  razorpayPaymentId: string;
-  razorpaySignature: string;
+  reconciliation?: CheckoutReconciliationPayload;
 };
 
 type RequestPaymentOrderOptions = {
@@ -47,8 +65,8 @@ type RequestPaymentOrderOptions = {
 export async function requestPaymentOrder(
   input: CreatePaymentOrderInput,
   options: RequestPaymentOrderOptions = {},
-): Promise<PaymentOrder> {
-  return postJson<CreatePaymentOrderInput, PaymentOrder>(
+): Promise<PaymentSession> {
+  return postJson<CreatePaymentOrderInput, PaymentSession>(
     options.endpoint ?? "/api/create-order",
     input,
     { fetchImpl: options.fetchImpl },

@@ -62,13 +62,16 @@ export async function createCheckoutAttempt(
   };
 
   if (options.checkoutServerSecret && options.buyerUserId) {
-    return (await convex.mutation(api.checkout.createCheckoutAttemptFromServer, {
-      serverSecret: options.checkoutServerSecret,
-      buyerUserId: options.buyerUserId,
-      cartIntent,
-      buyerEmail: input.buyerEmail,
-      referrerClerkUserId: input.referrerClerkUserId,
-    })) as CreateCheckoutAttemptResult;
+    return (await convex.mutation(
+      api.checkout.createCheckoutAttemptFromServer,
+      {
+        serverSecret: options.checkoutServerSecret,
+        buyerUserId: options.buyerUserId,
+        cartIntent,
+        buyerEmail: input.buyerEmail,
+        referrerClerkUserId: input.referrerClerkUserId,
+      },
+    )) as CreateCheckoutAttemptResult;
   }
 
   return (await convex.mutation(api.checkout.createCheckoutAttempt, {
@@ -76,31 +79,4 @@ export async function createCheckoutAttempt(
     buyerEmail: input.buyerEmail,
     referrerClerkUserId: input.referrerClerkUserId,
   })) as CreateCheckoutAttemptResult;
-}
-
-export async function markCheckoutAttemptPaymentOrdered(
-  input: {
-    checkoutAttemptId: string;
-    razorpayOrderId: string;
-  },
-  options: CheckoutAttemptServiceOptions = {},
-) {
-  const convex = createAuthedConvexClient(options);
-
-  if (options.checkoutServerSecret && options.buyerUserId) {
-    return await convex.mutation(
-      api.checkout.markCheckoutAttemptPaymentOrderedFromServer,
-      {
-        serverSecret: options.checkoutServerSecret,
-        buyerUserId: options.buyerUserId,
-        checkoutAttemptId: input.checkoutAttemptId as never,
-        razorpayOrderId: input.razorpayOrderId,
-      },
-    );
-  }
-
-  return await convex.mutation(api.checkout.markCheckoutAttemptPaymentOrdered, {
-    checkoutAttemptId: input.checkoutAttemptId as never,
-    razorpayOrderId: input.razorpayOrderId,
-  });
 }

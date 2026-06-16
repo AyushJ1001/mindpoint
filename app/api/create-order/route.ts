@@ -2,11 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { resolveAuthEmail } from "@/lib/clerk-email";
 import { isClerkServerConfigured } from "@/lib/clerk-env";
-import { createPaymentOrder } from "@/lib/services/payments.server";
-import {
-  createCheckoutAttempt,
-  markCheckoutAttemptPaymentOrdered,
-} from "@/lib/services/checkout-attempts.server";
+import { createCheckoutAttempt } from "@/lib/services/checkout-attempts.server";
 import { withRateLimit } from "@/lib/with-rate-limit";
 
 async function handleCreateOrder(req: NextRequest) {
@@ -79,21 +75,10 @@ async function handleCreateOrder(req: NextRequest) {
       return NextResponse.json({ error: "Invalid amount." }, { status: 400 });
     }
 
-    const order = await createPaymentOrder({
-      amount,
-      receipt: String(attempt.checkoutAttemptId).slice(0, 40),
-    });
-
-    await markCheckoutAttemptPaymentOrdered(
-      {
-        checkoutAttemptId: attempt.checkoutAttemptId,
-        razorpayOrderId: order.id,
-      },
-      { checkoutServerSecret, buyerUserId: userId },
-    );
-
     return NextResponse.json({
-      ...order,
+      id: String(attempt.checkoutAttemptId),
+      amount,
+      currency: "INR",
       checkoutAttemptId: attempt.checkoutAttemptId,
       reconciliation: attempt.reconciliation,
     });
@@ -101,7 +86,7 @@ async function handleCreateOrder(req: NextRequest) {
     return NextResponse.json(
       {
         error:
-          error instanceof Error ? error.message : "Failed to create order.",
+          error instanceof Error ? error.message : "Failed to prepare payment.",
       },
       { status: 500 },
     );
@@ -109,5 +94,5 @@ async function handleCreateOrder(req: NextRequest) {
 }
 
 export const POST = withRateLimit(handleCreateOrder, {
-  errorMessage: "Too many order requests. Please wait before trying again.",
+  errorMessage: "Too many payment requests. Please wait before trying again.",
 });

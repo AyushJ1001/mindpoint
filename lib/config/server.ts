@@ -8,25 +8,6 @@ export function isClerkServerConfigured(env: EnvSource = process.env): boolean {
   );
 }
 
-export function getRazorpayServerConfig(env: EnvSource = process.env): {
-  razorpayKeyId: string;
-  razorpayKeySecret: string;
-} {
-  const razorpayKeyId = readPublicEnv(env).razorpayKeyId;
-  const razorpayKeySecret = env.RAZORPAY_KEY_SECRET;
-
-  if (!razorpayKeyId || !razorpayKeySecret) {
-    throw new Error(
-      "Payment service not configured. Please set NEXT_PUBLIC_RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET.",
-    );
-  }
-
-  return {
-    razorpayKeyId,
-    razorpayKeySecret,
-  };
-}
-
 export function getResendEmailConfig(env: EnvSource = process.env): {
   fromEmail: string;
   resendApiKey: string;
