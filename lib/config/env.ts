@@ -5,7 +5,6 @@ export type PublicEnv = {
   convexUrl?: string;
   posthogHost?: string;
   posthogKey?: string;
-  razorpayKeyId?: string;
   siteUrl?: string;
 };
 
@@ -15,7 +14,6 @@ export function readPublicEnv(env: EnvSource = process.env): PublicEnv {
     convexUrl: env.NEXT_PUBLIC_CONVEX_URL,
     posthogHost: env.NEXT_PUBLIC_POSTHOG_HOST,
     posthogKey: env.NEXT_PUBLIC_POSTHOG_KEY,
-    razorpayKeyId: env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
     siteUrl: env.NEXT_PUBLIC_SITE_URL,
   };
 }

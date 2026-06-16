@@ -156,7 +156,7 @@ export default function RecoverPaidOrderPage() {
     <div>
       <AdminPageHeader
         title="Recover Paid Order"
-        description="Create enrollments and loyalty backfill for a captured Razorpay payment that did not finalize through checkout."
+        description="Create enrollments and loyalty backfill for a captured manual payment that did not finalize through checkout."
         actions={
           <Button variant="outline" asChild>
             <Link href="/admin/enrollments">
@@ -179,14 +179,14 @@ export default function RecoverPaidOrderPage() {
           </div>
           <div className="grid gap-3 md:grid-cols-4">
             <label className="space-y-1 text-sm">
-              <span>Razorpay order ID</span>
+              <span>Payment order/reference</span>
               <Input
                 value={razorpayOrderId}
                 onChange={(event) => setRazorpayOrderId(event.target.value)}
               />
             </label>
             <label className="space-y-1 text-sm">
-              <span>Razorpay payment ID</span>
+              <span>Payment transaction/reference</span>
               <Input
                 value={razorpayPaymentId}
                 onChange={(event) => setRazorpayPaymentId(event.target.value)}

@@ -8,6 +8,17 @@ type RequestOptions = {
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 
+export class HttpJsonError extends Error {
+  constructor(
+    message: string,
+    readonly status: number,
+    readonly payload: unknown,
+  ) {
+    super(message);
+    this.name = "HttpJsonError";
+  }
+}
+
 function getErrorMessage(payload: unknown, fallback: string): string {
   if (!payload || typeof payload !== "object") {
     return fallback;
@@ -34,11 +45,13 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
   }
 
   if (!response.ok) {
-    throw new Error(
+    throw new HttpJsonError(
       getErrorMessage(
         payload,
         `Request failed with status ${response.status}.`,
       ),
+      response.status,
+      payload,
     );
   }
 

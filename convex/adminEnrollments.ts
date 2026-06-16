@@ -671,7 +671,7 @@ export const recoverPaidOrder = mutation({
       throw new Error("Recovery reason is required.");
     }
     if (!args.razorpayPaymentId.trim()) {
-      throw new Error("Razorpay payment ID is required.");
+      throw new Error("Payment reference is required.");
     }
     if (!args.buyerUserId.trim() || !args.buyerEmail.trim()) {
       throw new Error("Buyer user ID and email are required.");
@@ -690,7 +690,7 @@ export const recoverPaidOrder = mutation({
       )
       .first();
     if (duplicate) {
-      throw new Error("This Razorpay payment ID is already recovered.");
+      throw new Error("This payment reference is already recovered.");
     }
 
     const enrollmentIds: Id<"enrollments">[] = [];
@@ -841,7 +841,7 @@ export const recoverPaidOrder = mutation({
       actorAdminId: admin.userId,
       actorEmail: admin.email,
       action: "enrollment.recover_paid_order",
-      entityType: "razorpay_payment",
+      entityType: "manual_payment",
       entityId: args.razorpayPaymentId.trim(),
       after: { enrollmentIds: enrollmentIds.map(String) },
       metadata: {
