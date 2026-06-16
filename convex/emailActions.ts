@@ -2,48 +2,12 @@
 
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import { Resend } from "resend";
 import { api } from "./_generated/api";
-
-const resendApiKey = process.env.RESEND_API_KEY;
-console.log("Resend API Key configured:", !!resendApiKey);
-
-if (!resendApiKey) {
-  console.error("RESEND_API_KEY is not configured!");
-  throw new Error("RESEND_API_KEY environment variable is required");
-}
-
-const resend = new Resend(resendApiKey);
+import { sendEmailWithCopyOrThrow as sendEmailWithCopy } from "./_shared/emailDelivery";
 
 function getSiteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL || "https://www.themindpoint.org";
 }
-
-// Helper function to ensure all emails are also sent to contact.themindpoint@gmail.com
-const sendEmailWithCopy = async (emailConfig: {
-  from: string;
-  to: string | string[];
-  subject: string;
-  html: string;
-  replyTo?: string;
-  attachments?: Array<{
-    filename: string;
-    content: Buffer;
-  }>;
-}) => {
-  // Ensure the main recipient gets the email
-  const mainRecipients = Array.isArray(emailConfig.to)
-    ? emailConfig.to
-    : [emailConfig.to];
-
-  // Add contact.themindpoint@gmail.com to the recipients
-  const allRecipients = [...mainRecipients, "contact.themindpoint@gmail.com"];
-
-  return await resend.emails.send({
-    ...emailConfig,
-    to: allRecipients,
-  });
-};
 
 function escapeHtml(value: string): string {
   return value

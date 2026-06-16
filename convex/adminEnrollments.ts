@@ -7,43 +7,29 @@ import { normalizeEnrollmentStatus } from "./adminUtils";
 import { createAdminAuditLog } from "./adminAudit";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
+import {
+  calculateInternshipEndDate,
+  extractInternshipPlanFromDuration,
+  generateEnrollmentNumber,
+  roundCurrency,
+  type InternshipPlan,
+} from "./_shared/enrollment";
 import { calculatePointsEarned } from "./_shared/mindPoints";
 import {
   convexFailure,
   convexResultErrorCode,
   convexSuccess,
   type ConvexFailure,
+  type ConvexResultErrorCode,
 } from "./_shared/result";
 
-type AdminEnrollmentFailure = ConvexFailure<
-  "CONFLICT" | "NOT_FOUND" | "VALIDATION_ERROR"
->;
+type AdminEnrollmentFailure = ConvexFailure<ConvexResultErrorCode>;
 
 function adminEnrollmentFailure(
   message: string,
-  code:
-    | "CONFLICT"
-    | "NOT_FOUND"
-    | "VALIDATION_ERROR" = convexResultErrorCode.VALIDATION_ERROR,
+  code: ConvexResultErrorCode = convexResultErrorCode.VALIDATION_ERROR,
 ): AdminEnrollmentFailure {
   return convexFailure({ code, message });
-}
-
-function generateEnrollmentNumber(
-  courseCode: string,
-  startDate: string,
-): string {
-  const date = new Date(startDate);
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const year = date.getFullYear().toString().slice(-2);
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const entropy = crypto
-    .randomUUID()
-    .replace(/-/g, "")
-    .slice(0, 8)
-    .toUpperCase();
-
-  return `EN-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
 }
 
 async function generateUniqueEnrollmentNumber(
@@ -72,54 +58,82 @@ async function generateUniqueEnrollmentNumber(
     convexResultErrorCode.CONFLICT,
   );
 }
-function extractInternshipPlanFromDuration(
-  duration?: string,
-): "120" | "240" | null {
-  if (!duration) return null;
-
-  const durationLower = duration.toLowerCase().trim();
-  if (durationLower.includes("120") || durationLower.includes("2 week")) {
-    return "120";
-  }
-  if (durationLower.includes("240") || durationLower.includes("4 week")) {
-    return "240";
-  }
-
-  return null;
-}
-
-function calculateInternshipEndDate(
-  startDate: string | undefined,
-  internshipPlan: "120" | "240",
-): string {
-  const parsedStart = startDate ? new Date(startDate) : new Date();
-  const start = Number.isNaN(parsedStart.getTime()) ? new Date() : parsedStart;
-  const weeks = internshipPlan === "120" ? 2 : 4;
-  const endDate = new Date(start);
-  endDate.setDate(start.getDate() + weeks * 7);
-
-  return endDate.toISOString().split("T")[0];
-}
 
 type GuestCheckoutResult = Array<{
   courseId?: Id<"courses"> | string;
   enrollmentId: Id<"enrollments">;
 }>;
 
+type GuestCheckoutMutationResult =
+  | AdminEnrollmentFailure
+  | GuestCheckoutResult
+  | {
+      _tag: "Success";
+      enrollments: GuestCheckoutResult;
+      success: true;
+    };
+
 type SuccessfulPaymentResult = {
   enrollmentId: Id<"enrollments">;
 };
 
-function normalizeEmail(value: string): string {
-  return value.trim().toLowerCase();
+type SuccessfulPaymentMutationResult =
+  | AdminEnrollmentFailure
+  | SuccessfulPaymentResult
+  | {
+      _tag: "Success";
+      enrollment?: SuccessfulPaymentResult;
+      enrollmentId?: Id<"enrollments">;
+      success: true;
+    };
+
+function isAdminEnrollmentFailure(
+  result: GuestCheckoutMutationResult | SuccessfulPaymentMutationResult,
+): result is AdminEnrollmentFailure {
+  return (
+    !Array.isArray(result) && "_tag" in result && result._tag === "Failure"
+  );
 }
 
-function roundCurrency(value: number | undefined): number {
-  if (!Number.isFinite(value)) {
-    return 0;
+function normalizeGuestCheckoutResult(
+  result: GuestCheckoutMutationResult,
+): AdminEnrollmentFailure | GuestCheckoutResult {
+  if (Array.isArray(result)) {
+    return result;
   }
 
-  return Math.max(0, Math.round(value!));
+  if (isAdminEnrollmentFailure(result)) {
+    return result;
+  }
+
+  return result.enrollments;
+}
+
+function normalizeSuccessfulPaymentResult(
+  result: SuccessfulPaymentMutationResult,
+): AdminEnrollmentFailure | SuccessfulPaymentResult {
+  if (isAdminEnrollmentFailure(result)) {
+    return result;
+  }
+
+  if ("_tag" in result) {
+    if (result.enrollment) {
+      return result.enrollment;
+    }
+    if (result.enrollmentId) {
+      return { enrollmentId: result.enrollmentId };
+    }
+    return adminEnrollmentFailure(
+      "handleSuccessfulPayment returned a success result without an enrollment ID.",
+      convexResultErrorCode.CONFLICT,
+    );
+  }
+
+  return result;
+}
+
+function normalizeEmail(value: string): string {
+  return value.trim().toLowerCase();
 }
 
 function isAuthenticatedUserId(userId: string): boolean {
@@ -579,7 +593,7 @@ export const createManualEnrollment = mutation({
     let enrollmentId: Id<"enrollments"> | null = null;
 
     if (isGuestUser) {
-      const enrollments = (await ctx.runMutation(
+      const checkoutResult: GuestCheckoutMutationResult = await ctx.runMutation(
         api.myFunctions.handleGuestUserCartCheckoutWithData,
         {
           userData: {
@@ -595,7 +609,11 @@ export const createManualEnrollment = mutation({
             items: [pricingItem],
           },
         },
-      )) as GuestCheckoutResult;
+      );
+      const enrollments = normalizeGuestCheckoutResult(checkoutResult);
+      if (isAdminEnrollmentFailure(enrollments)) {
+        return enrollments;
+      }
 
       if (enrollments.length === 0) {
         return adminEnrollmentFailure(
@@ -618,9 +636,8 @@ export const createManualEnrollment = mutation({
       enrollmentId = matching.enrollmentId;
     } else {
       try {
-        const created: SuccessfulPaymentResult = await ctx.runMutation(
-          api.myFunctions.handleSuccessfulPayment,
-          {
+        const checkoutResult: SuccessfulPaymentMutationResult =
+          await ctx.runMutation(api.myFunctions.handleSuccessfulPayment, {
             userId: args.userId,
             userEmail: args.userEmail,
             userPhone: args.userPhone,
@@ -635,8 +652,11 @@ export const createManualEnrollment = mutation({
               totalAmountPaid: pricingItem.amountPaid,
               items: [pricingItem],
             },
-          },
-        );
+          });
+        const created = normalizeSuccessfulPaymentResult(checkoutResult);
+        if (isAdminEnrollmentFailure(created)) {
+          return created;
+        }
         enrollmentId = created.enrollmentId;
       } catch (innerError) {
         return adminEnrollmentFailure(

@@ -217,3 +217,61 @@ test("admin enrollment secondary pages consume tagged Convex results", () => {
   assert.match(detailSource, /assertConvexSuccess/);
   assert.match(recoverySource, /assertConvexSuccess/);
 });
+
+test("checkout enrollment mutations expose tagged Convex results through Effect wrappers", () => {
+  const convexSource = readFileSync("convex/myFunctions.ts", "utf8");
+  const checkoutServiceSource = readFileSync(
+    "lib/services/checkout.ts",
+    "utf8",
+  );
+  const checkoutHelperSource = readFileSync(
+    "convex/_shared/checkout.ts",
+    "utf8",
+  );
+  const scheduleHelperSource = readFileSync(
+    "convex/_shared/enrollmentSchedule.ts",
+    "utf8",
+  );
+
+  assert.match(convexSource, /convexSuccess\(\{\s*enrollments:/);
+  assert.match(convexSource, /validateCheckoutPricingItemResult/);
+  assert.match(convexSource, /resolveEnrollmentBatchResult/);
+  assert.match(checkoutServiceSource, /throwIfConvexTaggedFailure/);
+  assert.match(checkoutServiceSource, /normalizeCartCheckoutMutationReturn/);
+  assert.match(checkoutHelperSource, /CheckoutPricingFailure/);
+  assert.match(scheduleHelperSource, /EnrollmentScheduleFailure/);
+});
+
+test("email delivery implementation is behind a shared module", () => {
+  const emailSource = readFileSync("convex/emailActions.ts", "utf8");
+  const deliverySource = readFileSync(
+    "convex/_shared/emailDelivery.ts",
+    "utf8",
+  );
+
+  assert.match(emailSource, /sendEmailWithCopyOrThrow/);
+  assert.doesNotMatch(emailSource, /new Resend/);
+  assert.doesNotMatch(
+    emailSource,
+    /RESEND_API_KEY environment variable is required/,
+  );
+  assert.match(deliverySource, /EmailDeliveryFailure/);
+  assert.match(deliverySource, /sendEmailWithCopy/);
+});
+
+test("google sheets actions return tagged results through extracted sheet modules", () => {
+  const actionSource = readFileSync("convex/googleSheets.ts", "utf8");
+  const clientSource = readFileSync(
+    "convex/_shared/googleSheetsClient.ts",
+    "utf8",
+  );
+  const sheetSource = readFileSync("convex/_shared/enrollmentSheet.ts", "utf8");
+
+  assert.match(actionSource, /googleSheetsActionResultValidator/);
+  assert.match(actionSource, /appendEnrollmentToSheet/);
+  assert.match(actionSource, /setupEnrollmentSheetDocument/);
+  assert.match(clientSource, /GoogleSheetsFailure/);
+  assert.match(sheetSource, /enrollmentSheetRange/);
+  assert.match(sheetSource, /status === 404/);
+  assert.doesNotMatch(actionSource, /\bany\b/);
+});

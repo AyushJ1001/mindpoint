@@ -102,6 +102,78 @@ type SupervisedTherapyEnrollmentMutationResult =
     sessionType: CheckoutSessionType;
   };
 
+type ConvexTaggedFailure = {
+  readonly _tag: "Failure";
+  readonly error: {
+    readonly code?: string;
+    readonly message: string;
+  };
+  readonly success: false;
+};
+
+type ConvexTaggedSuccess<Payload extends object> = {
+  readonly _tag: "Success";
+  readonly success: true;
+} & Payload;
+
+type CartCheckoutMutationReturn =
+  | ConvexTaggedSuccess<{ enrollments: EnrollmentSummary[] }>
+  | EnrollmentSummary[];
+
+type SingleEnrollmentMutationReturn<
+  Result extends SingleCourseEnrollmentMutationResult,
+> =
+  | ConvexTaggedSuccess<
+      {
+        enrollment: Result;
+      } & Partial<Result>
+    >
+  | Result;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isConvexTaggedFailure(value: unknown): value is ConvexTaggedFailure {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const error = value.error;
+  return (
+    value._tag === "Failure" &&
+    value.success === false &&
+    isRecord(error) &&
+    typeof error.message === "string"
+  );
+}
+
+function throwIfConvexTaggedFailure(value: unknown): void {
+  if (isConvexTaggedFailure(value)) {
+    throw new Error(value.error.message);
+  }
+}
+
+function normalizeCartCheckoutMutationReturn(
+  result: CartCheckoutMutationReturn,
+): EnrollmentSummary[] {
+  if (Array.isArray(result)) {
+    return result;
+  }
+
+  return result.enrollments;
+}
+
+function normalizeSingleEnrollmentMutationReturn<
+  Result extends SingleCourseEnrollmentMutationResult,
+>(result: SingleEnrollmentMutationReturn<Result>): Result {
+  if ("_tag" in result) {
+    return result.enrollment;
+  }
+
+  return result;
+}
+
 function resolveConvexUrl(convexUrl?: string): string {
   const resolvedConvexUrl = convexUrl || process.env.NEXT_PUBLIC_CONVEX_URL;
 
@@ -232,6 +304,8 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
         clearTimeout(timeoutHandle);
       }
 
+      throwIfConvexTaggedFailure(result);
+
       if (attempt > 0) {
         console.log(
           `Convex mutation succeeded after ${attempt + 1} attempts (${context.operationType})`,
@@ -343,26 +417,28 @@ export function handlePaymentSuccessEffect(
   };
 
   return Effect.gen(function* () {
-    const enrollments = yield* runCheckoutMutationEffect<EnrollmentSummary[]>(
-      api.myFunctions.handleCartCheckout,
-      {
-        bogoSelections,
-        checkoutAttemptId: options.checkoutAttemptId,
-        checkoutPricing,
-        courseIds,
-        lineItems,
-        razorpayOrderId: options.razorpayOrderId,
-        razorpayPaymentId: options.razorpayPaymentId,
-        referrerClerkUserId,
-        sessionType,
-        studentName,
-        userEmail,
-        userId,
-        userPhone,
-      },
-      context,
-      options.convexUrl,
-    );
+    const mutationResult =
+      yield* runCheckoutMutationEffect<CartCheckoutMutationReturn>(
+        api.myFunctions.handleCartCheckout,
+        {
+          bogoSelections,
+          checkoutAttemptId: options.checkoutAttemptId,
+          checkoutPricing,
+          courseIds,
+          lineItems,
+          razorpayOrderId: options.razorpayOrderId,
+          razorpayPaymentId: options.razorpayPaymentId,
+          referrerClerkUserId,
+          sessionType,
+          studentName,
+          userEmail,
+          userId,
+          userPhone,
+        },
+        context,
+        options.convexUrl,
+      );
+    const enrollments = normalizeCartCheckoutMutationReturn(mutationResult);
 
     return {
       enrollments,
@@ -434,15 +510,17 @@ export function handleGuestUserPaymentSuccessEffect(
   };
 
   return Effect.gen(function* () {
-    const enrollments = yield* runCheckoutMutationEffect<EnrollmentSummary[]>(
-      api.myFunctions.handleGuestUserCartCheckoutByEmail,
-      {
-        courseIds,
-        userEmail,
-      },
-      context,
-      options.convexUrl,
-    );
+    const mutationResult =
+      yield* runCheckoutMutationEffect<CartCheckoutMutationReturn>(
+        api.myFunctions.handleGuestUserCartCheckoutByEmail,
+        {
+          courseIds,
+          userEmail,
+        },
+        context,
+        options.convexUrl,
+      );
+    const enrollments = normalizeCartCheckoutMutationReturn(mutationResult);
 
     return {
       enrollments,
@@ -497,19 +575,21 @@ export function handleGuestUserPaymentSuccessWithDataEffect(
   };
 
   return Effect.gen(function* () {
-    const enrollments = yield* runCheckoutMutationEffect<EnrollmentSummary[]>(
-      api.myFunctions.handleGuestUserCartCheckoutWithData,
-      {
-        bogoSelections,
-        checkoutPricing,
-        courseIds,
-        lineItems,
-        sessionType,
-        userData,
-      },
-      context,
-      options.convexUrl,
-    );
+    const mutationResult =
+      yield* runCheckoutMutationEffect<CartCheckoutMutationReturn>(
+        api.myFunctions.handleGuestUserCartCheckoutWithData,
+        {
+          bogoSelections,
+          checkoutPricing,
+          courseIds,
+          lineItems,
+          sessionType,
+          userData,
+        },
+        context,
+        options.convexUrl,
+      );
+    const enrollments = normalizeCartCheckoutMutationReturn(mutationResult);
 
     return {
       enrollments,
@@ -577,21 +657,23 @@ export function handleSingleCourseEnrollmentEffect(
   };
 
   return Effect.gen(function* () {
-    const enrollment =
-      yield* runCheckoutMutationEffect<SingleCourseEnrollmentMutationResult>(
-        api.myFunctions.handleSuccessfulPayment,
-        {
-          batchId,
-          courseId,
-          sessionType,
-          studentName,
-          userEmail,
-          userId,
-          userPhone,
-        },
-        context,
-        options.convexUrl,
-      );
+    const mutationResult = yield* runCheckoutMutationEffect<
+      SingleEnrollmentMutationReturn<SingleCourseEnrollmentMutationResult>
+    >(
+      api.myFunctions.handleSuccessfulPayment,
+      {
+        batchId,
+        courseId,
+        sessionType,
+        studentName,
+        userEmail,
+        userId,
+        userPhone,
+      },
+      context,
+      options.convexUrl,
+    );
+    const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
     return {
       enrollment: {
@@ -661,16 +743,18 @@ export function handleGuestUserSingleEnrollmentEffect(
   };
 
   return Effect.gen(function* () {
-    const enrollment =
-      yield* runCheckoutMutationEffect<SingleCourseEnrollmentMutationResult>(
-        api.myFunctions.handleGuestUserSingleEnrollmentByEmail,
-        {
-          courseId,
-          userEmail,
-        },
-        context,
-        options.convexUrl,
-      );
+    const mutationResult = yield* runCheckoutMutationEffect<
+      SingleEnrollmentMutationReturn<SingleCourseEnrollmentMutationResult>
+    >(
+      api.myFunctions.handleGuestUserSingleEnrollmentByEmail,
+      {
+        courseId,
+        userEmail,
+      },
+      context,
+      options.convexUrl,
+    );
+    const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
     return {
       enrollment: {
@@ -730,20 +814,22 @@ export function handleSupervisedTherapyEnrollmentEffect(
   };
 
   return Effect.gen(function* () {
-    const enrollment =
-      yield* runCheckoutMutationEffect<SupervisedTherapyEnrollmentMutationResult>(
-        api.myFunctions.handleSupervisedTherapyEnrollment,
-        {
-          courseId,
-          sessionType,
-          studentName,
-          userEmail,
-          userId,
-          userPhone,
-        },
-        context,
-        options.convexUrl,
-      );
+    const mutationResult = yield* runCheckoutMutationEffect<
+      SingleEnrollmentMutationReturn<SupervisedTherapyEnrollmentMutationResult>
+    >(
+      api.myFunctions.handleSupervisedTherapyEnrollment,
+      {
+        courseId,
+        sessionType,
+        studentName,
+        userEmail,
+        userId,
+        userPhone,
+      },
+      context,
+      options.convexUrl,
+    );
+    const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
     return {
       enrollment: {
@@ -815,19 +901,21 @@ export function handleGuestUserSupervisedTherapyEnrollmentEffect(
   };
 
   return Effect.gen(function* () {
-    const enrollment =
-      yield* runCheckoutMutationEffect<SupervisedTherapyEnrollmentMutationResult>(
-        api.myFunctions.handleGuestUserSupervisedTherapyEnrollment,
-        {
-          courseId,
-          sessionType,
-          studentName,
-          userEmail,
-          userPhone,
-        },
-        context,
-        options.convexUrl,
-      );
+    const mutationResult = yield* runCheckoutMutationEffect<
+      SingleEnrollmentMutationReturn<SupervisedTherapyEnrollmentMutationResult>
+    >(
+      api.myFunctions.handleGuestUserSupervisedTherapyEnrollment,
+      {
+        courseId,
+        sessionType,
+        studentName,
+        userEmail,
+        userPhone,
+      },
+      context,
+      options.convexUrl,
+    );
+    const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
     return {
       enrollment: {
