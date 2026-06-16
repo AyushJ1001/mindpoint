@@ -1,44 +1,58 @@
-import { NextRequest, NextResponse } from "next/server";
-import { verifyPaymentSignature } from "@/lib/services/payments.server";
+import {
+  BoundaryValidationError,
+  isJsonObject,
+  type JsonValue,
+  parseJsonEffect,
+  runApiEffect,
+} from "@/lib/effect";
+import { verifyPaymentSignatureEffect } from "@/lib/services/payments.server";
 import { withRateLimit } from "@/lib/with-rate-limit";
+import { Effect } from "effect";
+import type { NextRequest } from "next/server";
+
+function jsonString(value: JsonValue | undefined): string {
+  return typeof value === "string" ? value : "";
+}
 
 async function handleVerifyPayment(req: NextRequest) {
-  try {
-    const body = await req.json();
-    const razorpayOrderId = String(body?.razorpayOrderId ?? "");
-    const razorpayPaymentId = String(body?.razorpayPaymentId ?? "");
-    const razorpaySignature = String(body?.razorpaySignature ?? "");
+  return runApiEffect(
+    Effect.gen(function* () {
+      const body = yield* parseJsonEffect(req);
+      const razorpayOrderId = isJsonObject(body)
+        ? jsonString(body.razorpayOrderId)
+        : "";
+      const razorpayPaymentId = isJsonObject(body)
+        ? jsonString(body.razorpayPaymentId)
+        : "";
+      const razorpaySignature = isJsonObject(body)
+        ? jsonString(body.razorpaySignature)
+        : "";
 
-    if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
-      return NextResponse.json(
-        { error: "Missing payment verification fields." },
-        { status: 400 },
-      );
-    }
+      if (!razorpayOrderId || !razorpayPaymentId || !razorpaySignature) {
+        return yield* Effect.fail(
+          new BoundaryValidationError({
+            message: "Missing payment verification fields.",
+          }),
+        );
+      }
 
-    if (
-      !verifyPaymentSignature({
+      const isValid = yield* verifyPaymentSignatureEffect({
         razorpayOrderId,
         razorpayPaymentId,
         razorpaySignature,
-      })
-    ) {
-      return NextResponse.json(
-        { error: "Invalid payment signature." },
-        { status: 400 },
-      );
-    }
+      });
 
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    return NextResponse.json(
-      {
-        error:
-          error instanceof Error ? error.message : "Failed to verify payment.",
-      },
-      { status: 500 },
-    );
-  }
+      if (!isValid) {
+        return yield* Effect.fail(
+          new BoundaryValidationError({
+            message: "Invalid payment signature.",
+          }),
+        );
+      }
+
+      return { success: true };
+    }),
+  );
 }
 
 export const POST = withRateLimit(handleVerifyPayment, {

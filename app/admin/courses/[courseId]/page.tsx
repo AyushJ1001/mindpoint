@@ -14,8 +14,16 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { showRupees } from "@/lib/utils";
-import { getUserFacingErrorMessage } from "@/lib/convex-error";
+import {
+  assertConvexSuccess,
+  getUserFacingErrorMessage,
+} from "@/lib/convex-error";
 import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
+
+type AdminCourseMutationSuccess = {
+  readonly _tag: "Success";
+  readonly success: true;
+};
 
 export default function AdminEditCoursePage() {
   const params = useParams<{ courseId: string }>();
@@ -45,7 +53,10 @@ export default function AdminEditCoursePage() {
     }
 
     try {
-      await transition({ courseId, lifecycleStatus: status });
+      assertConvexSuccess<AdminCourseMutationSuccess>(
+        await transition({ courseId, lifecycleStatus: status }),
+        "Failed to change course lifecycle",
+      );
       toast.success(`Course moved to ${status}`);
     } catch (error) {
       toast.error(

@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { downloadCsv, toCsv } from "@/lib/csv";
+import { assertConvexSuccess } from "@/lib/convex-error";
 
 type CouponCourseType =
   | "certificate"
@@ -43,6 +44,23 @@ const couponCourseTypes: CouponCourseType[] = [
   "therapy",
   "supervised",
 ];
+
+type AdminLoyaltyMutationSuccess = {
+  readonly _tag: "Success";
+  readonly success: true;
+};
+
+type LoyaltyBackfillSuccess = AdminLoyaltyMutationSuccess & {
+  readonly scanned: number;
+  readonly updated: number;
+};
+
+type ReminderQueueSuccess = AdminLoyaltyMutationSuccess & {
+  readonly processed: number;
+  readonly requested: number;
+  readonly scheduled: number;
+  readonly skipped: number;
+};
 
 export default function AdminLoyaltyPage() {
   const [search, setSearch] = useState("");
@@ -99,11 +117,14 @@ export default function AdminLoyaltyPage() {
     }
 
     try {
-      await adjustPoints({
-        clerkUserId: selectedUserId,
-        delta,
-        reason,
-      });
+      assertConvexSuccess<AdminLoyaltyMutationSuccess>(
+        await adjustPoints({
+          clerkUserId: selectedUserId,
+          delta,
+          reason,
+        }),
+        "Failed to adjust points",
+      );
       toast.success("Points adjusted");
     } catch (error) {
       toast.error(
@@ -119,12 +140,15 @@ export default function AdminLoyaltyPage() {
     }
 
     try {
-      await createManualCoupon({
-        clerkUserId: selectedUserId,
-        courseType: couponType,
-        pointsCost: couponPointsCost,
-        reason,
-      });
+      assertConvexSuccess<AdminLoyaltyMutationSuccess>(
+        await createManualCoupon({
+          clerkUserId: selectedUserId,
+          courseType: couponType,
+          pointsCost: couponPointsCost,
+          reason,
+        }),
+        "Failed to create coupon",
+      );
       toast.success("Manual coupon created");
     } catch (error) {
       toast.error(
@@ -136,7 +160,10 @@ export default function AdminLoyaltyPage() {
   const handleBackfillSearchData = async () => {
     setIsBackfilling(true);
     try {
-      const result = await backfillLoyaltySearchFields({ limit: 100 });
+      const result = assertConvexSuccess<LoyaltyBackfillSuccess>(
+        await backfillLoyaltySearchFields({ limit: 100 }),
+        "Failed to backfill search data",
+      );
       toast.success(
         `Backfill complete: updated ${result.updated} of ${result.scanned} loyalty accounts`,
       );
@@ -167,7 +194,10 @@ export default function AdminLoyaltyPage() {
     }
 
     try {
-      const result = await queueMindPointsReminderEmails({ clerkUserIds });
+      const result = assertConvexSuccess<ReminderQueueSuccess>(
+        await queueMindPointsReminderEmails({ clerkUserIds }),
+        "Failed to queue reminder emails",
+      );
       toast.success(
         `Queued ${result.scheduled} reminder email${result.scheduled === 1 ? "" : "s"}`,
         {

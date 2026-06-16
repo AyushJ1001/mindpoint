@@ -1654,10 +1654,7 @@ const CartContent = () => {
                       size="sm"
                       onClick={async () => {
                         if (!couponCode.trim()) return;
-                        if (
-                          couponValidation?.valid &&
-                          couponValidation.coupon
-                        ) {
+                        if (couponValidation?._tag === "Success") {
                           const hasEligibleCourse = items.some(
                             (item) =>
                               !coveredCourseIdSet.has(
@@ -1680,8 +1677,8 @@ const CartContent = () => {
                             pointsCost: couponValidation.coupon.pointsCost,
                           });
                           toast.success("Coupon applied successfully!");
-                        } else if (couponValidation?.error) {
-                          toast.error(couponValidation.error);
+                        } else if (couponValidation?._tag === "Failure") {
+                          toast.error(couponValidation.error.message);
                         }
                       }}
                       disabled={
@@ -1715,9 +1712,9 @@ const CartContent = () => {
                     </Button>
                   </div>
                 )}
-                {couponValidation && !couponValidation.valid && couponCode && (
+                {couponValidation?._tag === "Failure" && couponCode && (
                   <p className="text-xs text-red-600">
-                    {couponValidation.error}
+                    {couponValidation.error.message}
                   </p>
                 )}
               </div>

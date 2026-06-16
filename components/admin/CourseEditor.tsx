@@ -23,7 +23,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { UploadDropzone } from "@/lib/uploadthing";
-import { getUserFacingErrorMessage } from "@/lib/convex-error";
+import {
+  assertConvexSuccess,
+  getUserFacingErrorMessage,
+} from "@/lib/convex-error";
 import { useAdminTimeZone } from "@/components/admin/AdminTimeZoneProvider";
 import {
   defaultEmotionalHooks,
@@ -147,6 +150,17 @@ type OfferCampaignRecord = {
     label?: string;
   };
   isArchived: boolean;
+};
+
+type CourseIdMutationSuccess = {
+  readonly _tag: "Success";
+  readonly success: true;
+  readonly courseId: Id<"courses">;
+};
+
+type AdminCourseMutationSuccess = {
+  readonly _tag: "Success";
+  readonly success: true;
 };
 
 const courseTypes: CourseType[] = [
@@ -1074,22 +1088,30 @@ export function CourseEditor({
 
         try {
           for (const variant of parsedVariants) {
-            const courseId = await createCourse({
-              name: state.name,
-              type: state.type,
-              lifecycleStatus: state.lifecycleStatus,
-              data: buildPatch({
-                code: variant.code,
-                price: variant.price,
-                capacity: variant.capacity,
-                sessions: variant.sessions,
+            const result = assertConvexSuccess<CourseIdMutationSuccess>(
+              await createCourse({
+                name: state.name,
+                type: state.type,
+                lifecycleStatus: state.lifecycleStatus,
+                data: buildPatch({
+                  code: variant.code,
+                  price: variant.price,
+                  capacity: variant.capacity,
+                  sessions: variant.sessions,
+                }),
               }),
-            });
-            createdIds.push(courseId);
+              "Failed to create course variant",
+            );
+            createdIds.push(result.courseId);
           }
         } catch (error) {
           const rollbackResults = await Promise.allSettled(
-            createdIds.map((courseId) => deleteCourse({ courseId })),
+            createdIds.map(async (courseId) =>
+              assertConvexSuccess<AdminCourseMutationSuccess>(
+                await deleteCourse({ courseId }),
+                "Failed to roll back course variant",
+              ),
+            ),
           );
           const rollbackFailures = rollbackResults.filter(
             (result) => result.status === "rejected",
@@ -1115,23 +1137,29 @@ export function CourseEditor({
       const patch = buildPatch();
 
       if (course?._id) {
-        await updateCourse({
-          courseId: course._id,
-          patch,
-        });
+        assertConvexSuccess<AdminCourseMutationSuccess>(
+          await updateCourse({
+            courseId: course._id,
+            patch,
+          }),
+          "Failed to update course",
+        );
         setInitialSnapshot(JSON.stringify(state));
         toast.success("Course updated");
         onSaved?.(course._id);
       } else {
-        const courseId = await createCourse({
-          name: state.name,
-          type: state.type,
-          lifecycleStatus: state.lifecycleStatus,
-          data: patch,
-        });
+        const result = assertConvexSuccess<CourseIdMutationSuccess>(
+          await createCourse({
+            name: state.name,
+            type: state.type,
+            lifecycleStatus: state.lifecycleStatus,
+            data: patch,
+          }),
+          "Failed to create course",
+        );
         setInitialSnapshot(JSON.stringify(state));
         toast.success("Course created");
-        onSaved?.(courseId);
+        onSaved?.(result.courseId);
       }
     } catch (error) {
       console.error(error);
@@ -1227,10 +1255,13 @@ export function CourseEditor({
 
     try {
       validateBatchDraft(newBatch);
-      await createBatch({
-        courseId: course._id,
-        data: buildBatchPatch(newBatch),
-      });
+      assertConvexSuccess<AdminCourseMutationSuccess>(
+        await createBatch({
+          courseId: course._id,
+          data: buildBatchPatch(newBatch),
+        }),
+        "Failed to create batch",
+      );
       setNewBatch(emptyBatchFormState());
       toast.success("Batch created");
     } catch (error) {
@@ -1244,13 +1275,42 @@ export function CourseEditor({
 
     try {
       validateBatchDraft(draft);
-      await updateBatch({
-        batchId,
-        patch: buildBatchPatch(draft),
-      });
+      assertConvexSuccess<AdminCourseMutationSuccess>(
+        await updateBatch({
+          batchId,
+          patch: buildBatchPatch(draft),
+        }),
+        "Failed to update batch",
+      );
       toast.success("Batch updated");
     } catch (error) {
       toast.error(getUserFacingErrorMessage(error, "Failed to update batch"));
+    }
+  };
+
+  const handleDuplicateBatch = async (batchId: Id<"courseBatches">) => {
+    try {
+      assertConvexSuccess<AdminCourseMutationSuccess>(
+        await duplicateBatch({ batchId }),
+        "Failed to duplicate batch",
+      );
+      toast.success("Batch duplicated");
+    } catch (error) {
+      toast.error(
+        getUserFacingErrorMessage(error, "Failed to duplicate batch"),
+      );
+    }
+  };
+
+  const handleArchiveBatch = async (batchId: Id<"courseBatches">) => {
+    try {
+      assertConvexSuccess<AdminCourseMutationSuccess>(
+        await archiveBatch({ batchId }),
+        "Failed to archive batch",
+      );
+      toast.success("Batch archived");
+    } catch (error) {
+      toast.error(getUserFacingErrorMessage(error, "Failed to archive batch"));
     }
   };
 
@@ -1682,9 +1742,7 @@ export function CourseEditor({
                       <Button
                         type="button"
                         variant="outline"
-                        onClick={() =>
-                          void duplicateBatch({ batchId: batch._id })
-                        }
+                        onClick={() => void handleDuplicateBatch(batch._id)}
                       >
                         Duplicate
                       </Button>
@@ -1698,9 +1756,7 @@ export function CourseEditor({
                       <Button
                         type="button"
                         variant="destructive"
-                        onClick={() =>
-                          void archiveBatch({ batchId: batch._id })
-                        }
+                        onClick={() => void handleArchiveBatch(batch._id)}
                       >
                         Archive
                       </Button>

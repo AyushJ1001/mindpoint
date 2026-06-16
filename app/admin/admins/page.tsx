@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { assertConvexSuccess } from "@/lib/convex-error";
 
 export default function AdminManagersPage() {
   const [search, setSearch] = useState("");
@@ -45,11 +46,14 @@ export default function AdminManagersPage() {
 
     setLoadingEmail(email);
     try {
-      await addAdmin({
-        email,
-        name: newAdminName.trim() || undefined,
-        note: newAdminNote.trim() || undefined,
-      });
+      assertConvexSuccess(
+        await addAdmin({
+          email,
+          name: newAdminName.trim() || undefined,
+          note: newAdminNote.trim() || undefined,
+        }),
+        "Failed to add admin",
+      );
       toast.success("Admin access granted");
       setNewAdminEmail("");
       setNewAdminName("");
@@ -67,10 +71,13 @@ export default function AdminManagersPage() {
     if (!removeTargetKey) return;
     setLoadingEmail(removeTargetKey);
     try {
-      await removeAdmin({
-        email: removeTargetKey,
-        reason: removeReason.trim() || undefined,
-      });
+      assertConvexSuccess(
+        await removeAdmin({
+          email: removeTargetKey,
+          reason: removeReason.trim() || undefined,
+        }),
+        "Failed to remove admin",
+      );
       toast.success("Admin access removed");
       setRemoveTargetKey(null);
       setRemoveReason("Access no longer required");

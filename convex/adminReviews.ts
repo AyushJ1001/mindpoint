@@ -4,20 +4,40 @@ import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+  type ConvexFailure,
+} from "./_shared/result";
 
-function normalizeRating(value: number): number {
+type AdminReviewFailure = ConvexFailure<"NOT_FOUND" | "VALIDATION_ERROR">;
+
+function adminReviewFailure(
+  message: string,
+  code:
+    | "NOT_FOUND"
+    | "VALIDATION_ERROR" = convexResultErrorCode.VALIDATION_ERROR,
+): AdminReviewFailure {
+  return convexFailure({ code, message });
+}
+
+function normalizeRating(value: number): number | AdminReviewFailure {
   if (!Number.isFinite(value)) {
-    throw new Error("Rating must be a valid number");
+    return adminReviewFailure("Rating must be a valid number");
   }
 
   const rounded = Math.round(value * 2) / 2;
   return Math.max(0.5, Math.min(5, rounded));
 }
 
-function normalizeRequiredText(value: string, field: string): string {
+function normalizeRequiredText(
+  value: string,
+  field: string,
+): string | AdminReviewFailure {
   const trimmed = value.trim();
   if (!trimmed) {
-    throw new Error(`${field} is required`);
+    return adminReviewFailure(`${field} is required`);
   }
   return trimmed;
 }
@@ -183,16 +203,34 @@ export const createReview = mutation({
     const course = await ctx.db.get(args.courseId);
 
     if (!course) {
-      throw new Error("Course not found");
+      return adminReviewFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
+    const userName = normalizeRequiredText(args.userName, "Reviewer name");
+    if (typeof userName !== "string") {
+      return userName;
+    }
+
+    const rating = normalizeRating(args.rating);
+    if (typeof rating !== "number") {
+      return rating;
+    }
+
+    const content = normalizeRequiredText(args.content, "Review content");
+    if (typeof content !== "string") {
+      return content;
     }
 
     const review = {
       course: args.courseId,
-      userName: normalizeRequiredText(args.userName, "Reviewer name"),
+      userName,
       userId:
         normalizeOptionalUserId(args.userId) || `admin-managed:${admin.userId}`,
-      rating: normalizeRating(args.rating),
-      content: normalizeRequiredText(args.content, "Review content"),
+      rating,
+      content,
       isEdited: false,
     };
 
@@ -204,6 +242,13 @@ export const createReview = mutation({
     });
 
     const created = await ctx.db.get(reviewId);
+    if (!created) {
+      return adminReviewFailure(
+        "Review could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
       actorEmail: admin.email,
@@ -218,7 +263,7 @@ export const createReview = mutation({
       },
     });
 
-    return created;
+    return convexSuccess({ review: created });
   },
 });
 
@@ -236,22 +281,42 @@ export const updateReview = mutation({
     const existing = await ctx.db.get(args.reviewId);
 
     if (!existing) {
-      throw new Error("Review not found");
+      return adminReviewFailure(
+        "Review not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const course = await ctx.db.get(args.courseId);
     if (!course) {
-      throw new Error("Course not found");
+      return adminReviewFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
+    const userName = normalizeRequiredText(args.userName, "Reviewer name");
+    if (typeof userName !== "string") {
+      return userName;
+    }
+
+    const rating = normalizeRating(args.rating);
+    if (typeof rating !== "number") {
+      return rating;
+    }
+
+    const content = normalizeRequiredText(args.content, "Review content");
+    if (typeof content !== "string") {
+      return content;
     }
 
     const patch = {
       course: args.courseId,
-      userName: normalizeRequiredText(args.userName, "Reviewer name"),
+      userName,
       userId:
-        normalizeOptionalUserId(args.userId) ??
-        `admin-managed:${admin.userId}`,
-      rating: normalizeRating(args.rating),
-      content: normalizeRequiredText(args.content, "Review content"),
+        normalizeOptionalUserId(args.userId) ?? `admin-managed:${admin.userId}`,
+      rating,
+      content,
       isEdited: true,
     };
 
@@ -272,6 +337,13 @@ export const updateReview = mutation({
     }
 
     const updated = await ctx.db.get(args.reviewId);
+    if (!updated) {
+      return adminReviewFailure(
+        "Review could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
       actorEmail: admin.email,
@@ -285,7 +357,7 @@ export const updateReview = mutation({
       },
     });
 
-    return updated;
+    return convexSuccess({ review: updated });
   },
 });
 
@@ -298,7 +370,10 @@ export const deleteReview = mutation({
     const existing = await ctx.db.get(args.reviewId);
 
     if (!existing) {
-      throw new Error("Review not found");
+      return adminReviewFailure(
+        "Review not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     await ctx.db.delete(args.reviewId);
@@ -320,6 +395,6 @@ export const deleteReview = mutation({
       },
     });
 
-    return { success: true };
+    return convexSuccess({});
   },
 });

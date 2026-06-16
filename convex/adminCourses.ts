@@ -11,6 +11,12 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 import { normalizeCourseLifecycleStatus } from "./adminUtils";
 import { createAdminAuditLog } from "./adminAudit";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+  type ConvexFailure,
+} from "./_shared/result";
 
 const COURSE_INTEGRITY_SCAN_LIMIT = 2000;
 const MASTERCLASS_REPAIR_BATCH_LIMIT = 50;
@@ -20,6 +26,20 @@ const BATCH_MIGRATION_SUPPORTED_TYPES = [
   "masterclass",
   "resume-studio",
 ] as const;
+
+type AdminCourseFailure = ConvexFailure<
+  "CONFLICT" | "NOT_FOUND" | "VALIDATION_ERROR"
+>;
+
+function adminCourseFailure(
+  message: string,
+  code:
+    | "CONFLICT"
+    | "NOT_FOUND"
+    | "VALIDATION_ERROR" = convexResultErrorCode.VALIDATION_ERROR,
+): AdminCourseFailure {
+  return convexFailure({ code, message });
+}
 
 const coursePatchValidator = {
   name: v.optional(v.string()),
@@ -127,7 +147,7 @@ function isBatchEnabledType(type?: AdminCourseType) {
 async function assertPublishedBatchBackedCourseHasBatch(
   ctx: QueryCtx | MutationCtx,
   courseId: Id<"courses">,
-) {
+): Promise<AdminCourseFailure | null> {
   const batches = await ctx.db
     .query("courseBatches")
     .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
@@ -138,10 +158,12 @@ async function assertPublishedBatchBackedCourseHasBatch(
   );
 
   if (!batch) {
-    throw new Error(
+    return adminCourseFailure(
       "Add at least one published batch before publishing this course.",
     );
   }
+
+  return null;
 }
 
 function validateBatchPatch(batch: {
@@ -151,15 +173,17 @@ function validateBatchPatch(batch: {
   endTime?: string;
   daysOfWeek?: string[];
   capacity?: number;
-}) {
+}): AdminCourseFailure | null {
   if (!hasRequiredSchedule(batch)) {
-    throw new Error(
+    return adminCourseFailure(
       "Batch start/end date, time, and days of week are required.",
     );
   }
   if (!Number.isFinite(batch.capacity) || (batch.capacity ?? 0) < 0) {
-    throw new Error("Batch capacity must be zero or greater.");
+    return adminCourseFailure("Batch capacity must be zero or greater.");
   }
+
+  return null;
 }
 
 type AdminCourseType =
@@ -182,9 +206,11 @@ type CourseOfferPatch = {
   discountValue?: number;
 };
 
-function assertValidOffer(offer?: CourseOfferPatch | null) {
+function validateOffer(
+  offer?: CourseOfferPatch | null,
+): AdminCourseFailure | null {
   if (!offer) {
-    return;
+    return null;
   }
 
   const discountType = offer.discountType ?? "percentage";
@@ -194,7 +220,7 @@ function assertValidOffer(offer?: CourseOfferPatch | null) {
       : offer.discount;
 
   if (discountValue === undefined) {
-    throw new Error("Offer discount value is required");
+    return adminCourseFailure("Offer discount value is required");
   }
 
   if (
@@ -202,12 +228,14 @@ function assertValidOffer(offer?: CourseOfferPatch | null) {
     discountValue < 0 ||
     (discountType === "percentage" && discountValue > 100)
   ) {
-    throw new Error(
+    return adminCourseFailure(
       discountType === "percentage"
         ? "Percentage discount must be a number between 0 and 100"
         : "Offer amount must be a number greater than or equal to 0",
     );
   }
+
+  return null;
 }
 
 type BatchMigrationSupportedType =
@@ -777,30 +805,32 @@ function getMasterclassRepairCandidate(
 function validatePublishedCourseCodeConvention(course: {
   type?: AdminCourseType;
   code?: string;
-}) {
+}): AdminCourseFailure | null {
   const codePrefix = getUpperCodePrefix(course.code);
 
   if (course.type === "masterclass" && codePrefix !== "MC") {
-    throw new Error(
+    return adminCourseFailure(
       "Masterclass and workshop course codes must start with MC before publishing.",
     );
   }
 
   if (course.type === "worksheet" && codePrefix !== "WS") {
-    throw new Error(
+    return adminCourseFailure(
       "Worksheet course codes must start with WS before publishing.",
     );
   }
 
   if (codePrefix === "WS" && course.type !== "worksheet") {
-    throw new Error("Only worksheet course codes can start with WS.");
+    return adminCourseFailure("Only worksheet course codes can start with WS.");
   }
 
   if (codePrefix === "MC" && course.type !== "masterclass") {
-    throw new Error(
+    return adminCourseFailure(
       "Only masterclass and workshop course codes can start with MC.",
     );
   }
+
+  return null;
 }
 
 function validatePublishableCourse(course: {
@@ -822,19 +852,24 @@ function validatePublishableCourse(course: {
   startTime?: string;
   endTime?: string;
   daysOfWeek?: string[];
-}) {
+}): AdminCourseFailure | null {
   if (!hasText(course.name)) {
-    throw new Error("Course name is required before publishing");
+    return adminCourseFailure("Course name is required before publishing");
   }
   if (!hasText(course.code)) {
-    throw new Error("Course code is required before publishing");
+    return adminCourseFailure("Course code is required before publishing");
   }
   if (!course.type) {
-    throw new Error("Course type is required before publishing");
+    return adminCourseFailure("Course type is required before publishing");
   }
-  validatePublishedCourseCodeConvention(course);
+  const codeError = validatePublishedCourseCodeConvention(course);
+  if (codeError) {
+    return codeError;
+  }
   if (!hasText(course.description)) {
-    throw new Error("Course description is required before publishing");
+    return adminCourseFailure(
+      "Course description is required before publishing",
+    );
   }
 
   switch (course.type) {
@@ -846,10 +881,12 @@ function validatePublishableCourse(course: {
         !Array.isArray(course.learningOutcomes) ||
         course.learningOutcomes.length === 0
       ) {
-        throw new Error("Learning outcomes are required before publishing");
+        return adminCourseFailure(
+          "Learning outcomes are required before publishing",
+        );
       }
       if (!course.usesBatches && !hasRequiredSchedule(course)) {
-        throw new Error(
+        return adminCourseFailure(
           "Start/end date, time, and days of week are required before publishing",
         );
       }
@@ -861,16 +898,22 @@ function validatePublishableCourse(course: {
         !Array.isArray(course.learningOutcomes) ||
         course.learningOutcomes.length === 0
       ) {
-        throw new Error("Learning outcomes are required before publishing");
+        return adminCourseFailure(
+          "Learning outcomes are required before publishing",
+        );
       }
       if (!Array.isArray(course.allocation) || course.allocation.length === 0) {
-        throw new Error("Internship allocation is required before publishing");
+        return adminCourseFailure(
+          "Internship allocation is required before publishing",
+        );
       }
       if (!course.usesBatches && !hasText(course.duration)) {
-        throw new Error("Internship duration is required before publishing");
+        return adminCourseFailure(
+          "Internship duration is required before publishing",
+        );
       }
       if (!course.usesBatches && !hasRequiredSchedule(course)) {
-        throw new Error(
+        return adminCourseFailure(
           "Start/end date, time, and days of week are required before publishing",
         );
       }
@@ -882,7 +925,9 @@ function validatePublishableCourse(course: {
         !Array.isArray(course.learningOutcomes) ||
         course.learningOutcomes.length === 0
       ) {
-        throw new Error("Learning outcomes are required before publishing");
+        return adminCourseFailure(
+          "Learning outcomes are required before publishing",
+        );
       }
       break;
     }
@@ -890,23 +935,27 @@ function validatePublishableCourse(course: {
     case "therapy":
     case "supervised": {
       if (typeof course.sessions !== "number" || course.sessions <= 0) {
-        throw new Error("Sessions are required before publishing");
+        return adminCourseFailure("Sessions are required before publishing");
       }
       break;
     }
 
     case "worksheet": {
       if (!hasText(course.fileUrl)) {
-        throw new Error("Worksheet file URL is required before publishing");
+        return adminCourseFailure(
+          "Worksheet file URL is required before publishing",
+        );
       }
       if (!hasText(course.worksheetDescription)) {
-        throw new Error("Worksheet description is required before publishing");
+        return adminCourseFailure(
+          "Worksheet description is required before publishing",
+        );
       }
       if (
         !Array.isArray(course.targetAudience) ||
         course.targetAudience.length === 0
       ) {
-        throw new Error(
+        return adminCourseFailure(
           "Worksheet target audience is required before publishing",
         );
       }
@@ -916,6 +965,8 @@ function validatePublishableCourse(course: {
     default:
       break;
   }
+
+  return null;
 }
 
 function getSuggestedCourseType(course: CourseCodeConventionCandidateInput) {
@@ -1300,13 +1351,19 @@ export const createBatch = mutation({
     const admin = await requireAdmin(ctx);
     const course = await ctx.db.get(args.courseId);
     if (!course) {
-      throw new Error("Course not found");
+      return adminCourseFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
     if (!isBatchEnabledType(course.type)) {
-      throw new Error("This course type does not support batches.");
+      return adminCourseFailure("This course type does not support batches.");
     }
 
-    validateBatchPatch(args.data);
+    const batchError = validateBatchPatch(args.data);
+    if (batchError) {
+      return batchError;
+    }
     const now = Date.now();
     const existing = await ctx.db
       .query("courseBatches")
@@ -1339,6 +1396,13 @@ export const createBatch = mutation({
     }
 
     const batch = await ctx.db.get(batchId);
+    if (!batch) {
+      return adminCourseFailure(
+        "Batch could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
       actorEmail: admin.email,
@@ -1351,7 +1415,7 @@ export const createBatch = mutation({
       },
     });
 
-    return batch;
+    return convexSuccess({ batch });
   },
 });
 
@@ -1364,14 +1428,20 @@ export const updateBatch = mutation({
     const admin = await requireAdmin(ctx);
     const existing = await ctx.db.get(args.batchId);
     if (!existing) {
-      throw new Error("Batch not found");
+      return adminCourseFailure(
+        "Batch not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const next = {
       ...existing,
       ...args.patch,
     };
-    validateBatchPatch(next);
+    const batchError = validateBatchPatch(next);
+    if (batchError) {
+      return batchError;
+    }
 
     const patch = {
       ...args.patch,
@@ -1385,6 +1455,12 @@ export const updateBatch = mutation({
 
     await ctx.db.patch(args.batchId, patch);
     const updated = await ctx.db.get(args.batchId);
+    if (!updated) {
+      return adminCourseFailure(
+        "Batch could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -1396,7 +1472,7 @@ export const updateBatch = mutation({
       after: updated,
     });
 
-    return updated;
+    return convexSuccess({ batch: updated });
   },
 });
 
@@ -1408,7 +1484,10 @@ export const duplicateBatch = mutation({
     const admin = await requireAdmin(ctx);
     const existing = await ctx.db.get(args.batchId);
     if (!existing) {
-      throw new Error("Batch not found");
+      return adminCourseFailure(
+        "Batch not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const siblings = await ctx.db
@@ -1433,6 +1512,12 @@ export const duplicateBatch = mutation({
       updatedAt: now,
     });
     const duplicated = await ctx.db.get(duplicatedId);
+    if (!duplicated) {
+      return adminCourseFailure(
+        "Batch could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -1446,7 +1531,7 @@ export const duplicateBatch = mutation({
       },
     });
 
-    return duplicated;
+    return convexSuccess({ batch: duplicated });
   },
 });
 
@@ -1458,7 +1543,10 @@ export const archiveBatch = mutation({
     const admin = await requireAdmin(ctx);
     const existing = await ctx.db.get(args.batchId);
     if (!existing) {
-      throw new Error("Batch not found");
+      return adminCourseFailure(
+        "Batch not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     await ctx.db.patch(args.batchId, {
@@ -1467,6 +1555,12 @@ export const archiveBatch = mutation({
       updatedAt: Date.now(),
     });
     const updated = await ctx.db.get(args.batchId);
+    if (!updated) {
+      return adminCourseFailure(
+        "Batch could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -1478,7 +1572,7 @@ export const archiveBatch = mutation({
       after: updated,
     });
 
-    return updated;
+    return convexSuccess({ batch: updated });
   },
 });
 
@@ -1495,7 +1589,9 @@ export const reorderBatches = mutation({
       const batchId = uniqueIds[index] as Id<"courseBatches">;
       const batch = await ctx.db.get(batchId);
       if (!batch || String(batch.courseId) !== String(args.courseId)) {
-        throw new Error("Batch reorder payload contains an invalid batch.");
+        return adminCourseFailure(
+          "Batch reorder payload contains an invalid batch.",
+        );
       }
       await ctx.db.patch(batchId, {
         sortOrder: index,
@@ -1504,10 +1600,11 @@ export const reorderBatches = mutation({
       });
     }
 
-    return await ctx.db
+    const batches = await ctx.db
       .query("courseBatches")
       .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId))
       .collect();
+    return convexSuccess({ batches });
   },
 });
 
@@ -1541,7 +1638,7 @@ export const applyLegacyInternshipArchive = mutation({
       selectedCourseIds.has(String(candidate.courseId)),
     );
     if (selectedCandidates.length === 0) {
-      throw new Error(
+      return adminCourseFailure(
         "Select at least one legacy internship course to archive.",
       );
     }
@@ -1615,12 +1712,12 @@ export const applyLegacyInternshipArchive = mutation({
       },
     });
 
-    return {
+    return convexSuccess({
       archivedCourses,
       clearedCourseCampaigns,
       estimatedAffectedEnrollments,
       updatedBundleCampaigns,
-    };
+    });
   },
 });
 
@@ -1696,7 +1793,7 @@ export const applyBatchBackfillMigration = mutation({
         }
 
         if (!batch) {
-          throw new Error(
+          return adminCourseFailure(
             `Failed to create or load migrated batch for course ${sourceCourse._id}.`,
           );
         }
@@ -1815,14 +1912,14 @@ export const applyBatchBackfillMigration = mutation({
       },
     });
 
-    return {
+    return convexSuccess({
       ambiguousGroups: dryRun.ambiguousGroups,
       createdBatches,
       eligibleGroupCount: dryRun.eligibleGroupCount,
       movedEnrollments,
       movedReviews,
       updatedBundleCampaigns,
-    };
+    });
   },
 });
 
@@ -1849,7 +1946,10 @@ export const createCourse = mutation({
     const type = args.type ?? args.data?.type ?? "certificate";
     const usesBatches =
       args.data?.usesBatches ?? isBatchEnabledType(type) ?? false;
-    assertValidOffer(args.data?.offer);
+    const offerError = validateOffer(args.data?.offer);
+    if (offerError) {
+      return offerError;
+    }
 
     const payload = {
       ...args.data,
@@ -1878,14 +1978,18 @@ export const createCourse = mutation({
     };
 
     if (lifecycleStatus === "published") {
-      validatePublishableCourse(payload);
+      const publishError = validatePublishableCourse(payload);
+      if (publishError) {
+        return publishError;
+      }
+      if (payload.usesBatches && isBatchEnabledType(payload.type)) {
+        return adminCourseFailure(
+          "Save this canonical course as a draft first, then add its batches before publishing.",
+        );
+      }
     }
 
     const courseId = await ctx.db.insert("courses", payload);
-
-    if (lifecycleStatus === "published" && payload.usesBatches) {
-      await assertPublishedBatchBackedCourseHasBatch(ctx, courseId);
-    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -1896,7 +2000,7 @@ export const createCourse = mutation({
       after: payload,
     });
 
-    return courseId;
+    return convexSuccess({ courseId });
   },
 });
 
@@ -1909,13 +2013,19 @@ export const updateCourse = mutation({
     const admin = await requireAdmin(ctx);
     const existing = await ctx.db.get(args.courseId);
     if (!existing) {
-      throw new Error("Course not found");
+      return adminCourseFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const nextLifecycle = args.patch.lifecycleStatus
       ? args.patch.lifecycleStatus
       : normalizeCourseLifecycleStatus(existing.lifecycleStatus);
-    assertValidOffer(args.patch.offer);
+    const offerError = validateOffer(args.patch.offer);
+    if (offerError) {
+      return offerError;
+    }
 
     const patch = {
       ...args.patch,
@@ -1956,18 +2066,33 @@ export const updateCourse = mutation({
     }
 
     if (nextLifecycle === "published") {
-      validatePublishableCourse(preview);
+      const publishError = validatePublishableCourse(preview);
+      if (publishError) {
+        return publishError;
+      }
       if (
         (patch.usesBatches ?? existing.usesBatches) &&
         isBatchEnabledType(preview.type)
       ) {
-        await assertPublishedBatchBackedCourseHasBatch(ctx, args.courseId);
+        const batchError = await assertPublishedBatchBackedCourseHasBatch(
+          ctx,
+          args.courseId,
+        );
+        if (batchError) {
+          return batchError;
+        }
       }
     }
 
     await ctx.db.patch(args.courseId, patch);
 
     const updated = await ctx.db.get(args.courseId);
+    if (!updated) {
+      return adminCourseFailure(
+        "Course could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -1979,7 +2104,7 @@ export const updateCourse = mutation({
       after: updated,
     });
 
-    return updated;
+    return convexSuccess({ course: updated });
   },
 });
 
@@ -1993,7 +2118,10 @@ export const correctCourseType = mutation({
     const admin = await requireAdmin(ctx);
     const existing = await ctx.db.get(args.courseId);
     if (!existing) {
-      throw new Error("Course not found");
+      return adminCourseFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const patch = {
@@ -2004,6 +2132,12 @@ export const correctCourseType = mutation({
 
     await ctx.db.patch(args.courseId, patch);
     const updated = await ctx.db.get(args.courseId);
+    if (!updated) {
+      return adminCourseFailure(
+        "Course could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -2020,7 +2154,7 @@ export const correctCourseType = mutation({
       },
     });
 
-    return updated;
+    return convexSuccess({ course: updated });
   },
 });
 
@@ -2058,13 +2192,12 @@ export const repairMasterclassCourseCodes = mutation({
         existing.lifecycleStatus,
       );
       if (currentLifecycleStatus === "published") {
-        try {
-          validatePublishableCourse({
-            ...existing,
-            type: "masterclass",
-            code: candidate.suggestedCode,
-          });
-        } catch {
+        const publishError = validatePublishableCourse({
+          ...existing,
+          type: "masterclass",
+          code: candidate.suggestedCode,
+        });
+        if (publishError) {
           skipped += 1;
           continue;
         }
@@ -2098,12 +2231,12 @@ export const repairMasterclassCourseCodes = mutation({
       updated += 1;
     }
 
-    return {
+    return convexSuccess({
       requested: args.courseIds.length,
       processed: courseIdsToProcess.length,
       updated,
       skipped,
-    };
+    });
   },
 });
 
@@ -2116,7 +2249,10 @@ export const deleteCourse = mutation({
     const existing = await ctx.db.get(args.courseId);
 
     if (!existing) {
-      throw new Error("Course not found");
+      return adminCourseFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const linkedEnrollment = await ctx.db
@@ -2125,7 +2261,10 @@ export const deleteCourse = mutation({
       .first();
 
     if (linkedEnrollment) {
-      throw new Error("Cannot delete a course with enrollments");
+      return adminCourseFailure(
+        "Cannot delete a course with enrollments",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     const linkedReview = await ctx.db
@@ -2134,7 +2273,10 @@ export const deleteCourse = mutation({
       .first();
 
     if (linkedReview) {
-      throw new Error("Cannot delete a course with reviews");
+      return adminCourseFailure(
+        "Cannot delete a course with reviews",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     const linkedBatch = await ctx.db
@@ -2148,7 +2290,10 @@ export const deleteCourse = mutation({
         .withIndex("by_batchId", (q) => q.eq("batchId", linkedBatch._id))
         .first();
       if (batchEnrollment) {
-        throw new Error("Cannot delete a course with batch enrollments");
+        return adminCourseFailure(
+          "Cannot delete a course with batch enrollments",
+          convexResultErrorCode.CONFLICT,
+        );
       }
 
       const batches = await ctx.db
@@ -2169,7 +2314,7 @@ export const deleteCourse = mutation({
       before: existing,
     });
 
-    return { success: true };
+    return convexSuccess({});
   },
 });
 
@@ -2183,22 +2328,34 @@ export const transitionCourseLifecycle = mutation({
     const existing = await ctx.db.get(args.courseId);
 
     if (!existing) {
-      throw new Error("Course not found");
+      return adminCourseFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const currentStatus = normalizeCourseLifecycleStatus(
       existing.lifecycleStatus,
     );
     if (currentStatus === args.lifecycleStatus) {
-      return existing;
+      return convexSuccess({ course: existing });
     }
 
     const now = Date.now();
 
     if (args.lifecycleStatus === "published") {
-      validatePublishableCourse(existing);
+      const publishError = validatePublishableCourse(existing);
+      if (publishError) {
+        return publishError;
+      }
       if (existing.usesBatches && isBatchEnabledType(existing.type)) {
-        await assertPublishedBatchBackedCourseHasBatch(ctx, args.courseId);
+        const batchError = await assertPublishedBatchBackedCourseHasBatch(
+          ctx,
+          args.courseId,
+        );
+        if (batchError) {
+          return batchError;
+        }
       }
     }
 
@@ -2212,6 +2369,12 @@ export const transitionCourseLifecycle = mutation({
     });
 
     const updated = await ctx.db.get(args.courseId);
+    if (!updated) {
+      return adminCourseFailure(
+        "Course could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -2223,6 +2386,6 @@ export const transitionCourseLifecycle = mutation({
       after: { lifecycleStatus: args.lifecycleStatus },
     });
 
-    return updated;
+    return convexSuccess({ course: updated });
   },
 });

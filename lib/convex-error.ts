@@ -1,3 +1,32 @@
+type ConvexFailureLike = {
+  readonly _tag: "Failure";
+  readonly error: {
+    readonly message: string;
+  };
+  readonly success: false;
+};
+
+type ConvexSuccessLike = {
+  readonly _tag: "Success";
+  readonly success: true;
+};
+
+export function assertConvexSuccess<Success extends ConvexSuccessLike>(
+  result: ConvexFailureLike | Success | null | undefined,
+  fallback = "Something went wrong",
+): Success {
+  if (!result) {
+    throw new Error(fallback);
+  }
+
+  switch (result._tag) {
+    case "Success":
+      return result;
+    case "Failure":
+      throw new Error(result.error.message || fallback);
+  }
+}
+
 export function getUserFacingErrorMessage(
   error: unknown,
   fallback = "Something went wrong",

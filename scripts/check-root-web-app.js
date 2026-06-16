@@ -18,6 +18,7 @@ const REQUIRED_PATHS = [
   "app/page.tsx",
   "convex/schema.ts",
   "next.config.ts",
+  "proxy.ts",
   "tsconfig.json",
   ".env.example",
 ];
@@ -58,10 +59,18 @@ function checkRepositoryShape({ exists, readText, listFiles, env = {} }) {
   for (const forbiddenPath of FORBIDDEN_PATHS) {
     if (
       exists(forbiddenPath) ||
-      files.some((file) => file === forbiddenPath || file.startsWith(forbiddenPath))
+      files.some(
+        (file) => file === forbiddenPath || file.startsWith(forbiddenPath),
+      )
     ) {
       messages.push(`Remove stale monorepo/mobile path: ${forbiddenPath}`);
     }
+  }
+
+  if (exists("middleware.ts") || exists("middleware.js")) {
+    messages.push(
+      "Use Next proxy.ts convention instead of deprecated middleware.ts",
+    );
   }
 
   if (exists("package.json")) {
@@ -72,7 +81,9 @@ function checkRepositoryShape({ exists, readText, listFiles, env = {} }) {
       }
 
       const scripts = packageJson.scripts ?? {};
-      for (const [scriptName, expectedCommand] of Object.entries(REQUIRED_SCRIPTS)) {
+      for (const [scriptName, expectedCommand] of Object.entries(
+        REQUIRED_SCRIPTS,
+      )) {
         if (scripts[scriptName] !== expectedCommand) {
           messages.push(
             `package.json script "${scriptName}" must be "${expectedCommand}"`,
@@ -81,8 +92,14 @@ function checkRepositoryShape({ exists, readText, listFiles, env = {} }) {
       }
 
       for (const [scriptName, scriptCommand] of Object.entries(scripts)) {
-        if (/mobile|dev:web|build:turbo|turbo/.test(`${scriptName} ${scriptCommand}`)) {
-          messages.push(`Remove stale script "${scriptName}" containing mobile/Turbo/web-workspace plumbing`);
+        if (
+          /mobile|dev:web|build:turbo|turbo/.test(
+            `${scriptName} ${scriptCommand}`,
+          )
+        ) {
+          messages.push(
+            `Remove stale script "${scriptName}" containing mobile/Turbo/web-workspace plumbing`,
+          );
         }
       }
 
@@ -128,7 +145,10 @@ function checkRepositoryShape({ exists, readText, listFiles, env = {} }) {
       continue;
     }
 
-    if (file === "scripts/check-root-web-app.js" || file === "test-root-web-doctor.js") {
+    if (
+      file === "scripts/check-root-web-app.js" ||
+      file === "test-root-web-doctor.js"
+    ) {
       continue;
     }
 
@@ -147,7 +167,9 @@ function listRepoFiles(root) {
   function walk(relativeDir) {
     const absoluteDir = path.join(root, relativeDir);
     for (const entry of fs.readdirSync(absoluteDir, { withFileTypes: true })) {
-      const relativePath = path.join(relativeDir, entry.name).replaceAll(path.sep, "/");
+      const relativePath = path
+        .join(relativeDir, entry.name)
+        .replaceAll(path.sep, "/");
       if (
         entry.name === ".git" ||
         entry.name === "node_modules" ||
@@ -173,7 +195,8 @@ function runCli() {
   const root = process.cwd();
   const result = checkRepositoryShape({
     exists: (relativePath) => fs.existsSync(path.join(root, relativePath)),
-    readText: (relativePath) => fs.readFileSync(path.join(root, relativePath), "utf8"),
+    readText: (relativePath) =>
+      fs.readFileSync(path.join(root, relativePath), "utf8"),
     listFiles: () => listRepoFiles(root),
     env: process.env,
   });

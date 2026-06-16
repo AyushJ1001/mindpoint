@@ -4,6 +4,109 @@ import {
   buildLoyaltySearchFields,
   loyaltySearchFieldsChanged,
 } from "./loyaltySearch";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+} from "./_shared/result";
+
+const redeemPointsErrorValidator = v.object({
+  _tag: v.literal("ConvexResultError"),
+  code: v.union(
+    v.literal(convexResultErrorCode.INSUFFICIENT_POINTS),
+    v.literal(convexResultErrorCode.INVALID_POINTS_REQUIREMENT),
+    v.literal(convexResultErrorCode.POINTS_ACCOUNT_NOT_FOUND),
+    v.literal(convexResultErrorCode.POINTS_RECORD_NOT_FOUND),
+  ),
+  message: v.string(),
+});
+
+const redeemPointsResultValidator = v.union(
+  v.object({
+    _tag: v.literal("Failure"),
+    error: redeemPointsErrorValidator,
+    success: v.literal(false),
+  }),
+  v.object({
+    _tag: v.literal("Success"),
+    couponCode: v.string(),
+    couponId: v.id("coupons"),
+    newBalance: v.number(),
+    success: v.literal(true),
+  }),
+);
+
+const validateCouponErrorValidator = v.object({
+  _tag: v.literal("ConvexResultError"),
+  code: v.union(
+    v.literal(convexResultErrorCode.COUPON_ALREADY_USED),
+    v.literal(convexResultErrorCode.FORBIDDEN),
+    v.literal(convexResultErrorCode.INVALID_COUPON_CODE),
+  ),
+  message: v.string(),
+});
+
+const validateCouponResultValidator = v.union(
+  v.object({
+    _tag: v.literal("Failure"),
+    error: validateCouponErrorValidator,
+    success: v.literal(false),
+  }),
+  v.object({
+    _tag: v.literal("Success"),
+    coupon: v.object({
+      code: v.string(),
+      courseType: v.string(),
+      discount: v.number(),
+      pointsCost: v.number(),
+    }),
+    success: v.literal(true),
+  }),
+);
+
+const markCouponUsedErrorValidator = v.object({
+  _tag: v.literal("ConvexResultError"),
+  code: v.union(
+    v.literal(convexResultErrorCode.COUPON_ALREADY_USED),
+    v.literal(convexResultErrorCode.COUPON_NOT_FOUND),
+    v.literal(convexResultErrorCode.FORBIDDEN),
+  ),
+  message: v.string(),
+});
+
+const markCouponUsedResultValidator = v.union(
+  v.object({
+    _tag: v.literal("Failure"),
+    error: markCouponUsedErrorValidator,
+    success: v.literal(false),
+  }),
+  v.object({
+    _tag: v.literal("Success"),
+    success: v.literal(true),
+  }),
+);
+
+const awardPointsErrorValidator = v.object({
+  _tag: v.literal("ConvexResultError"),
+  code: v.union(
+    v.literal(convexResultErrorCode.POINTS_RECORD_NOT_FOUND),
+    v.literal(convexResultErrorCode.VALIDATION_ERROR),
+  ),
+  message: v.string(),
+});
+
+const awardPointsResultValidator = v.union(
+  v.object({
+    _tag: v.literal("Failure"),
+    error: awardPointsErrorValidator,
+    success: v.literal(false),
+  }),
+  v.object({
+    _tag: v.literal("Success"),
+    newBalance: v.number(),
+    success: v.literal(true),
+  }),
+);
 
 /**
  * Get user's current Mind Points balance and summary
@@ -127,14 +230,13 @@ export const awardPoints = internalMutation({
     description: v.string(),
     enrollmentId: v.optional(v.id("enrollments")),
   },
-  returns: v.object({
-    success: v.boolean(),
-    newBalance: v.optional(v.number()),
-    error: v.optional(v.string()),
-  }),
+  returns: awardPointsResultValidator,
   handler: async (ctx, args) => {
     if (args.points <= 0) {
-      return { success: false, error: "Points must be greater than 0" };
+      return convexFailure({
+        code: convexResultErrorCode.VALIDATION_ERROR,
+        message: "Points must be greater than 0",
+      });
     }
 
     const enrollment = args.enrollmentId
@@ -189,13 +291,16 @@ export const awardPoints = internalMutation({
         createdAt: Date.now(),
       });
 
-      return { success: true, newBalance: args.points };
+      return convexSuccess({ newBalance: args.points });
     }
 
     // Atomic update: reload the record immediately before updating to prevent race conditions
     const currentRecord = await ctx.db.get(pointsRecord._id);
     if (!currentRecord) {
-      return { success: false, error: "Points record not found" };
+      return convexFailure({
+        code: convexResultErrorCode.POINTS_RECORD_NOT_FOUND,
+        message: "Points record not found",
+      });
     }
 
     const newBalance = currentRecord.balance + args.points;
@@ -225,7 +330,7 @@ export const awardPoints = internalMutation({
       createdAt: Date.now(),
     });
 
-    return { success: true, newBalance };
+    return convexSuccess({ newBalance });
   },
 });
 
@@ -237,13 +342,7 @@ export const redeemPoints = mutation({
     courseType: v.string(),
     pointsRequired: v.number(),
   },
-  returns: v.object({
-    success: v.boolean(),
-    couponCode: v.optional(v.string()),
-    couponId: v.optional(v.id("coupons")),
-    newBalance: v.optional(v.number()),
-    error: v.optional(v.string()),
-  }),
+  returns: redeemPointsResultValidator,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -253,7 +352,10 @@ export const redeemPoints = mutation({
     const clerkUserId = identity.subject;
 
     if (args.pointsRequired <= 0) {
-      return { success: false, error: "Invalid points requirement" };
+      return convexFailure({
+        code: convexResultErrorCode.INVALID_POINTS_REQUIREMENT,
+        message: "Invalid points requirement",
+      });
     }
 
     // Get user's points balance - reload immediately before checking to prevent race conditions
@@ -263,21 +365,27 @@ export const redeemPoints = mutation({
       .first();
 
     if (!pointsRecord) {
-      return { success: false, error: "No points account found" };
+      return convexFailure({
+        code: convexResultErrorCode.POINTS_ACCOUNT_NOT_FOUND,
+        message: "No points account found",
+      });
     }
 
     // Reload the record immediately before updating to ensure we have the latest balance
     const currentRecord = await ctx.db.get(pointsRecord._id);
     if (!currentRecord) {
-      return { success: false, error: "Points record not found" };
+      return convexFailure({
+        code: convexResultErrorCode.POINTS_RECORD_NOT_FOUND,
+        message: "Points record not found",
+      });
     }
 
     // Check balance with the freshly loaded record
     if (currentRecord.balance < args.pointsRequired) {
-      return {
-        success: false,
-        error: `Insufficient points. You have ${currentRecord.balance} points, but need ${args.pointsRequired}`,
-      };
+      return convexFailure({
+        code: convexResultErrorCode.INSUFFICIENT_POINTS,
+        message: `Insufficient points. You have ${currentRecord.balance} points, but need ${args.pointsRequired}`,
+      });
     }
 
     // Generate unique coupon code using crypto.randomUUID() for better uniqueness
@@ -315,12 +423,11 @@ export const redeemPoints = mutation({
       createdAt: Date.now(),
     });
 
-    return {
-      success: true,
+    return convexSuccess({
       couponCode,
       couponId,
       newBalance,
-    };
+    });
   },
 });
 
@@ -331,21 +438,7 @@ export const validateCoupon = query({
   args: {
     code: v.string(),
   },
-  returns: v.union(
-    v.object({
-      valid: v.literal(false),
-      error: v.string(),
-    }),
-    v.object({
-      valid: v.literal(true),
-      coupon: v.object({
-        code: v.string(),
-        courseType: v.string(),
-        discount: v.number(),
-        pointsCost: v.number(),
-      }),
-    }),
-  ),
+  returns: validateCouponResultValidator,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -358,32 +451,34 @@ export const validateCoupon = query({
       .first();
 
     if (!coupon) {
-      return { valid: false as const, error: "Invalid coupon code" };
+      return convexFailure({
+        code: convexResultErrorCode.INVALID_COUPON_CODE,
+        message: "Invalid coupon code",
+      });
     }
 
     if (coupon.isUsed) {
-      return {
-        valid: false as const,
-        error: "This coupon has already been used",
-      };
+      return convexFailure({
+        code: convexResultErrorCode.COUPON_ALREADY_USED,
+        message: "This coupon has already been used",
+      });
     }
 
     if (coupon.clerkUserId !== identity.subject) {
-      return {
-        valid: false as const,
-        error: "This coupon does not belong to your account",
-      };
+      return convexFailure({
+        code: convexResultErrorCode.FORBIDDEN,
+        message: "This coupon does not belong to your account",
+      });
     }
 
-    return {
-      valid: true as const,
+    return convexSuccess({
       coupon: {
         code: coupon.code,
         courseType: coupon.courseType,
         discount: coupon.discount,
         pointsCost: coupon.pointsCost,
       },
-    };
+    });
   },
 });
 
@@ -394,10 +489,7 @@ export const markCouponUsed = mutation({
   args: {
     couponCode: v.string(),
   },
-  returns: v.object({
-    success: v.boolean(),
-    error: v.optional(v.string()),
-  }),
+  returns: markCouponUsedResultValidator,
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
@@ -410,18 +502,24 @@ export const markCouponUsed = mutation({
       .first();
 
     if (!coupon) {
-      return { success: false, error: "Coupon not found" };
+      return convexFailure({
+        code: convexResultErrorCode.COUPON_NOT_FOUND,
+        message: "Coupon not found",
+      });
     }
 
     if (coupon.isUsed) {
-      return { success: false, error: "Coupon already used" };
+      return convexFailure({
+        code: convexResultErrorCode.COUPON_ALREADY_USED,
+        message: "Coupon already used",
+      });
     }
 
     if (coupon.clerkUserId !== identity.subject) {
-      return {
-        success: false,
-        error: "Coupon does not belong to your account",
-      };
+      return convexFailure({
+        code: convexResultErrorCode.FORBIDDEN,
+        message: "Coupon does not belong to your account",
+      });
     }
 
     await ctx.db.patch(coupon._id, {
@@ -429,7 +527,7 @@ export const markCouponUsed = mutation({
       usedAt: Date.now(),
     });
 
-    return { success: true };
+    return convexSuccess({});
   },
 });
 

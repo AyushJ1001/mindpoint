@@ -65,13 +65,16 @@ export function MindPointsTab() {
         pointsRequired,
       });
 
-      if (result.success) {
-        toast.success(
-          `Successfully redeemed ${pointsRequired} points! Your coupon code is: ${result.couponCode}`,
-        );
-        setSelectedRedemption(null);
-      } else {
-        toast.error(result.error || "Failed to redeem points");
+      switch (result._tag) {
+        case "Success":
+          toast.success(
+            `Successfully redeemed ${pointsRequired} points! Your coupon code is: ${result.couponCode}`,
+          );
+          setSelectedRedemption(null);
+          break;
+        case "Failure":
+          toast.error(result.error.message);
+          break;
       }
     } catch (error) {
       toast.error("An error occurred while redeeming points");

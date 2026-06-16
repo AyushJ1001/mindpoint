@@ -3,6 +3,12 @@ import { mutation, query } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+  type ConvexFailure,
+} from "./_shared/result";
 
 const MAX_ELIGIBLE_COURSES = 500;
 
@@ -32,78 +38,122 @@ type BundleCampaignInput = {
   endDate?: string;
 };
 
+type AdminBundleFailure = ConvexFailure<
+  "CONFLICT" | "NOT_FOUND" | "VALIDATION_ERROR"
+>;
+
+type ValidBundleCampaign = {
+  name: string;
+  description?: string;
+  flatFee: number;
+  requiredCourseCountMin: number;
+  requiredCourseCountMax: number;
+  eligibleCourseIds: Id<"courses">[];
+  priority: number;
+  enabled: boolean;
+  startDate?: string;
+  endDate?: string;
+};
+
+function adminBundleFailure(
+  message: string,
+  code:
+    | "CONFLICT"
+    | "NOT_FOUND"
+    | "VALIDATION_ERROR" = convexResultErrorCode.VALIDATION_ERROR,
+): AdminBundleFailure {
+  return convexFailure({ code, message });
+}
+
 function normalizeString(value?: string | null) {
   const normalized = value?.trim();
   return normalized ? normalized : undefined;
 }
 
-function toInteger(value: number, field: string) {
+function toInteger(value: number, field: string): number | AdminBundleFailure {
   if (!Number.isFinite(value) || !Number.isInteger(value)) {
-    throw new Error(`${field} must be an integer`);
+    return adminBundleFailure(`${field} must be an integer`);
   }
 
   return value;
 }
 
-function assertValidBundleCampaign(input: BundleCampaignInput) {
+function normalizeBundleCampaign(
+  input: BundleCampaignInput,
+): AdminBundleFailure | ValidBundleCampaign {
   const name = normalizeString(input.name);
   if (!name) {
-    throw new Error("Campaign name is required");
+    return adminBundleFailure("Campaign name is required");
   }
 
   const flatFee = Math.round(input.flatFee);
   if (!Number.isFinite(flatFee) || flatFee <= 0) {
-    throw new Error("Flat fee must be greater than 0");
+    return adminBundleFailure("Flat fee must be greater than 0");
   }
 
   const minCount = toInteger(
     Math.round(input.requiredCourseCountMin),
     "Minimum course count",
   );
+  if (typeof minCount !== "number") {
+    return minCount;
+  }
+
   const maxCount = toInteger(
     Math.round(input.requiredCourseCountMax),
     "Maximum course count",
   );
+  if (typeof maxCount !== "number") {
+    return maxCount;
+  }
+
   if (minCount < 1) {
-    throw new Error("Minimum course count must be at least 1");
+    return adminBundleFailure("Minimum course count must be at least 1");
   }
   if (maxCount < minCount) {
-    throw new Error("Maximum course count must be greater than or equal to minimum course count");
+    return adminBundleFailure(
+      "Maximum course count must be greater than or equal to minimum course count",
+    );
   }
 
   const uniqueEligibleCourseIds = Array.from(
     new Set(input.eligibleCourseIds.map((courseId) => String(courseId))),
   ).map((courseId) => courseId as Id<"courses">);
   if (uniqueEligibleCourseIds.length === 0) {
-    throw new Error("Select at least one eligible course");
+    return adminBundleFailure("Select at least one eligible course");
   }
   if (uniqueEligibleCourseIds.length > MAX_ELIGIBLE_COURSES) {
-    throw new Error(
+    return adminBundleFailure(
       `Cannot target more than ${MAX_ELIGIBLE_COURSES} courses in one bundle campaign`,
     );
   }
   if (maxCount > uniqueEligibleCourseIds.length) {
-    throw new Error("Maximum course count cannot exceed the number of eligible courses");
+    return adminBundleFailure(
+      "Maximum course count cannot exceed the number of eligible courses",
+    );
   }
 
-  toInteger(Math.round(input.priority), "Priority");
+  const priority = toInteger(Math.round(input.priority), "Priority");
+  if (typeof priority !== "number") {
+    return priority;
+  }
 
   const startTimestamp = input.startDate
     ? new Date(input.startDate).getTime()
     : null;
   const endTimestamp = input.endDate ? new Date(input.endDate).getTime() : null;
   if (startTimestamp !== null && Number.isNaN(startTimestamp)) {
-    throw new Error("Start date is invalid");
+    return adminBundleFailure("Start date is invalid");
   }
   if (endTimestamp !== null && Number.isNaN(endTimestamp)) {
-    throw new Error("End date is invalid");
+    return adminBundleFailure("End date is invalid");
   }
   if (
     startTimestamp !== null &&
     endTimestamp !== null &&
     startTimestamp > endTimestamp
   ) {
-    throw new Error("End date must be on or after the start date");
+    return adminBundleFailure("End date must be on or after the start date");
   }
 
   return {
@@ -113,7 +163,7 @@ function assertValidBundleCampaign(input: BundleCampaignInput) {
     requiredCourseCountMin: minCount,
     requiredCourseCountMax: maxCount,
     eligibleCourseIds: uniqueEligibleCourseIds,
-    priority: Math.round(input.priority),
+    priority,
     enabled: input.enabled,
     startDate: input.startDate || undefined,
     endDate: input.endDate || undefined,
@@ -179,15 +229,24 @@ export const saveBundleCampaign = mutation({
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
     const now = Date.now();
-    const normalized = assertValidBundleCampaign(args);
+    const normalized = normalizeBundleCampaign(args);
+    if ("_tag" in normalized) {
+      return normalized;
+    }
 
     if (args.campaignId) {
       const existing = await ctx.db.get(args.campaignId);
       if (!existing) {
-        throw new Error("Bundle campaign not found");
+        return adminBundleFailure(
+          "Bundle campaign not found",
+          convexResultErrorCode.NOT_FOUND,
+        );
       }
       if (existing.isArchived && normalized.enabled) {
-        throw new Error("Archived campaigns must be restored before they can be enabled");
+        return adminBundleFailure(
+          "Archived campaigns must be restored before they can be enabled",
+          convexResultErrorCode.CONFLICT,
+        );
       }
 
       await ctx.db.patch(args.campaignId, {
@@ -196,6 +255,12 @@ export const saveBundleCampaign = mutation({
         updatedByAdminId: admin.userId,
       });
       const updated = await ctx.db.get(args.campaignId);
+      if (!updated) {
+        return adminBundleFailure(
+          "Bundle campaign could not be reloaded",
+          convexResultErrorCode.NOT_FOUND,
+        );
+      }
 
       await createAdminAuditLog(ctx, {
         actorAdminId: admin.userId,
@@ -207,7 +272,7 @@ export const saveBundleCampaign = mutation({
         after: updated,
       });
 
-      return updated;
+      return convexSuccess({ campaign: updated });
     }
 
     const campaignId = await ctx.db.insert("bundleCampaigns", {
@@ -219,6 +284,12 @@ export const saveBundleCampaign = mutation({
       updatedByAdminId: admin.userId,
     });
     const created = await ctx.db.get(campaignId);
+    if (!created) {
+      return adminBundleFailure(
+        "Bundle campaign could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -229,7 +300,7 @@ export const saveBundleCampaign = mutation({
       after: created,
     });
 
-    return created;
+    return convexSuccess({ campaign: created });
   },
 });
 
@@ -243,7 +314,10 @@ export const setBundleCampaignArchived = mutation({
     const existing = await ctx.db.get(args.campaignId);
 
     if (!existing) {
-      throw new Error("Bundle campaign not found");
+      return adminBundleFailure(
+        "Bundle campaign not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     await ctx.db.patch(args.campaignId, {
@@ -253,6 +327,12 @@ export const setBundleCampaignArchived = mutation({
       updatedByAdminId: admin.userId,
     });
     const updated = await ctx.db.get(args.campaignId);
+    if (!updated) {
+      return adminBundleFailure(
+        "Bundle campaign could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -266,7 +346,7 @@ export const setBundleCampaignArchived = mutation({
       after: updated,
     });
 
-    return updated;
+    return convexSuccess({ campaign: updated });
   },
 });
 
@@ -280,10 +360,16 @@ export const setBundleCampaignEnabled = mutation({
     const existing = await ctx.db.get(args.campaignId);
 
     if (!existing) {
-      throw new Error("Bundle campaign not found");
+      return adminBundleFailure(
+        "Bundle campaign not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
     if (existing.isArchived && args.enabled) {
-      throw new Error("Archived campaigns must be restored before they can be enabled");
+      return adminBundleFailure(
+        "Archived campaigns must be restored before they can be enabled",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     await ctx.db.patch(args.campaignId, {
@@ -292,6 +378,12 @@ export const setBundleCampaignEnabled = mutation({
       updatedByAdminId: admin.userId,
     });
     const updated = await ctx.db.get(args.campaignId);
+    if (!updated) {
+      return adminBundleFailure(
+        "Bundle campaign could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -305,6 +397,6 @@ export const setBundleCampaignEnabled = mutation({
       after: updated,
     });
 
-    return updated;
+    return convexSuccess({ campaign: updated });
   },
 });

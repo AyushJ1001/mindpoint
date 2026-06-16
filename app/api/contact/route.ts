@@ -1,32 +1,20 @@
-import { NextResponse } from "next/server";
-import { sendContactMessage } from "@/lib/services/contact.server";
-import { ZodError } from "zod";
+import { parseJsonEffect, runApiEffect } from "@/lib/effect";
+import { contactFormSchema } from "@/lib/domain/forms";
+import { sendContactMessageEffect } from "@/lib/services/contact.server";
 import { withStrictRateLimit } from "@/lib/with-rate-limit";
+import { Effect } from "effect";
+import type { NextRequest } from "next/server";
+import type { z } from "zod";
 
-async function handleContact(req: Request) {
-  try {
-    const result = await sendContactMessage(await req.json());
-    return NextResponse.json(result);
-  } catch (error) {
-    if (error instanceof ZodError) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: error.issues[0]?.message ?? "Invalid input.",
-        },
-        { status: 400 },
-      );
-    }
+type ContactMessageInput = z.input<typeof contactFormSchema>;
 
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error ? error.message : "Error sending message.",
-      },
-      { status: 500 },
-    );
-  }
+async function handleContact(req: NextRequest) {
+  return runApiEffect(
+    Effect.gen(function* () {
+      const body = yield* parseJsonEffect<ContactMessageInput>(req);
+      return yield* sendContactMessageEffect(body);
+    }),
+  );
 }
 
 export const POST = withStrictRateLimit(handleContact);

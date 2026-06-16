@@ -1,13 +1,13 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 import { isClerkServerConfigured } from "@/lib/config/server";
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse, NextRequest, type NextFetchEvent } from "next/server";
 import { isAdminDevBypassEnabled } from "@/lib/admin-dev-bypass";
 
 const isProtectedRoute = createRouteMatcher(["/server"]);
 const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
-// Only use Clerk middleware if keys are available
-const middleware = isClerkServerConfigured()
+// Only use Clerk auth handling if keys are available.
+const proxyHandler = isClerkServerConfigured()
   ? clerkMiddleware(async (auth, req) => {
       // Handle redirects for legacy routes
       if (req.nextUrl.pathname === "/terms") {
@@ -20,7 +20,7 @@ const middleware = isClerkServerConfigured()
       }
     })
   : (req: NextRequest) => {
-      // Fallback middleware when Clerk keys are not available
+      // Fallback proxy behavior when Clerk keys are not available.
       if (req.nextUrl.pathname === "/terms") {
         return NextResponse.redirect(new URL("/toc", req.url));
       }
@@ -33,7 +33,9 @@ const middleware = isClerkServerConfigured()
       return NextResponse.next();
     };
 
-export default middleware;
+export function proxy(req: NextRequest, event: NextFetchEvent) {
+  return proxyHandler(req, event);
+}
 
 export const config = {
   matcher: [

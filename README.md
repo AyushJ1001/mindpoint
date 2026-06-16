@@ -108,10 +108,9 @@ The Mind Point is a full-stack e-commerce platform for mental health education, 
 
 ### Analytics
 
-| Technology                                       | Purpose           |
-| ------------------------------------------------ | ----------------- |
-| [PostHog](https://posthog.com/)                  | Product analytics |
-| [Vercel Analytics](https://vercel.com/analytics) | Web analytics     |
+| Technology                                       | Purpose       |
+| ------------------------------------------------ | ------------- |
+| [Vercel Analytics](https://vercel.com/analytics) | Web analytics |
 
 ### External Integrations
 
@@ -216,8 +215,6 @@ Create a `.env.local` file with the following variables:
 | `GOOGLE_APPLICATION_CREDENTIALS_JSON` | Google service account JSON (stringified)     |
 | `GOOGLE_SHEETS_SPREADSHEET_ID`        | Target Google Sheets spreadsheet ID           |
 | `GOOGLE_SHEETS_SHEET_NAME`            | Sheet name (defaults to "Sheet1")             |
-| `NEXT_PUBLIC_POSTHOG_KEY`             | PostHog project API key                       |
-| `NEXT_PUBLIC_POSTHOG_HOST`            | PostHog host URL                              |
 | `CLERK_SKIP_KEY_VALIDATION`           | Set to `true` for builds without Clerk keys   |
 | `UPLOADTHING_SECRET`                  | UploadThing server secret for admin uploads   |
 | `UPLOADTHING_TOKEN`                   | UploadThing token (if required by your setup) |
@@ -248,18 +245,18 @@ Before anyone can use `/admin`, seed at least one active admin record in product
 
 ## Available Scripts
 
-| Command                     | Description                                      |
-| --------------------------- | ------------------------------------------------ |
-| `npm run dev`               | Start the Next.js dev server                      |
-| `npm run build`             | Create production build                          |
-| `npm start`                 | Start production server                          |
-| `npm run lint`              | Run ESLint                                       |
-| `npm run type-check`        | Run Next.js app TypeScript type checking         |
-| `npm run type-check:convex` | Run Convex TypeScript type checking              |
-| `npm run dev:convex`        | Start Convex dev sync                            |
-| `npm run doctor`            | Check for stale workspace/mobile artifacts       |
-| `npm run test:email`        | Test email functionality                         |
-| `npm run test:email:direct` | Test direct email sending                        |
+| Command                     | Description                                |
+| --------------------------- | ------------------------------------------ |
+| `npm run dev`               | Start the Next.js dev server               |
+| `npm run build`             | Create production build                    |
+| `npm start`                 | Start production server                    |
+| `npm run lint`              | Run ESLint                                 |
+| `npm run type-check`        | Run Next.js app TypeScript type checking   |
+| `npm run type-check:convex` | Run Convex TypeScript type checking        |
+| `npm run dev:convex`        | Start Convex dev sync                      |
+| `npm run doctor`            | Check for stale workspace/mobile artifacts |
+| `npm run test:email`        | Test email functionality                   |
+| `npm run test:email:direct` | Test direct email sending                  |
 
 ---
 

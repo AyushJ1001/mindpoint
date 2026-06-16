@@ -38,6 +38,7 @@ const validFiles = {
   "package.json": validPackage,
   "tsconfig.json": JSON.stringify({ compilerOptions: {}, include: [] }),
   "next.config.ts": "export default {};",
+  "proxy.ts": "export function proxy() { return null; }",
   "vercel.json": JSON.stringify({
     buildCommand: "NEXT_TELEMETRY_DISABLED=1 npm run build",
     outputDirectory: ".next",
@@ -84,5 +85,13 @@ assert.match(failing.messages.join("\n"), /turbo/);
 assert.match(failing.messages.join("\n"), /@mindpoint/);
 assert.match(failing.messages.join("\n"), /server-only/);
 assert.match(failing.messages.join("\n"), /Vercel/);
+
+const deprecatedMiddleware = runCase("deprecated middleware convention", {
+  ...validFiles,
+  "middleware.ts": "export default function middleware() {}",
+});
+
+assert.equal(deprecatedMiddleware.ok, false);
+assert.match(deprecatedMiddleware.messages.join("\n"), /proxy\.ts/);
 
 console.log("root web doctor tests passed");

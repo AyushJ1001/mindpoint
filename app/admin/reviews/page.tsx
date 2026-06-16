@@ -32,7 +32,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { getUserFacingErrorMessage } from "@/lib/convex-error";
+import {
+  assertConvexSuccess,
+  getUserFacingErrorMessage,
+} from "@/lib/convex-error";
 
 export const dynamic = "force-dynamic";
 
@@ -156,10 +159,9 @@ function AdminReviewsPageInner() {
     setFormState({
       courseId: String(review.course),
       userName: review.userName,
-      userId:
-        (review.userId ?? "").startsWith("admin-managed:")
-          ? ""
-          : (review.userId ?? ""),
+      userId: (review.userId ?? "").startsWith("admin-managed:")
+        ? ""
+        : (review.userId ?? ""),
       rating: String(review.rating),
       content: review.content,
     });
@@ -201,23 +203,29 @@ function AdminReviewsPageInner() {
       setIsSaving(true);
 
       if (editingReview) {
-        await updateReview({
-          reviewId: editingReview._id,
-          courseId: selectedFormCourseId,
-          userName: formState.userName,
-          userId: formState.userId,
-          rating: numericRating,
-          content: formState.content,
-        });
+        assertConvexSuccess(
+          await updateReview({
+            reviewId: editingReview._id,
+            courseId: selectedFormCourseId,
+            userName: formState.userName,
+            userId: formState.userId,
+            rating: numericRating,
+            content: formState.content,
+          }),
+          "Failed to update review",
+        );
         toast.success("Review updated");
       } else {
-        await createReview({
-          courseId: selectedFormCourseId,
-          userName: formState.userName,
-          userId: formState.userId || undefined,
-          rating: numericRating,
-          content: formState.content,
-        });
+        assertConvexSuccess(
+          await createReview({
+            courseId: selectedFormCourseId,
+            userName: formState.userName,
+            userId: formState.userId || undefined,
+            rating: numericRating,
+            content: formState.content,
+          }),
+          "Failed to create review",
+        );
         toast.success("Review created");
       }
 
@@ -237,7 +245,10 @@ function AdminReviewsPageInner() {
 
     try {
       setIsDeleting(true);
-      await deleteReview({ reviewId: deleteReviewId });
+      assertConvexSuccess(
+        await deleteReview({ reviewId: deleteReviewId }),
+        "Failed to delete review",
+      );
       toast.success("Review deleted");
       setDeleteReviewId(null);
     } catch (error) {
