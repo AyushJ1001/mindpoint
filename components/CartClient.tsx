@@ -4,18 +4,21 @@ import type { Id } from "@/lib/backend/data-model";
 import { buildCartItemId } from "@/lib/domain/cart";
 import { REFERRAL_COOKIE_KEY } from "@/lib/domain/referrals";
 import { evaluateBundleCampaigns } from "@/lib/domain/bundles";
-import { requestPaymentOrder } from "@/lib/services/payments";
+import {
+  requestPaymentOrder,
+  type CheckoutReconciliationPayload,
+  type PaymentSession,
+} from "@/lib/services/payments";
+import { HttpJsonError } from "@/lib/services/http";
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
-import { useRazorpay, RazorpayOrderOptions } from "react-razorpay";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Trash2,
   ShoppingCart,
-  CreditCard,
   Plus,
   Minus,
   Sparkles,
@@ -23,6 +26,7 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
+  QrCode,
 } from "lucide-react";
 import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/nextjs";
@@ -178,6 +182,30 @@ const getCartLineKey = (item: {
       )
     : String(item.id);
 
+function getCheckoutReconciliationFromError(
+  error: unknown,
+): CheckoutReconciliationPayload | null {
+  if (!(error instanceof HttpJsonError)) {
+    return null;
+  }
+
+  const payload = error.payload;
+  if (
+    !payload ||
+    typeof payload !== "object" ||
+    !("reconciliation" in payload)
+  ) {
+    return null;
+  }
+
+  const reconciliation = payload.reconciliation;
+  if (!reconciliation || typeof reconciliation !== "object") {
+    return null;
+  }
+
+  return reconciliation as CheckoutReconciliationPayload;
+}
+
 const CartContent = () => {
   const {
     items,
@@ -192,6 +220,14 @@ const CartContent = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
+  const [showQrPaymentDialog, setShowQrPaymentDialog] = useState(false);
+  const [qrImageAvailable, setQrImageAvailable] = useState(true);
+  const [qrPaymentSession, setQrPaymentSession] =
+    useState<PaymentSession | null>(null);
+  const [upiTransactionReference, setUpiTransactionReference] = useState("");
+  const [pendingQrWhatsAppNumber, setPendingQrWhatsAppNumber] = useState<
+    string | undefined
+  >();
   const [pendingCheckout, setPendingCheckout] = useState(false);
   const [cartReviewRequired, setCartReviewRequired] = useState(false);
   const [cartSyncNotice, setCartSyncNotice] = useState<string | null>(null);
@@ -205,7 +241,6 @@ const CartContent = () => {
     courseType: string;
     pointsCost: number;
   } | null>(null);
-  const { Razorpay, isLoading } = useRazorpay();
   const { user, isLoaded: isUserLoaded } = useUser();
   const { openSignIn } = useClerk();
   const { isAuthenticated } = useConvexAuth();
@@ -557,6 +592,67 @@ const CartContent = () => {
       : "skip",
   );
 
+  const applyCheckoutReconciliation = useCallback(
+    (reconciliation: CheckoutReconciliationPayload) => {
+      if (!reconciliation.status || reconciliation.status === "valid") {
+        return false;
+      }
+
+      const signature = JSON.stringify({
+        removedItems: reconciliation.removedItems,
+        updatedItems: reconciliation.updatedItems,
+        totalAmountPaid: reconciliation.totalAmountPaid,
+      });
+      if (signature === lastReconciliationSignature) {
+        return true;
+      }
+      setLastReconciliationSignature(signature);
+
+      const couponRejected = (reconciliation.updatedItems ?? []).some(
+        (updated) =>
+          updated.reasons.some((reason) => reason.startsWith("COUPON_")),
+      );
+      if (couponRejected) {
+        setAppliedCoupon(null);
+        setCouponCode("");
+      }
+
+      for (const reconciledItem of reconciliation.items ?? []) {
+        const changed = (reconciliation.updatedItems ?? []).some(
+          (updated) => updated.cartItemId === reconciledItem.cartItemId,
+        );
+        if (!changed) {
+          continue;
+        }
+
+        const payload: Record<string, unknown> = {
+          price: reconciledItem.checkoutPrice,
+          originalPrice: reconciledItem.listedPrice,
+        };
+        if (!reconciledItem.selectedFreeCourseId) {
+          payload.selectedFreeCourse = undefined;
+        }
+
+        updateItem(reconciledItem.cartItemId, payload);
+      }
+
+      const removedCount = reconciliation.removedItems?.length ?? 0;
+      const updatedCount = reconciliation.updatedItems?.length ?? 0;
+      const notice =
+        removedCount > 0
+          ? `${removedCount} item${removedCount === 1 ? "" : "s"} need${removedCount === 1 ? "s" : ""} review because pricing or availability changed.`
+          : `${updatedCount} item${updatedCount === 1 ? "" : "s"} updated because pricing or availability changed.`;
+      setCartSyncNotice(notice);
+      setCartReviewRequired(true);
+      toast.info(
+        "Your cart was updated because pricing or availability changed.",
+      );
+
+      return true;
+    },
+    [lastReconciliationSignature, updateItem],
+  );
+
   useEffect(() => {
     const handleFocus = () => {
       setReconciliationRequestedAt(Date.now());
@@ -567,60 +663,10 @@ const CartContent = () => {
   }, []);
 
   useEffect(() => {
-    if (!cartReconciliation || cartReconciliation.status === "valid") {
-      return;
+    if (cartReconciliation) {
+      applyCheckoutReconciliation(cartReconciliation);
     }
-
-    const signature = JSON.stringify({
-      removedItems: cartReconciliation.removedItems,
-      updatedItems: cartReconciliation.updatedItems,
-      totalAmountPaid: cartReconciliation.totalAmountPaid,
-    });
-    if (signature === lastReconciliationSignature) {
-      return;
-    }
-    setLastReconciliationSignature(signature);
-
-    const couponRejected = (cartReconciliation.updatedItems ?? []).some(
-      (updated) =>
-        updated.reasons.some((reason) => reason.startsWith("COUPON_")),
-    );
-    if (couponRejected) {
-      setAppliedCoupon(null);
-      setCouponCode("");
-    }
-
-    for (const reconciledItem of cartReconciliation.items ?? []) {
-      const changed = (cartReconciliation.updatedItems ?? []).some(
-        (updated) => updated.cartItemId === reconciledItem.cartItemId,
-      );
-      if (!changed) {
-        continue;
-      }
-
-      const payload: Record<string, unknown> = {
-        price: reconciledItem.checkoutPrice,
-        originalPrice: reconciledItem.listedPrice,
-      };
-      if (!reconciledItem.selectedFreeCourseId) {
-        payload.selectedFreeCourse = undefined;
-      }
-
-      updateItem(reconciledItem.cartItemId, payload);
-    }
-
-    const removedCount = cartReconciliation.removedItems?.length ?? 0;
-    const updatedCount = cartReconciliation.updatedItems?.length ?? 0;
-    const notice =
-      removedCount > 0
-        ? `${removedCount} item${removedCount === 1 ? "" : "s"} need${removedCount === 1 ? "s" : ""} review because pricing or availability changed.`
-        : `${updatedCount} item${updatedCount === 1 ? "" : "s"} updated because pricing or availability changed.`;
-    setCartSyncNotice(notice);
-    setCartReviewRequired(true);
-    toast.info(
-      "Your cart was updated because pricing or availability changed.",
-    );
-  }, [cartReconciliation, lastReconciliationSignature, removeItem, updateItem]);
+  }, [applyCheckoutReconciliation, cartReconciliation]);
   const listedCartTotal = useMemo(
     () =>
       items.reduce(
@@ -885,265 +931,76 @@ const CartContent = () => {
               : undefined,
         });
 
-        const options: RazorpayOrderOptions = {
-          key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID!,
-          amount: data.amount,
-          currency: data.currency as RazorpayOrderOptions["currency"],
-          name: "The Mind Point",
-          description: `Payment for ${items.length} course(s)`,
-          order_id: data.id,
-          handler: async (response: {
-            razorpay_order_id?: string;
-            razorpay_payment_id?: string;
-            razorpay_signature?: string;
-          }) => {
-            // Handle signed-in user
-            try {
-              await completeCheckoutEnrollment(whatsappNumber, {
-                checkoutAttemptId: data.checkoutAttemptId,
-                razorpayOrderId: response.razorpay_order_id ?? data.id,
-                razorpayPaymentId: response.razorpay_payment_id,
-                checkoutPricingOverride: data.reconciliation
-                  ?.checkoutPricing as typeof checkoutPricing | undefined,
-              });
-            } catch {
-              toast.error(
-                "Payment successful but enrollment failed. Please contact support.",
-              );
-            }
-
-            // Clear cart after successful payment
-            emptyCart();
-            setIsProcessing(false);
-          },
-          prefill: {
-            name: user?.fullName || "",
-            email: user?.primaryEmailAddress?.emailAddress || "",
-            contact: whatsappNumber || userProfile?.whatsappNumber || "",
-          },
-          theme: {
-            color: "#7C6F9B",
-          },
-        };
-
-        const rzp = new Razorpay(options);
-
-        // Add event handlers for payment modal
-        rzp.on("payment.failed", (response) => {
-          console.error("Payment failed:", response.error);
-          toast.error("Payment failed. Please try again.");
-          setIsProcessing(false);
-          if (modalCheckInterval) clearInterval(modalCheckInterval);
-          if (observer) observer.disconnect();
-        });
-
-        // Note: These event handlers are commented out as they may not be supported in the current version
-        // The payment success is handled in the main handler function above
-
-        // Add a timeout to reset processing state in case events don't fire
-        const timeoutId = setTimeout(() => {
-          console.log("Payment timeout - resetting processing state");
-          setIsProcessing(false);
-        }, 60000); // 1 minute timeout
-
-        // Clear timeout when payment is successful (handled in main handler)
-        const clearTimeoutAndCleanup = () => {
-          clearTimeout(timeoutId);
-          if (modalCheckInterval) clearInterval(modalCheckInterval);
-          if (observer) observer.disconnect();
-        };
-
-        // Monitor Razorpay modal state with comprehensive detection
-        let modalCheckInterval: NodeJS.Timeout;
-        let observer: MutationObserver;
-
-        const startModalMonitoring = () => {
-          console.log("Starting Razorpay modal monitoring...");
-
-          // More comprehensive selectors for Razorpay elements
-          const razorpaySelectors = [
-            "#razorpay-payment-button",
-            ".razorpay-container",
-            'iframe[src*="razorpay"]',
-            'iframe[src*="checkout"]',
-            '[id*="razorpay"]',
-            '[class*="razorpay"]',
-            ".razorpay-checkout",
-            "#razorpay-checkout",
-            'div[style*="position: fixed"][style*="z-index"]', // Common modal styling
-            'div[style*="position: fixed"][style*="top: 0"]', // Full screen modal
-          ];
-
-          const checkForRazorpayModal = () => {
-            const foundElements = [];
-            razorpaySelectors.forEach((selector) => {
-              const elements = document.querySelectorAll(selector);
-              if (elements.length > 0) {
-                foundElements.push(...Array.from(elements));
-              }
-            });
-
-            // Also check for any iframe that might be Razorpay
-            const allIframes = document.querySelectorAll("iframe");
-            const razorpayIframes = Array.from(allIframes).filter((iframe) => {
-              const src = (iframe as HTMLIFrameElement).src || "";
-              return (
-                src.includes("razorpay") ||
-                src.includes("checkout") ||
-                src.includes("pay")
-              );
-            });
-            foundElements.push(...razorpayIframes);
-
-            console.log(
-              `Found ${foundElements.length} potential Razorpay elements:`,
-              foundElements,
-            );
-
-            // Check if any of the found elements are actually visible and interactive
-            const visibleElements = foundElements.filter((element) => {
-              const style = window.getComputedStyle(element);
-              const rect = element.getBoundingClientRect();
-
-              // Check if element is visible (not hidden, has dimensions, not transparent)
-              const isVisible =
-                style.display !== "none" &&
-                style.visibility !== "hidden" &&
-                rect.width > 0 &&
-                rect.height > 0 &&
-                parseFloat(style.opacity) > 0;
-
-              // Check if element is in viewport
-              const isInViewport =
-                rect.top < window.innerHeight &&
-                rect.bottom > 0 &&
-                rect.left < window.innerWidth &&
-                rect.right > 0;
-
-              return isVisible && isInViewport;
-            });
-
-            console.log(
-              `Found ${visibleElements.length} visible Razorpay elements:`,
-              visibleElements,
-            );
-
-            // If no visible elements, consider modal closed
-            if (visibleElements.length === 0) {
-              console.log(
-                "No visible Razorpay elements found - resetting processing state",
-              );
-              setIsProcessing(false);
-              clearTimeoutAndCleanup();
-              return true; // Modal is closed
-            }
-
-            // Additional check: look for modal backdrop/overlay
-            const modalBackdrop = document.querySelector(
-              '.razorpay-backdrop, div[style*="position: fixed"][style*="background"]',
-            );
-            if (modalBackdrop) {
-              const backdropStyle = window.getComputedStyle(modalBackdrop);
-              const backdropRect = modalBackdrop.getBoundingClientRect();
-
-              // Check if backdrop is visible and covers the screen
-              const isBackdropVisible =
-                backdropStyle.display !== "none" &&
-                backdropStyle.visibility !== "hidden" &&
-                backdropRect.width > 0 &&
-                backdropRect.height > 0 &&
-                parseFloat(backdropStyle.opacity) > 0;
-
-              console.log(
-                `Modal backdrop visible: ${isBackdropVisible}`,
-                backdropStyle,
-              );
-
-              if (!isBackdropVisible) {
-                console.log(
-                  "Modal backdrop not visible - resetting processing state",
-                );
-                setIsProcessing(false);
-                clearTimeoutAndCleanup();
-                return true; // Modal is closed
-              }
-            }
-
-            return false; // Modal is still open
-          };
-
-          // Interval-based monitoring
-          modalCheckInterval = setInterval(() => {
-            checkForRazorpayModal();
-          }, 1000); // Check every second for faster response
-
-          // DOM mutation observer for immediate detection
-          observer = new MutationObserver((mutations) => {
-            mutations.forEach((mutation) => {
-              if (mutation.type === "childList") {
-                // Check if any removed nodes were Razorpay elements
-                const removedNodes = Array.from(mutation.removedNodes);
-                const hadRazorpayElements = removedNodes.some((node) => {
-                  if (node.nodeType === Node.ELEMENT_NODE) {
-                    const element = node as Element;
-                    return (
-                      razorpaySelectors.some((selector) =>
-                        element.matches(selector),
-                      ) ||
-                      (element.tagName === "IFRAME" &&
-                        ((element as HTMLIFrameElement).src?.includes(
-                          "razorpay",
-                        ) ||
-                          (element as HTMLIFrameElement).src?.includes(
-                            "checkout",
-                          )))
-                    );
-                  }
-                  return false;
-                });
-
-                if (hadRazorpayElements) {
-                  console.log(
-                    "Razorpay elements removed from DOM - checking if modal is closed",
-                  );
-                  setTimeout(() => {
-                    if (checkForRazorpayModal()) {
-                      console.log("Confirmed: Razorpay modal is closed");
-                    }
-                  }, 500); // Small delay to ensure DOM is updated
-                }
-              }
-            });
-          });
-
-          observer.observe(document.body, { childList: true, subtree: true });
-        };
-
-        // Start monitoring after modal opens
-        setTimeout(startModalMonitoring, 2000);
-
-        rzp.open();
+        setQrPaymentSession(data);
+        setQrImageAvailable(true);
+        setUpiTransactionReference("");
+        setPendingQrWhatsAppNumber(whatsappNumber);
+        setShowQrPaymentDialog(true);
+        setIsProcessing(false);
       } catch (error) {
-        console.error("Error creating order:", error);
-        toast.error("Failed to create order. Please try again.");
+        const reconciliation = getCheckoutReconciliationFromError(error);
+        if (reconciliation && applyCheckoutReconciliation(reconciliation)) {
+          setIsProcessing(false);
+          return;
+        }
+
+        console.error("Error preparing UPI payment:", error);
+        toast.error("Failed to prepare payment. Please try again.");
         setIsProcessing(false);
       }
     },
     [
       isEmpty,
       user?.id,
-      user?.fullName,
       user?.primaryEmailAddress?.emailAddress,
       discountedTotal,
-      items,
-      userProfile?.whatsappNumber,
       emptyCart,
-      setIsProcessing,
-      Razorpay,
+      applyCheckoutReconciliation,
       completeCheckoutEnrollment,
       buildCartIntent,
     ],
   );
+
+  const handleQrPaymentConfirmed = useCallback(async () => {
+    if (!qrPaymentSession) return;
+
+    const paymentReference = upiTransactionReference.trim();
+    if (paymentReference.length < 6) {
+      toast.error("Enter the UPI transaction reference number.");
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const enrollmentCompleted = await completeCheckoutEnrollment(
+        pendingQrWhatsAppNumber,
+        {
+          checkoutAttemptId: qrPaymentSession.checkoutAttemptId,
+          razorpayOrderId: qrPaymentSession.id,
+          razorpayPaymentId: paymentReference,
+          checkoutPricingOverride: qrPaymentSession.reconciliation
+            ?.checkoutPricing as typeof checkoutPricing | undefined,
+        },
+      );
+
+      if (enrollmentCompleted) {
+        emptyCart();
+        setShowQrPaymentDialog(false);
+        setQrPaymentSession(null);
+        setUpiTransactionReference("");
+        setPendingQrWhatsAppNumber(undefined);
+      }
+    } finally {
+      setIsProcessing(false);
+    }
+  }, [
+    completeCheckoutEnrollment,
+    emptyCart,
+    pendingQrWhatsAppNumber,
+    qrPaymentSession,
+    upiTransactionReference,
+  ]);
 
   // Check for WhatsApp number after sign-in and proceed with checkout
   const proceedWithCheckoutAfterAuth = useCallback(() => {
@@ -1510,7 +1367,7 @@ const CartContent = () => {
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CreditCard className="h-5 w-5" />
+                <QrCode className="h-5 w-5" />
                 Order Summary
               </CardTitle>
             </CardHeader>
@@ -1743,19 +1600,98 @@ const CartContent = () => {
               </div>
               <Button
                 onClick={handleCheckoutClick}
-                disabled={isProcessing || (discountedTotal > 0 && isLoading)}
+                disabled={isProcessing}
                 className="w-full"
               >
                 {isProcessing
                   ? "Processing..."
                   : cartReviewRequired
                     ? "Review changes"
-                    : "Proceed to Checkout"}
+                    : discountedTotal > 0
+                      ? "Go to Payment"
+                      : "Complete Checkout"}
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      <Dialog
+        open={showQrPaymentDialog}
+        onOpenChange={(open) => {
+          setShowQrPaymentDialog(open);
+          if (!open && !isProcessing) {
+            setQrPaymentSession(null);
+            setPendingQrWhatsAppNumber(undefined);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <QrCode className="h-5 w-5" />
+              Scan to pay
+            </DialogTitle>
+            <DialogDescription>Pay with any UPI app.</DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="bg-muted/50 rounded-md border px-4 py-3 text-center">
+              <div className="text-muted-foreground text-sm">Amount to pay</div>
+              <div className="text-2xl font-semibold">
+                {showRupees(qrPaymentSession?.amount ?? discountedTotal)}
+              </div>
+            </div>
+
+            {qrImageAvailable ? (
+              <Image
+                src="/payment/phonepe-qr-code.jpeg"
+                alt="UPI QR code for payment"
+                width={550}
+                height={550}
+                className="mx-auto h-auto w-full max-w-[280px] rounded-md border bg-black object-contain"
+                priority
+                onError={() => setQrImageAvailable(false)}
+              />
+            ) : (
+              <div className="bg-muted/50 text-muted-foreground mx-auto flex min-h-[320px] w-full max-w-[280px] items-center justify-center rounded-md border border-dashed p-4 text-center text-sm">
+                UPI QR image is missing from
+                public/payment/phonepe-qr-code.jpeg.
+              </div>
+            )}
+
+            <label className="space-y-2 text-sm">
+              <span className="font-medium">UPI transaction ID</span>
+              <Input
+                value={upiTransactionReference}
+                onChange={(event) =>
+                  setUpiTransactionReference(event.target.value)
+                }
+                placeholder="Enter reference number after payment"
+                autoComplete="off"
+              />
+            </label>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="outline"
+              onClick={() => setShowQrPaymentDialog(false)}
+              disabled={isProcessing}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleQrPaymentConfirmed}
+              disabled={
+                isProcessing || upiTransactionReference.trim().length < 6
+              }
+            >
+              {isProcessing ? "Finishing..." : "Confirm payment"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {user?.id && (
         <WhatsAppModal

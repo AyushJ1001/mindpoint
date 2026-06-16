@@ -19,7 +19,6 @@ import { ConvexHttpClient } from "convex/browser";
 import type {
   ConvexFailure,
   ConvexSerializable,
-  ConvexSerializableObject,
 } from "../../convex/_shared/result";
 
 import type { CreatePaymentOrderInput } from "./payments";
@@ -66,25 +65,6 @@ type CreateCheckoutAttemptMutationResult =
   | LegacyCreateCheckoutAttemptResult
   | null
   | undefined;
-
-type MarkCheckoutAttemptPaymentOrderedSuccess = {
-  readonly _tag: "Success";
-  readonly checkoutAttempt?: ConvexSerializable;
-  readonly success: true;
-};
-
-type MarkCheckoutAttemptPaymentOrderedResult =
-  | CheckoutAttemptFailure
-  | MarkCheckoutAttemptPaymentOrderedSuccess;
-
-type LegacyMarkCheckoutAttemptPaymentOrderedResult =
-  | ConvexSerializableObject
-  | null
-  | undefined;
-
-type MarkCheckoutAttemptPaymentOrderedMutationResult =
-  | LegacyMarkCheckoutAttemptPaymentOrderedResult
-  | MarkCheckoutAttemptPaymentOrderedResult;
 
 type CheckoutAttemptServiceOptions = {
   convexUrl?: string;
@@ -158,52 +138,6 @@ export function createCheckoutAttemptEffect(
     catch: (cause) => checkoutAttemptBoundaryError(cause as BoundaryThrowable),
   }).pipe(Effect.flatMap(normalizeCreateCheckoutAttemptResultEffect));
 }
-
-export async function markCheckoutAttemptPaymentOrdered(
-  input: {
-    checkoutAttemptId: string;
-    razorpayOrderId: string;
-  },
-  options: CheckoutAttemptServiceOptions = {},
-): Promise<MarkCheckoutAttemptPaymentOrderedMutationResult> {
-  const convex = createAuthedConvexClient(options);
-
-  if (options.checkoutServerSecret && options.buyerUserId) {
-    return (await convex.mutation(
-      api.checkout.markCheckoutAttemptPaymentOrderedFromServer,
-      {
-        serverSecret: options.checkoutServerSecret,
-        buyerUserId: options.buyerUserId,
-        checkoutAttemptId: input.checkoutAttemptId as never,
-        razorpayOrderId: input.razorpayOrderId,
-      },
-    )) as MarkCheckoutAttemptPaymentOrderedMutationResult;
-  }
-
-  return (await convex.mutation(
-    api.checkout.markCheckoutAttemptPaymentOrdered,
-    {
-      checkoutAttemptId: input.checkoutAttemptId as never,
-      razorpayOrderId: input.razorpayOrderId,
-    },
-  )) as MarkCheckoutAttemptPaymentOrderedMutationResult;
-}
-
-export function markCheckoutAttemptPaymentOrderedEffect(
-  input: {
-    checkoutAttemptId: string;
-    razorpayOrderId: string;
-  },
-  options: CheckoutAttemptServiceOptions = {},
-): Effect.Effect<MarkCheckoutAttemptPaymentOrderedSuccess, BoundaryError> {
-  return Effect.tryPromise({
-    try: () => markCheckoutAttemptPaymentOrdered(input, options),
-    catch: (cause) => checkoutAttemptBoundaryError(cause as BoundaryThrowable),
-  }).pipe(
-    Effect.flatMap(normalizeMarkCheckoutAttemptPaymentOrderedResultEffect),
-  );
-}
-
 export function normalizeCreateCheckoutAttemptResultEffect(
   result: CreateCheckoutAttemptMutationResult,
 ): Effect.Effect<CreateCheckoutAttemptSuccess, BoundaryError> {
@@ -233,24 +167,6 @@ export function normalizeCreateCheckoutAttemptResultEffect(
   }
 }
 
-export function normalizeMarkCheckoutAttemptPaymentOrderedResultEffect(
-  result: MarkCheckoutAttemptPaymentOrderedMutationResult,
-): Effect.Effect<MarkCheckoutAttemptPaymentOrderedSuccess, BoundaryError> {
-  if (result === null || result === undefined) {
-    return invalidCheckoutAttemptResultEffect();
-  }
-
-  if (isMarkCheckoutAttemptTaggedResult(result)) {
-    return unwrapTaggedCheckoutAttemptResult(result);
-  }
-
-  return Effect.succeed({
-    _tag: "Success",
-    checkoutAttempt: result,
-    success: true,
-  });
-}
-
 function unwrapTaggedCheckoutAttemptResult<
   Success extends { readonly _tag: "Success"; readonly success: true },
 >(
@@ -268,16 +184,6 @@ function isCreateCheckoutAttemptTaggedResult(
   result: CreateCheckoutAttemptMutationResult,
 ): result is CreateCheckoutAttemptResult {
   if (result === null || result === undefined || !("_tag" in result)) {
-    return false;
-  }
-
-  return result._tag === "Success" || result._tag === "Failure";
-}
-
-function isMarkCheckoutAttemptTaggedResult(
-  result: MarkCheckoutAttemptPaymentOrderedMutationResult,
-): result is MarkCheckoutAttemptPaymentOrderedResult {
-  if (result === null || result === undefined) {
     return false;
   }
 

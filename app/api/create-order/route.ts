@@ -3,17 +3,14 @@ import { resolveAuthEmail } from "@/lib/clerk-email";
 import { isClerkServerConfigured } from "@/lib/clerk-env";
 import {
   BoundaryConfigurationError,
+  BoundaryExternalServiceError,
   BoundaryUnauthorizedError,
   BoundaryValidationError,
   parseJsonEffect,
   runApiEffect,
 } from "@/lib/effect";
 import { validateCreateOrderBodyEffect } from "@/lib/services/create-order-boundary";
-import { createPaymentOrderEffect } from "@/lib/services/payments.server";
-import {
-  createCheckoutAttemptEffect,
-  markCheckoutAttemptPaymentOrderedEffect,
-} from "@/lib/services/checkout-attempts.server";
+import { createCheckoutAttemptEffect } from "@/lib/services/checkout-attempts.server";
 import { withRateLimit } from "@/lib/with-rate-limit";
 import { Effect } from "effect";
 import type { NextRequest } from "next/server";
@@ -35,9 +32,9 @@ async function handleCreateOrder(req: NextRequest) {
       const { userId, sessionClaims } = yield* Effect.tryPromise({
         try: () => auth(),
         catch: (cause) =>
-          new BoundaryUnauthorizedError({
+          new BoundaryExternalServiceError({
             ...(cause instanceof Error ? { cause } : {}),
-            message: "Sign in before checkout.",
+            message: "Checkout authentication service is unavailable.",
           }),
       });
 
@@ -61,9 +58,9 @@ async function handleCreateOrder(req: NextRequest) {
       const sessionEmail = yield* Effect.tryPromise({
         try: () => resolveAuthEmail(sessionClaims),
         catch: (cause) =>
-          new BoundaryUnauthorizedError({
+          new BoundaryExternalServiceError({
             ...(cause instanceof Error ? { cause } : {}),
-            message: "Sign in before checkout.",
+            message: "Checkout authentication service is unavailable.",
           }),
       });
       const buyerEmail = sessionEmail || createOrderBody.buyerEmail;
@@ -84,21 +81,10 @@ async function handleCreateOrder(req: NextRequest) {
         );
       }
 
-      const order = yield* createPaymentOrderEffect({
-        amount,
-        receipt: String(attempt.checkoutAttemptId).slice(0, 40),
-      });
-
-      yield* markCheckoutAttemptPaymentOrderedEffect(
-        {
-          checkoutAttemptId: attempt.checkoutAttemptId,
-          razorpayOrderId: order.id,
-        },
-        { checkoutServerSecret, buyerUserId: userId },
-      );
-
       return {
-        ...order,
+        amount,
+        currency: "INR",
+        id: String(attempt.checkoutAttemptId),
         checkoutAttemptId: attempt.checkoutAttemptId,
         reconciliation: attempt.reconciliation,
       };
@@ -107,5 +93,5 @@ async function handleCreateOrder(req: NextRequest) {
 }
 
 export const POST = withRateLimit(handleCreateOrder, {
-  errorMessage: "Too many order requests. Please wait before trying again.",
+  errorMessage: "Too many payment requests. Please wait before trying again.",
 });

@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import { Effect } from "effect";
 import {
+  BoundaryExternalServiceError,
   BoundaryResult,
   BoundaryValidationError,
   boundaryErrorToHttp,
@@ -39,17 +40,17 @@ test("BoundaryResult creates tagged success and failure data", () => {
 test("boundaryErrorToHttp maps validation errors to public JSON", () => {
   const http = boundaryErrorToHttp(
     new BoundaryValidationError({
-      message: "Missing payment verification fields.",
-      details: { fields: ["razorpaySignature"] },
+      message: "Checkout requires a current cart.",
+      details: { fields: ["cartIntent"] },
     }),
   );
 
   assert.equal(http.status, 400);
   assert.deepEqual(http.body, {
     success: false,
-    error: "Missing payment verification fields.",
+    error: "Checkout requires a current cart.",
     code: "VALIDATION_ERROR",
-    details: { fields: ["razorpaySignature"] },
+    details: { fields: ["cartIntent"] },
   });
 });
 
@@ -63,6 +64,21 @@ test("runApiEffect converts failed effects into NextResponse JSON", async () => 
     success: false,
     error: "Bad body.",
     code: "VALIDATION_ERROR",
+  });
+});
+
+test("boundaryErrorToHttp maps external service errors to gateway failures", () => {
+  const http = boundaryErrorToHttp(
+    new BoundaryExternalServiceError({
+      message: "Checkout authentication service is unavailable.",
+    }),
+  );
+
+  assert.equal(http.status, 502);
+  assert.deepEqual(http.body, {
+    success: false,
+    error: "Checkout authentication service is unavailable.",
+    code: "EXTERNAL_SERVICE_ERROR",
   });
 });
 
@@ -100,24 +116,6 @@ test("careers route maps invalid role payloads through the Effect boundary", asy
   assert.deepEqual(await response.json(), {
     success: false,
     error: "The 'roles' field must be a valid JSON array.",
-    code: "VALIDATION_ERROR",
-  });
-});
-
-test("verify payment route maps missing fields through the Effect boundary", async () => {
-  const { POST } = await import("./app/api/verify-payment/route");
-  const response = await POST(
-    new Request("http://localhost/api/verify-payment", {
-      body: JSON.stringify({ razorpayOrderId: "order_123" }),
-      headers: { "content-type": "application/json" },
-      method: "POST",
-    }) as never,
-  );
-
-  assert.equal(response.status, 400);
-  assert.deepEqual(await response.json(), {
-    success: false,
-    error: "Missing payment verification fields.",
     code: "VALIDATION_ERROR",
   });
 });
@@ -175,10 +173,9 @@ test("checkout service exposes Effect implementations for all payment action wra
 });
 
 test("checkout attempt boundary normalizes legacy Convex ok tuples", async () => {
-  const {
-    normalizeCreateCheckoutAttemptResultEffect,
-    normalizeMarkCheckoutAttemptPaymentOrderedResultEffect,
-  } = await import("./lib/services/checkout-attempts.server");
+  const { normalizeCreateCheckoutAttemptResultEffect } = await import(
+    "./lib/services/checkout-attempts.server"
+  );
 
   const createResult = await Effect.runPromise(
     normalizeCreateCheckoutAttemptResultEffect({
@@ -219,20 +216,5 @@ test("checkout attempt boundary normalizes legacy Convex ok tuples", async () =>
         totalAmountPaid: 0,
       },
     },
-  });
-
-  const markResult = await Effect.runPromise(
-    normalizeMarkCheckoutAttemptPaymentOrderedResultEffect({
-      _id: "attempt_123",
-      status: "payment_ordered",
-    }),
-  );
-  assert.deepEqual(markResult, {
-    _tag: "Success",
-    checkoutAttempt: {
-      _id: "attempt_123",
-      status: "payment_ordered",
-    },
-    success: true,
   });
 });

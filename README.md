@@ -32,7 +32,7 @@ The Mind Point is a full-stack e-commerce platform for mental health education, 
 
 - Add-to-cart functionality with persistent cart state
 - BOGO campaign selection modal
-- Secure payment processing via Razorpay (INR)
+- Direct UPI QR payment flow (INR)
 - Guest checkout support
 - Coupon code redemption
 
@@ -96,9 +96,9 @@ The Mind Point is a full-stack e-commerce platform for mental health education, 
 
 ### Payments
 
-| Technology                        | Purpose                         |
-| --------------------------------- | ------------------------------- |
-| [Razorpay](https://razorpay.com/) | Payment gateway (Indian market) |
+| Technology | Purpose                   |
+| ---------- | ------------------------- |
+| UPI QR     | Direct manual UPI payment |
 
 ### Email
 
@@ -153,7 +153,6 @@ mindpoint/
 - **npm** 9.x or higher
 - A [Convex](https://www.convex.dev/) account
 - A [Clerk](https://clerk.com/) account
-- A [Razorpay](https://razorpay.com/) account (for payments)
 - A [Resend](https://resend.com/) account (for emails)
 
 ### Installation
@@ -204,8 +203,6 @@ Create a `.env.local` file with the following variables:
 | `NEXT_PUBLIC_CONVEX_URL`            | Your Convex deployment URL |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk publishable key      |
 | `CLERK_SECRET_KEY`                  | Clerk secret key           |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID`       | Razorpay key ID            |
-| `RAZORPAY_KEY_SECRET`               | Razorpay secret key        |
 | `RESEND_API_KEY`                    | Resend API key for emails  |
 
 ### Optional Variables

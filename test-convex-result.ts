@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import test from "node:test";
 import {
   convexFailure,
+  convexResultErrorValidator,
   convexSuccess,
   getConvexResultErrorMessage,
 } from "./convex/_shared/result";
@@ -61,6 +62,14 @@ test("convex failure can carry serializable details", () => {
       message: "Your cart changed.",
     },
   });
+});
+
+test("convex result error validator accepts serializable details", () => {
+  assert.ok("details" in convexResultErrorValidator.fields);
+  assert.equal(
+    convexResultErrorValidator.fields.details.isOptional,
+    "optional",
+  );
 });
 
 test("convex result error message helper is exhaustive for success and failure", () => {

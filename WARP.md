@@ -179,8 +179,6 @@ Required environment variables (see `setup-env.sh` for Google Sheets):
 - `RESEND_API_KEY` - Resend email API key
 - `UPSTASH_REDIS_REST_URL` - Upstash Redis URL
 - `UPSTASH_REDIS_REST_TOKEN` - Upstash Redis token
-- `RAZORPAY_KEY_ID` - Razorpay public key
-- `RAZORPAY_KEY_SECRET` - Razorpay secret key
 - `GOOGLE_SHEETS_SPREADSHEET_ID` - Google Sheets spreadsheet ID (optional)
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON` - Service account JSON for Google Sheets (production)
 

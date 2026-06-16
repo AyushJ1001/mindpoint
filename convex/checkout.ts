@@ -305,47 +305,6 @@ async function createCheckoutAttemptForBuyer(
   });
 }
 
-async function markCheckoutAttemptPaymentOrderedForBuyer(
-  ctx: MutationCtx,
-  args: {
-    checkoutAttemptId: Id<"checkoutAttempts">;
-    razorpayOrderId: string;
-    buyerUserId: string;
-  },
-) {
-  const attempt = await ctx.db.get(args.checkoutAttemptId);
-  if (!attempt) {
-    return convexFailure({
-      code: convexResultErrorCode.CHECKOUT_ATTEMPT_NOT_FOUND,
-      message: "Checkout attempt not found.",
-    });
-  }
-  if (attempt.buyerUserId !== args.buyerUserId) {
-    return convexFailure({
-      code: convexResultErrorCode.FORBIDDEN,
-      message: "Checkout attempt does not belong to this user.",
-    });
-  }
-  if (attempt.status !== "created") {
-    return convexFailure({
-      code: convexResultErrorCode.CHECKOUT_ATTEMPT_INVALID_STATE,
-      message: "Checkout attempt is not ready for payment ordering.",
-    });
-  }
-
-  await ctx.db.patch(args.checkoutAttemptId, {
-    razorpayOrderId: args.razorpayOrderId,
-    status: "payment_ordered",
-    updatedAt: Date.now(),
-  });
-
-  const checkoutAttempt = await ctx.db.get(args.checkoutAttemptId);
-
-  return convexSuccess({
-    checkoutAttempt: checkoutAttempt as ConvexSerializable,
-  });
-}
-
 export const reconcileCart = query({
   args: {
     cartIntent: cartIntentValidator,
@@ -403,49 +362,6 @@ export const createCheckoutAttemptFromServer = mutation({
       buyerUserId: args.buyerUserId,
       buyerEmail: args.buyerEmail,
       referrerClerkUserId: args.referrerClerkUserId,
-    });
-  },
-});
-
-export const markCheckoutAttemptPaymentOrdered = mutation({
-  args: {
-    checkoutAttemptId: v.id("checkoutAttempts"),
-    razorpayOrderId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
-      return convexFailure({
-        code: convexResultErrorCode.UNAUTHORIZED,
-        message: "Unauthenticated checkout attempt update.",
-      });
-    }
-
-    return await markCheckoutAttemptPaymentOrderedForBuyer(ctx, {
-      checkoutAttemptId: args.checkoutAttemptId,
-      razorpayOrderId: args.razorpayOrderId,
-      buyerUserId: identity.subject,
-    });
-  },
-});
-
-export const markCheckoutAttemptPaymentOrderedFromServer = mutation({
-  args: {
-    serverSecret: v.string(),
-    buyerUserId: v.string(),
-    checkoutAttemptId: v.id("checkoutAttempts"),
-    razorpayOrderId: v.string(),
-  },
-  handler: async (ctx, args) => {
-    const unauthorized = validateCheckoutServerSecret(args.serverSecret);
-    if (unauthorized) {
-      return unauthorized;
-    }
-
-    return await markCheckoutAttemptPaymentOrderedForBuyer(ctx, {
-      checkoutAttemptId: args.checkoutAttemptId,
-      razorpayOrderId: args.razorpayOrderId,
-      buyerUserId: args.buyerUserId,
     });
   },
 });

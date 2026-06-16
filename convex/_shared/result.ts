@@ -1,4 +1,4 @@
-import { v } from "convex/values";
+import { v, type Validator } from "convex/values";
 
 export const convexResultErrorCode = {
   CHECKOUT_ATTEMPT_INVALID_STATE: "CHECKOUT_ATTEMPT_INVALID_STATE",
@@ -64,6 +64,37 @@ export type ConvexResult<
   Code extends ConvexResultErrorCode = ConvexResultErrorCode,
 > = ConvexFailure<Code> | ConvexSuccess<Payload>;
 
+type ConvexSerializableValidator = Validator<
+  ConvexSerializable,
+  "required",
+  string
+>;
+
+const convexSerializablePrimitiveValidator = v.union(
+  v.boolean(),
+  v.null(),
+  v.number(),
+  v.string(),
+);
+
+const convexSerializableDepth1Validator = v.union(
+  convexSerializablePrimitiveValidator,
+  v.array(convexSerializablePrimitiveValidator),
+  v.record(v.string(), convexSerializablePrimitiveValidator),
+);
+
+const convexSerializableDepth2Validator = v.union(
+  convexSerializablePrimitiveValidator,
+  v.array(convexSerializableDepth1Validator),
+  v.record(v.string(), convexSerializableDepth1Validator),
+);
+
+export const convexSerializableValidator: ConvexSerializableValidator = v.union(
+  convexSerializablePrimitiveValidator,
+  v.array(convexSerializableDepth2Validator),
+  v.record(v.string(), convexSerializableDepth2Validator),
+);
+
 export const convexResultErrorCodeValidator = v.union(
   v.literal(convexResultErrorCode.CHECKOUT_ATTEMPT_INVALID_STATE),
   v.literal(convexResultErrorCode.CHECKOUT_ATTEMPT_NOT_FOUND),
@@ -86,6 +117,7 @@ export const convexResultErrorCodeValidator = v.union(
 export const convexResultErrorValidator = v.object({
   _tag: v.literal("ConvexResultError"),
   code: convexResultErrorCodeValidator,
+  details: v.optional(convexSerializableValidator),
   message: v.string(),
 });
 
