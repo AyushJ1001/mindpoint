@@ -20,6 +20,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { assertConvexSuccess } from "@/lib/convex-error";
 import { showRupees } from "@/lib/utils";
 
 export default function AdminEnrollmentDetailPage() {
@@ -126,21 +127,30 @@ export default function AdminEnrollmentDetailPage() {
     if (!pendingAction || !actionReason.trim()) return;
     try {
       if (pendingAction === "change_batch") {
-        await changeEnrollmentBatch({
-          enrollmentId,
-          batchId: targetBatchId as Id<"courseBatches">,
-          reason: actionReason.trim(),
-        });
+        assertConvexSuccess(
+          await changeEnrollmentBatch({
+            enrollmentId,
+            batchId: targetBatchId as Id<"courseBatches">,
+            reason: actionReason.trim(),
+          }),
+          "Batch update failed",
+        );
         toast.success("Enrollment batch updated");
       } else if (pendingAction === "transfer") {
-        await transferEnrollment({
-          enrollmentId,
-          targetCourseId: targetCourseId as Id<"courses">,
-          reason: actionReason.trim(),
-        });
+        assertConvexSuccess(
+          await transferEnrollment({
+            enrollmentId,
+            targetCourseId: targetCourseId as Id<"courses">,
+            reason: actionReason.trim(),
+          }),
+          "Transfer failed",
+        );
         toast.success("Enrollment transferred");
       } else {
-        await cancelEnrollment({ enrollmentId, reason: actionReason.trim() });
+        assertConvexSuccess(
+          await cancelEnrollment({ enrollmentId, reason: actionReason.trim() }),
+          "Cancellation failed",
+        );
         toast.success("Enrollment cancelled");
       }
       setPendingAction(null);
@@ -164,18 +174,21 @@ export default function AdminEnrollmentDetailPage() {
 
     setIsSavingPricing(true);
     try {
-      await updateEnrollmentPricing({
-        enrollmentId,
-        listedPrice: parsePricingNumber(pricingListedPrice),
-        checkoutPrice: parsePricingNumber(pricingCheckoutPrice),
-        amountPaid: parsePricingNumber(pricingAmountPaid),
-        redemptionDiscountAmount: computedRedemptionDiscount,
-        mindPointsRedeemed: pricingMindPointsRedeemed
-          ? parsePricingNumber(pricingMindPointsRedeemed)
-          : undefined,
-        couponCode: pricingCouponCode.trim() || undefined,
-        reason: pricingEditReason.trim() || undefined,
-      });
+      assertConvexSuccess(
+        await updateEnrollmentPricing({
+          enrollmentId,
+          listedPrice: parsePricingNumber(pricingListedPrice),
+          checkoutPrice: parsePricingNumber(pricingCheckoutPrice),
+          amountPaid: parsePricingNumber(pricingAmountPaid),
+          redemptionDiscountAmount: computedRedemptionDiscount,
+          mindPointsRedeemed: pricingMindPointsRedeemed
+            ? parsePricingNumber(pricingMindPointsRedeemed)
+            : undefined,
+          couponCode: pricingCouponCode.trim() || undefined,
+          reason: pricingEditReason.trim() || undefined,
+        }),
+        "Failed to update enrollment pricing",
+      );
       toast.success("Enrollment pricing updated");
     } catch (error) {
       toast.error(

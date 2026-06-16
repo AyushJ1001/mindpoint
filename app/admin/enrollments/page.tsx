@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { downloadCsv, toCsv } from "@/lib/csv";
+import { assertConvexSuccess } from "@/lib/convex-error";
 import { showRupees } from "@/lib/utils";
 
 export default function AdminEnrollmentsPage() {
@@ -170,38 +171,41 @@ export default function AdminEnrollmentsPage() {
     }
     setIsCreatingEnrollment(true);
     try {
-      await createManualEnrollment({
-        userId: manualUserId,
-        userEmail: manualEmail,
-        userName: manualName || undefined,
-        userPhone: manualPhone || undefined,
-        courseId: manualCourseId as Id<"courses">,
-        batchId: manualBatchId
-          ? (manualBatchId as Id<"courseBatches">)
-          : undefined,
-        isGuestUser: manualUserIdLooksLikeEmail,
-        pricing: {
-          listedPrice: parseManualMoney(manualListedPrice),
-          checkoutPrice: parseManualMoney(manualCheckoutPrice),
-          amountPaid: parseManualMoney(manualAmountPaid),
-          redemptionDiscountAmount: Math.max(
-            0,
-            parseManualMoney(manualCheckoutPrice) -
-              parseManualMoney(manualAmountPaid),
-          ),
-          mindPointsRedeemed: manualMindPointsRedeemed
-            ? parseManualMoney(manualMindPointsRedeemed)
+      assertConvexSuccess(
+        await createManualEnrollment({
+          userId: manualUserId,
+          userEmail: manualEmail,
+          userName: manualName || undefined,
+          userPhone: manualPhone || undefined,
+          courseId: manualCourseId as Id<"courses">,
+          batchId: manualBatchId
+            ? (manualBatchId as Id<"courseBatches">)
             : undefined,
-          couponCode: manualCouponCode.trim() || undefined,
-        },
-        internshipPlan:
-          selectedManualCourse?.type === "internship" &&
-          !selectedManualCourse.usesBatches
-            ? manualInternshipPlan === "120" || manualInternshipPlan === "240"
-              ? manualInternshipPlan
-              : undefined
-            : undefined,
-      });
+          isGuestUser: manualUserIdLooksLikeEmail,
+          pricing: {
+            listedPrice: parseManualMoney(manualListedPrice),
+            checkoutPrice: parseManualMoney(manualCheckoutPrice),
+            amountPaid: parseManualMoney(manualAmountPaid),
+            redemptionDiscountAmount: Math.max(
+              0,
+              parseManualMoney(manualCheckoutPrice) -
+                parseManualMoney(manualAmountPaid),
+            ),
+            mindPointsRedeemed: manualMindPointsRedeemed
+              ? parseManualMoney(manualMindPointsRedeemed)
+              : undefined,
+            couponCode: manualCouponCode.trim() || undefined,
+          },
+          internshipPlan:
+            selectedManualCourse?.type === "internship" &&
+            !selectedManualCourse.usesBatches
+              ? manualInternshipPlan === "120" || manualInternshipPlan === "240"
+                ? manualInternshipPlan
+                : undefined
+              : undefined,
+        }),
+        "Failed to create enrollment",
+      );
       toast.success("Manual enrollment created");
       setManualUserId("");
       setManualEmail("");
@@ -228,10 +232,13 @@ export default function AdminEnrollmentsPage() {
   const handleCancel = async () => {
     if (!cancelEnrollmentId) return;
     try {
-      await cancelEnrollment({
-        enrollmentId: cancelEnrollmentId as Id<"enrollments">,
-        reason: cancelReason.trim(),
-      });
+      assertConvexSuccess(
+        await cancelEnrollment({
+          enrollmentId: cancelEnrollmentId as Id<"enrollments">,
+          reason: cancelReason.trim(),
+        }),
+        "Failed to cancel enrollment",
+      );
       toast.success("Enrollment cancelled");
       setCancelEnrollmentId(null);
       setCancelReason("Cancelled by admin");
@@ -245,9 +252,12 @@ export default function AdminEnrollmentsPage() {
   const handleResendEmail = async (enrollmentId: string) => {
     setResendingEnrollmentId(enrollmentId);
     try {
-      await resendEnrollmentEmail({
-        enrollmentId: enrollmentId as Id<"enrollments">,
-      });
+      assertConvexSuccess(
+        await resendEnrollmentEmail({
+          enrollmentId: enrollmentId as Id<"enrollments">,
+        }),
+        "Failed to send enrollment email",
+      );
       toast.success("Enrollment email sent");
     } catch (error) {
       toast.error(

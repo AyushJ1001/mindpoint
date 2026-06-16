@@ -187,6 +187,10 @@ test("small admin mutation groups use tagged Convex results", () => {
       convexFile: "convex/adminCourses.ts",
       uiFile: "components/admin/CourseEditor.tsx",
     },
+    {
+      convexFile: "convex/adminEnrollments.ts",
+      uiFile: "app/admin/enrollments/page.tsx",
+    },
   ] as const;
 
   for (const group of groups) {
@@ -198,4 +202,18 @@ test("small admin mutation groups use tagged Convex results", () => {
     assert.doesNotMatch(convexSource, /throw new Error/, group.convexFile);
     assert.match(uiSource, /assertConvexSuccess/, group.uiFile);
   }
+});
+
+test("admin enrollment secondary pages consume tagged Convex results", () => {
+  const detailSource = readFileSync(
+    "app/admin/enrollments/[enrollmentId]/page.tsx",
+    "utf8",
+  );
+  const recoverySource = readFileSync(
+    "app/admin/enrollments/recover/page.tsx",
+    "utf8",
+  );
+
+  assert.match(detailSource, /assertConvexSuccess/);
+  assert.match(recoverySource, /assertConvexSuccess/);
 });
