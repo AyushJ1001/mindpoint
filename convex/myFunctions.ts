@@ -4,11 +4,13 @@ import { api, internal } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import {
+  buildAdminCouponDiscountBudgetByCode,
   buildEnrollmentPricingFields,
   checkoutPricingValidator,
   enrollmentLineItemValidator,
   getCheckoutPricingItem,
   validateCheckoutPricingItemResult,
+  type CheckoutPricing,
   type CheckoutPricingItem,
   type EnrollmentLineItem,
 } from "./_shared/checkout";
@@ -233,6 +235,111 @@ function enrollmentMutationFailure(
     code,
     ...(details !== undefined ? { details } : {}),
     message,
+  });
+}
+
+function checkoutPricingFromAttempt(
+  attempt: Doc<"checkoutAttempts">,
+): CheckoutPricing {
+  return {
+    totalAmountPaid: roundCurrency(attempt.authoritativeAmount),
+    items: attempt.authoritativeLineItems.map((item) => ({
+      courseId: item.courseId as Id<"courses">,
+      batchId: item.batchId as Id<"courseBatches"> | undefined,
+      listedPrice: roundCurrency(item.listedPrice),
+      checkoutPrice: roundCurrency(item.checkoutPrice),
+      amountPaid: roundCurrency(item.amountPaid),
+      redemptionDiscountAmount:
+        item.redemptionDiscountAmount === undefined
+          ? undefined
+          : roundCurrency(item.redemptionDiscountAmount),
+      couponCode: item.couponCode,
+      mindPointsRedeemed:
+        item.mindPointsRedeemed === undefined
+          ? undefined
+          : roundCurrency(item.mindPointsRedeemed),
+      bundleCampaignId: item.bundleCampaignId as
+        | Id<"bundleCampaigns">
+        | undefined,
+      bundleCampaignName: item.bundleCampaignName,
+    })),
+  };
+}
+
+function normalizeOptionalNumber(value: unknown) {
+  const rounded = roundCurrency(value as number | undefined);
+  return rounded > 0 ? rounded : undefined;
+}
+
+function checkoutPricingMatchesAttempt(
+  submitted: CheckoutPricing | undefined,
+  attemptPricing: CheckoutPricing,
+) {
+  if (!submitted) {
+    return false;
+  }
+  if (
+    roundCurrency(submitted.totalAmountPaid) !== attemptPricing.totalAmountPaid
+  ) {
+    return false;
+  }
+  if (submitted.items.length !== attemptPricing.items.length) {
+    return false;
+  }
+
+  return attemptPricing.items.every((expected) => {
+    const submittedItem = getCheckoutPricingItem(
+      submitted,
+      expected.courseId,
+      expected.batchId,
+    );
+    if (!submittedItem) {
+      return false;
+    }
+
+    return (
+      roundCurrency(submittedItem.listedPrice) === expected.listedPrice &&
+      roundCurrency(submittedItem.checkoutPrice) === expected.checkoutPrice &&
+      roundCurrency(submittedItem.amountPaid) === expected.amountPaid &&
+      normalizeOptionalNumber(submittedItem.redemptionDiscountAmount) ===
+        normalizeOptionalNumber(expected.redemptionDiscountAmount) &&
+      (submittedItem.couponCode?.trim() || undefined) ===
+        (expected.couponCode?.trim() || undefined) &&
+      normalizeOptionalNumber(submittedItem.mindPointsRedeemed) ===
+        normalizeOptionalNumber(expected.mindPointsRedeemed) &&
+      (submittedItem.bundleCampaignId
+        ? String(submittedItem.bundleCampaignId)
+        : undefined) ===
+        (expected.bundleCampaignId
+          ? String(expected.bundleCampaignId)
+          : undefined)
+    );
+  });
+}
+
+function lineItemsMatchCheckoutPricing(
+  lineItems: EnrollmentLineItem[],
+  pricing: CheckoutPricing,
+) {
+  if (lineItems.length !== pricing.items.length) {
+    return false;
+  }
+
+  const usedPricingIndexes = new Set<number>();
+  return lineItems.every((lineItem) => {
+    const pricingIndex = pricing.items.findIndex(
+      (pricingItem, index) =>
+        !usedPricingIndexes.has(index) &&
+        String(pricingItem.courseId) === String(lineItem.courseId) &&
+        (pricingItem.batchId
+          ? String(pricingItem.batchId) === String(lineItem.batchId)
+          : lineItem.batchId === undefined),
+    );
+    if (pricingIndex < 0) {
+      return false;
+    }
+    usedPricingIndexes.add(pricingIndex);
+    return true;
   });
 }
 
@@ -910,11 +1017,22 @@ export const handleSuccessfulPayment = mutation({
       args.courseId,
       args.batchId,
     );
-    const pricingFailure = await validateCheckoutPricingItemResult(ctx, {
-      userId: args.userId,
-      course,
-      pricingItem,
-    });
+    const remainingAdminCouponDiscountByCode =
+      await buildAdminCouponDiscountBudgetByCode(ctx, [
+        { course, pricingItem },
+      ]);
+    const pricingFailure = await validateCheckoutPricingItemResult(
+      ctx,
+      {
+        userId: args.userId,
+        course,
+        pricingItem,
+      },
+      {
+        cartCourses: [course],
+        remainingAdminCouponDiscountByCode,
+      },
+    );
     if (pricingFailure) {
       return pricingFailure;
     }
@@ -1288,6 +1406,18 @@ export const handleCartCheckout = mutation({
     let firstPaidEnrollmentId: Id<"enrollments"> | null = null;
     const paymentReference = args.razorpayPaymentId?.trim();
     let checkoutAttempt: Doc<"checkoutAttempts"> | null = null;
+    const consumedAdminCouponCodes = new Set<string>();
+    const remainingAdminCouponDiscountByCode = new Map<string, number>();
+    let effectiveCheckoutPricing = args.checkoutPricing;
+
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity || identity.subject !== args.userId) {
+      return enrollmentMutationFailure(
+        "Authenticated checkout user mismatch.",
+        convexResultErrorCode.FORBIDDEN,
+        { userId: args.userId },
+      );
+    }
 
     if (args.checkoutAttemptId) {
       const attempt = await ctx.db.get(args.checkoutAttemptId);
@@ -1333,6 +1463,35 @@ export const handleCartCheckout = mutation({
       }
 
       checkoutAttempt = attempt;
+      if (
+        checkoutAttempt.buyerUserId &&
+        checkoutAttempt.buyerUserId !== args.userId
+      ) {
+        return enrollmentMutationFailure(
+          "Checkout attempt does not belong to this user.",
+          convexResultErrorCode.FORBIDDEN,
+          { checkoutAttemptId: args.checkoutAttemptId },
+        );
+      }
+
+      const attemptPricing = checkoutPricingFromAttempt(checkoutAttempt);
+      if (
+        !checkoutPricingMatchesAttempt(args.checkoutPricing, attemptPricing)
+      ) {
+        return enrollmentMutationFailure(
+          "Checkout pricing no longer matches the authorized checkout attempt.",
+          convexResultErrorCode.CONFLICT,
+          { checkoutAttemptId: args.checkoutAttemptId },
+        );
+      }
+      if (!lineItemsMatchCheckoutPricing(lineItems, attemptPricing)) {
+        return enrollmentMutationFailure(
+          "Checkout items no longer match the authorized checkout attempt.",
+          convexResultErrorCode.CONFLICT,
+          { checkoutAttemptId: args.checkoutAttemptId },
+        );
+      }
+      effectiveCheckoutPricing = attemptPricing;
     }
 
     for (const lineItem of lineItems) {
@@ -1363,22 +1522,10 @@ export const handleCartCheckout = mutation({
         return capacityResult;
       }
       const pricingItem = getCheckoutPricingItem(
-        args.checkoutPricing,
+        effectiveCheckoutPricing,
         lineItem.courseId,
         lineItem.batchId,
       );
-      const pricingFailure = await validateCheckoutPricingItemResult(
-        ctx,
-        {
-          userId: args.userId,
-          course,
-          pricingItem,
-        },
-        { consumeCoupon: false },
-      );
-      if (pricingFailure) {
-        return pricingFailure;
-      }
 
       preparedLineItems.push({
         batch,
@@ -1396,6 +1543,30 @@ export const handleCartCheckout = mutation({
       });
     }
 
+    const checkoutCartCourses = preparedLineItems.map((item) => item.course);
+    const preflightAdminCouponDiscountByCode =
+      await buildAdminCouponDiscountBudgetByCode(ctx, preparedLineItems);
+
+    for (const { course, pricingItem } of preparedLineItems) {
+      const pricingFailure = await validateCheckoutPricingItemResult(
+        ctx,
+        {
+          userId: args.userId,
+          course,
+          pricingItem,
+        },
+        {
+          cartCourses: checkoutCartCourses,
+          consumeCoupon: false,
+          remainingAdminCouponDiscountByCode:
+            preflightAdminCouponDiscountByCode,
+        },
+      );
+      if (pricingFailure) {
+        return pricingFailure;
+      }
+    }
+
     if (args.checkoutAttemptId && checkoutAttempt) {
       await ctx.db.patch(args.checkoutAttemptId, {
         razorpayOrderId:
@@ -1405,6 +1576,12 @@ export const handleCartCheckout = mutation({
         status: "payment_captured",
         updatedAt: Date.now(),
       });
+    }
+
+    const consumptionAdminCouponDiscountByCode =
+      await buildAdminCouponDiscountBudgetByCode(ctx, preparedLineItems);
+    for (const [couponCode, budget] of consumptionAdminCouponDiscountByCode) {
+      remainingAdminCouponDiscountByCode.set(couponCode, budget);
     }
 
     for (const {
@@ -1436,6 +1613,11 @@ export const handleCartCheckout = mutation({
           userId: args.userId,
           course,
           pricingItem,
+        },
+        {
+          cartCourses: checkoutCartCourses,
+          consumedAdminCouponCodes,
+          remainingAdminCouponDiscountByCode,
         },
       );
       if (couponConsumptionFailure) {
@@ -2208,6 +2390,8 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     const worksheetEnrollments: EnrollmentSummary[] = [];
     const preparedLineItems: PreparedEnrollmentLineItem[] = [];
     const processedBogoSourceCourses = new Set<string>();
+    const consumedAdminCouponCodes = new Set<string>();
+    const remainingAdminCouponDiscountByCode = new Map<string, number>();
 
     for (const lineItem of lineItems) {
       const course = await ctx.db.get(lineItem.courseId);
@@ -2242,18 +2426,6 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         lineItem.courseId,
         lineItem.batchId,
       );
-      const pricingFailure = await validateCheckoutPricingItemResult(
-        ctx,
-        {
-          userId: args.userData.email,
-          course,
-          pricingItem,
-        },
-        { consumeCoupon: false },
-      );
-      if (pricingFailure) {
-        return pricingFailure;
-      }
 
       preparedLineItems.push({
         batch,
@@ -2271,6 +2443,30 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         lineItem,
         pricingItem,
       });
+    }
+
+    const checkoutCartCourses = preparedLineItems.map((item) => item.course);
+    const preflightAdminCouponDiscountByCode =
+      await buildAdminCouponDiscountBudgetByCode(ctx, preparedLineItems);
+
+    for (const { course, pricingItem } of preparedLineItems) {
+      const pricingFailure = await validateCheckoutPricingItemResult(
+        ctx,
+        {
+          userId: args.userData.email,
+          course,
+          pricingItem,
+        },
+        {
+          cartCourses: checkoutCartCourses,
+          consumeCoupon: false,
+          remainingAdminCouponDiscountByCode:
+            preflightAdminCouponDiscountByCode,
+        },
+      );
+      if (pricingFailure) {
+        return pricingFailure;
+      }
     }
 
     // Check if guest user already exists with this email after preflight passes.
@@ -2295,6 +2491,12 @@ export const handleGuestUserCartCheckoutWithData = mutation({
 
     if (!guestUser) {
       throw new Error("Failed to create or retrieve guest user");
+    }
+
+    const consumptionAdminCouponDiscountByCode =
+      await buildAdminCouponDiscountBudgetByCode(ctx, preparedLineItems);
+    for (const [couponCode, budget] of consumptionAdminCouponDiscountByCode) {
+      remainingAdminCouponDiscountByCode.set(couponCode, budget);
     }
 
     for (const {
@@ -2326,6 +2528,11 @@ export const handleGuestUserCartCheckoutWithData = mutation({
           userId: args.userData.email,
           course,
           pricingItem,
+        },
+        {
+          cartCourses: checkoutCartCourses,
+          consumedAdminCouponCodes,
+          remainingAdminCouponDiscountByCode,
         },
       );
       if (couponConsumptionFailure) {

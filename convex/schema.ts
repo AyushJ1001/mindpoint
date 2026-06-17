@@ -80,6 +80,68 @@ export const BundleCampaignValue = v.object({
   updatedByAdminId: v.string(),
 });
 
+export const AdminCouponDiscountValue = v.union(
+  v.object({
+    type: v.literal("percentage"),
+    value: v.number(),
+    maxDiscount: v.optional(v.number()),
+  }),
+  v.object({
+    type: v.literal("flat"),
+    value: v.number(),
+  }),
+  v.object({
+    type: v.literal("free"),
+  }),
+);
+
+export const AdminCouponSelectorValue = v.union(
+  v.object({
+    type: v.literal("cart"),
+  }),
+  v.object({
+    type: v.literal("courses"),
+    courseIds: v.array(v.id("courses")),
+  }),
+  v.object({
+    type: v.literal("courseTypes"),
+    courseTypes: v.array(CourseType),
+  }),
+);
+
+export const AdminCouponRequirementValue = v.union(
+  v.object({
+    type: v.literal("none"),
+  }),
+  v.object({
+    type: v.literal("courses"),
+    courseIds: v.array(v.id("courses")),
+  }),
+  v.object({
+    type: v.literal("courseTypes"),
+    courseTypes: v.array(CourseType),
+  }),
+);
+
+export const AdminCouponValue = v.object({
+  code: v.string(),
+  name: v.string(),
+  description: v.optional(v.string()),
+  enabled: v.boolean(),
+  isArchived: v.boolean(),
+  discount: AdminCouponDiscountValue,
+  appliesTo: AdminCouponSelectorValue,
+  requires: AdminCouponRequirementValue,
+  startDate: v.optional(v.string()),
+  endDate: v.optional(v.string()),
+  redemptionLimit: v.optional(v.number()),
+  totalRedemptions: v.number(),
+  createdAt: v.number(),
+  updatedAt: v.number(),
+  createdByAdminId: v.string(),
+  updatedByAdminId: v.string(),
+});
+
 export const EnrollmentSessionType = v.union(
   v.literal("focus"),
   v.literal("flow"),
@@ -319,6 +381,12 @@ export default defineSchema({
       "isArchived",
       "priority",
     ]),
+
+  adminCoupons: defineTable(AdminCouponValue)
+    .index("by_code", ["code"])
+    .index("by_updatedAt", ["updatedAt"])
+    .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"])
+    .index("by_enabled_isArchived_code", ["enabled", "isArchived", "code"]),
 
   reviews: defineTable({
     userId: v.string(),

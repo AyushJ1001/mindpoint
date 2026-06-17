@@ -37,7 +37,18 @@ export type CheckoutPricingFailure = ConvexFailure<
 >;
 
 type ValidateCheckoutPricingItemOptions = {
+  cartCourses?: Array<Pick<Doc<"courses">, "_id" | "type">>;
   consumeCoupon?: boolean;
+  consumedAdminCouponCodes?: Set<string>;
+  remainingAdminCouponDiscountByCode?: Map<string, number>;
+};
+
+type AdminCouponBudgetLine = {
+  course: Pick<Doc<"courses">, "_id" | "type" | "price">;
+  pricingItem?: Pick<
+    CheckoutPricingItem,
+    "checkoutPrice" | "couponCode" | "bundleCampaignId"
+  >;
 };
 
 export const checkoutPricingItemValidator = v.object({
@@ -126,6 +137,169 @@ function checkoutPricingFailure(
   });
 }
 
+function expectedAdminCouponDiscountForLine(args: {
+  coupon: Doc<"adminCoupons">;
+  checkoutPrice: number;
+  remainingDiscount?: number;
+}) {
+  const checkoutPrice = roundCurrency(args.checkoutPrice);
+  if (checkoutPrice <= 0) {
+    return 0;
+  }
+
+  const remainingDiscount =
+    args.remainingDiscount === undefined
+      ? Number.POSITIVE_INFINITY
+      : roundCurrency(args.remainingDiscount);
+
+  if (remainingDiscount <= 0) {
+    return 0;
+  }
+
+  const discount = args.coupon.discount;
+  if (discount.type === "free") {
+    return Math.min(checkoutPrice, remainingDiscount);
+  }
+
+  if (discount.type === "flat") {
+    return Math.min(
+      checkoutPrice,
+      roundCurrency(discount.value),
+      remainingDiscount,
+    );
+  }
+
+  const percentageDiscount = Math.min(
+    checkoutPrice,
+    Math.round(checkoutPrice * (discount.value / 100)),
+  );
+  const cappedPercentageDiscount =
+    discount.maxDiscount === undefined
+      ? percentageDiscount
+      : Math.min(percentageDiscount, roundCurrency(discount.maxDiscount));
+
+  return Math.min(cappedPercentageDiscount, remainingDiscount);
+}
+
+function adminCouponUsesSharedDiscountBudget(coupon: Doc<"adminCoupons">) {
+  return (
+    coupon.discount.type === "flat" ||
+    coupon.discount.type === "free" ||
+    coupon.discount.type === "percentage"
+  );
+}
+
+function initialAdminCouponDiscountBudget(
+  coupon: Doc<"adminCoupons">,
+  eligibleSubtotal: number,
+) {
+  if (coupon.discount.type === "flat") {
+    return roundCurrency(coupon.discount.value);
+  }
+
+  if (coupon.discount.type === "free") {
+    return roundCurrency(eligibleSubtotal);
+  }
+
+  const percentageDiscount = Math.round(
+    roundCurrency(eligibleSubtotal) * (coupon.discount.value / 100),
+  );
+  return coupon.discount.maxDiscount === undefined
+    ? percentageDiscount
+    : Math.min(percentageDiscount, roundCurrency(coupon.discount.maxDiscount));
+}
+
+function adminCouponRequirementsSatisfied(
+  coupon: Doc<"adminCoupons">,
+  cartCourses: Array<Pick<Doc<"courses">, "_id" | "type">> | undefined,
+) {
+  const requires = coupon.requires;
+  if (requires.type === "none") {
+    return true;
+  }
+
+  if (!cartCourses || cartCourses.length === 0) {
+    return false;
+  }
+
+  if (requires.type === "courses") {
+    const cartCourseIds = new Set(
+      cartCourses.map((course) => String(course._id)),
+    );
+    return requires.courseIds.some((courseId) =>
+      cartCourseIds.has(String(courseId)),
+    );
+  }
+
+  const cartCourseTypes = new Set(
+    cartCourses.map((course) => course.type).filter(Boolean),
+  );
+  return requires.courseTypes.some((courseType) =>
+    cartCourseTypes.has(courseType),
+  );
+}
+
+function adminCouponAppliesToCourse(
+  coupon: Doc<"adminCoupons">,
+  course: Pick<Doc<"courses">, "_id" | "type">,
+) {
+  return (
+    coupon.appliesTo.type === "cart" ||
+    (coupon.appliesTo.type === "courses" &&
+      coupon.appliesTo.courseIds.some(
+        (courseId) => String(courseId) === String(course._id),
+      )) ||
+    (coupon.appliesTo.type === "courseTypes" &&
+      !!course.type &&
+      coupon.appliesTo.courseTypes.includes(course.type))
+  );
+}
+
+export async function buildAdminCouponDiscountBudgetByCode(
+  ctx: MutationCtx,
+  lines: AdminCouponBudgetLine[],
+) {
+  const couponCodes = Array.from(
+    new Set(
+      lines
+        .map((line) => line.pricingItem?.couponCode?.trim().toUpperCase())
+        .filter((code): code is string => Boolean(code)),
+    ),
+  );
+  const budgetByCode = new Map<string, number>();
+
+  for (const couponCode of couponCodes) {
+    const adminCoupon = await ctx.db
+      .query("adminCoupons")
+      .withIndex("by_code", (q) => q.eq("code", couponCode))
+      .first();
+    if (!adminCoupon || !adminCouponUsesSharedDiscountBudget(adminCoupon)) {
+      continue;
+    }
+
+    const eligiblePrices = lines
+      .filter(
+        (line) =>
+          !line.pricingItem?.bundleCampaignId &&
+          adminCouponAppliesToCourse(adminCoupon, line.course),
+      )
+      .map((line) =>
+        roundCurrency(line.pricingItem?.checkoutPrice ?? line.course.price),
+      );
+    const eligibleSubtotal =
+      adminCoupon.discount.type === "free"
+        ? Math.max(0, ...eligiblePrices)
+        : eligiblePrices.reduce((total, price) => total + price, 0);
+
+    budgetByCode.set(
+      couponCode,
+      initialAdminCouponDiscountBudget(adminCoupon, eligibleSubtotal),
+    );
+  }
+
+  return budgetByCode;
+}
+
 export async function validateCheckoutPricingItemResult(
   ctx: MutationCtx,
   args: {
@@ -178,14 +352,167 @@ export async function validateCheckoutPricingItemResult(
     .first();
 
   if (!coupon) {
-    return checkoutPricingFailure(
-      "INVALID_COUPON_CODE",
-      "Invalid coupon code.",
-      {
-        couponCode,
-        courseId: args.course._id,
-      },
+    const adminCoupon = await ctx.db
+      .query("adminCoupons")
+      .withIndex("by_code", (q) => q.eq("code", couponCode.toUpperCase()))
+      .first();
+
+    if (!adminCoupon) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "Invalid coupon code.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    const normalizedAdminCouponCode = adminCoupon.code.toUpperCase();
+    const adminCouponAlreadyConsumed =
+      options.consumedAdminCouponCodes?.has(normalizedAdminCouponCode) ?? false;
+
+    if (
+      !adminCoupon.enabled ||
+      adminCoupon.isArchived ||
+      (adminCoupon.startDate &&
+        Date.now() < new Date(adminCoupon.startDate).getTime()) ||
+      (adminCoupon.endDate &&
+        Date.now() > new Date(adminCoupon.endDate).getTime()) ||
+      (!adminCouponAlreadyConsumed &&
+        adminCoupon.redemptionLimit !== undefined &&
+        adminCoupon.redemptionLimit > 0 &&
+        adminCoupon.totalRedemptions >= adminCoupon.redemptionLimit)
+    ) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "This coupon is no longer active.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    if (pricingItem.bundleCampaignId) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "Coupons cannot be combined with bundle offers.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    const appliesToCourse = adminCouponAppliesToCourse(
+      adminCoupon,
+      args.course,
     );
+
+    if (!appliesToCourse) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "This coupon is not valid for this course.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    if (!adminCouponRequirementsSatisfied(adminCoupon, options.cartCourses)) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "This coupon is not valid for the current cart.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    const redemptionDiscountAmount = roundCurrency(
+      pricingItem.redemptionDiscountAmount,
+    );
+    const usesSharedDiscountBudget =
+      adminCouponUsesSharedDiscountBudget(adminCoupon);
+    let remainingAdminCouponDiscount = usesSharedDiscountBudget
+      ? options.remainingAdminCouponDiscountByCode?.get(
+          normalizedAdminCouponCode,
+        )
+      : undefined;
+    if (
+      usesSharedDiscountBudget &&
+      options.remainingAdminCouponDiscountByCode &&
+      remainingAdminCouponDiscount === undefined
+    ) {
+      remainingAdminCouponDiscount = initialAdminCouponDiscountBudget(
+        adminCoupon,
+        checkoutPrice,
+      );
+      options.remainingAdminCouponDiscountByCode.set(
+        normalizedAdminCouponCode,
+        remainingAdminCouponDiscount,
+      );
+    }
+    const expectedDiscountAmount = expectedAdminCouponDiscountForLine({
+      coupon: adminCoupon,
+      checkoutPrice,
+      remainingDiscount: remainingAdminCouponDiscount,
+    });
+    const expectedAmountPaid = Math.max(
+      0,
+      checkoutPrice - expectedDiscountAmount,
+    );
+
+    if (
+      expectedDiscountAmount <= 0 ||
+      redemptionDiscountAmount !== expectedDiscountAmount ||
+      amountPaid !== expectedAmountPaid
+    ) {
+      return checkoutPricingFailure(
+        "CONFLICT",
+        "Coupon pricing does not match the coupon discount.",
+        {
+          amountPaid,
+          checkoutPrice,
+          couponCode,
+          expectedAmountPaid,
+          expectedDiscountAmount,
+          redemptionDiscountAmount,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    if (
+      usesSharedDiscountBudget &&
+      options.remainingAdminCouponDiscountByCode
+    ) {
+      options.remainingAdminCouponDiscountByCode.set(
+        normalizedAdminCouponCode,
+        Math.max(
+          0,
+          adminCoupon.discount.type === "free"
+            ? 0
+            : (remainingAdminCouponDiscount ?? 0) - expectedDiscountAmount,
+        ),
+      );
+    }
+
+    const shouldConsumeAdminCoupon =
+      (options.consumeCoupon ?? true) && !adminCouponAlreadyConsumed;
+
+    if (shouldConsumeAdminCoupon) {
+      await ctx.db.patch(adminCoupon._id, {
+        totalRedemptions: adminCoupon.totalRedemptions + 1,
+        updatedAt: Date.now(),
+      });
+      options.consumedAdminCouponCodes?.add(normalizedAdminCouponCode);
+    }
+
+    return null;
   }
   if (coupon.isUsed) {
     return checkoutPricingFailure(

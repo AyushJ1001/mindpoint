@@ -10,6 +10,7 @@ import {
   type ReconciliationCartItem,
   type ReconciliationCourse,
 } from "../lib/domain/checkout-reconciliation";
+import type { ReconciliationAdminCoupon } from "../lib/domain/admin-coupons";
 import {
   convexFailure,
   convexResultErrorCode,
@@ -93,6 +94,42 @@ function campaignToReconciliationCampaign(
     isArchived: campaign.isArchived,
     startDate: campaign.startDate,
     endDate: campaign.endDate,
+  };
+}
+
+function adminCouponToReconciliationCoupon(
+  coupon: Doc<"adminCoupons">,
+): ReconciliationAdminCoupon {
+  return {
+    _id: String(coupon._id),
+    code: coupon.code,
+    name: coupon.name,
+    description: coupon.description,
+    enabled: coupon.enabled,
+    isArchived: coupon.isArchived,
+    discount: coupon.discount,
+    appliesTo:
+      coupon.appliesTo.type === "courses"
+        ? {
+            type: "courses",
+            courseIds: coupon.appliesTo.courseIds.map((courseId) =>
+              String(courseId),
+            ),
+          }
+        : coupon.appliesTo,
+    requires:
+      coupon.requires.type === "courses"
+        ? {
+            type: "courses",
+            courseIds: coupon.requires.courseIds.map((courseId) =>
+              String(courseId),
+            ),
+          }
+        : coupon.requires,
+    startDate: coupon.startDate,
+    endDate: coupon.endDate,
+    redemptionLimit: coupon.redemptionLimit,
+    totalRedemptions: coupon.totalRedemptions,
   };
 }
 
@@ -201,6 +238,17 @@ async function collectCheckoutContext(
       )
       .map((coupon) => [coupon.code, coupon]),
   );
+  const normalizedCouponCodes = Array.from(
+    new Set(couponCodes.map((code) => code.toUpperCase())),
+  );
+  const adminCoupons = await Promise.all(
+    normalizedCouponCodes.map((code) =>
+      ctx.db
+        .query("adminCoupons")
+        .withIndex("by_code", (q) => q.eq("code", code))
+        .first(),
+    ),
+  );
   const enrichedCartItems = cartItems.map((item) => {
     const coupon = item.couponCode
       ? couponsByCode.get(item.couponCode.trim())
@@ -220,6 +268,9 @@ async function collectCheckoutContext(
     courses: courses.map(courseToReconciliationCourse),
     batches: Array.from(batchesById.values()).map(batchToReconciliationBatch),
     bundleCampaigns: bundleCampaigns.map(campaignToReconciliationCampaign),
+    adminCoupons: adminCoupons
+      .filter((coupon): coupon is Doc<"adminCoupons"> => coupon !== null)
+      .map(adminCouponToReconciliationCoupon),
   };
 }
 
@@ -242,6 +293,7 @@ async function runReconciliation(
     courses: context.courses,
     batches: context.batches,
     bundleCampaigns: context.bundleCampaigns,
+    adminCoupons: context.adminCoupons,
   });
 }
 

@@ -10,10 +10,18 @@
 
 import type * as _publicCourse from "../_publicCourse.js";
 import type * as _shared_checkout from "../_shared/checkout.js";
+import type * as _shared_emailActionResult from "../_shared/emailActionResult.js";
+import type * as _shared_emailDelivery from "../_shared/emailDelivery.js";
+import type * as _shared_enrollment from "../_shared/enrollment.js";
+import type * as _shared_enrollmentSchedule from "../_shared/enrollmentSchedule.js";
+import type * as _shared_enrollmentSheet from "../_shared/enrollmentSheet.js";
+import type * as _shared_googleSheetsClient from "../_shared/googleSheetsClient.js";
 import type * as _shared_mindPoints from "../_shared/mindPoints.js";
+import type * as _shared_result from "../_shared/result.js";
 import type * as adminAudit from "../adminAudit.js";
 import type * as adminAuth from "../adminAuth.js";
 import type * as adminBundles from "../adminBundles.js";
+import type * as adminCoupons from "../adminCoupons.js";
 import type * as adminCourses from "../adminCourses.js";
 import type * as adminDashboard from "../adminDashboard.js";
 import type * as adminEnrollments from "../adminEnrollments.js";
@@ -48,10 +56,18 @@ import type {
 declare const fullApi: ApiFromModules<{
   _publicCourse: typeof _publicCourse;
   "_shared/checkout": typeof _shared_checkout;
+  "_shared/emailActionResult": typeof _shared_emailActionResult;
+  "_shared/emailDelivery": typeof _shared_emailDelivery;
+  "_shared/enrollment": typeof _shared_enrollment;
+  "_shared/enrollmentSchedule": typeof _shared_enrollmentSchedule;
+  "_shared/enrollmentSheet": typeof _shared_enrollmentSheet;
+  "_shared/googleSheetsClient": typeof _shared_googleSheetsClient;
   "_shared/mindPoints": typeof _shared_mindPoints;
+  "_shared/result": typeof _shared_result;
   adminAudit: typeof adminAudit;
   adminAuth: typeof adminAuth;
   adminBundles: typeof adminBundles;
+  adminCoupons: typeof adminCoupons;
   adminCourses: typeof adminCourses;
   adminDashboard: typeof adminDashboard;
   adminEnrollments: typeof adminEnrollments;
