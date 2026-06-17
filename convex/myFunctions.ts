@@ -1289,6 +1289,7 @@ export const handleCartCheckout = mutation({
     const paymentReference = args.razorpayPaymentId?.trim();
     let checkoutAttempt: Doc<"checkoutAttempts"> | null = null;
     const consumedAdminCouponCodes = new Set<string>();
+    const remainingAdminCouponDiscountByCode = new Map<string, number>();
 
     if (args.checkoutAttemptId) {
       const attempt = await ctx.db.get(args.checkoutAttemptId);
@@ -1438,7 +1439,7 @@ export const handleCartCheckout = mutation({
           course,
           pricingItem,
         },
-        { consumedAdminCouponCodes },
+        { consumedAdminCouponCodes, remainingAdminCouponDiscountByCode },
       );
       if (couponConsumptionFailure) {
         throw new Error(couponConsumptionFailure.error.message);
@@ -2211,6 +2212,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
     const preparedLineItems: PreparedEnrollmentLineItem[] = [];
     const processedBogoSourceCourses = new Set<string>();
     const consumedAdminCouponCodes = new Set<string>();
+    const remainingAdminCouponDiscountByCode = new Map<string, number>();
 
     for (const lineItem of lineItems) {
       const course = await ctx.db.get(lineItem.courseId);
@@ -2330,7 +2332,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
           course,
           pricingItem,
         },
-        { consumedAdminCouponCodes },
+        { consumedAdminCouponCodes, remainingAdminCouponDiscountByCode },
       );
       if (couponConsumptionFailure) {
         throw new Error(couponConsumptionFailure.error.message);

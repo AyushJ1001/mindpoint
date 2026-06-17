@@ -199,10 +199,10 @@ async function main() {
   assert.equal(adminCartCouponResult.status, "changed");
   assert.equal(adminCartCouponResult.totalAmountPaid, 5600);
   assert.equal(adminCartCouponResult.items[0].couponCode, "SAVE500");
-  assert.equal(adminCartCouponResult.items[1].couponCode, "SAVE500");
+  assert.equal(adminCartCouponResult.items[1].couponCode, undefined);
   assert.deepEqual(
     adminCartCouponResult.items.map((item) => item.amountPaid),
-    [3305, 2295],
+    [3100, 2500],
   );
 
   const adminCourseCouponResult = reconcileCheckoutIntent({

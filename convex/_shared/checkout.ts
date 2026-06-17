@@ -39,6 +39,7 @@ export type CheckoutPricingFailure = ConvexFailure<
 type ValidateCheckoutPricingItemOptions = {
   consumeCoupon?: boolean;
   consumedAdminCouponCodes?: Set<string>;
+  remainingAdminCouponDiscountByCode?: Map<string, number>;
 };
 
 export const checkoutPricingItemValidator = v.object({
@@ -125,6 +126,70 @@ function checkoutPricingFailure(
     ...(details !== undefined ? { details } : {}),
     message,
   });
+}
+
+function expectedAdminCouponDiscountForLine(args: {
+  coupon: Doc<"adminCoupons">;
+  checkoutPrice: number;
+  remainingDiscount?: number;
+}) {
+  const checkoutPrice = roundCurrency(args.checkoutPrice);
+  if (checkoutPrice <= 0) {
+    return 0;
+  }
+
+  const remainingDiscount =
+    args.remainingDiscount === undefined
+      ? Number.POSITIVE_INFINITY
+      : roundCurrency(args.remainingDiscount);
+
+  if (remainingDiscount <= 0) {
+    return 0;
+  }
+
+  const discount = args.coupon.discount;
+  if (discount.type === "free") {
+    return Math.min(checkoutPrice, remainingDiscount);
+  }
+
+  if (discount.type === "flat") {
+    return Math.min(
+      checkoutPrice,
+      roundCurrency(discount.value),
+      remainingDiscount,
+    );
+  }
+
+  const percentageDiscount = Math.min(
+    checkoutPrice,
+    Math.round(checkoutPrice * (discount.value / 100)),
+  );
+
+  return Math.min(percentageDiscount, remainingDiscount);
+}
+
+function adminCouponUsesSharedDiscountBudget(coupon: Doc<"adminCoupons">) {
+  return (
+    coupon.discount.type === "flat" ||
+    coupon.discount.type === "free" ||
+    (coupon.discount.type === "percentage" &&
+      coupon.discount.maxDiscount !== undefined)
+  );
+}
+
+function initialAdminCouponDiscountBudget(
+  coupon: Doc<"adminCoupons">,
+  checkoutPrice: number,
+) {
+  if (coupon.discount.type === "flat") {
+    return roundCurrency(coupon.discount.value);
+  }
+
+  if (coupon.discount.type === "free") {
+    return roundCurrency(checkoutPrice);
+  }
+
+  return roundCurrency(coupon.discount.maxDiscount);
 }
 
 export async function validateCheckoutPricingItemResult(
@@ -242,16 +307,70 @@ export async function validateCheckoutPricingItemResult(
       );
     }
 
-    if (amountPaid === checkoutPrice) {
+    const redemptionDiscountAmount = roundCurrency(
+      pricingItem.redemptionDiscountAmount,
+    );
+    const usesSharedDiscountBudget =
+      adminCouponUsesSharedDiscountBudget(adminCoupon);
+    let remainingAdminCouponDiscount = usesSharedDiscountBudget
+      ? options.remainingAdminCouponDiscountByCode?.get(
+          normalizedAdminCouponCode,
+        )
+      : undefined;
+    if (
+      usesSharedDiscountBudget &&
+      options.remainingAdminCouponDiscountByCode &&
+      remainingAdminCouponDiscount === undefined
+    ) {
+      remainingAdminCouponDiscount = initialAdminCouponDiscountBudget(
+        adminCoupon,
+        checkoutPrice,
+      );
+      options.remainingAdminCouponDiscountByCode.set(
+        normalizedAdminCouponCode,
+        remainingAdminCouponDiscount,
+      );
+    }
+    const expectedDiscountAmount = expectedAdminCouponDiscountForLine({
+      coupon: adminCoupon,
+      checkoutPrice,
+      remainingDiscount: remainingAdminCouponDiscount,
+    });
+    const expectedAmountPaid = Math.max(
+      0,
+      checkoutPrice - expectedDiscountAmount,
+    );
+
+    if (
+      expectedDiscountAmount <= 0 ||
+      redemptionDiscountAmount !== expectedDiscountAmount ||
+      amountPaid !== expectedAmountPaid
+    ) {
       return checkoutPricingFailure(
         "CONFLICT",
-        "Coupon pricing does not include a discount.",
+        "Coupon pricing does not match the coupon discount.",
         {
           amountPaid,
           checkoutPrice,
           couponCode,
+          expectedAmountPaid,
+          expectedDiscountAmount,
+          redemptionDiscountAmount,
           courseId: args.course._id,
         },
+      );
+    }
+
+    if (
+      usesSharedDiscountBudget &&
+      options.remainingAdminCouponDiscountByCode
+    ) {
+      options.remainingAdminCouponDiscountByCode.set(
+        normalizedAdminCouponCode,
+        Math.max(
+          0,
+          (remainingAdminCouponDiscount ?? 0) - expectedDiscountAmount,
+        ),
       );
     }
 

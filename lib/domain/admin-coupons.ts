@@ -154,39 +154,53 @@ function cartSatisfiesRequirement(
   );
 }
 
-function allocateDiscount(
-  items: AdminCouponLineItem[],
-  discountAmount: number,
-): Map<string, number> {
+function allocateDiscount(input: {
+  coupon: ReconciliationAdminCoupon;
+  items: AdminCouponLineItem[];
+  discountAmount: number;
+}): Map<string, number> {
+  const { coupon, items, discountAmount } = input;
   const positiveItems = items.filter(
     (item) => roundCurrency(item.amountPaid) > 0,
   );
   const itemDiscounts = new Map<string, number>();
-  const subtotal = positiveItems.reduce(
-    (total, item) => total + roundCurrency(item.amountPaid),
-    0,
-  );
 
-  if (subtotal <= 0 || discountAmount <= 0) {
+  if (positiveItems.length === 0 || discountAmount <= 0) {
     return itemDiscounts;
   }
 
-  let allocated = 0;
-  positiveItems.forEach((item, index) => {
-    const lineDiscount =
-      index === positiveItems.length - 1
-        ? discountAmount - allocated
-        : Math.min(
-            roundCurrency(item.amountPaid),
-            Math.floor(
-              (discountAmount * roundCurrency(item.amountPaid)) / subtotal,
-            ),
-          );
-    allocated += lineDiscount;
+  if (
+    coupon.discount.type === "percentage" &&
+    coupon.discount.maxDiscount === undefined
+  ) {
+    for (const item of positiveItems) {
+      const lineDiscount = Math.min(
+        roundCurrency(item.amountPaid),
+        Math.round(
+          roundCurrency(item.amountPaid) * (coupon.discount.value / 100),
+        ),
+      );
+      if (lineDiscount > 0) {
+        itemDiscounts.set(item.cartItemId, lineDiscount);
+      }
+    }
+    return itemDiscounts;
+  }
+
+  let remainingDiscount = discountAmount;
+  for (const item of positiveItems) {
+    const lineDiscount = Math.min(
+      roundCurrency(item.amountPaid),
+      remainingDiscount,
+    );
+    remainingDiscount -= lineDiscount;
     if (lineDiscount > 0) {
       itemDiscounts.set(item.cartItemId, lineDiscount);
     }
-  });
+    if (remainingDiscount <= 0) {
+      break;
+    }
+  }
 
   return itemDiscounts;
 }
@@ -280,6 +294,10 @@ export function applyAdminCouponToItems(input: {
     applied: true,
     coupon,
     discountAmount,
-    itemDiscounts: allocateDiscount(eligibleItems, discountAmount),
+    itemDiscounts: allocateDiscount({
+      coupon,
+      items: eligibleItems,
+      discountAmount,
+    }),
   };
 }
