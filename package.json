@@ -19,6 +19,7 @@
     "test:email:direct": "node test-resend-direct.js",
     "test:effect-boundary": "NODE_OPTIONS='--conditions react-server' tsx --test test-effect-boundary.ts",
     "test:convex-result": "tsx --test test-convex-result.ts",
+    "test:checkout-reconciliation": "tsx test-checkout-reconciliation.js",
     "test:analytics-removal": "node test-analytics-removal.js",
     "test:admin-route-protection": "node scripts/test-admin-route-protection.js",
     "test:root-web-doctor": "node test-root-web-doctor.js"

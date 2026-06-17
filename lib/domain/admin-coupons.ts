@@ -169,19 +169,22 @@ function allocateDiscount(input: {
     return itemDiscounts;
   }
 
-  if (
-    coupon.discount.type === "percentage" &&
-    coupon.discount.maxDiscount === undefined
-  ) {
+  if (coupon.discount.type === "percentage") {
+    let remainingDiscount = discountAmount;
     for (const item of positiveItems) {
       const lineDiscount = Math.min(
         roundCurrency(item.amountPaid),
         Math.round(
           roundCurrency(item.amountPaid) * (coupon.discount.value / 100),
         ),
+        remainingDiscount,
       );
+      remainingDiscount -= lineDiscount;
       if (lineDiscount > 0) {
         itemDiscounts.set(item.cartItemId, lineDiscount);
+      }
+      if (remainingDiscount <= 0) {
+        break;
       }
     }
     return itemDiscounts;

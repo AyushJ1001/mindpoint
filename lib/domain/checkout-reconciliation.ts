@@ -602,7 +602,7 @@ export function reconcileCheckoutIntent(input: {
         cartItemId: item.cartItemId,
         courseId: item.courseId,
         courseType: item.courseType,
-        amountPaid: item.amountPaid,
+        amountPaid: item.bundleCampaignId ? 0 : item.amountPaid,
         redemptionDiscountAmount: item.redemptionDiscountAmount,
         couponCode: item.couponCode,
       })),

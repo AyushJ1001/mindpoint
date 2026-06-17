@@ -43,6 +43,14 @@ type ValidateCheckoutPricingItemOptions = {
   remainingAdminCouponDiscountByCode?: Map<string, number>;
 };
 
+type AdminCouponBudgetLine = {
+  course: Pick<Doc<"courses">, "_id" | "type" | "price">;
+  pricingItem?: Pick<
+    CheckoutPricingItem,
+    "checkoutPrice" | "couponCode" | "bundleCampaignId"
+  >;
+};
+
 export const checkoutPricingItemValidator = v.object({
   courseId: v.id("courses"),
   batchId: v.optional(v.id("courseBatches")),
@@ -177,24 +185,28 @@ function adminCouponUsesSharedDiscountBudget(coupon: Doc<"adminCoupons">) {
   return (
     coupon.discount.type === "flat" ||
     coupon.discount.type === "free" ||
-    (coupon.discount.type === "percentage" &&
-      coupon.discount.maxDiscount !== undefined)
+    coupon.discount.type === "percentage"
   );
 }
 
 function initialAdminCouponDiscountBudget(
   coupon: Doc<"adminCoupons">,
-  checkoutPrice: number,
+  eligibleSubtotal: number,
 ) {
   if (coupon.discount.type === "flat") {
     return roundCurrency(coupon.discount.value);
   }
 
   if (coupon.discount.type === "free") {
-    return roundCurrency(checkoutPrice);
+    return roundCurrency(eligibleSubtotal);
   }
 
-  return roundCurrency(coupon.discount.maxDiscount);
+  const percentageDiscount = Math.round(
+    roundCurrency(eligibleSubtotal) * (coupon.discount.value / 100),
+  );
+  return coupon.discount.maxDiscount === undefined
+    ? percentageDiscount
+    : Math.min(percentageDiscount, roundCurrency(coupon.discount.maxDiscount));
 }
 
 function adminCouponRequirementsSatisfied(
@@ -225,6 +237,67 @@ function adminCouponRequirementsSatisfied(
   return requires.courseTypes.some((courseType) =>
     cartCourseTypes.has(courseType),
   );
+}
+
+function adminCouponAppliesToCourse(
+  coupon: Doc<"adminCoupons">,
+  course: Pick<Doc<"courses">, "_id" | "type">,
+) {
+  return (
+    coupon.appliesTo.type === "cart" ||
+    (coupon.appliesTo.type === "courses" &&
+      coupon.appliesTo.courseIds.some(
+        (courseId) => String(courseId) === String(course._id),
+      )) ||
+    (coupon.appliesTo.type === "courseTypes" &&
+      !!course.type &&
+      coupon.appliesTo.courseTypes.includes(course.type))
+  );
+}
+
+export async function buildAdminCouponDiscountBudgetByCode(
+  ctx: MutationCtx,
+  lines: AdminCouponBudgetLine[],
+) {
+  const couponCodes = Array.from(
+    new Set(
+      lines
+        .map((line) => line.pricingItem?.couponCode?.trim().toUpperCase())
+        .filter((code): code is string => Boolean(code)),
+    ),
+  );
+  const budgetByCode = new Map<string, number>();
+
+  for (const couponCode of couponCodes) {
+    const adminCoupon = await ctx.db
+      .query("adminCoupons")
+      .withIndex("by_code", (q) => q.eq("code", couponCode))
+      .first();
+    if (!adminCoupon || !adminCouponUsesSharedDiscountBudget(adminCoupon)) {
+      continue;
+    }
+
+    const eligiblePrices = lines
+      .filter(
+        (line) =>
+          !line.pricingItem?.bundleCampaignId &&
+          adminCouponAppliesToCourse(adminCoupon, line.course),
+      )
+      .map((line) =>
+        roundCurrency(line.pricingItem?.checkoutPrice ?? line.course.price),
+      );
+    const eligibleSubtotal =
+      adminCoupon.discount.type === "free"
+        ? Math.max(0, ...eligiblePrices)
+        : eligiblePrices.reduce((total, price) => total + price, 0);
+
+    budgetByCode.set(
+      couponCode,
+      initialAdminCouponDiscountBudget(adminCoupon, eligibleSubtotal),
+    );
+  }
+
+  return budgetByCode;
 }
 
 export async function validateCheckoutPricingItemResult(
@@ -321,15 +394,21 @@ export async function validateCheckoutPricingItemResult(
       );
     }
 
-    const appliesToCourse =
-      adminCoupon.appliesTo.type === "cart" ||
-      (adminCoupon.appliesTo.type === "courses" &&
-        adminCoupon.appliesTo.courseIds.some(
-          (courseId) => String(courseId) === String(args.course._id),
-        )) ||
-      (adminCoupon.appliesTo.type === "courseTypes" &&
-        !!args.course.type &&
-        adminCoupon.appliesTo.courseTypes.includes(args.course.type));
+    if (pricingItem.bundleCampaignId) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "Coupons cannot be combined with bundle offers.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    const appliesToCourse = adminCouponAppliesToCourse(
+      adminCoupon,
+      args.course,
+    );
 
     if (!appliesToCourse) {
       return checkoutPricingFailure(
@@ -415,7 +494,9 @@ export async function validateCheckoutPricingItemResult(
         normalizedAdminCouponCode,
         Math.max(
           0,
-          (remainingAdminCouponDiscount ?? 0) - expectedDiscountAmount,
+          adminCoupon.discount.type === "free"
+            ? 0
+            : (remainingAdminCouponDiscount ?? 0) - expectedDiscountAmount,
         ),
       );
     }

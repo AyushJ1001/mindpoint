@@ -68,6 +68,18 @@ function discountSummary(discount: CouponRow["discount"]) {
   }`;
 }
 
+function toDateTimeLocalValue(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return "";
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
+}
+
+function fromDateTimeLocalValue(value: string) {
+  return value ? new Date(value).toISOString() : undefined;
+}
+
 export default function AdminCouponsPage() {
   const [editingCouponId, setEditingCouponId] =
     useState<Id<"adminCoupons"> | null>(null);
@@ -157,8 +169,8 @@ export default function AdminCouponsPage() {
     setRequiredCourseTypes(
       coupon.requires.type === "courseTypes" ? coupon.requires.courseTypes : [],
     );
-    setStartDate(coupon.startDate ?? "");
-    setEndDate(coupon.endDate ?? "");
+    setStartDate(toDateTimeLocalValue(coupon.startDate));
+    setEndDate(toDateTimeLocalValue(coupon.endDate));
     setRedemptionLimit(
       coupon.redemptionLimit ? String(coupon.redemptionLimit) : "",
     );
@@ -204,8 +216,8 @@ export default function AdminCouponsPage() {
       discount,
       appliesTo,
       requires,
-      startDate: startDate || undefined,
-      endDate: endDate || undefined,
+      startDate: fromDateTimeLocalValue(startDate),
+      endDate: fromDateTimeLocalValue(endDate),
       redemptionLimit: redemptionLimit.trim()
         ? Number(redemptionLimit)
         : undefined,
@@ -566,6 +578,7 @@ export default function AdminCouponsPage() {
                   id="redemption-limit"
                   type="number"
                   min="1"
+                  step="1"
                   value={redemptionLimit}
                   onChange={(event) => setRedemptionLimit(event.target.value)}
                   placeholder="Unlimited"

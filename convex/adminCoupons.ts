@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
@@ -206,14 +207,12 @@ function normalizeCoupon(
   }
 
   const redemptionLimit =
-    input.redemptionLimit === undefined
-      ? undefined
-      : Math.round(input.redemptionLimit);
+    input.redemptionLimit === undefined ? undefined : input.redemptionLimit;
   if (
     redemptionLimit !== undefined &&
-    (!Number.isFinite(redemptionLimit) || redemptionLimit <= 0)
+    (!Number.isInteger(redemptionLimit) || redemptionLimit <= 0)
   ) {
-    return adminCouponFailure("Redemption limit must be greater than 0");
+    return adminCouponFailure("Redemption limit must be a positive integer");
   }
 
   return {
@@ -242,6 +241,32 @@ function isCouponActive(coupon: Doc<"adminCoupons">, now: number) {
     (end === null || Number.isNaN(end) || now <= end) &&
     (limit === undefined || limit <= 0 || coupon.totalRedemptions < limit)
   );
+}
+
+function couponCourseIds(coupon: AdminCouponInput) {
+  return [
+    ...(coupon.appliesTo.type === "courses" ? coupon.appliesTo.courseIds : []),
+    ...(coupon.requires.type === "courses" ? coupon.requires.courseIds : []),
+  ];
+}
+
+async function validateCouponCoursesExist(
+  ctx: MutationCtx,
+  coupon: AdminCouponInput,
+) {
+  const courseIds = uniqueCourseIds(couponCourseIds(coupon));
+  const courses = await Promise.all(
+    courseIds.map((courseId) => ctx.db.get(courseId)),
+  );
+  const missingCourseId = courseIds.find((_, index) => !courses[index]);
+  if (missingCourseId) {
+    return adminCouponFailure(
+      "One or more selected courses no longer exist",
+      convexResultErrorCode.VALIDATION_ERROR,
+    );
+  }
+
+  return null;
 }
 
 export const listCoupons = query({
@@ -297,6 +322,10 @@ export const saveCoupon = mutation({
     if ("_tag" in normalized) {
       return normalized;
     }
+    const courseFailure = await validateCouponCoursesExist(ctx, normalized);
+    if (courseFailure) {
+      return courseFailure;
+    }
 
     const duplicate = await ctx.db
       .query("adminCoupons")
@@ -305,6 +334,16 @@ export const saveCoupon = mutation({
     if (duplicate && String(duplicate._id) !== String(args.couponId)) {
       return adminCouponFailure(
         "Another coupon already uses this code",
+        convexResultErrorCode.CONFLICT,
+      );
+    }
+    const mindPointsDuplicate = await ctx.db
+      .query("coupons")
+      .withIndex("by_code", (q) => q.eq("code", normalized.code))
+      .first();
+    if (mindPointsDuplicate) {
+      return adminCouponFailure(
+        "A Mind Points coupon already uses this code",
         convexResultErrorCode.CONFLICT,
       );
     }
@@ -447,7 +486,6 @@ export const validateCouponCode = query({
         _id: String(coupon._id),
         code: coupon.code,
         name: coupon.name,
-        description: coupon.description,
         enabled: coupon.enabled,
         isArchived: coupon.isArchived,
         discount: coupon.discount,

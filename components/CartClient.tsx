@@ -483,7 +483,7 @@ const CartContent = () => {
           cartItemId: item.cartItemId,
           courseId: String(item.courseId),
           courseType: item.courseType,
-          amountPaid: item.amountPaid,
+          amountPaid: item.bundleCampaignId ? 0 : item.amountPaid,
           redemptionDiscountAmount: item.redemptionDiscountAmount,
           couponCode: item.couponCode,
         })),
@@ -1549,8 +1549,6 @@ const CartContent = () => {
                             _id: adminCouponValidation.coupon._id,
                             code: adminCouponValidation.coupon.code,
                             name: adminCouponValidation.coupon.name,
-                            description:
-                              adminCouponValidation.coupon.description,
                             enabled: adminCouponValidation.coupon.enabled,
                             isArchived: adminCouponValidation.coupon.isArchived,
                             discount: adminCouponValidation.coupon.discount,
@@ -1565,7 +1563,9 @@ const CartContent = () => {
                               cartItemId: item.cartItemId,
                               courseId: String(item.courseId),
                               courseType: item.courseType,
-                              amountPaid: item.amountPaid,
+                              amountPaid: item.bundleCampaignId
+                                ? 0
+                                : item.amountPaid,
                               redemptionDiscountAmount:
                                 item.redemptionDiscountAmount,
                             })),
