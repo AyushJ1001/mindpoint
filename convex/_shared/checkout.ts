@@ -274,17 +274,3 @@ export async function validateCheckoutPricingItemResult(
 
   return null;
 }
-
-export async function validateCheckoutPricingItem(
-  ctx: MutationCtx,
-  args: {
-    userId: string;
-    course: Doc<"courses">;
-    pricingItem?: CheckoutPricingItem;
-  },
-) {
-  const failure = await validateCheckoutPricingItemResult(ctx, args);
-  if (failure) {
-    throw new Error(failure.error.message);
-  }
-}

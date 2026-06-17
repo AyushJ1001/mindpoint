@@ -9,7 +9,6 @@ import {
   type CheckoutReconciliationPayload,
   type PaymentSession,
 } from "@/lib/services/payments";
-import { HttpJsonError } from "@/lib/services/http";
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import Image from "next/image";
@@ -181,30 +180,6 @@ const getCartLineKey = (item: {
         item.batchId ? String(item.batchId) : undefined,
       )
     : String(item.id);
-
-function getCheckoutReconciliationFromError(
-  error: unknown,
-): CheckoutReconciliationPayload | null {
-  if (!(error instanceof HttpJsonError)) {
-    return null;
-  }
-
-  const payload = error.payload;
-  if (
-    !payload ||
-    typeof payload !== "object" ||
-    !("reconciliation" in payload)
-  ) {
-    return null;
-  }
-
-  const reconciliation = payload.reconciliation;
-  if (!reconciliation || typeof reconciliation !== "object") {
-    return null;
-  }
-
-  return reconciliation as CheckoutReconciliationPayload;
-}
 
 const CartContent = () => {
   const {
@@ -909,45 +884,49 @@ const CartContent = () => {
 
       setIsProcessing(true);
 
-      try {
-        if (discountedTotal <= 0) {
-          const enrollmentCompleted =
-            await completeCheckoutEnrollment(whatsappNumber);
+      if (discountedTotal <= 0) {
+        const enrollmentCompleted =
+          await completeCheckoutEnrollment(whatsappNumber);
 
-          if (enrollmentCompleted) {
-            emptyCart();
-          }
-
-          setIsProcessing(false);
-          return;
+        if (enrollmentCompleted) {
+          emptyCart();
         }
 
-        const data = await requestPaymentOrder({
-          cartIntent: buildCartIntent(),
-          buyerEmail: user.primaryEmailAddress?.emailAddress || undefined,
-          referrerClerkUserId:
-            getReferralCookie() && getReferralCookie() !== user.id
-              ? getReferralCookie()!
-              : undefined,
-        });
-
-        setQrPaymentSession(data);
-        setQrImageAvailable(true);
-        setUpiTransactionReference("");
-        setPendingQrWhatsAppNumber(whatsappNumber);
-        setShowQrPaymentDialog(true);
         setIsProcessing(false);
-      } catch (error) {
-        const reconciliation = getCheckoutReconciliationFromError(error);
-        if (reconciliation && applyCheckoutReconciliation(reconciliation)) {
-          setIsProcessing(false);
-          return;
-        }
-
-        console.error("Error preparing UPI payment:", error);
-        toast.error("Failed to prepare payment. Please try again.");
-        setIsProcessing(false);
+        return;
       }
+
+      const paymentOrder = await requestPaymentOrder({
+        cartIntent: buildCartIntent(),
+        buyerEmail: user.primaryEmailAddress?.emailAddress || undefined,
+        referrerClerkUserId:
+          getReferralCookie() && getReferralCookie() !== user.id
+            ? getReferralCookie()!
+            : undefined,
+      });
+
+      if (!paymentOrder.success) {
+        if (
+          paymentOrder.reconciliation &&
+          applyCheckoutReconciliation(paymentOrder.reconciliation)
+        ) {
+          setIsProcessing(false);
+          return;
+        }
+
+        toast.error("Failed to prepare payment. Please try again.", {
+          description: paymentOrder.error,
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      setQrPaymentSession(paymentOrder.data);
+      setQrImageAvailable(true);
+      setUpiTransactionReference("");
+      setPendingQrWhatsAppNumber(whatsappNumber);
+      setShowQrPaymentDialog(true);
+      setIsProcessing(false);
     },
     [
       isEmpty,

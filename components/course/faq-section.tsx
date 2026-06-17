@@ -14,9 +14,7 @@ interface FAQSectionProps {
 // A calm, editorial FAQ. Default view shows only the question + short answer.
 // Clicking the row reveals the longer markdown body only when the short and
 // long answers actually differ.
-export default function FAQSection({
-  title = "Questions",
-}: FAQSectionProps) {
+export default function FAQSection({ title = "Questions" }: FAQSectionProps) {
   const [items, setItems] = useState<FaqItem[] | null>(null);
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
@@ -25,7 +23,14 @@ export default function FAQSection({
     (async () => {
       try {
         const res = await fetch("/faq/course.md", { cache: "force-cache" });
-        if (!res.ok) throw new Error("Failed to load faq/course.md");
+        if (!res.ok) {
+          console.error("Failed to load faq/course.md", {
+            status: res.status,
+            statusText: res.statusText,
+          });
+          if (!cancelled) setItems([]);
+          return;
+        }
         const text = await res.text();
         if (!cancelled) setItems(parseFaqMarkdown(text));
       } catch (err) {
@@ -58,10 +63,7 @@ export default function FAQSection({
                 item.a.trim() !== item.shortAnswer.trim();
               const isOpen = openIndex === i;
               return (
-                <div
-                  key={i}
-                  className="border-b border-foreground/10 py-5"
-                >
+                <div key={i} className="border-foreground/10 border-b py-5">
                   <button
                     type="button"
                     onClick={() =>
@@ -73,17 +75,17 @@ export default function FAQSection({
                     aria-expanded={hasLongForm ? isOpen : undefined}
                   >
                     <div className="flex-1">
-                      <h3 className="text-[0.95rem] font-semibold leading-snug text-foreground sm:text-base">
+                      <h3 className="text-foreground text-[0.95rem] leading-snug font-semibold sm:text-base">
                         {item.q}
                       </h3>
-                      <p className="mt-2 max-w-[58ch] text-sm leading-relaxed text-foreground/70 sm:text-[0.9375rem]">
+                      <p className="text-foreground/70 mt-2 max-w-[58ch] text-sm leading-relaxed sm:text-[0.9375rem]">
                         {item.shortAnswer}
                       </p>
                     </div>
                     {hasLongForm && (
                       <span
                         aria-hidden="true"
-                        className="mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border border-foreground/15 text-foreground/55 transition-colors group-hover:text-foreground"
+                        className="border-foreground/15 text-foreground/55 group-hover:text-foreground mt-0.5 flex h-6 w-6 flex-none items-center justify-center rounded-full border transition-colors"
                       >
                         {isOpen ? (
                           <Minus className="h-3 w-3" />
@@ -94,7 +96,7 @@ export default function FAQSection({
                     )}
                   </button>
                   {hasLongForm && isOpen && (
-                    <div className="mt-4 max-w-[58ch] text-sm leading-relaxed text-foreground/75 sm:text-[0.9375rem] [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:my-2 [&_li]:text-sm">
+                    <div className="text-foreground/75 mt-4 max-w-[58ch] text-sm leading-relaxed sm:text-[0.9375rem] [&_li]:text-sm [&_p]:mb-3 [&_p:last-child]:mb-0 [&_ul]:my-2">
                       <ReactMarkdown remarkPlugins={[remarkGfm]}>
                         {item.a}
                       </ReactMarkdown>

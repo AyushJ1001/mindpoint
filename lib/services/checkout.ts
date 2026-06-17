@@ -148,10 +148,16 @@ function isConvexTaggedFailure(value: unknown): value is ConvexTaggedFailure {
   );
 }
 
-function throwIfConvexTaggedFailure(value: unknown): void {
+function convexTaggedFailureToBoundaryError(
+  value: unknown,
+): BoundaryExternalServiceError | null {
   if (isConvexTaggedFailure(value)) {
-    throw new Error(value.error.message);
+    return new BoundaryExternalServiceError({
+      message: value.error.message,
+    });
   }
+
+  return null;
 }
 
 function normalizeCartCheckoutMutationReturn(
@@ -174,13 +180,16 @@ function normalizeSingleEnrollmentMutationReturn<
   return result;
 }
 
-function resolveConvexUrl(convexUrl?: string): string {
+function resolveConvexUrl(
+  convexUrl?: string,
+): string | BoundaryConfigurationError {
   const resolvedConvexUrl = convexUrl || process.env.NEXT_PUBLIC_CONVEX_URL;
 
   if (!resolvedConvexUrl) {
-    throw new Error(
-      "NEXT_PUBLIC_CONVEX_URL environment variable is not set. Cannot execute Convex mutation.",
-    );
+    return new BoundaryConfigurationError({
+      message:
+        "NEXT_PUBLIC_CONVEX_URL environment variable is not set. Cannot execute Convex mutation.",
+    });
   }
 
   return resolvedConvexUrl;
@@ -261,7 +270,12 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
 ): Promise<Return> {
   // These service calls use explicit user identifiers in args and do not attach
   // a Clerk session token, so ctx.auth will be null inside the called mutations.
-  const convex = new ConvexHttpClient(resolveConvexUrl(convexUrl));
+  const resolvedConvexUrl = resolveConvexUrl(convexUrl);
+  if (resolvedConvexUrl instanceof BoundaryConfigurationError) {
+    return Promise.reject(resolvedConvexUrl);
+  }
+
+  const convex = new ConvexHttpClient(resolvedConvexUrl);
   let lastError: BoundaryThrowable | null = null;
   const errors: Array<{ attempt: number; error: string; timestamp: Date }> = [];
 
@@ -292,9 +306,9 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
         timeoutHandle = setTimeout(
           () =>
             reject(
-              new Error(
-                `Convex mutation timed out after ${RETRY_CONFIG.timeoutMs}ms`,
-              ),
+              new BoundaryExternalServiceError({
+                message: `Convex mutation timed out after ${RETRY_CONFIG.timeoutMs}ms`,
+              }),
             ),
           RETRY_CONFIG.timeoutMs,
         );
@@ -304,7 +318,10 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
         clearTimeout(timeoutHandle);
       }
 
-      throwIfConvexTaggedFailure(result);
+      const taggedFailure = convexTaggedFailureToBoundaryError(result);
+      if (taggedFailure) {
+        return Promise.reject(taggedFailure);
+      }
 
       if (attempt > 0) {
         console.log(
@@ -351,8 +368,11 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
           },
         );
 
-        throw new Error(
-          `Failed to execute Convex mutation after ${attempt + 1} attempts: ${errorMessage}`,
+        return Promise.reject(
+          new BoundaryExternalServiceError({
+            ...(caught instanceof Error ? { cause: caught } : {}),
+            message: `Failed to execute Convex mutation after ${attempt + 1} attempts: ${errorMessage}`,
+          }),
         );
       }
 
@@ -364,9 +384,13 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
     }
   }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("Unknown error occurred during Convex mutation");
+  return Promise.reject(
+    lastError instanceof Error
+      ? lastError
+      : new BoundaryExternalServiceError({
+          message: "Unknown error occurred during Convex mutation",
+        }),
+  );
 }
 
 async function runCheckoutMutation<TResult>(

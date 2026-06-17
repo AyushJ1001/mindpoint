@@ -87,17 +87,3 @@ export async function sendEmailWithCopy(
     );
   }
 }
-
-export function assertEmailDelivered(result: EmailDeliveryResult): void {
-  if (result._tag === "Failure") {
-    throw new Error(result.error.message);
-  }
-}
-
-export async function sendEmailWithCopyOrThrow(
-  emailConfig: EmailDeliveryConfig,
-): Promise<EmailDeliveryResult> {
-  const result = await sendEmailWithCopy(emailConfig);
-  assertEmailDelivered(result);
-  return result;
-}

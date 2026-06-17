@@ -144,7 +144,7 @@ export function sendCareersApplicationEffect(formData: FormData) {
       getCareersEmailConfig,
     );
     const resend = new Resend(resendApiKey);
-    const data = yield* Effect.tryPromise({
+    yield* Effect.tryPromise({
       try: () =>
         resend.emails.send({
           from: `Careers Application <${fromEmail}>`,
@@ -164,7 +164,7 @@ export function sendCareersApplicationEffect(formData: FormData) {
         }),
     });
 
-    return { success: true, data } satisfies CareersSubmissionResult;
+    return { success: true } satisfies CareersSubmissionResult;
   });
 }
 

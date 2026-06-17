@@ -30,7 +30,7 @@ export function sendContactMessageEffect(input: ContactMessageInput) {
     const escapedEmail = escapeHtml(email);
     const escapedMessage = escapeHtml(message).replace(/\n/g, "<br/>");
     const sanitizedName = sanitizeHeaderValue(name);
-    const data = yield* Effect.tryPromise({
+    yield* Effect.tryPromise({
       try: () =>
         resend.emails.send({
           from: `"Contact Form" <${fromEmail}>`,
@@ -52,7 +52,7 @@ export function sendContactMessageEffect(input: ContactMessageInput) {
         }),
     });
 
-    return { success: true, data } satisfies ContactSubmissionResult;
+    return { success: true } satisfies ContactSubmissionResult;
   });
 }
 

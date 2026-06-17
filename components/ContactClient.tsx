@@ -57,13 +57,14 @@ export default function ContactClient() {
   const onSubmit = async (data: ContactFormValues) => {
     setStatus("Sending...");
 
-    try {
-      await submitContactForm(data);
-      setStatus("Message sent successfully!");
-      form.reset();
-    } catch {
-      setStatus("Error sending message.");
+    const result = await submitContactForm(data);
+    if (!result.success) {
+      setStatus(result.error || "Error sending message.");
+      return;
     }
+
+    setStatus("Message sent successfully!");
+    form.reset();
   };
 
   return (
@@ -122,11 +123,10 @@ export default function ContactClient() {
                   );
                 })}
               </div>
-
             </div>
 
             {/* Contact Form – subtle container, no heavy card */}
-            <div className="rounded-2xl bg-card/50 p-6 shadow-sm backdrop-blur-sm sm:p-8">
+            <div className="bg-card/50 rounded-2xl p-6 shadow-sm backdrop-blur-sm sm:p-8">
               <h3 className="text-foreground mb-6 text-xl font-semibold">
                 Send us a Message
               </h3>
@@ -189,9 +189,7 @@ export default function ContactClient() {
                     className="w-full"
                     disabled={status === "Sending..."}
                   >
-                    {status === "Sending..."
-                      ? "Sending..."
-                      : "Send Message"}
+                    {status === "Sending..." ? "Sending..." : "Send Message"}
                   </Button>
 
                   {status && (

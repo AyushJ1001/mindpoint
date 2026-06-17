@@ -150,8 +150,9 @@ test("rate-limited email actions return tagged Convex results", () => {
   const source = readFileSync("convex/emailActionsWithRateLimit.ts", "utf8");
 
   assert.match(source, /emailActionResultValidator/);
-  assert.match(source, /convexSuccess/);
-  assert.match(source, /convexFailure/);
+  assert.match(source, /emailActionSuccess/);
+  assert.match(source, /emailRateLimitFailure/);
+  assert.match(source, /isEmailActionFailure/);
   assert.doesNotMatch(source, /returns:\s*v\.null/);
   assert.doesNotMatch(source, /throw new Error/);
   assert.doesNotMatch(source, /throw error/);
@@ -236,7 +237,19 @@ test("checkout enrollment mutations expose tagged Convex results through Effect 
   assert.match(convexSource, /convexSuccess\(\{\s*enrollments:/);
   assert.match(convexSource, /validateCheckoutPricingItemResult/);
   assert.match(convexSource, /resolveEnrollmentBatchResult/);
-  assert.match(checkoutServiceSource, /throwIfConvexTaggedFailure/);
+  assert.match(
+    convexSource,
+    /handleGuestUserCartCheckoutByEmail[\s\S]+convexSuccess\(\{\s*enrollments/,
+  );
+  assert.match(
+    convexSource,
+    /handleGuestUserSingleEnrollmentByEmail[\s\S]+convexSuccess\(\{\s*[\s\S]*enrollment,/,
+  );
+  assert.match(
+    convexSource,
+    /handleSupervisedTherapyEnrollment[\s\S]+convexSuccess\(\{\s*[\s\S]*enrollment,/,
+  );
+  assert.match(checkoutServiceSource, /convexTaggedFailureToBoundaryError/);
   assert.match(checkoutServiceSource, /normalizeCartCheckoutMutationReturn/);
   assert.match(checkoutHelperSource, /CheckoutPricingFailure/);
   assert.match(scheduleHelperSource, /EnrollmentScheduleFailure/);
@@ -244,12 +257,22 @@ test("checkout enrollment mutations expose tagged Convex results through Effect 
 
 test("email delivery implementation is behind a shared module", () => {
   const emailSource = readFileSync("convex/emailActions.ts", "utf8");
+  const emailResultSource = readFileSync(
+    "convex/_shared/emailActionResult.ts",
+    "utf8",
+  );
   const deliverySource = readFileSync(
     "convex/_shared/emailDelivery.ts",
     "utf8",
   );
 
-  assert.match(emailSource, /sendEmailWithCopyOrThrow/);
+  assert.match(emailSource, /sendEmailWithCopy/);
+  assert.match(emailSource, /emailActionResultValidator/);
+  assert.doesNotMatch(emailSource, /returns:\s*v\.null/);
+  assert.doesNotMatch(emailSource, /throw error/);
+  assert.doesNotMatch(emailSource, /sendEmailWithCopyOrThrow/);
+  assert.match(emailResultSource, /EmailActionResult/);
+  assert.doesNotMatch(emailResultSource, /\bany\b|\bunknown\b/);
   assert.doesNotMatch(emailSource, /new Resend/);
   assert.doesNotMatch(
     emailSource,
@@ -257,6 +280,24 @@ test("email delivery implementation is behind a shared module", () => {
   );
   assert.match(deliverySource, /EmailDeliveryFailure/);
   assert.match(deliverySource, /sendEmailWithCopy/);
+  assert.doesNotMatch(deliverySource, /sendEmailWithCopyOrThrow/);
+  assert.doesNotMatch(deliverySource, /assertEmailDelivered/);
+});
+
+test("browser HTTP service exposes Effect/result APIs instead of throw APIs", () => {
+  const httpSource = readFileSync("lib/services/http.ts", "utf8");
+  const paymentSource = readFileSync("lib/services/payments.ts", "utf8");
+  const cartSource = readFileSync("components/CartClient.tsx", "utf8");
+
+  assert.match(httpSource, /postJsonEffect/);
+  assert.match(httpSource, /postJsonResult/);
+  assert.doesNotMatch(httpSource, /class HttpJsonError/);
+  assert.doesNotMatch(httpSource, /throw new Error/);
+  assert.doesNotMatch(httpSource, /throw error/);
+  assert.match(paymentSource, /PaymentOrderResult/);
+  assert.match(paymentSource, /requestPaymentOrderEffect/);
+  assert.doesNotMatch(cartSource, /HttpJsonError/);
+  assert.doesNotMatch(cartSource, /getCheckoutReconciliationFromError/);
 });
 
 test("google sheets actions return tagged results through extracted sheet modules", () => {

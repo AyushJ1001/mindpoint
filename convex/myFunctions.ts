@@ -8,7 +8,6 @@ import {
   checkoutPricingValidator,
   enrollmentLineItemValidator,
   getCheckoutPricingItem,
-  validateCheckoutPricingItem,
   validateCheckoutPricingItemResult,
   type CheckoutPricingItem,
   type EnrollmentLineItem,
@@ -32,9 +31,11 @@ import {
   type EnrollmentBatchResolution,
 } from "./_shared/enrollmentSchedule";
 import { calculatePointsEarned } from "./_shared/mindPoints";
+import type { GoogleSheetsActionResult } from "./_shared/enrollmentSheet";
 import {
   convexFailure,
   convexResultErrorCode,
+  convexResultErrorValidator,
   convexSuccess,
   type ConvexFailure,
   type ConvexSerializable,
@@ -1910,6 +1911,25 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
   },
 
   handler: async (ctx, args) => {
+    if (args.courseIds.length === 0) {
+      return enrollmentMutationFailure(
+        "Checkout requires at least one course.",
+      );
+    }
+
+    const courses: CourseDoc[] = [];
+    for (const courseId of args.courseIds) {
+      const course = await ctx.db.get(courseId);
+      if (!course) {
+        return enrollmentMutationFailure(
+          `Course with ID ${courseId} not found`,
+          convexResultErrorCode.NOT_FOUND,
+          { courseId },
+        );
+      }
+      courses.push(course);
+    }
+
     // Check if guest user already exists with this email
     let guestUser = await ctx.db
       .query("guestUsers")
@@ -1932,12 +1952,8 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
 
     const enrollments: EnrollmentSummary[] = [];
 
-    for (const courseId of args.courseIds) {
-      // Get the course details
-      const course = await ctx.db.get(courseId);
-      if (!course) {
-        throw new Error(`Course with ID ${courseId} not found`);
-      }
+    for (const course of courses) {
+      const courseId = course._id;
       const schedule = buildScheduleSnapshot(course, null);
 
       // Allow multiple enrollments per user for all course types
@@ -2138,7 +2154,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
       );
     }
 
-    return enrollments;
+    return convexSuccess({ enrollments });
   },
 });
 
@@ -2562,6 +2578,16 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
   },
 
   handler: async (ctx, args) => {
+    // Get the course details before guest writes.
+    const course = await ctx.db.get(args.courseId);
+    if (!course) {
+      return enrollmentMutationFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+        { courseId: args.courseId },
+      );
+    }
+
     // Check if guest user already exists with this email
     let guestUser = await ctx.db
       .query("guestUsers")
@@ -2582,11 +2608,6 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       throw new Error("Failed to create or retrieve guest user");
     }
 
-    // Get the course details
-    const course = await ctx.db.get(args.courseId);
-    if (!course) {
-      throw new Error("Course not found");
-    }
     const schedule = buildScheduleSnapshot(course, null);
 
     // Allow multiple enrollments per user for all course types
@@ -2721,11 +2742,16 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       }
     }
 
-    return {
+    const enrollment = {
       enrollmentId,
       enrollmentNumber,
       courseName: course.name,
     };
+
+    return convexSuccess({
+      ...enrollment,
+      enrollment,
+    });
   },
 });
 
@@ -2748,7 +2774,11 @@ export const handleSupervisedTherapyEnrollment = mutation({
     // Get the course details
     const course = await ctx.db.get(args.courseId);
     if (!course) {
-      throw new Error("Course not found");
+      return enrollmentMutationFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+        { courseId: args.courseId },
+      );
     }
     const schedule = buildScheduleSnapshot(course, null);
 
@@ -2872,12 +2902,17 @@ export const handleSupervisedTherapyEnrollment = mutation({
       }
     }
 
-    return {
+    const enrollment = {
       enrollmentId,
       enrollmentNumber,
       courseName: course.name,
       sessionType: args.sessionType,
     };
+
+    return convexSuccess({
+      ...enrollment,
+      enrollment,
+    });
   },
 });
 
@@ -2896,6 +2931,16 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
   },
 
   handler: async (ctx, args) => {
+    // Get the course details before guest writes.
+    const course = await ctx.db.get(args.courseId);
+    if (!course) {
+      return enrollmentMutationFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+        { courseId: args.courseId },
+      );
+    }
+
     // Check if guest user already exists with this email
     let guestUser = await ctx.db
       .query("guestUsers")
@@ -2922,11 +2967,6 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
       throw new Error("Failed to create or retrieve guest user");
     }
 
-    // Get the course details
-    const course = await ctx.db.get(args.courseId);
-    if (!course) {
-      throw new Error("Course not found");
-    }
     const schedule = buildScheduleSnapshot(course, null);
 
     // Note: Removed already enrolled check for supervised courses
@@ -3054,14 +3094,31 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
       }
     }
 
-    return {
+    const enrollment = {
       enrollmentId,
       enrollmentNumber,
       courseName: course.name,
       sessionType: args.sessionType,
     };
+
+    return convexSuccess({
+      ...enrollment,
+      enrollment,
+    });
   },
 });
+
+const googleSheetsActionResultValidator = v.union(
+  v.object({
+    _tag: v.literal("Success"),
+    success: v.literal(true),
+  }),
+  v.object({
+    _tag: v.literal("Failure"),
+    error: convexResultErrorValidator,
+    success: v.literal(false),
+  }),
+);
 
 // Setup Google Sheets for enrollments
 export const setupEnrollmentGoogleSheet = action({
@@ -3069,30 +3126,24 @@ export const setupEnrollmentGoogleSheet = action({
     spreadsheetId: v.string(),
     sheetName: v.optional(v.string()),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    try {
-      const sheetName = args.sheetName || "Enrollments";
+  returns: googleSheetsActionResultValidator,
+  handler: async (ctx, args): Promise<GoogleSheetsActionResult> => {
+    const sheetName = args.sheetName || "Enrollments";
 
-      const result = await ctx.runAction(
-        api.googleSheets.setupEnrollmentSheet,
-        {
-          spreadsheetId: args.spreadsheetId,
-          sheetName: sheetName,
-        },
-      );
-      if (result._tag === "Failure") {
-        throw new Error(result.error.message);
-      }
-
+    const result: GoogleSheetsActionResult = await ctx.runAction(
+      api.googleSheets.setupEnrollmentSheet,
+      {
+        spreadsheetId: args.spreadsheetId,
+        sheetName: sheetName,
+      },
+    );
+    if (result._tag === "Success") {
       console.log(
         `Successfully set up Google Sheets for enrollments: ${args.spreadsheetId}/${sheetName}`,
       );
-      return null;
-    } catch (error) {
-      console.error("Error setting up Google Sheets:", error);
-      throw error;
     }
+
+    return result;
   },
 });
 

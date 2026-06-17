@@ -73,20 +73,28 @@ type CheckoutAttemptServiceOptions = {
   buyerUserId?: string;
 };
 
-function resolveConvexUrl(convexUrl?: string): string {
+function resolveConvexUrl(
+  convexUrl?: string,
+): string | BoundaryConfigurationError {
   const resolvedConvexUrl = convexUrl || process.env.NEXT_PUBLIC_CONVEX_URL;
 
   if (!resolvedConvexUrl) {
-    throw new Error(
-      "NEXT_PUBLIC_CONVEX_URL environment variable is not set. Cannot execute Convex mutation.",
-    );
+    return new BoundaryConfigurationError({
+      message:
+        "NEXT_PUBLIC_CONVEX_URL environment variable is not set. Cannot execute Convex mutation.",
+    });
   }
 
   return resolvedConvexUrl;
 }
 
 function createAuthedConvexClient(options: CheckoutAttemptServiceOptions) {
-  const convex = new ConvexHttpClient(resolveConvexUrl(options.convexUrl));
+  const resolvedConvexUrl = resolveConvexUrl(options.convexUrl);
+  if (resolvedConvexUrl instanceof BoundaryConfigurationError) {
+    return resolvedConvexUrl;
+  }
+
+  const convex = new ConvexHttpClient(resolvedConvexUrl);
   if (options.convexAuthToken) {
     convex.setAuth(options.convexAuthToken);
   }
@@ -99,6 +107,10 @@ export async function createCheckoutAttempt(
   options: CheckoutAttemptServiceOptions = {},
 ): Promise<CreateCheckoutAttemptMutationResult> {
   const convex = createAuthedConvexClient(options);
+  if (convex instanceof BoundaryConfigurationError) {
+    return Promise.reject(convex);
+  }
+
   const cartIntent = {
     items: input.cartIntent.items.map((item) => ({
       ...item,
