@@ -398,7 +398,7 @@ const CartContent = () => {
     }
   }, [appliedCoupon, couponEligible]);
 
-  const checkoutPricing = useMemo(() => {
+  const baseCheckoutItems = useMemo(() => {
     const bundleAllocationQueue = new Map<
       string,
       Array<EvaluatedBundleCampaign["allocations"][number]>
@@ -412,7 +412,7 @@ const CartContent = () => {
       }
     }
 
-    const baseItems = items.map((item) => {
+    return items.map((item) => {
       const listedPrice = Math.round(item.originalPrice ?? item.price ?? 0);
       const defaultCheckoutPrice = Math.round(item.price ?? 0);
       const courseId = getCartCourseId(item);
@@ -448,6 +448,10 @@ const CartContent = () => {
           : undefined,
       };
     });
+  }, [appliedBundle, items]);
+
+  const checkoutPricing = useMemo(() => {
+    const baseItems = baseCheckoutItems;
 
     const toCheckoutPricingItem = (item: (typeof baseItems)[number]) => ({
       batchId: item.batchId,
@@ -578,7 +582,7 @@ const CartContent = () => {
       ),
       items: pricedItems,
     };
-  }, [items, appliedBundle, appliedCoupon, now]);
+  }, [baseCheckoutItems, appliedCoupon, now]);
 
   const discountedTotal = checkoutPricing.totalAmountPaid;
   const checkoutPricingByLineKey = useMemo(
@@ -1545,11 +1549,13 @@ const CartContent = () => {
                             adminCouponValidation.coupon as ReconciliationAdminCoupon;
                           const application = applyAdminCouponToItems({
                             coupon: adminCoupon,
-                            items: items.map((item) => ({
-                              cartItemId: getCartLineKey(item),
-                              courseId: String(getCartCourseId(item)),
+                            items: baseCheckoutItems.map((item) => ({
+                              cartItemId: item.cartItemId,
+                              courseId: String(item.courseId),
                               courseType: item.courseType,
-                              amountPaid: Math.round(item.price ?? 0),
+                              amountPaid: item.amountPaid,
+                              redemptionDiscountAmount:
+                                item.redemptionDiscountAmount,
                             })),
                             now,
                           });
@@ -1590,11 +1596,7 @@ const CartContent = () => {
                           });
                           toast.success("Coupon applied successfully!");
                         } else if (adminCouponValidation?._tag === "Failure") {
-                          toast.error(
-                            couponValidation?._tag === "Failure"
-                              ? couponValidation.error.message
-                              : adminCouponValidation.error.message,
-                          );
+                          toast.error(adminCouponValidation.error.message);
                         } else if (couponValidation?._tag === "Failure") {
                           toast.error(couponValidation.error.message);
                         }
@@ -1640,7 +1642,7 @@ const CartContent = () => {
                   couponValidation?._tag === "Failure" &&
                   couponCode && (
                     <p className="text-xs text-red-600">
-                      {couponValidation.error.message}
+                      {adminCouponValidation.error.message}
                     </p>
                   )}
               </div>

@@ -38,6 +38,7 @@ export type CheckoutPricingFailure = ConvexFailure<
 
 type ValidateCheckoutPricingItemOptions = {
   consumeCoupon?: boolean;
+  consumedAdminCouponCodes?: Set<string>;
 };
 
 export const checkoutPricingItemValidator = v.object({
@@ -194,6 +195,10 @@ export async function validateCheckoutPricingItemResult(
       );
     }
 
+    const normalizedAdminCouponCode = adminCoupon.code.toUpperCase();
+    const adminCouponAlreadyConsumed =
+      options.consumedAdminCouponCodes?.has(normalizedAdminCouponCode) ?? false;
+
     if (
       !adminCoupon.enabled ||
       adminCoupon.isArchived ||
@@ -201,7 +206,8 @@ export async function validateCheckoutPricingItemResult(
         Date.now() < new Date(adminCoupon.startDate).getTime()) ||
       (adminCoupon.endDate &&
         Date.now() > new Date(adminCoupon.endDate).getTime()) ||
-      (adminCoupon.redemptionLimit !== undefined &&
+      (!adminCouponAlreadyConsumed &&
+        adminCoupon.redemptionLimit !== undefined &&
         adminCoupon.redemptionLimit > 0 &&
         adminCoupon.totalRedemptions >= adminCoupon.redemptionLimit)
     ) {
@@ -249,11 +255,15 @@ export async function validateCheckoutPricingItemResult(
       );
     }
 
-    if (options.consumeCoupon ?? true) {
+    const shouldConsumeAdminCoupon =
+      (options.consumeCoupon ?? true) && !adminCouponAlreadyConsumed;
+
+    if (shouldConsumeAdminCoupon) {
       await ctx.db.patch(adminCoupon._id, {
         totalRedemptions: adminCoupon.totalRedemptions + 1,
         updatedAt: Date.now(),
       });
+      options.consumedAdminCouponCodes?.add(normalizedAdminCouponCode);
     }
 
     return null;
