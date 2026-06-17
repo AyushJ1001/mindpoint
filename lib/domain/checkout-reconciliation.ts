@@ -1,4 +1,10 @@
 import { calculateActiveOfferPrice } from "./pricing";
+import {
+  applyAdminCouponToItems,
+  findAdminCouponByCode,
+  normalizeAdminCouponCode,
+  type ReconciliationAdminCoupon,
+} from "./admin-coupons";
 
 export type CheckoutRemovalReason =
   | "COURSE_UNAVAILABLE"
@@ -16,7 +22,9 @@ export type CheckoutRemovalReason =
   | "COUPON_INVALID"
   | "COUPON_ALREADY_USED"
   | "COUPON_NOT_OWNED"
-  | "COUPON_TYPE_MISMATCH";
+  | "COUPON_TYPE_MISMATCH"
+  | "COUPON_NOT_APPLICABLE"
+  | "COUPON_EXPIRED";
 
 export type CheckoutUpdateReason =
   | "PRICE_CHANGED"
@@ -27,7 +35,9 @@ export type CheckoutUpdateReason =
   | "COUPON_INVALID"
   | "COUPON_ALREADY_USED"
   | "COUPON_NOT_OWNED"
-  | "COUPON_TYPE_MISMATCH";
+  | "COUPON_TYPE_MISMATCH"
+  | "COUPON_NOT_APPLICABLE"
+  | "COUPON_EXPIRED";
 
 export type CheckoutReconciliationStatus = "valid" | "changed" | "blocked";
 
@@ -121,6 +131,7 @@ export type ReconciledCheckoutItem = {
   bundleCampaignId?: string;
   bundleCampaignName?: string;
   courseName: string;
+  courseType?: string;
   batchLabel?: string;
   offerName?: string;
   bogoLabel?: string;
@@ -347,6 +358,7 @@ export function reconcileCheckoutIntent(input: {
   courses: ReconciliationCourse[];
   batches: ReconciliationBatch[];
   bundleCampaigns: ReconciliationBundleCampaign[];
+  adminCoupons?: ReconciliationAdminCoupon[];
   now?: number | Date;
 }): CheckoutReconciliationResult {
   const now =
@@ -371,6 +383,15 @@ export function reconcileCheckoutIntent(input: {
   const expiredOfferByCartItem = new Map<string, boolean>();
   const inputByCartItem = new Map(
     input.items.map((item) => [item.cartItemId, item]),
+  );
+  const requestedAdminCouponCode = input.items
+    .map((item) => item.couponCode?.trim())
+    .filter((code): code is string => Boolean(code))
+    .map(normalizeAdminCouponCode)
+    .find((code) => findAdminCouponByCode(input.adminCoupons ?? [], code));
+  const requestedAdminCoupon = findAdminCouponByCode(
+    input.adminCoupons ?? [],
+    requestedAdminCouponCode,
   );
 
   for (const item of input.items) {
@@ -424,7 +445,7 @@ export function reconcileCheckoutIntent(input: {
     let mindPointsRedeemed: number | undefined;
     const reasons: CheckoutUpdateReason[] = [];
 
-    if (item.couponCode) {
+    if (item.couponCode && !requestedAdminCoupon) {
       const normalizedCoupon = item.couponCode.trim();
       if (
         !Number.isFinite(item.couponDiscount) ||
@@ -491,6 +512,7 @@ export function reconcileCheckoutIntent(input: {
       couponCode,
       mindPointsRedeemed,
       courseName: course.name,
+      courseType: course.type,
       batchLabel: selectedBatch?.label,
       offerName: activeOffer?.name,
       bogoLabel: isBogoActive(course.bogo, now)
@@ -571,6 +593,57 @@ export function reconcileCheckoutIntent(input: {
       item.bundleCampaignId = bestBundle.campaign._id;
       item.bundleCampaignName = bestBundle.campaign.name;
     });
+  }
+
+  if (requestedAdminCoupon) {
+    const application = applyAdminCouponToItems({
+      coupon: requestedAdminCoupon,
+      items: items.map((item) => ({
+        cartItemId: item.cartItemId,
+        courseId: item.courseId,
+        courseType: item.courseType,
+        amountPaid: item.amountPaid,
+        redemptionDiscountAmount: item.redemptionDiscountAmount,
+        couponCode: item.couponCode,
+      })),
+      now,
+    });
+
+    const cartItemIdsWithRequestedCode = new Set(
+      input.items
+        .filter(
+          (item) =>
+            item.couponCode &&
+            normalizeAdminCouponCode(item.couponCode) ===
+              normalizeAdminCouponCode(requestedAdminCoupon.code),
+        )
+        .map((item) => item.cartItemId),
+    );
+
+    if (application.applied) {
+      for (const item of items) {
+        const discount = application.itemDiscounts.get(item.cartItemId) ?? 0;
+        if (discount <= 0) {
+          continue;
+        }
+
+        item.amountPaid = Math.max(0, item.amountPaid - discount);
+        item.redemptionDiscountAmount =
+          roundCurrency(item.redemptionDiscountAmount) + discount;
+        item.couponCode = normalizeAdminCouponCode(application.coupon.code);
+      }
+    } else {
+      for (const item of items) {
+        if (!cartItemIdsWithRequestedCode.has(item.cartItemId)) {
+          continue;
+        }
+
+        updateReasonsByCartItem.set(item.cartItemId, [
+          ...(updateReasonsByCartItem.get(item.cartItemId) ?? []),
+          application.reason,
+        ]);
+      }
+    }
   }
 
   for (const item of items) {

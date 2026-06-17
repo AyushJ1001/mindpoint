@@ -178,14 +178,85 @@ export async function validateCheckoutPricingItemResult(
     .first();
 
   if (!coupon) {
-    return checkoutPricingFailure(
-      "INVALID_COUPON_CODE",
-      "Invalid coupon code.",
-      {
-        couponCode,
-        courseId: args.course._id,
-      },
-    );
+    const adminCoupon = await ctx.db
+      .query("adminCoupons")
+      .withIndex("by_code", (q) => q.eq("code", couponCode.toUpperCase()))
+      .first();
+
+    if (!adminCoupon) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "Invalid coupon code.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    if (
+      !adminCoupon.enabled ||
+      adminCoupon.isArchived ||
+      (adminCoupon.startDate &&
+        Date.now() < new Date(adminCoupon.startDate).getTime()) ||
+      (adminCoupon.endDate &&
+        Date.now() > new Date(adminCoupon.endDate).getTime()) ||
+      (adminCoupon.redemptionLimit !== undefined &&
+        adminCoupon.redemptionLimit > 0 &&
+        adminCoupon.totalRedemptions >= adminCoupon.redemptionLimit)
+    ) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "This coupon is no longer active.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    const appliesToCourse =
+      adminCoupon.appliesTo.type === "cart" ||
+      (adminCoupon.appliesTo.type === "courses" &&
+        adminCoupon.appliesTo.courseIds.some(
+          (courseId) => String(courseId) === String(args.course._id),
+        )) ||
+      (adminCoupon.appliesTo.type === "courseTypes" &&
+        !!args.course.type &&
+        adminCoupon.appliesTo.courseTypes.includes(args.course.type));
+
+    if (!appliesToCourse) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "This coupon is not valid for this course.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    if (amountPaid === checkoutPrice) {
+      return checkoutPricingFailure(
+        "CONFLICT",
+        "Coupon pricing does not include a discount.",
+        {
+          amountPaid,
+          checkoutPrice,
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    if (options.consumeCoupon ?? true) {
+      await ctx.db.patch(adminCoupon._id, {
+        totalRedemptions: adminCoupon.totalRedemptions + 1,
+        updatedAt: Date.now(),
+      });
+    }
+
+    return null;
   }
   if (coupon.isUsed) {
     return checkoutPricingFailure(

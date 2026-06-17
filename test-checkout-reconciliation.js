@@ -153,6 +153,188 @@ async function main() {
   assert.equal(couponResult.items[0].couponCode, "MP-100");
   assert.equal(couponResult.items[0].mindPointsRedeemed, 120);
 
+  const adminCartCouponResult = reconcileCheckoutIntent({
+    now,
+    items: [
+      {
+        cartItemId: "course-a",
+        courseId: "course-a",
+        clientListedPrice: 3600,
+        clientCheckoutPrice: 3600,
+        couponCode: "SAVE500",
+      },
+      {
+        cartItemId: "course-b",
+        courseId: "course-b",
+        clientListedPrice: 2500,
+        clientCheckoutPrice: 2500,
+        couponCode: "SAVE500",
+      },
+    ],
+    courses: [
+      baseCourse,
+      {
+        ...baseCourse,
+        _id: "course-b",
+        name: "Certificate B",
+        price: 2500,
+      },
+    ],
+    batches: [],
+    bundleCampaigns: [],
+    adminCoupons: [
+      {
+        _id: "coupon-save500",
+        code: "SAVE500",
+        name: "Save 500",
+        enabled: true,
+        isArchived: false,
+        discount: { type: "flat", value: 500 },
+        appliesTo: { type: "cart" },
+        requires: { type: "none" },
+      },
+    ],
+  });
+
+  assert.equal(adminCartCouponResult.status, "changed");
+  assert.equal(adminCartCouponResult.totalAmountPaid, 5600);
+  assert.equal(adminCartCouponResult.items[0].couponCode, "SAVE500");
+  assert.equal(adminCartCouponResult.items[1].couponCode, "SAVE500");
+  assert.deepEqual(
+    adminCartCouponResult.items.map((item) => item.amountPaid),
+    [3305, 2295],
+  );
+
+  const adminCourseCouponResult = reconcileCheckoutIntent({
+    now,
+    items: [
+      {
+        cartItemId: "course-a",
+        courseId: "course-a",
+        clientListedPrice: 3600,
+        clientCheckoutPrice: 3600,
+        couponCode: "CERT25",
+      },
+      {
+        cartItemId: "course-therapy",
+        courseId: "course-therapy",
+        clientListedPrice: 2000,
+        clientCheckoutPrice: 2000,
+        couponCode: "CERT25",
+      },
+    ],
+    courses: [
+      baseCourse,
+      {
+        ...baseCourse,
+        _id: "course-therapy",
+        name: "Therapy",
+        type: "therapy",
+        price: 2000,
+      },
+    ],
+    batches: [],
+    bundleCampaigns: [],
+    adminCoupons: [
+      {
+        _id: "coupon-cert25",
+        code: "CERT25",
+        name: "Certificate 25",
+        enabled: true,
+        isArchived: false,
+        discount: { type: "percentage", value: 25 },
+        appliesTo: { type: "courseTypes", courseTypes: ["certificate"] },
+        requires: { type: "none" },
+      },
+    ],
+  });
+
+  assert.equal(adminCourseCouponResult.status, "changed");
+  assert.equal(adminCourseCouponResult.totalAmountPaid, 4700);
+  assert.equal(adminCourseCouponResult.items[0].amountPaid, 2700);
+  assert.equal(adminCourseCouponResult.items[1].amountPaid, 2000);
+
+  const adminRequirementCouponResult = reconcileCheckoutIntent({
+    now,
+    items: [
+      {
+        cartItemId: "course-a",
+        courseId: "course-a",
+        clientListedPrice: 3600,
+        clientCheckoutPrice: 3600,
+        couponCode: "THERAPY-GATE",
+      },
+    ],
+    courses: [baseCourse],
+    batches: [],
+    bundleCampaigns: [],
+    adminCoupons: [
+      {
+        _id: "coupon-therapy-gate",
+        code: "THERAPY-GATE",
+        name: "Therapy required",
+        enabled: true,
+        isArchived: false,
+        discount: { type: "percentage", value: 20 },
+        appliesTo: { type: "cart" },
+        requires: { type: "courseTypes", courseTypes: ["therapy"] },
+      },
+    ],
+  });
+
+  assert.equal(adminRequirementCouponResult.status, "changed");
+  assert.equal(adminRequirementCouponResult.totalAmountPaid, 3600);
+  assert.deepEqual(adminRequirementCouponResult.updatedItems[0].reasons, [
+    "COUPON_NOT_APPLICABLE",
+  ]);
+
+  const adminFreeCourseCouponResult = reconcileCheckoutIntent({
+    now,
+    items: [
+      {
+        cartItemId: "course-a",
+        courseId: "course-a",
+        clientListedPrice: 3600,
+        clientCheckoutPrice: 3600,
+        couponCode: "FREEB",
+      },
+      {
+        cartItemId: "course-b",
+        courseId: "course-b",
+        clientListedPrice: 2500,
+        clientCheckoutPrice: 2500,
+        couponCode: "FREEB",
+      },
+    ],
+    courses: [
+      baseCourse,
+      {
+        ...baseCourse,
+        _id: "course-b",
+        name: "Certificate B",
+        price: 2500,
+      },
+    ],
+    batches: [],
+    bundleCampaigns: [],
+    adminCoupons: [
+      {
+        _id: "coupon-freeb",
+        code: "FREEB",
+        name: "Free Course B",
+        enabled: true,
+        isArchived: false,
+        discount: { type: "free" },
+        appliesTo: { type: "courses", courseIds: ["course-b"] },
+        requires: { type: "courses", courseIds: ["course-a"] },
+      },
+    ],
+  });
+
+  assert.equal(adminFreeCourseCouponResult.status, "changed");
+  assert.equal(adminFreeCourseCouponResult.totalAmountPaid, 3600);
+  assert.equal(adminFreeCourseCouponResult.items[1].amountPaid, 0);
+
   const attemptPayload = buildCheckoutAttemptPayload({
     reconciliation: expiredOfferResult,
     buyerUserId: "user_buyer",

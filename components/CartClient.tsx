@@ -2,6 +2,10 @@
 
 import type { Id } from "@/lib/backend/data-model";
 import { buildCartItemId } from "@/lib/domain/cart";
+import {
+  applyAdminCouponToItems,
+  type ReconciliationAdminCoupon,
+} from "@/lib/domain/admin-coupons";
 import { REFERRAL_COOKIE_KEY } from "@/lib/domain/referrals";
 import { evaluateBundleCampaigns } from "@/lib/domain/bundles";
 import {
@@ -53,6 +57,19 @@ import { useMemo } from "react";
 export const dynamic = "force-dynamic";
 
 import type { EvaluatedBundleCampaign } from "@/lib/domain/bundles";
+
+type AppliedCheckoutCoupon =
+  | {
+      source: "mindPoints";
+      code: string;
+      discount: number;
+      courseType: string;
+      pointsCost: number;
+    }
+  | {
+      source: "admin";
+      coupon: ReconciliationAdminCoupon;
+    };
 
 /**
  * Collapsible progress section shown when a bundle is partially fulfilled.
@@ -211,12 +228,8 @@ const CartContent = () => {
     useState<string | null>(null);
   const [reconciliationRequestedAt, setReconciliationRequestedAt] = useState(0);
   const [couponCode, setCouponCode] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{
-    code: string;
-    discount: number;
-    courseType: string;
-    pointsCost: number;
-  } | null>(null);
+  const [appliedCoupon, setAppliedCoupon] =
+    useState<AppliedCheckoutCoupon | null>(null);
   const { user, isLoaded: isUserLoaded } = useUser();
   const { openSignIn } = useClerk();
   const { isAuthenticated } = useConvexAuth();
@@ -236,6 +249,10 @@ const CartContent = () => {
   const couponValidation = useQuery(
     api.mindPoints.validateCoupon,
     couponCode && isAuthenticated ? { code: couponCode } : "skip",
+  );
+  const adminCouponValidation = useQuery(
+    api.adminCoupons.validateCouponCode,
+    couponCode ? { code: couponCode } : "skip",
   );
 
   const now = useNow();
@@ -362,7 +379,7 @@ const CartContent = () => {
   }, [coveredCourseIdSet, items, itemOfferDetails]);
 
   const couponEligible = useMemo(() => {
-    if (!appliedCoupon) {
+    if (!appliedCoupon || appliedCoupon.source !== "mindPoints") {
       return true;
     }
 
@@ -455,6 +472,54 @@ const CartContent = () => {
       };
     }
 
+    if (appliedCoupon.source === "admin") {
+      const application = applyAdminCouponToItems({
+        coupon: appliedCoupon.coupon,
+        items: baseItems.map((item) => ({
+          cartItemId: item.cartItemId,
+          courseId: String(item.courseId),
+          courseType: item.courseType,
+          amountPaid: item.amountPaid,
+          redemptionDiscountAmount: item.redemptionDiscountAmount,
+          couponCode: item.couponCode,
+        })),
+        now,
+      });
+
+      if (!application.applied) {
+        return {
+          totalAmountPaid: baseItems.reduce(
+            (total, item) => total + item.amountPaid,
+            0,
+          ),
+          items: baseItems.map(toCheckoutPricingItem),
+        };
+      }
+
+      const pricedItems = baseItems.map((item) => {
+        const discount = application.itemDiscounts.get(item.cartItemId) ?? 0;
+        if (discount <= 0) {
+          return toCheckoutPricingItem(item);
+        }
+
+        return {
+          ...toCheckoutPricingItem(item),
+          amountPaid: Math.max(0, item.amountPaid - discount),
+          redemptionDiscountAmount:
+            (item.redemptionDiscountAmount ?? 0) + discount,
+          couponCode: application.coupon.code,
+        };
+      });
+
+      return {
+        totalAmountPaid: pricedItems.reduce(
+          (total, item) => total + item.amountPaid,
+          0,
+        ),
+        items: pricedItems,
+      };
+    }
+
     const eligibleIndex = (() => {
       let bestIndex = -1;
       let bestPrice = -1;
@@ -513,7 +578,7 @@ const CartContent = () => {
       ),
       items: pricedItems,
     };
-  }, [items, appliedBundle, appliedCoupon]);
+  }, [items, appliedBundle, appliedCoupon, now]);
 
   const discountedTotal = checkoutPricing.totalAmountPaid;
   const checkoutPricingByLineKey = useMemo(
@@ -1475,7 +1540,32 @@ const CartContent = () => {
                       size="sm"
                       onClick={async () => {
                         if (!couponCode.trim()) return;
-                        if (couponValidation?._tag === "Success") {
+                        if (adminCouponValidation?._tag === "Success") {
+                          const adminCoupon =
+                            adminCouponValidation.coupon as ReconciliationAdminCoupon;
+                          const application = applyAdminCouponToItems({
+                            coupon: adminCoupon,
+                            items: items.map((item) => ({
+                              cartItemId: getCartLineKey(item),
+                              courseId: String(getCartCourseId(item)),
+                              courseType: item.courseType,
+                              amountPaid: Math.round(item.price ?? 0),
+                            })),
+                            now,
+                          });
+                          if (!application.applied) {
+                            toast.error(
+                              "This coupon does not apply to the current cart.",
+                            );
+                            return;
+                          }
+                          setAppliedCoupon({
+                            source: "admin",
+                            coupon: adminCoupon,
+                          });
+                          setCouponCode(adminCoupon.code);
+                          toast.success("Coupon applied successfully!");
+                        } else if (couponValidation?._tag === "Success") {
                           const hasEligibleCourse = items.some(
                             (item) =>
                               !coveredCourseIdSet.has(
@@ -1492,18 +1582,27 @@ const CartContent = () => {
                             return;
                           }
                           setAppliedCoupon({
+                            source: "mindPoints",
                             code: couponCode,
                             discount: couponValidation.coupon.discount,
                             courseType: couponValidation.coupon.courseType,
                             pointsCost: couponValidation.coupon.pointsCost,
                           });
                           toast.success("Coupon applied successfully!");
+                        } else if (adminCouponValidation?._tag === "Failure") {
+                          toast.error(
+                            couponValidation?._tag === "Failure"
+                              ? couponValidation.error.message
+                              : adminCouponValidation.error.message,
+                          );
                         } else if (couponValidation?._tag === "Failure") {
                           toast.error(couponValidation.error.message);
                         }
                       }}
                       disabled={
-                        !couponCode.trim() || couponValidation === undefined
+                        !couponCode.trim() ||
+                        (adminCouponValidation === undefined &&
+                          couponValidation === undefined)
                       }
                       className="w-full sm:w-auto"
                     >
@@ -1515,10 +1614,14 @@ const CartContent = () => {
                     <div className="flex items-center gap-2">
                       <Gift className="h-4 w-4 text-green-600" />
                       <span className="font-mono text-sm font-semibold">
-                        {appliedCoupon.code}
+                        {appliedCoupon.source === "admin"
+                          ? appliedCoupon.coupon.code
+                          : appliedCoupon.code}
                       </span>
                       <span className="text-xs text-green-600">
-                        {appliedCoupon.discount}% off
+                        {appliedCoupon.source === "admin"
+                          ? appliedCoupon.coupon.name
+                          : `${appliedCoupon.discount}% off`}
                       </span>
                     </div>
                     <Button
@@ -1533,11 +1636,13 @@ const CartContent = () => {
                     </Button>
                   </div>
                 )}
-                {couponValidation?._tag === "Failure" && couponCode && (
-                  <p className="text-xs text-red-600">
-                    {couponValidation.error.message}
-                  </p>
-                )}
+                {adminCouponValidation?._tag === "Failure" &&
+                  couponValidation?._tag === "Failure" &&
+                  couponCode && (
+                    <p className="text-xs text-red-600">
+                      {couponValidation.error.message}
+                    </p>
+                  )}
               </div>
 
               <div className="space-y-2 border-t pt-4">
@@ -1548,9 +1653,11 @@ const CartContent = () => {
                 {appliedCoupon && (
                   <div className="text-sm text-green-600">
                     <Check className="mr-1 inline h-4 w-4" />
-                    {appliedCoupon.discount === 100
-                      ? `Coupon applied to one ${appliedCoupon.courseType} course`
-                      : `Coupon applied - ${appliedCoupon.discount}% off one ${appliedCoupon.courseType} course`}
+                    {appliedCoupon.source === "admin"
+                      ? `${appliedCoupon.coupon.name} applied`
+                      : appliedCoupon.discount === 100
+                        ? `Coupon applied to one ${appliedCoupon.courseType} course`
+                        : `Coupon applied - ${appliedCoupon.discount}% off one ${appliedCoupon.courseType} course`}
                   </div>
                 )}
                 {user?.id && totalPointsEarned > 0 && (
