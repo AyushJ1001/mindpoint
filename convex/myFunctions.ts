@@ -910,11 +910,18 @@ export const handleSuccessfulPayment = mutation({
       args.courseId,
       args.batchId,
     );
-    const pricingFailure = await validateCheckoutPricingItemResult(ctx, {
-      userId: args.userId,
-      course,
-      pricingItem,
-    });
+    const pricingFailure = await validateCheckoutPricingItemResult(
+      ctx,
+      {
+        userId: args.userId,
+        course,
+        pricingItem,
+      },
+      {
+        cartCourses: [course],
+        remainingAdminCouponDiscountByCode: new Map<string, number>(),
+      },
+    );
     if (pricingFailure) {
       return pricingFailure;
     }
@@ -1369,18 +1376,6 @@ export const handleCartCheckout = mutation({
         lineItem.courseId,
         lineItem.batchId,
       );
-      const pricingFailure = await validateCheckoutPricingItemResult(
-        ctx,
-        {
-          userId: args.userId,
-          course,
-          pricingItem,
-        },
-        { consumeCoupon: false },
-      );
-      if (pricingFailure) {
-        return pricingFailure;
-      }
 
       preparedLineItems.push({
         batch,
@@ -1396,6 +1391,29 @@ export const handleCartCheckout = mutation({
         lineItem,
         pricingItem,
       });
+    }
+
+    const checkoutCartCourses = preparedLineItems.map((item) => item.course);
+    const preflightAdminCouponDiscountByCode = new Map<string, number>();
+
+    for (const { course, pricingItem } of preparedLineItems) {
+      const pricingFailure = await validateCheckoutPricingItemResult(
+        ctx,
+        {
+          userId: args.userId,
+          course,
+          pricingItem,
+        },
+        {
+          cartCourses: checkoutCartCourses,
+          consumeCoupon: false,
+          remainingAdminCouponDiscountByCode:
+            preflightAdminCouponDiscountByCode,
+        },
+      );
+      if (pricingFailure) {
+        return pricingFailure;
+      }
     }
 
     if (args.checkoutAttemptId && checkoutAttempt) {
@@ -1439,7 +1457,11 @@ export const handleCartCheckout = mutation({
           course,
           pricingItem,
         },
-        { consumedAdminCouponCodes, remainingAdminCouponDiscountByCode },
+        {
+          cartCourses: checkoutCartCourses,
+          consumedAdminCouponCodes,
+          remainingAdminCouponDiscountByCode,
+        },
       );
       if (couponConsumptionFailure) {
         throw new Error(couponConsumptionFailure.error.message);
@@ -2247,18 +2269,6 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         lineItem.courseId,
         lineItem.batchId,
       );
-      const pricingFailure = await validateCheckoutPricingItemResult(
-        ctx,
-        {
-          userId: args.userData.email,
-          course,
-          pricingItem,
-        },
-        { consumeCoupon: false },
-      );
-      if (pricingFailure) {
-        return pricingFailure;
-      }
 
       preparedLineItems.push({
         batch,
@@ -2276,6 +2286,29 @@ export const handleGuestUserCartCheckoutWithData = mutation({
         lineItem,
         pricingItem,
       });
+    }
+
+    const checkoutCartCourses = preparedLineItems.map((item) => item.course);
+    const preflightAdminCouponDiscountByCode = new Map<string, number>();
+
+    for (const { course, pricingItem } of preparedLineItems) {
+      const pricingFailure = await validateCheckoutPricingItemResult(
+        ctx,
+        {
+          userId: args.userData.email,
+          course,
+          pricingItem,
+        },
+        {
+          cartCourses: checkoutCartCourses,
+          consumeCoupon: false,
+          remainingAdminCouponDiscountByCode:
+            preflightAdminCouponDiscountByCode,
+        },
+      );
+      if (pricingFailure) {
+        return pricingFailure;
+      }
     }
 
     // Check if guest user already exists with this email after preflight passes.
@@ -2332,7 +2365,11 @@ export const handleGuestUserCartCheckoutWithData = mutation({
           course,
           pricingItem,
         },
-        { consumedAdminCouponCodes, remainingAdminCouponDiscountByCode },
+        {
+          cartCourses: checkoutCartCourses,
+          consumedAdminCouponCodes,
+          remainingAdminCouponDiscountByCode,
+        },
       );
       if (couponConsumptionFailure) {
         throw new Error(couponConsumptionFailure.error.message);

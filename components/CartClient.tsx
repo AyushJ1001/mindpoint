@@ -1545,8 +1545,20 @@ const CartContent = () => {
                       onClick={async () => {
                         if (!couponCode.trim()) return;
                         if (adminCouponValidation?._tag === "Success") {
-                          const adminCoupon =
-                            adminCouponValidation.coupon as ReconciliationAdminCoupon;
+                          const adminCoupon: ReconciliationAdminCoupon = {
+                            _id: adminCouponValidation.coupon._id,
+                            code: adminCouponValidation.coupon.code,
+                            name: adminCouponValidation.coupon.name,
+                            description:
+                              adminCouponValidation.coupon.description,
+                            enabled: adminCouponValidation.coupon.enabled,
+                            isArchived: adminCouponValidation.coupon.isArchived,
+                            discount: adminCouponValidation.coupon.discount,
+                            appliesTo: adminCouponValidation.coupon.appliesTo,
+                            requires: adminCouponValidation.coupon.requires,
+                            startDate: adminCouponValidation.coupon.startDate,
+                            endDate: adminCouponValidation.coupon.endDate,
+                          };
                           const application = applyAdminCouponToItems({
                             coupon: adminCoupon,
                             items: baseCheckoutItems.map((item) => ({

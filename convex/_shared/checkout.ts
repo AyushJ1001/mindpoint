@@ -37,6 +37,7 @@ export type CheckoutPricingFailure = ConvexFailure<
 >;
 
 type ValidateCheckoutPricingItemOptions = {
+  cartCourses?: Array<Pick<Doc<"courses">, "_id" | "type">>;
   consumeCoupon?: boolean;
   consumedAdminCouponCodes?: Set<string>;
   remainingAdminCouponDiscountByCode?: Map<string, number>;
@@ -164,8 +165,12 @@ function expectedAdminCouponDiscountForLine(args: {
     checkoutPrice,
     Math.round(checkoutPrice * (discount.value / 100)),
   );
+  const cappedPercentageDiscount =
+    discount.maxDiscount === undefined
+      ? percentageDiscount
+      : Math.min(percentageDiscount, roundCurrency(discount.maxDiscount));
 
-  return Math.min(percentageDiscount, remainingDiscount);
+  return Math.min(cappedPercentageDiscount, remainingDiscount);
 }
 
 function adminCouponUsesSharedDiscountBudget(coupon: Doc<"adminCoupons">) {
@@ -190,6 +195,36 @@ function initialAdminCouponDiscountBudget(
   }
 
   return roundCurrency(coupon.discount.maxDiscount);
+}
+
+function adminCouponRequirementsSatisfied(
+  coupon: Doc<"adminCoupons">,
+  cartCourses: Array<Pick<Doc<"courses">, "_id" | "type">> | undefined,
+) {
+  const requires = coupon.requires;
+  if (requires.type === "none") {
+    return true;
+  }
+
+  if (!cartCourses || cartCourses.length === 0) {
+    return false;
+  }
+
+  if (requires.type === "courses") {
+    const cartCourseIds = new Set(
+      cartCourses.map((course) => String(course._id)),
+    );
+    return requires.courseIds.some((courseId) =>
+      cartCourseIds.has(String(courseId)),
+    );
+  }
+
+  const cartCourseTypes = new Set(
+    cartCourses.map((course) => course.type).filter(Boolean),
+  );
+  return requires.courseTypes.some((courseType) =>
+    cartCourseTypes.has(courseType),
+  );
 }
 
 export async function validateCheckoutPricingItemResult(
@@ -300,6 +335,17 @@ export async function validateCheckoutPricingItemResult(
       return checkoutPricingFailure(
         "INVALID_COUPON_CODE",
         "This coupon is not valid for this course.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    if (!adminCouponRequirementsSatisfied(adminCoupon, options.cartCourses)) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "This coupon is not valid for the current cart.",
         {
           couponCode,
           courseId: args.course._id,

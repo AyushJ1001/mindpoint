@@ -471,8 +471,6 @@ export const validateCouponCode = query({
             : coupon.requires,
         startDate: coupon.startDate,
         endDate: coupon.endDate,
-        redemptionLimit: coupon.redemptionLimit,
-        totalRedemptions: coupon.totalRedemptions,
       },
     });
   },
