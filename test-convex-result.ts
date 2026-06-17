@@ -300,6 +300,90 @@ test("browser HTTP service exposes Effect/result APIs instead of throw APIs", ()
   assert.doesNotMatch(cartSource, /getCheckoutReconciliationFromError/);
 });
 
+test("payment order failures expose nested checkout reconciliation from 409 responses", async () => {
+  const { requestPaymentOrder } = await import("./lib/services/payments");
+
+  const result = await requestPaymentOrder(
+    {
+      cartIntent: {
+        items: [{ cartItemId: "course_1", courseId: "course_1" }],
+      },
+    },
+    {
+      fetchImpl: async () =>
+        new Response(
+          JSON.stringify({
+            success: false,
+            error: "Your cart changed. Review it before checkout.",
+            code: "CONFLICT",
+            details: {
+              reconciliation: {
+                status: "changed",
+                totalAmountPaid: 100,
+                removedItems: [
+                  {
+                    cartItemId: "course_1",
+                    courseId: "course_1",
+                    reason: "archived",
+                  },
+                ],
+              },
+            },
+          }),
+          {
+            status: 409,
+            headers: { "content-type": "application/json" },
+          },
+        ),
+    },
+  );
+
+  assert.equal(result.success, false);
+  assert.deepEqual(result.reconciliation, {
+    status: "changed",
+    totalAmountPaid: 100,
+    removedItems: [
+      {
+        cartItemId: "course_1",
+        courseId: "course_1",
+        reason: "archived",
+      },
+    ],
+  });
+});
+
+test("cart checkout reconciliation auto-applies unavailable item removals with user-facing causes", async () => {
+  const { buildCartReconciliationApplication } = await import(
+    "./lib/services/cart-reconciliation"
+  );
+  const cartSource = readFileSync("components/CartClient.tsx", "utf8");
+
+  const application = buildCartReconciliationApplication({
+    status: "blocked",
+    totalAmountPaid: 0,
+    removedItems: [
+      {
+        cartItemId: "course_1",
+        courseId: "course_1",
+        reason: "COURSE_PAST_END_DATE",
+        message: "Course A is no longer available because it has ended.",
+      },
+    ],
+  });
+
+  assert.deepEqual(application?.removedItemIds, ["course_1"]);
+  assert.equal(application?.reviewRequired, true);
+  assert.match(
+    application?.toastDescription ?? "",
+    /no longer available because it has ended/,
+  );
+  assert.match(cartSource, /buildCartReconciliationApplication/);
+  assert.match(
+    cartSource,
+    /for \(const removedItemId of application\.removedItemIds\)[\s\S]+removeItem\(removedItemId\)/,
+  );
+});
+
 test("google sheets actions return tagged results through extracted sheet modules", () => {
   const actionSource = readFileSync("convex/googleSheets.ts", "utf8");
   const clientSource = readFileSync(

@@ -10,6 +10,7 @@ import {
   BoundaryUnauthorizedError,
   BoundaryUnexpectedError,
   BoundaryValidationError,
+  isJsonObject,
   type JsonValue,
 } from "../effect/errors";
 
@@ -114,7 +115,8 @@ function httpStatusError(status: number, payload: JsonValue): BoundaryError {
     payload,
     `Request failed with status ${status}.`,
   );
-  const details = payload;
+  const details =
+    isJsonObject(payload) && "details" in payload ? payload.details : payload;
 
   switch (status) {
     case 400:
