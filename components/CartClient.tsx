@@ -585,6 +585,25 @@ const CartContent = () => {
   }, [baseCheckoutItems, appliedCoupon, now]);
 
   const discountedTotal = checkoutPricing.totalAmountPaid;
+
+  useEffect(() => {
+    if (!appliedCoupon || appliedCoupon.source !== "admin") {
+      return;
+    }
+
+    const appliedCode = appliedCoupon.coupon.code.trim().toUpperCase();
+    const hasDiscountedLine = checkoutPricing.items.some(
+      (item) =>
+        item.couponCode?.trim().toUpperCase() === appliedCode &&
+        (item.redemptionDiscountAmount ?? 0) > 0,
+    );
+
+    if (!hasDiscountedLine) {
+      setAppliedCoupon(null);
+      setCouponCode("");
+    }
+  }, [appliedCoupon, checkoutPricing.items]);
+
   const checkoutPricingByLineKey = useMemo(
     () =>
       new Map(
