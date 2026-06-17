@@ -2,36 +2,41 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { EnrollmentStatus } from "./schema";
-import type { FunctionReturnType } from "convex/server";
 import { requireAdmin } from "./adminAuth";
 import { normalizeEnrollmentStatus } from "./adminUtils";
 import { createAdminAuditLog } from "./adminAudit";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
+import {
+  calculateInternshipEndDate,
+  extractInternshipPlanFromDuration,
+  generateEnrollmentNumber,
+  roundCurrency,
+  type InternshipPlan,
+} from "./_shared/enrollment";
 import { calculatePointsEarned } from "./_shared/mindPoints";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+  type ConvexFailure,
+  type ConvexResultErrorCode,
+} from "./_shared/result";
 
-function generateEnrollmentNumber(
-  courseCode: string,
-  startDate: string,
-): string {
-  const date = new Date(startDate);
-  const month = (date.getMonth() + 1).toString().padStart(2, "0");
-  const year = date.getFullYear().toString().slice(-2);
-  const timestamp = Date.now().toString(36).toUpperCase();
-  const entropy = crypto
-    .randomUUID()
-    .replace(/-/g, "")
-    .slice(0, 8)
-    .toUpperCase();
+type AdminEnrollmentFailure = ConvexFailure<ConvexResultErrorCode>;
 
-  return `EN-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
+function adminEnrollmentFailure(
+  message: string,
+  code: ConvexResultErrorCode = convexResultErrorCode.VALIDATION_ERROR,
+): AdminEnrollmentFailure {
+  return convexFailure({ code, message });
 }
 
 async function generateUniqueEnrollmentNumber(
   ctx: MutationCtx,
   courseCode: string,
   startDate: string,
-): Promise<string> {
+): Promise<AdminEnrollmentFailure | string> {
   const MAX_ATTEMPTS = 5;
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
@@ -48,54 +53,87 @@ async function generateUniqueEnrollmentNumber(
     }
   }
 
-  throw new Error("Enrollment number collision. Please retry.");
+  return adminEnrollmentFailure(
+    "Enrollment number collision. Please retry.",
+    convexResultErrorCode.CONFLICT,
+  );
 }
-function extractInternshipPlanFromDuration(
-  duration?: string,
-): "120" | "240" | null {
-  if (!duration) return null;
 
-  const durationLower = duration.toLowerCase().trim();
-  if (durationLower.includes("120") || durationLower.includes("2 week")) {
-    return "120";
+type GuestCheckoutResult = Array<{
+  courseId?: Id<"courses"> | string;
+  enrollmentId: Id<"enrollments">;
+}>;
+
+type GuestCheckoutMutationResult =
+  | AdminEnrollmentFailure
+  | GuestCheckoutResult
+  | {
+      _tag: "Success";
+      enrollments: GuestCheckoutResult;
+      success: true;
+    };
+
+type SuccessfulPaymentResult = {
+  enrollmentId: Id<"enrollments">;
+};
+
+type SuccessfulPaymentMutationResult =
+  | AdminEnrollmentFailure
+  | SuccessfulPaymentResult
+  | {
+      _tag: "Success";
+      enrollment?: SuccessfulPaymentResult;
+      enrollmentId?: Id<"enrollments">;
+      success: true;
+    };
+
+function isAdminEnrollmentFailure(
+  result: GuestCheckoutMutationResult | SuccessfulPaymentMutationResult,
+): result is AdminEnrollmentFailure {
+  return (
+    !Array.isArray(result) && "_tag" in result && result._tag === "Failure"
+  );
+}
+
+function normalizeGuestCheckoutResult(
+  result: GuestCheckoutMutationResult,
+): AdminEnrollmentFailure | GuestCheckoutResult {
+  if (Array.isArray(result)) {
+    return result;
   }
-  if (durationLower.includes("240") || durationLower.includes("4 week")) {
-    return "240";
+
+  if (isAdminEnrollmentFailure(result)) {
+    return result;
   }
 
-  return null;
+  return result.enrollments;
 }
 
-function calculateInternshipEndDate(
-  startDate: string | undefined,
-  internshipPlan: "120" | "240",
-): string {
-  const parsedStart = startDate ? new Date(startDate) : new Date();
-  const start = Number.isNaN(parsedStart.getTime()) ? new Date() : parsedStart;
-  const weeks = internshipPlan === "120" ? 2 : 4;
-  const endDate = new Date(start);
-  endDate.setDate(start.getDate() + weeks * 7);
+function normalizeSuccessfulPaymentResult(
+  result: SuccessfulPaymentMutationResult,
+): AdminEnrollmentFailure | SuccessfulPaymentResult {
+  if (isAdminEnrollmentFailure(result)) {
+    return result;
+  }
 
-  return endDate.toISOString().split("T")[0];
+  if ("_tag" in result) {
+    if (result.enrollment) {
+      return result.enrollment;
+    }
+    if (result.enrollmentId) {
+      return { enrollmentId: result.enrollmentId };
+    }
+    return adminEnrollmentFailure(
+      "handleSuccessfulPayment returned a success result without an enrollment ID.",
+      convexResultErrorCode.CONFLICT,
+    );
+  }
+
+  return result;
 }
-
-type GuestCheckoutResult = FunctionReturnType<
-  typeof api.myFunctions.handleGuestUserCartCheckoutWithData
->;
-type SuccessfulPaymentResult = FunctionReturnType<
-  typeof api.myFunctions.handleSuccessfulPayment
->;
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
-}
-
-function roundCurrency(value: number | undefined): number {
-  if (!Number.isFinite(value)) {
-    return 0;
-  }
-
-  return Math.max(0, Math.round(value!));
 }
 
 function isAuthenticatedUserId(userId: string): boolean {
@@ -119,6 +157,16 @@ const paidRecoveryCourseValidator = v.object({
   amountPaid: v.number(),
 });
 
+type AdminCheckoutPricingItem = {
+  amountPaid: number;
+  checkoutPrice: number;
+  couponCode?: string;
+  courseId: Id<"courses">;
+  listedPrice: number;
+  mindPointsRedeemed?: number;
+  redemptionDiscountAmount?: number;
+};
+
 function buildAdminCheckoutPricingItem(
   course: Doc<"courses">,
   courseId: Id<"courses">,
@@ -130,12 +178,12 @@ function buildAdminCheckoutPricingItem(
     couponCode?: string;
     mindPointsRedeemed?: number;
   },
-) {
+): AdminCheckoutPricingItem | AdminEnrollmentFailure {
   const listedPrice = roundCurrency(pricing?.listedPrice ?? course.price);
   const checkoutPrice = roundCurrency(pricing?.checkoutPrice ?? listedPrice);
   const amountPaid = roundCurrency(pricing?.amountPaid ?? checkoutPrice);
   if (amountPaid > checkoutPrice) {
-    throw new Error("Amount paid cannot exceed checkout price.");
+    return adminEnrollmentFailure("Amount paid cannot exceed checkout price.");
   }
 
   const redemptionDiscountAmount = roundCurrency(
@@ -494,24 +542,31 @@ export const createManualEnrollment = mutation({
     internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
     pricing: v.optional(adminEnrollmentPricingValidator),
   },
-  handler: async (ctx, args): Promise<Doc<"enrollments"> | null> => {
+  handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
     const course = await ctx.db.get(args.courseId);
 
     if (!course) {
-      throw new Error("Course not found");
+      return adminEnrollmentFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     if (course.usesBatches && !args.batchId) {
-      throw new Error("Select a batch before creating this enrollment.");
+      return adminEnrollmentFailure(
+        "Select a batch before creating this enrollment.",
+      );
     }
 
     if (args.isGuestUser && isAuthenticatedUserId(args.userId)) {
-      throw new Error("A Clerk user ID cannot be enrolled as a guest user.");
+      return adminEnrollmentFailure(
+        "A Clerk user ID cannot be enrolled as a guest user.",
+      );
     }
 
     if (args.isGuestUser === false && args.userId.includes("@")) {
-      throw new Error(
+      return adminEnrollmentFailure(
         "An email-based user ID must be enrolled as a guest user.",
       );
     }
@@ -520,7 +575,7 @@ export const createManualEnrollment = mutation({
       args.userId.includes("@") &&
       normalizeEmail(args.userId) !== normalizeEmail(args.userEmail)
     ) {
-      throw new Error(
+      return adminEnrollmentFailure(
         "When using an email as the user ID, the user email must match exactly.",
       );
     }
@@ -531,11 +586,14 @@ export const createManualEnrollment = mutation({
       args.courseId,
       args.pricing,
     );
+    if ("_tag" in pricingItem) {
+      return pricingItem;
+    }
 
     let enrollmentId: Id<"enrollments"> | null = null;
 
     if (isGuestUser) {
-      const enrollments = (await ctx.runMutation(
+      const checkoutResult: GuestCheckoutMutationResult = await ctx.runMutation(
         api.myFunctions.handleGuestUserCartCheckoutWithData,
         {
           userData: {
@@ -551,11 +609,16 @@ export const createManualEnrollment = mutation({
             items: [pricingItem],
           },
         },
-      )) as GuestCheckoutResult;
+      );
+      const enrollments = normalizeGuestCheckoutResult(checkoutResult);
+      if (isAdminEnrollmentFailure(enrollments)) {
+        return enrollments;
+      }
 
       if (enrollments.length === 0) {
-        throw new Error(
+        return adminEnrollmentFailure(
           `handleGuestUserCartCheckoutWithData returned no enrollments for course ${args.courseId}.`,
+          convexResultErrorCode.CONFLICT,
         );
       }
 
@@ -563,18 +626,18 @@ export const createManualEnrollment = mutation({
         (row) => String(row.courseId) === String(args.courseId),
       );
       if (!matching) {
-        throw new Error(
+        return adminEnrollmentFailure(
           `handleGuestUserCartCheckoutWithData returned enrollments for [${enrollments
             .map((row) => String(row.courseId))
             .join(", ")}], but none matched course ${args.courseId}.`,
+          convexResultErrorCode.CONFLICT,
         );
       }
       enrollmentId = matching.enrollmentId;
     } else {
       try {
-        const created: SuccessfulPaymentResult = await ctx.runMutation(
-          api.myFunctions.handleSuccessfulPayment,
-          {
+        const checkoutResult: SuccessfulPaymentMutationResult =
+          await ctx.runMutation(api.myFunctions.handleSuccessfulPayment, {
             userId: args.userId,
             userEmail: args.userEmail,
             userPhone: args.userPhone,
@@ -589,22 +652,29 @@ export const createManualEnrollment = mutation({
               totalAmountPaid: pricingItem.amountPaid,
               items: [pricingItem],
             },
-          },
-        );
+          });
+        const created = normalizeSuccessfulPaymentResult(checkoutResult);
+        if (isAdminEnrollmentFailure(created)) {
+          return created;
+        }
         enrollmentId = created.enrollmentId;
       } catch (innerError) {
-        throw new Error(
+        return adminEnrollmentFailure(
           `handleSuccessfulPayment failed: ${
             innerError instanceof Error
               ? innerError.message
               : String(innerError)
           }`,
+          convexResultErrorCode.CONFLICT,
         );
       }
     }
 
     if (!enrollmentId) {
-      throw new Error("Failed to create enrollment");
+      return adminEnrollmentFailure(
+        "Failed to create enrollment",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     try {
@@ -622,17 +692,19 @@ export const createManualEnrollment = mutation({
         },
       });
     } catch (error) {
-      throw new Error(
+      return adminEnrollmentFailure(
         `Enrollment ${enrollmentId} was created, but audit logging failed. Confirm the record before retrying: ${
           error instanceof Error ? error.message : String(error)
         }`,
+        convexResultErrorCode.CONFLICT,
       );
     }
 
     const createdEnrollment = await ctx.db.get(enrollmentId);
     if (!createdEnrollment) {
-      throw new Error(
+      return adminEnrollmentFailure(
         `Enrollment ${enrollmentId} was created, but it could not be reloaded. Confirm the record before retrying.`,
+        convexResultErrorCode.NOT_FOUND,
       );
     }
 
@@ -640,7 +712,15 @@ export const createManualEnrollment = mutation({
       registrationSource: "admin_manual",
     });
 
-    return await ctx.db.get(enrollmentId);
+    const enrollment = await ctx.db.get(enrollmentId);
+    if (!enrollment) {
+      return adminEnrollmentFailure(
+        "Enrollment could not be reloaded.",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
+    return convexSuccess({ enrollment });
   },
 });
 
@@ -668,19 +748,19 @@ export const recoverPaidOrder = mutation({
     const overrideReason = args.overrideReason?.trim();
 
     if (!reason) {
-      throw new Error("Recovery reason is required.");
+      return adminEnrollmentFailure("Recovery reason is required.");
     }
     if (!args.razorpayPaymentId.trim()) {
-      throw new Error("Payment reference is required.");
+      return adminEnrollmentFailure("Payment reference is required.");
     }
     if (!args.buyerUserId.trim() || !args.buyerEmail.trim()) {
-      throw new Error("Buyer user ID and email are required.");
+      return adminEnrollmentFailure("Buyer user ID and email are required.");
     }
     if (args.courses.length === 0) {
-      throw new Error("At least one course is required.");
+      return adminEnrollmentFailure("At least one course is required.");
     }
     if (args.overrideAvailability && !overrideReason) {
-      throw new Error("Override reason is required.");
+      return adminEnrollmentFailure("Override reason is required.");
     }
 
     const duplicate = await ctx.db
@@ -690,7 +770,10 @@ export const recoverPaidOrder = mutation({
       )
       .first();
     if (duplicate) {
-      throw new Error("This payment reference is already recovered.");
+      return adminEnrollmentFailure(
+        "This payment reference is already recovered.",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     const enrollmentIds: Id<"enrollments">[] = [];
@@ -700,11 +783,16 @@ export const recoverPaidOrder = mutation({
     for (const item of args.courses) {
       const course = await ctx.db.get(item.courseId);
       if (!course) {
-        throw new Error(`Course ${item.courseId} not found.`);
+        return adminEnrollmentFailure(
+          `Course ${item.courseId} not found.`,
+          convexResultErrorCode.NOT_FOUND,
+        );
       }
       const batch = item.batchId ? await ctx.db.get(item.batchId) : null;
       if (item.batchId && (!batch || batch.courseId !== item.courseId)) {
-        throw new Error(`Batch ${item.batchId} does not belong to the course.`);
+        return adminEnrollmentFailure(
+          `Batch ${item.batchId} does not belong to the course.`,
+        );
       }
 
       const capacity = batch?.capacity ?? course.capacity ?? 0;
@@ -715,8 +803,9 @@ export const recoverPaidOrder = mutation({
         capacity > 0 &&
         enrolledCount >= capacity
       ) {
-        throw new Error(
+        return adminEnrollmentFailure(
           `${batch ? `Batch "${batch.label}"` : `Course "${course.name}"`} is full. Enable override to recover into it.`,
+          convexResultErrorCode.CONFLICT,
         );
       }
 
@@ -741,6 +830,9 @@ export const recoverPaidOrder = mutation({
         course.type === "worksheet"
           ? "N/A"
           : await generateUniqueEnrollmentNumber(ctx, course.code, startDate);
+      if (typeof enrollmentNumber !== "string") {
+        return enrollmentNumber;
+      }
 
       const enrollmentId = await ctx.db.insert("enrollments", {
         userId: args.buyerUserId.trim(),
@@ -856,10 +948,10 @@ export const recoverPaidOrder = mutation({
       },
     });
 
-    return {
+    return convexSuccess({
       enrollmentIds,
       buyerPointsAwarded,
-    };
+    });
   },
 });
 
@@ -879,14 +971,19 @@ export const updateEnrollmentPricing = mutation({
 
     const enrollment = await ctx.db.get(args.enrollmentId);
     if (!enrollment) {
-      throw new Error("Enrollment not found");
+      return adminEnrollmentFailure(
+        "Enrollment not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const listedPrice = roundCurrency(args.listedPrice);
     const checkoutPrice = roundCurrency(args.checkoutPrice);
     const amountPaid = roundCurrency(args.amountPaid);
     if (amountPaid > checkoutPrice) {
-      throw new Error("Amount paid cannot exceed checkout price.");
+      return adminEnrollmentFailure(
+        "Amount paid cannot exceed checkout price.",
+      );
     }
 
     const redemptionDiscountAmount = roundCurrency(
@@ -921,7 +1018,14 @@ export const updateEnrollmentPricing = mutation({
       },
     });
 
-    return updated;
+    if (!updated) {
+      return adminEnrollmentFailure(
+        "Enrollment could not be reloaded.",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
+    return convexSuccess({ enrollment: updated });
   },
 });
 
@@ -935,12 +1039,15 @@ export const cancelEnrollment = mutation({
 
     const enrollment = await ctx.db.get(args.enrollmentId);
     if (!enrollment) {
-      throw new Error("Enrollment not found");
+      return adminEnrollmentFailure(
+        "Enrollment not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const currentStatus = normalizeEnrollmentStatus(enrollment.status);
     if (currentStatus === "cancelled" || currentStatus === "transferred") {
-      return enrollment;
+      return convexSuccess({ enrollment });
     }
 
     const now = Date.now();
@@ -970,7 +1077,14 @@ export const cancelEnrollment = mutation({
       metadata: { reason: args.reason },
     });
 
-    return updated;
+    if (!updated) {
+      return adminEnrollmentFailure(
+        "Enrollment could not be reloaded.",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
+    return convexSuccess({ enrollment: updated });
   },
 });
 
@@ -984,29 +1098,37 @@ export const resendEnrollmentConfirmationEmail = mutation({
 
     const enrollment = await ctx.db.get(args.enrollmentId);
     if (!enrollment) {
-      throw new Error("Enrollment not found");
+      return adminEnrollmentFailure(
+        "Enrollment not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const currentStatus = normalizeEnrollmentStatus(enrollment.status);
     if (currentStatus !== "active") {
-      throw new Error(
+      return adminEnrollmentFailure(
         `Cannot resend confirmation for a ${currentStatus} enrollment.`,
+        convexResultErrorCode.CONFLICT,
       );
     }
 
     const now = Date.now();
     const lastSentAt = enrollment.lastConfirmationSentAt ?? 0;
     if (now - lastSentAt < RESEND_COOLDOWN_MS) {
-      throw new Error(
+      return adminEnrollmentFailure(
         `A confirmation email was already sent ${Math.round(
           (now - lastSentAt) / 1000,
         )}s ago. Please wait before resending.`,
+        convexResultErrorCode.CONFLICT,
       );
     }
 
     const course = await ctx.db.get(enrollment.courseId);
     if (!course) {
-      throw new Error("Course not found for this enrollment");
+      return adminEnrollmentFailure(
+        "Course not found for this enrollment",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const recipientEmail =
@@ -1014,7 +1136,9 @@ export const resendEnrollmentConfirmationEmail = mutation({
       (enrollment.userId.includes("@") ? enrollment.userId : null);
 
     if (!recipientEmail) {
-      throw new Error("Cannot send email: enrollment has no recipient email");
+      return adminEnrollmentFailure(
+        "Cannot send email: enrollment has no recipient email",
+      );
     }
 
     const userName = enrollment.userName || recipientEmail;
@@ -1222,12 +1346,12 @@ export const resendEnrollmentConfirmationEmail = mutation({
       },
     });
 
-    return {
+    return convexSuccess({
       enrollmentId: args.enrollmentId,
       recipientEmail,
       emailAction,
       usedFallback,
-    };
+    });
   },
 });
 
@@ -1241,12 +1365,18 @@ export const changeEnrollmentBatch = mutation({
     const admin = await requireAdmin(ctx);
     const enrollment = await ctx.db.get(args.enrollmentId);
     if (!enrollment) {
-      throw new Error("Enrollment not found");
+      return adminEnrollmentFailure(
+        "Enrollment not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     const status = normalizeEnrollmentStatus(enrollment.status);
     if (status !== "active") {
-      throw new Error(`Cannot change batch for a ${status} enrollment.`);
+      return adminEnrollmentFailure(
+        `Cannot change batch for a ${status} enrollment.`,
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     const [course, targetBatch] = await Promise.all([
@@ -1255,22 +1385,33 @@ export const changeEnrollmentBatch = mutation({
     ]);
 
     if (!course) {
-      throw new Error("Course not found for this enrollment");
+      return adminEnrollmentFailure(
+        "Course not found for this enrollment",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
     if (!course.usesBatches) {
-      throw new Error("This course does not use batches.");
+      return adminEnrollmentFailure("This course does not use batches.");
     }
     if (!targetBatch) {
-      throw new Error("Target batch not found.");
+      return adminEnrollmentFailure(
+        "Target batch not found.",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
     if (String(targetBatch.courseId) !== String(enrollment.courseId)) {
-      throw new Error("Target batch must belong to the same course.");
+      return adminEnrollmentFailure(
+        "Target batch must belong to the same course.",
+      );
     }
     if ((targetBatch.lifecycleStatus ?? "published") !== "published") {
-      throw new Error("Only published batches can receive enrollments.");
+      return adminEnrollmentFailure(
+        "Only published batches can receive enrollments.",
+        convexResultErrorCode.CONFLICT,
+      );
     }
     if (String(enrollment.batchId) === String(targetBatch._id)) {
-      return enrollment;
+      return convexSuccess({ enrollment });
     }
 
     const targetUsers = targetBatch.enrolledUsers ?? [];
@@ -1280,7 +1421,10 @@ export const changeEnrollmentBatch = mutation({
       targetUsers.length >= targetCapacity &&
       !targetUsers.includes(enrollment.userId)
     ) {
-      throw new Error(`Batch "${targetBatch.label}" is full.`);
+      return adminEnrollmentFailure(
+        `Batch "${targetBatch.label}" is full.`,
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     const previousBatch = enrollment.batchId
@@ -1328,7 +1472,14 @@ export const changeEnrollmentBatch = mutation({
       },
     });
 
-    return updatedEnrollment;
+    if (!updatedEnrollment) {
+      return adminEnrollmentFailure(
+        "Enrollment could not be reloaded.",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
+    return convexSuccess({ enrollment: updatedEnrollment });
   },
 });
 
@@ -1347,20 +1498,31 @@ export const transferEnrollment = mutation({
     ]);
 
     if (!sourceEnrollment) {
-      throw new Error("Enrollment not found");
+      return adminEnrollmentFailure(
+        "Enrollment not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     if (!targetCourse) {
-      throw new Error("Target course not found");
+      return adminEnrollmentFailure(
+        "Target course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     if (sourceEnrollment.courseId === args.targetCourseId) {
-      throw new Error("Source and target course cannot be the same");
+      return adminEnrollmentFailure(
+        "Source and target course cannot be the same",
+      );
     }
 
     const currentStatus = normalizeEnrollmentStatus(sourceEnrollment.status);
     if (currentStatus !== "active") {
-      throw new Error("Only active enrollments can be transferred");
+      return adminEnrollmentFailure(
+        "Only active enrollments can be transferred",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     const existingActiveInTarget =
@@ -1383,13 +1545,14 @@ export const transferEnrollment = mutation({
         .first());
 
     if (existingActiveInTarget) {
-      throw new Error(
+      return adminEnrollmentFailure(
         `User is already actively enrolled in "${targetCourse.name}". Cannot transfer to the same course.`,
+        convexResultErrorCode.CONFLICT,
       );
     }
 
     if (targetCourse.usesBatches) {
-      throw new Error(
+      return adminEnrollmentFailure(
         `Target course "${targetCourse.name}" uses batches. Create a manual enrollment with a selected batch instead of transferring directly.`,
       );
     }
@@ -1401,8 +1564,9 @@ export const transferEnrollment = mutation({
       currentEnrolled >= capacity &&
       !(targetCourse.enrolledUsers ?? []).includes(sourceEnrollment.userId)
     ) {
-      throw new Error(
+      return adminEnrollmentFailure(
         `Target course "${targetCourse.name}" is at full capacity (${currentEnrolled}/${capacity}).`,
+        convexResultErrorCode.CONFLICT,
       );
     }
 
@@ -1443,6 +1607,9 @@ export const transferEnrollment = mutation({
             courseCode,
             courseStartDate,
           );
+    if (typeof enrollmentNumber !== "string") {
+      return enrollmentNumber;
+    }
 
     const newEnrollmentId = await ctx.db.insert("enrollments", {
       userId: sourceEnrollment.userId,
@@ -1518,9 +1685,16 @@ export const transferEnrollment = mutation({
       },
     });
 
-    return {
+    if (!updatedSource || !createdTarget) {
+      return adminEnrollmentFailure(
+        "Transferred enrollment could not be reloaded.",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
+    return convexSuccess({
       sourceEnrollment: updatedSource,
       newEnrollment: createdTarget,
-    };
+    });
   },
 });

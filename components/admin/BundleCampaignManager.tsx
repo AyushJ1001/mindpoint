@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { formatDateWindow } from "@/lib/admin-timezone";
 import { showRupees } from "@/lib/utils";
+import { assertConvexSuccess } from "@/lib/convex-error";
 
 type CourseTypeFilter =
   | "all"
@@ -43,6 +44,12 @@ type BundleCampaignRecord = {
   startDate?: string;
   endDate?: string;
   updatedAt: number;
+};
+
+type BundleCampaignMutationSuccess = {
+  readonly _tag: "Success";
+  readonly success: true;
+  readonly campaign: BundleCampaignRecord;
 };
 
 const courseTypeOptions: CourseTypeFilter[] = [
@@ -135,7 +142,9 @@ export function BundleCampaignManager() {
     setEndDate(campaign.endDate || "");
     setRequiredCourseCountMin(String(campaign.requiredCourseCountMin));
     setRequiredCourseCountMax(String(campaign.requiredCourseCountMax));
-    setSelectedCourseIds(campaign.eligibleCourseIds.map((courseId) => String(courseId)));
+    setSelectedCourseIds(
+      campaign.eligibleCourseIds.map((courseId) => String(courseId)),
+    );
   };
 
   const toggleCourse = (courseId: string, checked: boolean) => {
@@ -167,29 +176,30 @@ export function BundleCampaignManager() {
 
     setIsSaving(true);
     try {
-      const result = await saveBundleCampaign({
-        campaignId:
-          mode === "update" && activeCampaignId
-            ? (activeCampaignId as Id<"bundleCampaigns">)
-            : undefined,
-        name: campaignName,
-        description: campaignDescription || undefined,
-        flatFee: Number(flatFee),
-        priority: Number(priority),
-        enabled,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
-        requiredCourseCountMin: Number(requiredCourseCountMin),
-        requiredCourseCountMax: Number(requiredCourseCountMax),
-        eligibleCourseIds: selectedCourseIds as Id<"courses">[],
-      });
+      const result = assertConvexSuccess<BundleCampaignMutationSuccess>(
+        await saveBundleCampaign({
+          campaignId:
+            mode === "update" && activeCampaignId
+              ? (activeCampaignId as Id<"bundleCampaigns">)
+              : undefined,
+          name: campaignName,
+          description: campaignDescription || undefined,
+          flatFee: Number(flatFee),
+          priority: Number(priority),
+          enabled,
+          startDate: startDate || undefined,
+          endDate: endDate || undefined,
+          requiredCourseCountMin: Number(requiredCourseCountMin),
+          requiredCourseCountMax: Number(requiredCourseCountMax),
+          eligibleCourseIds: selectedCourseIds as Id<"courses">[],
+        }),
+        "Failed to save bundle campaign",
+      );
 
-      if (!result) {
-        throw new Error("Campaign could not be reloaded after saving");
-      }
-
-      loadCampaign(result);
-      toast.success(mode === "create" ? "Bundle campaign saved" : "Bundle campaign updated");
+      loadCampaign(result.campaign);
+      toast.success(
+        mode === "create" ? "Bundle campaign saved" : "Bundle campaign updated",
+      );
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -204,11 +214,16 @@ export function BundleCampaignManager() {
   const toggleArchived = async (campaignId: string, isArchived: boolean) => {
     setCampaignActionId(campaignId);
     try {
-      await setBundleCampaignArchived({
-        campaignId: campaignId as Id<"bundleCampaigns">,
-        isArchived,
-      });
-      toast.success(isArchived ? "Bundle campaign archived" : "Bundle campaign restored");
+      assertConvexSuccess(
+        await setBundleCampaignArchived({
+          campaignId: campaignId as Id<"bundleCampaigns">,
+          isArchived,
+        }),
+        "Failed to update bundle campaign",
+      );
+      toast.success(
+        isArchived ? "Bundle campaign archived" : "Bundle campaign restored",
+      );
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -223,11 +238,16 @@ export function BundleCampaignManager() {
   const toggleEnabled = async (campaignId: string, nextEnabled: boolean) => {
     setCampaignActionId(campaignId);
     try {
-      await setBundleCampaignEnabled({
-        campaignId: campaignId as Id<"bundleCampaigns">,
-        enabled: nextEnabled,
-      });
-      toast.success(nextEnabled ? "Bundle campaign enabled" : "Bundle campaign disabled");
+      assertConvexSuccess(
+        await setBundleCampaignEnabled({
+          campaignId: campaignId as Id<"bundleCampaigns">,
+          enabled: nextEnabled,
+        }),
+        "Failed to update bundle campaign",
+      );
+      toast.success(
+        nextEnabled ? "Bundle campaign enabled" : "Bundle campaign disabled",
+      );
     } catch (error) {
       toast.error(
         error instanceof Error
@@ -311,7 +331,9 @@ export function BundleCampaignManager() {
                             {campaign.enabled ? "Enabled" : "Disabled"}
                           </Badge>
                           <Badge
-                            variant={campaign.isArchived ? "outline" : "secondary"}
+                            variant={
+                              campaign.isArchived ? "outline" : "secondary"
+                            }
                           >
                             {campaign.isArchived ? "Archived" : "Live"}
                           </Badge>
@@ -489,7 +511,10 @@ export function BundleCampaignManager() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2">
-              <Button disabled={isSaving} onClick={() => saveCampaign("create")}>
+              <Button
+                disabled={isSaving}
+                onClick={() => saveCampaign("create")}
+              >
                 Save New
               </Button>
               <Button

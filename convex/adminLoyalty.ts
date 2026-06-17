@@ -9,8 +9,32 @@ import {
   loyaltySearchFieldsChanged,
   loyaltySearchMatches,
 } from "./loyaltySearch";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+  type ConvexFailure,
+} from "./_shared/result";
 
 const MAX_POINTS_DELTA = 100_000;
+
+type AdminLoyaltyFailure = ConvexFailure<
+  | "INSUFFICIENT_POINTS"
+  | "INVALID_POINTS_REQUIREMENT"
+  | "NOT_FOUND"
+  | "VALIDATION_ERROR"
+>;
+
+function adminLoyaltyFailure(
+  message: string,
+  code:
+    | "INSUFFICIENT_POINTS"
+    | "INVALID_POINTS_REQUIREMENT"
+    | "NOT_FOUND"
+    | "VALIDATION_ERROR" = convexResultErrorCode.VALIDATION_ERROR,
+): AdminLoyaltyFailure {
+  return convexFailure({ code, message });
+}
 
 function generateCouponCode() {
   const uuid = crypto.randomUUID().replace(/-/g, "").toUpperCase();
@@ -92,10 +116,10 @@ export const backfillLoyaltySearchFields = mutation({
       updated += 1;
     }
 
-    return {
+    return convexSuccess({
       scanned: pointsRows.length,
       updated,
-    };
+    });
   },
 });
 
@@ -169,12 +193,16 @@ export const adjustPoints = mutation({
     const admin = await requireAdmin(ctx);
 
     if (args.delta === 0) {
-      throw new Error("Delta cannot be 0");
+      return adminLoyaltyFailure(
+        "Delta cannot be 0",
+        convexResultErrorCode.INVALID_POINTS_REQUIREMENT,
+      );
     }
 
     if (Math.abs(args.delta) > MAX_POINTS_DELTA) {
-      throw new Error(
+      return adminLoyaltyFailure(
         `Adjustment exceeds maximum allowed delta of ${MAX_POINTS_DELTA}`,
+        convexResultErrorCode.INVALID_POINTS_REQUIREMENT,
       );
     }
 
@@ -188,8 +216,9 @@ export const adjustPoints = mutation({
 
     if (!existing) {
       if (args.delta < 0) {
-        throw new Error(
+        return adminLoyaltyFailure(
           "Cannot deduct points from a user with no points record",
+          convexResultErrorCode.INSUFFICIENT_POINTS,
         );
       }
 
@@ -223,7 +252,10 @@ export const adjustPoints = mutation({
     } else {
       const newBalance = existing.balance + args.delta;
       if (newBalance < 0) {
-        throw new Error("Point balance cannot become negative");
+        return adminLoyaltyFailure(
+          "Point balance cannot become negative",
+          convexResultErrorCode.INSUFFICIENT_POINTS,
+        );
       }
 
       const latestEnrollment = await ctx.db
@@ -266,6 +298,12 @@ export const adjustPoints = mutation({
       .query("mindPoints")
       .withIndex("by_clerkUserId", (q) => q.eq("clerkUserId", args.clerkUserId))
       .first();
+    if (!after) {
+      return adminLoyaltyFailure(
+        "Point account could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -278,7 +316,7 @@ export const adjustPoints = mutation({
       metadata: { delta: args.delta, reason: args.reason },
     });
 
-    return after;
+    return convexSuccess({ points: after });
   },
 });
 
@@ -293,7 +331,10 @@ export const createManualCoupon = mutation({
     const admin = await requireAdmin(ctx);
 
     if (args.pointsCost < 0) {
-      throw new Error("pointsCost cannot be negative");
+      return adminLoyaltyFailure(
+        "pointsCost cannot be negative",
+        convexResultErrorCode.INVALID_POINTS_REQUIREMENT,
+      );
     }
 
     let beforePoints = null;
@@ -308,7 +349,10 @@ export const createManualCoupon = mutation({
         .first();
 
       if (!existingPoints || existingPoints.balance < args.pointsCost) {
-        throw new Error("User does not have enough points for this coupon");
+        return adminLoyaltyFailure(
+          "User does not have enough points for this coupon",
+          convexResultErrorCode.INSUFFICIENT_POINTS,
+        );
       }
 
       beforePoints = existingPoints;
@@ -345,6 +389,12 @@ export const createManualCoupon = mutation({
     });
 
     const created = await ctx.db.get(couponId);
+    if (!created) {
+      return adminLoyaltyFailure(
+        "Coupon could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -361,7 +411,7 @@ export const createManualCoupon = mutation({
       },
     });
 
-    return created;
+    return convexSuccess({ coupon: created });
   },
 });
 
@@ -439,11 +489,11 @@ export const queueMindPointsReminderEmails = mutation({
       },
     });
 
-    return {
+    return convexSuccess({
       requested: requestedUserIds.length,
       processed: uniqueUserIds.length,
       scheduled,
       skipped,
-    };
+    });
   },
 });

@@ -15,6 +15,27 @@ import {
   sortPublicCourseBatches,
   type PublicCourseBatch,
 } from "./courseBatchHelpers";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+  type ConvexFailure,
+} from "./_shared/result";
+
+type PublicReviewFailure = ConvexFailure<
+  "CONFLICT" | "FORBIDDEN" | "NOT_FOUND" | "VALIDATION_ERROR"
+>;
+
+function publicReviewFailure(
+  message: string,
+  code:
+    | "CONFLICT"
+    | "FORBIDDEN"
+    | "NOT_FOUND"
+    | "VALIDATION_ERROR" = convexResultErrorCode.VALIDATION_ERROR,
+): PublicReviewFailure {
+  return convexFailure({ code, message });
+}
 
 async function listVisiblePublicBatchesForCourse(
   ctx: QueryCtx,
@@ -50,9 +71,11 @@ async function toPublicCourse(
   });
 }
 
-function normalizePublicReviewRating(value: number): number {
+function normalizePublicReviewRating(
+  value: number,
+): number | PublicReviewFailure {
   if (!Number.isFinite(value)) {
-    throw new Error("Rating must be a valid number");
+    return publicReviewFailure("Rating must be a valid number");
   }
 
   const rounded = Math.round(value * 2) / 2;
@@ -297,8 +320,17 @@ export const createReview = mutation({
   },
   handler: async (ctx, args) => {
     const rating = normalizePublicReviewRating(args.rating);
+    if (typeof rating !== "number") {
+      return rating;
+    }
+
     const course = await ctx.db.get(args.courseId);
-    if (!course) throw new Error("Course not found");
+    if (!course) {
+      return publicReviewFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject ?? "anonymous";
@@ -313,7 +345,10 @@ export const createReview = mutation({
           .first()
       : null;
     if (existingReview) {
-      throw new Error("You have already reviewed this course");
+      return publicReviewFailure(
+        "You have already reviewed this course",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     const reviewId = await ctx.db.insert("reviews", {
@@ -329,7 +364,7 @@ export const createReview = mutation({
       reviews: [...(course.reviews ?? []), reviewId],
     });
 
-    return reviewId;
+    return convexSuccess({ reviewId });
   },
 });
 
@@ -341,14 +376,26 @@ export const updateReview = mutation({
   },
   handler: async (ctx, args) => {
     const rating = normalizePublicReviewRating(args.rating);
+    if (typeof rating !== "number") {
+      return rating;
+    }
+
     const review = await ctx.db.get(args.reviewId);
-    if (!review) throw new Error("Review not found");
+    if (!review) {
+      return publicReviewFailure(
+        "Review not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject ?? "anonymous";
 
     if (review.userId !== userId) {
-      throw new Error("You can only edit your own reviews");
+      return publicReviewFailure(
+        "You can only edit your own reviews",
+        convexResultErrorCode.FORBIDDEN,
+      );
     }
 
     await ctx.db.patch(args.reviewId, {
@@ -357,7 +404,7 @@ export const updateReview = mutation({
       isEdited: true,
     });
 
-    return args.reviewId;
+    return convexSuccess({ reviewId: args.reviewId });
   },
 });
 
@@ -367,13 +414,21 @@ export const deleteReview = mutation({
   },
   handler: async (ctx, args) => {
     const review = await ctx.db.get(args.reviewId);
-    if (!review) throw new Error("Review not found");
+    if (!review) {
+      return publicReviewFailure(
+        "Review not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     const identity = await ctx.auth.getUserIdentity();
     const userId = identity?.subject ?? "anonymous";
 
     if (review.userId !== userId) {
-      throw new Error("You can only delete your own reviews");
+      return publicReviewFailure(
+        "You can only delete your own reviews",
+        convexResultErrorCode.FORBIDDEN,
+      );
     }
 
     const course = await ctx.db.get(review.course);
@@ -387,7 +442,7 @@ export const deleteReview = mutation({
       });
     }
 
-    return args.reviewId;
+    return convexSuccess({ reviewId: args.reviewId });
   },
 });
 

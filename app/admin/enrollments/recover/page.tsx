@@ -9,6 +9,7 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { assertConvexSuccess } from "@/lib/convex-error";
 import { showRupees } from "@/lib/utils";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
@@ -20,6 +21,13 @@ type RecoveryCourseLine = {
   listedPrice: string;
   checkoutPrice: string;
   amountPaid: string;
+};
+
+type RecoverPaidOrderSuccess = {
+  readonly _tag: "Success";
+  readonly buyerPointsAwarded: number;
+  readonly enrollmentIds: Id<"enrollments">[];
+  readonly success: true;
 };
 
 function parseMoney(value: string) {
@@ -115,30 +123,33 @@ export default function RecoverPaidOrderPage() {
 
     setIsRecovering(true);
     try {
-      const result = await recoverPaidOrder({
-        recoveryReason: recoveryReason.trim(),
-        razorpayOrderId: razorpayOrderId.trim(),
-        razorpayPaymentId: razorpayPaymentId.trim(),
-        amountPaid: paymentAmount,
-        buyerUserId: buyerUserId.trim(),
-        buyerEmail: buyerEmail.trim(),
-        buyerName: buyerName.trim() || undefined,
-        buyerPhone: buyerPhone.trim() || undefined,
-        referrerClerkUserId: referrerClerkUserId.trim() || undefined,
-        backfillBuyerMindPoints,
-        backfillReferralReward,
-        overrideAvailability,
-        overrideReason: overrideReason.trim() || undefined,
-        courses: lines.map((line) => ({
-          courseId: line.courseId as Id<"courses">,
-          batchId: line.batchId.trim()
-            ? (line.batchId.trim() as Id<"courseBatches">)
-            : undefined,
-          listedPrice: parseMoney(line.listedPrice),
-          checkoutPrice: parseMoney(line.checkoutPrice),
-          amountPaid: parseMoney(line.amountPaid),
-        })),
-      });
+      const result = assertConvexSuccess<RecoverPaidOrderSuccess>(
+        await recoverPaidOrder({
+          recoveryReason: recoveryReason.trim(),
+          razorpayOrderId: razorpayOrderId.trim(),
+          razorpayPaymentId: razorpayPaymentId.trim(),
+          amountPaid: paymentAmount,
+          buyerUserId: buyerUserId.trim(),
+          buyerEmail: buyerEmail.trim(),
+          buyerName: buyerName.trim() || undefined,
+          buyerPhone: buyerPhone.trim() || undefined,
+          referrerClerkUserId: referrerClerkUserId.trim() || undefined,
+          backfillBuyerMindPoints,
+          backfillReferralReward,
+          overrideAvailability,
+          overrideReason: overrideReason.trim() || undefined,
+          courses: lines.map((line) => ({
+            courseId: line.courseId as Id<"courses">,
+            batchId: line.batchId.trim()
+              ? (line.batchId.trim() as Id<"courseBatches">)
+              : undefined,
+            listedPrice: parseMoney(line.listedPrice),
+            checkoutPrice: parseMoney(line.checkoutPrice),
+            amountPaid: parseMoney(line.amountPaid),
+          })),
+        }),
+        "Failed to recover paid order",
+      );
 
       toast.success("Paid order recovered", {
         description: `${result.enrollmentIds.length} enrollment${result.enrollmentIds.length === 1 ? "" : "s"} created.`,

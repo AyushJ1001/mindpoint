@@ -33,6 +33,7 @@ import {
   isDiscountActive,
   showRupees,
 } from "@/lib/utils";
+import { assertConvexSuccess } from "@/lib/convex-error";
 
 type OfferDiscountType = "percentage" | "fixedPrice" | "flatOff";
 
@@ -73,6 +74,19 @@ type CampaignRecord = {
   updatedByAdminId: string;
   lastAppliedAt?: number;
   lastAppliedCourseIds?: Id<"courses">[];
+};
+
+type CampaignMutationSuccess = {
+  readonly _tag: "Success";
+  readonly success: true;
+  readonly campaign: CampaignRecord;
+};
+
+type ApplyOffersMutationSuccess = {
+  readonly _tag: "Success";
+  readonly success: true;
+  readonly courseIds: string[];
+  readonly updatedCount: number;
 };
 
 const courseTypeOptions: CourseTypeFilter[] = [
@@ -356,22 +370,21 @@ export default function AdminOffersPage() {
     setIsSaving(true);
     try {
       const { offer, bogo } = buildOfferPayload();
-      const result = await saveCampaign({
-        campaignId:
-          mode === "update" && activeCampaignId
-            ? (activeCampaignId as Id<"offerCampaigns">)
-            : undefined,
-        name,
-        description: campaignDescription.trim() || undefined,
-        offer: offer ?? null,
-        bogo: bogo ?? null,
-      });
+      const result = assertConvexSuccess<CampaignMutationSuccess>(
+        await saveCampaign({
+          campaignId:
+            mode === "update" && activeCampaignId
+              ? (activeCampaignId as Id<"offerCampaigns">)
+              : undefined,
+          name,
+          description: campaignDescription.trim() || undefined,
+          offer: offer ?? null,
+          bogo: bogo ?? null,
+        }),
+        "Failed to save campaign",
+      );
 
-      if (!result) {
-        throw new Error("Campaign could not be reloaded after saving");
-      }
-
-      loadCampaignIntoBuilder(result);
+      loadCampaignIntoBuilder(result.campaign);
       toast.success(mode === "create" ? "Campaign saved" : "Campaign updated");
     } catch (error) {
       toast.error(
@@ -414,11 +427,14 @@ export default function AdminOffersPage() {
         throw new Error("Enable and configure the BOGO campaign first");
       }
 
-      const result = await applyOffersToCourses({
-        courseIds: selectedCourseIds as Id<"courses">[],
-        offer: applyDiscount ? offer : undefined,
-        bogo: applyBogo ? bogo : undefined,
-      });
+      const result = assertConvexSuccess<ApplyOffersMutationSuccess>(
+        await applyOffersToCourses({
+          courseIds: selectedCourseIds as Id<"courses">[],
+          offer: applyDiscount ? offer : undefined,
+          bogo: applyBogo ? bogo : undefined,
+        }),
+        "Failed to update offers",
+      );
       toast.success(`Updated offers on ${result.updatedCount} course(s)`);
     } catch (error) {
       toast.error(
@@ -448,10 +464,13 @@ export default function AdminOffersPage() {
 
     setCampaignActionId(campaignId);
     try {
-      const result = await applyCampaignToCourses({
-        campaignId: campaignId as Id<"offerCampaigns">,
-        courseIds: selectedCourseIds as Id<"courses">[],
-      });
+      const result = assertConvexSuccess<ApplyOffersMutationSuccess>(
+        await applyCampaignToCourses({
+          campaignId: campaignId as Id<"offerCampaigns">,
+          courseIds: selectedCourseIds as Id<"courses">[],
+        }),
+        "Failed to apply campaign",
+      );
       toast.success(`Applied campaign to ${result.updatedCount} course(s)`);
     } catch (error) {
       toast.error(
@@ -481,12 +500,15 @@ export default function AdminOffersPage() {
 
     setIsSaving(true);
     try {
-      const result = await applyOffersToCourses({
-        courseIds: selectedCourseIds as Id<"courses">[],
-        offer:
-          clearMode === "discount" || clearMode === "all" ? null : undefined,
-        bogo: clearMode === "bogo" || clearMode === "all" ? null : undefined,
-      });
+      const result = assertConvexSuccess<ApplyOffersMutationSuccess>(
+        await applyOffersToCourses({
+          courseIds: selectedCourseIds as Id<"courses">[],
+          offer:
+            clearMode === "discount" || clearMode === "all" ? null : undefined,
+          bogo: clearMode === "bogo" || clearMode === "all" ? null : undefined,
+        }),
+        "Failed to clear offers",
+      );
       toast.success(`Cleared offers on ${result.updatedCount} course(s)`);
       return true;
     } catch (error) {
@@ -520,10 +542,13 @@ export default function AdminOffersPage() {
 
     setCampaignActionId(campaignId);
     try {
-      await setCampaignArchived({
-        campaignId: campaignId as Id<"offerCampaigns">,
-        isArchived: nextArchivedState,
-      });
+      assertConvexSuccess<CampaignMutationSuccess>(
+        await setCampaignArchived({
+          campaignId: campaignId as Id<"offerCampaigns">,
+          isArchived: nextArchivedState,
+        }),
+        "Failed to update campaign",
+      );
       toast.success(
         nextArchivedState ? "Campaign archived" : "Campaign restored",
       );

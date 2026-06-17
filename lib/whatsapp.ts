@@ -67,7 +67,7 @@ export class WhatsAppService {
       });
 
       if (!response.ok) {
-        throw new Error(`WhatsApp API error: ${response.statusText}`);
+        return false;
       }
       */
 

@@ -1,3 +1,19 @@
+import { Effect } from "effect";
+
+import {
+  BoundaryConflictError,
+  type BoundaryError,
+  type BoundaryErrorCode,
+  BoundaryExternalServiceError,
+  BoundaryForbiddenError,
+  BoundaryNotFoundError,
+  BoundaryUnauthorizedError,
+  BoundaryUnexpectedError,
+  BoundaryValidationError,
+  isJsonObject,
+  type JsonValue,
+} from "../effect/errors";
+
 export type FetchImpl = typeof fetch;
 
 type RequestOptions = {
@@ -8,18 +24,22 @@ type RequestOptions = {
 
 const DEFAULT_REQUEST_TIMEOUT_MS = 30_000;
 
-export class HttpJsonError extends Error {
-  constructor(
-    message: string,
-    readonly status: number,
-    readonly payload: unknown,
-  ) {
-    super(message);
-    this.name = "HttpJsonError";
-  }
-}
+export type HttpClientFailure = {
+  readonly code: BoundaryErrorCode;
+  readonly details?: JsonValue;
+  readonly error: string;
+  readonly status: number;
+  readonly success: false;
+};
 
-function getErrorMessage(payload: unknown, fallback: string): string {
+export type HttpClientResult<TResponse> =
+  | {
+      readonly data: TResponse;
+      readonly success: true;
+    }
+  | HttpClientFailure;
+
+function getErrorMessage(payload: JsonValue, fallback: string): string {
   if (!payload || typeof payload !== "object") {
     return fallback;
   }
@@ -35,98 +55,227 @@ function getErrorMessage(payload: unknown, fallback: string): string {
   return fallback;
 }
 
-async function parseJsonResponse<T>(response: Response): Promise<T> {
-  let payload: T | null = null;
-
-  try {
-    payload = (await response.json()) as T;
-  } catch {
-    payload = null;
+function boundaryErrorStatus(error: BoundaryError): number {
+  switch (error._tag) {
+    case "BoundaryValidationError":
+      return 400;
+    case "BoundaryUnauthorizedError":
+      return 401;
+    case "BoundaryForbiddenError":
+      return 403;
+    case "BoundaryNotFoundError":
+      return 404;
+    case "BoundaryConflictError":
+      return 409;
+    case "BoundaryConfigurationError":
+    case "BoundaryUnexpectedError":
+      return 500;
+    case "BoundaryExternalServiceError":
+      return 502;
   }
-
-  if (!response.ok) {
-    throw new HttpJsonError(
-      getErrorMessage(
-        payload,
-        `Request failed with status ${response.status}.`,
-      ),
-      response.status,
-      payload,
-    );
-  }
-
-  if (!payload) {
-    throw new Error("Request succeeded without a response body.");
-  }
-
-  return payload;
 }
 
-export async function postJson<TRequest, TResponse>(
+function boundaryErrorCode(error: BoundaryError): BoundaryErrorCode {
+  switch (error._tag) {
+    case "BoundaryValidationError":
+      return "VALIDATION_ERROR";
+    case "BoundaryUnauthorizedError":
+      return "UNAUTHORIZED";
+    case "BoundaryForbiddenError":
+      return "FORBIDDEN";
+    case "BoundaryNotFoundError":
+      return "NOT_FOUND";
+    case "BoundaryConflictError":
+      return "CONFLICT";
+    case "BoundaryConfigurationError":
+      return "CONFIGURATION_ERROR";
+    case "BoundaryExternalServiceError":
+      return "EXTERNAL_SERVICE_ERROR";
+    case "BoundaryUnexpectedError":
+      return "UNEXPECTED_ERROR";
+  }
+}
+
+export function boundaryErrorToHttpClientFailure(
+  error: BoundaryError,
+): HttpClientFailure {
+  return {
+    code: boundaryErrorCode(error),
+    error: error.message,
+    status: boundaryErrorStatus(error),
+    success: false,
+    ...("details" in error && error.details !== undefined
+      ? { details: error.details }
+      : {}),
+  };
+}
+
+function httpStatusError(status: number, payload: JsonValue): BoundaryError {
+  const message = getErrorMessage(
+    payload,
+    `Request failed with status ${status}.`,
+  );
+  const details =
+    isJsonObject(payload) && "details" in payload ? payload.details : payload;
+
+  switch (status) {
+    case 400:
+      return new BoundaryValidationError({ details, message });
+    case 401:
+      return new BoundaryUnauthorizedError({ message });
+    case 403:
+      return new BoundaryForbiddenError({ message });
+    case 404:
+      return new BoundaryNotFoundError({ details, message });
+    case 409:
+      return new BoundaryConflictError({ details, message });
+    default:
+      return new BoundaryExternalServiceError({ message });
+  }
+}
+
+function requestFailureFromCause(
+  cause: JsonValue | Error,
+  timeoutMs: number,
+): BoundaryError {
+  if (cause instanceof Error && cause.name === "AbortError") {
+    return new BoundaryExternalServiceError({
+      cause,
+      message: `Request timed out after ${timeoutMs}ms.`,
+    });
+  }
+
+  return new BoundaryExternalServiceError({
+    ...(cause instanceof Error ? { cause } : {}),
+    message: cause instanceof Error ? cause.message : "Request failed.",
+  });
+}
+
+function readJsonPayloadEffect(response: Response): Effect.Effect<JsonValue> {
+  return Effect.promise(async () => {
+    try {
+      return (await response.json()) as JsonValue;
+    } catch {
+      return null;
+    }
+  });
+}
+
+function parseJsonResponseEffect<TResponse>(
+  response: Response,
+): Effect.Effect<TResponse, BoundaryError> {
+  return readJsonPayloadEffect(response).pipe(
+    Effect.flatMap((payload) => {
+      if (!response.ok) {
+        return Effect.fail(httpStatusError(response.status, payload));
+      }
+
+      if (payload === null) {
+        return Effect.fail(
+          new BoundaryUnexpectedError({
+            message: "Request succeeded without a response body.",
+          }),
+        );
+      }
+
+      return Effect.succeed(payload as TResponse);
+    }),
+  );
+}
+
+export function postJsonEffect<TRequest, TResponse>(
   endpoint: string,
   body: TRequest,
   options: RequestOptions = {},
-): Promise<TResponse> {
+): Effect.Effect<TResponse, BoundaryError> {
   const {
     fetchImpl = fetch,
     headers,
     timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   } = options;
-  const controller = new AbortController();
-  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
 
-  try {
-    const response = await fetchImpl(endpoint, {
-      method: "POST",
-      signal: controller.signal,
-      headers: {
-        "Content-Type": "application/json",
-        ...headers,
-      },
-      body: JSON.stringify(body),
-    });
+  return Effect.tryPromise({
+    try: async () => {
+      const controller = new AbortController();
+      const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
 
-    return parseJsonResponse<TResponse>(response);
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(`Request timed out after ${timeoutMs}ms.`);
-    }
-
-    throw error;
-  } finally {
-    clearTimeout(timeoutHandle);
-  }
+      try {
+        return await fetchImpl(endpoint, {
+          body: JSON.stringify(body),
+          headers: {
+            "Content-Type": "application/json",
+            ...headers,
+          },
+          method: "POST",
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutHandle);
+      }
+    },
+    catch: (cause) =>
+      requestFailureFromCause(cause as JsonValue | Error, timeoutMs),
+  }).pipe(Effect.flatMap(parseJsonResponseEffect<TResponse>));
 }
 
-export async function postFormData<TResponse>(
+export function postFormDataEffect<TResponse>(
   endpoint: string,
   body: FormData,
   options: RequestOptions = {},
-): Promise<TResponse> {
+): Effect.Effect<TResponse, BoundaryError> {
   const {
     fetchImpl = fetch,
     headers,
     timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
   } = options;
-  const controller = new AbortController();
-  const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
 
-  try {
-    const response = await fetchImpl(endpoint, {
-      method: "POST",
-      signal: controller.signal,
-      headers,
-      body,
-    });
+  return Effect.tryPromise({
+    try: async () => {
+      const controller = new AbortController();
+      const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
 
-    return parseJsonResponse<TResponse>(response);
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new Error(`Request timed out after ${timeoutMs}ms.`);
-    }
+      try {
+        return await fetchImpl(endpoint, {
+          body,
+          headers,
+          method: "POST",
+          signal: controller.signal,
+        });
+      } finally {
+        clearTimeout(timeoutHandle);
+      }
+    },
+    catch: (cause) =>
+      requestFailureFromCause(cause as JsonValue | Error, timeoutMs),
+  }).pipe(Effect.flatMap(parseJsonResponseEffect<TResponse>));
+}
 
-    throw error;
-  } finally {
-    clearTimeout(timeoutHandle);
-  }
+export function postJsonResult<TRequest, TResponse>(
+  endpoint: string,
+  body: TRequest,
+  options: RequestOptions = {},
+): Promise<HttpClientResult<TResponse>> {
+  return Effect.runPromise(
+    postJsonEffect<TRequest, TResponse>(endpoint, body, options).pipe(
+      Effect.match({
+        onFailure: boundaryErrorToHttpClientFailure,
+        onSuccess: (data) => ({ data, success: true }),
+      }),
+    ),
+  );
+}
+
+export function postFormDataResult<TResponse>(
+  endpoint: string,
+  body: FormData,
+  options: RequestOptions = {},
+): Promise<HttpClientResult<TResponse>> {
+  return Effect.runPromise(
+    postFormDataEffect<TResponse>(endpoint, body, options).pipe(
+      Effect.match({
+        onFailure: boundaryErrorToHttpClientFailure,
+        onSuccess: (data) => ({ data, success: true }),
+      }),
+    ),
+  );
 }

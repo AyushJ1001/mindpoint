@@ -2,48 +2,38 @@
 
 import { v } from "convex/values";
 import { action } from "./_generated/server";
-import { Resend } from "resend";
 import { api } from "./_generated/api";
+import { sendEmailWithCopy } from "./_shared/emailDelivery";
+import {
+  emailActionResultValidator,
+  emailActionSuccess,
+  emailDeliveryFailure,
+  emailDeliveryFailureFromThrowable,
+  isEmailActionFailure,
+  type EmailActionResult,
+} from "./_shared/emailActionResult";
 
-const resendApiKey = process.env.RESEND_API_KEY;
-console.log("Resend API Key configured:", !!resendApiKey);
+type EmailActionFailure = Extract<
+  EmailActionResult,
+  { readonly _tag: "Failure" }
+>;
 
-if (!resendApiKey) {
-  console.error("RESEND_API_KEY is not configured!");
-  throw new Error("RESEND_API_KEY environment variable is required");
+type AttachmentFetchResult =
+  | {
+      readonly _tag: "AttachmentFetchSuccess";
+      readonly content: Buffer;
+    }
+  | EmailActionFailure;
+
+function isAttachmentFetchFailure(
+  result: AttachmentFetchResult,
+): result is EmailActionFailure {
+  return result._tag === "Failure";
 }
-
-const resend = new Resend(resendApiKey);
 
 function getSiteUrl(): string {
   return process.env.NEXT_PUBLIC_SITE_URL || "https://www.themindpoint.org";
 }
-
-// Helper function to ensure all emails are also sent to contact.themindpoint@gmail.com
-const sendEmailWithCopy = async (emailConfig: {
-  from: string;
-  to: string | string[];
-  subject: string;
-  html: string;
-  replyTo?: string;
-  attachments?: Array<{
-    filename: string;
-    content: Buffer;
-  }>;
-}) => {
-  // Ensure the main recipient gets the email
-  const mainRecipients = Array.isArray(emailConfig.to)
-    ? emailConfig.to
-    : [emailConfig.to];
-
-  // Add contact.themindpoint@gmail.com to the recipients
-  const allRecipients = [...mainRecipients, "contact.themindpoint@gmail.com"];
-
-  return await resend.emails.send({
-    ...emailConfig,
-    to: allRecipients,
-  });
-};
 
 function escapeHtml(value: string): string {
   return value
@@ -58,8 +48,8 @@ export const sendTestEmail = action({
   args: {
     userEmail: v.string(),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
     try {
       console.log("Attempting to send test email to:", args.userEmail);
 
@@ -78,13 +68,19 @@ export const sendTestEmail = action({
         `,
       });
 
+      if (isEmailActionFailure(result)) {
+        return result;
+      }
+
       console.log("Test email sent successfully:", result);
     } catch (error) {
       console.error("Failed to send test email:", error);
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -99,25 +95,33 @@ export const sendTestSupervisedEmail = action({
       v.literal("elevate"),
     ),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
     try {
       console.log("Testing supervised email with attachments...");
 
       // Call the actual supervised email function
-      await ctx.runAction(api.emailActions.sendSupervisedTherapyWelcomeEmail, {
-        userEmail: args.userEmail,
-        studentName: args.studentName,
-        sessionType: args.sessionType,
-      });
+      const result: EmailActionResult = await ctx.runAction(
+        api.emailActions.sendSupervisedTherapyWelcomeEmail,
+        {
+          userEmail: args.userEmail,
+          studentName: args.studentName,
+          sessionType: args.sessionType,
+        },
+      );
+      if (isEmailActionFailure(result)) {
+        return result;
+      }
 
       console.log("Test supervised email sent successfully!");
     } catch (error) {
       console.error("Test supervised email failed:", error);
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -127,8 +131,8 @@ export const sendSimpleTestEmail = action({
     to: v.string(),
     body: v.optional(v.string()),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
     try {
       console.log("Sending simple test email to:", args.to);
       const html = args.body ?? "hi";
@@ -138,13 +142,18 @@ export const sendSimpleTestEmail = action({
         subject: "Simple Test Email",
         html,
       });
+      if (isEmailActionFailure(result)) {
+        return result;
+      }
+
       console.log("Simple test email sent:", result);
     } catch (error) {
       console.error("Failed to send simple test email:", error);
-      // Re-throw so callers/scripts can detect failure
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -156,12 +165,12 @@ export const sendMindPointsReminderEmail = action({
     totalEarned: v.number(),
     totalRedeemed: v.number(),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
     try {
       const accountUrl = `${getSiteUrl()}/account?tab=points`;
 
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Your Mind Points are waiting to be redeemed",
@@ -198,16 +207,21 @@ export const sendMindPointsReminderEmail = action({
           </div>
         `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
     } catch (error) {
       console.error("Failed to send Mind Points reminder email:", {
         userEmail: args.userEmail,
         balance: args.balance,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -216,7 +230,7 @@ export const sendTestEmailWithAttachment = action({
   args: {
     userEmail: v.string(),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       console.log("Testing email with simple attachment...");
@@ -229,7 +243,7 @@ export const sendTestEmailWithAttachment = action({
         ),
       };
 
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Test Email with Attachment",
@@ -244,14 +258,19 @@ export const sendTestEmailWithAttachment = action({
         `,
         attachments: [testAttachment],
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
       console.log("Test email with attachment sent successfully!");
     } catch (error) {
       console.error("Test email with attachment failed:", error);
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -266,18 +285,24 @@ export const testActualSupervisedEnrollment = action({
       v.literal("elevate"),
     ),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
     try {
       console.log("Testing ACTUAL supervised enrollment email...");
       console.log("This simulates the real enrollment process");
 
       // Call the actual supervised email function that gets called during real enrollment
-      await ctx.runAction(api.emailActions.sendSupervisedTherapyWelcomeEmail, {
-        userEmail: args.userEmail,
-        studentName: args.studentName,
-        sessionType: args.sessionType,
-      });
+      const result: EmailActionResult = await ctx.runAction(
+        api.emailActions.sendSupervisedTherapyWelcomeEmail,
+        {
+          userEmail: args.userEmail,
+          studentName: args.studentName,
+          sessionType: args.sessionType,
+        },
+      );
+      if (isEmailActionFailure(result)) {
+        return result;
+      }
 
       console.log("Actual supervised enrollment email sent successfully!");
       console.log(
@@ -285,10 +310,12 @@ export const testActualSupervisedEnrollment = action({
       );
     } catch (error) {
       console.error("Actual supervised enrollment email failed:", error);
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -304,11 +331,11 @@ export const sendCertificateEnrollmentConfirmation = action({
     startTime: v.string(),
     endTime: v.string(),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       // Send email
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Certificate Course Enrollment Confirmation",
@@ -364,8 +391,11 @@ export const sendCertificateEnrollmentConfirmation = action({
         </div>
       `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
-      return null;
+      return emailActionSuccess();
     } catch (error) {
       console.error("Failed to send certificate enrollment confirmation:", {
         userEmail: args.userEmail,
@@ -373,7 +403,9 @@ export const sendCertificateEnrollmentConfirmation = action({
         enrollmentNumber: args.enrollmentNumber,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
   },
 });
@@ -391,7 +423,7 @@ export const sendInternshipEnrollmentConfirmation = action({
     endTime: v.string(),
     internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       const planText = args.internshipPlan
@@ -401,7 +433,7 @@ export const sendInternshipEnrollmentConfirmation = action({
         : "1-month internship cohort";
 
       // Send email
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Internship Program Enrollment Confirmation",
@@ -461,8 +493,11 @@ export const sendInternshipEnrollmentConfirmation = action({
         </div>
       `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
-      return null;
+      return emailActionSuccess();
     } catch (error) {
       console.error("Failed to send internship enrollment confirmation:", {
         userEmail: args.userEmail,
@@ -470,7 +505,9 @@ export const sendInternshipEnrollmentConfirmation = action({
         enrollmentNumber: args.enrollmentNumber,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
   },
 });
@@ -487,11 +524,11 @@ export const sendDiplomaEnrollmentConfirmation = action({
     startTime: v.string(),
     endTime: v.string(),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       // Send email
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Diploma Course Enrollment Confirmation",
@@ -547,8 +584,11 @@ export const sendDiplomaEnrollmentConfirmation = action({
         </div>
       `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
-      return null;
+      return emailActionSuccess();
     } catch (error) {
       console.error("Failed to send diploma enrollment confirmation:", {
         userEmail: args.userEmail,
@@ -556,7 +596,9 @@ export const sendDiplomaEnrollmentConfirmation = action({
         enrollmentNumber: args.enrollmentNumber,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
   },
 });
@@ -569,11 +611,11 @@ export const sendPreRecordedEnrollmentConfirmation = action({
     courseName: v.string(),
     enrollmentNumber: v.string(),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       // Send email
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Pre-Recorded Course Enrollment Confirmation",
@@ -617,8 +659,11 @@ export const sendPreRecordedEnrollmentConfirmation = action({
         </div>
       `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
-      return null;
+      return emailActionSuccess();
     } catch (error) {
       console.error("Failed to send pre-recorded enrollment confirmation:", {
         userEmail: args.userEmail,
@@ -626,7 +671,9 @@ export const sendPreRecordedEnrollmentConfirmation = action({
         enrollmentNumber: args.enrollmentNumber,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
   },
 });
@@ -643,11 +690,11 @@ export const sendMasterclassEnrollmentConfirmation = action({
     startTime: v.string(),
     endTime: v.string(),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       // Send email
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Masterclass Enrollment Confirmation",
@@ -703,8 +750,11 @@ export const sendMasterclassEnrollmentConfirmation = action({
         </div>
       `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
-      return null;
+      return emailActionSuccess();
     } catch (error) {
       console.error("Failed to send masterclass enrollment confirmation:", {
         userEmail: args.userEmail,
@@ -712,7 +762,9 @@ export const sendMasterclassEnrollmentConfirmation = action({
         enrollmentNumber: args.enrollmentNumber,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
   },
 });
@@ -729,11 +781,11 @@ export const sendEnrollmentConfirmation = action({
     startTime: v.string(),
     endTime: v.string(),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       // Send email
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Enrollment Confirmation",
@@ -783,8 +835,11 @@ export const sendEnrollmentConfirmation = action({
         </div>
       `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
-      return null;
+      return emailActionSuccess();
     } catch (error) {
       console.error("Failed to send enrollment confirmation:", {
         userEmail: args.userEmail,
@@ -792,7 +847,9 @@ export const sendEnrollmentConfirmation = action({
         enrollmentNumber: args.enrollmentNumber,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
   },
 });
@@ -821,11 +878,11 @@ export const sendCartCheckoutConfirmation = action({
       }),
     ),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       // Send email
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Enrollment Confirmation",
@@ -933,6 +990,9 @@ export const sendCartCheckoutConfirmation = action({
           </div>
         `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
       console.log(
         `Cart checkout confirmation email sent successfully to ${args.userEmail}`,
@@ -942,10 +1002,12 @@ export const sendCartCheckoutConfirmation = action({
         `Failed to send cart checkout confirmation email to ${args.userEmail}:`,
         error,
       );
-      // Don't throw the error to avoid breaking the enrollment process
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -958,11 +1020,11 @@ export const sendTherapyEnrollmentConfirmation = action({
     sessionCount: v.number(),
     enrollmentNumber: v.string(),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       // Send email
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Therapy Session Enrollment Confirmation",
@@ -1001,8 +1063,11 @@ export const sendTherapyEnrollmentConfirmation = action({
         </div>
       `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
-      return null;
+      return emailActionSuccess();
     } catch (error) {
       console.error("Failed to send therapy enrollment confirmation:", {
         userEmail: args.userEmail,
@@ -1010,7 +1075,9 @@ export const sendTherapyEnrollmentConfirmation = action({
         enrollmentNumber: args.enrollmentNumber,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
   },
 });
@@ -1028,7 +1095,7 @@ export const sendSupervisedTherapyWelcomeEmail = action({
       v.literal("elevate"),
     ),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       // Get the base URL for attachments - use environment variable or fallback to production URL
@@ -1045,14 +1112,14 @@ export const sendSupervisedTherapyWelcomeEmail = action({
       );
 
       // Fetch the PDF files and convert them to buffers for attachments
-      const fetchFile = async (url: string): Promise<Buffer> => {
+      const fetchFile = async (url: string): Promise<AttachmentFetchResult> => {
         console.log(`Fetching file from: ${url}`);
         const response = await fetch(url);
         console.log(
           `Response status: ${response.status} ${response.statusText}`,
         );
         if (!response.ok) {
-          throw new Error(
+          return emailDeliveryFailure(
             `Failed to fetch file from ${url}: ${response.status} ${response.statusText}`,
           );
         }
@@ -1061,36 +1128,44 @@ export const sendSupervisedTherapyWelcomeEmail = action({
         console.log(
           `Successfully fetched file: ${url}, size: ${buffer.length} bytes`,
         );
-        return buffer;
+        return {
+          _tag: "AttachmentFetchSuccess",
+          content: buffer,
+        };
       };
 
-      const attachments = await Promise.all([
+      const attachmentSpecs = [
         {
           filename: "TMP Client Intake Form (1).pdf",
-          content: await fetchFile(
-            `${baseUrl}/checklist/TMP%20Client%20Intake%20Form%20(1).pdf`,
-          ),
+          url: `${baseUrl}/checklist/TMP%20Client%20Intake%20Form%20(1).pdf`,
         },
         {
           filename:
             "TMP Consent Form for Live Client Session Observation (1).pdf",
-          content: await fetchFile(
-            `${baseUrl}/checklist/TMP%20Consent%20Form%20for%20Live%20Client%20Session%20Observation%20(1).pdf`,
-          ),
+          url: `${baseUrl}/checklist/TMP%20Consent%20Form%20for%20Live%20Client%20Session%20Observation%20(1).pdf`,
         },
         {
           filename: "TMP Session Preparation Template.pdf",
-          content: await fetchFile(
-            `${baseUrl}/checklist/TMP%20Session%20Preparation%20Template.pdf`,
-          ),
+          url: `${baseUrl}/checklist/TMP%20Session%20Preparation%20Template.pdf`,
         },
         {
           filename: "TMP Supervised Session Self-Preparation Checklist.pdf",
-          content: await fetchFile(
-            `${baseUrl}/checklist/TMP%20Supervised%20Session%20Self-Preparation%20Checklist.pdf`,
-          ),
+          url: `${baseUrl}/checklist/TMP%20Supervised%20Session%20Self-Preparation%20Checklist.pdf`,
         },
-      ]);
+      ];
+
+      const attachments = [];
+      for (const attachment of attachmentSpecs) {
+        const fetchResult = await fetchFile(attachment.url);
+        if (isAttachmentFetchFailure(fetchResult)) {
+          return fetchResult;
+        }
+
+        attachments.push({
+          filename: attachment.filename,
+          content: fetchResult.content,
+        });
+      }
 
       console.log("Successfully fetched all PDF files for attachments");
       console.log("Number of attachments:", attachments.length);
@@ -1100,7 +1175,7 @@ export const sendSupervisedTherapyWelcomeEmail = action({
       );
 
       // Send email with attachments
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: `Supervised Therapy Sessions & Training - ${args.sessionType.charAt(0).toUpperCase() + args.sessionType.slice(1)} Session - Payment Confirmation`,
@@ -1148,6 +1223,9 @@ export const sendSupervisedTherapyWelcomeEmail = action({
       `,
         attachments,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
       console.log(
         "Supervised therapy welcome email sent successfully to:",
@@ -1155,10 +1233,12 @@ export const sendSupervisedTherapyWelcomeEmail = action({
       );
     } catch (error) {
       console.error("Failed to send supervised therapy welcome email:", error);
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -1174,7 +1254,7 @@ export const sendWorksheetPurchaseConfirmation = action({
       }),
     ),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       console.log(
@@ -1187,14 +1267,14 @@ export const sendWorksheetPurchaseConfirmation = action({
       const fetchFile = async (
         url: string,
         filename: string,
-      ): Promise<Buffer> => {
+      ): Promise<AttachmentFetchResult> => {
         console.log(`Fetching worksheet file from: ${url}`);
         const response = await fetch(url);
         console.log(
           `Response status: ${response.status} ${response.statusText}`,
         );
         if (!response.ok) {
-          throw new Error(
+          return emailDeliveryFailure(
             `Failed to fetch worksheet file from ${url}: ${response.status} ${response.statusText}`,
           );
         }
@@ -1203,26 +1283,32 @@ export const sendWorksheetPurchaseConfirmation = action({
         console.log(
           `Successfully fetched worksheet: ${filename}, size: ${buffer.length} bytes`,
         );
-        return buffer;
+        return {
+          _tag: "AttachmentFetchSuccess",
+          content: buffer,
+        };
       };
 
       // Fetch all worksheet PDFs
-      const attachments = await Promise.all(
-        args.worksheets.map(async (worksheet) => {
-          // Extract filename from URL or use worksheet name
-          const urlParts = worksheet.fileUrl.split("/");
-          const urlFilename = urlParts[urlParts.length - 1] || "worksheet.pdf";
-          // Ensure .pdf extension
-          const filename = urlFilename.endsWith(".pdf")
-            ? urlFilename
-            : `${worksheet.name.replace(/[^a-z0-9]/gi, "_")}.pdf`;
+      const attachments = [];
+      for (const worksheet of args.worksheets) {
+        // Extract filename from URL or use worksheet name
+        const urlParts = worksheet.fileUrl.split("/");
+        const urlFilename = urlParts[urlParts.length - 1] || "worksheet.pdf";
+        // Ensure .pdf extension
+        const filename = urlFilename.endsWith(".pdf")
+          ? urlFilename
+          : `${worksheet.name.replace(/[^a-z0-9]/gi, "_")}.pdf`;
+        const fetchResult = await fetchFile(worksheet.fileUrl, filename);
+        if (isAttachmentFetchFailure(fetchResult)) {
+          return fetchResult;
+        }
 
-          return {
-            filename: filename,
-            content: await fetchFile(worksheet.fileUrl, filename),
-          };
-        }),
-      );
+        attachments.push({
+          filename,
+          content: fetchResult.content,
+        });
+      }
 
       console.log(
         "Successfully fetched all worksheet PDF files for attachments",
@@ -1246,7 +1332,7 @@ export const sendWorksheetPurchaseConfirmation = action({
         .join("");
 
       // Send email with attachments
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Worksheet Purchase Confirmation",
@@ -1300,6 +1386,9 @@ export const sendWorksheetPurchaseConfirmation = action({
       `,
         attachments,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
       console.log(
         "Worksheet purchase confirmation email sent successfully to:",
@@ -1310,10 +1399,12 @@ export const sendWorksheetPurchaseConfirmation = action({
         "Failed to send worksheet purchase confirmation email:",
         error,
       );
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -1328,11 +1419,11 @@ export const sendAlreadyEnrolledNotification = action({
       }),
     ),
   },
-  returns: v.null(),
+  returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
       // Send email
-      await sendEmailWithCopy({
+      const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Course Enrollment Status - Already Enrolled",
@@ -1385,6 +1476,9 @@ export const sendAlreadyEnrolledNotification = action({
           </div>
         `,
       });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
 
       console.log(
         `Already enrolled notification email sent successfully to ${args.userEmail}`,
@@ -1394,9 +1488,11 @@ export const sendAlreadyEnrolledNotification = action({
         `Failed to send already enrolled notification email to ${args.userEmail}:`,
         error,
       );
-      // Don't throw the error to avoid breaking the enrollment process
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });

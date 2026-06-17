@@ -2,32 +2,55 @@
 // Usage: ensure NEXT_PUBLIC_CONVEX_URL is set in .env, then run:
 //   node test-resend-email.js
 
-require('dotenv').config({ path: '.env' });
+require("dotenv").config({ path: ".env" });
 
-const { ConvexHttpClient } = require('convex/browser');
-const { api } = require('./convex/_generated/api');
+const { ConvexHttpClient } = require("convex/browser");
+const { api } = require("./convex/_generated/api");
+
+function assertTaggedSuccess(result, label) {
+  if (result?._tag === "Success") {
+    return;
+  }
+
+  const message =
+    result?._tag === "Failure"
+      ? result.error?.message || "Unknown tagged failure"
+      : "Action did not return a tagged success result";
+
+  throw new Error(`${label} failed: ${message}`);
+}
 
 async function run() {
   try {
     const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
     if (!convexUrl) {
-      throw new Error('NEXT_PUBLIC_CONVEX_URL is not set in environment');
+      throw new Error("NEXT_PUBLIC_CONVEX_URL is not set in environment");
     }
 
     const convex = new ConvexHttpClient(convexUrl);
-    const to = 'ayushjuvekar@gmail.com';
-    const body = 'hi';
+    const to = "ayushjuvekar@gmail.com";
+    const body = "hi";
 
-    console.log('➡️  Triggering sendSimpleTestEmail action...');
-    await convex.action(api.emailActions.sendSimpleTestEmail, { to, body });
-    console.log('✅ Email action invoked successfully. Check inbox for delivery.');
+    console.log("➡️  Triggering sendSimpleTestEmail action...");
+    const result = await convex.action(api.emailActions.sendSimpleTestEmail, {
+      to,
+      body,
+    });
+    assertTaggedSuccess(result, "Simple test email");
+    console.log(
+      "✅ Email action invoked successfully. Check inbox for delivery.",
+    );
   } catch (err) {
-    console.error('❌ Failed to send test email:', err?.message || err);
+    console.error("❌ Failed to send test email:", err?.message || err);
     if (err?.stack) console.error(err.stack);
-    console.error('\nTroubleshooting:');
-    console.error('- Ensure NEXT_PUBLIC_CONVEX_URL is set in .env');
-    console.error('- Ensure RESEND_API_KEY is configured in your Convex environment');
-    console.error('- Ensure no-reply@themindpoint.org domain is verified in Resend');
+    console.error("\nTroubleshooting:");
+    console.error("- Ensure NEXT_PUBLIC_CONVEX_URL is set in .env");
+    console.error(
+      "- Ensure RESEND_API_KEY is configured in your Convex environment",
+    );
+    console.error(
+      "- Ensure no-reply@themindpoint.org domain is verified in Resend",
+    );
   }
 }
 
@@ -36,4 +59,3 @@ if (require.main === module) {
 }
 
 module.exports = { run };
-

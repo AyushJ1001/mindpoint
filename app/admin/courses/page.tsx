@@ -26,7 +26,10 @@ import {
   isDiscountActive,
   showRupees,
 } from "@/lib/utils";
-import { getUserFacingErrorMessage } from "@/lib/convex-error";
+import {
+  assertConvexSuccess,
+  getUserFacingErrorMessage,
+} from "@/lib/convex-error";
 import { toast } from "sonner";
 
 type CourseTypeFilter =
@@ -40,6 +43,27 @@ type CourseTypeFilter =
   | "supervised"
   | "resume-studio"
   | "worksheet";
+
+type AdminCourseMutationSuccess = {
+  readonly _tag: "Success";
+  readonly success: true;
+};
+
+type CourseRepairSuccess = AdminCourseMutationSuccess & {
+  readonly processed: number;
+  readonly requested: number;
+  readonly skipped: number;
+  readonly updated: number;
+};
+
+type BatchMigrationSuccess = AdminCourseMutationSuccess & {
+  readonly createdBatches: number;
+  readonly movedEnrollments: number;
+};
+
+type LegacyArchiveSuccess = AdminCourseMutationSuccess & {
+  readonly archivedCourses: number;
+};
 
 type OfferFilter = "all" | "discount" | "bogo" | "both" | "none";
 
@@ -269,10 +293,13 @@ export default function AdminCoursesPage() {
 
     try {
       setIsTransitioning(true);
-      await transitionCourse({
-        courseId: pendingTransition.courseId,
-        lifecycleStatus: pendingTransition.nextStatus,
-      });
+      assertConvexSuccess<AdminCourseMutationSuccess>(
+        await transitionCourse({
+          courseId: pendingTransition.courseId,
+          lifecycleStatus: pendingTransition.nextStatus,
+        }),
+        "Failed to change course lifecycle",
+      );
       toast.success(
         `"${pendingTransition.courseName}" moved to ${pendingTransition.nextStatus}`,
       );
@@ -289,11 +316,14 @@ export default function AdminCoursesPage() {
   const applySuggestedTypeFix = async (issue: CourseTypeIssue) => {
     try {
       setFixingCourseId(issue.courseId);
-      await correctCourseType({
-        courseId: issue.courseId,
-        type: issue.suggestedType,
-        reason: issue.reason,
-      });
+      assertConvexSuccess<AdminCourseMutationSuccess>(
+        await correctCourseType({
+          courseId: issue.courseId,
+          type: issue.suggestedType,
+          reason: issue.reason,
+        }),
+        "Failed to update course type",
+      );
       toast.success(
         `"${issue.name}" updated from ${issue.currentType || "missing"} to ${issue.suggestedType}`,
       );
@@ -311,9 +341,12 @@ export default function AdminCoursesPage() {
   ) => {
     try {
       setRepairingCourseId(candidate.courseId);
-      const result = await repairMasterclassCourseCodes({
-        courseIds: [candidate.courseId],
-      });
+      const result = assertConvexSuccess<CourseRepairSuccess>(
+        await repairMasterclassCourseCodes({
+          courseIds: [candidate.courseId],
+        }),
+        "Failed to repair course code",
+      );
       toast.success(
         `Updated ${result.updated} course code${result.updated === 1 ? "" : "s"}; skipped ${result.skipped}`,
       );
@@ -331,11 +364,14 @@ export default function AdminCoursesPage() {
 
     try {
       setIsRepairingAll(true);
-      const result = await repairMasterclassCourseCodes({
-        courseIds: masterclassCodeRepairCandidates.map(
-          (candidate) => candidate.courseId,
-        ),
-      });
+      const result = assertConvexSuccess<CourseRepairSuccess>(
+        await repairMasterclassCourseCodes({
+          courseIds: masterclassCodeRepairCandidates.map(
+            (candidate) => candidate.courseId,
+          ),
+        }),
+        "Failed to repair course codes",
+      );
       toast.success(
         `Updated ${result.updated} course code${result.updated === 1 ? "" : "s"}; skipped ${result.skipped}`,
       );
@@ -352,7 +388,10 @@ export default function AdminCoursesPage() {
   const handleApplyBatchMigration = async () => {
     try {
       setIsApplyingBatchMigration(true);
-      const result = await applyBatchBackfillMigration({});
+      const result = assertConvexSuccess<BatchMigrationSuccess>(
+        await applyBatchBackfillMigration({}),
+        "Failed to apply batch migration",
+      );
       toast.success(
         `Created ${result.createdBatches} batches and repointed ${result.movedEnrollments} enrollments.`,
       );
@@ -372,7 +411,10 @@ export default function AdminCoursesPage() {
       const courseIds = selectedLegacyArchiveRows.map(
         (candidate) => candidate.courseId,
       );
-      const result = await applyLegacyInternshipArchive({ courseIds });
+      const result = assertConvexSuccess<LegacyArchiveSuccess>(
+        await applyLegacyInternshipArchive({ courseIds }),
+        "Failed to archive legacy internships",
+      );
       toast.success(
         `Archived ${result.archivedCourses} legacy internship course${result.archivedCourses === 1 ? "" : "s"}.`,
       );

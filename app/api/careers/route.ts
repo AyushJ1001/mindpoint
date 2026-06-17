@@ -1,42 +1,16 @@
-import { NextRequest, NextResponse } from "next/server";
-import {
-  InvalidRolesPayloadError,
-  ResumeTooLargeError,
-  sendCareersApplication,
-} from "@/lib/services/careers.server";
-import { ZodError } from "zod";
+import { parseFormDataEffect, runApiEffect } from "@/lib/effect";
+import { sendCareersApplicationEffect } from "@/lib/services/careers.server";
 import { withRateLimit } from "@/lib/with-rate-limit";
+import { Effect } from "effect";
+import type { NextRequest } from "next/server";
 
 async function handleCareersApplication(req: NextRequest) {
-  try {
-    const result = await sendCareersApplication(await req.formData());
-    return NextResponse.json(result);
-  } catch (error) {
-    if (
-      error instanceof ZodError ||
-      error instanceof ResumeTooLargeError ||
-      error instanceof InvalidRolesPayloadError
-    ) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: error.message || "Invalid input.",
-        },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json(
-      {
-        success: false,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to submit application",
-      },
-      { status: 500 },
-    );
-  }
+  return runApiEffect(
+    Effect.gen(function* () {
+      const formData = yield* parseFormDataEffect(req);
+      return yield* sendCareersApplicationEffect(formData);
+    }),
+  );
 }
 
 export const POST = withRateLimit(handleCareersApplication, {

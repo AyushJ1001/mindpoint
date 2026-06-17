@@ -2,14 +2,22 @@ import { action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
 import { checkConvexRateLimit, convexEmailRatelimit } from "./rateLimit";
+import {
+  emailActionResultValidator,
+  emailActionSuccess,
+  emailDeliveryFailureFromThrowable,
+  emailRateLimitFailure,
+  isEmailActionFailure,
+  type EmailActionResult,
+} from "./_shared/emailActionResult";
 
 // Example: Rate-limited version of sendTestEmail
 export const sendTestEmailWithRateLimit = action({
   args: {
     userEmail: v.string(),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
     // Use email as identifier for rate limiting
     const identifier = `email:${args.userEmail}`;
 
@@ -20,7 +28,7 @@ export const sendTestEmailWithRateLimit = action({
     );
 
     if (!rateLimitResult.success) {
-      throw new Error(
+      return emailRateLimitFailure(
         `Email rate limit exceeded for ${args.userEmail}. Try again in ${Math.ceil((rateLimitResult.reset - Date.now()) / 1000)} seconds.`,
       );
     }
@@ -29,17 +37,25 @@ export const sendTestEmailWithRateLimit = action({
       console.log("Attempting to send test email to:", args.userEmail);
 
       // Call the original email function
-      await ctx.runAction(api.emailActions.sendTestEmail, {
-        userEmail: args.userEmail,
-      });
+      const result: EmailActionResult = await ctx.runAction(
+        api.emailActions.sendTestEmail,
+        {
+          userEmail: args.userEmail,
+        },
+      );
+      if (isEmailActionFailure(result)) {
+        return result;
+      }
 
       console.log("Test email sent successfully with rate limiting");
     } catch (error) {
       console.error("Failed to send test email:", error);
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -54,8 +70,8 @@ export const sendTestSupervisedEmailWithRateLimit = action({
       v.literal("elevate"),
     ),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
     // Use email as identifier for rate limiting
     const identifier = `supervised:${args.userEmail}`;
 
@@ -66,7 +82,7 @@ export const sendTestSupervisedEmailWithRateLimit = action({
     );
 
     if (!rateLimitResult.success) {
-      throw new Error(
+      return emailRateLimitFailure(
         `Supervised email rate limit exceeded for ${args.userEmail}. Try again in ${Math.ceil((rateLimitResult.reset - Date.now()) / 1000)} seconds.`,
       );
     }
@@ -75,21 +91,29 @@ export const sendTestSupervisedEmailWithRateLimit = action({
       console.log("Testing supervised email with rate limiting...");
 
       // Call the original supervised email function
-      await ctx.runAction(api.emailActions.sendTestSupervisedEmail, {
-        userEmail: args.userEmail,
-        studentName: args.studentName,
-        sessionType: args.sessionType,
-      });
+      const result: EmailActionResult = await ctx.runAction(
+        api.emailActions.sendTestSupervisedEmail,
+        {
+          userEmail: args.userEmail,
+          studentName: args.studentName,
+          sessionType: args.sessionType,
+        },
+      );
+      if (isEmailActionFailure(result)) {
+        return result;
+      }
 
       console.log(
         "Test supervised email sent successfully with rate limiting!",
       );
     } catch (error) {
       console.error("Test supervised email failed:", error);
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });
 
@@ -105,8 +129,8 @@ export const sendEnrollmentConfirmationWithRateLimit = action({
     startTime: v.string(),
     endTime: v.string(),
   },
-  returns: v.null(),
-  handler: async (ctx, args) => {
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
     // Use email as identifier for rate limiting
     const identifier = `enrollment:${args.userEmail}`;
 
@@ -117,7 +141,7 @@ export const sendEnrollmentConfirmationWithRateLimit = action({
     );
 
     if (!rateLimitResult.success) {
-      throw new Error(
+      return emailRateLimitFailure(
         `Enrollment email rate limit exceeded for ${args.userEmail}. Try again in ${Math.ceil((rateLimitResult.reset - Date.now()) / 1000)} seconds.`,
       );
     }
@@ -126,25 +150,33 @@ export const sendEnrollmentConfirmationWithRateLimit = action({
       console.log("Sending enrollment confirmation with rate limiting...");
 
       // Call the original enrollment confirmation function
-      await ctx.runAction(api.emailActions.sendEnrollmentConfirmation, {
-        userEmail: args.userEmail,
-        userPhone: args.userPhone,
-        courseName: args.courseName,
-        enrollmentNumber: args.enrollmentNumber,
-        startDate: args.startDate,
-        endDate: args.endDate,
-        startTime: args.startTime,
-        endTime: args.endTime,
-      });
+      const result: EmailActionResult = await ctx.runAction(
+        api.emailActions.sendEnrollmentConfirmation,
+        {
+          userEmail: args.userEmail,
+          userPhone: args.userPhone,
+          courseName: args.courseName,
+          enrollmentNumber: args.enrollmentNumber,
+          startDate: args.startDate,
+          endDate: args.endDate,
+          startTime: args.startTime,
+          endTime: args.endTime,
+        },
+      );
+      if (isEmailActionFailure(result)) {
+        return result;
+      }
 
       console.log(
         "Enrollment confirmation sent successfully with rate limiting!",
       );
     } catch (error) {
       console.error("Enrollment confirmation failed:", error);
-      throw error;
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
     }
 
-    return null;
+    return emailActionSuccess();
   },
 });

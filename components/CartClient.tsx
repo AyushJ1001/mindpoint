@@ -9,7 +9,7 @@ import {
   type CheckoutReconciliationPayload,
   type PaymentSession,
 } from "@/lib/services/payments";
-import { HttpJsonError } from "@/lib/services/http";
+import { buildCartReconciliationApplication } from "@/lib/services/cart-reconciliation";
 import { useCart } from "react-use-cart";
 import { Suspense } from "react";
 import Image from "next/image";
@@ -181,30 +181,6 @@ const getCartLineKey = (item: {
         item.batchId ? String(item.batchId) : undefined,
       )
     : String(item.id);
-
-function getCheckoutReconciliationFromError(
-  error: unknown,
-): CheckoutReconciliationPayload | null {
-  if (!(error instanceof HttpJsonError)) {
-    return null;
-  }
-
-  const payload = error.payload;
-  if (
-    !payload ||
-    typeof payload !== "object" ||
-    !("reconciliation" in payload)
-  ) {
-    return null;
-  }
-
-  const reconciliation = payload.reconciliation;
-  if (!reconciliation || typeof reconciliation !== "object") {
-    return null;
-  }
-
-  return reconciliation as CheckoutReconciliationPayload;
-}
 
 const CartContent = () => {
   const {
@@ -608,49 +584,33 @@ const CartContent = () => {
       }
       setLastReconciliationSignature(signature);
 
-      const couponRejected = (reconciliation.updatedItems ?? []).some(
-        (updated) =>
-          updated.reasons.some((reason) => reason.startsWith("COUPON_")),
-      );
-      if (couponRejected) {
+      const application = buildCartReconciliationApplication(reconciliation);
+      if (!application) {
+        return false;
+      }
+
+      if (application.clearCoupon) {
         setAppliedCoupon(null);
         setCouponCode("");
       }
 
-      for (const reconciledItem of reconciliation.items ?? []) {
-        const changed = (reconciliation.updatedItems ?? []).some(
-          (updated) => updated.cartItemId === reconciledItem.cartItemId,
-        );
-        if (!changed) {
-          continue;
-        }
-
-        const payload: Record<string, unknown> = {
-          price: reconciledItem.checkoutPrice,
-          originalPrice: reconciledItem.listedPrice,
-        };
-        if (!reconciledItem.selectedFreeCourseId) {
-          payload.selectedFreeCourse = undefined;
-        }
-
-        updateItem(reconciledItem.cartItemId, payload);
+      for (const removedItemId of application.removedItemIds) {
+        removeItem(removedItemId);
       }
 
-      const removedCount = reconciliation.removedItems?.length ?? 0;
-      const updatedCount = reconciliation.updatedItems?.length ?? 0;
-      const notice =
-        removedCount > 0
-          ? `${removedCount} item${removedCount === 1 ? "" : "s"} need${removedCount === 1 ? "s" : ""} review because pricing or availability changed.`
-          : `${updatedCount} item${updatedCount === 1 ? "" : "s"} updated because pricing or availability changed.`;
-      setCartSyncNotice(notice);
-      setCartReviewRequired(true);
-      toast.info(
-        "Your cart was updated because pricing or availability changed.",
-      );
+      for (const updatedItem of application.updatedItems) {
+        updateItem(updatedItem.cartItemId, updatedItem.payload);
+      }
+
+      setCartSyncNotice(application.notice);
+      setCartReviewRequired(application.reviewRequired);
+      toast.info(application.toastTitle, {
+        description: application.toastDescription,
+      });
 
       return true;
     },
-    [lastReconciliationSignature, updateItem],
+    [lastReconciliationSignature, removeItem, updateItem],
   );
 
   useEffect(() => {
@@ -909,45 +869,49 @@ const CartContent = () => {
 
       setIsProcessing(true);
 
-      try {
-        if (discountedTotal <= 0) {
-          const enrollmentCompleted =
-            await completeCheckoutEnrollment(whatsappNumber);
+      if (discountedTotal <= 0) {
+        const enrollmentCompleted =
+          await completeCheckoutEnrollment(whatsappNumber);
 
-          if (enrollmentCompleted) {
-            emptyCart();
-          }
-
-          setIsProcessing(false);
-          return;
+        if (enrollmentCompleted) {
+          emptyCart();
         }
 
-        const data = await requestPaymentOrder({
-          cartIntent: buildCartIntent(),
-          buyerEmail: user.primaryEmailAddress?.emailAddress || undefined,
-          referrerClerkUserId:
-            getReferralCookie() && getReferralCookie() !== user.id
-              ? getReferralCookie()!
-              : undefined,
-        });
-
-        setQrPaymentSession(data);
-        setQrImageAvailable(true);
-        setUpiTransactionReference("");
-        setPendingQrWhatsAppNumber(whatsappNumber);
-        setShowQrPaymentDialog(true);
         setIsProcessing(false);
-      } catch (error) {
-        const reconciliation = getCheckoutReconciliationFromError(error);
-        if (reconciliation && applyCheckoutReconciliation(reconciliation)) {
-          setIsProcessing(false);
-          return;
-        }
-
-        console.error("Error preparing UPI payment:", error);
-        toast.error("Failed to prepare payment. Please try again.");
-        setIsProcessing(false);
+        return;
       }
+
+      const paymentOrder = await requestPaymentOrder({
+        cartIntent: buildCartIntent(),
+        buyerEmail: user.primaryEmailAddress?.emailAddress || undefined,
+        referrerClerkUserId:
+          getReferralCookie() && getReferralCookie() !== user.id
+            ? getReferralCookie()!
+            : undefined,
+      });
+
+      if (!paymentOrder.success) {
+        if (
+          paymentOrder.reconciliation &&
+          applyCheckoutReconciliation(paymentOrder.reconciliation)
+        ) {
+          setIsProcessing(false);
+          return;
+        }
+
+        toast.error("Failed to prepare payment. Please try again.", {
+          description: paymentOrder.error,
+        });
+        setIsProcessing(false);
+        return;
+      }
+
+      setQrPaymentSession(paymentOrder.data);
+      setQrImageAvailable(true);
+      setUpiTransactionReference("");
+      setPendingQrWhatsAppNumber(whatsappNumber);
+      setShowQrPaymentDialog(true);
+      setIsProcessing(false);
     },
     [
       isEmpty,
@@ -1511,10 +1475,7 @@ const CartContent = () => {
                       size="sm"
                       onClick={async () => {
                         if (!couponCode.trim()) return;
-                        if (
-                          couponValidation?.valid &&
-                          couponValidation.coupon
-                        ) {
+                        if (couponValidation?._tag === "Success") {
                           const hasEligibleCourse = items.some(
                             (item) =>
                               !coveredCourseIdSet.has(
@@ -1537,8 +1498,8 @@ const CartContent = () => {
                             pointsCost: couponValidation.coupon.pointsCost,
                           });
                           toast.success("Coupon applied successfully!");
-                        } else if (couponValidation?.error) {
-                          toast.error(couponValidation.error);
+                        } else if (couponValidation?._tag === "Failure") {
+                          toast.error(couponValidation.error.message);
                         }
                       }}
                       disabled={
@@ -1572,9 +1533,9 @@ const CartContent = () => {
                     </Button>
                   </div>
                 )}
-                {couponValidation && !couponValidation.valid && couponCode && (
+                {couponValidation?._tag === "Failure" && couponCode && (
                   <p className="text-xs text-red-600">
-                    {couponValidation.error}
+                    {couponValidation.error.message}
                   </p>
                 )}
               </div>

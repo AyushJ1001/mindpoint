@@ -30,7 +30,14 @@ export default function TherapyFAQSection({
     const load = async () => {
       try {
         const res = await fetch("/faq/therapy.md", { cache: "force-cache" });
-        if (!res.ok) throw new Error("Failed to load faq/therapy.md");
+        if (!res.ok) {
+          console.error("Failed to load faq/therapy.md", {
+            status: res.status,
+            statusText: res.statusText,
+          });
+          if (!cancelled) setFaqMarkdown(null);
+          return;
+        }
         const text = await res.text();
         if (!cancelled) setFaqMarkdown(text);
       } catch (err) {
@@ -75,7 +82,7 @@ export default function TherapyFAQSection({
                     const items = parseFaqMarkdown(faqMarkdown);
                     if (items.length === 0) {
                       return (
-                        <div className="prose prose-sm dark:prose-invert max-w-none sm:prose-base">
+                        <div className="prose prose-sm dark:prose-invert sm:prose-base max-w-none">
                           <ReactMarkdown remarkPlugins={[remarkGfm]}>
                             {faqMarkdown}
                           </ReactMarkdown>
@@ -86,11 +93,11 @@ export default function TherapyFAQSection({
                       <Accordion type="single" collapsible className="w-full">
                         {items.map((item, idx) => (
                           <AccordionItem key={idx} value={`faq-${idx + 1}`}>
-                            <AccordionTrigger className="hover:text-primary text-left text-[0.95rem] font-semibold leading-snug sm:text-base">
+                            <AccordionTrigger className="hover:text-primary text-left text-[0.95rem] leading-snug font-semibold sm:text-base">
                               {item.q}
                             </AccordionTrigger>
                             <AccordionContent>
-                              <div className="prose prose-sm dark:prose-invert max-w-none pt-2 sm:prose-base">
+                              <div className="prose prose-sm dark:prose-invert sm:prose-base max-w-none pt-2">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                   {item.a}
                                 </ReactMarkdown>

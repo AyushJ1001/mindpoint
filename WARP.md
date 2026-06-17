@@ -54,7 +54,7 @@ node test-google-sheets.js     # Test Google Sheets integration
 - **Auth**: Clerk for user authentication
 - **Payments**: Razorpay integration
 - **Email**: Resend for transactional emails
-- **Analytics**: PostHog and Vercel Analytics
+- **Analytics**: Vercel Analytics
 - **Styling**: Tailwind CSS 4 with class-variance-authority for component variants
 - **UI Components**: Radix UI primitives
 
@@ -217,15 +217,14 @@ Cart uses `react-use-cart` library. Pricing logic in cart client must check for 
 
 All email actions should use rate-limited wrappers in `emailActionsWithRateLimit.ts` to prevent abuse.
 
-### Middleware & Auth
+### Proxy & Auth
 
-`middleware.ts` conditionally enables Clerk auth only if keys are present. This allows builds in environments without full auth configuration.
+`proxy.ts` conditionally enables Clerk auth only if keys are present. This allows builds in environments without full auth configuration.
 
 ### Build Configuration
 
 - `next.config.ts` ignores TypeScript/ESLint errors during build for faster iteration
 - Console logs removed in production (except `console.error`)
-- PostHog rewrites configured for analytics proxy
 
 ## Commit Conventions
 

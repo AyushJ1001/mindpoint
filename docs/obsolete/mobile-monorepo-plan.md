@@ -69,7 +69,7 @@ mindpoint/
 ### `apps/web`
 
 - Keeps the existing Next.js product
-- Owns SSR, metadata, middleware, web routing, web-only analytics, and any browser-only implementation
+- Owns SSR, metadata, proxy/auth routing, web-only analytics, and any browser-only implementation
 - Becomes a thin composition layer over shared packages where possible
 
 ### `apps/mobile`
@@ -124,8 +124,6 @@ Canonical names already in use:
 - `GOOGLE_APPLICATION_CREDENTIALS_JSON`
 - `GOOGLE_SHEETS_SPREADSHEET_ID`
 - `GOOGLE_SHEETS_SHEET_NAME`
-- `NEXT_PUBLIC_POSTHOG_KEY`
-- `NEXT_PUBLIC_POSTHOG_HOST`
 - `NEXT_PUBLIC_SITE_URL`
 
 Rules:

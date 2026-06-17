@@ -1,7 +1,10 @@
 import "client-only";
 
+import { Effect } from "effect";
+
+import type { JsonValue } from "../effect/errors";
 import type { FetchImpl } from "./http";
-import { postJson } from "./http";
+import { postJsonEffect } from "./http";
 
 export type ContactFormValues = {
   email: string;
@@ -10,9 +13,9 @@ export type ContactFormValues = {
 };
 
 export type ContactSubmissionResult = {
-  success: boolean;
-  data?: unknown;
+  data?: JsonValue;
   error?: string;
+  success: boolean;
 };
 
 type SubmitContactFormOptions = {
@@ -24,15 +27,25 @@ export async function submitContactForm(
   input: ContactFormValues,
   options: SubmitContactFormOptions = {},
 ): Promise<ContactSubmissionResult> {
-  const result = await postJson<ContactFormValues, ContactSubmissionResult>(
-    options.endpoint ?? "/api/contact",
-    input,
-    { fetchImpl: options.fetchImpl },
+  return Effect.runPromise(
+    postJsonEffect<ContactFormValues, ContactSubmissionResult>(
+      options.endpoint ?? "/api/contact",
+      input,
+      { fetchImpl: options.fetchImpl },
+    ).pipe(
+      Effect.match({
+        onFailure: (error) => ({
+          error: error.message || "Error sending message.",
+          success: false,
+        }),
+        onSuccess: (result) =>
+          result.success
+            ? result
+            : {
+                error: result.error || "Error sending message.",
+                success: false,
+              },
+      }),
+    ),
   );
-
-  if (!result.success) {
-    throw new Error(result.error || "Error sending message.");
-  }
-
-  return result;
 }

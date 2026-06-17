@@ -10,6 +10,13 @@ import {
   type ReconciliationCartItem,
   type ReconciliationCourse,
 } from "../lib/domain/checkout-reconciliation";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+  type ConvexFailure,
+  type ConvexSerializable,
+} from "./_shared/result";
 
 const cartIntentItemValidator = v.object({
   cartItemId: v.string(),
@@ -238,11 +245,20 @@ async function runReconciliation(
   });
 }
 
-function assertCheckoutServerSecret(serverSecret: string) {
+type CheckoutUnauthorizedFailure = ConvexFailure<"UNAUTHORIZED">;
+
+function validateCheckoutServerSecret(
+  serverSecret: string,
+): CheckoutUnauthorizedFailure | null {
   const expected = process.env.CHECKOUT_SERVER_SECRET;
   if (!expected || serverSecret !== expected) {
-    throw new Error("Unauthorized checkout server request.");
+    return convexFailure({
+      code: convexResultErrorCode.UNAUTHORIZED,
+      message: "Unauthorized checkout server request.",
+    });
   }
+
+  return null;
 }
 
 async function createCheckoutAttemptForBuyer(
@@ -262,10 +278,11 @@ async function createCheckoutAttemptForBuyer(
     reconciliation.status !== "valid" ||
     reconciliation.totalAmountPaid <= 0
   ) {
-    return {
-      ok: false,
-      reconciliation,
-    };
+    return convexFailure({
+      code: convexResultErrorCode.CONFLICT,
+      details: { reconciliation: reconciliation as ConvexSerializable },
+      message: "Your cart changed. Review it before checkout.",
+    });
   }
 
   const now = Date.now();
@@ -282,11 +299,10 @@ async function createCheckoutAttemptForBuyer(
     updatedAt: now,
   });
 
-  return {
-    ok: true,
+  return convexSuccess({
     checkoutAttemptId,
     reconciliation,
-  };
+  });
 }
 
 export const reconcileCart = query({
@@ -312,7 +328,10 @@ export const createCheckoutAttempt = mutation({
   handler: async (ctx, args) => {
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      throw new Error("Unauthenticated checkout attempt.");
+      return convexFailure({
+        code: convexResultErrorCode.UNAUTHORIZED,
+        message: "Unauthenticated checkout attempt.",
+      });
     }
 
     return await createCheckoutAttemptForBuyer(ctx, {
@@ -333,7 +352,10 @@ export const createCheckoutAttemptFromServer = mutation({
     referrerClerkUserId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    assertCheckoutServerSecret(args.serverSecret);
+    const unauthorized = validateCheckoutServerSecret(args.serverSecret);
+    if (unauthorized) {
+      return unauthorized;
+    }
 
     return await createCheckoutAttemptForBuyer(ctx, {
       cartIntent: args.cartIntent,

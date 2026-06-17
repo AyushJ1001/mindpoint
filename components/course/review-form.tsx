@@ -25,12 +25,19 @@ import { api } from "@/lib/backend/api";
 import { Id } from "@/lib/backend/data-model";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { assertConvexSuccess } from "@/lib/convex-error";
 
 interface ReviewFormProps {
   courseId: Id<"courses">;
   editingReview?: Id<"reviews"> | null;
   onEditComplete?: () => void;
 }
+
+type ReviewMutationSuccess = {
+  readonly _tag: "Success";
+  readonly success: true;
+  readonly reviewId: Id<"reviews">;
+};
 
 export default function ReviewForm({
   courseId,
@@ -90,18 +97,24 @@ export default function ReviewForm({
                 setSubmitSuccess(false);
 
                 if (editingReview) {
-                  await updateReview({
-                    reviewId: editingReview,
-                    rating: values.rating,
-                    content: values.content,
-                  });
+                  assertConvexSuccess<ReviewMutationSuccess>(
+                    await updateReview({
+                      reviewId: editingReview,
+                      rating: values.rating,
+                      content: values.content,
+                    }),
+                    "Failed to update review",
+                  );
                   onEditComplete?.();
                 } else {
-                  await createReview({
-                    courseId,
-                    rating: values.rating,
-                    content: values.content,
-                  });
+                  assertConvexSuccess<ReviewMutationSuccess>(
+                    await createReview({
+                      courseId,
+                      rating: values.rating,
+                      content: values.content,
+                    }),
+                    "Failed to submit review",
+                  );
                 }
 
                 setSubmitSuccess(true);

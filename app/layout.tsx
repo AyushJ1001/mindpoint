@@ -1,12 +1,7 @@
 import type { Metadata } from "next";
-import {
-  Plus_Jakarta_Sans,
-  JetBrains_Mono,
-  Fraunces,
-} from "next/font/google";
+import { Plus_Jakarta_Sans, JetBrains_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import "react-phone-number-input/style.css";
-import { PostHogProvider } from "@/components/PostHogProvider";
 import ClientProviders from "@/components/ClientProviders";
 import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
@@ -89,14 +84,10 @@ export default function RootLayout({
           Skip to main content
         </a>
 
-        <PostHogProvider>
-          <ClientProviders>
-            {children}
-          </ClientProviders>
+        <ClientProviders>{children}</ClientProviders>
 
-          <Footer />
-          <Toaster />
-        </PostHogProvider>
+        <Footer />
+        <Toaster />
       </body>
     </html>
   );

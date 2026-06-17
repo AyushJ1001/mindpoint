@@ -3,8 +3,6 @@ export type EnvSource = Record<string, string | undefined>;
 export type PublicEnv = {
   clerkPublishableKey?: string;
   convexUrl?: string;
-  posthogHost?: string;
-  posthogKey?: string;
   siteUrl?: string;
 };
 
@@ -12,8 +10,6 @@ export function readPublicEnv(env: EnvSource = process.env): PublicEnv {
   return {
     clerkPublishableKey: env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
     convexUrl: env.NEXT_PUBLIC_CONVEX_URL,
-    posthogHost: env.NEXT_PUBLIC_POSTHOG_HOST,
-    posthogKey: env.NEXT_PUBLIC_POSTHOG_KEY,
     siteUrl: env.NEXT_PUBLIC_SITE_URL,
   };
 }

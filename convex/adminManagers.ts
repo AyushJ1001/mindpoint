@@ -2,6 +2,26 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { createAdminAuditLog } from "./adminAudit";
 import { requireAdmin } from "./adminAuth";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+  type ConvexFailure,
+} from "./_shared/result";
+
+type AdminManagerFailure = ConvexFailure<
+  "CONFLICT" | "NOT_FOUND" | "VALIDATION_ERROR"
+>;
+
+function adminManagerFailure(
+  message: string,
+  code:
+    | "CONFLICT"
+    | "NOT_FOUND"
+    | "VALIDATION_ERROR" = convexResultErrorCode.VALIDATION_ERROR,
+): AdminManagerFailure {
+  return convexFailure({ code, message });
+}
 
 function normalizeClerkUserId(input: string): string {
   return input.trim();
@@ -170,7 +190,7 @@ export const addAdminByEmail = mutation({
     const admin = await requireAdmin(ctx);
     const email = normalizeEmail(args.email);
     if (!email || !email.includes("@")) {
-      throw new Error("Valid email is required");
+      return adminManagerFailure("Valid email is required");
     }
 
     const existing = await ctx.db
@@ -210,6 +230,12 @@ export const addAdminByEmail = mutation({
       .query("adminManagers")
       .withIndex("by_adminEmail", (q) => q.eq("adminEmail", email))
       .first();
+    if (!after) {
+      return adminManagerFailure(
+        "Admin access could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -225,7 +251,7 @@ export const addAdminByEmail = mutation({
       },
     });
 
-    return after;
+    return convexSuccess({ admin: after });
   },
 });
 
@@ -238,7 +264,7 @@ export const removeAdmin = mutation({
     const admin = await requireAdmin(ctx);
     const targetInput = args.email.trim();
     if (!targetInput) {
-      throw new Error("Valid email or Clerk user ID is required");
+      return adminManagerFailure("Valid email or Clerk user ID is required");
     }
 
     const targetIsEmail = targetInput.includes("@");
@@ -251,7 +277,10 @@ export const removeAdmin = mutation({
       (targetIsEmail && normalizeEmail(admin.email) === targetEmail) ||
       (!targetIsEmail && admin.userId === targetClerkUserId)
     ) {
-      throw new Error("You cannot remove your own admin access.");
+      return adminManagerFailure(
+        "You cannot remove your own admin access.",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     let existing = targetIsEmail
@@ -271,14 +300,20 @@ export const removeAdmin = mutation({
     }
 
     if (!existing || !existing.isActive) {
-      throw new Error("Admin access is not active for this user.");
+      return adminManagerFailure(
+        "Admin access is not active for this user.",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     if (
       admin.userId === existing.clerkUserId ||
       (!!admin.email && normalizeEmail(admin.email) === existing.adminEmail)
     ) {
-      throw new Error("You cannot remove your own admin access.");
+      return adminManagerFailure(
+        "You cannot remove your own admin access.",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     const activeAdmins = await ctx.db
@@ -287,8 +322,9 @@ export const removeAdmin = mutation({
       .take(2);
 
     if (activeAdmins.length <= 1) {
-      throw new Error(
+      return adminManagerFailure(
         "Cannot remove the last active admin. Add another admin first.",
+        convexResultErrorCode.CONFLICT,
       );
     }
 
@@ -302,6 +338,13 @@ export const removeAdmin = mutation({
     });
 
     const after = await ctx.db.get(existing._id);
+    if (!after) {
+      return adminManagerFailure(
+        "Admin access could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
     const entityId = existing.adminEmail ?? existing.clerkUserId ?? targetInput;
 
     await createAdminAuditLog(ctx, {
@@ -318,6 +361,6 @@ export const removeAdmin = mutation({
       },
     });
 
-    return after;
+    return convexSuccess({ admin: after });
   },
 });

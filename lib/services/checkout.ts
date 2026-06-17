@@ -3,8 +3,16 @@ import "server-only";
 import { api } from "@/lib/backend/api";
 import type { Id } from "@/lib/backend/data-model";
 import type { CheckoutPricing } from "@/lib/domain/checkout";
+import {
+  BoundaryConfigurationError,
+  BoundaryExternalServiceError,
+  boundaryErrorFromThrowable,
+  type BoundaryError,
+  type BoundaryThrowable,
+} from "@/lib/effect";
 import { ConvexHttpClient } from "convex/browser";
 import type { DefaultFunctionArgs, FunctionReference } from "convex/server";
+import { Effect } from "effect";
 
 const RETRY_CONFIG = {
   initialDelayMs: 500,
@@ -26,6 +34,24 @@ type CheckoutResult = {
   error?: string;
 };
 
+type CartCheckoutResult = CheckoutResult & {
+  enrollments?: EnrollmentSummary[];
+};
+
+type SingleEnrollmentCheckoutResult = CheckoutResult & {
+  enrollment?: EnrollmentSummary;
+};
+
+type CartCheckoutSuccess = {
+  enrollments: EnrollmentSummary[];
+  success: true;
+};
+
+type SingleEnrollmentCheckoutSuccess = {
+  enrollment: EnrollmentSummary;
+  success: true;
+};
+
 export type EnrollmentSummary = {
   courseId?: string;
   courseName: string;
@@ -35,19 +61,141 @@ export type EnrollmentSummary = {
   sessionType?: string;
 };
 
-function resolveConvexUrl(convexUrl?: string): string {
+type CheckoutLineItem = {
+  batchId?: Id<"courseBatches">;
+  courseId: Id<"courses">;
+};
+
+type BogoSelection = {
+  sourceBatchId?: Id<"courseBatches">;
+  sourceCourseId: Id<"courses">;
+  selectedFreeBatchId?: Id<"courseBatches">;
+  selectedFreeCourseId: Id<"courses">;
+};
+
+type CheckoutSessionType = "focus" | "flow" | "elevate";
+
+type CheckoutMutationOptions = {
+  convexUrl?: string;
+};
+
+type PaymentSuccessOptions = CheckoutMutationOptions & {
+  checkoutAttemptId?: string;
+  razorpayOrderId?: string;
+  razorpayPaymentId?: string;
+};
+
+type GuestCheckoutUserData = {
+  email: string;
+  name: string;
+  phone: string;
+};
+
+type SingleCourseEnrollmentMutationResult = {
+  courseName: string;
+  enrollmentId: Id<"enrollments">;
+  enrollmentNumber: string;
+};
+
+type SupervisedTherapyEnrollmentMutationResult =
+  SingleCourseEnrollmentMutationResult & {
+    sessionType: CheckoutSessionType;
+  };
+
+type ConvexTaggedFailure = {
+  readonly _tag: "Failure";
+  readonly error: {
+    readonly code?: string;
+    readonly message: string;
+  };
+  readonly success: false;
+};
+
+type ConvexTaggedSuccess<Payload extends object> = {
+  readonly _tag: "Success";
+  readonly success: true;
+} & Payload;
+
+type CartCheckoutMutationReturn =
+  | ConvexTaggedSuccess<{ enrollments: EnrollmentSummary[] }>
+  | EnrollmentSummary[];
+
+type SingleEnrollmentMutationReturn<
+  Result extends SingleCourseEnrollmentMutationResult,
+> =
+  | ConvexTaggedSuccess<
+      {
+        enrollment: Result;
+      } & Partial<Result>
+    >
+  | Result;
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function isConvexTaggedFailure(value: unknown): value is ConvexTaggedFailure {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const error = value.error;
+  return (
+    value._tag === "Failure" &&
+    value.success === false &&
+    isRecord(error) &&
+    typeof error.message === "string"
+  );
+}
+
+function convexTaggedFailureToBoundaryError(
+  value: unknown,
+): BoundaryExternalServiceError | null {
+  if (isConvexTaggedFailure(value)) {
+    return new BoundaryExternalServiceError({
+      message: value.error.message,
+    });
+  }
+
+  return null;
+}
+
+function normalizeCartCheckoutMutationReturn(
+  result: CartCheckoutMutationReturn,
+): EnrollmentSummary[] {
+  if (Array.isArray(result)) {
+    return result;
+  }
+
+  return result.enrollments;
+}
+
+function normalizeSingleEnrollmentMutationReturn<
+  Result extends SingleCourseEnrollmentMutationResult,
+>(result: SingleEnrollmentMutationReturn<Result>): Result {
+  if ("_tag" in result) {
+    return result.enrollment;
+  }
+
+  return result;
+}
+
+function resolveConvexUrl(
+  convexUrl?: string,
+): string | BoundaryConfigurationError {
   const resolvedConvexUrl = convexUrl || process.env.NEXT_PUBLIC_CONVEX_URL;
 
   if (!resolvedConvexUrl) {
-    throw new Error(
-      "NEXT_PUBLIC_CONVEX_URL environment variable is not set. Cannot execute Convex mutation.",
-    );
+    return new BoundaryConfigurationError({
+      message:
+        "NEXT_PUBLIC_CONVEX_URL environment variable is not set. Cannot execute Convex mutation.",
+    });
   }
 
   return resolvedConvexUrl;
 }
 
-function isRetryableError(error: unknown): boolean {
+function isRetryableError(error: BoundaryThrowable): boolean {
   if (!(error instanceof Error)) {
     return false;
   }
@@ -78,6 +226,42 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+function throwableMessage(error: BoundaryThrowable): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+function checkoutMutationBoundaryError(
+  cause: BoundaryThrowable,
+): BoundaryError {
+  const error = boundaryErrorFromThrowable(cause);
+
+  if (error instanceof BoundaryConfigurationError) {
+    return error;
+  }
+
+  return new BoundaryExternalServiceError({
+    ...(cause instanceof Error ? { cause } : {}),
+    message:
+      cause instanceof Error ? cause.message : "Checkout mutation failed.",
+  });
+}
+
+function logCheckoutBoundaryError(
+  message: string,
+  error: BoundaryError,
+  context: MutationContext,
+) {
+  console.error(message, {
+    courseIds: context.courseIds,
+    error: error.message,
+    operationType: context.operationType,
+    referrerClerkUserId: context.referrerClerkUserId,
+    stack: error.cause?.stack,
+    userEmail: context.userEmail,
+    userId: context.userId,
+  });
+}
+
 async function executeConvexMutationWithRetry<Args extends object, Return>(
   mutation: FunctionReference<"mutation", "public", DefaultFunctionArgs>,
   args: Args,
@@ -86,8 +270,13 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
 ): Promise<Return> {
   // These service calls use explicit user identifiers in args and do not attach
   // a Clerk session token, so ctx.auth will be null inside the called mutations.
-  const convex = new ConvexHttpClient(resolveConvexUrl(convexUrl));
-  let lastError: Error | unknown = null;
+  const resolvedConvexUrl = resolveConvexUrl(convexUrl);
+  if (resolvedConvexUrl instanceof BoundaryConfigurationError) {
+    return Promise.reject(resolvedConvexUrl);
+  }
+
+  const convex = new ConvexHttpClient(resolvedConvexUrl);
+  let lastError: BoundaryThrowable | null = null;
   const errors: Array<{ attempt: number; error: string; timestamp: Date }> = [];
 
   for (let attempt = 0; attempt <= RETRY_CONFIG.maxRetries; attempt++) {
@@ -117,9 +306,9 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
         timeoutHandle = setTimeout(
           () =>
             reject(
-              new Error(
-                `Convex mutation timed out after ${RETRY_CONFIG.timeoutMs}ms`,
-              ),
+              new BoundaryExternalServiceError({
+                message: `Convex mutation timed out after ${RETRY_CONFIG.timeoutMs}ms`,
+              }),
             ),
           RETRY_CONFIG.timeoutMs,
         );
@@ -127,6 +316,11 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
       const result = await Promise.race([mutationPromise, timeoutPromise]);
       if (timeoutHandle) {
         clearTimeout(timeoutHandle);
+      }
+
+      const taggedFailure = convexTaggedFailureToBoundaryError(result);
+      if (taggedFailure) {
+        return Promise.reject(taggedFailure);
       }
 
       if (attempt > 0) {
@@ -141,9 +335,9 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
         clearTimeout(timeoutHandle);
       }
 
-      lastError = error;
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
+      const caught = error as BoundaryThrowable;
+      lastError = caught;
+      const errorMessage = throwableMessage(caught);
       errors.push({
         attempt: attempt + 1,
         error: errorMessage,
@@ -156,13 +350,13 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
           courseIds: context.courseIds,
           error: errorMessage,
           operationType: context.operationType,
-          retryable: isRetryableError(error),
+          retryable: isRetryableError(caught),
           userEmail: context.userEmail,
           userId: context.userId,
         },
       );
 
-      if (attempt === RETRY_CONFIG.maxRetries || !isRetryableError(error)) {
+      if (attempt === RETRY_CONFIG.maxRetries || !isRetryableError(caught)) {
         console.error(
           `Convex mutation failed after all retries (${context.operationType}):`,
           {
@@ -174,8 +368,11 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
           },
         );
 
-        throw new Error(
-          `Failed to execute Convex mutation after ${attempt + 1} attempts: ${errorMessage}`,
+        return Promise.reject(
+          new BoundaryExternalServiceError({
+            ...(caught instanceof Error ? { cause: caught } : {}),
+            message: `Failed to execute Convex mutation after ${attempt + 1} attempts: ${errorMessage}`,
+          }),
         );
       }
 
@@ -187,9 +384,13 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
     }
   }
 
-  throw lastError instanceof Error
-    ? lastError
-    : new Error("Unknown error occurred during Convex mutation");
+  return Promise.reject(
+    lastError instanceof Error
+      ? lastError
+      : new BoundaryExternalServiceError({
+          message: "Unknown error occurred during Convex mutation",
+        }),
+  );
 }
 
 async function runCheckoutMutation<TResult>(
@@ -206,190 +407,283 @@ async function runCheckoutMutation<TResult>(
   );
 }
 
-export async function handlePaymentSuccess(
+function runCheckoutMutationEffect<TResult>(
+  mutation: FunctionReference<"mutation", "public", DefaultFunctionArgs>,
+  args: DefaultFunctionArgs,
+  context: MutationContext,
+  convexUrl?: string,
+): Effect.Effect<TResult, BoundaryError> {
+  return Effect.tryPromise({
+    try: () => runCheckoutMutation<TResult>(mutation, args, context, convexUrl),
+    catch: (cause) => checkoutMutationBoundaryError(cause as BoundaryThrowable),
+  });
+}
+
+export function handlePaymentSuccessEffect(
   userId: string,
-  lineItems: Array<{ courseId: Id<"courses">; batchId?: Id<"courseBatches"> }>,
+  lineItems: CheckoutLineItem[],
   userEmail: string,
   userPhone?: string,
   studentName?: string,
-  sessionType?: "focus" | "flow" | "elevate",
-  bogoSelections?: Array<{
-    sourceCourseId: Id<"courses">;
-    sourceBatchId?: Id<"courseBatches">;
-    selectedFreeCourseId: Id<"courses">;
-    selectedFreeBatchId?: Id<"courseBatches">;
-  }>,
+  sessionType?: CheckoutSessionType,
+  bogoSelections?: BogoSelection[],
   referrerClerkUserId?: string,
   checkoutPricing?: CheckoutPricing,
-  options: {
-    convexUrl?: string;
-    checkoutAttemptId?: string;
-    razorpayOrderId?: string;
-    razorpayPaymentId?: string;
-  } = {},
-): Promise<CheckoutResult & { enrollments?: EnrollmentSummary[] }> {
+  options: PaymentSuccessOptions = {},
+): Effect.Effect<CartCheckoutSuccess, BoundaryError> {
   const courseIds = lineItems.map((item) => item.courseId);
-  try {
-    const enrollments = await runCheckoutMutation<EnrollmentSummary[]>(
-      api.myFunctions.handleCartCheckout,
-      {
-        bogoSelections,
-        checkoutPricing,
-        courseIds,
-        lineItems,
-        referrerClerkUserId,
-        sessionType,
-        studentName,
-        userEmail,
-        userId,
-        userPhone,
-        checkoutAttemptId: options.checkoutAttemptId,
-        razorpayOrderId: options.razorpayOrderId,
-        razorpayPaymentId: options.razorpayPaymentId,
-      },
-      {
-        courseIds: courseIds.map((id) => id),
-        operationType: "handleCartCheckout",
-        referrerClerkUserId,
-        userEmail,
-        userId,
-      },
-      options.convexUrl,
-    );
+  const context: MutationContext = {
+    courseIds: courseIds.map((id) => id),
+    operationType: "handleCartCheckout",
+    referrerClerkUserId,
+    userEmail,
+    userId,
+  };
+
+  return Effect.gen(function* () {
+    const mutationResult =
+      yield* runCheckoutMutationEffect<CartCheckoutMutationReturn>(
+        api.myFunctions.handleCartCheckout,
+        {
+          bogoSelections,
+          checkoutAttemptId: options.checkoutAttemptId,
+          checkoutPricing,
+          courseIds,
+          lineItems,
+          razorpayOrderId: options.razorpayOrderId,
+          razorpayPaymentId: options.razorpayPaymentId,
+          referrerClerkUserId,
+          sessionType,
+          studentName,
+          userEmail,
+          userId,
+          userPhone,
+        },
+        context,
+        options.convexUrl,
+      );
+    const enrollments = normalizeCartCheckoutMutationReturn(mutationResult);
 
     return {
-      success: true,
       enrollments,
+      success: true as const,
     };
-  } catch (error) {
-    console.error("Error handling payment success (all retries exhausted):", {
-      courseIds: courseIds.map((id) => id),
-      error: error instanceof Error ? error.message : String(error),
-      stack: error instanceof Error ? error.stack : undefined,
-      userEmail,
+  });
+}
+
+export async function handlePaymentSuccess(
+  userId: string,
+  lineItems: CheckoutLineItem[],
+  userEmail: string,
+  userPhone?: string,
+  studentName?: string,
+  sessionType?: CheckoutSessionType,
+  bogoSelections?: BogoSelection[],
+  referrerClerkUserId?: string,
+  checkoutPricing?: CheckoutPricing,
+  options: PaymentSuccessOptions = {},
+): Promise<CartCheckoutResult> {
+  const courseIds = lineItems.map((item) => item.courseId);
+  return Effect.runPromise(
+    handlePaymentSuccessEffect(
       userId,
-    });
+      lineItems,
+      userEmail,
+      userPhone,
+      studentName,
+      sessionType,
+      bogoSelections,
+      referrerClerkUserId,
+      checkoutPricing,
+      options,
+    ).pipe(
+      Effect.match({
+        onFailure: (error) => {
+          logCheckoutBoundaryError(
+            "Error handling payment success (all retries exhausted):",
+            error,
+            {
+              courseIds: courseIds.map((id) => id),
+              operationType: "handleCartCheckout",
+              referrerClerkUserId,
+              userEmail,
+              userId,
+            },
+          );
+
+          return {
+            error: error.message,
+            success: false as const,
+          };
+        },
+        onSuccess: (result) => result,
+      }),
+    ),
+  );
+}
+
+export function handleGuestUserPaymentSuccessEffect(
+  userEmail: string,
+  courseIds: Id<"courses">[],
+  options: CheckoutMutationOptions = {},
+): Effect.Effect<CartCheckoutSuccess, BoundaryError> {
+  const context: MutationContext = {
+    courseIds: courseIds.map((id) => id),
+    operationType: "handleGuestUserCartCheckoutByEmail",
+    userEmail,
+  };
+
+  return Effect.gen(function* () {
+    const mutationResult =
+      yield* runCheckoutMutationEffect<CartCheckoutMutationReturn>(
+        api.myFunctions.handleGuestUserCartCheckoutByEmail,
+        {
+          courseIds,
+          userEmail,
+        },
+        context,
+        options.convexUrl,
+      );
+    const enrollments = normalizeCartCheckoutMutationReturn(mutationResult);
 
     return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
+      enrollments,
+      success: true as const,
     };
-  }
+  });
 }
 
 export async function handleGuestUserPaymentSuccess(
   userEmail: string,
   courseIds: Id<"courses">[],
-  options: { convexUrl?: string } = {},
-): Promise<CheckoutResult & { enrollments?: EnrollmentSummary[] }> {
-  try {
-    const enrollments = await runCheckoutMutation<EnrollmentSummary[]>(
-      api.myFunctions.handleGuestUserCartCheckoutByEmail,
-      {
-        courseIds,
-        userEmail,
-      },
-      {
-        courseIds: courseIds.map((id) => id),
-        operationType: "handleGuestUserCartCheckoutByEmail",
-        userEmail,
-      },
-      options.convexUrl,
-    );
+  options: CheckoutMutationOptions = {},
+): Promise<CartCheckoutResult> {
+  return Effect.runPromise(
+    handleGuestUserPaymentSuccessEffect(userEmail, courseIds, options).pipe(
+      Effect.match({
+        onFailure: (error) => {
+          logCheckoutBoundaryError(
+            "Error handling guest user payment success (all retries exhausted):",
+            error,
+            {
+              courseIds: courseIds.map((id) => id),
+              operationType: "handleGuestUserCartCheckoutByEmail",
+              userEmail,
+            },
+          );
+
+          return {
+            error: error.message,
+            success: false as const,
+          };
+        },
+        onSuccess: (result) => result,
+      }),
+    ),
+  );
+}
+
+export function handleGuestUserPaymentSuccessWithDataEffect(
+  userData: GuestCheckoutUserData,
+  lineItems: CheckoutLineItem[],
+  sessionType?: CheckoutSessionType,
+  bogoSelections?: BogoSelection[],
+  checkoutPricing?: CheckoutPricing,
+  options: CheckoutMutationOptions = {},
+): Effect.Effect<CartCheckoutSuccess, BoundaryError> {
+  const courseIds = lineItems.map((item) => item.courseId);
+  const context: MutationContext = {
+    courseIds: courseIds.map((id) => id),
+    operationType: "handleGuestUserCartCheckoutWithData",
+    userEmail: userData.email,
+  };
+
+  return Effect.gen(function* () {
+    const mutationResult =
+      yield* runCheckoutMutationEffect<CartCheckoutMutationReturn>(
+        api.myFunctions.handleGuestUserCartCheckoutWithData,
+        {
+          bogoSelections,
+          checkoutPricing,
+          courseIds,
+          lineItems,
+          sessionType,
+          userData,
+        },
+        context,
+        options.convexUrl,
+      );
+    const enrollments = normalizeCartCheckoutMutationReturn(mutationResult);
 
     return {
-      success: true,
       enrollments,
+      success: true as const,
     };
-  } catch (error) {
-    console.error(
-      "Error handling guest user payment success (all retries exhausted):",
-      {
-        courseIds: courseIds.map((id) => id),
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        userEmail,
-      },
-    );
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
+  });
 }
 
 export async function handleGuestUserPaymentSuccessWithData(
-  userData: { email: string; name: string; phone: string },
-  lineItems: Array<{ courseId: Id<"courses">; batchId?: Id<"courseBatches"> }>,
-  sessionType?: "focus" | "flow" | "elevate",
-  bogoSelections?: Array<{
-    sourceCourseId: Id<"courses">;
-    sourceBatchId?: Id<"courseBatches">;
-    selectedFreeCourseId: Id<"courses">;
-    selectedFreeBatchId?: Id<"courseBatches">;
-  }>,
+  userData: GuestCheckoutUserData,
+  lineItems: CheckoutLineItem[],
+  sessionType?: CheckoutSessionType,
+  bogoSelections?: BogoSelection[],
   checkoutPricing?: CheckoutPricing,
-  options: { convexUrl?: string } = {},
-): Promise<CheckoutResult & { enrollments?: EnrollmentSummary[] }> {
+  options: CheckoutMutationOptions = {},
+): Promise<CartCheckoutResult> {
   const courseIds = lineItems.map((item) => item.courseId);
-  try {
-    const enrollments = await runCheckoutMutation<EnrollmentSummary[]>(
-      api.myFunctions.handleGuestUserCartCheckoutWithData,
-      {
-        bogoSelections,
-        checkoutPricing,
-        courseIds,
-        lineItems,
-        sessionType,
-        userData,
-      },
-      {
-        courseIds: courseIds.map((id) => id),
-        operationType: "handleGuestUserCartCheckoutWithData",
-        userEmail: userData.email,
-      },
-      options.convexUrl,
-    );
+  return Effect.runPromise(
+    handleGuestUserPaymentSuccessWithDataEffect(
+      userData,
+      lineItems,
+      sessionType,
+      bogoSelections,
+      checkoutPricing,
+      options,
+    ).pipe(
+      Effect.match({
+        onFailure: (error) => {
+          logCheckoutBoundaryError(
+            "Error handling guest user payment success with data (all retries exhausted):",
+            error,
+            {
+              courseIds: courseIds.map((id) => id),
+              operationType: "handleGuestUserCartCheckoutWithData",
+              userEmail: userData.email,
+            },
+          );
 
-    return {
-      success: true,
-      enrollments,
-    };
-  } catch (error) {
-    console.error(
-      "Error handling guest user payment success with data (all retries exhausted):",
-      {
-        courseIds: courseIds.map((id) => id),
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        userEmail: userData.email,
-      },
-    );
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
+          return {
+            error: error.message,
+            success: false as const,
+          };
+        },
+        onSuccess: (result) => result,
+      }),
+    ),
+  );
 }
 
-export async function handleSingleCourseEnrollment(
+export function handleSingleCourseEnrollmentEffect(
   userId: string,
   courseId: Id<"courses">,
   batchId: Id<"courseBatches"> | undefined,
   userEmail: string,
   userPhone?: string,
   studentName?: string,
-  sessionType?: "focus" | "flow" | "elevate",
-  options: { convexUrl?: string } = {},
-): Promise<CheckoutResult & { enrollment?: EnrollmentSummary }> {
-  try {
-    const enrollment = await runCheckoutMutation<{
-      enrollmentId: Id<"enrollments">;
-      enrollmentNumber: string;
-      courseName: string;
-    }>(
+  sessionType?: CheckoutSessionType,
+  options: CheckoutMutationOptions = {},
+): Effect.Effect<SingleEnrollmentCheckoutSuccess, BoundaryError> {
+  const context: MutationContext = {
+    courseIds: [courseId],
+    operationType: "handleSuccessfulPayment",
+    userEmail,
+    userId,
+  };
+
+  return Effect.gen(function* () {
+    const mutationResult = yield* runCheckoutMutationEffect<
+      SingleEnrollmentMutationReturn<SingleCourseEnrollmentMutationResult>
+    >(
       api.myFunctions.handleSuccessfulPayment,
       {
         batchId,
@@ -400,108 +694,153 @@ export async function handleSingleCourseEnrollment(
         userId,
         userPhone,
       },
-      {
-        courseIds: [courseId],
-        operationType: "handleSuccessfulPayment",
-        userEmail,
-        userId,
-      },
+      context,
       options.convexUrl,
     );
+    const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
     return {
-      success: true,
       enrollment: {
         courseName: enrollment.courseName,
         enrollmentId: enrollment.enrollmentId as string,
         enrollmentNumber: enrollment.enrollmentNumber,
       },
+      success: true as const,
     };
-  } catch (error) {
-    console.error(
-      "Error handling single course enrollment (all retries exhausted):",
-      {
-        courseId,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        userEmail,
-        userId,
-      },
-    );
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
+  });
 }
 
-export async function handleGuestUserSingleEnrollment(
+export async function handleSingleCourseEnrollment(
+  userId: string,
+  courseId: Id<"courses">,
+  batchId: Id<"courseBatches"> | undefined,
+  userEmail: string,
+  userPhone?: string,
+  studentName?: string,
+  sessionType?: CheckoutSessionType,
+  options: CheckoutMutationOptions = {},
+): Promise<SingleEnrollmentCheckoutResult> {
+  return Effect.runPromise(
+    handleSingleCourseEnrollmentEffect(
+      userId,
+      courseId,
+      batchId,
+      userEmail,
+      userPhone,
+      studentName,
+      sessionType,
+      options,
+    ).pipe(
+      Effect.match({
+        onFailure: (error) => {
+          logCheckoutBoundaryError(
+            "Error handling single course enrollment (all retries exhausted):",
+            error,
+            {
+              courseIds: [courseId],
+              operationType: "handleSuccessfulPayment",
+              userEmail,
+              userId,
+            },
+          );
+
+          return {
+            error: error.message,
+            success: false as const,
+          };
+        },
+        onSuccess: (result) => result,
+      }),
+    ),
+  );
+}
+
+export function handleGuestUserSingleEnrollmentEffect(
   userEmail: string,
   courseId: Id<"courses">,
-  options: { convexUrl?: string } = {},
-): Promise<CheckoutResult & { enrollment?: EnrollmentSummary }> {
-  try {
-    const enrollment = await runCheckoutMutation<{
-      enrollmentId: Id<"enrollments">;
-      enrollmentNumber: string;
-      courseName: string;
-    }>(
+  options: CheckoutMutationOptions = {},
+): Effect.Effect<SingleEnrollmentCheckoutSuccess, BoundaryError> {
+  const context: MutationContext = {
+    courseIds: [courseId],
+    operationType: "handleGuestUserSingleEnrollmentByEmail",
+    userEmail,
+  };
+
+  return Effect.gen(function* () {
+    const mutationResult = yield* runCheckoutMutationEffect<
+      SingleEnrollmentMutationReturn<SingleCourseEnrollmentMutationResult>
+    >(
       api.myFunctions.handleGuestUserSingleEnrollmentByEmail,
       {
         courseId,
         userEmail,
       },
-      {
-        courseIds: [courseId],
-        operationType: "handleGuestUserSingleEnrollmentByEmail",
-        userEmail,
-      },
+      context,
       options.convexUrl,
     );
+    const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
     return {
-      success: true,
       enrollment: {
         courseName: enrollment.courseName,
         enrollmentId: enrollment.enrollmentId as string,
         enrollmentNumber: enrollment.enrollmentNumber,
       },
+      success: true as const,
     };
-  } catch (error) {
-    console.error(
-      "Error handling guest user single course enrollment (all retries exhausted):",
-      {
-        courseId,
-        error: error instanceof Error ? error.message : String(error),
-        stack: error instanceof Error ? error.stack : undefined,
-        userEmail,
-      },
-    );
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
+  });
 }
 
-export async function handleSupervisedTherapyEnrollment(
+export async function handleGuestUserSingleEnrollment(
+  userEmail: string,
+  courseId: Id<"courses">,
+  options: CheckoutMutationOptions = {},
+): Promise<SingleEnrollmentCheckoutResult> {
+  return Effect.runPromise(
+    handleGuestUserSingleEnrollmentEffect(userEmail, courseId, options).pipe(
+      Effect.match({
+        onFailure: (error) => {
+          logCheckoutBoundaryError(
+            "Error handling guest user single course enrollment (all retries exhausted):",
+            error,
+            {
+              courseIds: [courseId],
+              operationType: "handleGuestUserSingleEnrollmentByEmail",
+              userEmail,
+            },
+          );
+
+          return {
+            error: error.message,
+            success: false as const,
+          };
+        },
+        onSuccess: (result) => result,
+      }),
+    ),
+  );
+}
+
+export function handleSupervisedTherapyEnrollmentEffect(
   userId: string,
   courseId: Id<"courses">,
   userEmail: string,
   userPhone: string,
   studentName: string,
-  sessionType: "focus" | "flow" | "elevate",
-  options: { convexUrl?: string } = {},
-): Promise<CheckoutResult & { enrollment?: EnrollmentSummary }> {
-  try {
-    const enrollment = await runCheckoutMutation<{
-      enrollmentId: Id<"enrollments">;
-      enrollmentNumber: string;
-      courseName: string;
-      sessionType: "focus" | "flow" | "elevate";
-    }>(
+  sessionType: CheckoutSessionType,
+  options: CheckoutMutationOptions = {},
+): Effect.Effect<SingleEnrollmentCheckoutSuccess, BoundaryError> {
+  const context: MutationContext = {
+    courseIds: [courseId],
+    operationType: "handleSupervisedTherapyEnrollment",
+    userEmail,
+    userId,
+  };
+
+  return Effect.gen(function* () {
+    const mutationResult = yield* runCheckoutMutationEffect<
+      SingleEnrollmentMutationReturn<SupervisedTherapyEnrollmentMutationResult>
+    >(
       api.myFunctions.handleSupervisedTherapyEnrollment,
       {
         courseId,
@@ -511,59 +850,84 @@ export async function handleSupervisedTherapyEnrollment(
         userId,
         userPhone,
       },
-      {
-        courseIds: [courseId],
-        operationType: "handleSupervisedTherapyEnrollment",
-        userEmail,
-        userId,
-      },
+      context,
       options.convexUrl,
     );
+    const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
     return {
-      success: true,
       enrollment: {
         courseName: enrollment.courseName,
         enrollmentId: enrollment.enrollmentId as string,
         enrollmentNumber: enrollment.enrollmentNumber,
         sessionType: enrollment.sessionType,
       },
+      success: true as const,
     };
-  } catch (error) {
-    console.error(
-      "Error handling supervised therapy enrollment (all retries exhausted):",
-      {
-        courseId,
-        error: error instanceof Error ? error.message : String(error),
-        sessionType,
-        stack: error instanceof Error ? error.stack : undefined,
-        userEmail,
-        userId,
-      },
-    );
-
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
+  });
 }
 
-export async function handleGuestUserSupervisedTherapyEnrollment(
+export async function handleSupervisedTherapyEnrollment(
+  userId: string,
+  courseId: Id<"courses">,
+  userEmail: string,
+  userPhone: string,
+  studentName: string,
+  sessionType: CheckoutSessionType,
+  options: CheckoutMutationOptions = {},
+): Promise<SingleEnrollmentCheckoutResult> {
+  return Effect.runPromise(
+    handleSupervisedTherapyEnrollmentEffect(
+      userId,
+      courseId,
+      userEmail,
+      userPhone,
+      studentName,
+      sessionType,
+      options,
+    ).pipe(
+      Effect.match({
+        onFailure: (error) => {
+          logCheckoutBoundaryError(
+            "Error handling supervised therapy enrollment (all retries exhausted):",
+            error,
+            {
+              courseIds: [courseId],
+              operationType: "handleSupervisedTherapyEnrollment",
+              userEmail,
+              userId,
+            },
+          );
+
+          return {
+            error: error.message,
+            success: false as const,
+          };
+        },
+        onSuccess: (result) => result,
+      }),
+    ),
+  );
+}
+
+export function handleGuestUserSupervisedTherapyEnrollmentEffect(
   userEmail: string,
   userPhone: string,
   courseId: Id<"courses">,
   studentName: string,
-  sessionType: "focus" | "flow" | "elevate",
-  options: { convexUrl?: string } = {},
-): Promise<CheckoutResult & { enrollment?: EnrollmentSummary }> {
-  try {
-    const enrollment = await runCheckoutMutation<{
-      enrollmentId: Id<"enrollments">;
-      enrollmentNumber: string;
-      courseName: string;
-      sessionType: "focus" | "flow" | "elevate";
-    }>(
+  sessionType: CheckoutSessionType,
+  options: CheckoutMutationOptions = {},
+): Effect.Effect<SingleEnrollmentCheckoutSuccess, BoundaryError> {
+  const context: MutationContext = {
+    courseIds: [courseId],
+    operationType: "handleGuestUserSupervisedTherapyEnrollment",
+    userEmail,
+  };
+
+  return Effect.gen(function* () {
+    const mutationResult = yield* runCheckoutMutationEffect<
+      SingleEnrollmentMutationReturn<SupervisedTherapyEnrollmentMutationResult>
+    >(
       api.myFunctions.handleGuestUserSupervisedTherapyEnrollment,
       {
         courseId,
@@ -572,38 +936,59 @@ export async function handleGuestUserSupervisedTherapyEnrollment(
         userEmail,
         userPhone,
       },
-      {
-        courseIds: [courseId],
-        operationType: "handleGuestUserSupervisedTherapyEnrollment",
-        userEmail,
-      },
+      context,
       options.convexUrl,
     );
+    const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
     return {
-      success: true,
       enrollment: {
         courseName: enrollment.courseName,
         enrollmentId: enrollment.enrollmentId as string,
         enrollmentNumber: enrollment.enrollmentNumber,
         sessionType: enrollment.sessionType,
       },
+      success: true as const,
     };
-  } catch (error) {
-    console.error(
-      "Error handling guest user supervised therapy enrollment (all retries exhausted):",
-      {
-        courseId,
-        error: error instanceof Error ? error.message : String(error),
-        sessionType,
-        stack: error instanceof Error ? error.stack : undefined,
-        userEmail,
-      },
-    );
+  });
+}
 
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Unknown error occurred",
-    };
-  }
+export async function handleGuestUserSupervisedTherapyEnrollment(
+  userEmail: string,
+  userPhone: string,
+  courseId: Id<"courses">,
+  studentName: string,
+  sessionType: CheckoutSessionType,
+  options: CheckoutMutationOptions = {},
+): Promise<SingleEnrollmentCheckoutResult> {
+  return Effect.runPromise(
+    handleGuestUserSupervisedTherapyEnrollmentEffect(
+      userEmail,
+      userPhone,
+      courseId,
+      studentName,
+      sessionType,
+      options,
+    ).pipe(
+      Effect.match({
+        onFailure: (error) => {
+          logCheckoutBoundaryError(
+            "Error handling guest user supervised therapy enrollment (all retries exhausted):",
+            error,
+            {
+              courseIds: [courseId],
+              operationType: "handleGuestUserSupervisedTherapyEnrollment",
+              userEmail,
+            },
+          );
+
+          return {
+            error: error.message,
+            success: false as const,
+          };
+        },
+        onSuccess: (result) => result,
+      }),
+    ),
+  );
 }

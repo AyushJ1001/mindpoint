@@ -125,8 +125,7 @@ export default function CareersClient() {
         // Simulate auto-fill from resume
         simulateAutoFill();
         toast.success("Resume uploaded successfully", {
-          description:
-            "We've auto-filled some fields based on your resume.",
+          description: "We've auto-filled some fields based on your resume.",
         });
       } else {
         toast.error("Invalid file type", {
@@ -160,45 +159,43 @@ export default function CareersClient() {
 
     setIsSubmitting(true);
 
-    try {
-      const data = new FormData();
-      data.append("fullName", formData.fullName);
-      data.append("email", formData.email);
-      data.append("phone", formData.phone);
-      data.append("location", formData.location);
-      data.append("linkedIn", formData.linkedIn || "");
-      data.append("coverLetter", formData.coverLetter || "");
-      data.append("roles", JSON.stringify(selectedRoles));
-      data.append("resume", selectedFile);
+    const data = new FormData();
+    data.append("fullName", formData.fullName);
+    data.append("email", formData.email);
+    data.append("phone", formData.phone);
+    data.append("location", formData.location);
+    data.append("linkedIn", formData.linkedIn || "");
+    data.append("coverLetter", formData.coverLetter || "");
+    data.append("roles", JSON.stringify(selectedRoles));
+    data.append("resume", selectedFile);
 
-      await submitCareersApplication(data);
-
-      toast.success("Application submitted successfully!", {
-        description:
-          "We'll review your application and get back to you within 5-7 business days.",
-      });
-
-      // Reset form
-      form.reset();
-      setSelectedFile(null);
-      setSelectedRoles([]);
-    } catch (error: unknown) {
-      const message =
-        error instanceof Error ? error.message : "Please try again later.";
+    const result = await submitCareersApplication(data);
+    if (!result.success) {
       toast.error("Failed to submit application", {
-        description: message,
+        description: result.error || "Please try again later.",
       });
-    } finally {
       setIsSubmitting(false);
+      return;
     }
+
+    toast.success("Application submitted successfully!", {
+      description:
+        "We'll review your application and get back to you within 5-7 business days.",
+    });
+
+    // Reset form
+    form.reset();
+    setSelectedFile(null);
+    setSelectedRoles([]);
+    setIsSubmitting(false);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-lavender-50 to-lavender-100">
+    <div className="from-background via-lavender-50 to-lavender-100 min-h-screen bg-gradient-to-br">
       <div className="container py-12">
         {/* Header Section */}
         <div className="mb-12 text-center">
-          <h1 className="mb-4 text-4xl font-bold text-foreground md:text-5xl">
+          <h1 className="text-foreground mb-4 text-4xl font-bold md:text-5xl">
             Join Our Mission
           </h1>
           <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-lg">
@@ -235,18 +232,15 @@ export default function CareersClient() {
                 <div className="bg-primary/8 mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full">
                   <Icon className="text-primary h-7 w-7" />
                 </div>
-                <h3 className="mb-1 font-semibold text-foreground">
-                  {title}
-                </h3>
+                <h3 className="text-foreground mb-1 font-semibold">{title}</h3>
                 <p className="text-muted-foreground text-sm">{desc}</p>
               </div>
             ))}
           </div>
-
         </div>
 
         {/* Application Form – soft container instead of hard Card */}
-        <div className="mx-auto max-w-4xl rounded-2xl bg-card/50 p-6 shadow-sm backdrop-blur-sm sm:p-8 lg:p-10">
+        <div className="bg-card/50 mx-auto max-w-4xl rounded-2xl p-6 shadow-sm backdrop-blur-sm sm:p-8 lg:p-10">
           <div className="mb-6">
             <h2 className="text-foreground text-2xl font-semibold">
               Apply Now
@@ -258,10 +252,7 @@ export default function CareersClient() {
           </div>
 
           <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-8"
-            >
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
               {/* Resume Upload */}
               <div className="space-y-4">
                 <Label className="text-base font-semibold">Resume/CV *</Label>
@@ -330,7 +321,7 @@ export default function CareersClient() {
 
               {/* Personal Details */}
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-foreground">
+                <h3 className="text-foreground text-lg font-semibold">
                   Personal Details
                 </h3>
 

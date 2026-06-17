@@ -5,6 +5,13 @@ import type { MutationCtx } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
 import { CourseBogoValue, CourseOfferValue } from "./schema";
+import {
+  convexFailure,
+  convexResultErrorCode,
+  convexSuccess,
+  type ConvexFailure,
+  type ConvexSuccess,
+} from "./_shared/result";
 
 type OfferDiscountType = "percentage" | "fixedPrice" | "flatOff";
 
@@ -26,9 +33,27 @@ type BogoValue = {
 
 const MAX_COURSES_PER_APPLY = 150;
 
-function assertValidOffer(offer?: OfferValue | null) {
+type AdminOfferFailure = ConvexFailure<
+  "CONFLICT" | "NOT_FOUND" | "VALIDATION_ERROR"
+>;
+type ApplyOffersSuccess = ConvexSuccess<{
+  courseIds: string[];
+  updatedCount: number;
+}>;
+
+function adminOfferFailure(
+  message: string,
+  code:
+    | "CONFLICT"
+    | "NOT_FOUND"
+    | "VALIDATION_ERROR" = convexResultErrorCode.VALIDATION_ERROR,
+): AdminOfferFailure {
+  return convexFailure({ code, message });
+}
+
+function validateOffer(offer?: OfferValue | null): AdminOfferFailure | null {
   if (!offer) {
-    return;
+    return null;
   }
 
   const discountType = offer.discountType ?? "percentage";
@@ -38,7 +63,7 @@ function assertValidOffer(offer?: OfferValue | null) {
       : offer.discount;
 
   if (discountValue === undefined) {
-    throw new Error("Offer discount value is required");
+    return adminOfferFailure("Offer discount value is required");
   }
 
   if (
@@ -46,12 +71,14 @@ function assertValidOffer(offer?: OfferValue | null) {
     discountValue < 0 ||
     (discountType === "percentage" && discountValue > 100)
   ) {
-    throw new Error(
+    return adminOfferFailure(
       discountType === "percentage"
         ? "Percentage discount must be a number between 0 and 100"
         : "Offer amount must be a number greater than or equal to 0",
     );
   }
+
+  return null;
 }
 
 async function applyOffersToCourseIds(
@@ -68,26 +95,31 @@ async function applyOffersToCourseIds(
           campaignName: string;
         };
   },
-) {
+): Promise<AdminOfferFailure | ApplyOffersSuccess> {
   const uniqueCourseIds = Array.from(
     new Set(args.courseIds.map((courseId) => String(courseId))),
   ).map((value) => value as Id<"courses">);
 
   if (uniqueCourseIds.length === 0) {
-    throw new Error("Select at least one course");
+    return adminOfferFailure("Select at least one course");
   }
 
   if (uniqueCourseIds.length > MAX_COURSES_PER_APPLY) {
-    throw new Error(
+    return adminOfferFailure(
       `Cannot apply offers to more than ${MAX_COURSES_PER_APPLY} courses at once`,
     );
   }
 
   if (args.offer === undefined && args.bogo === undefined) {
-    throw new Error("Provide a discount offer, a BOGO campaign, or both");
+    return adminOfferFailure(
+      "Provide a discount offer, a BOGO campaign, or both",
+    );
   }
 
-  assertValidOffer(args.offer);
+  const offerError = validateOffer(args.offer);
+  if (offerError) {
+    return offerError;
+  }
 
   const now = Date.now();
   const updatedCourseIds: string[] = [];
@@ -149,10 +181,10 @@ async function applyOffersToCourseIds(
     });
   }
 
-  return {
+  return convexSuccess({
     updatedCount: updatedCourseIds.length,
     courseIds: updatedCourseIds,
-  };
+  });
 }
 
 export const listCampaigns = query({
@@ -212,26 +244,32 @@ export const saveCampaign = mutation({
     const name = args.name.trim();
 
     if (!name) {
-      throw new Error("Campaign name is required");
+      return adminOfferFailure("Campaign name is required");
     }
 
     const offer = args.offer === null ? undefined : args.offer;
     const bogo = args.bogo === null ? undefined : args.bogo;
 
     if (!offer && !bogo) {
-      throw new Error(
+      return adminOfferFailure(
         "A campaign must include a discount offer, a BOGO campaign, or both",
       );
     }
 
-    assertValidOffer(offer);
+    const offerError = validateOffer(offer);
+    if (offerError) {
+      return offerError;
+    }
 
     const now = Date.now();
 
     if (args.campaignId) {
       const existing = await ctx.db.get(args.campaignId);
       if (!existing) {
-        throw new Error("Campaign not found");
+        return adminOfferFailure(
+          "Campaign not found",
+          convexResultErrorCode.NOT_FOUND,
+        );
       }
 
       await ctx.db.patch(args.campaignId, {
@@ -244,6 +282,12 @@ export const saveCampaign = mutation({
       });
 
       const updated = await ctx.db.get(args.campaignId);
+      if (!updated) {
+        return adminOfferFailure(
+          "Campaign could not be reloaded",
+          convexResultErrorCode.NOT_FOUND,
+        );
+      }
 
       await createAdminAuditLog(ctx, {
         actorAdminId: admin.userId,
@@ -255,7 +299,7 @@ export const saveCampaign = mutation({
         after: updated,
       });
 
-      return updated;
+      return convexSuccess({ campaign: updated });
     }
 
     const campaignId = await ctx.db.insert("offerCampaigns", {
@@ -270,6 +314,12 @@ export const saveCampaign = mutation({
       updatedByAdminId: admin.userId,
     });
     const created = await ctx.db.get(campaignId);
+    if (!created) {
+      return adminOfferFailure(
+        "Campaign could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -280,7 +330,7 @@ export const saveCampaign = mutation({
       after: created,
     });
 
-    return created;
+    return convexSuccess({ campaign: created });
   },
 });
 
@@ -294,7 +344,10 @@ export const setCampaignArchived = mutation({
     const existing = await ctx.db.get(args.campaignId);
 
     if (!existing) {
-      throw new Error("Campaign not found");
+      return adminOfferFailure(
+        "Campaign not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     await ctx.db.patch(args.campaignId, {
@@ -303,6 +356,12 @@ export const setCampaignArchived = mutation({
       updatedByAdminId: admin.userId,
     });
     const updated = await ctx.db.get(args.campaignId);
+    if (!updated) {
+      return adminOfferFailure(
+        "Campaign could not be reloaded",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
 
     await createAdminAuditLog(ctx, {
       actorAdminId: admin.userId,
@@ -316,7 +375,7 @@ export const setCampaignArchived = mutation({
       after: updated,
     });
 
-    return updated;
+    return convexSuccess({ campaign: updated });
   },
 });
 
@@ -348,11 +407,17 @@ export const applyCampaignToCourses = mutation({
     const campaign = await ctx.db.get(args.campaignId);
 
     if (!campaign) {
-      throw new Error("Campaign not found");
+      return adminOfferFailure(
+        "Campaign not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
     }
 
     if (campaign.isArchived) {
-      throw new Error("Archived campaigns cannot be applied");
+      return adminOfferFailure(
+        "Archived campaigns cannot be applied",
+        convexResultErrorCode.CONFLICT,
+      );
     }
 
     return await applyOffersToCourseIds(ctx, {
