@@ -1,4 +1,7 @@
 import { v } from "convex/values";
+import { hmac } from "@noble/hashes/hmac";
+import { sha256 } from "@noble/hashes/sha2";
+import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils";
 import { query, mutation, action } from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
@@ -99,12 +102,6 @@ function checkoutAuthorizationMessage(args: {
   return `${args.checkoutAttemptId}:${args.userId}:${args.timestamp}`;
 }
 
-function bytesToHex(bytes: Uint8Array) {
-  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
-    "",
-  );
-}
-
 function timingSafeStringEqual(a: string, b: string): boolean {
   if (a.length !== b.length) {
     return false;
@@ -124,28 +121,16 @@ function checkoutIdentityMatchesUser(
   return identity?.subject === userId;
 }
 
-async function createCheckoutAuthorizationSignature(
+function createCheckoutAuthorizationSignature(
   serverSecret: string,
   message: string,
 ) {
-  const encoder = new TextEncoder();
-  const key = await crypto.subtle.importKey(
-    "raw",
-    encoder.encode(serverSecret),
-    { hash: "SHA-256", name: "HMAC" },
-    false,
-    ["sign"],
+  return bytesToHex(
+    hmac(sha256, utf8ToBytes(serverSecret), utf8ToBytes(message)),
   );
-  const signature = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    encoder.encode(message),
-  );
-
-  return bytesToHex(new Uint8Array(signature));
 }
 
-async function isValidCheckoutAuthorization(args: {
+function isValidCheckoutAuthorization(args: {
   authorization?: { signature: string; timestamp: number };
   checkoutAttemptId: string;
   userId: string;
@@ -163,7 +148,7 @@ async function isValidCheckoutAuthorization(args: {
     return false;
   }
 
-  const expectedSignature = await createCheckoutAuthorizationSignature(
+  const expectedSignature = createCheckoutAuthorizationSignature(
     serverSecret,
     checkoutAuthorizationMessage({
       checkoutAttemptId: args.checkoutAttemptId,
@@ -1537,11 +1522,11 @@ export const handleCartCheckout = mutation({
 
       const hasAuthorizedCheckoutServerRequest =
         checkoutAttempt.buyerUserId === args.userId &&
-        (await isValidCheckoutAuthorization({
+        isValidCheckoutAuthorization({
           authorization: args.checkoutAuthorization,
           checkoutAttemptId: args.checkoutAttemptId,
           userId: args.userId,
-        }));
+        });
 
       if (
         !hasMatchingAuthenticatedUser &&
