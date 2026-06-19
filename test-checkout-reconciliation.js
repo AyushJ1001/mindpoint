@@ -1,9 +1,11 @@
 const assert = require("node:assert/strict");
 
 async function main() {
-  const { buildCheckoutAttemptPayload, reconcileCheckoutIntent } = await import(
+  const checkoutReconciliation = await import(
     "./lib/domain/checkout-reconciliation.ts"
   );
+  const { buildCheckoutAttemptPayload, reconcileCheckoutIntent } =
+    checkoutReconciliation.default;
 
   const now = new Date("2026-05-12T12:00:00Z");
 
