@@ -84,6 +84,11 @@ async function awardMindPoints(
   }
 }
 
+function isValidCheckoutServerSecret(serverSecret?: string): boolean {
+  const expected = process.env.CHECKOUT_SERVER_SECRET;
+  return Boolean(expected && serverSecret && serverSecret === expected);
+}
+
 // Helper function to add enrollment to Google Sheets
 async function addEnrollmentToGoogleSheets(
   ctx: MutationCtx,
@@ -1381,6 +1386,7 @@ export const handleCartCheckout = mutation({
     ),
     checkoutPricing: v.optional(checkoutPricingValidator),
     checkoutAttemptId: v.optional(v.id("checkoutAttempts")),
+    checkoutServerSecret: v.optional(v.string()),
     razorpayOrderId: v.optional(v.string()),
     razorpayPaymentId: v.optional(v.string()),
   },
@@ -1411,13 +1417,7 @@ export const handleCartCheckout = mutation({
     let effectiveCheckoutPricing = args.checkoutPricing;
 
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity || identity.subject !== args.userId) {
-      return enrollmentMutationFailure(
-        "Authenticated checkout user mismatch.",
-        convexResultErrorCode.FORBIDDEN,
-        { userId: args.userId },
-      );
-    }
+    const hasMatchingAuthenticatedUser = identity?.subject === args.userId;
 
     if (args.checkoutAttemptId) {
       const attempt = await ctx.db.get(args.checkoutAttemptId);
@@ -1426,6 +1426,33 @@ export const handleCartCheckout = mutation({
           "Checkout attempt not found.",
           convexResultErrorCode.CHECKOUT_ATTEMPT_NOT_FOUND,
           { checkoutAttemptId: args.checkoutAttemptId },
+        );
+      }
+
+      checkoutAttempt = attempt;
+      if (
+        checkoutAttempt.buyerUserId &&
+        checkoutAttempt.buyerUserId !== args.userId
+      ) {
+        return enrollmentMutationFailure(
+          "Checkout attempt does not belong to this user.",
+          convexResultErrorCode.FORBIDDEN,
+          { checkoutAttemptId: args.checkoutAttemptId },
+        );
+      }
+
+      const hasAuthorizedCheckoutServerRequest =
+        checkoutAttempt.buyerUserId === args.userId &&
+        isValidCheckoutServerSecret(args.checkoutServerSecret);
+
+      if (
+        !hasMatchingAuthenticatedUser &&
+        !hasAuthorizedCheckoutServerRequest
+      ) {
+        return enrollmentMutationFailure(
+          "Authenticated checkout user mismatch.",
+          convexResultErrorCode.FORBIDDEN,
+          { checkoutAttemptId: args.checkoutAttemptId, userId: args.userId },
         );
       }
 
@@ -1462,18 +1489,6 @@ export const handleCartCheckout = mutation({
         }
       }
 
-      checkoutAttempt = attempt;
-      if (
-        checkoutAttempt.buyerUserId &&
-        checkoutAttempt.buyerUserId !== args.userId
-      ) {
-        return enrollmentMutationFailure(
-          "Checkout attempt does not belong to this user.",
-          convexResultErrorCode.FORBIDDEN,
-          { checkoutAttemptId: args.checkoutAttemptId },
-        );
-      }
-
       const attemptPricing = checkoutPricingFromAttempt(checkoutAttempt);
       if (
         !checkoutPricingMatchesAttempt(args.checkoutPricing, attemptPricing)
@@ -1492,6 +1507,12 @@ export const handleCartCheckout = mutation({
         );
       }
       effectiveCheckoutPricing = attemptPricing;
+    } else if (!hasMatchingAuthenticatedUser) {
+      return enrollmentMutationFailure(
+        "Authenticated checkout user mismatch.",
+        convexResultErrorCode.FORBIDDEN,
+        { userId: args.userId },
+      );
     }
 
     for (const lineItem of lineItems) {

@@ -1,5 +1,6 @@
 "use server";
 
+import { auth } from "@clerk/nextjs/server";
 import {
   handleGuestUserPaymentSuccess as handleGuestUserPaymentSuccessService,
   handleGuestUserPaymentSuccessWithData as handleGuestUserPaymentSuccessWithDataService,
@@ -13,7 +14,34 @@ import {
 export async function handlePaymentSuccess(
   ...args: Parameters<typeof handlePaymentSuccessService>
 ) {
-  return handlePaymentSuccessService(...args);
+  const [checkoutUserId] = args;
+  const { getToken, userId } = await auth();
+
+  if (!userId || userId !== checkoutUserId) {
+    return {
+      error: "Sign in with the checkout account before completing enrollment.",
+      success: false as const,
+    };
+  }
+
+  let convexAuthToken: string | null = null;
+  try {
+    convexAuthToken = await getToken({ template: "convex" });
+  } catch (error) {
+    console.warn("Unable to create Convex auth token for checkout.", error);
+  }
+
+  const options = args[9] ?? {};
+  const checkoutArgs = [...args] as Parameters<
+    typeof handlePaymentSuccessService
+  >;
+  checkoutArgs[9] = {
+    ...options,
+    checkoutServerSecret: process.env.CHECKOUT_SERVER_SECRET,
+    convexAuthToken: convexAuthToken ?? undefined,
+  };
+
+  return handlePaymentSuccessService(...checkoutArgs);
 }
 
 export async function handleGuestUserPaymentSuccess(
