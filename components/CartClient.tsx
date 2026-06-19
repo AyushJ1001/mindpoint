@@ -886,7 +886,6 @@ const CartContent = () => {
           : undefined;
 
       const result = await handlePaymentSuccess(
-        user.id,
         lineItems,
         user.primaryEmailAddress?.emailAddress || "",
         userPhone,

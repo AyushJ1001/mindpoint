@@ -67,6 +67,26 @@ test("runApiEffect converts failed effects into NextResponse JSON", async () => 
   });
 });
 
+test("rate limit wrapper fails open quickly when the limiter stalls", async () => {
+  const { NextResponse } = await import("next/server");
+  const { withRateLimit } = await import("./lib/with-rate-limit");
+  const handler = withRateLimit(async () => NextResponse.json({ ok: true }), {
+    limiter: {
+      limit: () => new Promise(() => {}),
+    },
+    timeoutMs: 5,
+  });
+
+  const startedAt = Date.now();
+  const response = await handler(
+    new Request("http://localhost/api/create-order") as never,
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true });
+  assert.ok(Date.now() - startedAt < 500);
+});
+
 test("boundaryErrorToHttp maps external service errors to gateway failures", () => {
   const http = boundaryErrorToHttp(
     new BoundaryExternalServiceError({
@@ -134,6 +154,21 @@ test("create order boundary maps missing cart intent through the Effect boundary
   });
 });
 
+test("create order route can authorize checkout attempts with a Convex auth token fallback", () => {
+  const routeSource = readFileSync("app/api/create-order/route.ts", "utf8");
+  const checkoutAttemptSource = readFileSync(
+    "lib/services/checkout-attempts.server.ts",
+    "utf8",
+  );
+
+  assert.match(routeSource, /getToken\(\{\s*template: "convex"\s*\}\)/);
+  assert.match(routeSource, /convexAuthToken/);
+  assert.match(
+    checkoutAttemptSource,
+    /convex\.setAuth\(options\.convexAuthToken\)/,
+  );
+});
+
 test("checkout service exposes an Effect implementation for authenticated cart checkout", () => {
   const source = readFileSync("lib/services/checkout.ts", "utf8");
   const checkoutSlice = source.slice(
@@ -143,6 +178,24 @@ test("checkout service exposes an Effect implementation for authenticated cart c
 
   assert.match(source, /export function handlePaymentSuccessEffect/);
   assert.doesNotMatch(checkoutSlice, /try\s*\{/);
+});
+
+test("authenticated checkout finalization forwards Clerk auth to Convex", () => {
+  const checkoutSource = readFileSync("lib/services/checkout.ts", "utf8");
+  const paymentActionSource = readFileSync("app/actions/payment.ts", "utf8");
+  const cartSource = readFileSync("components/CartClient.tsx", "utf8");
+  const cartCheckoutCall = cartSource.slice(
+    cartSource.indexOf("const result = await handlePaymentSuccess("),
+    cartSource.indexOf(
+      "if (!result.success)",
+      cartSource.indexOf("const result = await handlePaymentSuccess("),
+    ),
+  );
+
+  assert.match(checkoutSource, /convex\.setAuth\(options\.convexAuthToken\)/);
+  assert.match(paymentActionSource, /await auth\(\)/);
+  assert.match(paymentActionSource, /getToken\(\{\s*template: "convex"\s*\}\)/);
+  assert.doesNotMatch(cartCheckoutCall, /user\.id/);
 });
 
 test("checkout service exposes Effect implementations for all payment action wrappers", () => {
@@ -217,4 +270,17 @@ test("checkout attempt boundary normalizes legacy Convex ok tuples", async () =>
       },
     },
   });
+});
+
+test("checkout attempt boundary maps Convex auth provider mismatch to configuration error", () => {
+  const source = readFileSync(
+    "lib/services/checkout-attempts.server.ts",
+    "utf8",
+  );
+
+  assert.match(source, /No auth provider found matching the given token/);
+  assert.match(
+    source,
+    /Checkout authentication is not configured for this Clerk instance\./,
+  );
 });

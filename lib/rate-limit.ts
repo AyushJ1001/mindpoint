@@ -12,6 +12,7 @@ type RateLimiter = {
   limit(identifier: string): Promise<RateLimitResult>;
 };
 
+const DEFAULT_RATE_LIMIT_TIMEOUT_MS = 1_000;
 const upstashUrl =
   process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const upstashToken =
@@ -82,10 +83,44 @@ export function getClientIdentifier(req: Request): string {
   return ip;
 }
 
+function getRateLimitTimeoutMs(): number {
+  const timeoutMs = Number(process.env.RATE_LIMIT_TIMEOUT_MS);
+  return Number.isFinite(timeoutMs) && timeoutMs > 0
+    ? timeoutMs
+    : DEFAULT_RATE_LIMIT_TIMEOUT_MS;
+}
+
+async function limitWithTimeout(
+  limiter: RateLimiter,
+  identifier: string,
+  timeoutMs: number,
+): Promise<RateLimitResult> {
+  let timeoutHandle: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      limiter.limit(identifier),
+      new Promise<never>((_, reject) => {
+        timeoutHandle = setTimeout(
+          () =>
+            reject(
+              new Error(`Rate limit check timed out after ${timeoutMs}ms.`),
+            ),
+          timeoutMs,
+        );
+      }),
+    ]);
+  } finally {
+    if (timeoutHandle) {
+      clearTimeout(timeoutHandle);
+    }
+  }
+}
+
 // Helper function to check rate limit
 export async function checkRateLimit(
   req: Request,
   limiter: RateLimiter = ratelimit,
+  timeoutMs = getRateLimitTimeoutMs(),
 ): Promise<{
   success: boolean;
   limit: number;
@@ -93,7 +128,7 @@ export async function checkRateLimit(
   reset: number;
 }> {
   const identifier = getClientIdentifier(req);
-  const result = await limiter.limit(identifier);
+  const result = await limitWithTimeout(limiter, identifier, timeoutMs);
 
   return {
     success: result.success,
