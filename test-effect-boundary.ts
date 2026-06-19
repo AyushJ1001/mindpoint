@@ -154,6 +154,21 @@ test("create order boundary maps missing cart intent through the Effect boundary
   });
 });
 
+test("create order route can authorize checkout attempts with a Convex auth token fallback", () => {
+  const routeSource = readFileSync("app/api/create-order/route.ts", "utf8");
+  const checkoutAttemptSource = readFileSync(
+    "lib/services/checkout-attempts.server.ts",
+    "utf8",
+  );
+
+  assert.match(routeSource, /getToken\(\{\s*template: "convex"\s*\}\)/);
+  assert.match(routeSource, /convexAuthToken/);
+  assert.match(
+    checkoutAttemptSource,
+    /convex\.setAuth\(options\.convexAuthToken\)/,
+  );
+});
+
 test("checkout service exposes an Effect implementation for authenticated cart checkout", () => {
   const source = readFileSync("lib/services/checkout.ts", "utf8");
   const checkoutSlice = source.slice(

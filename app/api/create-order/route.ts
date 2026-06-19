@@ -29,7 +29,7 @@ async function handleCreateOrder(req: NextRequest) {
         );
       }
 
-      const { userId, sessionClaims } = yield* Effect.tryPromise({
+      const { userId, sessionClaims, getToken } = yield* Effect.tryPromise({
         try: () => auth(),
         catch: (cause) =>
           new BoundaryExternalServiceError({
@@ -47,10 +47,21 @@ async function handleCreateOrder(req: NextRequest) {
       }
 
       const checkoutServerSecret = process.env.CHECKOUT_SERVER_SECRET;
-      if (!checkoutServerSecret) {
+      const convexAuthToken = checkoutServerSecret
+        ? undefined
+        : yield* Effect.tryPromise({
+            try: () => getToken({ template: "convex" }),
+            catch: (cause) =>
+              new BoundaryExternalServiceError({
+                ...(cause instanceof Error ? { cause } : {}),
+                message: "Checkout authentication token is unavailable.",
+              }),
+          });
+
+      if (!checkoutServerSecret && !convexAuthToken) {
         return yield* Effect.fail(
           new BoundaryConfigurationError({
-            message: "Checkout server authorization is not configured.",
+            message: "Checkout authentication token is unavailable.",
           }),
         );
       }
@@ -71,7 +82,9 @@ async function handleCreateOrder(req: NextRequest) {
           buyerEmail,
           referrerClerkUserId: createOrderBody.referrerClerkUserId,
         },
-        { checkoutServerSecret, buyerUserId: userId },
+        checkoutServerSecret
+          ? { checkoutServerSecret, buyerUserId: userId }
+          : { convexAuthToken: convexAuthToken ?? undefined },
       );
 
       const amount = Number(attempt.reconciliation.totalAmountPaid);
