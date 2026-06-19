@@ -20,6 +20,7 @@ interface RateLimitOptions {
   };
   errorMessage?: string;
   statusCode?: number;
+  timeoutMs?: number;
 }
 
 export function withRateLimit(
@@ -30,6 +31,7 @@ export function withRateLimit(
     limiter,
     errorMessage = "Too many requests. Please try again later.",
     statusCode = 429,
+    timeoutMs,
   } = options;
 
   return async (req: NextRequest): Promise<NextResponse> => {
@@ -39,7 +41,7 @@ export function withRateLimit(
       }
 
       // Check rate limit
-      const rateLimitResult = await checkRateLimit(req, limiter);
+      const rateLimitResult = await checkRateLimit(req, limiter, timeoutMs);
 
       // Add rate limit headers to response
       const headers = createRateLimitHeaders(
@@ -77,7 +79,9 @@ export function withRateLimit(
 
       return response;
     } catch (error) {
-      console.error("Rate limiting error:", error);
+      console.warn("Rate limiting unavailable; allowing request.", {
+        error: error instanceof Error ? error.message : String(error),
+      });
 
       // If rate limiting fails, still allow the request to proceed
       // but log the error for monitoring

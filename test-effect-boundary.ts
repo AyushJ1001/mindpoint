@@ -67,6 +67,26 @@ test("runApiEffect converts failed effects into NextResponse JSON", async () => 
   });
 });
 
+test("rate limit wrapper fails open quickly when the limiter stalls", async () => {
+  const { NextResponse } = await import("next/server");
+  const { withRateLimit } = await import("./lib/with-rate-limit");
+  const handler = withRateLimit(async () => NextResponse.json({ ok: true }), {
+    limiter: {
+      limit: () => new Promise(() => {}),
+    },
+    timeoutMs: 5,
+  });
+
+  const startedAt = Date.now();
+  const response = await handler(
+    new Request("http://localhost/api/create-order") as never,
+  );
+
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { ok: true });
+  assert.ok(Date.now() - startedAt < 500);
+});
+
 test("boundaryErrorToHttp maps external service errors to gateway failures", () => {
   const http = boundaryErrorToHttp(
     new BoundaryExternalServiceError({
