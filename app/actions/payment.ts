@@ -55,11 +55,6 @@ export async function handlePaymentSuccess(
   } catch (error) {
     console.warn("Unable to create Convex auth token for checkout.", error);
   }
-  if (!convexAuthToken) {
-    console.warn(
-      "Convex auth token unavailable for checkout; relying on signed checkout authorization.",
-    );
-  }
 
   const checkoutServerSecret = process.env.CHECKOUT_SERVER_SECRET;
   const checkoutAuthorization =
@@ -70,6 +65,22 @@ export async function handlePaymentSuccess(
           checkoutServerSecret,
         )
       : undefined;
+
+  if (!convexAuthToken) {
+    if (checkoutAuthorization) {
+      console.warn(
+        "Convex auth token unavailable for checkout; relying on signed checkout authorization.",
+      );
+    } else {
+      console.error(
+        "Convex auth token unavailable and no signed checkout authorization could be created. Checkout will fail.",
+        {
+          hasCheckoutAttemptId: Boolean(options.checkoutAttemptId),
+          hasServerSecret: Boolean(checkoutServerSecret),
+        },
+      );
+    }
+  }
 
   return handlePaymentSuccessService(
     checkoutUserId,
