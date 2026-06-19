@@ -75,8 +75,13 @@ type BogoSelection = {
 
 type CheckoutSessionType = "focus" | "flow" | "elevate";
 
+type CheckoutServerAuthorization = {
+  signature: string;
+  timestamp: number;
+};
+
 type CheckoutMutationOptions = {
-  checkoutServerSecret?: string;
+  checkoutAuthorization?: CheckoutServerAuthorization;
   convexAuthToken?: string;
   convexUrl?: string;
 };
@@ -449,8 +454,8 @@ export function handlePaymentSuccessEffect(
         api.myFunctions.handleCartCheckout,
         {
           bogoSelections,
+          checkoutAuthorization: options.checkoutAuthorization,
           checkoutAttemptId: options.checkoutAttemptId,
-          checkoutServerSecret: options.checkoutServerSecret,
           checkoutPricing,
           courseIds,
           lineItems,

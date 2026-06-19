@@ -1,6 +1,7 @@
 "use server";
 
 import { auth } from "@clerk/nextjs/server";
+import { createHmac } from "crypto";
 import {
   handleGuestUserPaymentSuccess as handleGuestUserPaymentSuccessService,
   handleGuestUserPaymentSuccessWithData as handleGuestUserPaymentSuccessWithDataService,
@@ -11,10 +12,34 @@ import {
   handleSupervisedTherapyEnrollment as handleSupervisedTherapyEnrollmentService,
 } from "@/lib/services/checkout";
 
+function createCheckoutAuthorization(
+  checkoutAttemptId: string,
+  userId: string,
+  serverSecret: string,
+) {
+  const timestamp = Date.now();
+  const signature = createHmac("sha256", serverSecret)
+    .update(`${checkoutAttemptId}:${userId}:${timestamp}`)
+    .digest("hex");
+
+  return { signature, timestamp };
+}
+
 export async function handlePaymentSuccess(
   ...args: Parameters<typeof handlePaymentSuccessService>
 ) {
-  const [checkoutUserId] = args;
+  const [
+    checkoutUserId,
+    lineItems,
+    userEmail,
+    userPhone,
+    studentName,
+    sessionType,
+    bogoSelections,
+    referrerClerkUserId,
+    checkoutPricing,
+    options = {},
+  ] = args;
   const { getToken, userId } = await auth();
 
   if (!userId || userId !== checkoutUserId) {
@@ -30,18 +55,38 @@ export async function handlePaymentSuccess(
   } catch (error) {
     console.warn("Unable to create Convex auth token for checkout.", error);
   }
+  if (!convexAuthToken) {
+    console.warn(
+      "Convex auth token unavailable for checkout; relying on signed checkout authorization.",
+    );
+  }
 
-  const options = args[9] ?? {};
-  const checkoutArgs = [...args] as Parameters<
-    typeof handlePaymentSuccessService
-  >;
-  checkoutArgs[9] = {
-    ...options,
-    checkoutServerSecret: process.env.CHECKOUT_SERVER_SECRET,
-    convexAuthToken: convexAuthToken ?? undefined,
-  };
+  const checkoutServerSecret = process.env.CHECKOUT_SERVER_SECRET;
+  const checkoutAuthorization =
+    checkoutServerSecret && options.checkoutAttemptId
+      ? createCheckoutAuthorization(
+          options.checkoutAttemptId,
+          checkoutUserId,
+          checkoutServerSecret,
+        )
+      : undefined;
 
-  return handlePaymentSuccessService(...checkoutArgs);
+  return handlePaymentSuccessService(
+    checkoutUserId,
+    lineItems,
+    userEmail,
+    userPhone,
+    studentName,
+    sessionType,
+    bogoSelections,
+    referrerClerkUserId,
+    checkoutPricing,
+    {
+      ...options,
+      checkoutAuthorization,
+      convexAuthToken: convexAuthToken ?? undefined,
+    },
+  );
 }
 
 export async function handleGuestUserPaymentSuccess(
