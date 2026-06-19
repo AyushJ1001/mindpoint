@@ -121,11 +121,7 @@ function checkoutIdentityMatchesUser(
   identity: ConvexUserIdentity,
   userId: string,
 ) {
-  if (!identity) {
-    return false;
-  }
-
-  return identity.tokenIdentifier === userId || identity.subject === userId;
+  return identity?.subject === userId;
 }
 
 async function createCheckoutAuthorizationSignature(
