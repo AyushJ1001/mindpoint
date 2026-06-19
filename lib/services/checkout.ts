@@ -75,7 +75,14 @@ type BogoSelection = {
 
 type CheckoutSessionType = "focus" | "flow" | "elevate";
 
+type CheckoutServerAuthorization = {
+  signature: string;
+  timestamp: number;
+};
+
 type CheckoutMutationOptions = {
+  checkoutAuthorization?: CheckoutServerAuthorization;
+  convexAuthToken?: string;
   convexUrl?: string;
 };
 
@@ -266,16 +273,17 @@ async function executeConvexMutationWithRetry<Args extends object, Return>(
   mutation: FunctionReference<"mutation", "public", DefaultFunctionArgs>,
   args: Args,
   context: MutationContext,
-  convexUrl?: string,
+  options: CheckoutMutationOptions = {},
 ): Promise<Return> {
-  // These service calls use explicit user identifiers in args and do not attach
-  // a Clerk session token, so ctx.auth will be null inside the called mutations.
-  const resolvedConvexUrl = resolveConvexUrl(convexUrl);
+  const resolvedConvexUrl = resolveConvexUrl(options.convexUrl);
   if (resolvedConvexUrl instanceof BoundaryConfigurationError) {
     return Promise.reject(resolvedConvexUrl);
   }
 
   const convex = new ConvexHttpClient(resolvedConvexUrl);
+  if (options.convexAuthToken) {
+    convex.setAuth(options.convexAuthToken);
+  }
   let lastError: BoundaryThrowable | null = null;
   const errors: Array<{ attempt: number; error: string; timestamp: Date }> = [];
 
@@ -397,13 +405,13 @@ async function runCheckoutMutation<TResult>(
   mutation: FunctionReference<"mutation", "public", DefaultFunctionArgs>,
   args: DefaultFunctionArgs,
   context: MutationContext,
-  convexUrl?: string,
+  options: CheckoutMutationOptions = {},
 ): Promise<TResult> {
   return executeConvexMutationWithRetry<DefaultFunctionArgs, TResult>(
     mutation,
     args,
     context,
-    convexUrl,
+    options,
   );
 }
 
@@ -411,10 +419,10 @@ function runCheckoutMutationEffect<TResult>(
   mutation: FunctionReference<"mutation", "public", DefaultFunctionArgs>,
   args: DefaultFunctionArgs,
   context: MutationContext,
-  convexUrl?: string,
+  options: CheckoutMutationOptions = {},
 ): Effect.Effect<TResult, BoundaryError> {
   return Effect.tryPromise({
-    try: () => runCheckoutMutation<TResult>(mutation, args, context, convexUrl),
+    try: () => runCheckoutMutation<TResult>(mutation, args, context, options),
     catch: (cause) => checkoutMutationBoundaryError(cause as BoundaryThrowable),
   });
 }
@@ -446,6 +454,7 @@ export function handlePaymentSuccessEffect(
         api.myFunctions.handleCartCheckout,
         {
           bogoSelections,
+          checkoutAuthorization: options.checkoutAuthorization,
           checkoutAttemptId: options.checkoutAttemptId,
           checkoutPricing,
           courseIds,
@@ -460,7 +469,7 @@ export function handlePaymentSuccessEffect(
           userPhone,
         },
         context,
-        options.convexUrl,
+        options,
       );
     const enrollments = normalizeCartCheckoutMutationReturn(mutationResult);
 
@@ -542,7 +551,7 @@ export function handleGuestUserPaymentSuccessEffect(
           userEmail,
         },
         context,
-        options.convexUrl,
+        options,
       );
     const enrollments = normalizeCartCheckoutMutationReturn(mutationResult);
 
@@ -611,7 +620,7 @@ export function handleGuestUserPaymentSuccessWithDataEffect(
           userData,
         },
         context,
-        options.convexUrl,
+        options,
       );
     const enrollments = normalizeCartCheckoutMutationReturn(mutationResult);
 
@@ -695,7 +704,7 @@ export function handleSingleCourseEnrollmentEffect(
         userPhone,
       },
       context,
-      options.convexUrl,
+      options,
     );
     const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
@@ -776,7 +785,7 @@ export function handleGuestUserSingleEnrollmentEffect(
         userEmail,
       },
       context,
-      options.convexUrl,
+      options,
     );
     const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
@@ -851,7 +860,7 @@ export function handleSupervisedTherapyEnrollmentEffect(
         userPhone,
       },
       context,
-      options.convexUrl,
+      options,
     );
     const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 
@@ -937,7 +946,7 @@ export function handleGuestUserSupervisedTherapyEnrollmentEffect(
         userPhone,
       },
       context,
-      options.convexUrl,
+      options,
     );
     const enrollment = normalizeSingleEnrollmentMutationReturn(mutationResult);
 

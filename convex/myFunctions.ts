@@ -48,6 +48,13 @@ import { pickPublicCourse } from "./_publicCourse";
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
 
+const CHECKOUT_AUTHORIZATION_MAX_AGE_MS = 5 * 60 * 1000;
+const CHECKOUT_AUTHORIZATION_CLOCK_SKEW_MS = 30 * 1000;
+
+type ConvexUserIdentity = Awaited<
+  ReturnType<MutationCtx["auth"]["getUserIdentity"]>
+>;
+
 // Helper function to award Mind Points after successful payment
 // Returns the number of points awarded (0 when no award occurs)
 // Only awards points for authenticated users (not guest users) and paid purchases (not BOGO free items)
@@ -82,6 +89,90 @@ async function awardMindPoints(
     console.error("Error awarding Mind Points:", error);
     return 0;
   }
+}
+
+function checkoutAuthorizationMessage(args: {
+  checkoutAttemptId: string;
+  timestamp: number;
+  userId: string;
+}) {
+  return `${args.checkoutAttemptId}:${args.userId}:${args.timestamp}`;
+}
+
+function bytesToHex(bytes: Uint8Array) {
+  return Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0")).join(
+    "",
+  );
+}
+
+function timingSafeStringEqual(a: string, b: string): boolean {
+  if (a.length !== b.length) {
+    return false;
+  }
+
+  let diff = 0;
+  for (let index = 0; index < a.length; index += 1) {
+    diff |= a.charCodeAt(index) ^ b.charCodeAt(index);
+  }
+  return diff === 0;
+}
+
+function checkoutIdentityMatchesUser(
+  identity: ConvexUserIdentity,
+  userId: string,
+) {
+  return identity?.subject === userId;
+}
+
+async function createCheckoutAuthorizationSignature(
+  serverSecret: string,
+  message: string,
+) {
+  const encoder = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(serverSecret),
+    { hash: "SHA-256", name: "HMAC" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign(
+    "HMAC",
+    key,
+    encoder.encode(message),
+  );
+
+  return bytesToHex(new Uint8Array(signature));
+}
+
+async function isValidCheckoutAuthorization(args: {
+  authorization?: { signature: string; timestamp: number };
+  checkoutAttemptId: string;
+  userId: string;
+}) {
+  const serverSecret = process.env.CHECKOUT_SERVER_SECRET;
+  if (!serverSecret || !args.authorization) {
+    return false;
+  }
+
+  const now = Date.now();
+  if (
+    args.authorization.timestamp > now + CHECKOUT_AUTHORIZATION_CLOCK_SKEW_MS ||
+    now - args.authorization.timestamp > CHECKOUT_AUTHORIZATION_MAX_AGE_MS
+  ) {
+    return false;
+  }
+
+  const expectedSignature = await createCheckoutAuthorizationSignature(
+    serverSecret,
+    checkoutAuthorizationMessage({
+      checkoutAttemptId: args.checkoutAttemptId,
+      timestamp: args.authorization.timestamp,
+      userId: args.userId,
+    }),
+  );
+
+  return timingSafeStringEqual(args.authorization.signature, expectedSignature);
 }
 
 // Helper function to add enrollment to Google Sheets
@@ -1379,6 +1470,12 @@ export const handleCartCheckout = mutation({
         }),
       ),
     ),
+    checkoutAuthorization: v.optional(
+      v.object({
+        signature: v.string(),
+        timestamp: v.number(),
+      }),
+    ),
     checkoutPricing: v.optional(checkoutPricingValidator),
     checkoutAttemptId: v.optional(v.id("checkoutAttempts")),
     razorpayOrderId: v.optional(v.string()),
@@ -1411,13 +1508,10 @@ export const handleCartCheckout = mutation({
     let effectiveCheckoutPricing = args.checkoutPricing;
 
     const identity = await ctx.auth.getUserIdentity();
-    if (!identity || identity.subject !== args.userId) {
-      return enrollmentMutationFailure(
-        "Authenticated checkout user mismatch.",
-        convexResultErrorCode.FORBIDDEN,
-        { userId: args.userId },
-      );
-    }
+    const hasMatchingAuthenticatedUser = checkoutIdentityMatchesUser(
+      identity,
+      args.userId,
+    );
 
     if (args.checkoutAttemptId) {
       const attempt = await ctx.db.get(args.checkoutAttemptId);
@@ -1426,6 +1520,37 @@ export const handleCartCheckout = mutation({
           "Checkout attempt not found.",
           convexResultErrorCode.CHECKOUT_ATTEMPT_NOT_FOUND,
           { checkoutAttemptId: args.checkoutAttemptId },
+        );
+      }
+
+      checkoutAttempt = attempt;
+      if (
+        checkoutAttempt.buyerUserId &&
+        checkoutAttempt.buyerUserId !== args.userId
+      ) {
+        return enrollmentMutationFailure(
+          "Checkout attempt does not belong to this user.",
+          convexResultErrorCode.FORBIDDEN,
+          { checkoutAttemptId: args.checkoutAttemptId },
+        );
+      }
+
+      const hasAuthorizedCheckoutServerRequest =
+        checkoutAttempt.buyerUserId === args.userId &&
+        (await isValidCheckoutAuthorization({
+          authorization: args.checkoutAuthorization,
+          checkoutAttemptId: args.checkoutAttemptId,
+          userId: args.userId,
+        }));
+
+      if (
+        !hasMatchingAuthenticatedUser &&
+        !hasAuthorizedCheckoutServerRequest
+      ) {
+        return enrollmentMutationFailure(
+          "Authenticated checkout user mismatch.",
+          convexResultErrorCode.FORBIDDEN,
+          { checkoutAttemptId: args.checkoutAttemptId, userId: args.userId },
         );
       }
 
@@ -1462,18 +1587,6 @@ export const handleCartCheckout = mutation({
         }
       }
 
-      checkoutAttempt = attempt;
-      if (
-        checkoutAttempt.buyerUserId &&
-        checkoutAttempt.buyerUserId !== args.userId
-      ) {
-        return enrollmentMutationFailure(
-          "Checkout attempt does not belong to this user.",
-          convexResultErrorCode.FORBIDDEN,
-          { checkoutAttemptId: args.checkoutAttemptId },
-        );
-      }
-
       const attemptPricing = checkoutPricingFromAttempt(checkoutAttempt);
       if (
         !checkoutPricingMatchesAttempt(args.checkoutPricing, attemptPricing)
@@ -1492,6 +1605,12 @@ export const handleCartCheckout = mutation({
         );
       }
       effectiveCheckoutPricing = attemptPricing;
+    } else if (!hasMatchingAuthenticatedUser) {
+      return enrollmentMutationFailure(
+        "Authenticated checkout user mismatch.",
+        convexResultErrorCode.FORBIDDEN,
+        { userId: args.userId },
+      );
     }
 
     for (const lineItem of lineItems) {
