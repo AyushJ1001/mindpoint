@@ -145,6 +145,24 @@ test("checkout service exposes an Effect implementation for authenticated cart c
   assert.doesNotMatch(checkoutSlice, /try\s*\{/);
 });
 
+test("authenticated checkout finalization forwards Clerk auth to Convex", () => {
+  const checkoutSource = readFileSync("lib/services/checkout.ts", "utf8");
+  const paymentActionSource = readFileSync("app/actions/payment.ts", "utf8");
+  const cartSource = readFileSync("components/CartClient.tsx", "utf8");
+  const cartCheckoutCall = cartSource.slice(
+    cartSource.indexOf("const result = await handlePaymentSuccess("),
+    cartSource.indexOf(
+      "if (!result.success)",
+      cartSource.indexOf("const result = await handlePaymentSuccess("),
+    ),
+  );
+
+  assert.match(checkoutSource, /convex\.setAuth\(options\.convexAuthToken\)/);
+  assert.match(paymentActionSource, /await auth\(\)/);
+  assert.match(paymentActionSource, /getToken\(\{\s*template: "convex"\s*\}\)/);
+  assert.doesNotMatch(cartCheckoutCall, /user\.id/);
+});
+
 test("checkout service exposes Effect implementations for all payment action wrappers", () => {
   const source = readFileSync("lib/services/checkout.ts", "utf8");
   const names = [
