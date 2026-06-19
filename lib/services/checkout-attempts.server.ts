@@ -263,11 +263,17 @@ function checkoutAttemptBoundaryError(cause: BoundaryThrowable): BoundaryError {
     return error;
   }
 
+  const message = cause instanceof Error ? cause.message : String(cause);
+  if (message.includes("No auth provider found matching the given token")) {
+    return new BoundaryConfigurationError({
+      ...(cause instanceof Error ? { cause } : {}),
+      message:
+        "Checkout authentication is not configured for this Clerk instance.",
+    });
+  }
+
   return new BoundaryExternalServiceError({
     ...(cause instanceof Error ? { cause } : {}),
-    message:
-      cause instanceof Error
-        ? cause.message
-        : "Failed to update checkout attempt.",
+    message,
   });
 }

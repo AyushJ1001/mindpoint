@@ -271,3 +271,16 @@ test("checkout attempt boundary normalizes legacy Convex ok tuples", async () =>
     },
   });
 });
+
+test("checkout attempt boundary maps Convex auth provider mismatch to configuration error", () => {
+  const source = readFileSync(
+    "lib/services/checkout-attempts.server.ts",
+    "utf8",
+  );
+
+  assert.match(source, /No auth provider found matching the given token/);
+  assert.match(
+    source,
+    /Checkout authentication is not configured for this Clerk instance\./,
+  );
+});
