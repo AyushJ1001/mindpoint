@@ -366,8 +366,18 @@ function sanitizeUploadThingUrl(value: string | undefined): string | undefined {
   }
   try {
     const parsed = new URL(trimmed);
-    if (parsed.protocol === "https:" && isUploadThingHost(parsed.hostname)) {
-      return trimmed;
+    // Reject embedded credentials (userinfo). `parsed.hostname` ignores
+    // userinfo, so `https://user@utfs.io/...` would otherwise pass the host
+    // check while persisting an attacker-controlled credential string.
+    const hasUserInfo = parsed.username !== "" || parsed.password !== "";
+    if (
+      parsed.protocol === "https:" &&
+      !hasUserInfo &&
+      isUploadThingHost(parsed.hostname)
+    ) {
+      // Store the parser's canonical serialization so the persisted value is
+      // exactly what we validated, not the raw (possibly odd) input.
+      return parsed.href;
     }
   } catch {
     // Malformed URL — fall through and drop it.

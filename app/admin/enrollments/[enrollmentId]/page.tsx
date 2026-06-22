@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
@@ -324,11 +325,13 @@ export default function AdminEnrollmentDetailPage() {
                 rel="noopener noreferrer"
                 className="mt-2 block w-fit"
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
+                <Image
                   src={detail.paymentScreenshotUrl}
                   alt="Payment screenshot"
-                  className="max-h-64 w-auto rounded-md border"
+                  width={400}
+                  height={256}
+                  unoptimized
+                  className="h-auto max-h-64 w-auto rounded-md border"
                 />
                 <span className="text-xs text-blue-600 underline">
                   Open full size

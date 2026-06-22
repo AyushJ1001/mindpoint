@@ -44,6 +44,8 @@
 
 - Never commit `.env*`; use environment variables referenced in `setup-env.sh` and Convex dashboard secrets.
 - Rotate API keys after using local scripts and confirm rate-limit thresholds in `convex/rateLimit.ts` before scaling traffic.
+- User-supplied UploadThing URLs (e.g. payment screenshots) are validated server-side in the Convex mutation before persisting — HTTPS, no embedded userinfo, and an UploadThing host allowlist (`sanitizeUploadThingUrl` in `convex/myFunctions.ts`). The non-admin `paymentScreenshotUploader` route is auth-gated and per-user rate-limited (`uploadRatelimit`).
+- Render UploadThing-hosted images (arbitrary remote URLs) with `next/image` using the `unoptimized` prop — not a raw `<img>`. The host allowlist lives in `next.config.ts` `images.remotePatterns`; `unoptimized` skips the optimizer while keeping the component consistent across buyer and admin surfaces.
 
 ## Cursor Cloud specific instructions
 
