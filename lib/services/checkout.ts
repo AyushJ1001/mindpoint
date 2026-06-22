@@ -90,6 +90,7 @@ type PaymentSuccessOptions = CheckoutMutationOptions & {
   checkoutAttemptId?: string;
   razorpayOrderId?: string;
   razorpayPaymentId?: string;
+  paymentScreenshotUrl?: string;
 };
 
 type GuestCheckoutUserData = {
@@ -461,6 +462,7 @@ export function handlePaymentSuccessEffect(
           lineItems,
           razorpayOrderId: options.razorpayOrderId,
           razorpayPaymentId: options.razorpayPaymentId,
+          paymentScreenshotUrl: options.paymentScreenshotUrl,
           referrerClerkUserId,
           sessionType,
           studentName,

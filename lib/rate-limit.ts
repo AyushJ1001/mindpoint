@@ -69,6 +69,15 @@ export const authRatelimit = createRateLimiter(
   "@upstash/ratelimit/auth",
 );
 
+// Ratelimiter for buyer-facing file uploads (payment screenshots). Generous
+// enough for a buyer to retry / replace a screenshot a few times, but caps
+// per-user spam of the non-admin upload route. No-ops when Redis is unset.
+export const uploadRatelimit = createRateLimiter(
+  10,
+  "1 m",
+  "@upstash/ratelimit/upload",
+);
+
 // Helper function to get client identifier
 export function getClientIdentifier(req: Request): string {
   // Try to get IP from various headers

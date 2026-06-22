@@ -315,6 +315,29 @@ export default function AdminEnrollmentDetailPage() {
               ? formatTimestamp(detail.lastConfirmationSentAt)
               : "Not resent yet"}
           </p>
+          <div>
+            <strong>Payment Screenshot:</strong>{" "}
+            {detail.paymentScreenshotUrl ? (
+              <a
+                href={detail.paymentScreenshotUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 block w-fit"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={detail.paymentScreenshotUrl}
+                  alt="Payment screenshot"
+                  className="max-h-64 w-auto rounded-md border"
+                />
+                <span className="text-xs text-blue-600 underline">
+                  Open full size
+                </span>
+              </a>
+            ) : (
+              "Not provided"
+            )}
+          </div>
         </CardContent>
       </Card>
 

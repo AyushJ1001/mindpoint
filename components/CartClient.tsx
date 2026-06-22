@@ -49,6 +49,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { UploadDropzone } from "@/lib/uploadthing";
 import Link from "next/link";
 import { Check, X } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
@@ -217,7 +218,8 @@ const CartContent = () => {
   const [qrImageAvailable, setQrImageAvailable] = useState(true);
   const [qrPaymentSession, setQrPaymentSession] =
     useState<PaymentSession | null>(null);
-  const [upiTransactionReference, setUpiTransactionReference] = useState("");
+  const [paymentScreenshotUrl, setPaymentScreenshotUrl] = useState("");
+  const [isUploadingScreenshot, setIsUploadingScreenshot] = useState(false);
   const [pendingQrWhatsAppNumber, setPendingQrWhatsAppNumber] = useState<
     string | undefined
   >();
@@ -850,6 +852,7 @@ const CartContent = () => {
         checkoutAttemptId?: string;
         razorpayOrderId?: string;
         razorpayPaymentId?: string;
+        paymentScreenshotUrl?: string;
         checkoutPricingOverride?: typeof checkoutPricing;
       } = {},
     ) => {
@@ -996,7 +999,8 @@ const CartContent = () => {
 
       setQrPaymentSession(paymentOrder.data);
       setQrImageAvailable(true);
-      setUpiTransactionReference("");
+      setPaymentScreenshotUrl("");
+      setIsUploadingScreenshot(false);
       setPendingQrWhatsAppNumber(whatsappNumber);
       setShowQrPaymentDialog(true);
       setIsProcessing(false);
@@ -1016,9 +1020,9 @@ const CartContent = () => {
   const handleQrPaymentConfirmed = useCallback(async () => {
     if (!qrPaymentSession) return;
 
-    const paymentReference = upiTransactionReference.trim();
-    if (paymentReference.length < 6) {
-      toast.error("Enter the UPI transaction reference number.");
+    const screenshotUrl = paymentScreenshotUrl.trim();
+    if (!screenshotUrl) {
+      toast.error("Upload a screenshot of your successful payment.");
       return;
     }
 
@@ -1030,7 +1034,7 @@ const CartContent = () => {
         {
           checkoutAttemptId: qrPaymentSession.checkoutAttemptId,
           razorpayOrderId: qrPaymentSession.id,
-          razorpayPaymentId: paymentReference,
+          paymentScreenshotUrl: screenshotUrl,
           checkoutPricingOverride: qrPaymentSession.reconciliation
             ?.checkoutPricing as typeof checkoutPricing | undefined,
         },
@@ -1040,7 +1044,8 @@ const CartContent = () => {
         emptyCart();
         setShowQrPaymentDialog(false);
         setQrPaymentSession(null);
-        setUpiTransactionReference("");
+        setPaymentScreenshotUrl("");
+        setIsUploadingScreenshot(false);
         setPendingQrWhatsAppNumber(undefined);
       }
     } finally {
@@ -1051,7 +1056,7 @@ const CartContent = () => {
     emptyCart,
     pendingQrWhatsAppNumber,
     qrPaymentSession,
-    upiTransactionReference,
+    paymentScreenshotUrl,
   ]);
 
   // Check for WhatsApp number after sign-in and proceed with checkout
@@ -1723,10 +1728,17 @@ const CartContent = () => {
       <Dialog
         open={showQrPaymentDialog}
         onOpenChange={(open) => {
+          // Don't allow the dialog to close (and reset state) while a screenshot
+          // is still uploading — the in-flight URL would be silently discarded.
+          if (!open && (isProcessing || isUploadingScreenshot)) {
+            return;
+          }
           setShowQrPaymentDialog(open);
-          if (!open && !isProcessing) {
+          if (!open) {
             setQrPaymentSession(null);
             setPendingQrWhatsAppNumber(undefined);
+            setPaymentScreenshotUrl("");
+            setIsUploadingScreenshot(false);
           }
         }}
       >
@@ -1764,34 +1776,79 @@ const CartContent = () => {
               </div>
             )}
 
-            <label className="space-y-2 text-sm">
-              <span className="font-medium">UPI transaction ID</span>
-              <Input
-                value={upiTransactionReference}
-                onChange={(event) =>
-                  setUpiTransactionReference(event.target.value)
-                }
-                placeholder="Enter reference number after payment"
-                autoComplete="off"
-              />
-            </label>
+            <div className="space-y-2 text-sm">
+              <span className="font-medium">Payment screenshot</span>
+              <p className="text-muted-foreground text-xs">
+                After paying, upload a screenshot of the successful transaction
+                from your UPI app.
+              </p>
+              {paymentScreenshotUrl ? (
+                <div className="space-y-2">
+                  <div className="mx-auto w-full max-w-[220px] overflow-hidden rounded-md border">
+                    <Image
+                      src={paymentScreenshotUrl}
+                      alt="Uploaded payment screenshot"
+                      width={440}
+                      height={440}
+                      className="h-auto w-full object-contain"
+                      unoptimized
+                    />
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => setPaymentScreenshotUrl("")}
+                    disabled={isProcessing}
+                  >
+                    Replace screenshot
+                  </Button>
+                </div>
+              ) : (
+                <UploadDropzone
+                  endpoint="paymentScreenshotUploader"
+                  onUploadBegin={() => setIsUploadingScreenshot(true)}
+                  onClientUploadComplete={(res) => {
+                    setIsUploadingScreenshot(false);
+                    const url = res?.[0]?.serverData?.url;
+                    if (url) {
+                      setPaymentScreenshotUrl(url);
+                      toast.success("Screenshot uploaded.");
+                    } else {
+                      toast.error("Upload failed. Please try again.");
+                    }
+                  }}
+                  onUploadError={(error) => {
+                    setIsUploadingScreenshot(false);
+                    toast.error(error.message || "Screenshot upload failed.");
+                  }}
+                  config={{ mode: "auto" }}
+                  className="ut-button:bg-primary ut-button:text-primary-foreground ut-label:text-foreground border-muted-foreground/30 mt-0"
+                />
+              )}
+            </div>
           </div>
 
           <DialogFooter className="gap-2 sm:gap-0">
             <Button
               variant="outline"
               onClick={() => setShowQrPaymentDialog(false)}
-              disabled={isProcessing}
+              disabled={isProcessing || isUploadingScreenshot}
             >
               Cancel
             </Button>
             <Button
               onClick={handleQrPaymentConfirmed}
               disabled={
-                isProcessing || upiTransactionReference.trim().length < 6
+                isProcessing || isUploadingScreenshot || !paymentScreenshotUrl
               }
             >
-              {isProcessing ? "Finishing..." : "Confirm payment"}
+              {isProcessing
+                ? "Finishing..."
+                : isUploadingScreenshot
+                  ? "Uploading..."
+                  : "Confirm payment"}
             </Button>
           </DialogFooter>
         </DialogContent>
