@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
@@ -315,6 +316,31 @@ export default function AdminEnrollmentDetailPage() {
               ? formatTimestamp(detail.lastConfirmationSentAt)
               : "Not resent yet"}
           </p>
+          <div>
+            <strong>Payment Screenshot:</strong>{" "}
+            {detail.paymentScreenshotUrl ? (
+              <a
+                href={detail.paymentScreenshotUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-2 block w-fit"
+              >
+                <Image
+                  src={detail.paymentScreenshotUrl}
+                  alt="Payment screenshot"
+                  width={400}
+                  height={256}
+                  unoptimized
+                  className="h-auto max-h-64 w-auto rounded-md border"
+                />
+                <span className="text-xs text-blue-600 underline">
+                  Open full size
+                </span>
+              </a>
+            ) : (
+              "Not provided"
+            )}
+          </div>
         </CardContent>
       </Card>
 

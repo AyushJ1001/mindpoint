@@ -347,6 +347,44 @@ function normalizeOptionalNumber(value: unknown) {
   return rounded > 0 ? rounded : undefined;
 }
 
+// Hosts that UploadThing serves uploaded files from (mirrors the allowed image
+// hosts in next.config.ts). Anything else is treated as untrusted and dropped.
+function isUploadThingHost(hostname: string): boolean {
+  return (
+    hostname === "utfs.io" ||
+    hostname === "uploadthing.com" ||
+    hostname === "files.uploadthing.com" ||
+    hostname.endsWith(".ufs.sh") ||
+    hostname.endsWith(".utfs.io")
+  );
+}
+
+function sanitizeUploadThingUrl(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    // Reject embedded credentials (userinfo). `parsed.hostname` ignores
+    // userinfo, so `https://user@utfs.io/...` would otherwise pass the host
+    // check while persisting an attacker-controlled credential string.
+    const hasUserInfo = parsed.username !== "" || parsed.password !== "";
+    if (
+      parsed.protocol === "https:" &&
+      !hasUserInfo &&
+      isUploadThingHost(parsed.hostname)
+    ) {
+      // Store the parser's canonical serialization so the persisted value is
+      // exactly what we validated, not the raw (possibly odd) input.
+      return parsed.href;
+    }
+  } catch {
+    // Malformed URL — fall through and drop it.
+  }
+  return undefined;
+}
+
 function checkoutPricingMatchesAttempt(
   submitted: CheckoutPricing | undefined,
   attemptPricing: CheckoutPricing,
@@ -1465,6 +1503,7 @@ export const handleCartCheckout = mutation({
     checkoutAttemptId: v.optional(v.id("checkoutAttempts")),
     razorpayOrderId: v.optional(v.string()),
     razorpayPaymentId: v.optional(v.string()),
+    paymentScreenshotUrl: v.optional(v.string()),
   },
 
   handler: async (ctx, args) => {
@@ -1487,6 +1526,11 @@ export const handleCartCheckout = mutation({
     let totalPointsEarnedForOrder = 0;
     let firstPaidEnrollmentId: Id<"enrollments"> | null = null;
     const paymentReference = args.razorpayPaymentId?.trim();
+    // Only persist screenshot URLs that come from the UploadThing CDN. The value
+    // is client-supplied (any authenticated user can call this mutation directly)
+    // and is later rendered into the admin dashboard, so we reject arbitrary URLs
+    // to avoid pointing an admin's browser at attacker-controlled hosts.
+    const paymentScreenshotUrl = sanitizeUploadThingUrl(args.paymentScreenshotUrl);
     let checkoutAttempt: Doc<"checkoutAttempts"> | null = null;
     const consumedAdminCouponCodes = new Set<string>();
     const remainingAdminCouponDiscountByCode = new Map<string, number>();
@@ -1677,6 +1721,8 @@ export const handleCartCheckout = mutation({
           args.razorpayOrderId ?? checkoutAttempt.razorpayOrderId,
         razorpayPaymentId:
           paymentReference ?? checkoutAttempt.razorpayPaymentId,
+        paymentScreenshotUrl:
+          paymentScreenshotUrl ?? checkoutAttempt.paymentScreenshotUrl,
         status: "payment_captured",
         updatedAt: Date.now(),
       });
@@ -1752,6 +1798,7 @@ export const handleCartCheckout = mutation({
         checkoutAttemptId: args.checkoutAttemptId,
         razorpayOrderId: args.razorpayOrderId,
         razorpayPaymentId: paymentReference,
+        paymentScreenshotUrl,
         referrerClerkUserId: args.referrerClerkUserId,
       });
 

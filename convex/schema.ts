@@ -308,6 +308,7 @@ const publicEnrollmentFields = {
   checkoutAttemptId: v.optional(v.id("checkoutAttempts")),
   razorpayOrderId: v.optional(v.string()),
   razorpayPaymentId: v.optional(v.string()),
+  paymentScreenshotUrl: v.optional(v.string()),
   referrerClerkUserId: v.optional(v.string()),
 };
 
@@ -490,6 +491,7 @@ export default defineSchema({
     validationSummary: v.any(),
     razorpayOrderId: v.optional(v.string()),
     razorpayPaymentId: v.optional(v.string()),
+    paymentScreenshotUrl: v.optional(v.string()),
     buyerUserId: v.optional(v.string()),
     buyerEmail: v.optional(v.string()),
     referrerClerkUserId: v.optional(v.string()),
