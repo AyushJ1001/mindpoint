@@ -298,17 +298,23 @@ export const listReviewsForCourse = query({
     sortBy: v.optional(v.union(v.literal("date"), v.literal("rating"))),
   },
   handler: async (ctx, args) => {
-    const rows = await ctx.db
+    const reviewsQuery = ctx.db
       .query("reviews")
       .withIndex("by_course", (q) => q.eq("course", args.courseId))
-      .order("desc")
-      .collect();
+      .order("desc");
 
+    // Rating sort has to reorder the full set before applying `count`, so it
+    // still needs every review. The default (date) sort is already newest-first
+    // from the index, so a bounded `count` can be pushed into the DB read.
     if (args.sortBy === "rating") {
+      const rows = await reviewsQuery.collect();
       rows.sort((a, b) => b.rating - a.rating);
+      return args.count ? rows.slice(0, args.count) : rows;
     }
 
-    return args.count ? rows.slice(0, args.count) : rows;
+    return args.count
+      ? await reviewsQuery.take(args.count)
+      : await reviewsQuery.collect();
   },
 });
 

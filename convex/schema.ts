@@ -330,11 +330,9 @@ export default defineSchema({
   }),
   courses: defineTable(courseTableFields)
     .index("by_name_and_type", ["name", "type"])
-    .index("by_startDate", ["startDate"])
     .index("by_type", ["type"])
     .index("by_lifecycleStatus", ["lifecycleStatus"])
-    .index("by_type_and_lifecycleStatus", ["type", "lifecycleStatus"])
-    .index("by_mergedIntoCourseId", ["mergedIntoCourseId"]),
+    .index("by_type_and_lifecycleStatus", ["type", "lifecycleStatus"]),
 
   courseBatches: defineTable({
     courseId: v.id("courses"),
@@ -376,7 +374,6 @@ export default defineSchema({
   bundleCampaigns: defineTable(BundleCampaignValue)
     .index("by_updatedAt", ["updatedAt"])
     .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"])
-    .index("by_enabled_priority", ["enabled", "priority"])
     .index("by_enabled_isArchived_priority", [
       "enabled",
       "isArchived",
@@ -386,8 +383,7 @@ export default defineSchema({
   adminCoupons: defineTable(AdminCouponValue)
     .index("by_code", ["code"])
     .index("by_updatedAt", ["updatedAt"])
-    .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"])
-    .index("by_enabled_isArchived_code", ["enabled", "isArchived", "code"]),
+    .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"]),
 
   reviews: defineTable({
     userId: v.string(),
@@ -510,9 +506,7 @@ export default defineSchema({
     recoveredByAdminId: v.optional(v.string()),
     recoveryReason: v.optional(v.string()),
   })
-    .index("by_razorpayOrderId", ["razorpayOrderId"])
     .index("by_razorpayPaymentId", ["razorpayPaymentId"])
-    .index("by_buyerUserId", ["buyerUserId"])
     .index("by_status", ["status"]),
 
   adminAuditLogs: defineTable({
