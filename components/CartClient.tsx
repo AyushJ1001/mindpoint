@@ -51,11 +51,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { UploadDropzone } from "@/lib/uploadthing";
 import Link from "next/link";
-import { Check, X } from "lucide-react";
+import { Check, Copy, X } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import { useMemo } from "react";
 
 export const dynamic = "force-dynamic";
+
+// UPI ID shown on the Scan-to-pay dialog as a fallback for users who can't
+// scan the QR code.
+const PAYMENT_UPI_ID = "akshajuvekar6@okhdfcbank";
 
 import type { EvaluatedBundleCampaign } from "@/lib/domain/bundles";
 
@@ -1765,16 +1769,48 @@ const CartContent = () => {
                 alt="UPI QR code for payment"
                 width={550}
                 height={550}
-                className="mx-auto h-auto w-full max-w-[280px] rounded-md border bg-black object-contain"
+                className="mx-auto h-auto w-full max-w-[340px] rounded-md border bg-black object-contain"
                 priority
                 onError={() => setQrImageAvailable(false)}
               />
             ) : (
-              <div className="bg-muted/50 text-muted-foreground mx-auto flex min-h-[320px] w-full max-w-[280px] items-center justify-center rounded-md border border-dashed p-4 text-center text-sm">
+              <div className="bg-muted/50 text-muted-foreground mx-auto flex min-h-[320px] w-full max-w-[340px] items-center justify-center rounded-md border border-dashed p-4 text-center text-sm">
                 UPI QR image is missing from
                 public/payment/phonepe-qr-code.jpeg.
               </div>
             )}
+
+            <div className="text-center">
+              <p className="text-muted-foreground text-xs">
+                Can&apos;t scan? Pay to this UPI ID
+              </p>
+              <div className="mt-1 flex items-center justify-center gap-2">
+                <span className="font-medium break-all select-all">
+                  {PAYMENT_UPI_ID}
+                </span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 px-2"
+                  onClick={() => {
+                    if (!navigator.clipboard) {
+                      toast.error(`Copy not supported. UPI ID: ${PAYMENT_UPI_ID}`);
+                      return;
+                    }
+                    void navigator.clipboard
+                      .writeText(PAYMENT_UPI_ID)
+                      .then(() => toast.success("UPI ID copied"))
+                      .catch(() =>
+                        toast.error("Couldn't copy. Please copy it manually."),
+                      );
+                  }}
+                >
+                  <Copy className="h-3.5 w-3.5" />
+                  <span className="sr-only">Copy UPI ID</span>
+                </Button>
+              </div>
+            </div>
 
             <div className="space-y-2 text-sm">
               <span className="font-medium">Payment screenshot</span>
