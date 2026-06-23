@@ -2,9 +2,10 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
 import type { Doc, Id } from "@/lib/backend/data-model";
+import { useRevalidatingCourseMutation } from "@/hooks/use-revalidating-mutation";
 import { Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -420,13 +421,25 @@ export function CourseEditor({
     limit: 100,
   }) as OfferCampaignRecord[] | undefined;
 
-  const createCourse = useMutation(api.adminCourses.createCourse);
-  const createBatch = useMutation(api.adminCourses.createBatch);
-  const deleteCourse = useMutation(api.adminCourses.deleteCourse);
-  const duplicateBatch = useMutation(api.adminCourses.duplicateBatch);
-  const archiveBatch = useMutation(api.adminCourses.archiveBatch);
-  const updateCourse = useMutation(api.adminCourses.updateCourse);
-  const updateBatch = useMutation(api.adminCourses.updateBatch);
+  // These all change what appears on the public course listings, so route them
+  // through the revalidating wrapper to refresh the ISR caches on success.
+  const createCourse = useRevalidatingCourseMutation(
+    api.adminCourses.createCourse,
+  );
+  const createBatch = useRevalidatingCourseMutation(api.adminCourses.createBatch);
+  const deleteCourse = useRevalidatingCourseMutation(
+    api.adminCourses.deleteCourse,
+  );
+  const duplicateBatch = useRevalidatingCourseMutation(
+    api.adminCourses.duplicateBatch,
+  );
+  const archiveBatch = useRevalidatingCourseMutation(
+    api.adminCourses.archiveBatch,
+  );
+  const updateCourse = useRevalidatingCourseMutation(
+    api.adminCourses.updateCourse,
+  );
+  const updateBatch = useRevalidatingCourseMutation(api.adminCourses.updateBatch);
   const courseBatches = useQuery(
     api.adminCourses.listCourseBatches,
     course?._id && batchBackedTypes.has(state.type)

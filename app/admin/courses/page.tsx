@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
+import { useRevalidatingCourseMutation } from "@/hooks/use-revalidating-mutation";
 import type { Id } from "@/lib/backend/data-model";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -182,17 +183,21 @@ export default function AdminCoursesPage() {
       limit: 100,
     },
   ) as MasterclassCodeRepairResult | undefined;
-  const transitionCourse = useMutation(
+  // All of these change what appears on the public course listings, so route
+  // them through the revalidating wrapper to refresh the ISR caches on success.
+  const transitionCourse = useRevalidatingCourseMutation(
     api.adminCourses.transitionCourseLifecycle,
   );
-  const applyBatchBackfillMigration = useMutation(
+  const applyBatchBackfillMigration = useRevalidatingCourseMutation(
     api.adminCourses.applyBatchBackfillMigration,
   );
-  const applyLegacyInternshipArchive = useMutation(
+  const applyLegacyInternshipArchive = useRevalidatingCourseMutation(
     api.adminCourses.applyLegacyInternshipArchive,
   );
-  const correctCourseType = useMutation(api.adminCourses.correctCourseType);
-  const repairMasterclassCourseCodes = useMutation(
+  const correctCourseType = useRevalidatingCourseMutation(
+    api.adminCourses.correctCourseType,
+  );
+  const repairMasterclassCourseCodes = useRevalidatingCourseMutation(
     api.adminCourses.repairMasterclassCourseCodes,
   );
   const batchMigrationPreview = useQuery(
