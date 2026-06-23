@@ -75,6 +75,13 @@ async function toPublicCourse(
 // one `courseBatches` query per batch-using course (N+1), load every published
 // batch in a single indexed read and group it by course. Output is identical to
 // calling `toPublicCourse` per course.
+//
+// This intentionally trades a per-course-bounded read for one catalog-wide
+// `.collect()`: `courseBatches` is an admin-curated, low-cardinality table
+// (a handful of batches per course), not user-generated/unbounded like
+// `enrollments`, so the single grouped read stays small while removing the N
+// round-trips. Reverting to per-course `by_courseId_and_lifecycleStatus` reads
+// would just re-introduce the N+1 this replaced.
 async function loadPublishedBatchesByCourse(
   ctx: QueryCtx,
   courses: Doc<"courses">[],
@@ -545,7 +552,8 @@ export const getBogoCoursesByTypes = query({
   args: { courseTypes: v.array(CourseType) },
   returns: v.record(v.string(), v.array(PublicCourseDocumentValue)),
   handler: async (ctx, args) => {
-    const result: Record<string, PublicCourse[]> = {};
+    const visibleByType: Record<string, Doc<"courses">[]> = {};
+    const allVisible: Doc<"courses">[] = [];
 
     for (const courseType of args.courseTypes) {
       const [publishedCourses, legacyPublishedCourses] = await Promise.all([
@@ -565,14 +573,23 @@ export const getBogoCoursesByTypes = query({
           .collect(),
       ]);
 
-      result[courseType] = await toPublicCourses(
-        ctx,
-        [...publishedCourses, ...legacyPublishedCourses]
-          .filter((course) => course.bogo?.enabled === true)
-          .filter((course) => !isMergedCourse(course)),
-      );
+      const visible = [...publishedCourses, ...legacyPublishedCourses]
+        .filter((course) => course.bogo?.enabled === true)
+        .filter((course) => !isMergedCourse(course));
+      visibleByType[courseType] = visible;
+      allVisible.push(...visible);
     }
 
+    // Load published batches once for the whole request instead of re-scanning
+    // inside the per-type loop.
+    const batchesByCourse = await loadPublishedBatchesByCourse(ctx, allVisible);
+
+    const result: Record<string, PublicCourse[]> = {};
+    for (const courseType of args.courseTypes) {
+      result[courseType] = (visibleByType[courseType] ?? []).map((course) =>
+        buildPublicCourseWithPreloadedBatches(course, batchesByCourse),
+      );
+    }
     return result;
   },
 });
