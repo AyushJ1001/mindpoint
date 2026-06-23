@@ -2,7 +2,13 @@ import { v } from "convex/values";
 import { hmac } from "@noble/hashes/hmac";
 import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils";
-import { query, mutation, action, internalAction } from "./_generated/server";
+import {
+  query,
+  mutation,
+  action,
+  internalAction,
+  internalMutation,
+} from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -1057,7 +1063,7 @@ async function createBogoEnrollment(
 }
 
 // Handle successful payment and create enrollment
-export const handleSuccessfulPayment = mutation({
+export const handleSuccessfulPayment = internalMutation({
   args: {
     userId: v.string(),
     courseId: v.id("courses"),

@@ -8,7 +8,6 @@ import {
   handleGuestUserSingleEnrollment as handleGuestUserSingleEnrollmentService,
   handleGuestUserSupervisedTherapyEnrollment as handleGuestUserSupervisedTherapyEnrollmentService,
   handlePaymentSuccess as handlePaymentSuccessService,
-  handleSingleCourseEnrollment as handleSingleCourseEnrollmentService,
   handleSupervisedTherapyEnrollment as handleSupervisedTherapyEnrollmentService,
 } from "@/lib/services/checkout";
 
@@ -110,12 +109,6 @@ export async function handleGuestUserPaymentSuccessWithData(
   ...args: Parameters<typeof handleGuestUserPaymentSuccessWithDataService>
 ) {
   return handleGuestUserPaymentSuccessWithDataService(...args);
-}
-
-export async function handleSingleCourseEnrollment(
-  ...args: Parameters<typeof handleSingleCourseEnrollmentService>
-) {
-  return handleSingleCourseEnrollmentService(...args);
 }
 
 export async function handleGuestUserSingleEnrollment(

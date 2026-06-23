@@ -637,7 +637,7 @@ export const createManualEnrollment = mutation({
     } else {
       try {
         const checkoutResult: SuccessfulPaymentMutationResult =
-          await ctx.runMutation(api.myFunctions.handleSuccessfulPayment, {
+          await ctx.runMutation(internal.myFunctions.handleSuccessfulPayment, {
             userId: args.userId,
             userEmail: args.userEmail,
             userPhone: args.userPhone,
