@@ -2,7 +2,13 @@ import { v } from "convex/values";
 import { hmac } from "@noble/hashes/hmac";
 import { sha256 } from "@noble/hashes/sha2";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils";
-import { query, mutation, action } from "./_generated/server";
+import {
+  query,
+  mutation,
+  action,
+  internalAction,
+  internalMutation,
+} from "./_generated/server";
 import { api, internal } from "./_generated/api";
 import { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
@@ -203,7 +209,7 @@ async function addEnrollmentToGoogleSheets(
     } = enrollmentData;
 
     // Schedule the Google Sheets action
-    await ctx.scheduler.runAfter(0, api.googleSheets.addEnrollmentToSheet, {
+    await ctx.scheduler.runAfter(0, internal.googleSheets.addEnrollmentToSheet, {
       enrollmentData: {
         ...sheetsData,
         enrollmentDate: new Date().toISOString(),
@@ -480,7 +486,7 @@ async function scheduleEnrollmentConfirmationForSummary(
   if (args.course.type === "supervised" && args.sessionType) {
     await ctx.scheduler.runAfter(
       0,
-      api.emailActions.sendSupervisedTherapyWelcomeEmail,
+      internal.emailActions.sendSupervisedTherapyWelcomeEmail,
       {
         userEmail: args.recipientEmail,
         studentName: args.userName,
@@ -493,7 +499,7 @@ async function scheduleEnrollmentConfirmationForSummary(
   if (args.course.type === "therapy") {
     await ctx.scheduler.runAfter(
       0,
-      api.emailActions.sendTherapyEnrollmentConfirmation,
+      internal.emailActions.sendTherapyEnrollmentConfirmation,
       {
         userEmail: args.recipientEmail,
         userName: args.userName,
@@ -514,7 +520,7 @@ async function scheduleEnrollmentConfirmationForSummary(
         "120";
     await ctx.scheduler.runAfter(
       0,
-      api.emailActions.sendInternshipEnrollmentConfirmation,
+      internal.emailActions.sendInternshipEnrollmentConfirmation,
       {
         userEmail: args.recipientEmail,
         userName: args.userName,
@@ -540,7 +546,7 @@ async function scheduleEnrollmentConfirmationForSummary(
   ) {
     await ctx.scheduler.runAfter(
       0,
-      api.emailActions.sendCertificateEnrollmentConfirmation,
+      internal.emailActions.sendCertificateEnrollmentConfirmation,
       {
         userEmail: args.recipientEmail,
         userName: args.userName,
@@ -559,7 +565,7 @@ async function scheduleEnrollmentConfirmationForSummary(
   if (args.course.type === "diploma") {
     await ctx.scheduler.runAfter(
       0,
-      api.emailActions.sendDiplomaEnrollmentConfirmation,
+      internal.emailActions.sendDiplomaEnrollmentConfirmation,
       {
         userEmail: args.recipientEmail,
         userName: args.userName,
@@ -578,7 +584,7 @@ async function scheduleEnrollmentConfirmationForSummary(
   if (args.course.type === "pre-recorded") {
     await ctx.scheduler.runAfter(
       0,
-      api.emailActions.sendPreRecordedEnrollmentConfirmation,
+      internal.emailActions.sendPreRecordedEnrollmentConfirmation,
       {
         userEmail: args.recipientEmail,
         userName: args.userName,
@@ -593,7 +599,7 @@ async function scheduleEnrollmentConfirmationForSummary(
   if (args.course.type === "masterclass") {
     await ctx.scheduler.runAfter(
       0,
-      api.emailActions.sendMasterclassEnrollmentConfirmation,
+      internal.emailActions.sendMasterclassEnrollmentConfirmation,
       {
         userEmail: args.recipientEmail,
         userName: args.userName,
@@ -609,7 +615,7 @@ async function scheduleEnrollmentConfirmationForSummary(
     return;
   }
 
-  await ctx.scheduler.runAfter(0, api.emailActions.sendEnrollmentConfirmation, {
+  await ctx.scheduler.runAfter(0, internal.emailActions.sendEnrollmentConfirmation, {
     userEmail: args.recipientEmail,
     userPhone: args.userPhone,
     courseName: args.enrollment.courseName,
@@ -918,12 +924,14 @@ async function createBogoEnrollment(
 
   await ensureEnrollmentCapacity(ctx, freeCourse, userContext.userId, batch);
 
-  // Idempotency: Check if a BOGO enrollment already exists for this user & course
-  // Optimized to use index for userId, then filter by courseId
+  // Idempotency: Check if a BOGO enrollment already exists for this user & course.
+  // Use the composite (userId, courseId) index instead of scanning all of the
+  // user's enrollments and filtering inside the query.
   const existingEnrollments = await ctx.db
     .query("enrollments")
-    .withIndex("by_userId", (q) => q.eq("userId", userContext.userId))
-    .filter((q) => q.eq(q.field("courseId"), freeCourse._id))
+    .withIndex("by_userId_and_courseId", (q) =>
+      q.eq("userId", userContext.userId).eq("courseId", freeCourse._id),
+    )
     .collect();
   const existingBogo = existingEnrollments.find((e) => e.isBogoFree === true);
 
@@ -979,6 +987,7 @@ async function createBogoEnrollment(
       : (extractInternshipPlanFromDuration(freeCourse.duration) ?? undefined);
 
   const enrollmentId = await ctx.db.insert("enrollments", {
+    status: "active",
     userId: userContext.userId,
     userName: userContext.userName || userContext.userEmail,
     userEmail: userContext.userEmail,
@@ -1055,7 +1064,7 @@ async function createBogoEnrollment(
 }
 
 // Handle successful payment and create enrollment
-export const handleSuccessfulPayment = mutation({
+export const handleSuccessfulPayment = internalMutation({
   args: {
     userId: v.string(),
     courseId: v.id("courses"),
@@ -1153,6 +1162,7 @@ export const handleSuccessfulPayment = mutation({
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
+      status: "active",
       userId: args.userId,
       userName: args.studentName || args.userEmail,
       userEmail: args.userEmail,
@@ -1241,7 +1251,7 @@ export const handleSuccessfulPayment = mutation({
       // Schedule supervised therapy welcome email
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendSupervisedTherapyWelcomeEmail,
+        internal.emailActions.sendSupervisedTherapyWelcomeEmail,
         {
           userEmail: args.userEmail,
           studentName: args.studentName,
@@ -1263,7 +1273,7 @@ export const handleSuccessfulPayment = mutation({
       // Schedule internship enrollment confirmation email
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendInternshipEnrollmentConfirmation,
+        internal.emailActions.sendInternshipEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           userName: userName,
@@ -1286,7 +1296,7 @@ export const handleSuccessfulPayment = mutation({
       // Schedule certificate enrollment confirmation email
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendCertificateEnrollmentConfirmation,
+        internal.emailActions.sendCertificateEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           userName: userName,
@@ -1303,7 +1313,7 @@ export const handleSuccessfulPayment = mutation({
       // Schedule diploma enrollment confirmation email
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendDiplomaEnrollmentConfirmation,
+        internal.emailActions.sendDiplomaEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           userName: userName,
@@ -1320,7 +1330,7 @@ export const handleSuccessfulPayment = mutation({
       // Schedule pre-recorded enrollment confirmation email
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendPreRecordedEnrollmentConfirmation,
+        internal.emailActions.sendPreRecordedEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           userName: userName,
@@ -1333,7 +1343,7 @@ export const handleSuccessfulPayment = mutation({
       // Schedule masterclass enrollment confirmation email
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendMasterclassEnrollmentConfirmation,
+        internal.emailActions.sendMasterclassEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           userName: userName,
@@ -1350,7 +1360,7 @@ export const handleSuccessfulPayment = mutation({
       // Schedule therapy enrollment confirmation email
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendTherapyEnrollmentConfirmation,
+        internal.emailActions.sendTherapyEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           userName: userName,
@@ -1364,7 +1374,7 @@ export const handleSuccessfulPayment = mutation({
       // Schedule legacy enrollment confirmation email for other types
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendEnrollmentConfirmation,
+        internal.emailActions.sendEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           courseName: course.name,
@@ -1390,7 +1400,7 @@ export const handleSuccessfulPayment = mutation({
         ) {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendSupervisedTherapyWelcomeEmail,
+            internal.emailActions.sendSupervisedTherapyWelcomeEmail,
             {
               userEmail: args.userEmail,
               studentName: args.studentName,
@@ -1400,7 +1410,7 @@ export const handleSuccessfulPayment = mutation({
         } else if (bonusCourse.type === "therapy") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendTherapyEnrollmentConfirmation,
+            internal.emailActions.sendTherapyEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: userName,
@@ -1425,7 +1435,7 @@ export const handleSuccessfulPayment = mutation({
 
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendInternshipEnrollmentConfirmation,
+            internal.emailActions.sendInternshipEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: userName,
@@ -1442,7 +1452,7 @@ export const handleSuccessfulPayment = mutation({
         } else {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendEnrollmentConfirmation,
+            internal.emailActions.sendEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               courseName: bonusCourse.name,
@@ -1775,6 +1785,7 @@ export const handleCartCheckout = mutation({
       }
 
       const enrollmentId = await ctx.db.insert("enrollments", {
+        status: "active",
         userId: args.userId,
         courseId: lineItem.courseId,
         courseName: courseDisplayName,
@@ -2025,7 +2036,7 @@ export const handleCartCheckout = mutation({
       if (validWorksheets.length > 0) {
         await ctx.scheduler.runAfter(
           0,
-          api.emailActions.sendWorksheetPurchaseConfirmation,
+          internal.emailActions.sendWorksheetPurchaseConfirmation,
           {
             userEmail: args.userEmail,
             userName: args.studentName || args.userEmail,
@@ -2304,6 +2315,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
 
       // Create enrollment record
       const enrollmentId = await ctx.db.insert("enrollments", {
+        status: "active",
         userId: args.userEmail, // Use email as userId for guest users
         userName: guestUser.name,
         courseId: courseId,
@@ -2378,7 +2390,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         if (course.type === "internship") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendInternshipEnrollmentConfirmation,
+            internal.emailActions.sendInternshipEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: userName,
@@ -2395,7 +2407,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         } else if (course.type === "certificate") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendCertificateEnrollmentConfirmation,
+            internal.emailActions.sendCertificateEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: userName,
@@ -2411,7 +2423,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         } else if (course.type === "diploma") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendDiplomaEnrollmentConfirmation,
+            internal.emailActions.sendDiplomaEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: userName,
@@ -2427,7 +2439,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         } else if (course.type === "pre-recorded") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendPreRecordedEnrollmentConfirmation,
+            internal.emailActions.sendPreRecordedEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: userName,
@@ -2439,7 +2451,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         } else if (course.type === "masterclass") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendMasterclassEnrollmentConfirmation,
+            internal.emailActions.sendMasterclassEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: userName,
@@ -2455,7 +2467,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
         } else if (course.type === "therapy") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendTherapyEnrollmentConfirmation,
+            internal.emailActions.sendTherapyEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: userName,
@@ -2469,7 +2481,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
           // Fallback to generic enrollment confirmation for other types
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendEnrollmentConfirmation,
+            internal.emailActions.sendEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               courseName: course.name,
@@ -2691,6 +2703,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       }
 
       const enrollmentId = await ctx.db.insert("enrollments", {
+        status: "active",
         userId: args.userData.email,
         userName: args.userData.name,
         userEmail: args.userData.email,
@@ -2877,7 +2890,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       if (validWorksheets.length > 0) {
         await ctx.scheduler.runAfter(
           0,
-          api.emailActions.sendWorksheetPurchaseConfirmation,
+          internal.emailActions.sendWorksheetPurchaseConfirmation,
           {
             userEmail: args.userData.email,
             userName: args.userData.name,
@@ -2983,6 +2996,7 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
+      status: "active",
       userId: args.userEmail, // Use email as userId for guest users
       userName: guestUser.name,
       courseId: args.courseId,
@@ -3026,7 +3040,7 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       // Send therapy-specific email
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendTherapyEnrollmentConfirmation,
+        internal.emailActions.sendTherapyEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           userName: guestUser.name,
@@ -3040,7 +3054,7 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
       // Send generic enrollment confirmation email
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendEnrollmentConfirmation,
+        internal.emailActions.sendEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           courseName: course.name,
@@ -3062,7 +3076,7 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
         if (bonusCourse.type === "therapy") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendTherapyEnrollmentConfirmation,
+            internal.emailActions.sendTherapyEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: guestUser.name,
@@ -3075,7 +3089,7 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
         } else if (bonusCourse.type === "supervised") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendSupervisedTherapyWelcomeEmail,
+            internal.emailActions.sendSupervisedTherapyWelcomeEmail,
             {
               userEmail: args.userEmail,
               studentName: guestUser.name,
@@ -3085,7 +3099,7 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
         } else {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendEnrollmentConfirmation,
+            internal.emailActions.sendEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               courseName: bonusCourse.name,
@@ -3164,6 +3178,7 @@ export const handleSupervisedTherapyEnrollment = mutation({
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
+      status: "active",
       userId: args.userId,
       userName: args.studentName,
       userEmail: args.userEmail,
@@ -3205,7 +3220,7 @@ export const handleSupervisedTherapyEnrollment = mutation({
     // Schedule the new supervised therapy welcome email
     await ctx.scheduler.runAfter(
       0,
-      api.emailActions.sendSupervisedTherapyWelcomeEmail,
+      internal.emailActions.sendSupervisedTherapyWelcomeEmail,
       {
         userEmail: args.userEmail,
         studentName: args.studentName,
@@ -3222,7 +3237,7 @@ export const handleSupervisedTherapyEnrollment = mutation({
         if (bonusCourse.type === "supervised") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendSupervisedTherapyWelcomeEmail,
+            internal.emailActions.sendSupervisedTherapyWelcomeEmail,
             {
               userEmail: args.userEmail,
               studentName: args.studentName,
@@ -3232,7 +3247,7 @@ export const handleSupervisedTherapyEnrollment = mutation({
         } else if (bonusCourse.type === "therapy") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendTherapyEnrollmentConfirmation,
+            internal.emailActions.sendTherapyEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: args.studentName,
@@ -3245,7 +3260,7 @@ export const handleSupervisedTherapyEnrollment = mutation({
         } else {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendEnrollmentConfirmation,
+            internal.emailActions.sendEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               courseName: bonusCourse.name,
@@ -3354,6 +3369,7 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
+      status: "active",
       userId: args.userEmail, // Use email as userId for guest users
       userName: args.studentName,
       userEmail: args.userEmail,
@@ -3397,7 +3413,7 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
     // Schedule the new supervised therapy welcome email
     await ctx.scheduler.runAfter(
       0,
-      api.emailActions.sendSupervisedTherapyWelcomeEmail,
+      internal.emailActions.sendSupervisedTherapyWelcomeEmail,
       {
         userEmail: args.userEmail,
         studentName: args.studentName,
@@ -3414,7 +3430,7 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
         if (bonusCourse.type === "supervised") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendSupervisedTherapyWelcomeEmail,
+            internal.emailActions.sendSupervisedTherapyWelcomeEmail,
             {
               userEmail: args.userEmail,
               studentName: args.studentName,
@@ -3424,7 +3440,7 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
         } else if (bonusCourse.type === "therapy") {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendTherapyEnrollmentConfirmation,
+            internal.emailActions.sendTherapyEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               userName: args.studentName,
@@ -3437,7 +3453,7 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
         } else {
           await ctx.scheduler.runAfter(
             0,
-            api.emailActions.sendEnrollmentConfirmation,
+            internal.emailActions.sendEnrollmentConfirmation,
             {
               userEmail: args.userEmail,
               courseName: bonusCourse.name,
@@ -3479,7 +3495,7 @@ const googleSheetsActionResultValidator = v.union(
 );
 
 // Setup Google Sheets for enrollments
-export const setupEnrollmentGoogleSheet = action({
+export const setupEnrollmentGoogleSheet = internalAction({
   args: {
     spreadsheetId: v.string(),
     sheetName: v.optional(v.string()),
@@ -3489,7 +3505,7 @@ export const setupEnrollmentGoogleSheet = action({
     const sheetName = args.sheetName || "Enrollments";
 
     const result: GoogleSheetsActionResult = await ctx.runAction(
-      api.googleSheets.setupEnrollmentSheet,
+      internal.googleSheets.setupEnrollmentSheet,
       {
         spreadsheetId: args.spreadsheetId,
         sheetName: sheetName,

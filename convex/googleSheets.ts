@@ -1,7 +1,7 @@
 "use node";
 
 import { v } from "convex/values";
-import { action } from "./_generated/server";
+import { internalAction } from "./_generated/server";
 import {
   appendEnrollmentToSheet,
   setupEnrollmentSheetDocument,
@@ -40,7 +40,7 @@ const enrollmentDataValidator = v.object({
   enrollmentDate: v.string(),
 });
 
-export const addEnrollmentToSheet = action({
+export const addEnrollmentToSheet = internalAction({
   args: {
     enrollmentData: enrollmentDataValidator,
     spreadsheetId: v.string(),
@@ -62,7 +62,7 @@ export const addEnrollmentToSheet = action({
   },
 });
 
-export const setupEnrollmentSheet = action({
+export const setupEnrollmentSheet = internalAction({
   args: {
     spreadsheetId: v.string(),
     sheetName: v.string(),

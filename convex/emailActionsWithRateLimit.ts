@@ -1,6 +1,6 @@
-import { action } from "./_generated/server";
+import { internalAction } from "./_generated/server";
 import { v } from "convex/values";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { checkConvexRateLimit, convexEmailRatelimit } from "./rateLimit";
 import {
   emailActionResultValidator,
@@ -12,7 +12,7 @@ import {
 } from "./_shared/emailActionResult";
 
 // Example: Rate-limited version of sendTestEmail
-export const sendTestEmailWithRateLimit = action({
+export const sendTestEmailWithRateLimit = internalAction({
   args: {
     userEmail: v.string(),
   },
@@ -38,7 +38,7 @@ export const sendTestEmailWithRateLimit = action({
 
       // Call the original email function
       const result: EmailActionResult = await ctx.runAction(
-        api.emailActions.sendTestEmail,
+        internal.emailActions.sendTestEmail,
         {
           userEmail: args.userEmail,
         },
@@ -60,7 +60,7 @@ export const sendTestEmailWithRateLimit = action({
 });
 
 // Example: Rate-limited version of sendTestSupervisedEmail
-export const sendTestSupervisedEmailWithRateLimit = action({
+export const sendTestSupervisedEmailWithRateLimit = internalAction({
   args: {
     userEmail: v.string(),
     studentName: v.string(),
@@ -92,7 +92,7 @@ export const sendTestSupervisedEmailWithRateLimit = action({
 
       // Call the original supervised email function
       const result: EmailActionResult = await ctx.runAction(
-        api.emailActions.sendTestSupervisedEmail,
+        internal.emailActions.sendTestSupervisedEmail,
         {
           userEmail: args.userEmail,
           studentName: args.studentName,
@@ -118,7 +118,7 @@ export const sendTestSupervisedEmailWithRateLimit = action({
 });
 
 // Example: Rate-limited enrollment confirmation
-export const sendEnrollmentConfirmationWithRateLimit = action({
+export const sendEnrollmentConfirmationWithRateLimit = internalAction({
   args: {
     userEmail: v.string(),
     userPhone: v.optional(v.string()),
@@ -151,7 +151,7 @@ export const sendEnrollmentConfirmationWithRateLimit = action({
 
       // Call the original enrollment confirmation function
       const result: EmailActionResult = await ctx.runAction(
-        api.emailActions.sendEnrollmentConfirmation,
+        internal.emailActions.sendEnrollmentConfirmation,
         {
           userEmail: args.userEmail,
           userPhone: args.userPhone,

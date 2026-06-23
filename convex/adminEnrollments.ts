@@ -637,7 +637,7 @@ export const createManualEnrollment = mutation({
     } else {
       try {
         const checkoutResult: SuccessfulPaymentMutationResult =
-          await ctx.runMutation(api.myFunctions.handleSuccessfulPayment, {
+          await ctx.runMutation(internal.myFunctions.handleSuccessfulPayment, {
             userId: args.userId,
             userEmail: args.userEmail,
             userPhone: args.userPhone,
@@ -1159,7 +1159,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
       if (enrollment.sessionType) {
         await ctx.scheduler.runAfter(
           0,
-          api.emailActions.sendSupervisedTherapyWelcomeEmail,
+          internal.emailActions.sendSupervisedTherapyWelcomeEmail,
           {
             userEmail: recipientEmail,
             studentName: userName,
@@ -1170,7 +1170,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
       } else {
         await ctx.scheduler.runAfter(
           0,
-          api.emailActions.sendEnrollmentConfirmation,
+          internal.emailActions.sendEnrollmentConfirmation,
           {
             userEmail: recipientEmail,
             userPhone: enrollment.userPhone,
@@ -1188,7 +1188,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
     } else if (courseType === "therapy") {
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendTherapyEnrollmentConfirmation,
+        internal.emailActions.sendTherapyEnrollmentConfirmation,
         {
           userEmail: recipientEmail,
           userName,
@@ -1207,7 +1207,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
           "120";
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendInternshipEnrollmentConfirmation,
+        internal.emailActions.sendInternshipEnrollmentConfirmation,
         {
           userEmail: recipientEmail,
           userName,
@@ -1228,7 +1228,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
     } else if (courseType === "certificate" || courseType === "resume-studio") {
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendCertificateEnrollmentConfirmation,
+        internal.emailActions.sendCertificateEnrollmentConfirmation,
         {
           userEmail: recipientEmail,
           userName,
@@ -1248,7 +1248,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
     } else if (courseType === "diploma") {
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendDiplomaEnrollmentConfirmation,
+        internal.emailActions.sendDiplomaEnrollmentConfirmation,
         {
           userEmail: recipientEmail,
           userName,
@@ -1265,7 +1265,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
     } else if (courseType === "pre-recorded") {
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendPreRecordedEnrollmentConfirmation,
+        internal.emailActions.sendPreRecordedEnrollmentConfirmation,
         {
           userEmail: recipientEmail,
           userName,
@@ -1278,7 +1278,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
     } else if (courseType === "masterclass") {
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendMasterclassEnrollmentConfirmation,
+        internal.emailActions.sendMasterclassEnrollmentConfirmation,
         {
           userEmail: recipientEmail,
           userName,
@@ -1295,7 +1295,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
     } else if (courseType === "worksheet" && course.fileUrl) {
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendWorksheetPurchaseConfirmation,
+        internal.emailActions.sendWorksheetPurchaseConfirmation,
         {
           userEmail: recipientEmail,
           userName,
@@ -1307,7 +1307,7 @@ export const resendEnrollmentConfirmationEmail = mutation({
     } else {
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendEnrollmentConfirmation,
+        internal.emailActions.sendEnrollmentConfirmation,
         {
           userEmail: recipientEmail,
           userPhone: enrollment.userPhone,
@@ -1528,10 +1528,12 @@ export const transferEnrollment = mutation({
     const existingActiveInTarget =
       (await ctx.db
         .query("enrollments")
-        .withIndex("by_courseId_and_status", (q) =>
-          q.eq("courseId", args.targetCourseId).eq("status", "active"),
+        .withIndex("by_courseId_and_status_and_userId", (q) =>
+          q
+            .eq("courseId", args.targetCourseId)
+            .eq("status", "active")
+            .eq("userId", sourceEnrollment.userId),
         )
-        .filter((q) => q.eq(q.field("userId"), sourceEnrollment.userId))
         .first()) ??
       (await ctx.db
         .query("enrollments")

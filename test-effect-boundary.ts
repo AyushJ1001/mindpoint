@@ -150,7 +150,6 @@ test("checkout service exposes Effect implementations for all payment action wra
   const names = [
     "handleGuestUserPaymentSuccess",
     "handleGuestUserPaymentSuccessWithData",
-    "handleSingleCourseEnrollment",
     "handleGuestUserSingleEnrollment",
     "handleSupervisedTherapyEnrollment",
     "handleGuestUserSupervisedTherapyEnrollment",

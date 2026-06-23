@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
-import { api } from "./_generated/api";
+import { internal } from "./_generated/api";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
 import { CourseType } from "./schema";
@@ -461,7 +461,7 @@ export const queueMindPointsReminderEmails = mutation({
 
       await ctx.scheduler.runAfter(
         0,
-        api.emailActions.sendMindPointsReminderEmail,
+        internal.emailActions.sendMindPointsReminderEmail,
         {
           userEmail,
           userName,

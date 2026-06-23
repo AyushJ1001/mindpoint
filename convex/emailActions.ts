@@ -1,8 +1,8 @@
 "use node";
 
 import { v } from "convex/values";
-import { action } from "./_generated/server";
-import { api } from "./_generated/api";
+import { internalAction } from "./_generated/server";
+import { internal } from "./_generated/api";
 import { sendEmailWithCopy } from "./_shared/emailDelivery";
 import {
   emailActionResultValidator,
@@ -44,7 +44,7 @@ function escapeHtml(value: string): string {
 }
 
 // Test email action for debugging
-export const sendTestEmail = action({
+export const sendTestEmail = internalAction({
   args: {
     userEmail: v.string(),
   },
@@ -85,7 +85,7 @@ export const sendTestEmail = action({
 });
 
 // Test supervised email action for debugging
-export const sendTestSupervisedEmail = action({
+export const sendTestSupervisedEmail = internalAction({
   args: {
     userEmail: v.string(),
     studentName: v.string(),
@@ -102,7 +102,7 @@ export const sendTestSupervisedEmail = action({
 
       // Call the actual supervised email function
       const result: EmailActionResult = await ctx.runAction(
-        api.emailActions.sendSupervisedTherapyWelcomeEmail,
+        internal.emailActions.sendSupervisedTherapyWelcomeEmail,
         {
           userEmail: args.userEmail,
           studentName: args.studentName,
@@ -126,7 +126,7 @@ export const sendTestSupervisedEmail = action({
 });
 
 // Simple test email action: sends plain "hi" (or provided body) to a recipient
-export const sendSimpleTestEmail = action({
+export const sendSimpleTestEmail = internalAction({
   args: {
     to: v.string(),
     body: v.optional(v.string()),
@@ -157,7 +157,7 @@ export const sendSimpleTestEmail = action({
   },
 });
 
-export const sendMindPointsReminderEmail = action({
+export const sendMindPointsReminderEmail = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
@@ -226,7 +226,7 @@ export const sendMindPointsReminderEmail = action({
 });
 
 // Test email with simple attachment for debugging
-export const sendTestEmailWithAttachment = action({
+export const sendTestEmailWithAttachment = internalAction({
   args: {
     userEmail: v.string(),
   },
@@ -275,7 +275,7 @@ export const sendTestEmailWithAttachment = action({
 });
 
 // Test actual supervised enrollment email (simulates real enrollment)
-export const testActualSupervisedEnrollment = action({
+export const testActualSupervisedEnrollment = internalAction({
   args: {
     userEmail: v.string(),
     studentName: v.string(),
@@ -293,7 +293,7 @@ export const testActualSupervisedEnrollment = action({
 
       // Call the actual supervised email function that gets called during real enrollment
       const result: EmailActionResult = await ctx.runAction(
-        api.emailActions.sendSupervisedTherapyWelcomeEmail,
+        internal.emailActions.sendSupervisedTherapyWelcomeEmail,
         {
           userEmail: args.userEmail,
           studentName: args.studentName,
@@ -319,7 +319,7 @@ export const testActualSupervisedEnrollment = action({
   },
 });
 
-export const sendCertificateEnrollmentConfirmation = action({
+export const sendCertificateEnrollmentConfirmation = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
@@ -410,7 +410,7 @@ export const sendCertificateEnrollmentConfirmation = action({
   },
 });
 
-export const sendInternshipEnrollmentConfirmation = action({
+export const sendInternshipEnrollmentConfirmation = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
@@ -512,7 +512,7 @@ export const sendInternshipEnrollmentConfirmation = action({
   },
 });
 
-export const sendDiplomaEnrollmentConfirmation = action({
+export const sendDiplomaEnrollmentConfirmation = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
@@ -603,7 +603,7 @@ export const sendDiplomaEnrollmentConfirmation = action({
   },
 });
 
-export const sendPreRecordedEnrollmentConfirmation = action({
+export const sendPreRecordedEnrollmentConfirmation = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
@@ -678,7 +678,7 @@ export const sendPreRecordedEnrollmentConfirmation = action({
   },
 });
 
-export const sendMasterclassEnrollmentConfirmation = action({
+export const sendMasterclassEnrollmentConfirmation = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
@@ -770,7 +770,7 @@ export const sendMasterclassEnrollmentConfirmation = action({
 });
 
 // Legacy function for backward compatibility
-export const sendEnrollmentConfirmation = action({
+export const sendEnrollmentConfirmation = internalAction({
   args: {
     userEmail: v.string(),
     userPhone: v.optional(v.string()),
@@ -854,7 +854,7 @@ export const sendEnrollmentConfirmation = action({
   },
 });
 
-export const sendCartCheckoutConfirmation = action({
+export const sendCartCheckoutConfirmation = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
@@ -1011,7 +1011,7 @@ export const sendCartCheckoutConfirmation = action({
   },
 });
 
-export const sendTherapyEnrollmentConfirmation = action({
+export const sendTherapyEnrollmentConfirmation = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
@@ -1085,7 +1085,7 @@ export const sendTherapyEnrollmentConfirmation = action({
 // Note: sendSupervisedEnrollmentConfirmation function removed as it was unused
 // All supervised enrollments now use sendSupervisedTherapyWelcomeEmail which includes the required checklist PDFs
 
-export const sendSupervisedTherapyWelcomeEmail = action({
+export const sendSupervisedTherapyWelcomeEmail = internalAction({
   args: {
     userEmail: v.string(),
     studentName: v.string(),
@@ -1242,7 +1242,7 @@ export const sendSupervisedTherapyWelcomeEmail = action({
   },
 });
 
-export const sendWorksheetPurchaseConfirmation = action({
+export const sendWorksheetPurchaseConfirmation = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
@@ -1408,7 +1408,7 @@ export const sendWorksheetPurchaseConfirmation = action({
   },
 });
 
-export const sendAlreadyEnrolledNotification = action({
+export const sendAlreadyEnrolledNotification = internalAction({
   args: {
     userEmail: v.string(),
     userName: v.string(),
