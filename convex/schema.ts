@@ -353,6 +353,7 @@ export default defineSchema({
   })
     .index("by_courseId", ["courseId"])
     .index("by_courseId_and_lifecycleStatus", ["courseId", "lifecycleStatus"])
+    .index("by_lifecycleStatus", ["lifecycleStatus"])
     .index("by_legacySourceCourseId", ["legacySourceCourseId"]),
 
   offerCampaigns: defineTable({
