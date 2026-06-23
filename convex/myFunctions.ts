@@ -987,6 +987,7 @@ async function createBogoEnrollment(
       : (extractInternshipPlanFromDuration(freeCourse.duration) ?? undefined);
 
   const enrollmentId = await ctx.db.insert("enrollments", {
+    status: "active",
     userId: userContext.userId,
     userName: userContext.userName || userContext.userEmail,
     userEmail: userContext.userEmail,
@@ -1161,6 +1162,7 @@ export const handleSuccessfulPayment = internalMutation({
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
+      status: "active",
       userId: args.userId,
       userName: args.studentName || args.userEmail,
       userEmail: args.userEmail,
@@ -1783,6 +1785,7 @@ export const handleCartCheckout = mutation({
       }
 
       const enrollmentId = await ctx.db.insert("enrollments", {
+        status: "active",
         userId: args.userId,
         courseId: lineItem.courseId,
         courseName: courseDisplayName,
@@ -2312,6 +2315,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
 
       // Create enrollment record
       const enrollmentId = await ctx.db.insert("enrollments", {
+        status: "active",
         userId: args.userEmail, // Use email as userId for guest users
         userName: guestUser.name,
         courseId: courseId,
@@ -2699,6 +2703,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       }
 
       const enrollmentId = await ctx.db.insert("enrollments", {
+        status: "active",
         userId: args.userData.email,
         userName: args.userData.name,
         userEmail: args.userData.email,
@@ -2991,6 +2996,7 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
+      status: "active",
       userId: args.userEmail, // Use email as userId for guest users
       userName: guestUser.name,
       courseId: args.courseId,
@@ -3172,6 +3178,7 @@ export const handleSupervisedTherapyEnrollment = mutation({
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
+      status: "active",
       userId: args.userId,
       userName: args.studentName,
       userEmail: args.userEmail,
@@ -3362,6 +3369,7 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
 
     // Create enrollment record
     const enrollmentId = await ctx.db.insert("enrollments", {
+      status: "active",
       userId: args.userEmail, // Use email as userId for guest users
       userName: args.studentName,
       userEmail: args.userEmail,

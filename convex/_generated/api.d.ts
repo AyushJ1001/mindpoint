@@ -41,6 +41,7 @@ import type * as emailActionsWithRateLimit from "../emailActionsWithRateLimit.js
 import type * as googleSheets from "../googleSheets.js";
 import type * as image from "../image.js";
 import type * as loyaltySearch from "../loyaltySearch.js";
+import type * as migrations from "../migrations.js";
 import type * as mindPoints from "../mindPoints.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as rateLimit from "../rateLimit.js";
@@ -86,6 +87,7 @@ declare const fullApi: ApiFromModules<{
   googleSheets: typeof googleSheets;
   image: typeof image;
   loyaltySearch: typeof loyaltySearch;
+  migrations: typeof migrations;
   mindPoints: typeof mindPoints;
   myFunctions: typeof myFunctions;
   rateLimit: typeof rateLimit;
