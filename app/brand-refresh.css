@@ -27,6 +27,24 @@ main {
   box-shadow: 0 14px 32px -30px rgba(15, 77, 77, 0.58) !important;
 }
 
+/* The interactive navbar replaces the SSR navbar after hydration. Force its
+   brand slot to use the new TMP wordmark instead of the old /logo.png asset. */
+nav[data-app-navbar] a[aria-label="Home"] {
+  display: inline-block !important;
+  width: 13.5rem !important;
+  height: 2.75rem !important;
+  flex: 0 0 13.5rem !important;
+  background-image: url('/tmp-logo-vector.svg') !important;
+  background-repeat: no-repeat !important;
+  background-position: left center !important;
+  background-size: contain !important;
+}
+
+nav[data-app-navbar] a[aria-label="Home"] > img,
+nav[data-app-navbar] a[aria-label="Home"] > span {
+  display: none !important;
+}
+
 .brand-section-tint,
 .tmp-programs-page .brand-section-tint {
   background:
