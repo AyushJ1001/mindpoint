@@ -15,19 +15,18 @@ import TestimonialsSection from "@/components/landing/TestimonialsSection";
 import CoursePreviewSection from "@/components/landing/CoursePreviewSection";
 import FinalCtaSection from "@/components/landing/FinalCtaSection";
 
-export const revalidate = 3600; // Revalidate every hour
+export const revalidate = 3600;
 
 export const metadata = {
-  title: "The Mind Point - Mental Health Education & Professional Development",
+  title: "The Mind Point - Learn. Grow. Heal. Belong.",
   description:
-    "Empowering minds through comprehensive mental health education and professional development. Learn with structured programs, live workshops, and science-backed resources.",
+    "Psychology education, practical training and supportive learning designed for students, aspiring mental health professionals and lifelong learners.",
   keywords:
     "mental health, psychology, education, therapy, counseling, professional development, online courses",
   openGraph: {
-    title:
-      "The Mind Point - Mental Health Education & Professional Development",
+    title: "The Mind Point - Learn. Grow. Heal. Belong.",
     description:
-      "Empowering minds through comprehensive mental health education and professional development.",
+      "A thoughtful space for psychology education, practical training, healing and professional growth.",
     type: "website",
   },
   metadataBase: new URL("https://themindpoint.org"),
@@ -40,7 +39,6 @@ async function getUpcomingCourses() {
   try {
     const { convexUrl } = readPublicEnv();
 
-    // Skip data fetching during build if CONVEX_URL is not available
     if (!convexUrl) {
       console.warn(
         "NEXT_PUBLIC_CONVEX_URL not available, returning empty courses array",
@@ -76,6 +74,29 @@ async function getUpcomingCourses() {
   }
 }
 
+function HomeSections({ upcomingCourses }: { upcomingCourses: Awaited<ReturnType<typeof getUpcomingCourses>> }) {
+  return (
+    <>
+      <HeroSection canAccessAdmin={false} />
+      <Suspense
+        fallback={
+          <div className="section-padding text-muted-foreground text-center">
+            Loading programs...
+          </div>
+        }
+      >
+        <CoursePreviewSection upcomingCourses={upcomingCourses} />
+      </Suspense>
+      <TwoPathsSection />
+      <WhoThisIsForSection />
+      <WhatWeOfferSection />
+      <FeaturedEntrySection />
+      <TestimonialsSection />
+      <FinalCtaSection />
+    </>
+  );
+}
+
 export default async function Home() {
   let canAccessAdmin = false;
   const upcomingCourses = await getUpcomingCourses();
@@ -84,54 +105,33 @@ export default async function Home() {
     const { userId, sessionClaims, getToken } = await auth();
     const sessionEmail = await resolveAuthEmail(sessionClaims);
 
-    if (!userId && !sessionEmail) {
-      return (
-        <>
-          <HeroSection canAccessAdmin={canAccessAdmin} />
-          <TwoPathsSection />
-          <WhoThisIsForSection />
-          <WhatWeOfferSection />
-          <FeaturedEntrySection />
-          <TestimonialsSection />
-          <Suspense
-            fallback={
-              <div className="section-padding text-muted-foreground text-center">
-                Loading courses...
-              </div>
-            }
-          >
-            <CoursePreviewSection upcomingCourses={upcomingCourses} />
-          </Suspense>
-          <FinalCtaSection />
-        </>
-      );
-    }
-
-    try {
-      const convexToken = await getToken({ template: "convex" });
-      canAccessAdmin = await hasAdminAccess(userId, sessionEmail, convexToken);
-    } catch (error) {
-      console.warn("Failed to resolve home-page admin access:", error);
+    if (userId || sessionEmail) {
+      try {
+        const convexToken = await getToken({ template: "convex" });
+        canAccessAdmin = await hasAdminAccess(userId, sessionEmail, convexToken);
+      } catch (error) {
+        console.warn("Failed to resolve home-page admin access:", error);
+      }
     }
   }
 
   return (
     <>
       <HeroSection canAccessAdmin={canAccessAdmin} />
-      <TwoPathsSection />
-      <WhoThisIsForSection />
-      <WhatWeOfferSection />
-      <FeaturedEntrySection />
-      <TestimonialsSection />
       <Suspense
         fallback={
           <div className="section-padding text-muted-foreground text-center">
-            Loading courses...
+            Loading programs...
           </div>
         }
       >
         <CoursePreviewSection upcomingCourses={upcomingCourses} />
       </Suspense>
+      <TwoPathsSection />
+      <WhoThisIsForSection />
+      <WhatWeOfferSection />
+      <FeaturedEntrySection />
+      <TestimonialsSection />
       <FinalCtaSection />
     </>
   );
