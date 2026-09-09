@@ -74,9 +74,43 @@ body::before {
   background-size: 48px 48px !important;
 }
 
+.dark body {
+  background-image:
+    radial-gradient(circle at 8% 0%, rgba(142, 193, 195, 0.12), transparent 34rem),
+    linear-gradient(180deg, #102f2e 0%, var(--background) 100%) !important;
+}
+
 ::selection {
   background: rgba(142, 193, 195, 0.35);
   color: #173f3d;
+}
+
+/* Founder-selected navigation treatment. Keep the existing behaviour and
+   information architecture, but visually move it into the new TMP identity. */
+[data-app-navbar] {
+  border-color: rgba(15, 77, 77, 0.1) !important;
+  background: rgba(250, 248, 243, 0.9) !important;
+  box-shadow: 0 12px 36px -28px rgba(15, 77, 77, 0.55) !important;
+  backdrop-filter: blur(18px) !important;
+}
+
+.dark [data-app-navbar] {
+  background: rgba(16, 47, 46, 0.9) !important;
+}
+
+[data-app-navbar] img[alt="The Mind Point"] {
+  content: url("/tmp-botanical-logo.svg");
+  width: 2.75rem !important;
+  height: 2.75rem !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  border: 0 !important;
+  --tw-ring-shadow: 0 0 #0000 !important;
+}
+
+[data-app-navbar] a[aria-label="Home"] > span {
+  font-weight: 500 !important;
+  letter-spacing: -0.025em !important;
 }
 
 .brand-kicker {
