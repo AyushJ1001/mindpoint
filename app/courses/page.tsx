@@ -6,36 +6,35 @@ import CoursesHero from "@/components/CoursesHero";
 import Script from "next/script";
 import { Suspense } from "react";
 
-export const revalidate = 1800; // Revalidate every 30 minutes
+export const revalidate = 1800;
 
 export const metadata: Metadata = {
-  title: "All Courses - The Mind Point",
+  title: "Programs - The Mind Point",
   description:
-    "Explore our comprehensive collection of mental health courses, including certificate programs, diplomas, internships, therapy sessions, and professional development courses.",
+    "Explore psychology certificate courses, diplomas, internships, supervised learning, therapy sessions, masterclasses, and flexible self-paced programs from The Mind Point.",
   keywords:
-    "mental health courses, psychology courses, certificate programs, diploma courses, therapy sessions, counseling courses, professional development, online learning",
+    "psychology courses, mental health education, certificate programs, diploma courses, internships, therapy sessions, supervised learning, online psychology courses",
   openGraph: {
-    title: "All Courses - The Mind Point",
+    title: "Programs - The Mind Point",
     description:
-      "Explore our comprehensive collection of mental health courses and professional development programs.",
+      "Psychology education, practical training, supervised learning, and personal support — all in one thoughtful learning ecosystem.",
     type: "website",
     url: "https://themindpoint.org/courses",
   },
   twitter: {
     card: "summary_large_image",
-    title: "All Courses - The Mind Point",
+    title: "Programs - The Mind Point",
     description:
-      "Explore our comprehensive collection of mental health courses and professional development programs.",
+      "Explore psychology learning and support designed around where you are now.",
   },
 };
 
-// Structured data for the course catalog
 const coursesStructuredData = {
   "@context": "https://schema.org",
   "@type": "ItemList",
-  name: "Mental Health Education Courses",
+  name: "The Mind Point Psychology Programs",
   description:
-    "Comprehensive collection of mental health courses, certificate programs, diplomas, and professional development courses",
+    "Psychology education, certificate programs, diplomas, supervised learning, therapy sessions, and professional development programs",
   url: "https://themindpoint.org/courses",
   numberOfItems: "50+",
   itemListElement: [
@@ -48,10 +47,7 @@ const coursesStructuredData = {
         description:
           "Professional certification programs in psychology and mental health",
         url: "https://themindpoint.org/courses/certificate",
-        provider: {
-          "@type": "Organization",
-          name: "The Mind Point",
-        },
+        provider: { "@type": "Organization", name: "The Mind Point" },
       },
     },
     {
@@ -63,10 +59,7 @@ const coursesStructuredData = {
         description:
           "Comprehensive diploma courses for in-depth knowledge and expertise",
         url: "https://themindpoint.org/courses/diploma",
-        provider: {
-          "@type": "Organization",
-          name: "The Mind Point",
-        },
+        provider: { "@type": "Organization", name: "The Mind Point" },
       },
     },
     {
@@ -78,10 +71,7 @@ const coursesStructuredData = {
         description:
           "Professional therapy and counseling services for mental wellness",
         url: "https://themindpoint.org/courses/therapy",
-        provider: {
-          "@type": "Organization",
-          name: "The Mind Point",
-        },
+        provider: { "@type": "Organization", name: "The Mind Point" },
       },
     },
     {
@@ -93,10 +83,7 @@ const coursesStructuredData = {
         description:
           "Hands-on experience through structured internship opportunities",
         url: "https://themindpoint.org/courses/internship",
-        provider: {
-          "@type": "Organization",
-          name: "The Mind Point",
-        },
+        provider: { "@type": "Organization", name: "The Mind Point" },
       },
     },
     {
@@ -106,12 +93,9 @@ const coursesStructuredData = {
         "@type": "Course",
         name: "Masterclasses",
         description:
-          "Intensive sessions with industry experts and thought leaders",
+          "Focused learning experiences across psychology and mental health topics",
         url: "https://themindpoint.org/courses/masterclass",
-        provider: {
-          "@type": "Organization",
-          name: "The Mind Point",
-        },
+        provider: { "@type": "Organization", name: "The Mind Point" },
       },
     },
   ],
@@ -119,7 +103,6 @@ const coursesStructuredData = {
 
 async function getAllCourses() {
   try {
-    // Skip data fetching during build if CONVEX_URL is not available
     if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
       console.warn(
         "NEXT_PUBLIC_CONVEX_URL not available, returning empty courses array",
@@ -140,7 +123,7 @@ export default async function CoursesPage() {
   const courses = await getAllCourses();
 
   return (
-    <>
+    <div className="tmp-programs-page">
       <Script
         id="courses-structured-data"
         type="application/ld+json"
@@ -149,9 +132,28 @@ export default async function CoursesPage() {
         }}
       />
       <CoursesHero />
-      <Suspense fallback={<div>Loading courses...</div>}>
-        <CoursesClient coursesData={courses} />
-      </Suspense>
-    </>
+      <section className="brand-section-tint border-t border-primary/5 py-14 sm:py-18 lg:py-20">
+        <div className="container">
+          <div className="mx-auto mb-10 max-w-3xl text-center">
+            <span className="brand-kicker">Browse all programs</span>
+            <h2 className="font-display text-foreground mt-4 text-4xl font-medium sm:text-5xl">
+              Compare the details. Choose at your pace.
+            </h2>
+            <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg leading-8">
+              Dates, formats, pricing, and enrolment options remain clear and practical — with the new TMP visual language around them.
+            </p>
+          </div>
+          <Suspense
+            fallback={
+              <div className="py-16 text-center text-muted-foreground">
+                Loading programs...
+              </div>
+            }
+          >
+            <CoursesClient coursesData={courses} />
+          </Suspense>
+        </div>
+      </section>
+    </div>
   );
 }
