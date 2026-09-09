@@ -1,73 +1,85 @@
+import Image from "next/image";
+import Link from "next/link";
+import { ArrowRight, CalendarDays } from "lucide-react";
 import { ConvexHttpClient } from "convex/browser";
-import { auth } from "@clerk/nextjs/server";
 import { api } from "@/lib/backend/api";
 import { readPublicEnv } from "@/lib/config";
-import { Suspense } from "react";
-import { hasAdminAccess } from "@/lib/admin-access";
-import { resolveAuthEmail } from "@/lib/clerk-email";
-import { isClerkServerConfigured } from "@/lib/clerk-env";
-import HeroSection from "@/components/landing/HeroSection";
-import TwoPathsSection from "@/components/landing/TwoPathsSection";
-import WhoThisIsForSection from "@/components/landing/WhoThisIsForSection";
-import WhatWeOfferSection from "@/components/landing/WhatWeOfferSection";
-import FeaturedEntrySection from "@/components/landing/FeaturedEntrySection";
-import TestimonialsSection from "@/components/landing/TestimonialsSection";
-import CoursePreviewSection from "@/components/landing/CoursePreviewSection";
-import FinalCtaSection from "@/components/landing/FinalCtaSection";
 
 export const revalidate = 3600;
 
 export const metadata = {
-  title: "The Mind Point - Learn. Grow. Heal. Belong.",
+  title: "The Mind Point - A Kinder, Brighter You.",
   description:
     "Psychology education, practical training and supportive learning designed for students, aspiring mental health professionals and lifelong learners.",
-  keywords:
-    "mental health, psychology, education, therapy, counseling, professional development, online courses",
-  openGraph: {
-    title: "The Mind Point - Learn. Grow. Heal. Belong.",
-    description:
-      "A thoughtful space for psychology education, practical training, healing and professional growth.",
-    type: "website",
-  },
   metadataBase: new URL("https://themindpoint.org"),
-  alternates: {
-    canonical: "/",
-  },
+  alternates: { canonical: "/" },
 };
+
+const pathways = [
+  {
+    number: "01",
+    title: "Learn psychology with depth",
+    text: "Certificate courses, diplomas and masterclasses built to move beyond memorising theory into real understanding and application.",
+    href: "/courses",
+    link: "Explore programs",
+  },
+  {
+    number: "02",
+    title: "Build practical confidence",
+    text: "Internships, supervised learning and case-based practice designed for psychology students and emerging professionals.",
+    href: "/courses/internship",
+    link: "Explore practical training",
+  },
+  {
+    number: "03",
+    title: "Find personal support",
+    text: "Accessible therapy and counselling for moments when you need clarity, grounding, emotional support or a place to begin.",
+    href: "/courses/therapy",
+    link: "Explore personal support",
+  },
+];
+
+const voices = [
+  {
+    quote:
+      "The learning felt clear, practical and genuinely useful — not like another set of notes to memorise.",
+    label: "Psychology learner",
+  },
+  {
+    quote:
+      "TMP gave me a space where I could ask questions, practise, and slowly feel more confident about the work I want to do.",
+    label: "Certificate student",
+  },
+  {
+    quote:
+      "What stayed with me was how human the whole experience felt. Professional, but never intimidating.",
+    label: "Community member",
+  },
+];
 
 async function getUpcomingCourses() {
   try {
     const { convexUrl } = readPublicEnv();
-
-    if (!convexUrl) {
-      console.warn(
-        "NEXT_PUBLIC_CONVEX_URL not available, returning empty courses array",
-      );
-      return [];
-    }
+    if (!convexUrl) return [];
 
     const convex = new ConvexHttpClient(convexUrl);
     const allCourses = await convex.query(api.courses.listCourses, {
       count: undefined,
     });
 
-    const upcomingCourses = allCourses
-      ?.filter((course) => {
-        if (!course.startDate || course.startDate.trim() === "") return false;
-        if (!course.type) return false;
-        if (course.type === "pre-recorded") return false;
-
-        const startDate = new Date(course.startDate);
-        const now = new Date();
-        return startDate > now;
-      })
-      ?.sort(
-        (a, b) =>
-          new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
-      )
-      .slice(0, 4);
-
-    return upcomingCourses || [];
+    return (
+      allCourses
+        ?.filter((course) => {
+          if (!course.startDate || course.startDate.trim() === "") return false;
+          if (!course.type || course.type === "pre-recorded") return false;
+          return new Date(course.startDate) > new Date();
+        })
+        ?.sort(
+          (a, b) =>
+            new Date(a.startDate).getTime() - new Date(b.startDate).getTime(),
+        )
+        .slice(0, 3) || []
+    );
   } catch (error) {
     console.warn("Failed to fetch upcoming courses:", error);
     return [];
@@ -75,41 +87,344 @@ async function getUpcomingCourses() {
 }
 
 export default async function Home() {
-  let canAccessAdmin = false;
   const upcomingCourses = await getUpcomingCourses();
 
-  if (isClerkServerConfigured()) {
-    const { userId, sessionClaims, getToken } = await auth();
-    const sessionEmail = await resolveAuthEmail(sessionClaims);
-
-    if (userId || sessionEmail) {
-      try {
-        const convexToken = await getToken({ template: "convex" });
-        canAccessAdmin = await hasAdminAccess(userId, sessionEmail, convexToken);
-      } catch (error) {
-        console.warn("Failed to resolve home-page admin access:", error);
-      }
-    }
-  }
-
   return (
-    <>
-      <HeroSection canAccessAdmin={canAccessAdmin} />
-      <Suspense
-        fallback={
-          <div className="section-padding text-muted-foreground text-center">
-            Loading programs...
+    <div className="bg-[#fffdf9] text-[#173f3d]">
+      {/* HERO — intentionally mirrors the airy editorial feel of the approved brand board */}
+      <section className="relative overflow-hidden border-b border-[#0f4d4d]/8">
+        <div className="grid min-h-[46rem] lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="relative flex items-center bg-[#fffdf9] px-6 py-14 sm:px-10 lg:px-[7vw] lg:py-20">
+            <div className="relative z-10 max-w-[36rem]">
+              <Image
+                src="/tmp-botanical-logo.svg"
+                alt="The Mind Point"
+                width={170}
+                height={170}
+                className="mb-7 h-24 w-24 object-contain sm:h-28 sm:w-28"
+                priority
+              />
+
+              <p className="mb-5 text-[0.68rem] font-semibold tracking-[0.25em] text-[#0f4d4d]/60 uppercase">
+                Psychology education · healing · growth
+              </p>
+
+              <h1 className="font-display text-[clamp(4.3rem,7.2vw,7.4rem)] leading-[0.84] font-medium tracking-[-0.06em] text-[#173f3d]">
+                A Kinder,
+                <br />
+                <span className="italic">Brighter You.</span>
+              </h1>
+
+              <p className="mt-8 max-w-[34rem] text-lg leading-8 text-[#58706d] sm:text-xl">
+                Practical tools. Compassionate guidance. Psychology learning
+                designed to help you understand, grow and move forward with
+                more clarity.
+              </p>
+
+              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/courses"
+                  className="inline-flex items-center justify-center rounded-full bg-[#0f4d4d] px-7 py-3.5 text-sm font-semibold tracking-wide text-[#faf8f3] shadow-[0_18px_36px_-20px_rgba(15,77,77,0.75)] transition hover:-translate-y-0.5 hover:bg-[#173f3d]"
+                >
+                  Start your journey
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+                <Link
+                  href="/about"
+                  className="inline-flex items-center justify-center rounded-full border border-[#0f4d4d]/18 bg-white px-7 py-3.5 text-sm font-semibold tracking-wide text-[#173f3d] transition hover:-translate-y-0.5 hover:bg-[#eef5f3]"
+                >
+                  Discover TMP
+                </Link>
+              </div>
+
+              <p className="mt-12 text-[0.68rem] font-semibold tracking-[0.24em] text-[#0f4d4d]/55 uppercase">
+                Learn · Grow · Heal · Belong
+              </p>
+            </div>
+
+            <div
+              className="pointer-events-none absolute -left-24 bottom-[-11rem] h-[23rem] w-[23rem] rounded-full border border-[#8ec1c3]/18"
+              aria-hidden="true"
+            />
           </div>
-        }
-      >
-        <CoursePreviewSection upcomingCourses={upcomingCourses} />
-      </Suspense>
-      <TwoPathsSection />
-      <WhoThisIsForSection />
-      <WhatWeOfferSection />
-      <FeaturedEntrySection />
-      <TestimonialsSection />
-      <FinalCtaSection />
-    </>
+
+          <div className="relative min-h-[34rem] overflow-hidden lg:min-h-full">
+            <Image
+              src="/illustrations/hero.jpg"
+              alt="Calm coastal landscape representing growth and reflection"
+              fill
+              priority
+              className="object-cover object-center"
+              sizes="(max-width: 1024px) 100vw, 55vw"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#fffdf9]/18 via-transparent to-transparent" />
+            <div className="absolute right-8 top-10 max-w-[12rem] text-right sm:right-12 sm:top-14">
+              <p className="font-display text-2xl leading-tight italic text-[#173f3d] sm:text-3xl">
+                Wellness
+                <br />
+                Belongs
+                <br />
+                Here.
+              </p>
+              <span className="mt-4 inline-block h-px w-10 bg-[#b79755]" />
+            </div>
+            <div className="absolute right-8 bottom-8 text-right sm:right-12 sm:bottom-12">
+              <p className="text-[0.62rem] font-semibold tracking-[0.26em] text-[#173f3d]/70 uppercase">
+                Mindful people
+                <br />
+                Brighter tomorrows
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* EDITORIAL INTRO — no conventional cards */}
+      <section className="px-6 py-24 sm:px-10 lg:px-[7vw] lg:py-32">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-24">
+            <div>
+              <p className="text-[0.68rem] font-semibold tracking-[0.26em] text-[#0f4d4d]/55 uppercase">
+                The Mind Point
+              </p>
+              <h2 className="font-display mt-5 text-5xl leading-[0.95] font-medium tracking-[-0.04em] sm:text-6xl">
+                Psychology that feels
+                <span className="block italic">clear, human and useful.</span>
+              </h2>
+            </div>
+            <div className="lg:pt-14">
+              <p className="max-w-2xl text-xl leading-9 text-[#607572]">
+                We bring learning, practice and personal support into one
+                thoughtful space — so psychology feels less overwhelming and
+                more meaningful, whether you are studying it, working in it, or
+                simply trying to understand yourself better.
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-20 border-t border-[#0f4d4d]/12">
+            {pathways.map((item) => (
+              <Link
+                href={item.href}
+                key={item.number}
+                className="group grid gap-5 border-b border-[#0f4d4d]/12 py-9 transition sm:grid-cols-[5rem_0.8fr_1.2fr_auto] sm:items-center sm:gap-8 lg:py-11"
+              >
+                <span className="font-display text-2xl italic text-[#b79755]">
+                  {item.number}
+                </span>
+                <h3 className="font-display text-3xl leading-tight font-medium sm:text-4xl">
+                  {item.title}
+                </h3>
+                <p className="max-w-xl text-base leading-7 text-[#657774]">
+                  {item.text}
+                </p>
+                <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#0f4d4d]/15 bg-[#f4f8f6] text-[#0f4d4d] transition group-hover:translate-x-1 group-hover:bg-[#0f4d4d] group-hover:text-white">
+                  <ArrowRight className="h-4 w-4" />
+                </span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* DEEP TEAL BRAND MOMENT */}
+      <section className="relative overflow-hidden bg-[#0f4d4d] px-6 py-24 text-[#faf8f3] sm:px-10 lg:px-[7vw] lg:py-32">
+        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full border border-[#9fd0cf]/10" />
+        <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
+          <div>
+            <p className="text-[0.68rem] font-semibold tracking-[0.26em] text-[#9fd0cf] uppercase">
+              A calmer way to learn
+            </p>
+            <h2 className="font-display mt-5 text-5xl leading-[0.96] font-medium tracking-[-0.04em] sm:text-6xl">
+              Serious learning.
+              <span className="block italic text-[#b9dedd]">Never cold.</span>
+            </h2>
+          </div>
+          <p className="max-w-2xl text-lg leading-8 text-[#d2e1de] sm:text-xl sm:leading-9">
+            TMP is built for people who want depth without intimidation,
+            structure without rigidity, and a professional learning environment
+            that still feels safe enough to ask, question, practise and grow.
+          </p>
+        </div>
+      </section>
+
+      {/* UPCOMING PROGRAMS — magazine-like large features */}
+      <section className="px-6 py-24 sm:px-10 lg:px-[7vw] lg:py-32">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[0.68rem] font-semibold tracking-[0.26em] text-[#0f4d4d]/55 uppercase">
+                Now enrolling
+              </p>
+              <h2 className="font-display mt-4 text-5xl leading-none font-medium tracking-[-0.04em] sm:text-6xl">
+                Your next place to learn.
+              </h2>
+            </div>
+            <Link
+              href="/courses"
+              className="inline-flex items-center text-sm font-semibold text-[#0f4d4d]"
+            >
+              View all programs
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </div>
+
+          {upcomingCourses.length > 0 ? (
+            <div className="mt-14 grid gap-8 lg:grid-cols-3">
+              {upcomingCourses.map((course, index) => {
+                const start = new Date(course.startDate).toLocaleDateString(
+                  "en-IN",
+                  { day: "numeric", month: "short", year: "numeric" },
+                );
+                const image = course.imageUrls?.[0];
+                return (
+                  <Link
+                    href={`/courses/${course._id}`}
+                    key={course._id}
+                    className={`group ${index === 0 ? "lg:col-span-2" : ""}`}
+                  >
+                    <div
+                      className={`relative overflow-hidden rounded-[2rem] bg-[#eef4f2] ${index === 0 ? "aspect-[16/9]" : "aspect-[4/5]"}`}
+                    >
+                      {image ? (
+                        <Image
+                          src={image}
+                          alt={course.name}
+                          fill
+                          className="object-cover transition duration-700 group-hover:scale-[1.02]"
+                          sizes={index === 0 ? "(max-width: 1024px) 100vw, 66vw" : "(max-width: 1024px) 100vw, 33vw"}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(142,193,195,0.45),transparent_20rem),linear-gradient(145deg,#f2f7f5,#e5efec)]" />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-[#173f3d]/70 via-transparent to-transparent" />
+                      <div className="absolute right-5 bottom-5 left-5 text-white sm:right-7 sm:bottom-7 sm:left-7">
+                        <div className="mb-3 flex items-center gap-2 text-[0.68rem] font-semibold tracking-[0.16em] uppercase text-white/80">
+                          <CalendarDays className="h-4 w-4" />
+                          {start}
+                        </div>
+                        <h3 className="font-display max-w-2xl text-3xl leading-tight font-medium sm:text-4xl">
+                          {course.name}
+                        </h3>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mt-14 border-y border-[#0f4d4d]/12 py-12 text-[#607572]">
+              New batches will appear here as soon as they are published.
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* PERSONAL SUPPORT SPLIT */}
+      <section className="grid min-h-[42rem] lg:grid-cols-2">
+        <div className="relative min-h-[28rem] overflow-hidden lg:min-h-full">
+          <Image
+            src="/illustrations/hope.jpg"
+            alt="A calm space for personal support"
+            fill
+            className="object-cover"
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
+          <div className="absolute inset-0 bg-[#0f4d4d]/10" />
+        </div>
+        <div className="flex items-center bg-[#edf5f2] px-6 py-16 sm:px-10 lg:px-[7vw] lg:py-20">
+          <div className="max-w-xl">
+            <p className="text-[0.68rem] font-semibold tracking-[0.26em] text-[#0f4d4d]/55 uppercase">
+              Personal support
+            </p>
+            <h2 className="font-display mt-5 text-5xl leading-[0.95] font-medium tracking-[-0.04em] sm:text-6xl">
+              Some growth begins
+              <span className="block italic">with being heard.</span>
+            </h2>
+            <p className="mt-7 text-lg leading-8 text-[#617572]">
+              Therapy and counselling at TMP are designed to feel approachable,
+              grounded and practical — a place to understand what is happening
+              and decide what you need next.
+            </p>
+            <Link
+              href="/courses/therapy"
+              className="mt-9 inline-flex items-center rounded-full bg-[#0f4d4d] px-7 py-3.5 text-sm font-semibold tracking-wide text-white"
+            >
+              Explore support
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* TESTIMONIALS — editorial quotes rather than cards */}
+      <section className="px-6 py-24 sm:px-10 lg:px-[7vw] lg:py-32">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl">
+            <p className="text-[0.68rem] font-semibold tracking-[0.26em] text-[#0f4d4d]/55 uppercase">
+              Student voices
+            </p>
+            <h2 className="font-display mt-4 text-5xl leading-none font-medium tracking-[-0.04em] sm:text-6xl">
+              What learners carry with them.
+            </h2>
+          </div>
+
+          <div className="mt-16 grid gap-12 lg:grid-cols-3 lg:gap-10">
+            {voices.map((voice, index) => (
+              <blockquote
+                key={voice.label}
+                className={`border-t border-[#0f4d4d]/16 pt-7 ${index === 1 ? "lg:mt-16" : ""}`}
+              >
+                <span className="font-display text-6xl leading-none text-[#b79755]/45">“</span>
+                <p className="font-display -mt-3 text-3xl leading-[1.2] font-medium text-[#173f3d]">
+                  {voice.quote}
+                </p>
+                <footer className="mt-7 text-[0.68rem] font-semibold tracking-[0.18em] text-[#0f4d4d]/55 uppercase">
+                  {voice.label}
+                </footer>
+              </blockquote>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FINAL COASTAL CTA */}
+      <section className="relative min-h-[34rem] overflow-hidden">
+        <Image
+          src="/illustrations/hero.jpg"
+          alt=""
+          fill
+          className="object-cover"
+          sizes="100vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#0f4d4d]/92 via-[#173f3d]/78 to-[#0f4d4d]/32" />
+        <div className="relative z-10 flex min-h-[34rem] items-center px-6 py-20 sm:px-10 lg:px-[7vw]">
+          <div className="max-w-3xl text-white">
+            <p className="text-[0.68rem] font-semibold tracking-[0.26em] text-[#b9dedd] uppercase">
+              A brighter tomorrow starts here
+            </p>
+            <h2 className="font-display mt-5 text-5xl leading-[0.95] font-medium tracking-[-0.04em] sm:text-6xl lg:text-7xl">
+              Learn something meaningful.
+              <span className="block italic text-[#d9efeb]">Carry it forward.</span>
+            </h2>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/courses"
+                className="inline-flex items-center justify-center rounded-full bg-[#faf8f3] px-7 py-3.5 text-sm font-semibold text-[#0f4d4d]"
+              >
+                Explore programs
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+              <Link
+                href="/about"
+                className="inline-flex items-center justify-center rounded-full border border-white/30 bg-white/8 px-7 py-3.5 text-sm font-semibold text-white backdrop-blur"
+              >
+                About The Mind Point
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
