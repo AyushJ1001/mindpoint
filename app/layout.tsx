@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono, Fraunces } from "next/font/google";
+import { Cormorant_Garamond, JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
+import "./brand.css";
 import "react-phone-number-input/style.css";
 import ClientProviders from "@/components/ClientProviders";
 import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 
-const plusJakarta = Plus_Jakarta_Sans({
+const manrope = Manrope({
   variable: "--font-manrope",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
@@ -18,15 +19,17 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const fraunces = Fraunces({
+const cormorant = Cormorant_Garamond({
   variable: "--font-syne",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
 });
 
 export const metadata: Metadata = {
   title: "The Mind Point",
-  description: "A platform for mental health education and support",
+  description:
+    "Learn. Grow. Heal. Belong. Psychology education, practical training and support designed for a kinder, brighter tomorrow.",
   icons: {
     icon: "/logo.ico",
   },
@@ -77,9 +80,8 @@ export default function RootLayout({
         <Analytics />
       </head>
       <body
-        className={`${plusJakarta.variable} ${jetbrainsMono.variable} ${fraunces.variable} flex min-h-screen flex-col antialiased`}
+        className={`${manrope.variable} ${jetbrainsMono.variable} ${cormorant.variable} flex min-h-screen flex-col antialiased`}
       >
-        {/* Skip link for keyboard users */}
         <a href="#main-content" className="skip-link">
           Skip to main content
         </a>
