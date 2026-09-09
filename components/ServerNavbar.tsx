@@ -4,18 +4,26 @@ import { Menu } from "lucide-react";
 
 export default function ServerNavbar() {
   return (
-    <nav className="bg-background/95 border-border sticky top-0 z-50 w-full border-b shadow-sm backdrop-blur-sm">
+    <nav
+      data-app-navbar
+      className="bg-background/95 border-border sticky top-0 z-50 w-full border-b shadow-sm backdrop-blur-sm"
+    >
       <div className="container flex h-16 items-center">
         <div className="mr-4 flex">
-          <Link href="/" className="mr-6 flex items-center gap-2.5">
+          <Link
+            href="/"
+            className="mr-6 flex items-center gap-2.5"
+            aria-label="Home"
+          >
             <Image
-              src="/logo.png"
+              src="/tmp-botanical-logo.svg"
               alt="The Mind Point"
-              width={36}
-              height={36}
-              className="h-8 w-8 rounded-xl ring-1 ring-border sm:h-9 sm:w-9"
+              width={44}
+              height={44}
+              className="h-10 w-10 object-contain sm:h-11 sm:w-11"
+              priority
             />
-            <span className="text-foreground font-display text-base font-bold tracking-tight sm:text-xl">
+            <span className="text-foreground font-display text-lg font-medium tracking-tight sm:text-2xl">
               The Mind Point
             </span>
           </Link>
@@ -29,7 +37,7 @@ export default function ServerNavbar() {
                   href="/courses"
                   className="text-foreground/70 transition-colors hover:text-primary"
                 >
-                  Courses
+                  Programs
                 </Link>
                 <Link
                   href="/about"
@@ -54,7 +62,6 @@ export default function ServerNavbar() {
           </div>
 
           <div className="flex items-center space-x-2">
-            {/* Placeholder for cart and auth - will be hydrated client-side */}
             <div className="flex items-center space-x-2">
               <div className="relative">
                 <button className="p-2">
