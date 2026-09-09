@@ -95,7 +95,7 @@ export default function CoursesLayout({
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full overflow-x-clip">
+      <div className="tmp-program-shell flex min-h-screen w-full overflow-x-clip">
         <AppSidebar />
         <main className="min-w-0 flex-1">
           <div className="sticky top-16 z-30 border-b border-primary/10 bg-[#faf8f3]/90 shadow-[0_12px_35px_-30px_rgba(15,77,77,0.55)] backdrop-blur-xl dark:bg-[#102f2e]/90">
