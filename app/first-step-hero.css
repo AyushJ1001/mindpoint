@@ -1,0 +1,82 @@
+/* First-step homepage refinement requested by Aksha.
+   Scope: hero/background/typography only. Lower homepage sections stay untouched. */
+
+/* The homepage root is currently the only top-level content wrapper using both
+   of these brand utility classes, so this keeps the overrides local to home. */
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child {
+  background: #fbfaf6 !important;
+  border-bottom-color: rgba(15, 77, 77, 0.07) !important;
+}
+
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid {
+  min-height: 38rem !important;
+}
+
+/* Left side: return to the earlier, calmer scale and the brand-board type feel. */
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:first-child {
+  background: #fbfaf6 !important;
+}
+
+/* The logo now lives clearly in the navigation; remove the oversized duplicate
+   from the hero so the composition matches the approved coastal brand board. */
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:first-child img[alt="The Mind Point"] {
+  display: none !important;
+}
+
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child h1 {
+  font-family: var(--font-lora), Georgia, serif !important;
+  font-size: clamp(3.25rem, 5.6vw, 5.4rem) !important;
+  line-height: 0.98 !important;
+  letter-spacing: -0.035em !important;
+  font-weight: 500 !important;
+}
+
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child h1 span {
+  font-family: var(--font-lora), Georgia, serif !important;
+  font-style: italic !important;
+}
+
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child h1 + p {
+  margin-top: 1.5rem !important;
+  max-width: 34rem !important;
+  font-size: 1.125rem !important;
+  line-height: 1.75rem !important;
+}
+
+/* Right side: use the exact coastal crop from the approved brand board,
+   without dark overlays or colour grading. */
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:last-child {
+  min-height: 28rem !important;
+  background-color: #edf4f2 !important;
+  background-image: url('/tmp-coastal-hero.svg') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:last-child > img,
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:last-child > div {
+  display: none !important;
+}
+
+@media (min-width: 1024px) {
+  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid {
+    min-height: 40rem !important;
+  }
+
+  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:first-child {
+    padding-top: 4rem !important;
+    padding-bottom: 4rem !important;
+  }
+}
+
+@media (max-width: 639px) {
+  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child h1 {
+    font-size: 3.25rem !important;
+  }
+
+  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:last-child {
+    min-height: 22rem !important;
+    background-position: 58% center !important;
+  }
+}
