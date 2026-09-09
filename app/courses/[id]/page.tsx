@@ -138,14 +138,12 @@ export default async function CoursePage({ params, searchParams }: Props) {
       );
     }
 
-    // Prefetch related variants (same name & type) to enable instant switching
     const variants = course.usesBatches
       ? []
       : await convex.query(api.courses.getRelatedVariants, {
           id: id as Id<"courses">,
         });
 
-    // Generate structured data for the course
     const courseStructuredData = {
       "@context": "https://schema.org",
       "@type": "Course",
@@ -183,18 +181,9 @@ export default async function CoursePage({ params, searchParams }: Props) {
       timeRequired: course.duration || "Varies by course",
       teaches: course.content || course.description || course.name,
       about: [
-        {
-          "@type": "Thing",
-          name: "Mental Health",
-        },
-        {
-          "@type": "Thing",
-          name: "Psychology",
-        },
-        {
-          "@type": "Thing",
-          name: "Professional Development",
-        },
+        { "@type": "Thing", name: "Mental Health" },
+        { "@type": "Thing", name: "Psychology" },
+        { "@type": "Thing", name: "Professional Development" },
       ],
     };
 
@@ -207,12 +196,14 @@ export default async function CoursePage({ params, searchParams }: Props) {
             __html: JSON.stringify(courseStructuredData),
           }}
         />
-        <CourseClient
-          course={course}
-          variants={variants ?? []}
-          batches={pageData?.batches ?? []}
-          selectedBatch={pageData?.selectedBatch ?? null}
-        />
+        <div className="tmp-course-detail-page">
+          <CourseClient
+            course={course}
+            variants={variants ?? []}
+            batches={pageData?.batches ?? []}
+            selectedBatch={pageData?.selectedBatch ?? null}
+          />
+        </div>
       </>
     );
   } catch (error) {
