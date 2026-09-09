@@ -1,0 +1,72 @@
+:root {
+  --background: #fffdf9;
+  --card: #ffffff;
+  --secondary: #f2f8f6;
+  --muted: #f7f5ef;
+  --accent: #eaf4f2;
+  --border: #dde7e3;
+}
+
+body {
+  background: #fffdf9 !important;
+  background-image: none !important;
+}
+
+body::before {
+  opacity: 0 !important;
+  background: none !important;
+}
+
+main {
+  background: #fffdf9;
+}
+
+[data-app-navbar] {
+  background: rgba(255, 253, 249, 0.97) !important;
+  border-color: rgba(15, 77, 77, 0.08) !important;
+  box-shadow: 0 14px 32px -30px rgba(15, 77, 77, 0.58) !important;
+}
+
+.brand-section-tint,
+.tmp-programs-page .brand-section-tint {
+  background:
+    linear-gradient(180deg, #f4faf8 0%, #fffdf9 100%) !important;
+}
+
+.brand-card,
+.brand-panel,
+.tmp-programs-page [data-slot="card"],
+.brand-section-tint [data-slot="card"] {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-color: rgba(15, 77, 77, 0.1) !important;
+  box-shadow: 0 22px 55px -42px rgba(15, 77, 77, 0.42) !important;
+}
+
+.home-section-md,
+.section-padding {
+  background-color: transparent;
+}
+
+.tmp-coastal-hero {
+  background: #fffdf9;
+}
+
+.tmp-coastal-hero::before {
+  content: "";
+  position: absolute;
+  left: -12rem;
+  bottom: -14rem;
+  width: 30rem;
+  height: 30rem;
+  border-radius: 999px;
+  background: rgba(142, 193, 195, 0.08);
+  pointer-events: none;
+  z-index: 0;
+}
+
+@media (max-width: 1023px) {
+  .tmp-coastal-hero > div > div:first-child {
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+  }
+}
