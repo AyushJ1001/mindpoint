@@ -14,9 +14,9 @@ export default function ServerNavbar() {
           aria-label="The Mind Point home"
         >
           <img
-            src="/tmp-wordmark-reference.svg"
+            src="/tmp-logo-vector.svg"
             alt="The Mind Point"
-            className="h-8 w-auto max-w-[10rem] object-contain sm:h-9 sm:max-w-[11rem]"
+            className="h-10 w-auto max-w-[12.5rem] object-contain sm:h-11 sm:max-w-[13.5rem]"
           />
         </Link>
 
