@@ -10,22 +10,14 @@ export default function ServerNavbar() {
       <div className="container flex h-16 items-center">
         <Link
           href="/"
-          className="mr-6 flex min-w-0 items-center gap-2.5"
+          className="mr-6 flex min-w-0 items-center"
           aria-label="The Mind Point home"
         >
           <img
-            src="/tmp-botanical-logo.svg"
-            alt="TMP logo"
-            className="h-10 w-10 shrink-0 object-contain"
+            src="/tmp-wordmark-reference.svg"
+            alt="The Mind Point"
+            className="h-8 w-auto max-w-[10rem] object-contain sm:h-9 sm:max-w-[11rem]"
           />
-          <div className="min-w-0">
-            <div className="font-display text-[1.25rem] leading-none font-medium tracking-[-0.025em] text-[#173f3d] sm:text-[1.4rem]">
-              The Mind Point
-            </div>
-            <div className="mt-1 hidden text-[0.53rem] font-semibold tracking-[0.18em] text-[#0f4d4d]/55 uppercase sm:block">
-              Learn · Grow · Heal · Belong
-            </div>
-          </div>
         </Link>
 
         <div className="ml-auto flex items-center gap-2">
