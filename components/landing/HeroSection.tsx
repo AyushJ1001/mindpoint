@@ -10,75 +10,65 @@ import {
   Shield,
   Sparkles,
 } from "lucide-react";
+import { LeafAccent } from "@/components/illustrations";
 
 interface HeroSectionProps {
   canAccessAdmin: boolean;
 }
 
 const SUPPORT_NOTES = [
-  { text: "Personal support", icon: HeartHandshake },
-  { text: "Career growth", icon: BookOpen },
-  { text: "A warmer pace", icon: Sparkles },
+  { text: "Practical psychology", icon: BookOpen },
+  { text: "Human-centred learning", icon: HeartHandshake },
+  { text: "A safe space to grow", icon: Sparkles },
 ];
 
 export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
   return (
-    <section className="relative min-h-[75vh] overflow-hidden pt-14 pb-14 sm:min-h-[70vh] sm:pt-18 lg:pt-20">
-      {/* ── Full-bleed background image ── */}
-      <Image
-        src="/illustrations/hero.jpg"
-        alt=""
-        fill
-        className="object-cover"
-        priority
-        sizes="100vw"
-      />
+    <section className="brand-hero relative overflow-hidden pt-10 pb-16 sm:pt-14 sm:pb-20 lg:pt-20 lg:pb-24">
+      <div className="container relative z-10">
+        <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
+          <div className="mx-auto max-w-2xl text-center lg:mx-0 lg:text-left">
+            <div className="flex items-center justify-center gap-4 lg:justify-start">
+              <span className="brand-gold-rule" aria-hidden="true" />
+              <span className="brand-kicker">
+                Psychology education · healing · growth
+              </span>
+            </div>
 
-      {/* Gradient overlay – strong on the text side, fades to reveal image */}
-      <div
-        className="absolute inset-0 bg-gradient-to-r from-background/[0.92] via-background/75 to-background/40 sm:from-background/[0.88] sm:via-background/65 sm:to-background/30"
-        aria-hidden="true"
-      />
-      {/* Bottom fade into next section */}
-      <div
-        className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent"
-        aria-hidden="true"
-      />
-
-      <div className="relative z-10 container flex min-h-[60vh] items-center sm:min-h-[55vh]">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-2xl text-center lg:text-left">
-            <span className="text-primary/90 text-xs font-semibold tracking-[0.34em] uppercase">
-              Mental health learning, made more human
-            </span>
-            <h1 className="font-display text-foreground mt-5 text-4xl leading-[1.04] font-semibold tracking-tight sm:text-5xl md:text-6xl lg:text-[4.4rem]">
-              Your mind deserves the same care you give to others.
+            <h1 className="font-display text-foreground mt-7 text-5xl leading-[0.98] font-medium tracking-[-0.035em] sm:text-6xl lg:text-[5.4rem]">
+              Learn. Grow.
+              <br />
+              <span className="text-primary italic">Heal. Belong.</span>
             </h1>
 
-            <p className="text-muted-foreground mt-6 max-w-xl text-lg leading-8 sm:text-xl">
-              Join a warm, serious learning space for people who want support,
-              direction, and skills they can actually carry into life and work.
+            <p className="text-muted-foreground mx-auto mt-7 max-w-xl text-lg leading-8 sm:text-xl lg:mx-0">
+              A thoughtful learning space for psychology students, aspiring
+              professionals, counsellors, and anyone who wants to understand
+              themselves and others more deeply.
             </p>
 
-            <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-              <Button size="lg" asChild className="min-w-[12rem]">
+            <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
+              <Button
+                size="lg"
+                asChild
+                className="min-w-[12.5rem] rounded-full px-7 shadow-[0_12px_35px_-18px_rgba(15,77,77,0.8)]"
+              >
                 <Link href="/courses">
-                  Begin your journey
+                  Explore programs
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link href="#paths">Find the right support</Link>
+              <Button
+                variant="outline"
+                size="lg"
+                asChild
+                className="rounded-full border-primary/20 bg-background/60 px-7 backdrop-blur"
+              >
+                <Link href="/about">Meet The Mind Point</Link>
               </Button>
             </div>
 
-            <p className="text-muted-foreground mt-4 text-sm leading-6 sm:text-base">
-              Start with therapy, training, or a first small step. You do not
-              need to have the whole path figured out yet.
-            </p>
-
-            {/* Support notes – inline text with icons */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
+            <div className="mt-9 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
               {SUPPORT_NOTES.map((note) => {
                 const Icon = note.icon;
                 return (
@@ -86,7 +76,7 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
                     key={note.text}
                     className="text-muted-foreground inline-flex items-center gap-2 text-sm"
                   >
-                    <span className="bg-primary/8 text-primary/70 inline-flex rounded-full p-1.5">
+                    <span className="bg-primary/8 text-primary inline-flex rounded-full p-1.5">
                       <Icon className="h-3.5 w-3.5" />
                     </span>
                     {note.text}
@@ -96,7 +86,7 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
             </div>
 
             {canAccessAdmin && (
-              <div className="mt-4">
+              <div className="mt-5">
                 <Button variant="ghost" size="sm" asChild>
                   <Link href="/admin">
                     <Shield className="mr-2 h-4 w-4" />
@@ -105,6 +95,44 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
                 </Button>
               </div>
             )}
+          </div>
+
+          <div className="relative mx-auto w-full max-w-[34rem] lg:mx-0 lg:justify-self-end">
+            <LeafAccent className="brand-soft-float text-primary/30 pointer-events-none absolute -top-8 -left-8 z-20 hidden h-16 w-16 -rotate-12 lg:block" />
+
+            <div className="brand-panel relative overflow-hidden rounded-[2.4rem] p-2 sm:p-3">
+              <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem]">
+                <Image
+                  src="/illustrations/hero.jpg"
+                  alt="A calm, reflective learning atmosphere"
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 1024px) 90vw, 42vw"
+                />
+                <div
+                  className="absolute inset-0 bg-gradient-to-t from-[#0f4d4d]/45 via-transparent to-[#faf8f3]/5"
+                  aria-hidden="true"
+                />
+
+                <div className="absolute right-5 bottom-5 left-5 rounded-[1.5rem] border border-white/25 bg-[#fffdf9]/88 p-5 text-left shadow-xl backdrop-blur-md sm:right-6 sm:bottom-6 sm:left-6 sm:p-6">
+                  <p className="font-display text-primary text-2xl leading-tight font-medium sm:text-3xl">
+                    A kinder, brighter tomorrow starts with understanding.
+                  </p>
+                  <div className="mt-4 flex items-center gap-3">
+                    <span className="h-px w-9 bg-[#b79755]" />
+                    <span className="text-primary/75 text-[0.68rem] font-semibold tracking-[0.22em] uppercase">
+                      The Mind Point
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="bg-sea-glass/10 absolute -right-8 -bottom-8 h-32 w-32 rounded-full border border-primary/10"
+              aria-hidden="true"
+            />
           </div>
         </div>
       </div>
