@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Cormorant_Garamond, JetBrains_Mono, Manrope } from "next/font/google";
 import "./globals.css";
 import "./brand.css";
+import "./brand-refresh.css";
 import "react-phone-number-input/style.css";
 import ClientProviders from "@/components/ClientProviders";
 import Footer from "./footer";
