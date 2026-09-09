@@ -13,11 +13,47 @@ export default function ServerNavbar() {
           className="mr-6 flex min-w-0 items-center"
           aria-label="The Mind Point home"
         >
-          <img
-            src="/tmp-logo-vector.svg"
-            alt="The Mind Point"
-            className="h-10 w-auto max-w-[12.5rem] object-contain sm:h-11 sm:max-w-[13.5rem]"
-          />
+          <svg
+            viewBox="0 0 260 64"
+            role="img"
+            aria-label="The Mind Point logo"
+            className="h-11 w-[11.5rem] shrink-0"
+          >
+            <g fill="#0F4D4D">
+              <text
+                x="0"
+                y="38"
+                fontFamily="Georgia, 'Times New Roman', serif"
+                fontSize="40"
+                fontWeight="500"
+                letterSpacing="-3"
+              >
+                TMP
+              </text>
+              <path d="M79 10 C89 1 101 2 108 9 C98 13 89 18 82 25 C82 19 81 14 79 10 Z" />
+              <path
+                d="M102 9 C110 3 119 5 124 12 C116 14 109 18 103 24 C103 18 103 13 102 9 Z"
+                fill="#D9C6AE"
+              />
+              <path
+                d="M93 11 C95 18 95 24 93 31"
+                fill="none"
+                stroke="#0F4D4D"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+              />
+            </g>
+            <text
+              x="78"
+              y="47"
+              fontFamily="Arial, Helvetica, sans-serif"
+              fontSize="10"
+              letterSpacing="3.1"
+              fill="#173F3D"
+            >
+              THE MIND POINT
+            </text>
+          </svg>
         </Link>
 
         <div className="ml-auto flex items-center gap-2">
