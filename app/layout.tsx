@@ -1,8 +1,14 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, JetBrains_Mono, Manrope } from "next/font/google";
+import {
+  Cormorant_Garamond,
+  JetBrains_Mono,
+  Lora,
+  Manrope,
+} from "next/font/google";
 import "./globals.css";
 import "./brand.css";
 import "./brand-refresh.css";
+import "./first-step-hero.css";
 import "react-phone-number-input/style.css";
 import ClientProviders from "@/components/ClientProviders";
 import Footer from "./footer";
@@ -24,6 +30,13 @@ const cormorant = Cormorant_Garamond({
   variable: "--font-syne",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+});
+
+const lora = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
   style: ["normal", "italic"],
 });
 
@@ -81,7 +94,7 @@ export default function RootLayout({
         <Analytics />
       </head>
       <body
-        className={`${manrope.variable} ${jetbrainsMono.variable} ${cormorant.variable} flex min-h-screen flex-col antialiased`}
+        className={`${manrope.variable} ${jetbrainsMono.variable} ${cormorant.variable} ${lora.variable} flex min-h-screen flex-col antialiased`}
       >
         <a href="#main-content" className="skip-link">
           Skip to main content
