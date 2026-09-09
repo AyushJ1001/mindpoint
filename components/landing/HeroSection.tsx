@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { Lora } from "next/font/google";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Shield } from "lucide-react";
 
@@ -9,35 +10,43 @@ interface HeroSectionProps {
   canAccessAdmin: boolean;
 }
 
+const lora = Lora({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  style: ["normal", "italic"],
+});
+
 export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
   return (
-    <section className="tmp-coastal-hero relative isolate overflow-hidden border-b border-primary/5">
-      <div className="grid min-h-[42rem] lg:min-h-[46rem] lg:grid-cols-[0.92fr_1.08fr]">
-        <div className="relative z-10 flex items-center bg-[#fffdf9] px-6 py-16 sm:px-10 lg:px-[7vw] lg:py-20">
+    <section className="relative isolate overflow-hidden border-b border-[#0f4d4d]/5 bg-[#fbfaf6]">
+      <div className="grid min-h-[38rem] lg:grid-cols-[0.9fr_1.1fr]">
+        <div className="relative z-10 flex items-center bg-[#fbfaf6] px-6 py-14 sm:px-10 lg:px-[6.5vw] lg:py-16">
           <div className="mx-auto w-full max-w-xl lg:mx-0">
-            <div className="mb-8 flex items-center gap-4">
+            <div className="mb-6 flex items-center gap-4">
               <span className="h-px w-10 bg-[#b79755]" aria-hidden="true" />
-              <span className="text-[0.68rem] font-semibold tracking-[0.25em] text-[#0f4d4d]/60 uppercase">
+              <span className="text-[0.66rem] font-semibold tracking-[0.24em] text-[#0f4d4d]/60 uppercase">
                 Psychology education · healing · growth
               </span>
             </div>
 
-            <h1 className="font-display text-[#173f3d] text-[clamp(3.8rem,7vw,6.6rem)] leading-[0.88] font-medium tracking-[-0.055em]">
+            <h1
+              className={`${lora.className} text-5xl leading-[0.98] font-medium tracking-[-0.035em] text-[#173f3d] sm:text-6xl lg:text-[5.4rem]`}
+            >
               A Kinder,
               <br />
               <span className="italic">Brighter You.</span>
             </h1>
 
-            <p className="mt-7 max-w-[35rem] text-lg leading-8 text-[#58706d] sm:text-xl">
+            <p className="mt-6 max-w-[34rem] text-base leading-7 text-[#58706d] sm:text-lg sm:leading-8">
               Practical tools. Compassionate guidance. Psychology learning that
               helps you understand, grow, and move forward with more clarity.
             </p>
 
-            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button
                 size="lg"
                 asChild
-                className="rounded-full bg-[#0f4d4d] px-7 text-[#faf8f3] shadow-[0_18px_36px_-20px_rgba(15,77,77,0.7)] hover:bg-[#173f3d]"
+                className="rounded-full bg-[#0f4d4d] px-7 text-[#faf8f3] shadow-[0_16px_30px_-20px_rgba(15,77,77,0.65)] hover:bg-[#173f3d]"
               >
                 <Link href="/courses">
                   Start your journey
@@ -48,13 +57,13 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
                 variant="outline"
                 size="lg"
                 asChild
-                className="rounded-full border-[#0f4d4d]/20 bg-white px-7 text-[#173f3d] hover:bg-[#eef5f3]"
+                className="rounded-full border-[#0f4d4d]/18 bg-white/80 px-7 text-[#173f3d] hover:bg-[#f0f6f4]"
               >
                 <Link href="/about">Discover TMP</Link>
               </Button>
             </div>
 
-            <div className="mt-11 text-[0.68rem] font-semibold tracking-[0.24em] text-[#0f4d4d]/55 uppercase">
+            <div className="mt-9 text-[0.66rem] font-semibold tracking-[0.23em] text-[#0f4d4d]/55 uppercase">
               Learn · Grow · Heal · Belong
             </div>
 
@@ -71,27 +80,20 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
           </div>
         </div>
 
-        <div className="relative min-h-[29rem] overflow-hidden lg:min-h-full">
+        <div className="relative min-h-[24rem] overflow-hidden lg:min-h-full">
           <Image
-            src="/illustrations/hero.jpg"
-            alt="Calm coastal landscape representing growth and reflection"
+            src="/tmp-coastal-hero.svg"
+            alt="Coastal landscape with olive leaves, matching The Mind Point's new visual identity"
             fill
             className="object-cover object-center"
             priority
-            sizes="(max-width: 1024px) 100vw, 55vw"
+            sizes="(max-width: 1024px) 100vw, 56vw"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#fffdf9]/22 via-transparent to-transparent lg:from-[#fffdf9]/12" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0f4d4d]/10 via-transparent to-[#fffdf9]/6" />
 
-          <div className="absolute right-7 bottom-7 max-w-[15rem] rounded-[1.4rem] border border-white/35 bg-white/68 p-5 text-right shadow-lg backdrop-blur-md sm:right-10 sm:bottom-10">
-            <p className="font-display text-2xl leading-tight font-medium text-[#173f3d] italic">
-              Wellness belongs here.
-            </p>
-            <span className="mt-3 inline-block h-px w-9 bg-[#b79755]" />
-          </div>
-
-          <div className="pointer-events-none absolute -right-14 -bottom-14 h-56 w-56 rounded-full border border-white/35 bg-[#8ec1c3]/12 backdrop-blur-[2px]" />
-          <div className="pointer-events-none absolute top-8 right-8 h-24 w-24 rounded-full border border-white/30 bg-white/8" />
+          <div
+            className="pointer-events-none absolute inset-y-0 left-0 hidden w-24 bg-gradient-to-r from-[#fbfaf6] via-[#fbfaf6]/38 to-transparent lg:block"
+            aria-hidden="true"
+          />
         </div>
       </div>
     </section>
