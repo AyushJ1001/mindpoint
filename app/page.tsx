@@ -74,29 +74,6 @@ async function getUpcomingCourses() {
   }
 }
 
-function HomeSections({ upcomingCourses }: { upcomingCourses: Awaited<ReturnType<typeof getUpcomingCourses>> }) {
-  return (
-    <>
-      <HeroSection canAccessAdmin={false} />
-      <Suspense
-        fallback={
-          <div className="section-padding text-muted-foreground text-center">
-            Loading programs...
-          </div>
-        }
-      >
-        <CoursePreviewSection upcomingCourses={upcomingCourses} />
-      </Suspense>
-      <TwoPathsSection />
-      <WhoThisIsForSection />
-      <WhatWeOfferSection />
-      <FeaturedEntrySection />
-      <TestimonialsSection />
-      <FinalCtaSection />
-    </>
-  );
-}
-
 export default async function Home() {
   let canAccessAdmin = false;
   const upcomingCourses = await getUpcomingCourses();
