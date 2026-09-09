@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 92" role="img" aria-labelledby="title desc">
+  <title id="title">The Mind Point</title>
+  <desc id="desc">TMP botanical logo</desc>
+  <rect width="360" height="92" fill="#fbfaf6"/>
+  <g fill="#0f4d4d">
+    <text x="8" y="56" font-family="Georgia, 'Times New Roman', serif" font-size="58" font-weight="500" letter-spacing="-6">TMP</text>
+    <path d="M142 20 C158 5 176 6 188 16 C171 22 157 30 146 42 C145 33 144 26 142 20 Z"/>
+    <path d="M181 18 C194 9 207 12 214 23 C201 25 191 31 182 40 C182 31 182 24 181 18 Z" fill="#cdb792"/>
+    <path d="M164 22 C167 33 167 41 164 54" fill="none" stroke="#0f4d4d" stroke-width="2.2" stroke-linecap="round"/>
+  </g>
+  <text x="114" y="73" font-family="Arial, Helvetica, sans-serif" font-size="15" letter-spacing="5.2" fill="#173f3d">THE MIND POINT</text>
+</svg>
