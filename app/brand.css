@@ -1,0 +1,182 @@
+:root {
+  --background: #faf8f3;
+  --foreground: #173f3d;
+  --card: #fffdf9;
+  --card-foreground: #173f3d;
+  --popover: #fffdf9;
+  --popover-foreground: #173f3d;
+  --primary: #0f4d4d;
+  --primary-foreground: #faf8f3;
+  --secondary: #e8f1ef;
+  --secondary-foreground: #173f3d;
+  --muted: #f2efe8;
+  --muted-foreground: #63706d;
+  --accent: #deebe8;
+  --accent-foreground: #173f3d;
+  --border: #d8d2c5;
+  --input: #f4f1ea;
+  --ring: #8ec1c3;
+  --chart-1: #0f4d4d;
+  --chart-2: #8ec1c3;
+  --chart-3: #d9c6ae;
+  --chart-4: #6f9187;
+  --chart-5: #c4a96b;
+  --sidebar: #f8f5ee;
+  --sidebar-foreground: #173f3d;
+  --sidebar-primary: #0f4d4d;
+  --sidebar-primary-foreground: #faf8f3;
+  --sidebar-accent: #deebe8;
+  --sidebar-accent-foreground: #173f3d;
+  --sidebar-border: #d8d2c5;
+  --sidebar-ring: #8ec1c3;
+
+  --tmp-deep-teal: #0f4d4d;
+  --tmp-deep-teal-2: #173f3d;
+  --tmp-sea-glass: #8ec1c3;
+  --tmp-sea-glass-soft: #deebe8;
+  --tmp-warm-sand: #d9c6ae;
+  --tmp-ivory: #faf8f3;
+  --tmp-gold: #b79755;
+}
+
+.dark {
+  --background: #102f2e;
+  --foreground: #f7f3ea;
+  --card: #173f3d;
+  --card-foreground: #f7f3ea;
+  --popover: #173f3d;
+  --popover-foreground: #f7f3ea;
+  --primary: #9fd0cf;
+  --primary-foreground: #102f2e;
+  --secondary: #1d4947;
+  --secondary-foreground: #f7f3ea;
+  --muted: #1a4442;
+  --muted-foreground: #c4d2cf;
+  --accent: #245451;
+  --accent-foreground: #f7f3ea;
+  --border: #35615f;
+  --input: #1a4442;
+  --ring: #8ec1c3;
+}
+
+body {
+  background-image:
+    radial-gradient(circle at 8% 0%, rgba(142, 193, 195, 0.18), transparent 34rem),
+    radial-gradient(circle at 94% 10%, rgba(217, 198, 174, 0.22), transparent 30rem),
+    linear-gradient(180deg, #fffdf9 0%, var(--background) 22rem, var(--background) 100%) !important;
+}
+
+body::before {
+  opacity: 0.16 !important;
+  background-image:
+    linear-gradient(to right, rgba(15, 77, 77, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 77, 77, 0.04) 1px, transparent 1px) !important;
+  background-size: 48px 48px !important;
+}
+
+::selection {
+  background: rgba(142, 193, 195, 0.35);
+  color: #173f3d;
+}
+
+.brand-kicker {
+  color: var(--tmp-deep-teal);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.brand-section-tint {
+  position: relative;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(142, 193, 195, 0.14), transparent 20rem),
+    linear-gradient(180deg, rgba(232, 241, 239, 0.72), rgba(250, 248, 243, 0.28));
+}
+
+.brand-section-dark {
+  color: #faf8f3;
+  background:
+    radial-gradient(circle at 82% 20%, rgba(142, 193, 195, 0.18), transparent 22rem),
+    linear-gradient(135deg, #0f4d4d, #173f3d);
+}
+
+.brand-section-dark h1,
+.brand-section-dark h2,
+.brand-section-dark h3,
+.brand-section-dark h4,
+.brand-section-dark p {
+  color: inherit;
+}
+
+.brand-panel {
+  border: 1px solid rgba(183, 151, 85, 0.24);
+  background: rgba(255, 253, 249, 0.82);
+  box-shadow: 0 30px 80px -45px rgba(15, 77, 77, 0.45);
+  backdrop-filter: blur(14px);
+}
+
+.brand-card {
+  border: 1px solid rgba(15, 77, 77, 0.12);
+  background: rgba(255, 253, 249, 0.9);
+  box-shadow: 0 20px 55px -38px rgba(15, 77, 77, 0.5);
+}
+
+.brand-gold-rule {
+  width: 3.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--tmp-gold), transparent);
+}
+
+.brand-hero {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(circle at 80% 18%, rgba(142, 193, 195, 0.34), transparent 24rem),
+    radial-gradient(circle at 92% 75%, rgba(217, 198, 174, 0.35), transparent 22rem),
+    linear-gradient(125deg, #fffdf9 0%, #f6f2e9 47%, #e7f0ed 100%);
+}
+
+.brand-hero::before,
+.brand-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 999px;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.brand-hero::before {
+  width: 24rem;
+  height: 24rem;
+  right: -8rem;
+  top: -6rem;
+  border: 1px solid rgba(15, 77, 77, 0.11);
+  box-shadow:
+    0 0 0 44px rgba(142, 193, 195, 0.07),
+    0 0 0 88px rgba(217, 198, 174, 0.05);
+}
+
+.brand-hero::after {
+  width: 15rem;
+  height: 15rem;
+  left: -7rem;
+  bottom: -8rem;
+  background: rgba(142, 193, 195, 0.12);
+}
+
+.brand-soft-float {
+  animation: brand-float 8s ease-in-out infinite;
+}
+
+@keyframes brand-float {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate(0deg); }
+  50% { transform: translate3d(0, -10px, 0) rotate(1.5deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-soft-float {
+    animation: none;
+  }
+}
