@@ -1,0 +1,151 @@
+.tmp-program-shell .calm-catalog-hero-title {
+  font-family: var(--font-display), var(--font-sans), serif;
+  color: #173f3d;
+  font-size: clamp(2.8rem, 5vw, 4.8rem);
+  line-height: 1.02;
+  font-weight: 500;
+  letter-spacing: -0.035em;
+}
+
+.tmp-program-shell .calm-catalog-hero-lead {
+  color: #63706d;
+  font-size: 1.1rem;
+  line-height: 1.9;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) main > div:last-child > div.min-h-screen > section:first-child {
+  position: relative;
+  overflow: hidden;
+  margin: -1rem -0.75rem 0;
+  padding: 4.5rem 0 4rem;
+  border-bottom: 1px solid rgba(15, 77, 77, 0.07);
+  background:
+    radial-gradient(circle at 86% 20%, rgba(142, 193, 195, 0.28), transparent 22rem),
+    radial-gradient(circle at 12% 80%, rgba(217, 198, 174, 0.26), transparent 20rem),
+    linear-gradient(130deg, #fffdf9 0%, #f8f4ec 48%, #e8f2ef 100%);
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) main > div:last-child > div.min-h-screen > section:first-child::after {
+  content: "";
+  position: absolute;
+  right: -8rem;
+  top: -8rem;
+  width: 23rem;
+  height: 23rem;
+  border-radius: 999px;
+  border: 1px solid rgba(15, 77, 77, 0.1);
+  box-shadow:
+    0 0 0 42px rgba(142, 193, 195, 0.055),
+    0 0 0 84px rgba(217, 198, 174, 0.04);
+  pointer-events: none;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) main > div:last-child > div.min-h-screen > section:first-child .container {
+  position: relative;
+  z-index: 1;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) main > div:last-child > div.min-h-screen > section:first-child .text-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: #0f4d4d;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) main > div:last-child > div.min-h-screen > section:first-child .text-primary::before {
+  content: "";
+  width: 2.7rem;
+  height: 1px;
+  background: #b79755;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) main > div:last-child > div.min-h-screen > section:nth-child(2) {
+  padding-top: 3.5rem;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] {
+  border: 1px solid rgba(15, 77, 77, 0.12) !important;
+  border-radius: 1.8rem !important;
+  background: rgba(255, 253, 249, 0.94) !important;
+  box-shadow: 0 26px 62px -44px rgba(15, 77, 77, 0.66) !important;
+  overflow: hidden;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"]:hover {
+  border-color: rgba(15, 77, 77, 0.2) !important;
+  box-shadow: 0 34px 76px -44px rgba(15, 77, 77, 0.74) !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card-title"] {
+  font-family: var(--font-display), var(--font-sans), serif;
+  color: #173f3d;
+  font-size: 1.2rem !important;
+  line-height: 1.28 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] [data-slot="button"] {
+  border-radius: 999px !important;
+  background: #0f4d4d !important;
+  color: #faf8f3 !important;
+  box-shadow: 0 16px 30px -20px rgba(15, 77, 77, 0.8) !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] [data-slot="button"]:hover {
+  background: #173f3d !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] [data-slot="badge"] {
+  border-radius: 999px !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] [class*="from-orange-500"] {
+  background: linear-gradient(90deg, #0f4d4d, #6f9187) !important;
+  color: #fffdf9 !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] [class*="bg-blue-600"] {
+  background: #6f9187 !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] [class*="bg-emerald-500"] {
+  background: #7fa292 !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] [class*="text-orange-600"] {
+  color: #8f7136 !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] [class*="text-emerald-600"] {
+  color: #54776d !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [data-slot="card"] [class*="text-blue-700"] {
+  color: #537a79 !important;
+}
+
+.tmp-program-shell:has(.calm-catalog-hero-title) [role="combobox"] {
+  border-color: rgba(15, 77, 77, 0.13) !important;
+  border-radius: 1rem !important;
+  background: #fffdf9 !important;
+}
+
+@media (min-width: 640px) {
+  .tmp-program-shell:has(.calm-catalog-hero-title) main > div:last-child > div.min-h-screen > section:first-child {
+    margin-left: -1.5rem;
+    margin-right: -1.5rem;
+    padding-top: 5.5rem;
+    padding-bottom: 5rem;
+  }
+}
+
+@media (max-width: 767px) {
+  .tmp-program-shell .calm-catalog-hero-title {
+    font-size: clamp(2.45rem, 12vw, 3.3rem);
+  }
+}
