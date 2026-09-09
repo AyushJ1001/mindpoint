@@ -279,6 +279,127 @@ body::before {
   color: #537a79 !important;
 }
 
+/* Course detail pages: preserve the existing information-rich layout and
+   interaction model, but replace the lavender/terracotta atmosphere with the
+   new TMP botanical palette and softer editorial shapes. */
+.tmp-course-detail-page .calm-page {
+  background:
+    radial-gradient(circle at 90% 5%, rgba(142, 193, 195, 0.2), transparent 28rem),
+    radial-gradient(circle at 5% 35%, rgba(217, 198, 174, 0.18), transparent 24rem),
+    linear-gradient(165deg, #fffdf9 0%, #faf8f3 52%, #f2f7f5 100%) !important;
+}
+
+.tmp-course-detail-page .calm-page::before {
+  background:
+    radial-gradient(900px ellipse at 50% -12%, rgba(142, 193, 195, 0.2), transparent 62%),
+    radial-gradient(700px ellipse at 100% 10%, rgba(217, 198, 174, 0.18), transparent 58%),
+    radial-gradient(540px ellipse at 0% 80%, rgba(15, 77, 77, 0.08), transparent 55%) !important;
+  opacity: 0.78 !important;
+}
+
+.tmp-course-detail-page .calm-page::after {
+  opacity: 0.07 !important;
+  filter: hue-rotate(90deg) saturate(0.55);
+}
+
+.tmp-course-detail-page .calm-kbd,
+.tmp-course-detail-page .calm-section-number,
+.tmp-course-detail-page .calm-module-label,
+.tmp-course-detail-page .calm-batch-status {
+  font-family: var(--font-sans), sans-serif !important;
+  letter-spacing: 0.18em !important;
+  color: rgba(15, 77, 77, 0.68) !important;
+}
+
+.tmp-course-detail-page h1.calm-hero-title {
+  font-size: clamp(2.4rem, 4.4vw, 4.25rem) !important;
+  line-height: 1.02 !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.tmp-course-detail-page .calm-hero-hook {
+  color: #54716d !important;
+  font-size: clamp(1.05rem, 1.25vw, 1.3rem) !important;
+}
+
+.tmp-course-detail-page .calm-hero-lead,
+.tmp-course-detail-page .calm-body,
+.tmp-course-detail-page .calm-section-lead {
+  color: #62716e !important;
+}
+
+.tmp-course-detail-page .calm-hero-art {
+  border: 1px solid rgba(183, 151, 85, 0.22) !important;
+  border-radius: 2rem !important;
+  box-shadow: 0 30px 70px -42px rgba(15, 77, 77, 0.62) !important;
+}
+
+.tmp-course-detail-page .calm-tint-certificate { --hero-tint: #deebe8; }
+.tmp-course-detail-page .calm-tint-diploma { --hero-tint: #eee4d5; }
+.tmp-course-detail-page .calm-tint-therapy { --hero-tint: #dcefed; }
+.tmp-course-detail-page .calm-tint-supervised { --hero-tint: #dbe7e3; }
+.tmp-course-detail-page .calm-tint-internship { --hero-tint: #efe4d4; }
+.tmp-course-detail-page .calm-tint-pre-recorded { --hero-tint: #e6f0ed; }
+.tmp-course-detail-page .calm-tint-masterclass { --hero-tint: #efe6d3; }
+.tmp-course-detail-page .calm-tint-worksheet { --hero-tint: #f4efe4; }
+.tmp-course-detail-page .calm-tint-resume-studio { --hero-tint: #e1ece8; }
+
+.tmp-course-detail-page .calm-card,
+.tmp-course-detail-page [data-slot="card"] {
+  border-color: rgba(15, 77, 77, 0.12) !important;
+  border-radius: 1.5rem !important;
+  background: rgba(255, 253, 249, 0.88) !important;
+  box-shadow: 0 24px 60px -44px rgba(15, 77, 77, 0.5) !important;
+}
+
+.tmp-course-detail-page .calm-module-card {
+  border-radius: 1.25rem !important;
+}
+
+.tmp-course-detail-page .calm-module-card:hover {
+  background: rgba(222, 235, 232, 0.46) !important;
+}
+
+.tmp-course-detail-page .calm-title-ornament {
+  background: linear-gradient(90deg, #b79755, rgba(183, 151, 85, 0.12)) !important;
+}
+
+.tmp-course-detail-page .calm-title-ornament::after {
+  background: #8ec1c3 !important;
+}
+
+.tmp-course-detail-page .calm-meta-chip {
+  background: rgba(222, 235, 232, 0.72) !important;
+  border-color: rgba(15, 77, 77, 0.16) !important;
+  box-shadow: none !important;
+}
+
+.tmp-course-detail-page .calm-batch-chip {
+  border-radius: 1rem !important;
+  border-color: rgba(15, 77, 77, 0.14) !important;
+  background: rgba(255, 253, 249, 0.92) !important;
+}
+
+.tmp-course-detail-page .calm-batch-chip[data-selected="true"] {
+  background: #0f4d4d !important;
+  border-color: #0f4d4d !important;
+  color: #faf8f3 !important;
+}
+
+.tmp-course-detail-page button:not([data-slot="carousel-previous"]):not([data-slot="carousel-next"]),
+.tmp-course-detail-page a[data-slot="button"] {
+  border-radius: 999px;
+}
+
+.tmp-course-detail-page [class*="from-orange-500"] {
+  background: linear-gradient(90deg, #0f4d4d, #6f9187) !important;
+}
+
+.tmp-course-detail-page [class*="text-orange-600"] {
+  color: #8f7136 !important;
+}
+
 .brand-soft-float {
   animation: brand-float 8s ease-in-out infinite;
 }
