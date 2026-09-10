@@ -6,7 +6,7 @@ export default function ServerNavbar() {
   return (
     <nav
       data-app-navbar
-      className="sticky top-0 z-50 w-full border-b border-[#0f4d4d]/8 bg-[#fbfaf6]/96 backdrop-blur-xl"
+      className="border-border bg-background/95 text-foreground sticky top-0 z-50 w-full border-b backdrop-blur-xl"
     >
       <div className="container flex h-16 items-center">
         <Link
@@ -20,9 +20,9 @@ export default function ServerNavbar() {
             width={80}
             height={60}
             priority
-            className="h-12 w-16 shrink-0 object-contain mix-blend-multiply"
+            className="h-12 w-16 shrink-0 object-contain mix-blend-multiply dark:mix-blend-screen dark:grayscale dark:invert"
           />
-          <span className="ml-2.5 hidden text-[0.65rem] font-semibold tracking-[0.2em] text-[#173f3d] uppercase sm:block">
+          <span className="text-foreground ml-2.5 hidden text-[0.65rem] font-semibold tracking-[0.2em] uppercase sm:block">
             The Mind Point
           </span>
         </Link>
@@ -32,32 +32,32 @@ export default function ServerNavbar() {
             <nav className="flex items-center space-x-7 text-[0.78rem] font-semibold tracking-[0.06em] uppercase">
               <Link
                 href="/courses"
-                className="text-[#173f3d]/70 transition-colors hover:text-[#0f4d4d]"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Programs
               </Link>
               <Link
                 href="/about"
-                className="text-[#173f3d]/70 transition-colors hover:text-[#0f4d4d]"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 About
               </Link>
               <Link
                 href="/contact"
-                className="text-[#173f3d]/70 transition-colors hover:text-[#0f4d4d]"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Contact
               </Link>
               <Link
                 href="/careers"
-                className="text-[#173f3d]/70 transition-colors hover:text-[#0f4d4d]"
+                className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Careers
               </Link>
             </nav>
           </div>
 
-          <button className="ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#0f4d4d]/10 bg-white/70 text-[#173f3d] shadow-sm">
+          <button className="border-border bg-card text-foreground ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-sm">
             <span className="sr-only">Shopping cart</span>
             <svg
               className="h-4.5 w-4.5"
@@ -74,7 +74,7 @@ export default function ServerNavbar() {
             </svg>
           </button>
 
-          <button className="inline-flex h-9 w-9 items-center justify-center rounded-full border border-[#0f4d4d]/10 bg-white/70 text-[#173f3d] md:hidden">
+          <button className="border-border bg-card text-foreground inline-flex h-9 w-9 items-center justify-center rounded-full border md:hidden">
             <Menu className="h-4.5 w-4.5" />
           </button>
         </div>

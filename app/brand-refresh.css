@@ -1,4 +1,4 @@
-:root {
+:root:not(.dark) {
   --background: #fffdf9;
   --card: #ffffff;
   --secondary: #f2f8f6;
@@ -19,12 +19,6 @@ body::before {
 
 main {
   background: #fffdf9;
-}
-
-[data-app-navbar] {
-  background: rgba(255, 253, 249, 0.97) !important;
-  border-color: rgba(15, 77, 77, 0.08) !important;
-  box-shadow: 0 14px 32px -30px rgba(15, 77, 77, 0.58) !important;
 }
 
 .brand-section-tint,

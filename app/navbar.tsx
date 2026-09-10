@@ -161,7 +161,7 @@ export default function Navbar() {
   return (
     <nav
       data-app-navbar
-      className="bg-background/95 border-border sticky top-0 z-50 border-b shadow-sm backdrop-blur-sm"
+      className="bg-background/95 border-border text-foreground sticky top-0 z-50 border-b shadow-sm backdrop-blur-sm"
       role="navigation"
       aria-label="Primary"
     >
@@ -178,10 +178,10 @@ export default function Navbar() {
               alt="The Mind Point"
               width={80}
               height={60}
-              className="h-12 w-16 shrink-0 object-contain mix-blend-multiply"
+              className="h-12 w-16 shrink-0 object-contain mix-blend-multiply dark:mix-blend-screen dark:grayscale dark:invert"
               priority
             />
-            <span className="hidden text-[0.65rem] font-semibold tracking-[0.2em] text-[#173f3d] uppercase sm:block">
+            <span className="text-foreground hidden text-[0.65rem] font-semibold tracking-[0.2em] uppercase sm:block">
               The Mind Point
             </span>
           </Link>

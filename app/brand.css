@@ -102,19 +102,6 @@ body::before {
   color: #173f3d;
 }
 
-/* Founder-selected navigation treatment. Keep the existing behaviour and
-   information architecture, but visually move it into the new TMP identity. */
-[data-app-navbar] {
-  border-color: rgba(15, 77, 77, 0.1) !important;
-  background: rgba(250, 248, 243, 0.9) !important;
-  box-shadow: 0 12px 36px -28px rgba(15, 77, 77, 0.55) !important;
-  backdrop-filter: blur(18px) !important;
-}
-
-.dark [data-app-navbar] {
-  background: rgba(16, 47, 46, 0.9) !important;
-}
-
 .brand-kicker {
   color: var(--tmp-deep-teal);
   font-size: 0.72rem;
