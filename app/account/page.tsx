@@ -33,16 +33,18 @@ const TABS = [
 function AccountContent() {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
-  const activeTab = (tabParam === "points"
-    ? "points"
-    : tabParam === "referrals"
-      ? "referrals"
-      : "enrollments") as "enrollments" | "points" | "referrals";
+  const activeTab = (
+    tabParam === "points"
+      ? "points"
+      : tabParam === "referrals"
+        ? "referrals"
+        : "enrollments"
+  ) as "enrollments" | "points" | "referrals";
 
   return (
     <div className="min-h-screen bg-[#faf8f3]">
-      <section className="brand-hero relative overflow-hidden border-b border-primary/5 py-12 sm:py-16">
-        <div className="container relative z-10">
+      <section className="brand-hero border-primary/5 relative overflow-hidden border-b py-12 sm:py-16">
+        <div className="relative z-10 container">
           <div className="flex flex-col gap-8 sm:flex-row sm:items-center sm:justify-between">
             <div className="max-w-2xl">
               <div className="flex items-center gap-4">
@@ -54,13 +56,14 @@ function AccountContent() {
                 <span className="text-primary italic"> all in one place.</span>
               </h1>
               <p className="text-muted-foreground mt-4 max-w-xl text-base leading-7 sm:text-lg">
-                Return to your enrollments, keep track of your Mind Points, and see the ways your TMP journey continues to grow.
+                Return to your enrollments, keep track of your Mind Points, and
+                see the ways your TMP journey continues to grow.
               </p>
             </div>
 
             <div className="brand-panel hidden shrink-0 rounded-[1.8rem] p-5 sm:block">
               <Image
-                src="/tmp-botanical-logo.svg"
+                src="/tmp-botanical-mark.webp"
                 alt="The Mind Point"
                 width={100}
                 height={100}
@@ -73,7 +76,7 @@ function AccountContent() {
 
       <div className="container py-8 sm:py-10 lg:py-12">
         <nav
-          className="mb-8 flex flex-wrap gap-2 rounded-[1.4rem] border border-primary/10 bg-[#fffdf9]/85 p-2 shadow-[0_18px_50px_-40px_rgba(15,77,77,0.6)]"
+          className="border-primary/10 mb-8 flex flex-wrap gap-2 rounded-[1.4rem] border bg-[#fffdf9]/85 p-2 shadow-[0_18px_50px_-40px_rgba(15,77,77,0.6)]"
           aria-label="Account sections"
         >
           {TABS.map((tab) => {
@@ -145,7 +148,7 @@ export default function AccountPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-[50vh] items-center justify-center text-muted-foreground">
+        <div className="text-muted-foreground flex min-h-[50vh] items-center justify-center">
           Loading your TMP space...
         </div>
       }

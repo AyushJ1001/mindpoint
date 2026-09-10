@@ -4,6 +4,11 @@ import { ArrowRight, CalendarDays } from "lucide-react";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
 import { readPublicEnv } from "@/lib/config";
+import { auth } from "@clerk/nextjs/server";
+import { hasAdminAccess } from "@/lib/admin-access";
+import { resolveAuthEmail } from "@/lib/clerk-email";
+import { isClerkServerConfigured } from "@/lib/clerk-env";
+import HeroSection from "@/components/landing/HeroSection";
 
 export const revalidate = 3600;
 
@@ -88,96 +93,29 @@ async function getUpcomingCourses() {
 
 export default async function Home() {
   const upcomingCourses = await getUpcomingCourses();
+  let canAccessAdmin = false;
+
+  if (isClerkServerConfigured()) {
+    const { userId, sessionClaims, getToken } = await auth();
+    const sessionEmail = await resolveAuthEmail(sessionClaims);
+
+    if (userId || sessionEmail) {
+      try {
+        const convexToken = await getToken({ template: "convex" });
+        canAccessAdmin = await hasAdminAccess(
+          userId,
+          sessionEmail,
+          convexToken,
+        );
+      } catch (error) {
+        console.warn("Failed to resolve home-page admin access:", error);
+      }
+    }
+  }
 
   return (
     <div className="bg-[#fffdf9] text-[#173f3d]">
-      {/* HERO — intentionally mirrors the airy editorial feel of the approved brand board */}
-      <section className="relative overflow-hidden border-b border-[#0f4d4d]/8">
-        <div className="grid min-h-[46rem] lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="relative flex items-center bg-[#fffdf9] px-6 py-14 sm:px-10 lg:px-[7vw] lg:py-20">
-            <div className="relative z-10 max-w-[36rem]">
-              <Image
-                src="/tmp-botanical-logo.svg"
-                alt="The Mind Point"
-                width={170}
-                height={170}
-                className="mb-7 h-24 w-24 object-contain sm:h-28 sm:w-28"
-                priority
-              />
-
-              <p className="mb-5 text-[0.68rem] font-semibold tracking-[0.25em] text-[#0f4d4d]/60 uppercase">
-                Psychology education · healing · growth
-              </p>
-
-              <h1 className="font-display text-[clamp(4.3rem,7.2vw,7.4rem)] leading-[0.84] font-medium tracking-[-0.06em] text-[#173f3d]">
-                A Kinder,
-                <br />
-                <span className="italic">Brighter You.</span>
-              </h1>
-
-              <p className="mt-8 max-w-[34rem] text-lg leading-8 text-[#58706d] sm:text-xl">
-                Practical tools. Compassionate guidance. Psychology learning
-                designed to help you understand, grow and move forward with
-                more clarity.
-              </p>
-
-              <div className="mt-9 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/courses"
-                  className="inline-flex items-center justify-center rounded-full bg-[#0f4d4d] px-7 py-3.5 text-sm font-semibold tracking-wide text-[#faf8f3] shadow-[0_18px_36px_-20px_rgba(15,77,77,0.75)] transition hover:-translate-y-0.5 hover:bg-[#173f3d]"
-                >
-                  Start your journey
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-                <Link
-                  href="/about"
-                  className="inline-flex items-center justify-center rounded-full border border-[#0f4d4d]/18 bg-white px-7 py-3.5 text-sm font-semibold tracking-wide text-[#173f3d] transition hover:-translate-y-0.5 hover:bg-[#eef5f3]"
-                >
-                  Discover TMP
-                </Link>
-              </div>
-
-              <p className="mt-12 text-[0.68rem] font-semibold tracking-[0.24em] text-[#0f4d4d]/55 uppercase">
-                Learn · Grow · Heal · Belong
-              </p>
-            </div>
-
-            <div
-              className="pointer-events-none absolute -left-24 bottom-[-11rem] h-[23rem] w-[23rem] rounded-full border border-[#8ec1c3]/18"
-              aria-hidden="true"
-            />
-          </div>
-
-          <div className="relative min-h-[34rem] overflow-hidden lg:min-h-full">
-            <Image
-              src="/illustrations/hero.jpg"
-              alt="Calm coastal landscape representing growth and reflection"
-              fill
-              priority
-              className="object-cover object-center"
-              sizes="(max-width: 1024px) 100vw, 55vw"
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#fffdf9]/18 via-transparent to-transparent" />
-            <div className="absolute right-8 top-10 max-w-[12rem] text-right sm:right-12 sm:top-14">
-              <p className="font-display text-2xl leading-tight italic text-[#173f3d] sm:text-3xl">
-                Wellness
-                <br />
-                Belongs
-                <br />
-                Here.
-              </p>
-              <span className="mt-4 inline-block h-px w-10 bg-[#b79755]" />
-            </div>
-            <div className="absolute right-8 bottom-8 text-right sm:right-12 sm:bottom-12">
-              <p className="text-[0.62rem] font-semibold tracking-[0.26em] text-[#173f3d]/70 uppercase">
-                Mindful people
-                <br />
-                Brighter tomorrows
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
+      <HeroSection canAccessAdmin={canAccessAdmin} />
 
       {/* EDITORIAL INTRO — no conventional cards */}
       <section className="px-6 py-24 sm:px-10 lg:px-[7vw] lg:py-32">
@@ -209,7 +147,7 @@ export default async function Home() {
                 key={item.number}
                 className="group grid gap-5 border-b border-[#0f4d4d]/12 py-9 transition sm:grid-cols-[5rem_0.8fr_1.2fr_auto] sm:items-center sm:gap-8 lg:py-11"
               >
-                <span className="font-display text-2xl italic text-[#b79755]">
+                <span className="font-display text-2xl text-[#b79755] italic">
                   {item.number}
                 </span>
                 <h3 className="font-display text-3xl leading-tight font-medium sm:text-4xl">
@@ -229,7 +167,7 @@ export default async function Home() {
 
       {/* DEEP TEAL BRAND MOMENT */}
       <section className="relative overflow-hidden bg-[#0f4d4d] px-6 py-24 text-[#faf8f3] sm:px-10 lg:px-[7vw] lg:py-32">
-        <div className="pointer-events-none absolute -right-24 -top-24 h-80 w-80 rounded-full border border-[#9fd0cf]/10" />
+        <div className="pointer-events-none absolute -top-24 -right-24 h-80 w-80 rounded-full border border-[#9fd0cf]/10" />
         <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:items-end lg:gap-20">
           <div>
             <p className="text-[0.68rem] font-semibold tracking-[0.26em] text-[#9fd0cf] uppercase">
@@ -237,7 +175,7 @@ export default async function Home() {
             </p>
             <h2 className="font-display mt-5 text-5xl leading-[0.96] font-medium tracking-[-0.04em] sm:text-6xl">
               Serious learning.
-              <span className="block italic text-[#b9dedd]">Never cold.</span>
+              <span className="block text-[#b9dedd] italic">Never cold.</span>
             </h2>
           </div>
           <p className="max-w-2xl text-lg leading-8 text-[#d2e1de] sm:text-xl sm:leading-9">
@@ -292,14 +230,18 @@ export default async function Home() {
                           alt={course.name}
                           fill
                           className="object-cover transition duration-700 group-hover:scale-[1.02]"
-                          sizes={index === 0 ? "(max-width: 1024px) 100vw, 66vw" : "(max-width: 1024px) 100vw, 33vw"}
+                          sizes={
+                            index === 0
+                              ? "(max-width: 1024px) 100vw, 66vw"
+                              : "(max-width: 1024px) 100vw, 33vw"
+                          }
                         />
                       ) : (
                         <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(142,193,195,0.45),transparent_20rem),linear-gradient(145deg,#f2f7f5,#e5efec)]" />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-[#173f3d]/70 via-transparent to-transparent" />
                       <div className="absolute right-5 bottom-5 left-5 text-white sm:right-7 sm:bottom-7 sm:left-7">
-                        <div className="mb-3 flex items-center gap-2 text-[0.68rem] font-semibold tracking-[0.16em] uppercase text-white/80">
+                        <div className="mb-3 flex items-center gap-2 text-[0.68rem] font-semibold tracking-[0.16em] text-white/80 uppercase">
                           <CalendarDays className="h-4 w-4" />
                           {start}
                         </div>
@@ -375,7 +317,9 @@ export default async function Home() {
                 key={voice.label}
                 className={`border-t border-[#0f4d4d]/16 pt-7 ${index === 1 ? "lg:mt-16" : ""}`}
               >
-                <span className="font-display text-6xl leading-none text-[#b79755]/45">“</span>
+                <span className="font-display text-6xl leading-none text-[#b79755]/45">
+                  “
+                </span>
                 <p className="font-display -mt-3 text-3xl leading-[1.2] font-medium text-[#173f3d]">
                   {voice.quote}
                 </p>
@@ -405,7 +349,9 @@ export default async function Home() {
             </p>
             <h2 className="font-display mt-5 text-5xl leading-[0.95] font-medium tracking-[-0.04em] sm:text-6xl lg:text-7xl">
               Learn something meaningful.
-              <span className="block italic text-[#d9efeb]">Carry it forward.</span>
+              <span className="block text-[#d9efeb] italic">
+                Carry it forward.
+              </span>
             </h2>
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link

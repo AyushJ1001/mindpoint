@@ -36,7 +36,7 @@ const aboutStructuredData = {
   description:
     "A platform for mental health education and support, offering courses in psychology, counseling, and professional development.",
   url: "https://themindpoint.org",
-  logo: "https://themindpoint.org/tmp-botanical-logo.svg",
+  logo: "https://themindpoint.org/tmp-botanical-mark.webp",
   foundingDate: "2020",
   address: {
     "@type": "PostalAddress",
@@ -173,7 +173,7 @@ export default function About() {
 
       <div className="tmp-about-page min-h-screen">
         <section className="brand-hero relative overflow-hidden py-16 sm:py-20 lg:py-24">
-          <div className="container relative z-10">
+          <div className="relative z-10 container">
             <div className="grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
               <div className="max-w-3xl text-center lg:text-left">
                 <div className="flex items-center justify-center gap-4 lg:justify-start">
@@ -182,10 +182,15 @@ export default function About() {
                 </div>
                 <h1 className="font-display text-foreground mt-6 text-5xl leading-[1.02] font-medium tracking-[-0.035em] sm:text-6xl lg:text-7xl">
                   Psychology education that feels
-                  <span className="text-primary block italic">serious and human.</span>
+                  <span className="text-primary block italic">
+                    serious and human.
+                  </span>
                 </h1>
                 <p className="text-muted-foreground mt-6 max-w-2xl text-lg leading-8 sm:text-xl">
-                  The Mind Point is an online learning and support space built around one belief: people learn psychology best when depth, practical application, accessibility, and warmth are allowed to exist together.
+                  The Mind Point is an online learning and support space built
+                  around one belief: people learn psychology best when depth,
+                  practical application, accessibility, and warmth are allowed
+                  to exist together.
                 </p>
                 <div className="mt-9 flex flex-col items-center gap-3 sm:flex-row sm:justify-center lg:justify-start">
                   <Button size="lg" asChild className="rounded-full px-7">
@@ -198,7 +203,7 @@ export default function About() {
                     size="lg"
                     variant="outline"
                     asChild
-                    className="rounded-full border-primary/20 bg-background/60 px-7"
+                    className="border-primary/20 bg-background/60 rounded-full px-7"
                   >
                     <Link href="/contact">Talk to TMP</Link>
                   </Button>
@@ -208,7 +213,7 @@ export default function About() {
               <div className="relative mx-auto w-full max-w-md lg:justify-self-end">
                 <div className="brand-panel relative overflow-hidden rounded-[2.4rem] p-8 text-center sm:p-10">
                   <Image
-                    src="/tmp-botanical-logo.svg"
+                    src="/tmp-botanical-mark.webp"
                     alt="The Mind Point botanical TMP logo"
                     width={220}
                     height={220}
@@ -234,33 +239,54 @@ export default function About() {
               <div className="lg:sticky lg:top-28 lg:self-start">
                 <span className="brand-kicker">Our mission</span>
                 <h2 className="font-display text-foreground mt-4 text-4xl leading-tight font-medium sm:text-5xl">
-                  Make psychology education easier to enter — and harder to forget.
+                  Make psychology education easier to enter — and harder to
+                  forget.
                 </h2>
                 <p className="text-muted-foreground mt-5 text-lg leading-8">
-                  TMP offers certificate courses, diploma programs, workshops, internships, supervised learning, recorded courses, and personal support through a fully online platform.
+                  TMP offers certificate courses, diploma programs, workshops,
+                  internships, supervised learning, recorded courses, and
+                  personal support through a fully online platform.
                 </p>
               </div>
 
-              <div className="space-y-7 text-lg leading-8 text-muted-foreground">
+              <div className="text-muted-foreground space-y-7 text-lg leading-8">
                 <p>
-                  The aim is not to turn learning into a pile of notes or credentials. It is to help learners understand ideas clearly enough that they can recognise, discuss, reflect on, and eventually apply them with greater confidence.
+                  The aim is not to turn learning into a pile of notes or
+                  credentials. It is to help learners understand ideas clearly
+                  enough that they can recognise, discuss, reflect on, and
+                  eventually apply them with greater confidence.
                 </p>
                 <p>
-                  We also want the learning environment itself to feel different: thoughtful rather than intimidating, structured without becoming rigid, and professional without losing warmth.
+                  We also want the learning environment itself to feel
+                  different: thoughtful rather than intimidating, structured
+                  without becoming rigid, and professional without losing
+                  warmth.
                 </p>
 
                 <div className="mt-10 grid grid-cols-2 gap-5 sm:grid-cols-3">
                   <div className="brand-card rounded-[1.5rem] p-6">
-                    <p className="font-display text-primary text-4xl font-medium">2020</p>
-                    <p className="text-muted-foreground mt-2 text-sm">Founded</p>
+                    <p className="font-display text-primary text-4xl font-medium">
+                      2020
+                    </p>
+                    <p className="text-muted-foreground mt-2 text-sm">
+                      Founded
+                    </p>
                   </div>
                   <div className="brand-card rounded-[1.5rem] p-6">
-                    <p className="font-display text-primary text-4xl font-medium">10,000+</p>
-                    <p className="text-muted-foreground mt-2 text-sm">Learners reached</p>
+                    <p className="font-display text-primary text-4xl font-medium">
+                      10,000+
+                    </p>
+                    <p className="text-muted-foreground mt-2 text-sm">
+                      Learners reached
+                    </p>
                   </div>
                   <div className="brand-card col-span-2 rounded-[1.5rem] p-6 sm:col-span-1">
-                    <p className="font-display text-primary text-4xl font-medium">Online</p>
-                    <p className="text-muted-foreground mt-2 text-sm">Built for access across locations</p>
+                    <p className="font-display text-primary text-4xl font-medium">
+                      Online
+                    </p>
+                    <p className="text-muted-foreground mt-2 text-sm">
+                      Built for access across locations
+                    </p>
                   </div>
                 </div>
               </div>
@@ -269,7 +295,7 @@ export default function About() {
         </section>
 
         <section className="brand-section-dark home-section-md relative overflow-hidden">
-          <div className="container relative z-10">
+          <div className="relative z-10 container">
             <div className="mx-auto max-w-6xl">
               <div className="mb-12 max-w-3xl">
                 <div className="flex items-center gap-4">
@@ -282,7 +308,9 @@ export default function About() {
                   One ecosystem, different ways to learn and grow.
                 </h2>
                 <p className="mt-5 max-w-2xl text-lg leading-8 text-[#c9dbd8]">
-                  TMP is intentionally broader than a single course format, so students can move between learning, practice, professional development, and personal support.
+                  TMP is intentionally broader than a single course format, so
+                  students can move between learning, practice, professional
+                  development, and personal support.
                 </p>
               </div>
 
@@ -320,7 +348,10 @@ export default function About() {
 
               <div className="grid gap-6 lg:grid-cols-3">
                 {BELIEFS.map((belief) => (
-                  <div key={belief.number} className="brand-card rounded-[1.8rem] p-7 sm:p-8">
+                  <div
+                    key={belief.number}
+                    className="brand-card rounded-[1.8rem] p-7 sm:p-8"
+                  >
                     <span className="font-display text-primary/40 text-2xl italic">
                       {belief.number}
                     </span>
@@ -337,7 +368,7 @@ export default function About() {
           </div>
         </section>
 
-        <section className="brand-section-tint home-section-md border-y border-primary/5">
+        <section className="brand-section-tint home-section-md border-primary/5 border-y">
           <div className="container">
             <div className="mx-auto max-w-6xl">
               <div className="mb-12 text-center">
@@ -385,7 +416,8 @@ export default function About() {
                     Professional learning without losing the person inside it.
                   </h2>
                   <p className="mt-5 text-base leading-8 text-[#d6e3e0]">
-                    The details matter: structure, affordability, materials, practical application, and feeling seen while you learn.
+                    The details matter: structure, affordability, materials,
+                    practical application, and feeling seen while you learn.
                   </p>
                 </div>
 
@@ -395,7 +427,7 @@ export default function About() {
                       <span className="bg-primary/8 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
                         <feature.icon className="h-4 w-4" />
                       </span>
-                      <p className="text-foreground pt-2 text-sm font-medium leading-6">
+                      <p className="text-foreground pt-2 text-sm leading-6 font-medium">
                         {feature.text}
                       </p>
                     </div>

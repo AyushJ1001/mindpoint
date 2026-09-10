@@ -174,14 +174,14 @@ export default function Navbar() {
             aria-label="Home"
           >
             <Image
-              src="/logo.png"
+              src="/tmp-botanical-mark.webp"
               alt="The Mind Point"
-              width={36}
-              height={36}
-              className="transition-smooth ring-border h-8 w-8 rounded-xl ring-1 hover:scale-105 sm:h-9 sm:w-9"
+              width={80}
+              height={60}
+              className="h-12 w-16 shrink-0 object-contain mix-blend-multiply"
               priority
             />
-            <span className="text-foreground font-display text-base font-bold tracking-tight sm:text-xl">
+            <span className="hidden text-[0.65rem] font-semibold tracking-[0.2em] text-[#173f3d] uppercase sm:block">
               The Mind Point
             </span>
           </Link>
@@ -620,27 +620,29 @@ export default function Navbar() {
                 </div>
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-2">
-              <Show when="signed-in">
-                <MindPointsBadge />
-                <UserButton
-                  userProfileMode="navigation"
-                  userProfileUrl="/account"
-                />
-              </Show>
-              <Show when="signed-out">
-                <SignInButton>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="transition-smooth hover:bg-accent/50 cursor-pointer"
-                  >
-                    <span className="hidden sm:inline">Sign In</span>
-                    <span className="sm:hidden">Sign in</span>
-                  </Button>
-                </SignInButton>
-              </Show>
-            </div>
+            {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && (
+              <div className="flex items-center gap-2">
+                <Show when="signed-in">
+                  <MindPointsBadge />
+                  <UserButton
+                    userProfileMode="navigation"
+                    userProfileUrl="/account"
+                  />
+                </Show>
+                <Show when="signed-out">
+                  <SignInButton>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="transition-smooth hover:bg-accent/50 cursor-pointer"
+                    >
+                      <span className="hidden sm:inline">Sign In</span>
+                      <span className="sm:hidden">Sign in</span>
+                    </Button>
+                  </SignInButton>
+                </Show>
+              </div>
+            )}
           </div>
         </div>
 

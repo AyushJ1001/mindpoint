@@ -76,7 +76,7 @@ export default function ContactClient() {
   return (
     <div className="tmp-contact-page min-h-screen">
       <section className="brand-hero relative overflow-hidden py-16 sm:py-20 lg:py-24">
-        <div className="container relative z-10">
+        <div className="relative z-10 container">
           <div className="mx-auto max-w-4xl text-center">
             <div className="flex items-center justify-center gap-4">
               <span className="brand-gold-rule" aria-hidden="true" />
@@ -85,10 +85,13 @@ export default function ContactClient() {
             </div>
             <h1 className="font-display text-foreground mt-6 text-5xl leading-[1.02] font-medium tracking-[-0.035em] sm:text-6xl lg:text-7xl">
               Have a question? You can start
-              <span className="text-primary block italic">with a simple message.</span>
+              <span className="text-primary block italic">
+                with a simple message.
+              </span>
             </h1>
             <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg leading-8 sm:text-xl">
-              Ask about a program, enrollment, learning pathway, therapy option, or anything else you need help understanding before you decide.
+              Ask about a program, enrollment, learning pathway, therapy option,
+              or anything else you need help understanding before you decide.
             </p>
           </div>
         </div>
@@ -100,7 +103,7 @@ export default function ContactClient() {
             <div className="brand-section-dark relative overflow-hidden rounded-[2.2rem] p-8 sm:p-10">
               <div className="relative z-10">
                 <Image
-                  src="/tmp-botanical-logo.svg"
+                  src="/tmp-botanical-mark.webp"
                   alt="The Mind Point"
                   width={120}
                   height={120}
@@ -113,7 +116,9 @@ export default function ContactClient() {
                   Clear answers before you commit.
                 </h2>
                 <p className="mt-5 text-base leading-8 text-[#d1dfdc]">
-                  If you are unsure which program fits, what a batch includes, how recordings work, or where to begin, reach out. A question is a perfectly good first step.
+                  If you are unsure which program fits, what a batch includes,
+                  how recordings work, or where to begin, reach out. A question
+                  is a perfectly good first step.
                 </p>
 
                 <div className="mt-10 space-y-6">
@@ -129,7 +134,10 @@ export default function ContactClient() {
                             {item.title}
                           </p>
                           {item.lines.map((line) => (
-                            <p key={line} className="mt-1 text-sm leading-6 text-[#f2eee6]">
+                            <p
+                              key={line}
+                              className="mt-1 text-sm leading-6 text-[#f2eee6]"
+                            >
                               {line}
                             </p>
                           ))}
@@ -148,12 +156,16 @@ export default function ContactClient() {
                   Tell us what you need help with.
                 </h2>
                 <p className="text-muted-foreground mt-3 max-w-xl leading-7">
-                  You do not need to phrase it perfectly. Just share the question, course, or concern you have in mind.
+                  You do not need to phrase it perfectly. Just share the
+                  question, course, or concern you have in mind.
                 </p>
               </div>
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="space-y-6"
+                >
                   <FormField
                     control={form.control}
                     name="name"
@@ -165,7 +177,7 @@ export default function ContactClient() {
                         <FormControl>
                           <Input
                             placeholder="Your name"
-                            className="h-12 rounded-2xl border-primary/10 bg-[#fffdf9] px-4"
+                            className="border-primary/10 h-12 rounded-2xl bg-[#fffdf9] px-4"
                             {...field}
                           />
                         </FormControl>
@@ -185,7 +197,7 @@ export default function ContactClient() {
                         <FormControl>
                           <Input
                             placeholder="your.email@example.com"
-                            className="h-12 rounded-2xl border-primary/10 bg-[#fffdf9] px-4"
+                            className="border-primary/10 h-12 rounded-2xl bg-[#fffdf9] px-4"
                             {...field}
                           />
                         </FormControl>
@@ -205,7 +217,7 @@ export default function ContactClient() {
                         <FormControl>
                           <Textarea
                             placeholder="Tell us how we can help you..."
-                            className="min-h-[160px] rounded-2xl border-primary/10 bg-[#fffdf9] p-4"
+                            className="border-primary/10 min-h-[160px] rounded-2xl bg-[#fffdf9] p-4"
                             {...field}
                           />
                         </FormControl>

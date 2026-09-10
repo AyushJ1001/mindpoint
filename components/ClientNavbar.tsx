@@ -1,18 +1,26 @@
 "use client";
 
-import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Suspense } from "react";
 import Navbar from "@/app/navbar";
 import ServerNavbar from "./ServerNavbar";
 
 export default function ClientNavbar() {
-  const pathname = usePathname();
+  const [isHydrated, setIsHydrated] = useState(false);
 
-  // On the homepage preview, keep the branded server navbar mounted instead of
-  // swapping to the legacy interactive navbar after hydration. This guarantees
-  // the TMP wordmark remains visible while we finalize the new homepage header.
-  if (pathname === "/") {
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+
+  // Always show server navbar during SSR and initial hydration
+  if (!isHydrated) {
     return <ServerNavbar />;
   }
 
-  return <Navbar />;
+  // Once hydrated, show the full interactive navbar with Suspense fallback
+  return (
+    <Suspense fallback={<ServerNavbar />}>
+      <Navbar />
+    </Suspense>
+  );
 }
