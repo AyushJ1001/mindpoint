@@ -7,25 +7,54 @@ import { api } from "@/lib/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, BookOpen, Calendar, Clock } from "lucide-react";
+import { ArrowRight, BookOpen, Calendar, Clock, RefreshCw } from "lucide-react";
 
 export function EnrollmentsTab() {
-  const { user } = useUser();
-  const { isAuthenticated } = useConvexAuth();
+  const { user, isLoaded: isClerkLoaded } = useUser();
+  const {
+    isAuthenticated,
+    isLoading: isConvexAuthLoading,
+  } = useConvexAuth();
   const enrollments = useQuery(
     api.myFunctions.getUserEnrollments,
     isAuthenticated ? { limit: 200 } : "skip",
   );
 
+  if (!isClerkLoaded) {
+    return <div className="text-muted-foreground">Loading your account...</div>;
+  }
+
   if (!user) {
     return <div>Please sign in to view your enrollments.</div>;
   }
 
-  if (enrollments === undefined) {
+  if (isConvexAuthLoading || (isAuthenticated && enrollments === undefined)) {
     return <div className="text-muted-foreground">Loading enrollments...</div>;
   }
 
-  if (enrollments.length === 0) {
+  if (!isAuthenticated) {
+    return (
+      <Card>
+        <CardContent className="py-10 text-center">
+          <p className="font-medium">Your account is signed in, but your learning data did not connect.</p>
+          <p className="text-muted-foreground mx-auto mt-2 max-w-lg text-sm leading-6">
+            Refresh once to retry the secure connection. If it still does not connect, the preview authentication configuration needs attention rather than your enrollment records.
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            className="mt-5"
+            onClick={() => window.location.reload()}
+          >
+            <RefreshCw className="h-4 w-4" />
+            Retry connection
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!enrollments || enrollments.length === 0) {
     return (
       <Card>
         <CardContent className="py-12 text-center">
