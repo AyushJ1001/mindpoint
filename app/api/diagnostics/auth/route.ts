@@ -4,6 +4,13 @@ import { api } from "@/lib/backend/api";
 
 export const dynamic = "force-dynamic";
 
+function clerkMode(key?: string) {
+  if (!key) return "missing";
+  if (key.startsWith("pk_live_")) return "live";
+  if (key.startsWith("pk_test_")) return "test";
+  return "unknown";
+}
+
 export async function GET() {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
   const clerkPublic = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
@@ -28,6 +35,7 @@ export async function GET() {
     branch: process.env.VERCEL_GIT_COMMIT_REF ?? "unknown",
     hasConvexUrl: Boolean(convexUrl),
     hasClerkPublishableKey: Boolean(clerkPublic),
+    clerkPublishableKeyMode: clerkMode(clerkPublic),
     hasClerkSecretKey: Boolean(clerkSecret),
     hasClerkJwtIssuer: Boolean(clerkIssuer),
     convexReachable,
