@@ -10,14 +10,38 @@ import ClientNavbar from "@/components/ClientNavbar";
 import RouteBodyClass from "@/components/RouteBodyClass";
 import StructuredData from "@/components/structured-data";
 import { ThemeProvider } from "@/components/theme-provider";
+import { usePathname } from "next/navigation";
 
 interface ClientProvidersProps {
   children: ReactNode;
 }
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
+  const pathname = usePathname();
+
+  // Throwaway design routes use synthetic, in-memory data and should not boot
+  // the authenticated storefront shell when local credentials are absent.
+  if (pathname.startsWith("/prototype/")) {
+    return (
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="light"
+        enableSystem={false}
+      >
+        <main id="main-content" className="flex-grow" role="main" tabIndex={-1}>
+          {children}
+        </main>
+      </ThemeProvider>
+    );
+  }
+
   const appShell = (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
       <RouteBodyClass />
       <StructuredData />
       <ClientNavbar />
