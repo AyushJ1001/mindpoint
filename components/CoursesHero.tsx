@@ -1,148 +1,126 @@
-import { ScrollReveal } from "@/components/ScrollReveal";
 import Link from "next/link";
-import {
-  Award,
-  BriefcaseBusiness,
-  GraduationCap,
-  PlaySquare,
-  Sparkles,
-  HeartPulse,
-  Telescope,
-  FileText,
-  ArrowUpRight,
-} from "lucide-react";
 
 const CATEGORIES = [
   {
+    number: "01",
     title: "Certificate Courses",
     href: "/courses/certificate",
-    desc: "Structured learning with a credential you can build on.",
-    icon: Award,
-    note: "Learn",
+    desc: "Structured psychology learning with a credential you can build on.",
+    note: "learn",
   },
   {
+    number: "02",
     title: "Internship Programs",
     href: "/courses/internship",
     desc: "Hands-on practice with guidance, feedback, and real application.",
-    icon: BriefcaseBusiness,
-    note: "Practice",
+    note: "practise",
   },
   {
+    number: "03",
     title: "Diploma Programs",
     href: "/courses/diploma",
     desc: "A deeper, longer learning journey for those ready to go further.",
-    icon: GraduationCap,
-    note: "Advance",
+    note: "advance",
   },
   {
+    number: "04",
     title: "Pre-recorded Courses",
     href: "/courses/pre-recorded",
     desc: "Flexible self-paced modules you can return to whenever you need.",
-    icon: PlaySquare,
-    note: "Self-paced",
+    note: "self-paced",
   },
   {
+    number: "05",
     title: "Masterclasses",
     href: "/courses/masterclass",
     desc: "Focused learning experiences built around one useful topic at a time.",
-    icon: Sparkles,
-    note: "Explore",
+    note: "explore",
   },
   {
+    number: "06",
     title: "Therapy Sessions",
     href: "/courses/therapy",
     desc: "A professional, supportive space to pause, understand, and move forward.",
-    icon: HeartPulse,
-    note: "Support",
+    note: "support",
   },
   {
+    number: "07",
     title: "Supervised Programs",
     href: "/courses/supervised",
     desc: "Guided feedback and structured practice for developing clinical confidence.",
-    icon: Telescope,
-    note: "Supervision",
+    note: "supervision",
   },
   {
+    number: "08",
     title: "Resume Studio",
     href: "/courses/resume-studio",
     desc: "Practical help presenting your psychology experience with clarity and confidence.",
-    icon: FileText,
-    note: "Career",
+    note: "career",
   },
 ];
 
 export default function CoursesHero() {
   return (
     <>
-      <section className="brand-hero relative overflow-hidden border-b border-primary/5 py-16 sm:py-20 lg:py-24">
-        <div className="container relative z-10">
-          <ScrollReveal>
-            <div className="mx-auto max-w-4xl text-center">
-              <div className="flex items-center justify-center gap-4">
-                <span className="brand-gold-rule" aria-hidden="true" />
-                <span className="brand-kicker">The Mind Point Academy</span>
-                <span className="brand-gold-rule" aria-hidden="true" />
-              </div>
-              <h1 className="font-display text-foreground mx-auto mt-6 max-w-4xl text-5xl leading-[1.02] font-medium tracking-[-0.035em] sm:text-6xl lg:text-7xl">
-                Find the kind of learning that fits
-                <span className="text-primary block italic">where you are now.</span>
-              </h1>
-              <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg leading-8 sm:text-xl">
-                From first explorations to professional training, TMP brings psychology education,
-                supervised practice, and personal support into one thoughtful learning ecosystem.
-              </p>
+      <section className="ss-hero">
+        <div className="ss-wrap">
+          <p className="ss-kicker">the academy · a field guide</p>
+          <h1 className="ss-heading-xl">Learn it deeply. Use it confidently.</h1>
+          <p className="ss-lead ss-dropcap mt-7 max-w-3xl">
+            The Mind Point Academy brings courses, internships, diplomas,
+            supervised learning and personal support into one organised place.
+            Start with the depth and format that fit you now. You can always go
+            further later.
+          </p>
+          <div className="mt-7 flex flex-wrap gap-x-7 gap-y-4">
+            <a href="#all-programmes" className="ss-link">
+              browse everything <span aria-hidden="true">›</span>
+            </a>
+            <Link href="/contact" className="ss-link">
+              ask what fits you <span aria-hidden="true">›</span>
+            </Link>
+          </div>
+
+          <div className="ss-stat-grid mt-12 lg:mt-16">
+            <div className="ss-stat">
+              <strong>8</strong>
+              <span>ways to learn or get support</span>
             </div>
-          </ScrollReveal>
+            <div className="ss-stat">
+              <strong>Live</strong>
+              <span>cohorts and guided learning</span>
+            </div>
+            <div className="ss-stat">
+              <strong>Self-paced</strong>
+              <span>for flexible schedules</span>
+            </div>
+            <div className="ss-stat">
+              <strong>Online</strong>
+              <span>accessible across locations</span>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section className="home-section-md">
-        <div className="container">
-          <ScrollReveal>
-            <div className="mx-auto mb-10 max-w-3xl text-center">
-              <span className="brand-kicker">Choose your path</span>
-              <h2 className="font-display text-foreground mt-4 text-4xl font-medium sm:text-5xl">
-                Eight ways to begin — without the catalogue overwhelm.
-              </h2>
-              <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg leading-8">
-                Start with the format or goal that feels most relevant. You can always move between paths as you grow.
-              </p>
-            </div>
-          </ScrollReveal>
+      <section className="ss-section" id="all-programmes">
+        <div className="ss-wrap">
+          <p className="ss-kicker">pick the depth that fits</p>
+          <h2 className="ss-heading-lg">The ways in.</h2>
+          <p className="ss-lead mt-5 max-w-3xl">
+            Start with the format, goal or stage that feels most useful. Every
+            path below leads into the same TMP learning ecosystem.
+          </p>
 
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {CATEGORIES.map((category, index) => (
-              <ScrollReveal key={category.href} transitionDelayMs={index * 60}>
-                <Link
-                  href={category.href}
-                  className="brand-card group relative block h-full overflow-hidden rounded-[1.8rem] p-6 transition-all duration-300 hover:-translate-y-1"
-                >
-                  <div
-                    className="absolute -top-10 -right-10 h-28 w-28 rounded-full bg-[#deebe8] opacity-55 transition-transform duration-500 group-hover:scale-110"
-                    aria-hidden="true"
-                  />
-                  <div className="relative">
-                    <div className="mb-7 flex items-start justify-between gap-4">
-                      <div className="bg-primary/8 text-primary inline-flex h-12 w-12 items-center justify-center rounded-2xl">
-                        <category.icon className="h-5 w-5" />
-                      </div>
-                      <span className="text-primary/55 text-[0.68rem] font-semibold tracking-[0.18em] uppercase">
-                        {category.note}
-                      </span>
-                    </div>
-                    <h3 className="font-display text-foreground text-2xl leading-tight font-medium transition-colors group-hover:text-primary">
-                      {category.title}
-                    </h3>
-                    <p className="text-muted-foreground mt-3 text-sm leading-6">
-                      {category.desc}
-                    </p>
-                    <div className="text-primary mt-6 inline-flex items-center gap-2 text-sm font-semibold">
-                      Explore
-                      <ArrowUpRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                    </div>
-                  </div>
-                </Link>
-              </ScrollReveal>
+          <div className="ss-row-list mt-10">
+            {CATEGORIES.map((category) => (
+              <Link href={category.href} key={category.href} className="ss-row group">
+                <span className="ss-row-date">{category.number} · {category.note}</span>
+                <span className="ss-row-title">{category.title}</span>
+                <span className="ss-row-meta">{category.desc}</span>
+                <span className="text-sm text-[#0f4d4d] transition-transform group-hover:translate-x-1" aria-hidden="true">
+                  ›
+                </span>
+              </Link>
             ))}
           </div>
         </div>
