@@ -22,6 +22,7 @@ colors:
   gold: "#b79755"
   portal: "#0b3f3e"
   portal-body: "#d2e1de"
+  portal-diagram: "#f8f5ee"
   dark-background: "#102f2e"
   dark-foreground: "#f7f3ea"
   dark-secondary: "#1d4947"
@@ -113,6 +114,13 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.card}"
     padding: "1.5rem"
+  portal-journey:
+    textColor: "{colors.ivory}"
+    padding: "2rem"
+  portal-diagram:
+    backgroundColor: "{colors.portal-diagram}"
+    textColor: "{colors.coastal-ink}"
+    padding: "1.75rem"
   portal-promo:
     backgroundColor: "{colors.portal}"
     textColor: "{colors.ivory}"
@@ -161,13 +169,15 @@ The palette uses deep teal for reading and action, with ivory pages and sea-glas
 
 The dark theme maps background to `dark-background`, foreground to `dark-foreground`, card to `coastal-ink`, primary to `sea-glass-light`, and primary text to `dark-background`. Secondary, muted, accent, and borders use their named dark counterparts. The source also contains deliberately fixed light and dark marketing sections; those are authored color pairs rather than a universal theme inversion.
 
+The portal walkthrough keeps its light canvas in dark appearance. Pair `background`, `muted`, and `secondary` fills with fixed `coastal-ink` headings, `primary` accents, and `muted-foreground` descriptions. The enrollment diagram uses the fixed `portal-diagram` fill and dark teal text. Do not apply a theme-responsive pale foreground to these fixed light panels.
+
 **The Semantic Controls Rule.** New reusable controls use semantic variables so their hover, selected, and focus states follow the active theme.
 
 ## Typography
 
 Cormorant Garamond supplies display, headline, title, and italic emphasis. Manrope supplies paragraphs, metadata, labels, and controls. JetBrains Mono remains available for technical content, but the current public brand overrides course labels to Manrope. The legacy variable `--font-syne` actually loads Cormorant Garamond; do not infer the font family from that variable name.
 
-The display token records the catalog heading. The coastal home hero is intentionally smaller, starting at 2.25rem and reaching 4.4rem. Course detail titles use `clamp(3.1rem, 6vw, 6.4rem)` with a 0.92 line height. Portal titles span 3.75rem to 6rem. Reuse the role that fits the content rather than putting the largest scale on every page.
+The display token records the catalog heading. The coastal home hero is intentionally smaller, starting at 2.25rem and reaching 4.4rem. Course detail titles use `clamp(3.1rem, 6vw, 6.4rem)` with a 0.92 line height. The portal hero title starts at 3.75rem, reaches 4.5rem at the small breakpoint, and uses 5.75rem on desktop, with a 0.9 line height. Reuse the role that fits the content rather than putting the largest scale on every page.
 
 Headlines begin at 3rem and commonly increase to 3.75rem. Program-card titles use the compact title token; editorial pathway titles may be larger. Body copy uses 1rem with generous leading, while introductory paragraphs commonly use 1.125rem or 1.25rem with 2rem to 2.25rem leading. Existing hero copy stays within 27rem to 42rem depending on the layout.
 
@@ -177,9 +187,11 @@ Uppercase labels identify sections or short facts. Keep long instructions in sen
 
 Public `.container` elements have an 82rem maximum width. Most bespoke marketing sections use an 80rem content width, 1.5rem mobile gutters, 2.5rem small-screen gutters, and 7vw desktop gutters. Shared container gutters are 1rem, 1.5rem, and 2rem. These are two existing layout families; choose one per section sequence.
 
-Standard public section padding is fluid from 4.5rem to 7.5rem. Spacious home sections use 6rem on mobile and 8rem on desktop. Portal sections commonly use 5rem, growing to 7rem or more for the hero. Use the shorter rhythm for course selection and forms.
+Standard public section padding is fluid from 4.5rem to 7.5rem. Spacious home sections use 6rem on mobile and 8rem on desktop. Portal sections commonly use 5rem, growing to 7rem. Its hero uses 4rem on mobile, 7rem at the small breakpoint, and 8rem on desktop. Use the shorter rhythm for course selection and forms.
 
 At 640px, actions and supporting information can split into columns. At 1024px, navigation becomes horizontal and editorial sections use unequal two-column grids. Keep primary actions full-width or wrapped naturally at narrow widths. The home hero reserves room for its coastal image below the copy on mobile; its text and focal point share the frame on desktop.
+
+The portal hero puts its heading and description first, then Find your program and Open My Learning, then the supporting checklist, and finally the enrollment diagram. Keep that DOM and reading order on mobile so visitors reach the actions before the longer explanation. The homepage three-step journey stacks vertically and becomes three columns at 640px. The dedicated four-step walkthrough uses one column, two columns at 768px, and four at 1280px.
 
 Pathway rows use a numeral, heading, explanation, and arrow. Program collections use responsive grids. Course details group the title, format, schedule, price, batch selection, and enrollment action before the longer curriculum. Preserve that information relationship when changing a layout.
 
@@ -223,9 +235,13 @@ The sticky header has a small Learning Portal announcement link above the botani
 
 ### Learning Portal promotion
 
-Use the shared `LearningPortalPromo` component for repeat appearances. It combines a deep-teal panel, large Cormorant heading with sea-glass italic emphasis, plain explanatory copy, and an ivory action. Its compact version fits course pages; the full version adds brief supporting benefits.
+Use the shared `LearningPortalPromo` component for repeat appearances. It combines a deep-teal panel, large Cormorant heading with sea-glass italic emphasis, plain explanatory copy, and an ivory action. Its compact version fits course pages; the full version adds supporting benefits and a ruled three-step ordered list: Choose, Enroll, Learn. Pair italic serif numerals with a short heading and one sentence of explanation. The primary link reads See how the portal works and opens `/learning-portal`.
 
-Public messaging presents the portal as an active part of TMP. The promotion links to `/learning-portal`; the portal page links to `/account` for learner access and `/courses` for program exploration. Describe the course journey, resources, and progress without inventing product screens or implementation guarantees. This file records public marketing patterns, not a verified LMS dashboard specification.
+The dedicated portal page expands the sequence into four steps: Choose your program, Complete your enrollment, Enter your learning space, and Keep moving forward. These form an ordered grid with thin teal rules. Follow it with the existing benefits and before, during, and later learning rows. Keep the journey explanatory and preserve the actual enrollment and account destinations.
+
+The hero includes a factual enrollment diagram. A warm light panel contains a heading and three numbered rows for program choice, account enrollment, and returning through My Learning. Each row pairs a teal circular icon with a plain label and description. This explains a supported route through the site; it is not a dashboard preview. Do not add fabricated course progress, lesson players, calendars, completion rates, or account data to this illustration.
+
+Public messaging presents the portal as an active part of TMP. The page links to `/courses` through Find your program, followed by `/account` through Open My Learning. On mobile these actions precede the checklist and diagram. The final section repeats both program exploration and existing-learner access. Describe the course journey, resources, and progress without inventing product screens or implementation guarantees. This file records public marketing patterns, not a verified LMS dashboard specification.
 
 ### Photography and brand mark
 
@@ -235,6 +251,7 @@ Preserve `public/tmp-botanical-mark.webp` and `public/tmp-coastal-hero.webp`. Th
 
 ### Do:
 
+- Do keep the portal hero actions before its checklist and enrollment diagram on mobile.
 - Do preserve the botanical mark, coastal imagery, and "Learn · Grow · Heal · Belong" brand promise.
 - Do use semantic CSS variables for new reusable controls and verify both light and dark states.
 - Do give each section a clear next action, with program exploration and learner access labelled by destination.
@@ -244,6 +261,7 @@ Preserve `public/tmp-botanical-mark.webp` and `public/tmp-coastal-hero.webp`. Th
 
 ### Don't:
 
+- Don't mix theme-responsive pale text with the portal's fixed light panels.
 - Don't treat the older lavender declarations or unused hero components as the current public identity.
 - Don't use sea-glass or gold for small text on ivory without checking contrast.
 - Don't turn every paragraph into a rounded card; retain the existing open rows and ruled sections.

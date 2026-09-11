@@ -1,6 +1,6 @@
 {
   "schemaVersion": 2,
-  "generatedAt": "2026-09-11T21:40:23.588595+00:00",
+  "generatedAt": "2026-09-11T22:18:22.034415+00:00",
   "title": "Design System: The Mind Point",
   "extensions": {
     "colorMeta": {
@@ -381,6 +381,20 @@
           "oklch(84% 0.0490 191.81)",
           "oklch(95% 0.0490 191.81)"
         ]
+      },
+      "portal-diagram": {
+        "role": "neutral",
+        "displayName": "Portal diagram panel",
+        "tonalRamp": [
+          "oklch(15% 0.012 88)",
+          "oklch(26% 0.012 88)",
+          "oklch(38% 0.012 88)",
+          "oklch(49% 0.012 88)",
+          "oklch(61% 0.012 88)",
+          "oklch(72% 0.012 88)",
+          "oklch(84% 0.012 88)",
+          "oklch(95% 0.012 88)"
+        ]
       }
     },
     "typographyMeta": {
@@ -420,6 +434,11 @@
         "name": "course-detail-card",
         "value": "0 26px 64px -50px color-mix(in srgb, var(--primary) 72%, transparent)",
         "purpose": "Course detail panels."
+      },
+      {
+        "name": "portal-diagram",
+        "value": "0 35px 90px -30px rgba(0,0,0,0.55)",
+        "purpose": "Separates the fixed light enrollment diagram from the deep-teal hero."
       }
     ],
     "motion": [
@@ -451,6 +470,10 @@
       {
         "name": "lg",
         "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
       }
     ]
   },
@@ -468,7 +491,7 @@
       "kind": "button",
       "refersTo": "button-inverse",
       "description": "Primary action within a dark brand section.",
-      "html": "<a class=\"ds-inverse\" href=\"/learning-portal\">Explore the learning portal</a>",
+      "html": "<a class=\"ds-inverse\" href=\"/learning-portal\">See how the portal works</a>",
       "css": ".ds-inverse{display:inline-flex;align-items:center;justify-content:center;gap:.75rem;min-height:2.75rem;border-radius:999px;padding:.875rem 1.75rem;font-size:.875rem;font-weight:600;text-decoration:none;transition:background-color 300ms;font-family:var(--font-manrope,Manrope),sans-serif;min-height:3rem;background:var(--tmp-ivory,#faf8f3);color:var(--tmp-deep-teal,#0f4d4d);font-size:.75rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700}.ds-inverse:hover{background:white}.ds-inverse:focus-visible{outline:2px solid var(--ring,#69a7a6);outline-offset:4px;}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
     },
     {
@@ -515,9 +538,25 @@
       "name": "Learning Portal panel",
       "kind": "custom",
       "refersTo": "portal-promo",
-      "description": "Shared dark panel for the active learner experience.",
-      "html": "<section class=\"ds-portal\"><h2>Your learning deserves <em>a place of its own.</em></h2><p>The TMP Learning Portal brings your course journey, resources, and progress into one place.</p><a href=\"/learning-portal\">Explore the learning portal</a></section>",
+      "description": "Shared dark panel with an explanatory link; the full homepage version adds the Choose, Enroll, Learn journey.",
+      "html": "<section class=\"ds-portal\"><h2>Your learning deserves <em>a place of its own.</em></h2><p>From enrollment to ongoing learning, the TMP Learning Portal gives your psychology journey one calmer, clearer place to continue.</p><a href=\"/learning-portal\">See how the portal works</a></section>",
       "css": ".ds-portal{padding:2rem;border-radius:1.5rem;background:#0b3f3e;color:var(--tmp-ivory,#faf8f3);font-family:var(--font-manrope,Manrope),sans-serif;}.ds-portal h2{margin:0;font-family:var(--font-syne,\"Cormorant Garamond\"),Georgia,serif;font-size:3rem;font-weight:500;line-height:.98;letter-spacing:-.04em}.ds-portal em{display:block;color:#b9dedd}.ds-portal p{max-width:42rem;margin:1.5rem 0;line-height:2;color:#d2e1de}.ds-portal a{display:inline-flex;align-items:center;min-height:3rem;border-radius:999px;padding:0 1.5rem;background:var(--tmp-ivory,#faf8f3);color:var(--tmp-deep-teal,#0f4d4d);font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;text-decoration:none}.ds-portal a:hover{background:white}.ds-portal a:focus-visible{outline:2px solid var(--ring,#69a7a6);outline-offset:4px;}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
+    },
+    {
+      "name": "Homepage portal journey",
+      "kind": "custom",
+      "refersTo": "portal-journey",
+      "description": "Three-step ordered explainer below the full homepage portal promotion; compact promotions omit it.",
+      "html": "<section class=\"ds-journey\"><p class=\"ds-journey-label\">How your TMP journey works</p><ol><li><span>01</span><h3>Choose</h3><p>Find the right TMP program for your goal.</p></li><li><span>02</span><h3>Enroll</h3><p>Complete enrollment through the website.</p></li><li><span>03</span><h3>Learn</h3><p>Return to My Learning and continue from one place.</p></li></ol></section>",
+      "css": ".ds-journey{padding:2rem;background:#0b3f3e;color:#faf8f3;border-top:1px solid rgba(255,255,255,.12);font-family:var(--font-manrope,Manrope),sans-serif;}.ds-journey-label{margin:0;color:#9fd0cf;font-size:.6rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase}.ds-journey ol{display:grid;gap:1.5rem;list-style:none;margin:1.5rem 0 0;padding:0}.ds-journey li{display:grid;grid-template-columns:auto 1fr;column-gap:1rem}.ds-journey li>span{grid-row:span 2;color:#9fd0cf;font-size:1.875rem;font-style:italic;font-family:var(--font-syne,\"Cormorant Garamond\"),Georgia,serif;}.ds-journey h3{margin:0;font-size:1.5rem;font-weight:600;font-family:var(--font-syne,\"Cormorant Garamond\"),Georgia,serif;}.ds-journey li p{margin:.25rem 0 0;font-size:.875rem;line-height:1.5rem;color:#c9dbd8}@media(min-width:640px){.ds-journey ol{grid-template-columns:repeat(3,minmax(0,1fr));gap:0}.ds-journey li:not(:first-child){border-left:1px solid rgba(255,255,255,.12);padding-left:1.75rem}.ds-journey li:not(:last-child){padding-right:1.75rem}}"
+    },
+    {
+      "name": "Enrollment route diagram",
+      "kind": "custom",
+      "refersTo": "portal-diagram",
+      "description": "Factual program-choice, enrollment, and My Learning route; no speculative learner dashboard. Fixed light colors remain readable in dark appearance.",
+      "html": "<section class=\"ds-route\"><p class=\"ds-route-label\">Your route into My Learning</p><h2>One connected journey,<em>from choice to course.</em></h2><ol><li><span>01</span><div><strong>Choose a TMP program</strong><p>Compare the format, schedule, and fee.</p></div></li><li><span>02</span><div><strong>Enroll with your TMP account</strong><p>Complete the website enrollment flow.</p></div></li><li><span>03</span><div><strong>Return through My Learning</strong><p>Find your enrolled programs in your account.</p></div></li></ol></section>",
+      "css": ".ds-route{padding:1.75rem;border:1px solid rgba(255,255,255,.15);border-radius:1.75rem;background:#f8f5ee;color:#173f3d;box-shadow:0 35px 90px -30px rgba(0,0,0,.55);font-family:var(--font-manrope,Manrope),sans-serif;}.ds-route-label{margin:0;color:#0f4d4d;font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase}.ds-route h2{margin:.75rem 0 0;font-size:1.875rem;line-height:1.25;font-weight:600;font-family:var(--font-syne,\"Cormorant Garamond\"),Georgia,serif;}.ds-route h2 em{display:block;color:#0f4d4d}.ds-route ol{display:grid;gap:.75rem;list-style:none;padding:0;margin:2rem 0 0}.ds-route li{display:grid;grid-template-columns:auto 1fr;gap:1rem;border-radius:1rem;background:#e7f1ee;padding:1rem}.ds-route li>span{display:flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border-radius:999px;background:#0f4d4d;color:white;font-size:.75rem;font-weight:700}.ds-route strong{color:#173f3d;font-weight:600}.ds-route li p{margin:.25rem 0 0;font-size:.875rem;line-height:1.5rem;color:#526a66}"
     }
   ],
   "narrative": {
@@ -542,6 +581,7 @@
       }
     ],
     "dos": [
+      "Do keep the portal hero actions before its checklist and enrollment diagram on mobile.",
       "Do preserve the botanical mark, coastal imagery, and \"Learn \u00b7 Grow \u00b7 Heal \u00b7 Belong\" brand promise.",
       "Do use semantic CSS variables for new reusable controls and verify both light and dark states.",
       "Do give each section a clear next action, with program exploration and learner access labelled by destination.",
@@ -550,6 +590,7 @@
       "Do use repository-backed claims and preserve course, payment, authentication, and account behavior."
     ],
     "donts": [
+      "Don't mix theme-responsive pale text with the portal's fixed light panels.",
       "Don't treat the older lavender declarations or unused hero components as the current public identity.",
       "Don't use sea-glass or gold for small text on ivory without checking contrast.",
       "Don't turn every paragraph into a rounded card; retain the existing open rows and ruled sections.",

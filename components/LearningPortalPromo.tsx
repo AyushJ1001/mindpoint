@@ -1,9 +1,15 @@
 import Link from "next/link";
-import { ArrowRight, BookOpenCheck, Layers3 } from "lucide-react";
+import { ArrowRight, BookOpenCheck, Check, Layers3 } from "lucide-react";
 
 type LearningPortalPromoProps = {
   compact?: boolean;
 };
+
+const portalJourney = [
+  ["01", "Choose", "Find the right TMP program for your goal."],
+  ["02", "Enroll", "Complete enrollment through the website."],
+  ["03", "Learn", "Return to My Learning and continue from one place."],
+];
 
 export default function LearningPortalPromo({
   compact = false,
@@ -49,9 +55,8 @@ export default function LearningPortalPromo({
               </span>
             </h2>
             <p className="mt-6 max-w-2xl text-base leading-8 text-[#d2e1de] sm:text-lg">
-              The TMP Learning Portal brings your course journey, resources, and
-              progress into one calmer, clearer place built for focused
-              psychology learning.
+              From enrollment to ongoing learning, the TMP Learning Portal gives
+              your psychology journey one calmer, clearer place to continue.
             </p>
             <p className="mt-5 text-[0.66rem] font-bold tracking-[0.2em] text-[#9fd0cf] uppercase">
               The TMP Learning Portal · One connected learning experience
@@ -69,6 +74,10 @@ export default function LearningPortalPromo({
                   <Layers3 className="h-4 w-4 text-[#9fd0cf]" />
                   One considered home for TMP resources
                 </div>
+                <div className="flex items-center gap-3 border-b border-white/10 pb-3 text-sm text-[#e8f1ef]">
+                  <Check className="h-4 w-4 text-[#9fd0cf]" />A clear path from
+                  enrollment to what comes next
+                </div>
               </div>
             )}
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -76,7 +85,7 @@ export default function LearningPortalPromo({
                 href="/learning-portal"
                 className="inline-flex min-h-12 items-center justify-center rounded-full bg-[#faf8f3] px-6 text-xs font-bold tracking-[0.07em] text-[#0f4d4d] uppercase hover:bg-white"
               >
-                Explore the learning portal
+                See how the portal works
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
               <Link
@@ -88,6 +97,34 @@ export default function LearningPortalPromo({
             </div>
           </div>
         </div>
+
+        {!compact && (
+          <div className="relative border-t border-white/12 px-8 py-8 sm:px-12 lg:px-16">
+            <p className="text-[0.6rem] font-bold tracking-[0.2em] text-[#9fd0cf] uppercase">
+              How your TMP journey works
+            </p>
+            <ol className="mt-6 grid gap-6 sm:grid-cols-3 sm:gap-0">
+              {portalJourney.map(([number, title, text], index) => (
+                <li
+                  key={number}
+                  className={`grid grid-cols-[auto_1fr] gap-x-4 ${
+                    index > 0 ? "sm:border-l sm:border-white/12 sm:pl-7" : ""
+                  } ${index < 2 ? "sm:pr-7" : ""}`}
+                >
+                  <span className="font-display row-span-2 text-3xl text-[#9fd0cf] italic">
+                    {number}
+                  </span>
+                  <h3 className="font-display text-2xl font-semibold text-white">
+                    {title}
+                  </h3>
+                  <p className="mt-1 text-sm leading-6 text-[#c9dbd8]">
+                    {text}
+                  </p>
+                </li>
+              ))}
+            </ol>
+          </div>
+        )}
       </div>
     </section>
   );
