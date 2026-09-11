@@ -1,0 +1,111 @@
+/* Final public-site polish for page families that keep their existing markup. */
+
+/* Legal / policy pages share this wrapper. Keep the legal copy untouched and
+   translate only its presentation into the TMP editorial system. */
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 {
+  width: min(960px, calc(100% - 2rem));
+  max-width: 960px !important;
+  margin-inline: auto;
+  padding: clamp(3.5rem, 7vw, 7rem) 0 clamp(5rem, 8vw, 8rem) !important;
+  background: transparent !important;
+  color: #163f3d;
+}
+
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 section {
+  margin: 0 !important;
+}
+
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 h1 {
+  margin: 0 0 2.5rem !important;
+  padding-bottom: 2.5rem;
+  border-bottom: 1px solid rgba(22, 63, 61, 0.3);
+  color: #163f3d !important;
+  font-size: clamp(3rem, 6vw, 6rem) !important;
+  font-weight: 500 !important;
+  line-height: 0.95 !important;
+  letter-spacing: -0.045em !important;
+}
+
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 h2 {
+  margin: 3.5rem 0 1rem !important;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(22, 63, 61, 0.18);
+  color: #163f3d !important;
+  font-size: clamp(1.65rem, 2.8vw, 2.6rem) !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.025em !important;
+}
+
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 p,
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 li,
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 div {
+  color: #596c68 !important;
+  line-height: 1.8 !important;
+}
+
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 ul,
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 ol {
+  margin-block: 1rem 2rem !important;
+}
+
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 [class*="bg-yellow"],
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 [class*="bg-red"],
+body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 [class*="bg-blue"] {
+  border: 1px solid rgba(22, 63, 61, 0.18) !important;
+  border-left: 3px solid #0f4d4d !important;
+  background: rgba(142, 193, 195, 0.08) !important;
+  color: #596c68 !important;
+}
+
+/* Category catalogue pages: preserve the purchase / BOGO / variant logic while
+   making the existing course grid read as a restrained editorial catalogue. */
+body[data-route-mode="site"] .calm-catalog-hero-title {
+  font-family: var(--font-syne), Georgia, serif !important;
+  color: #163f3d !important;
+  font-size: clamp(3rem, 6vw, 6.4rem) !important;
+  font-weight: 500 !important;
+  line-height: 0.94 !important;
+  letter-spacing: -0.045em !important;
+}
+
+body[data-route-mode="site"] .calm-catalog-hero-lead {
+  color: #596c68 !important;
+  font-size: clamp(1rem, 1.4vw, 1.25rem) !important;
+  line-height: 1.75 !important;
+}
+
+body[data-route-mode="site"] .section-padding + section [data-slot="card"] {
+  border: 0 !important;
+  border-top: 1px solid rgba(22, 63, 61, 0.22) !important;
+  border-bottom: 1px solid rgba(22, 63, 61, 0.22) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+body[data-route-mode="site"] .section-padding + section [data-slot="card"]:hover {
+  background: rgba(142, 193, 195, 0.07) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+body[data-route-mode="site"] .section-padding + section [data-slot="card-title"] {
+  font-family: var(--font-syne), Georgia, serif !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.02em !important;
+}
+
+/* Dialogs / sheets throughout the public site. */
+body[data-route-mode="site"] [role="dialog"] {
+  border-radius: 0 !important;
+  border-color: rgba(22, 63, 61, 0.25) !important;
+  background: #fbf8f1 !important;
+  box-shadow: 0 32px 90px -60px rgba(15, 77, 77, 0.65) !important;
+}
+
+@media (min-width: 768px) {
+  body[data-route-mode="site"] main#main-content > div.mx-auto.max-w-4xl.bg-white.p-6 {
+    width: min(960px, calc(100% - 4rem));
+  }
+}
