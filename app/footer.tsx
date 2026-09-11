@@ -3,32 +3,65 @@ import Link from "next/link";
 export default function Footer() {
   return (
     <footer
-      className="border-border relative z-20 mt-auto border-t bg-secondary/40"
+      className="relative z-20 mt-auto overflow-hidden border-t border-[#315d5a] bg-[#0f4d4d] text-[#faf8f3]"
       role="contentinfo"
       aria-label="Footer"
     >
-      <div className="container py-10 sm:py-12">
-        <div className="grid grid-cols-1 gap-10 rounded-[1.6rem] border border-border bg-card/75 p-6 shadow-[0_24px_45px_-30px_rgba(124,111,155,0.35)] backdrop-blur sm:p-8 md:grid-cols-4">
-          {/* Brand Section */}
+      <div
+        className="pointer-events-none absolute -top-32 -right-24 h-72 w-72 rounded-full border border-[#9fd0cf]/10"
+        aria-hidden="true"
+      />
+      <div className="relative container py-16 sm:py-20">
+        <div className="mb-16 border-b border-white/10 pb-14">
+          <p className="text-[0.66rem] font-bold tracking-[0.26em] text-[#9fd0cf] uppercase">
+            Begin where you are
+          </p>
+          <div className="mt-5 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <p className="font-display max-w-4xl text-5xl leading-[0.9] font-medium tracking-[-0.045em] text-[#faf8f3] sm:text-6xl lg:text-7xl">
+              A kinder, brighter way to
+              <span className="block text-[#b9dedd] italic">
+                learn, grow and heal.
+              </span>
+            </p>
+            <Link
+              href="/courses"
+              className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-[#faf8f3] px-7 text-xs font-bold tracking-[0.08em] text-[#0f4d4d] uppercase hover:bg-white"
+            >
+              Find your path&nbsp; →
+            </Link>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12">
           <div className="md:col-span-2">
-            <h3 className="text-foreground font-display mb-4 text-3xl font-semibold tracking-tight">
+            <div className="flex items-center gap-4">
+              <span className="h-px w-10 bg-[#c7a768]" aria-hidden="true" />
+              <span className="text-xs font-semibold tracking-[0.24em] text-[#9fd0cf] uppercase">
+                Learn · Grow · Heal · Belong
+              </span>
+            </div>
+            <h3 className="font-display mt-5 text-5xl font-medium tracking-tight text-[#faf8f3]">
               The Mind Point
             </h3>
-            <p className="text-muted-foreground mb-6 max-w-lg leading-relaxed">
-              Empowering minds through comprehensive mental health education and
-              professional development. Join our community of learners and
-              professionals dedicated to mental wellness.
+            <p className="mt-4 max-w-xl leading-7 text-[#cfddda]">
+              Psychology education, practical training, and personal support
+              designed to make learning feel serious, accessible, and human.
             </p>
-            <div className="flex gap-4">
+            <a
+              href="mailto:contact.themindpoint@gmail.com"
+              className="mt-5 inline-block text-sm font-semibold text-[#f0d9a8] hover:text-white"
+            >
+              contact.themindpoint@gmail.com
+            </a>
+            <div className="mt-7 flex gap-3">
               <Link
                 href="https://instagram.com/themindpoint?igshid=YmMyMTA2M2Y="
-                className="transition-smooth inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/5 transition hover:-translate-y-0.5 hover:bg-white/10"
                 aria-label="Follow us on Instagram"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <svg
-                  className="text-primary h-5 w-5"
+                  className="h-5 w-5 text-[#faf8f3]"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
@@ -38,13 +71,13 @@ export default function Footer() {
               </Link>
               <Link
                 href="https://www.facebook.com/themindpoint?mibextid=LQQJ4d"
-                className="transition-smooth inline-flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card hover:-translate-y-0.5 hover:border-primary/30 hover:bg-accent"
+                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-white/5 transition hover:-translate-y-0.5 hover:bg-white/10"
                 aria-label="Follow us on Facebook"
                 target="_blank"
                 rel="noopener noreferrer"
               >
                 <svg
-                  className="text-primary h-5 w-5"
+                  className="h-5 w-5 text-[#faf8f3]"
                   fill="currentColor"
                   viewBox="0 0 24 24"
                   aria-hidden="true"
@@ -55,66 +88,61 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
           <div>
-            <h4 className="text-primary mb-4 text-sm font-semibold tracking-[0.14em] uppercase">
-              Quick Links
+            <h4 className="mb-4 text-xs font-semibold tracking-[0.2em] text-[#9fd0cf] uppercase">
+              Explore
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-3 text-[#d8e4e1]">
               <li>
-                <Link
-                  href="/about"
-                  className="text-muted-foreground hover:text-primary transition-smooth"
-                >
-                  About Us
+                <Link href="/courses" className="hover:text-white">
+                  Programs
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/contact"
-                  className="text-muted-foreground hover:text-primary transition-smooth"
-                >
+                <Link href="/learning-portal" className="hover:text-white">
+                  Learning Portal
+                </Link>
+              </li>
+              <li>
+                <Link href="/courses/therapy" className="hover:text-white">
+                  Personal Support
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-white">
+                  About TMP
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white">
                   Contact
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/careers"
-                  className="text-muted-foreground hover:text-primary transition-smooth"
-                >
-                  Careers - Join Us
+                <Link href="/careers" className="hover:text-white">
+                  Careers
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Legal */}
           <div>
-            <h4 className="text-primary mb-4 text-sm font-semibold tracking-[0.14em] uppercase">
-              Legal
+            <h4 className="mb-4 text-xs font-semibold tracking-[0.2em] text-[#9fd0cf] uppercase">
+              Policies
             </h4>
-            <ul className="space-y-2">
+            <ul className="space-y-3 text-[#d8e4e1]">
               <li>
-                <Link
-                  href="/toc"
-                  className="text-muted-foreground hover:text-primary transition-smooth"
-                >
+                <Link href="/toc" className="hover:text-white">
                   Terms & Conditions
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/privacy"
-                  className="text-muted-foreground hover:text-primary transition-smooth"
-                >
+                <Link href="/privacy" className="hover:text-white">
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link
-                  href="/refund"
-                  className="text-muted-foreground hover:text-primary transition-smooth"
-                >
+                <Link href="/refund" className="hover:text-white">
                   Refund Policy
                 </Link>
               </li>
@@ -122,11 +150,12 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-border mt-8 border-t pt-8 text-center">
-          <p className="text-muted-foreground">
-            Copyright &copy; {new Date().getFullYear()} The Mind Point. All rights
-            reserved.
+        <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-7 text-sm text-[#afc8c4] sm:flex-row sm:items-center sm:justify-between">
+          <p>
+            Copyright &copy; {new Date().getFullYear()} The Mind Point. All
+            rights reserved.
           </p>
+          <p>A kinder, brighter tomorrow.</p>
         </div>
       </div>
     </footer>

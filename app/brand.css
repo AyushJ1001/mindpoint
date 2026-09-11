@@ -1,0 +1,473 @@
+:root {
+  --background: #faf8f3;
+  --foreground: #173f3d;
+  --card: #fffdf9;
+  --card-foreground: #173f3d;
+  --popover: #fffdf9;
+  --popover-foreground: #173f3d;
+  --primary: #0f4d4d;
+  --primary-foreground: #faf8f3;
+  --secondary: #e8f1ef;
+  --secondary-foreground: #173f3d;
+  --muted: #f2efe8;
+  --muted-foreground: #63706d;
+  --accent: #deebe8;
+  --accent-foreground: #173f3d;
+  --border: #d8d2c5;
+  --input: #f4f1ea;
+  --ring: #8ec1c3;
+  --chart-1: #0f4d4d;
+  --chart-2: #8ec1c3;
+  --chart-3: #d9c6ae;
+  --chart-4: #6f9187;
+  --chart-5: #c4a96b;
+  --sidebar: #f8f5ee;
+  --sidebar-foreground: #173f3d;
+  --sidebar-primary: #0f4d4d;
+  --sidebar-primary-foreground: #faf8f3;
+  --sidebar-accent: #deebe8;
+  --sidebar-accent-foreground: #173f3d;
+  --sidebar-border: #d8d2c5;
+  --sidebar-ring: #8ec1c3;
+
+  --tmp-deep-teal: #0f4d4d;
+  --tmp-deep-teal-2: #173f3d;
+  --tmp-sea-glass: #8ec1c3;
+  --tmp-sea-glass-soft: #deebe8;
+  --tmp-warm-sand: #d9c6ae;
+  --tmp-ivory: #faf8f3;
+  --tmp-gold: #b79755;
+}
+
+.dark {
+  --background: #102f2e;
+  --foreground: #f7f3ea;
+  --card: #173f3d;
+  --card-foreground: #f7f3ea;
+  --popover: #173f3d;
+  --popover-foreground: #f7f3ea;
+  --primary: #9fd0cf;
+  --primary-foreground: #102f2e;
+  --secondary: #1d4947;
+  --secondary-foreground: #f7f3ea;
+  --muted: #1a4442;
+  --muted-foreground: #c4d2cf;
+  --accent: #245451;
+  --accent-foreground: #f7f3ea;
+  --border: #35615f;
+  --input: #1a4442;
+  --ring: #8ec1c3;
+}
+
+body {
+  background-image:
+    radial-gradient(
+      circle at 8% 0%,
+      rgba(142, 193, 195, 0.18),
+      transparent 34rem
+    ),
+    radial-gradient(
+      circle at 94% 10%,
+      rgba(217, 198, 174, 0.22),
+      transparent 30rem
+    ),
+    linear-gradient(
+      180deg,
+      #fffdf9 0%,
+      var(--background) 22rem,
+      var(--background) 100%
+    ) !important;
+}
+
+body::before {
+  opacity: 0.16 !important;
+  background-image:
+    linear-gradient(to right, rgba(15, 77, 77, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(15, 77, 77, 0.04) 1px, transparent 1px) !important;
+  background-size: 48px 48px !important;
+}
+
+.dark body {
+  background-image:
+    radial-gradient(
+      circle at 8% 0%,
+      rgba(142, 193, 195, 0.12),
+      transparent 34rem
+    ),
+    linear-gradient(180deg, #102f2e 0%, var(--background) 100%) !important;
+}
+
+::selection {
+  background: rgba(142, 193, 195, 0.35);
+  color: #173f3d;
+}
+
+.brand-kicker {
+  color: var(--tmp-deep-teal);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+
+.brand-section-tint {
+  position: relative;
+  background:
+    radial-gradient(
+      circle at 12% 10%,
+      rgba(142, 193, 195, 0.14),
+      transparent 20rem
+    ),
+    linear-gradient(
+      180deg,
+      rgba(232, 241, 239, 0.72),
+      rgba(250, 248, 243, 0.28)
+    );
+}
+
+.brand-section-dark {
+  color: #faf8f3;
+  background:
+    radial-gradient(
+      circle at 82% 20%,
+      rgba(142, 193, 195, 0.18),
+      transparent 22rem
+    ),
+    linear-gradient(135deg, #0f4d4d, #173f3d);
+}
+
+.brand-section-dark h1,
+.brand-section-dark h2,
+.brand-section-dark h3,
+.brand-section-dark h4,
+.brand-section-dark p {
+  color: inherit;
+}
+
+.brand-panel {
+  border: 1px solid rgba(183, 151, 85, 0.24);
+  background: rgba(255, 253, 249, 0.82);
+  box-shadow: 0 30px 80px -45px rgba(15, 77, 77, 0.45);
+  backdrop-filter: blur(14px);
+}
+
+.brand-card {
+  border: 1px solid rgba(15, 77, 77, 0.12);
+  background: rgba(255, 253, 249, 0.9);
+  box-shadow: 0 20px 55px -38px rgba(15, 77, 77, 0.5);
+}
+
+.brand-gold-rule {
+  width: 3.5rem;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--tmp-gold), transparent);
+}
+
+.brand-hero {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(
+      circle at 80% 18%,
+      rgba(142, 193, 195, 0.34),
+      transparent 24rem
+    ),
+    radial-gradient(
+      circle at 92% 75%,
+      rgba(217, 198, 174, 0.35),
+      transparent 22rem
+    ),
+    linear-gradient(125deg, #fffdf9 0%, #f6f2e9 47%, #e7f0ed 100%);
+}
+
+.brand-hero::before,
+.brand-hero::after {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  border-radius: 999px;
+  filter: blur(2px);
+  pointer-events: none;
+}
+
+.brand-hero::before {
+  width: 24rem;
+  height: 24rem;
+  right: -8rem;
+  top: -6rem;
+  border: 1px solid rgba(15, 77, 77, 0.11);
+  box-shadow:
+    0 0 0 44px rgba(142, 193, 195, 0.07),
+    0 0 0 88px rgba(217, 198, 174, 0.05);
+}
+
+.brand-hero::after {
+  width: 15rem;
+  height: 15rem;
+  left: -7rem;
+  bottom: -8rem;
+  background: rgba(142, 193, 195, 0.12);
+}
+
+/* Program card system. This deliberately keeps all cart, batch, offer and
+   enrollment logic untouched and changes only presentation. */
+.tmp-programs-page [data-slot="card"],
+.brand-section-tint [data-slot="card"] {
+  border: 1px solid rgba(15, 77, 77, 0.12) !important;
+  border-radius: 1.8rem !important;
+  background: rgba(255, 253, 249, 0.92) !important;
+  box-shadow: 0 24px 60px -42px rgba(15, 77, 77, 0.62) !important;
+  overflow: hidden;
+}
+
+.tmp-programs-page [data-slot="card"]:hover,
+.brand-section-tint [data-slot="card"]:hover {
+  box-shadow: 0 32px 70px -42px rgba(15, 77, 77, 0.72) !important;
+}
+
+.tmp-programs-page [data-slot="card"] [class*="bg-muted"],
+.brand-section-tint [data-slot="card"] [class*="bg-muted"] {
+  background: linear-gradient(145deg, #eff5f2, #f7f1e8) !important;
+}
+
+.tmp-programs-page [data-slot="card-title"],
+.brand-section-tint [data-slot="card-title"] {
+  font-family: var(--font-display), var(--font-sans), serif;
+  font-size: 1.12rem !important;
+  line-height: 1.3 !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+}
+
+.tmp-programs-page [data-slot="card"] [data-slot="button"],
+.brand-section-tint [data-slot="card"] [data-slot="button"] {
+  border-radius: 999px !important;
+  background: #0f4d4d !important;
+  color: #faf8f3 !important;
+  box-shadow: 0 16px 30px -20px rgba(15, 77, 77, 0.8) !important;
+}
+
+.tmp-programs-page [data-slot="card"] [data-slot="button"]:hover,
+.brand-section-tint [data-slot="card"] [data-slot="button"]:hover {
+  background: #173f3d !important;
+}
+
+.tmp-programs-page [data-slot="card"] [data-slot="badge"],
+.brand-section-tint [data-slot="card"] [data-slot="badge"] {
+  border-radius: 999px !important;
+}
+
+.tmp-programs-page [data-slot="card"] [class*="from-orange-500"],
+.brand-section-tint [data-slot="card"] [class*="from-orange-500"] {
+  background: linear-gradient(90deg, #0f4d4d, #6f9187) !important;
+  color: #fffdf9 !important;
+}
+
+.tmp-programs-page [data-slot="card"] [class*="text-orange-600"],
+.brand-section-tint [data-slot="card"] [class*="text-orange-600"] {
+  color: #8f7136 !important;
+}
+
+.tmp-programs-page [data-slot="card"] [class*="bg-blue-600"],
+.brand-section-tint [data-slot="card"] [class*="bg-blue-600"] {
+  background: #6f9187 !important;
+}
+
+.tmp-programs-page [data-slot="card"] [class*="bg-emerald-500"],
+.brand-section-tint [data-slot="card"] [class*="bg-emerald-500"] {
+  background: #7fa292 !important;
+}
+
+.tmp-programs-page [data-slot="card"] [class*="text-emerald-600"],
+.brand-section-tint [data-slot="card"] [class*="text-emerald-600"] {
+  color: #54776d !important;
+}
+
+.tmp-programs-page [data-slot="card"] [class*="text-blue-700"],
+.brand-section-tint [data-slot="card"] [class*="text-blue-700"] {
+  color: #537a79 !important;
+}
+
+/* Course detail pages: preserve the existing information-rich layout and
+   interaction model, but replace the lavender/terracotta atmosphere with the
+   new TMP botanical palette and softer editorial shapes. */
+.tmp-course-detail-page .calm-page {
+  background:
+    radial-gradient(
+      circle at 90% 5%,
+      rgba(142, 193, 195, 0.2),
+      transparent 28rem
+    ),
+    radial-gradient(
+      circle at 5% 35%,
+      rgba(217, 198, 174, 0.18),
+      transparent 24rem
+    ),
+    linear-gradient(165deg, #fffdf9 0%, #faf8f3 52%, #f2f7f5 100%) !important;
+}
+
+.tmp-course-detail-page .calm-page::before {
+  background:
+    radial-gradient(
+      900px ellipse at 50% -12%,
+      rgba(142, 193, 195, 0.2),
+      transparent 62%
+    ),
+    radial-gradient(
+      700px ellipse at 100% 10%,
+      rgba(217, 198, 174, 0.18),
+      transparent 58%
+    ),
+    radial-gradient(
+      540px ellipse at 0% 80%,
+      rgba(15, 77, 77, 0.08),
+      transparent 55%
+    ) !important;
+  opacity: 0.78 !important;
+}
+
+.tmp-course-detail-page .calm-page::after {
+  opacity: 0.07 !important;
+  filter: hue-rotate(90deg) saturate(0.55);
+}
+
+.tmp-course-detail-page .calm-kbd,
+.tmp-course-detail-page .calm-section-number,
+.tmp-course-detail-page .calm-module-label,
+.tmp-course-detail-page .calm-batch-status {
+  font-family: var(--font-sans), sans-serif !important;
+  letter-spacing: 0.18em !important;
+  color: rgba(15, 77, 77, 0.68) !important;
+}
+
+.tmp-course-detail-page h1.calm-hero-title {
+  font-size: clamp(2.4rem, 4.4vw, 4.25rem) !important;
+  line-height: 1.02 !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.035em !important;
+}
+
+.tmp-course-detail-page .calm-hero-hook {
+  color: #54716d !important;
+  font-size: clamp(1.05rem, 1.25vw, 1.3rem) !important;
+}
+
+.tmp-course-detail-page .calm-hero-lead,
+.tmp-course-detail-page .calm-body,
+.tmp-course-detail-page .calm-section-lead {
+  color: #62716e !important;
+}
+
+.tmp-course-detail-page .calm-hero-art {
+  border: 1px solid rgba(183, 151, 85, 0.22) !important;
+  border-radius: 2rem !important;
+  box-shadow: 0 30px 70px -42px rgba(15, 77, 77, 0.62) !important;
+}
+
+.tmp-course-detail-page .calm-tint-certificate {
+  --hero-tint: #deebe8;
+}
+.tmp-course-detail-page .calm-tint-diploma {
+  --hero-tint: #eee4d5;
+}
+.tmp-course-detail-page .calm-tint-therapy {
+  --hero-tint: #dcefed;
+}
+.tmp-course-detail-page .calm-tint-supervised {
+  --hero-tint: #dbe7e3;
+}
+.tmp-course-detail-page .calm-tint-internship {
+  --hero-tint: #efe4d4;
+}
+.tmp-course-detail-page .calm-tint-pre-recorded {
+  --hero-tint: #e6f0ed;
+}
+.tmp-course-detail-page .calm-tint-masterclass {
+  --hero-tint: #efe6d3;
+}
+.tmp-course-detail-page .calm-tint-worksheet {
+  --hero-tint: #f4efe4;
+}
+.tmp-course-detail-page .calm-tint-resume-studio {
+  --hero-tint: #e1ece8;
+}
+
+.tmp-course-detail-page .calm-card,
+.tmp-course-detail-page [data-slot="card"] {
+  border-color: rgba(15, 77, 77, 0.12) !important;
+  border-radius: 1.5rem !important;
+  background: rgba(255, 253, 249, 0.88) !important;
+  box-shadow: 0 24px 60px -44px rgba(15, 77, 77, 0.5) !important;
+}
+
+.tmp-course-detail-page .calm-module-card {
+  border-radius: 1.25rem !important;
+}
+
+.tmp-course-detail-page .calm-module-card:hover {
+  background: rgba(222, 235, 232, 0.46) !important;
+}
+
+.tmp-course-detail-page .calm-title-ornament {
+  background: linear-gradient(
+    90deg,
+    #b79755,
+    rgba(183, 151, 85, 0.12)
+  ) !important;
+}
+
+.tmp-course-detail-page .calm-title-ornament::after {
+  background: #8ec1c3 !important;
+}
+
+.tmp-course-detail-page .calm-meta-chip {
+  background: rgba(222, 235, 232, 0.72) !important;
+  border-color: rgba(15, 77, 77, 0.16) !important;
+  box-shadow: none !important;
+}
+
+.tmp-course-detail-page .calm-batch-chip {
+  border-radius: 1rem !important;
+  border-color: rgba(15, 77, 77, 0.14) !important;
+  background: rgba(255, 253, 249, 0.92) !important;
+}
+
+.tmp-course-detail-page .calm-batch-chip[data-selected="true"] {
+  background: #0f4d4d !important;
+  border-color: #0f4d4d !important;
+  color: #faf8f3 !important;
+}
+
+.tmp-course-detail-page
+  button:not([data-slot="carousel-previous"]):not([data-slot="carousel-next"]),
+.tmp-course-detail-page a[data-slot="button"] {
+  border-radius: 999px;
+}
+
+.tmp-course-detail-page [class*="from-orange-500"] {
+  background: linear-gradient(90deg, #0f4d4d, #6f9187) !important;
+}
+
+.tmp-course-detail-page [class*="text-orange-600"] {
+  color: #8f7136 !important;
+}
+
+.brand-soft-float {
+  animation: brand-float 8s ease-in-out infinite;
+}
+
+@keyframes brand-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(0, -10px, 0) rotate(1.5deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-soft-float {
+    animation: none;
+  }
+}

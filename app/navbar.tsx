@@ -161,12 +161,19 @@ export default function Navbar() {
   return (
     <nav
       data-app-navbar
-      className="bg-background/95 border-border sticky top-0 z-50 border-b shadow-sm backdrop-blur-sm"
+      className="bg-background/95 border-border text-foreground sticky top-0 z-50 border-b backdrop-blur-xl"
       role="navigation"
       aria-label="Primary"
     >
+      <Link
+        href="/learning-portal"
+        className="bg-primary text-primary-foreground flex min-h-8 items-center justify-center px-4 py-2 text-center text-[0.62rem] font-bold tracking-[0.18em] uppercase"
+      >
+        The TMP Learning Portal · Courses, resources and progress in one
+        place&nbsp; →
+      </Link>
       <div className="container">
-        <div className="flex items-center justify-between py-2.5 sm:py-3">
+        <div className="flex min-h-18 items-center justify-between py-2.5">
           {/* Logo */}
           <Link
             href="/"
@@ -174,14 +181,14 @@ export default function Navbar() {
             aria-label="Home"
           >
             <Image
-              src="/logo.png"
+              src="/tmp-botanical-mark.webp"
               alt="The Mind Point"
-              width={36}
-              height={36}
-              className="transition-smooth ring-border h-8 w-8 rounded-xl ring-1 hover:scale-105 sm:h-9 sm:w-9"
+              width={80}
+              height={60}
+              className="h-12 w-16 shrink-0 object-contain mix-blend-multiply dark:mix-blend-screen dark:grayscale dark:invert"
               priority
             />
-            <span className="text-foreground font-display text-base font-bold tracking-tight sm:text-xl">
+            <span className="text-foreground hidden text-[0.65rem] font-semibold tracking-[0.2em] uppercase sm:block">
               The Mind Point
             </span>
           </Link>
@@ -192,7 +199,7 @@ export default function Navbar() {
               <NavigationMenuList className="space-x-2">
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="transition-smooth hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent rounded-full border border-transparent bg-transparent px-4">
-                    Home
+                    Discover
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="w-[400px] p-4">
@@ -255,11 +262,32 @@ export default function Navbar() {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="transition-smooth hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent rounded-full border border-transparent bg-transparent px-4">
-                    TMP Academy
+                    Learn
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="w-[300px] p-4">
                       <div className="grid gap-2">
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/learning-portal"
+                            className={`bg-primary/7 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground mb-1 block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
+                              isActive("/learning-portal") ? "bg-accent" : ""
+                            }`}
+                            aria-current={
+                              isActive("/learning-portal") ? "page" : undefined
+                            }
+                          >
+                            <div className="flex items-center justify-between gap-3 text-sm font-semibold">
+                              TMP Learning Portal
+                              <span className="text-primary text-[0.58rem] tracking-[0.12em] uppercase">
+                                Portal
+                              </span>
+                            </div>
+                            <p className="text-muted-foreground mt-1.5 text-xs leading-snug">
+                              A dedicated home for the full learning journey.
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
                         {[
                           {
                             name: "Certificate Courses",
@@ -304,7 +332,7 @@ export default function Navbar() {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="transition-smooth hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent rounded-full border border-transparent bg-transparent px-4">
-                    Therapy & Career
+                    Practise & Support
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="w-[280px] p-4">
@@ -364,6 +392,12 @@ export default function Navbar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-3">
+            <Link
+              href="/courses"
+              className="bg-primary text-primary-foreground hover:bg-foreground hidden min-h-10 items-center rounded-full px-5 text-[0.68rem] font-bold tracking-[0.08em] uppercase xl:inline-flex"
+            >
+              Find your path
+            </Link>
             <ModeToggle />
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
               <SheetTrigger asChild>
@@ -620,27 +654,29 @@ export default function Navbar() {
                 </div>
               </SheetContent>
             </Sheet>
-            <div className="flex items-center gap-2">
-              <Show when="signed-in">
-                <MindPointsBadge />
-                <UserButton
-                  userProfileMode="navigation"
-                  userProfileUrl="/account"
-                />
-              </Show>
-              <Show when="signed-out">
-                <SignInButton>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="transition-smooth hover:bg-accent/50 cursor-pointer"
-                  >
-                    <span className="hidden sm:inline">Sign In</span>
-                    <span className="sm:hidden">Sign in</span>
-                  </Button>
-                </SignInButton>
-              </Show>
-            </div>
+            {process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && (
+              <div className="flex items-center gap-2">
+                <Show when="signed-in">
+                  <MindPointsBadge />
+                  <UserButton
+                    userProfileMode="navigation"
+                    userProfileUrl="/account"
+                  />
+                </Show>
+                <Show when="signed-out">
+                  <SignInButton>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="transition-smooth hover:bg-accent/50 cursor-pointer"
+                    >
+                      <span className="hidden sm:inline">Sign In</span>
+                      <span className="sm:hidden">Sign in</span>
+                    </Button>
+                  </SignInButton>
+                </Show>
+              </div>
+            )}
           </div>
         </div>
 
@@ -653,7 +689,7 @@ export default function Navbar() {
             <div className="space-y-4 py-3">
               <div className="space-y-2">
                 <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
-                  Home
+                  Discover
                 </h3>
                 {[
                   { href: "/about", label: "About Us" },
@@ -676,9 +712,10 @@ export default function Navbar() {
 
               <div className="space-y-2">
                 <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
-                  TMP Academy
+                  Learn
                 </h3>
                 {[
+                  "/learning-portal",
                   "/courses/certificate",
                   "/courses/internship",
                   "/courses/diploma",
@@ -706,7 +743,7 @@ export default function Navbar() {
 
               <div className="space-y-2">
                 <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
-                  Therapy & Career
+                  Practise & Support
                 </h3>
                 {[
                   "/courses/therapy",

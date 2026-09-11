@@ -9,7 +9,7 @@ const PERSONAS = [
   },
   {
     quote:
-      "I'm a career switcher exploring whether counseling is the right path for me.",
+      "I'm a career switcher exploring whether counselling is the right path for me.",
     label: "Career Changer",
   },
   {
@@ -26,39 +26,45 @@ const PERSONAS = [
 
 export default function WhoThisIsForSection() {
   return (
-    <section className="home-section-sm relative overflow-hidden pt-4 sm:pt-6">
-      <div className="container">
+    <section className="brand-section-dark home-section-md relative overflow-hidden">
+      <div className="container relative z-10">
         <ScrollReveal>
           <div className="mx-auto max-w-6xl">
-            <div className="grid items-start gap-8 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14">
-              {/* Left column – heading */}
+            <div className="grid items-start gap-10 lg:grid-cols-[0.85fr_1.15fr] lg:gap-16">
               <div>
-                <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
-                  Who this is for
-                </span>
-                <h2 className="text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-                  Built for the curious, the compassionate, and the
-                  not-quite-sure-yet.
+                <div className="flex items-center gap-4">
+                  <span className="h-px w-12 bg-[#c7a768]" aria-hidden="true" />
+                  <span className="text-[#9fd0cf] text-xs font-semibold tracking-[0.3em] uppercase">
+                    Who belongs here
+                  </span>
+                </div>
+                <h2 className="font-display mt-5 text-4xl leading-tight font-medium text-[#faf8f3] sm:text-5xl">
+                  A serious learning space that still feels human.
                 </h2>
-                <p className="text-muted-foreground mt-4 max-w-2xl text-lg leading-8">
-                  Whether you&apos;re studying, shifting careers, practicing
-                  already, or simply trying to understand yourself better, there
-                  should be a clear way in.
+                <p className="mt-5 max-w-xl text-lg leading-8 text-[#c9dbd8]">
+                  TMP is designed for people who care deeply about psychology —
+                  whether you are beginning, changing direction, practising, or
+                  simply trying to understand yourself more clearly.
                 </p>
               </div>
 
-              {/* Right column – personas as flowing blockquotes */}
-              <div className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {PERSONAS.map((persona, index) => (
                   <ScrollReveal
                     key={persona.label}
-                    transitionDelayMs={index * 90}
+                    transitionDelayMs={index * 80}
                   >
-                    <blockquote className="border-primary/15 relative border-l-2 py-1 pl-5">
-                      <p className="text-foreground/85 text-base leading-7 italic">
-                        &ldquo;{persona.quote}&rdquo;
+                    <blockquote className="h-full rounded-[1.6rem] border border-white/10 bg-white/[0.055] p-6 backdrop-blur-sm">
+                      <span
+                        className="font-display text-[#c7a768]/80 block text-4xl leading-none"
+                        aria-hidden="true"
+                      >
+                        &ldquo;
+                      </span>
+                      <p className="mt-2 text-base leading-7 text-[#f4f0e7]">
+                        {persona.quote}
                       </p>
-                      <footer className="text-muted-foreground mt-2 text-sm font-medium tracking-[0.14em] uppercase">
+                      <footer className="mt-5 text-xs font-semibold tracking-[0.16em] text-[#9fd0cf] uppercase">
                         {persona.label}
                       </footer>
                     </blockquote>
@@ -70,8 +76,11 @@ export default function WhoThisIsForSection() {
         </ScrollReveal>
       </div>
 
-      {/* ── Floating leaf accent ── */}
-      <LeafAccent className="pointer-events-none absolute -bottom-4 left-[6%] hidden h-10 w-10 -rotate-[25deg] opacity-[0.35] select-none lg:block" />
+      <LeafAccent className="brand-soft-float pointer-events-none absolute -bottom-4 left-[5%] hidden h-14 w-14 -rotate-[25deg] text-white opacity-10 select-none lg:block" />
+      <div
+        className="pointer-events-none absolute -top-32 -right-20 h-72 w-72 rounded-full border border-[#9fd0cf]/10"
+        aria-hidden="true"
+      />
     </section>
   );
 }

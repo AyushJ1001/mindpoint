@@ -1,111 +1,65 @@
-"use client";
-
-import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import {
-  ArrowRight,
-  BookOpen,
-  HeartHandshake,
-  Shield,
-  Sparkles,
-} from "lucide-react";
+import Link from "next/link";
+import { ArrowRight, Shield } from "lucide-react";
 
 interface HeroSectionProps {
   canAccessAdmin: boolean;
 }
 
-const SUPPORT_NOTES = [
-  { text: "Personal support", icon: HeartHandshake },
-  { text: "Career growth", icon: BookOpen },
-  { text: "A warmer pace", icon: Sparkles },
-];
-
 export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
   return (
-    <section className="relative min-h-[75vh] overflow-hidden pt-14 pb-14 sm:min-h-[70vh] sm:pt-18 lg:pt-20">
-      {/* ── Full-bleed background image ── */}
+    <section className="relative isolate overflow-hidden border-b border-[#0f4d4d]/7 bg-[#fbfaf6]">
       <Image
-        src="/illustrations/hero.jpg"
+        src="/tmp-coastal-hero.webp"
         alt=""
         fill
-        className="object-cover"
         priority
         sizes="100vw"
+        className="-z-20 object-cover object-[65%_center] lg:object-center"
       />
-
-      {/* Gradient overlay – strong on the text side, fades to reveal image */}
-      <div
-        className="absolute inset-0 bg-gradient-to-r from-background/[0.92] via-background/75 to-background/40 sm:from-background/[0.88] sm:via-background/65 sm:to-background/30"
-        aria-hidden="true"
-      />
-      {/* Bottom fade into next section */}
-      <div
-        className="absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-background to-transparent"
-        aria-hidden="true"
-      />
-
-      <div className="relative z-10 container flex min-h-[60vh] items-center sm:min-h-[55vh]">
-        <div className="mx-auto max-w-6xl">
-          <div className="max-w-2xl text-center lg:text-left">
-            <span className="text-primary/90 text-xs font-semibold tracking-[0.34em] uppercase">
-              Mental health learning, made more human
-            </span>
-            <h1 className="font-display text-foreground mt-5 text-4xl leading-[1.04] font-semibold tracking-tight sm:text-5xl md:text-6xl lg:text-[4.4rem]">
-              Your mind deserves the same care you give to others.
-            </h1>
-
-            <p className="text-muted-foreground mt-6 max-w-xl text-lg leading-8 sm:text-xl">
-              Join a warm, serious learning space for people who want support,
-              direction, and skills they can actually carry into life and work.
-            </p>
-
-            <div className="mt-9 flex flex-col items-center gap-4 sm:flex-row sm:justify-center lg:justify-start">
-              <Button size="lg" asChild className="min-w-[12rem]">
-                <Link href="/courses">
-                  Begin your journey
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-              <Button variant="outline" size="lg" asChild>
-                <Link href="#paths">Find the right support</Link>
-              </Button>
-            </div>
-
-            <p className="text-muted-foreground mt-4 text-sm leading-6 sm:text-base">
-              Start with therapy, training, or a first small step. You do not
-              need to have the whole path figured out yet.
-            </p>
-
-            {/* Support notes – inline text with icons */}
-            <div className="mt-8 flex flex-wrap items-center justify-center gap-x-6 gap-y-3 lg:justify-start">
-              {SUPPORT_NOTES.map((note) => {
-                const Icon = note.icon;
-                return (
-                  <span
-                    key={note.text}
-                    className="text-muted-foreground inline-flex items-center gap-2 text-sm"
-                  >
-                    <span className="bg-primary/8 text-primary/70 inline-flex rounded-full p-1.5">
-                      <Icon className="h-3.5 w-3.5" />
-                    </span>
-                    {note.text}
-                  </span>
-                );
-              })}
-            </div>
-
-            {canAccessAdmin && (
-              <div className="mt-4">
-                <Button variant="ghost" size="sm" asChild>
-                  <Link href="/admin">
-                    <Shield className="mr-2 h-4 w-4" />
-                    Admin
-                  </Link>
-                </Button>
-              </div>
-            )}
+      <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(251,250,246,0.96)_0%,rgba(251,250,246,0.9)_48%,rgba(251,250,246,0)_78%)] lg:bg-[linear-gradient(90deg,rgba(251,250,246,0.6)_0%,rgba(251,250,246,0.15)_42%,transparent_65%)]" />
+      <div className="relative container flex min-h-[40rem] items-start pt-12 pb-52 sm:pt-16 lg:min-h-[35rem] lg:items-center lg:py-16">
+        <div className="max-w-[34rem]">
+          <p className="mb-6 text-[0.66rem] font-bold tracking-[0.26em] text-[#0f4d4d]/65 uppercase">
+            Psychology · learning · practice · care
+          </p>
+          <h1 className="font-display text-4xl leading-[1.04] font-semibold tracking-[-0.025em] text-[#173f3d] sm:text-5xl md:text-6xl lg:text-[4.4rem]">
+            A Kinder,
+            <br />
+            <span className="italic">Brighter You.</span>
+          </h1>
+          <p className="mt-6 max-w-[27rem] text-lg leading-8 text-[#173f3d]">
+            Practical tools. Compassionate guidance.
+            <br />A more mindful tomorrow.
+          </p>
+          <div className="mt-7 flex flex-wrap items-center gap-x-6 gap-y-4">
+            <Link
+              href="/courses"
+              className="inline-flex min-h-11 items-center justify-center rounded-full bg-[#0f4d4d] px-7 py-3.5 text-sm font-semibold text-[#faf8f3] transition hover:bg-[#173f3d]"
+            >
+              Start your journey
+              <ArrowRight className="ml-3 h-4 w-4" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/about"
+              className="inline-flex min-h-11 items-center text-sm font-semibold text-[#173f3d] underline decoration-[#173f3d]/40 underline-offset-4 hover:decoration-current"
+            >
+              Discover TMP
+            </Link>
           </div>
+          <p className="mt-9 flex items-center gap-3 text-xs font-semibold tracking-[0.2em] text-[#173f3d] uppercase">
+            <span className="h-px w-8 bg-[#b79755]" aria-hidden="true" />
+            Learn · Grow · Heal · Belong
+          </p>
+          {canAccessAdmin && (
+            <Link
+              href="/admin"
+              className="mt-5 inline-flex min-h-11 items-center gap-2 text-sm font-medium text-[#173f3d] underline underline-offset-4"
+            >
+              <Shield className="h-4 w-4" aria-hidden="true" />
+              Admin
+            </Link>
+          )}
         </div>
       </div>
     </section>

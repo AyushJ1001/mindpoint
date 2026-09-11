@@ -13,7 +13,7 @@ export const metadata = {
 
 export default function TOC() {
   return (
-    <div className="mx-auto max-w-4xl bg-white p-6">
+    <div className="legal-page">
       {/* Terms and Conditions Section */}
       <section className="mb-12">
         <h1 className="mb-6 text-3xl font-bold text-gray-900">

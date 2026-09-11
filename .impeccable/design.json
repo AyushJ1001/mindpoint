@@ -1,0 +1,602 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-11T22:18:22.034415+00:00",
+  "title": "Design System: The Mind Point",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Primary",
+        "tonalRamp": [
+          "oklch(15% 0.0595 194.96)",
+          "oklch(26% 0.0595 194.96)",
+          "oklch(38% 0.0595 194.96)",
+          "oklch(49% 0.0595 194.96)",
+          "oklch(61% 0.0595 194.96)",
+          "oklch(72% 0.0595 194.96)",
+          "oklch(84% 0.0595 194.96)",
+          "oklch(95% 0.0595 194.96)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "tonalRamp": [
+          "oklch(15% 0.0483 190.95)",
+          "oklch(26% 0.0483 190.95)",
+          "oklch(38% 0.0483 190.95)",
+          "oklch(49% 0.0483 190.95)",
+          "oklch(61% 0.0483 190.95)",
+          "oklch(72% 0.0483 190.95)",
+          "oklch(84% 0.0483 190.95)",
+          "oklch(95% 0.0483 190.95)"
+        ]
+      },
+      "coastal-ink": {
+        "role": "neutral",
+        "displayName": "Coastal ink",
+        "tonalRamp": [
+          "oklch(15% 0.0448 190.78)",
+          "oklch(26% 0.0448 190.78)",
+          "oklch(38% 0.0448 190.78)",
+          "oklch(49% 0.0448 190.78)",
+          "oklch(61% 0.0448 190.78)",
+          "oklch(72% 0.0448 190.78)",
+          "oklch(84% 0.0448 190.78)",
+          "oklch(95% 0.0448 190.78)"
+        ]
+      },
+      "background": {
+        "role": "neutral",
+        "displayName": "Background",
+        "tonalRamp": [
+          "oklch(15% 0.0054 95.10)",
+          "oklch(26% 0.0054 95.10)",
+          "oklch(38% 0.0054 95.10)",
+          "oklch(49% 0.0054 95.10)",
+          "oklch(61% 0.0054 95.10)",
+          "oklch(72% 0.0054 95.10)",
+          "oklch(84% 0.0054 95.10)",
+          "oklch(95% 0.0054 95.10)"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card",
+        "tonalRamp": [
+          "oklch(15% 0.0069 88.64)",
+          "oklch(26% 0.0069 88.64)",
+          "oklch(38% 0.0069 88.64)",
+          "oklch(49% 0.0069 88.64)",
+          "oklch(61% 0.0069 88.64)",
+          "oklch(72% 0.0069 88.64)",
+          "oklch(84% 0.0069 88.64)",
+          "oklch(95% 0.0069 88.64)"
+        ]
+      },
+      "ivory": {
+        "role": "neutral",
+        "displayName": "Ivory",
+        "tonalRamp": [
+          "oklch(15% 0.0070 88.64)",
+          "oklch(26% 0.0070 88.64)",
+          "oklch(38% 0.0070 88.64)",
+          "oklch(49% 0.0070 88.64)",
+          "oklch(61% 0.0070 88.64)",
+          "oklch(72% 0.0070 88.64)",
+          "oklch(84% 0.0070 88.64)",
+          "oklch(95% 0.0070 88.64)"
+        ]
+      },
+      "secondary": {
+        "role": "secondary",
+        "displayName": "Secondary",
+        "tonalRamp": [
+          "oklch(15% 0.0113 176.31)",
+          "oklch(26% 0.0113 176.31)",
+          "oklch(38% 0.0113 176.31)",
+          "oklch(49% 0.0113 176.31)",
+          "oklch(61% 0.0113 176.31)",
+          "oklch(72% 0.0113 176.31)",
+          "oklch(84% 0.0113 176.31)",
+          "oklch(95% 0.0113 176.31)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Muted",
+        "tonalRamp": [
+          "oklch(15% 0.0124 91.52)",
+          "oklch(26% 0.0124 91.52)",
+          "oklch(38% 0.0124 91.52)",
+          "oklch(49% 0.0124 91.52)",
+          "oklch(61% 0.0124 91.52)",
+          "oklch(72% 0.0124 91.52)",
+          "oklch(84% 0.0124 91.52)",
+          "oklch(95% 0.0124 91.52)"
+        ]
+      },
+      "muted-foreground": {
+        "role": "neutral",
+        "displayName": "Muted foreground",
+        "tonalRamp": [
+          "oklch(15% 0.0220 184.33)",
+          "oklch(26% 0.0220 184.33)",
+          "oklch(38% 0.0220 184.33)",
+          "oklch(49% 0.0220 184.33)",
+          "oklch(61% 0.0220 184.33)",
+          "oklch(72% 0.0220 184.33)",
+          "oklch(84% 0.0220 184.33)",
+          "oklch(95% 0.0220 184.33)"
+        ]
+      },
+      "accent": {
+        "role": "secondary",
+        "displayName": "Accent",
+        "tonalRamp": [
+          "oklch(15% 0.0160 192.07)",
+          "oklch(26% 0.0160 192.07)",
+          "oklch(38% 0.0160 192.07)",
+          "oklch(49% 0.0160 192.07)",
+          "oklch(61% 0.0160 192.07)",
+          "oklch(72% 0.0160 192.07)",
+          "oklch(84% 0.0160 192.07)",
+          "oklch(95% 0.0160 192.07)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Border",
+        "tonalRamp": [
+          "oklch(15% 0.0140 174.11)",
+          "oklch(26% 0.0140 174.11)",
+          "oklch(38% 0.0140 174.11)",
+          "oklch(49% 0.0140 174.11)",
+          "oklch(61% 0.0140 174.11)",
+          "oklch(72% 0.0140 174.11)",
+          "oklch(84% 0.0140 174.11)",
+          "oklch(95% 0.0140 174.11)"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Input",
+        "tonalRamp": [
+          "oklch(15% 0.0082 91.48)",
+          "oklch(26% 0.0082 91.48)",
+          "oklch(38% 0.0082 91.48)",
+          "oklch(49% 0.0082 91.48)",
+          "oklch(61% 0.0082 91.48)",
+          "oklch(72% 0.0082 91.48)",
+          "oklch(84% 0.0082 91.48)",
+          "oklch(95% 0.0082 91.48)"
+        ]
+      },
+      "ring": {
+        "role": "neutral",
+        "displayName": "Ring",
+        "tonalRamp": [
+          "oklch(15% 0.0641 194.45)",
+          "oklch(26% 0.0641 194.45)",
+          "oklch(38% 0.0641 194.45)",
+          "oklch(49% 0.0641 194.45)",
+          "oklch(61% 0.0641 194.45)",
+          "oklch(72% 0.0641 194.45)",
+          "oklch(84% 0.0641 194.45)",
+          "oklch(95% 0.0641 194.45)"
+        ]
+      },
+      "sea-glass": {
+        "role": "secondary",
+        "displayName": "Sea glass",
+        "tonalRamp": [
+          "oklch(15% 0.0534 199.15)",
+          "oklch(26% 0.0534 199.15)",
+          "oklch(38% 0.0534 199.15)",
+          "oklch(49% 0.0534 199.15)",
+          "oklch(61% 0.0534 199.15)",
+          "oklch(72% 0.0534 199.15)",
+          "oklch(84% 0.0534 199.15)",
+          "oklch(95% 0.0534 199.15)"
+        ]
+      },
+      "sea-glass-light": {
+        "role": "secondary",
+        "displayName": "Sea glass light",
+        "tonalRamp": [
+          "oklch(15% 0.0510 194.64)",
+          "oklch(26% 0.0510 194.64)",
+          "oklch(38% 0.0510 194.64)",
+          "oklch(49% 0.0510 194.64)",
+          "oklch(61% 0.0510 194.64)",
+          "oklch(72% 0.0510 194.64)",
+          "oklch(84% 0.0510 194.64)",
+          "oklch(95% 0.0510 194.64)"
+        ]
+      },
+      "sea-glass-highlight": {
+        "role": "secondary",
+        "displayName": "Sea glass highlight",
+        "tonalRamp": [
+          "oklch(15% 0.0388 194.44)",
+          "oklch(26% 0.0388 194.44)",
+          "oklch(38% 0.0388 194.44)",
+          "oklch(49% 0.0388 194.44)",
+          "oklch(61% 0.0388 194.44)",
+          "oklch(72% 0.0388 194.44)",
+          "oklch(84% 0.0388 194.44)",
+          "oklch(95% 0.0388 194.44)"
+        ]
+      },
+      "warm-sand": {
+        "role": "tertiary",
+        "displayName": "Warm sand",
+        "tonalRamp": [
+          "oklch(15% 0.0389 73.67)",
+          "oklch(26% 0.0389 73.67)",
+          "oklch(38% 0.0389 73.67)",
+          "oklch(49% 0.0389 73.67)",
+          "oklch(61% 0.0389 73.67)",
+          "oklch(72% 0.0389 73.67)",
+          "oklch(84% 0.0389 73.67)",
+          "oklch(95% 0.0389 73.67)"
+        ]
+      },
+      "gold": {
+        "role": "tertiary",
+        "displayName": "Gold",
+        "tonalRamp": [
+          "oklch(15% 0.0930 84.10)",
+          "oklch(26% 0.0930 84.10)",
+          "oklch(38% 0.0930 84.10)",
+          "oklch(49% 0.0930 84.10)",
+          "oklch(61% 0.0930 84.10)",
+          "oklch(72% 0.0930 84.10)",
+          "oklch(84% 0.0930 84.10)",
+          "oklch(95% 0.0930 84.10)"
+        ]
+      },
+      "portal": {
+        "role": "primary",
+        "displayName": "Portal",
+        "tonalRamp": [
+          "oklch(15% 0.0520 193.02)",
+          "oklch(26% 0.0520 193.02)",
+          "oklch(38% 0.0520 193.02)",
+          "oklch(49% 0.0520 193.02)",
+          "oklch(61% 0.0520 193.02)",
+          "oklch(72% 0.0520 193.02)",
+          "oklch(84% 0.0520 193.02)",
+          "oklch(95% 0.0520 193.02)"
+        ]
+      },
+      "portal-body": {
+        "role": "neutral",
+        "displayName": "Portal body",
+        "tonalRamp": [
+          "oklch(15% 0.0166 182.67)",
+          "oklch(26% 0.0166 182.67)",
+          "oklch(38% 0.0166 182.67)",
+          "oklch(49% 0.0166 182.67)",
+          "oklch(61% 0.0166 182.67)",
+          "oklch(72% 0.0166 182.67)",
+          "oklch(84% 0.0166 182.67)",
+          "oklch(95% 0.0166 182.67)"
+        ]
+      },
+      "dark-background": {
+        "role": "neutral",
+        "displayName": "Dark background",
+        "tonalRamp": [
+          "oklch(15% 0.0365 192.41)",
+          "oklch(26% 0.0365 192.41)",
+          "oklch(38% 0.0365 192.41)",
+          "oklch(49% 0.0365 192.41)",
+          "oklch(61% 0.0365 192.41)",
+          "oklch(72% 0.0365 192.41)",
+          "oklch(84% 0.0365 192.41)",
+          "oklch(95% 0.0365 192.41)"
+        ]
+      },
+      "dark-foreground": {
+        "role": "neutral",
+        "displayName": "Dark foreground",
+        "tonalRamp": [
+          "oklch(15% 0.0127 86.83)",
+          "oklch(26% 0.0127 86.83)",
+          "oklch(38% 0.0127 86.83)",
+          "oklch(49% 0.0127 86.83)",
+          "oklch(61% 0.0127 86.83)",
+          "oklch(72% 0.0127 86.83)",
+          "oklch(84% 0.0127 86.83)",
+          "oklch(95% 0.0127 86.83)"
+        ]
+      },
+      "dark-secondary": {
+        "role": "neutral",
+        "displayName": "Dark secondary",
+        "tonalRamp": [
+          "oklch(15% 0.0485 191.25)",
+          "oklch(26% 0.0485 191.25)",
+          "oklch(38% 0.0485 191.25)",
+          "oklch(49% 0.0485 191.25)",
+          "oklch(61% 0.0485 191.25)",
+          "oklch(72% 0.0485 191.25)",
+          "oklch(84% 0.0485 191.25)",
+          "oklch(95% 0.0485 191.25)"
+        ]
+      },
+      "dark-muted": {
+        "role": "neutral",
+        "displayName": "Dark muted",
+        "tonalRamp": [
+          "oklch(15% 0.0467 191.03)",
+          "oklch(26% 0.0467 191.03)",
+          "oklch(38% 0.0467 191.03)",
+          "oklch(49% 0.0467 191.03)",
+          "oklch(61% 0.0467 191.03)",
+          "oklch(72% 0.0467 191.03)",
+          "oklch(84% 0.0467 191.03)",
+          "oklch(95% 0.0467 191.03)"
+        ]
+      },
+      "dark-muted-foreground": {
+        "role": "neutral",
+        "displayName": "Dark muted foreground",
+        "tonalRamp": [
+          "oklch(15% 0.0157 181.71)",
+          "oklch(26% 0.0157 181.71)",
+          "oklch(38% 0.0157 181.71)",
+          "oklch(49% 0.0157 181.71)",
+          "oklch(61% 0.0157 181.71)",
+          "oklch(72% 0.0157 181.71)",
+          "oklch(84% 0.0157 181.71)",
+          "oklch(95% 0.0157 181.71)"
+        ]
+      },
+      "dark-accent": {
+        "role": "neutral",
+        "displayName": "Dark accent",
+        "tonalRamp": [
+          "oklch(15% 0.0523 189.85)",
+          "oklch(26% 0.0523 189.85)",
+          "oklch(38% 0.0523 189.85)",
+          "oklch(49% 0.0523 189.85)",
+          "oklch(61% 0.0523 189.85)",
+          "oklch(72% 0.0523 189.85)",
+          "oklch(84% 0.0523 189.85)",
+          "oklch(95% 0.0523 189.85)"
+        ]
+      },
+      "dark-border": {
+        "role": "neutral",
+        "displayName": "Dark border",
+        "tonalRamp": [
+          "oklch(15% 0.0490 191.81)",
+          "oklch(26% 0.0490 191.81)",
+          "oklch(38% 0.0490 191.81)",
+          "oklch(49% 0.0490 191.81)",
+          "oklch(61% 0.0490 191.81)",
+          "oklch(72% 0.0490 191.81)",
+          "oklch(84% 0.0490 191.81)",
+          "oklch(95% 0.0490 191.81)"
+        ]
+      },
+      "portal-diagram": {
+        "role": "neutral",
+        "displayName": "Portal diagram panel",
+        "tonalRamp": [
+          "oklch(15% 0.012 88)",
+          "oklch(26% 0.012 88)",
+          "oklch(38% 0.012 88)",
+          "oklch(49% 0.012 88)",
+          "oklch(61% 0.012 88)",
+          "oklch(72% 0.012 88)",
+          "oklch(84% 0.012 88)",
+          "oklch(95% 0.012 88)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Catalog display",
+        "purpose": "Large program catalog headings; choose smaller existing variants for home and course details."
+      },
+      "headline": {
+        "displayName": "Editorial headline",
+        "purpose": "Section headings with optional italic emphasis."
+      },
+      "title": {
+        "displayName": "Program title",
+        "purpose": "Compact serif titles inside cards."
+      },
+      "body": {
+        "displayName": "Reading text",
+        "purpose": "Descriptions and instructions."
+      },
+      "label": {
+        "displayName": "Section label",
+        "purpose": "Short uppercase labels in Manrope."
+      }
+    },
+    "shadows": [
+      {
+        "name": "program-card",
+        "value": "0 24px 64px -52px color-mix(in srgb, var(--primary) 72%, transparent)",
+        "purpose": "Broad faint separation below program cards."
+      },
+      {
+        "name": "program-card-hover",
+        "value": "0 30px 72px -50px color-mix(in srgb, var(--primary) 82%, transparent)",
+        "purpose": "Hover feedback paired with a stronger border."
+      },
+      {
+        "name": "course-detail-card",
+        "value": "0 26px 64px -50px color-mix(in srgb, var(--primary) 72%, transparent)",
+        "purpose": "Course detail panels."
+      },
+      {
+        "name": "portal-diagram",
+        "value": "0 35px 90px -30px rgba(0,0,0,0.55)",
+        "purpose": "Separates the fixed light enrollment diagram from the deep-teal hero."
+      }
+    ],
+    "motion": [
+      {
+        "name": "card-state",
+        "value": "260ms ease",
+        "purpose": "Card transform, border, and shadow transitions when reduced motion is not requested."
+      },
+      {
+        "name": "control-state",
+        "value": "300ms cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "Shared button and smooth state transitions."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "Global animation and transition suppression with one animation iteration."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary action",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Main destination on a light background.",
+      "html": "<a class=\"ds-primary\" href=\"/courses\">Start your journey <svg aria-hidden=\"true\" width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><path d=\"M5 12h14m-6-6 6 6-6 6\"/></svg></a>",
+      "css": ".ds-primary{display:inline-flex;align-items:center;justify-content:center;gap:.75rem;min-height:2.75rem;border-radius:999px;padding:.875rem 1.75rem;font-size:.875rem;font-weight:600;text-decoration:none;transition:background-color 300ms;font-family:var(--font-manrope,Manrope),sans-serif;background:var(--tmp-deep-teal,#0f4d4d);color:var(--tmp-ivory,#faf8f3)}.ds-primary:hover{background:var(--tmp-deep-teal-2,#173f3d)}.ds-primary:focus-visible{outline:2px solid var(--ring,#69a7a6);outline-offset:4px;}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
+    },
+    {
+      "name": "Inverse action",
+      "kind": "button",
+      "refersTo": "button-inverse",
+      "description": "Primary action within a dark brand section.",
+      "html": "<a class=\"ds-inverse\" href=\"/learning-portal\">See how the portal works</a>",
+      "css": ".ds-inverse{display:inline-flex;align-items:center;justify-content:center;gap:.75rem;min-height:2.75rem;border-radius:999px;padding:.875rem 1.75rem;font-size:.875rem;font-weight:600;text-decoration:none;transition:background-color 300ms;font-family:var(--font-manrope,Manrope),sans-serif;min-height:3rem;background:var(--tmp-ivory,#faf8f3);color:var(--tmp-deep-teal,#0f4d4d);font-size:.75rem;letter-spacing:.07em;text-transform:uppercase;font-weight:700}.ds-inverse:hover{background:white}.ds-inverse:focus-visible{outline:2px solid var(--ring,#69a7a6);outline-offset:4px;}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
+    },
+    {
+      "name": "Outline action",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary action alongside a primary control.",
+      "html": "<button class=\"ds-outline\">View details</button>",
+      "css": ".ds-outline{display:inline-flex;align-items:center;justify-content:center;gap:.75rem;min-height:2.75rem;border-radius:999px;padding:.875rem 1.75rem;font-size:.875rem;font-weight:600;text-decoration:none;transition:background-color 300ms;font-family:var(--font-manrope,Manrope),sans-serif;background:var(--card,#fffdf8);color:var(--foreground,#123f3d);border:1px solid var(--border,#cdd9d5);padding:.5rem 1rem;font-size:.75rem;font-weight:700;letter-spacing:.045em}.ds-outline:hover{background:var(--accent,#dcebea)}.ds-outline:focus-visible{outline:2px solid var(--ring,#69a7a6);outline-offset:4px;}.ds-outline:disabled{opacity:.5;pointer-events:none}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
+    },
+    {
+      "name": "Text field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Shared labelled input with visible focus.",
+      "html": "<label class=\"ds-field-label\" for=\"ds-name\">Name</label><input class=\"ds-input\" id=\"ds-name\" placeholder=\"Your name\" />",
+      "css": ".ds-field-label{display:block;margin-bottom:.5rem;color:var(--foreground,#123f3d);font-size:.875rem;font-family:var(--font-manrope,Manrope),sans-serif;}.ds-input{width:100%;height:2.25rem;min-width:0;border:1px solid var(--input,#f7f5ef);border-radius:.875rem;background:transparent;color:var(--foreground,#123f3d);padding:.25rem .75rem;font-size:1rem;font-family:var(--font-manrope,Manrope),sans-serif;}.ds-input::placeholder{color:var(--muted-foreground,#5e706d)}.ds-input:focus-visible{outline:none;border-color:var(--ring,#69a7a6);box-shadow:0 0 0 3px color-mix(in srgb,var(--ring,#69a7a6) 50%,transparent)}.ds-input:disabled{opacity:.5;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
+    },
+    {
+      "name": "Navigation link",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Active and inactive links use the same semantic colors as the header.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Preview navigation\"><a href=\"/about\">Discover</a><a href=\"/courses\" aria-current=\"page\">Learn</a><a href=\"/learning-portal\">Learning Portal</a></nav>",
+      "css": ".ds-nav{display:flex;flex-wrap:wrap;gap:.5rem;padding:1rem;background:color-mix(in srgb,var(--background,#fbfaf6) 95%,transparent);backdrop-filter:blur(24px);border-bottom:1px solid var(--border,#cdd9d5);font-family:var(--font-manrope,Manrope),sans-serif;}.ds-nav a{padding:.625rem 1rem;border-radius:999px;font-size:.875rem;font-weight:500;color:var(--foreground,#123f3d);text-decoration:none}.ds-nav a:hover,.ds-nav a[aria-current=page]{background:var(--accent,#dcebea)}.ds-nav a:focus-visible{outline:2px solid var(--ring,#69a7a6);outline-offset:4px;}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
+    },
+    {
+      "name": "Selected batch",
+      "kind": "chip",
+      "refersTo": "batch-selected",
+      "description": "Batch selection preserves date, timing, and selected semantics.",
+      "html": "<button class=\"ds-batch\" aria-pressed=\"true\"><span>Choose your batch</span><span class=\"ds-batch-status\">Selected</span></button>",
+      "css": ".ds-batch{display:flex;align-items:center;justify-content:space-between;gap:.75rem;width:100%;padding:1rem 1.25rem;border:1px solid var(--primary,#0f4d4d);border-radius:.75rem;background:var(--primary,#0f4d4d);color:var(--primary-foreground,#fffdf8);font-size:1.1rem;font-weight:600;font-family:var(--font-manrope,Manrope),sans-serif;}.ds-batch-status{font-size:.68rem;font-weight:700;letter-spacing:.24em;text-transform:uppercase}.ds-batch:focus-visible{outline:2px solid var(--ring,#69a7a6);outline-offset:4px;}.ds-batch:disabled{opacity:.45;cursor:not-allowed}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
+    },
+    {
+      "name": "Program card",
+      "kind": "card",
+      "refersTo": "program-card",
+      "description": "Course choice with serif title and readable supporting copy.",
+      "html": "<article class=\"ds-card\"><h3>Find your next program</h3><p>Explore psychology learning, practical training, and personal support.</p><a href=\"/courses\">Explore programs</a></article>",
+      "css": ".ds-card{padding:1.5rem;border:1px solid color-mix(in srgb,var(--primary,#0f4d4d) 15%,transparent);border-radius:1.15rem;background:color-mix(in srgb,var(--card,#fffdf8) 95%,transparent);color:var(--foreground,#123f3d);box-shadow:0 24px 64px -52px color-mix(in srgb,var(--primary,#0f4d4d) 72%,transparent);font-family:var(--font-manrope,Manrope),sans-serif;}.ds-card h3{margin:0;font-family:var(--font-syne,\"Cormorant Garamond\"),Georgia,serif;font-size:1.35rem;font-weight:600;line-height:1.15}.ds-card p{color:var(--muted-foreground,#5e706d);font-size:1rem;line-height:1.75}.ds-card a{color:var(--primary,#0f4d4d);font-size:.875rem;font-weight:700}.ds-card:hover{border-color:color-mix(in srgb,var(--primary,#0f4d4d) 34%,transparent);box-shadow:0 30px 72px -50px color-mix(in srgb,var(--primary,#0f4d4d) 82%,transparent)}.ds-card a:focus-visible{outline:2px solid var(--ring,#69a7a6);outline-offset:4px;}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
+    },
+    {
+      "name": "Learning Portal panel",
+      "kind": "custom",
+      "refersTo": "portal-promo",
+      "description": "Shared dark panel with an explanatory link; the full homepage version adds the Choose, Enroll, Learn journey.",
+      "html": "<section class=\"ds-portal\"><h2>Your learning deserves <em>a place of its own.</em></h2><p>From enrollment to ongoing learning, the TMP Learning Portal gives your psychology journey one calmer, clearer place to continue.</p><a href=\"/learning-portal\">See how the portal works</a></section>",
+      "css": ".ds-portal{padding:2rem;border-radius:1.5rem;background:#0b3f3e;color:var(--tmp-ivory,#faf8f3);font-family:var(--font-manrope,Manrope),sans-serif;}.ds-portal h2{margin:0;font-family:var(--font-syne,\"Cormorant Garamond\"),Georgia,serif;font-size:3rem;font-weight:500;line-height:.98;letter-spacing:-.04em}.ds-portal em{display:block;color:#b9dedd}.ds-portal p{max-width:42rem;margin:1.5rem 0;line-height:2;color:#d2e1de}.ds-portal a{display:inline-flex;align-items:center;min-height:3rem;border-radius:999px;padding:0 1.5rem;background:var(--tmp-ivory,#faf8f3);color:var(--tmp-deep-teal,#0f4d4d);font-size:.75rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;text-decoration:none}.ds-portal a:hover{background:white}.ds-portal a:focus-visible{outline:2px solid var(--ring,#69a7a6);outline-offset:4px;}@media(prefers-reduced-motion:reduce){.ds-primary,.ds-inverse,.ds-outline,.ds-card{transition:none}}"
+    },
+    {
+      "name": "Homepage portal journey",
+      "kind": "custom",
+      "refersTo": "portal-journey",
+      "description": "Three-step ordered explainer below the full homepage portal promotion; compact promotions omit it.",
+      "html": "<section class=\"ds-journey\"><p class=\"ds-journey-label\">How your TMP journey works</p><ol><li><span>01</span><h3>Choose</h3><p>Find the right TMP program for your goal.</p></li><li><span>02</span><h3>Enroll</h3><p>Complete enrollment through the website.</p></li><li><span>03</span><h3>Learn</h3><p>Return to My Learning and continue from one place.</p></li></ol></section>",
+      "css": ".ds-journey{padding:2rem;background:#0b3f3e;color:#faf8f3;border-top:1px solid rgba(255,255,255,.12);font-family:var(--font-manrope,Manrope),sans-serif;}.ds-journey-label{margin:0;color:#9fd0cf;font-size:.6rem;font-weight:700;letter-spacing:.2em;text-transform:uppercase}.ds-journey ol{display:grid;gap:1.5rem;list-style:none;margin:1.5rem 0 0;padding:0}.ds-journey li{display:grid;grid-template-columns:auto 1fr;column-gap:1rem}.ds-journey li>span{grid-row:span 2;color:#9fd0cf;font-size:1.875rem;font-style:italic;font-family:var(--font-syne,\"Cormorant Garamond\"),Georgia,serif;}.ds-journey h3{margin:0;font-size:1.5rem;font-weight:600;font-family:var(--font-syne,\"Cormorant Garamond\"),Georgia,serif;}.ds-journey li p{margin:.25rem 0 0;font-size:.875rem;line-height:1.5rem;color:#c9dbd8}@media(min-width:640px){.ds-journey ol{grid-template-columns:repeat(3,minmax(0,1fr));gap:0}.ds-journey li:not(:first-child){border-left:1px solid rgba(255,255,255,.12);padding-left:1.75rem}.ds-journey li:not(:last-child){padding-right:1.75rem}}"
+    },
+    {
+      "name": "Enrollment route diagram",
+      "kind": "custom",
+      "refersTo": "portal-diagram",
+      "description": "Factual program-choice, enrollment, and My Learning route; no speculative learner dashboard. Fixed light colors remain readable in dark appearance.",
+      "html": "<section class=\"ds-route\"><p class=\"ds-route-label\">Your route into My Learning</p><h2>One connected journey,<em>from choice to course.</em></h2><ol><li><span>01</span><div><strong>Choose a TMP program</strong><p>Compare the format, schedule, and fee.</p></div></li><li><span>02</span><div><strong>Enroll with your TMP account</strong><p>Complete the website enrollment flow.</p></div></li><li><span>03</span><div><strong>Return through My Learning</strong><p>Find your enrolled programs in your account.</p></div></li></ol></section>",
+      "css": ".ds-route{padding:1.75rem;border:1px solid rgba(255,255,255,.15);border-radius:1.75rem;background:#f8f5ee;color:#173f3d;box-shadow:0 35px 90px -30px rgba(0,0,0,.55);font-family:var(--font-manrope,Manrope),sans-serif;}.ds-route-label{margin:0;color:#0f4d4d;font-size:.6rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase}.ds-route h2{margin:.75rem 0 0;font-size:1.875rem;line-height:1.25;font-weight:600;font-family:var(--font-syne,\"Cormorant Garamond\"),Georgia,serif;}.ds-route h2 em{display:block;color:#0f4d4d}.ds-route ol{display:grid;gap:.75rem;list-style:none;padding:0;margin:2rem 0 0}.ds-route li{display:grid;grid-template-columns:auto 1fr;gap:1rem;border-radius:1rem;background:#e7f1ee;padding:1rem}.ds-route li>span{display:flex;align-items:center;justify-content:center;width:2.5rem;height:2.5rem;border-radius:999px;background:#0f4d4d;color:white;font-size:.75rem;font-weight:700}.ds-route strong{color:#173f3d;font-weight:600}.ds-route li p{margin:.25rem 0 0;font-size:.875rem;line-height:1.5rem;color:#526a66}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Coastal Psychology Journal",
+    "overview": "The Mind Point pairs Cormorant Garamond headlines with Manrope text, coastal photography, and a deep-teal, sea-glass, sand, and ivory palette. The botanical TMP mark and the promise \"Learn \u00b7 Grow \u00b7 Heal \u00b7 Belong\" connect education and personal support.\n\nThe public site uses the pacing of a psychology journal: generous section spacing, large serif headings, numbered pathway rows, and short blocks of explanatory text. Course selection and learner actions use clearer, denser controls within the same palette. Deep-teal sections give the Learning Portal and key calls to action a distinct place in that sequence.",
+    "keyCharacteristics": [
+      "Botanical identity and coastal photography.",
+      "Cormorant headlines with italic emphasis; Manrope for reading and controls.",
+      "Ivory pages, teal actions, sea-glass panels, and small gold details.",
+      "Editorial rows for explanation; structured cards for choosing programs."
+    ],
+    "rules": [
+      {
+        "name": "The Semantic Controls Rule",
+        "body": "New reusable controls use semantic variables so their hover, selected, and focus states follow the active theme.",
+        "section": "colors"
+      },
+      {
+        "name": "The Quiet Canvas Rule",
+        "body": "Keep the main reading background free of the retired page-wide grid and lavender glow; use local decoration where the current design already establishes it.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do keep the portal hero actions before its checklist and enrollment diagram on mobile.",
+      "Do preserve the botanical mark, coastal imagery, and \"Learn \u00b7 Grow \u00b7 Heal \u00b7 Belong\" brand promise.",
+      "Do use semantic CSS variables for new reusable controls and verify both light and dark states.",
+      "Do give each section a clear next action, with program exploration and learner access labelled by destination.",
+      "Do keep dates, prices, batch availability, and enrollment controls readable when text wraps.",
+      "Do retain visible keyboard focus, meaningful link names, reduced-motion support, and labelled form fields.",
+      "Do use repository-backed claims and preserve course, payment, authentication, and account behavior."
+    ],
+    "donts": [
+      "Don't mix theme-responsive pale text with the portal's fixed light panels.",
+      "Don't treat the older lavender declarations or unused hero components as the current public identity.",
+      "Don't use sea-glass or gold for small text on ivory without checking contrast.",
+      "Don't turn every paragraph into a rounded card; retain the existing open rows and ruled sections.",
+      "Don't market the Learning Portal as a waitlist or an upcoming launch.",
+      "Don't invent learner metrics, dashboard screenshots, testimonials, or guarantees.",
+      "Don't copy hardcoded light-page colors into controls that must respond to the dark theme."
+    ]
+  }
+}

@@ -1,59 +1,67 @@
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { Button } from "@/components/ui/button";
-import { Clock, Shield, Calendar } from "lucide-react";
+import { Clock, HeartHandshake, Calendar } from "lucide-react";
 import Link from "next/link";
 
 const HIGHLIGHTS = [
-  { label: "~20 min session", icon: Clock },
-  { label: "Licensed professional", icon: Shield },
+  { label: "A focused first conversation", icon: Clock },
+  { label: "Thoughtful, human support", icon: HeartHandshake },
   { label: "Flexible scheduling", icon: Calendar },
 ];
 
 export default function FeaturedEntrySection() {
   return (
-    <section className="home-section-sm">
+    <section className="home-section-md relative">
       <div className="container">
         <ScrollReveal>
-          <div className="mx-auto max-w-3xl text-center">
-            <span className="text-primary/80 text-xs font-semibold tracking-[0.32em] uppercase">
-              A smaller first step
-            </span>
-            <h2 className="text-foreground mt-3 text-3xl font-semibold tracking-tight sm:text-4xl">
-              Not sure where to begin? Start with one calm conversation.
-            </h2>
-            <p className="text-muted-foreground mt-4 text-lg leading-8">
-              Book a single therapy session. No pressure to commit to the
-              whole path at once, just a supportive first moment with someone
-              who listens.
-            </p>
+          <div className="brand-panel mx-auto max-w-5xl overflow-hidden rounded-[2.4rem]">
+            <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
+              <div className="bg-[#0f4d4d] p-8 text-[#faf8f3] sm:p-10 lg:p-12">
+                <span className="text-[#9fd0cf] text-xs font-semibold tracking-[0.28em] uppercase">
+                  A smaller first step
+                </span>
+                <h2 className="font-display mt-4 text-4xl leading-tight font-medium sm:text-5xl">
+                  You do not need to arrive with everything figured out.
+                </h2>
+                <p className="mt-5 text-base leading-8 text-[#d6e3e0] sm:text-lg">
+                  Sometimes the most useful beginning is simply one calm,
+                  focused conversation that helps you understand what you need
+                  next.
+                </p>
+              </div>
 
-            {/* Highlights as inline badges */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-              {HIGHLIGHTS.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <span
-                    key={item.label}
-                    className="text-foreground/80 bg-primary/5 inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm"
-                  >
-                    <Icon className="text-primary/60 h-4 w-4" />
-                    {item.label}
-                  </span>
-                );
-              })}
-            </div>
+              <div className="bg-[#fffdf9] p-8 sm:p-10 lg:p-12">
+                <div className="space-y-4">
+                  {HIGHLIGHTS.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <div
+                        key={item.label}
+                        className="flex items-center gap-4 border-b border-border/70 pb-4 last:border-b-0"
+                      >
+                        <span className="bg-primary/8 text-primary flex h-10 w-10 shrink-0 items-center justify-center rounded-full">
+                          <Icon className="h-4 w-4" />
+                        </span>
+                        <span className="text-foreground text-sm font-medium sm:text-base">
+                          {item.label}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
 
-            {/* Pricing + CTA */}
-            <div className="mt-8 flex flex-col items-center gap-2">
-              <p className="text-foreground text-xl font-semibold">
-                Starting from ₹600
-              </p>
-              <p className="text-muted-foreground text-sm">
-                One session is enough to begin getting oriented.
-              </p>
-              <Button size="lg" className="mt-4" asChild>
-                <Link href="/courses/therapy">Book your first session</Link>
-              </Button>
+                <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="brand-kicker">Personal support</p>
+                    <p className="font-display text-foreground mt-2 text-3xl font-medium">
+                      Starting from ₹600
+                    </p>
+                  </div>
+                  <Button size="lg" className="rounded-full px-7" asChild>
+                    <Link href="/courses/therapy">Explore therapy sessions</Link>
+                  </Button>
+                </div>
+              </div>
             </div>
           </div>
         </ScrollReveal>
