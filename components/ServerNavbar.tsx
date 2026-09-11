@@ -1,59 +1,62 @@
 import Link from "next/link";
 import { Menu } from "lucide-react";
 
+function TmpWordmark() {
+  return (
+    <div
+      className="flex items-center whitespace-nowrap text-[#123f3e]"
+      aria-label="The Mind Point"
+    >
+      <div className="relative mr-4 flex h-12 items-center">
+        <span
+          className="font-display text-[2.75rem] font-medium leading-none tracking-[-0.075em]"
+          style={{ fontFamily: "var(--font-syne), Georgia, serif" }}
+        >
+          TMP
+        </span>
+        <svg
+          viewBox="0 0 48 46"
+          aria-hidden="true"
+          className="pointer-events-none absolute -right-2 -top-1 h-10 w-10"
+        >
+          <path
+            d="M22 31 C23 23 24 15 25 5"
+            fill="none"
+            stroke="#667f74"
+            strokeWidth="1.4"
+            strokeLinecap="round"
+          />
+          <path
+            d="M25 12 C18 11 13 7 12 2 C19 2 24 5 28 10 C27 11 26 12 25 12 Z"
+            fill="#90A49A"
+          />
+          <path
+            d="M27 16 C34 13 39 9 40 4 C33 4 28 7 24 13 C25 14 26 15 27 16 Z"
+            fill="#CDBB95"
+          />
+        </svg>
+      </div>
+
+      <span className="text-[0.88rem] font-medium tracking-[0.36em] text-[#163f3e] sm:text-[0.93rem]">
+        THE MIND POINT
+      </span>
+    </div>
+  );
+}
+
 export default function ServerNavbar() {
   return (
     <nav
       data-app-navbar
       className="sticky top-0 z-50 w-full border-b border-[#0f4d4d]/8 bg-[#fbfaf6]/96 backdrop-blur-xl"
     >
-      <div className="container flex h-16 items-center">
+      <div className="container flex h-[4.65rem] items-center">
         <Link
           href="/"
-          className="mr-6 flex min-w-0 items-center"
+          className="mr-8 flex min-w-0 items-center"
           aria-label="The Mind Point home"
         >
-          <svg
-            viewBox="0 0 260 64"
-            role="img"
-            aria-label="The Mind Point logo"
-            className="h-11 w-[11.5rem] shrink-0"
-          >
-            <g fill="#0F4D4D">
-              <text
-                x="0"
-                y="38"
-                fontFamily="Georgia, 'Times New Roman', serif"
-                fontSize="40"
-                fontWeight="500"
-                letterSpacing="-3"
-              >
-                TMP
-              </text>
-              <path d="M79 10 C89 1 101 2 108 9 C98 13 89 18 82 25 C82 19 81 14 79 10 Z" />
-              <path
-                d="M102 9 C110 3 119 5 124 12 C116 14 109 18 103 24 C103 18 103 13 102 9 Z"
-                fill="#D9C6AE"
-              />
-              <path
-                d="M93 11 C95 18 95 24 93 31"
-                fill="none"
-                stroke="#0F4D4D"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-              />
-            </g>
-            <text
-              x="78"
-              y="47"
-              fontFamily="Arial, Helvetica, sans-serif"
-              fontSize="10"
-              letterSpacing="3.1"
-              fill="#173F3D"
-            >
-              THE MIND POINT
-            </text>
-          </svg>
+          <TmpWordmark />
         </Link>
 
         <div className="ml-auto flex items-center gap-2">
