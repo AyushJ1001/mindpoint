@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resource activity state prototype</title>
+    <style>
+      :root { font-family: system-ui, sans-serif; color: #20202b; background: #f6f3fb; }
+      * { box-sizing: border-box; }
+      body { margin: 0; }
+      main { width: min(920px, calc(100% - 32px)); margin: 40px auto; }
+      h1 { margin-bottom: 8px; }
+      h2 { margin-top: 0; font-size: 1.15rem; }
+      .intro { max-width: 72ch; color: #555269; }
+      .panel { margin-top: 24px; padding: 24px; border: 1px solid #dcd5e9; border-radius: 16px; background: white; }
+      .state { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+      .field { padding: 12px; border-radius: 10px; background: #f5f2fa; }
+      .field span { display: block; color: #68627a; font-size: .8rem; }
+      .field strong { display: block; margin-top: 4px; }
+      .notice { min-height: 48px; margin-top: 16px; padding: 12px; border-left: 4px solid #7656a6; background: #f7f2ff; }
+      .actions, .tabs, .steps { display: flex; flex-wrap: wrap; gap: 8px; }
+      button { padding: 10px 14px; border: 1px solid #7656a6; border-radius: 8px; color: #4d3275; background: white; cursor: pointer; }
+      button:hover, button:focus-visible { background: #eee7f8; }
+      button:focus-visible { outline: 3px solid #c9afea; outline-offset: 2px; }
+      button[aria-selected="true"] { color: white; background: #654593; }
+      button:disabled { cursor: not-allowed; opacity: .45; }
+      .walkthrough { margin-top: 18px; padding-top: 18px; border-top: 1px solid #e6e0ee; }
+      .walkthrough p { color: #555269; }
+      pre { overflow: auto; padding: 14px; border-radius: 10px; color: #e9e2f3; background: #282332; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Required resource behavior</h1>
+      <p class="intro">This throwaway prototype asks whether a required Reading or Media activity can handle normal completion, delivery failure, rights restriction, and replacement without inventing progress or trapping a Student.</p>
+
+      <section class="panel" aria-labelledby="state-title">
+        <h2 id="state-title">Current state</h2>
+        <div id="state" class="state"></div>
+        <div id="notice" class="notice" role="status" aria-live="polite"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="free-title">
+        <h2 id="free-title">Try any action</h2>
+        <div id="actions" class="actions"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="guided-title">
+        <h2 id="guided-title">Guided walkthroughs</h2>
+        <div id="tabs" class="tabs" role="tablist"></div>
+        <div id="walkthrough" class="walkthrough"></div>
+      </section>
+
+      <section class="panel" aria-labelledby="history-title">
+        <h2 id="history-title">Action history</h2>
+        <pre id="history">No actions yet.</pre>
+      </section>
+    </main>
+
+    <script>
+      const initialState = () => ({
+        availability: "Available",
+        progress: "Not started",
+        evidence: "None",
+        required: true,
+        resourceVersion: 1,
+        replacementReview: "Not needed",
+        activityBlocked: false,
+        message: "The required resource is ready to open.",
+        history: [],
+      });
+
+      function transition(state, action) {
+        const next = { ...state, history: [...state.history, action.type] };
+        if (action.type === "OPEN") {
+          if (state.availability !== "Available") return reject(next, "The resource cannot open while it is unavailable.");
+          next.progress = state.progress === "Not started" ? "In progress" : state.progress;
+          next.message = "The Student opened the resource. Completion still needs valid evidence.";
+          return next;
+        }
+        if (action.type === "CONFIRM_READ") {
+          if (state.availability !== "Available" || state.progress === "Not started") return reject(next, "Reading completion requires an available resource that the Student opened.");
+          next.progress = "Completed";
+          next.evidence = `Student confirmation for resource version ${state.resourceVersion}`;
+          next.message = "The Reading is complete and retains its versioned evidence.";
+          return next;
+        }
+        if (action.type === "PLAY_90") {
+          if (state.availability !== "Available") return reject(next, "Playback evidence cannot complete unavailable Media.");
+          next.progress = "Completed";
+          next.evidence = `90% playback for resource version ${state.resourceVersion}`;
+          next.message = "The Media is complete. An equivalent transcript route would produce its own evidence.";
+          return next;
+        }
+        if (action.type === "FAIL") {
+          next.availability = "Unavailable";
+          next.activityBlocked = state.required && state.progress !== "Completed";
+          next.message = next.activityBlocked ? "Faculty must repair or replace this required resource. The Student is not marked complete." : "The resource is unavailable. Existing valid completion evidence remains.";
+          return next;
+        }
+        if (action.type === "RESTRICT") {
+          next.availability = "Restricted";
+          next.activityBlocked = state.required && state.progress !== "Completed";
+          next.message = "Student access stops during review. Existing evidence remains, and no new completion can be created.";
+          return next;
+        }
+        if (action.type === "REPLACE_EQUIVALENT") {
+          next.availability = "Available";
+          next.resourceVersion += 1;
+          next.replacementReview = "Equivalent replacement approved";
+          next.activityBlocked = false;
+          next.message = state.progress === "Completed" ? "The lawful equivalent is available. Earlier versioned completion evidence remains valid." : "The lawful equivalent is available and the Student can continue.";
+          return next;
+        }
+        if (action.type === "REPLACE_CHANGED") {
+          next.availability = "Available";
+          next.resourceVersion += 1;
+          next.replacementReview = "Instructional meaning changed";
+          next.activityBlocked = true;
+          next.message = "This is not a silent replacement. Faculty must create a new Curriculum version or make an explicit Student transition decision.";
+          return next;
+        }
+        if (action.type === "WAIVE") {
+          if (!state.activityBlocked) return reject(next, "A Waiver is available only when required work is blocked.");
+          next.progress = "Completed";
+          next.evidence = "Audited Waiver, not resource interaction";
+          next.activityBlocked = false;
+          next.message = "An authorized Waiver prevents the unavailable resource from blocking Course completion.";
+          return next;
+        }
+        return reject(next, "Unknown action.");
+      }
+
+      function reject(state, reason) {
+        state.message = `No change: ${reason}`;
+        return state;
+      }
+
+      const actionLabels = {
+        OPEN: "Open resource",
+        CONFIRM_READ: "Confirm Reading complete",
+        PLAY_90: "Reach 90% Media playback",
+        FAIL: "Delivery fails",
+        RESTRICT: "Rights review restricts access",
+        REPLACE_EQUIVALENT: "Publish equivalent replacement",
+        REPLACE_CHANGED: "Publish meaning-changing replacement",
+        WAIVE: "Authorize Waiver",
+      };
+
+      const scenarios = [
+        { name: "Reading completion", text: "Opening starts progress, but only the Student's explicit confirmation completes a Reading.", steps: ["OPEN", "CONFIRM_READ"] },
+        { name: "Failure before completion", text: "A required resource failure blocks the activity without granting completion. An equivalent replacement lets the Student continue.", steps: ["OPEN", "FAIL", "REPLACE_EQUIVALENT", "CONFIRM_READ"] },
+        { name: "Restriction after completion", text: "A takedown restriction stops access but retains valid versioned completion evidence.", steps: ["OPEN", "CONFIRM_READ", "RESTRICT"] },
+        { name: "Material change", text: "A replacement that changes instructional meaning cannot silently reuse the existing activity and evidence.", steps: ["OPEN", "REPLACE_CHANGED"] },
+      ];
+
+      let state = initialState();
+      let activeScenario = 0;
+      let activeStep = 0;
+
+      function dispatch(type) {
+        state = transition(state, { type });
+        render();
+      }
+
+      function startScenario(index) {
+        activeScenario = index;
+        activeStep = 0;
+        state = initialState();
+        render();
+      }
+
+      function guidedDispatch(type) {
+        dispatch(type);
+        activeStep += 1;
+        render();
+      }
+
+      function render() {
+        const fields = [
+          ["Availability", state.availability], ["Progress", state.progress],
+          ["Completion evidence", state.evidence], ["Resource version", state.resourceVersion],
+          ["Replacement review", state.replacementReview], ["Blocks completion", state.activityBlocked ? "Yes" : "No"],
+        ];
+        document.querySelector("#state").innerHTML = fields.map(([label, value]) => `<div class="field"><span>${label}</span><strong>${value}</strong></div>`).join("");
+        document.querySelector("#notice").textContent = state.message;
+        document.querySelector("#history").textContent = state.history.length ? state.history.map((item, index) => `${index + 1}. ${actionLabels[item]}`).join("\n") : "No actions yet.";
+        document.querySelector("#actions").innerHTML = Object.entries(actionLabels).map(([type, label]) => `<button type="button" data-action="${type}">${label}</button>`).join("");
+        document.querySelectorAll("[data-action]").forEach(button => button.addEventListener("click", () => dispatch(button.dataset.action)));
+        document.querySelector("#tabs").innerHTML = scenarios.map((scenario, index) => `<button type="button" role="tab" aria-selected="${index === activeScenario}" data-tab="${index}">${scenario.name}</button>`).join("");
+        document.querySelectorAll("[data-tab]").forEach(button => button.addEventListener("click", () => startScenario(Number(button.dataset.tab))));
+        const scenario = scenarios[activeScenario];
+        const steps = scenario.steps.map((type, index) => `<button type="button" data-step="${index}" ${index !== activeStep ? "disabled" : ""}>${index + 1}. ${actionLabels[type]}</button>`).join("");
+        document.querySelector("#walkthrough").innerHTML = `<p>${scenario.text}</p><div class="steps">${steps}</div>`;
+        document.querySelectorAll("[data-step]").forEach(button => button.addEventListener("click", () => guidedDispatch(scenario.steps[Number(button.dataset.step)])));
+      }
+
+      render();
+    </script>
+  </body>
+</html>
