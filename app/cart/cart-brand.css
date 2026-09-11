@@ -1,48 +1,51 @@
 .tmp-cart-page {
   min-height: 100vh;
-  background:
-    radial-gradient(circle at 92% 2%, rgba(142, 193, 195, 0.18), transparent 28rem),
-    radial-gradient(circle at 5% 55%, rgba(217, 198, 174, 0.15), transparent 24rem),
-    #faf8f3;
+  background: #f7f3ea;
+  color: #163f3d;
 }
 
 .tmp-cart-page > .container {
-  max-width: 72rem;
-  padding-top: 3.5rem !important;
-  padding-bottom: 5rem !important;
+  max-width: 82rem;
+  padding-top: clamp(3rem, 6vw, 6rem) !important;
+  padding-bottom: clamp(4rem, 8vw, 8rem) !important;
 }
 
 .tmp-cart-page h1 {
-  font-family: var(--font-display), var(--font-sans), serif;
-  color: #173f3d;
-  font-size: clamp(2.8rem, 5vw, 4.8rem) !important;
-  line-height: 1.02;
+  font-family: var(--font-syne), Georgia, serif;
+  color: #163f3d;
+  font-size: clamp(3rem, 6vw, 6.4rem) !important;
+  line-height: 0.94;
   font-weight: 500 !important;
-  letter-spacing: -0.035em !important;
+  letter-spacing: -0.045em !important;
 }
 
 .tmp-cart-page h1 + p {
-  max-width: 38rem;
-  color: #63706d;
-  font-size: 1.05rem;
-  line-height: 1.8;
+  max-width: 42rem;
+  color: #65736f;
+  font-size: 1rem;
+  line-height: 1.75;
 }
 
 .tmp-cart-page [data-slot="card"] {
-  border: 1px solid rgba(15, 77, 77, 0.12) !important;
-  border-radius: 1.7rem !important;
-  background: rgba(255, 253, 249, 0.94) !important;
-  box-shadow: 0 26px 62px -45px rgba(15, 77, 77, 0.58) !important;
+  border: 0 !important;
+  border-top: 1px solid rgba(22, 63, 61, 0.22) !important;
+  border-bottom: 1px solid rgba(22, 63, 61, 0.22) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
-.tmp-cart-page [data-slot="card-title"] {
-  font-family: var(--font-display), var(--font-sans), serif;
-  color: #173f3d;
+.tmp-cart-page [data-slot="card-title"],
+.tmp-cart-page h2,
+.tmp-cart-page h3 {
+  font-family: var(--font-syne), Georgia, serif !important;
+  color: #163f3d !important;
   font-weight: 500 !important;
 }
 
 .tmp-cart-page [data-slot="button"] {
-  border-radius: 999px !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
 }
 
 .tmp-cart-page [data-slot="button"][class*="bg-primary"] {
@@ -51,34 +54,32 @@
 }
 
 .tmp-cart-page [data-slot="button"][class*="bg-primary"]:hover {
-  background: #173f3d !important;
+  background: #163f3d !important;
 }
 
 .tmp-cart-page [data-slot="badge"] {
-  border-radius: 999px !important;
+  border-radius: 2px !important;
+  box-shadow: none !important;
 }
 
 .tmp-cart-page [class*="border-amber-200"] {
-  border-color: rgba(183, 151, 85, 0.25) !important;
-  background: #f6f0e5 !important;
-  color: #6f5b32 !important;
+  border-color: rgba(15, 77, 77, 0.2) !important;
+  background: rgba(217, 198, 174, 0.18) !important;
+  color: #59645f !important;
 }
 
-.tmp-cart-page [class*="bg-amber-500"] {
-  background: #b79755 !important;
-}
-
+.tmp-cart-page [class*="bg-amber-500"],
 .tmp-cart-page [class*="bg-amber-200"] {
-  background: #e7d9bd !important;
+  background: #d9c6ae !important;
 }
 
 .tmp-cart-page [class*="text-amber-700"],
 .tmp-cart-page [class*="text-amber-900"] {
-  color: #735d32 !important;
+  color: #655b48 !important;
 }
 
 .tmp-cart-page [class*="from-orange-500"] {
-  background: linear-gradient(90deg, #0f4d4d, #6f9187) !important;
+  background: #0f4d4d !important;
 }
 
 .tmp-cart-page [class*="bg-emerald-500"],
@@ -89,23 +90,27 @@
 .tmp-cart-page input,
 .tmp-cart-page textarea,
 .tmp-cart-page [role="combobox"] {
-  border-color: rgba(15, 77, 77, 0.13) !important;
-  border-radius: 1rem !important;
-  background: #fffdf9 !important;
+  border-color: rgba(22, 63, 61, 0.28) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
 }
 
 .tmp-cart-page [role="dialog"] {
-  border-color: rgba(15, 77, 77, 0.14) !important;
-  border-radius: 1.8rem !important;
-  background: #fffdf9 !important;
+  border-color: rgba(22, 63, 61, 0.25) !important;
+  border-radius: 0 !important;
+  background: #fbf8f1 !important;
+  box-shadow: 0 30px 80px -55px rgba(15, 77, 77, 0.55) !important;
 }
 
 .tmp-cart-page a[href="/courses"] {
   color: #0f4d4d;
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
 }
 
 @media (max-width: 639px) {
   .tmp-cart-page > .container {
-    padding-top: 2.25rem !important;
+    padding-top: 2.5rem !important;
   }
 }
