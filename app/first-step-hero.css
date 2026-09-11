@@ -1,31 +1,75 @@
-/* First-step homepage refinement requested by Aksha.
+/* Homepage hero refinement requested by Aksha.
    Scope: ONLY the top hero/background/typography. Lower sections stay untouched. */
 
+/* Full-frame coastal treatment: bright, airy and softly misted rather than split-screen. */
 main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child {
-  background: #fbfaf6 !important;
+  position: relative !important;
+  isolation: isolate !important;
+  overflow: hidden !important;
   border-bottom-color: rgba(15, 77, 77, 0.07) !important;
+  background-color: #eef6f4 !important;
+  background-image:
+    linear-gradient(90deg, rgba(250, 248, 243, 0.93) 0%, rgba(250, 248, 243, 0.84) 31%, rgba(250, 248, 243, 0.52) 55%, rgba(238, 247, 245, 0.24) 76%, rgba(238, 247, 245, 0.10) 100%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.18) 0%, rgba(236, 246, 244, 0.20) 100%),
+    url('/illustrations/hero.jpg') !important;
+  background-size: cover !important;
+  background-position: center 45% !important;
+  background-repeat: no-repeat !important;
 }
 
+/* A very soft sea-glass mist keeps the image calm without making it grey. */
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at 78% 18%, rgba(255, 255, 255, 0.28), transparent 28%),
+    radial-gradient(circle at 72% 70%, rgba(142, 193, 195, 0.14), transparent 36%);
+}
+
+/* Convert the original left/right grid into one full-width content layer. */
 main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid {
-  min-height: 38rem !important;
+  position: relative !important;
+  z-index: 1 !important;
+  display: block !important;
+  min-height: 40rem !important;
 }
 
 main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:first-child {
-  background: #fbfaf6 !important;
+  display: flex !important;
+  min-height: 40rem !important;
+  align-items: center !important;
+  width: 100% !important;
+  background: transparent !important;
+  padding-top: 4rem !important;
+  padding-bottom: 4rem !important;
 }
 
-/* The logo is kept small and clear in the navigation, so do not duplicate a large logo in the hero. */
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:first-child > div {
+  max-width: 38rem !important;
+}
+
+/* The logo remains a navbar concern; no duplicate oversized logo in the hero. */
 main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:first-child img[alt="The Mind Point"] {
   display: none !important;
 }
 
-/* Restore the normal TMP display font and the earlier, normal-sized hero scale. */
+/* The original right-hand hero panel is no longer needed once the coast fills the frame. */
+main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:last-child {
+  display: none !important;
+}
+
+/* Keep typography restrained and readable over the background. */
 main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child h1 {
   font-family: var(--font-syne), Georgia, serif !important;
   font-size: 2.25rem !important;
   line-height: 1.04 !important;
   letter-spacing: -0.025em !important;
   font-weight: 600 !important;
+  color: #173f3d !important;
+  text-shadow: 0 1px 22px rgba(255, 255, 255, 0.34);
 }
 
 main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child h1 span {
@@ -38,22 +82,7 @@ main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child 
   max-width: 34rem !important;
   font-size: 1.125rem !important;
   line-height: 2rem !important;
-}
-
-/* Use the exact coastal crop taken from the approved brand-board image. */
-main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:last-child {
-  min-height: 28rem !important;
-  background-color: #edf4f2 !important;
-  background-image: url('/tmp-coastal-hero.svg') !important;
-  background-size: cover !important;
-  background-position: center center !important;
-  background-repeat: no-repeat !important;
-}
-
-/* Remove the old stock hero image/overlays so only the approved coastal background is visible. */
-main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:last-child > img,
-main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:last-child > div {
-  display: none !important;
+  color: #4f6966 !important;
 }
 
 @media (min-width: 640px) {
@@ -69,13 +98,9 @@ main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child 
 }
 
 @media (min-width: 1024px) {
-  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid {
-    min-height: 40rem !important;
-  }
-
+  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid,
   main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:first-child {
-    padding-top: 4rem !important;
-    padding-bottom: 4rem !important;
+    min-height: 42rem !important;
   }
 
   main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child h1 {
@@ -83,9 +108,16 @@ main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child 
   }
 }
 
-@media (max-width: 639px) {
-  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:last-child {
-    min-height: 22rem !important;
-    background-position: 58% center !important;
+@media (max-width: 767px) {
+  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child {
+    background-position: 62% center !important;
+    background-image:
+      linear-gradient(90deg, rgba(250, 248, 243, 0.94) 0%, rgba(250, 248, 243, 0.82) 62%, rgba(238, 247, 245, 0.42) 100%),
+      url('/illustrations/hero.jpg') !important;
+  }
+
+  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid,
+  main#main-content > div.bg-\[\#fffdf9\].text-\[\#173f3d\] > section:first-child > div.grid > div:first-child {
+    min-height: 34rem !important;
   }
 }
