@@ -19,6 +19,7 @@ import {
 import {
   LayoutDashboard,
   BookOpen,
+  LibraryBig,
   Users,
   GraduationCap,
   Gift,
@@ -33,6 +34,7 @@ import {
 const items = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/courses", label: "Courses", icon: BookOpen },
+  { href: "/admin/lms", label: "LMS Content", icon: LibraryBig },
   { href: "/admin/offers", label: "Offer Manager", icon: TicketPercent },
   { href: "/admin/coupons", label: "Coupons", icon: BadgePercent },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquareQuote },
