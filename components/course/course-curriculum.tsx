@@ -2,6 +2,7 @@
 
 import { ScrollReveal } from "@/components/ScrollReveal";
 import type { PublicCourse } from "@/lib/backend";
+import { stripLmsMetadata } from "@/lib/lms-content";
 
 interface Props {
   course: PublicCourse;
@@ -12,7 +13,7 @@ interface Props {
 // semicolons, or em/en-dash lists.
 function bulletsFromDescription(desc?: string): string[] {
   if (!desc) return [];
-  const raw = desc.trim();
+  const raw = stripLmsMetadata(desc).trim();
   if (!raw) return [];
 
   // Prefer explicit delimiters when present.
