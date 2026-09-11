@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,36 +15,16 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Phone, Mail, Clock, Globe2 } from "lucide-react";
 import { submitContactForm } from "@/lib/services/contact";
 import { contactFormSchema } from "@/lib/utils";
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 const CONTACT_INFO = [
-  {
-    icon: Phone,
-    title: "Phone",
-    lines: ["+91 97707 80086"],
-  },
-  {
-    icon: Mail,
-    title: "Email",
-    lines: ["contact.themindpoint@gmail.com"],
-  },
-  {
-    icon: Globe2,
-    title: "Website",
-    lines: ["www.themindpoint.org"],
-  },
-  {
-    icon: Clock,
-    title: "Business Hours",
-    lines: [
-      "Monday - Friday: 9:00 AM - 6:00 PM",
-      "Saturday: 10:00 AM - 4:00 PM",
-    ],
-  },
+  ["phone", "+91 97707 80086"],
+  ["email", "contact.themindpoint@gmail.com"],
+  ["website", "www.themindpoint.org"],
+  ["hours", "Mon–Fri 9:00 AM–6:00 PM · Sat 10:00 AM–4:00 PM"],
 ];
 
 export default function ContactClient() {
@@ -53,123 +32,89 @@ export default function ContactClient() {
 
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      message: "",
-    },
+    defaultValues: { name: "", email: "", message: "" },
   });
 
   const onSubmit = async (data: ContactFormValues) => {
     setStatus("Sending...");
-
     const result = await submitContactForm(data);
     if (!result.success) {
       setStatus(result.error || "Error sending message.");
       return;
     }
-
     setStatus("Message sent successfully!");
     form.reset();
   };
 
   return (
-    <div className="tmp-contact-page min-h-screen">
-      <section className="brand-hero relative overflow-hidden py-16 sm:py-20 lg:py-24">
-        <div className="container relative z-10">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="flex items-center justify-center gap-4">
-              <span className="brand-gold-rule" aria-hidden="true" />
-              <span className="brand-kicker">Contact The Mind Point</span>
-              <span className="brand-gold-rule" aria-hidden="true" />
-            </div>
-            <h1 className="font-display text-foreground mt-6 text-5xl leading-[1.02] font-medium tracking-[-0.035em] sm:text-6xl lg:text-7xl">
-              Have a question? You can start
-              <span className="text-primary block italic">with a simple message.</span>
-            </h1>
-            <p className="text-muted-foreground mx-auto mt-6 max-w-2xl text-lg leading-8 sm:text-xl">
-              Ask about a program, enrollment, learning pathway, therapy option, or anything else you need help understanding before you decide.
-            </p>
-          </div>
+    <div className="ss-page tmp-contact-page">
+      <section className="ss-hero">
+        <div className="ss-wrap">
+          <p className="ss-kicker">contact · ask before you decide</p>
+          <h1 className="ss-heading-xl">A question is a perfectly good first step.</h1>
+          <p className="ss-lead ss-dropcap mt-7 max-w-3xl">
+            Ask about a programme, a batch, recordings, enrolment, therapy, or
+            where to begin. You do not need to know the exact words — tell us what
+            you are trying to understand and we will help you get oriented.
+          </p>
         </div>
       </section>
 
-      <section className="home-section-md">
-        <div className="container">
-          <div className="mx-auto grid max-w-6xl items-start gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:gap-12">
-            <div className="brand-section-dark relative overflow-hidden rounded-[2.2rem] p-8 sm:p-10">
-              <div className="relative z-10">
-                <Image
-                  src="/tmp-botanical-logo.svg"
-                  alt="The Mind Point"
-                  width={120}
-                  height={120}
-                  className="h-20 w-20 object-contain brightness-0 invert"
-                />
-                <span className="mt-8 block text-xs font-semibold tracking-[0.25em] text-[#9fd0cf] uppercase">
-                  We are here to help you get oriented
-                </span>
-                <h2 className="font-display mt-4 text-4xl leading-tight font-medium text-[#faf8f3] sm:text-5xl">
-                  Clear answers before you commit.
-                </h2>
-                <p className="mt-5 text-base leading-8 text-[#d1dfdc]">
-                  If you are unsure which program fits, what a batch includes, how recordings work, or where to begin, reach out. A question is a perfectly good first step.
-                </p>
-
-                <div className="mt-10 space-y-6">
-                  {CONTACT_INFO.map((item) => {
-                    const Icon = item.icon;
-                    return (
-                      <div key={item.title} className="flex items-start gap-4">
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#b9dedd]">
-                          <Icon className="h-4 w-4" />
-                        </span>
-                        <div>
-                          <p className="text-xs font-semibold tracking-[0.14em] text-[#9fd0cf] uppercase">
-                            {item.title}
-                          </p>
-                          {item.lines.map((line) => (
-                            <p key={line} className="mt-1 text-sm leading-6 text-[#f2eee6]">
-                              {line}
-                            </p>
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+      <section className="ss-section">
+        <div className="ss-wrap">
+          <div className="grid gap-14 lg:grid-cols-[0.72fr_1.28fr] lg:gap-20">
+            <aside>
+              <p className="ss-kicker">the practical bits</p>
+              <h2 className="ss-heading-md">How to reach us.</h2>
+              <div className="mt-8 border-t border-[#163f3d]/30">
+                {CONTACT_INFO.map(([label, value]) => (
+                  <div
+                    key={label}
+                    className="grid gap-2 border-b border-[#163f3d]/18 py-5 sm:grid-cols-[7rem_1fr]"
+                  >
+                    <span className="text-[0.7rem] font-semibold tracking-[0.08em] text-[#0f4d4d]/65 lowercase">
+                      {label}
+                    </span>
+                    <span className="text-sm leading-6 text-[#425956]">{value}</span>
+                  </div>
+                ))}
               </div>
-            </div>
+              <p className="mt-7 max-w-sm text-sm leading-7 text-[#65736f]">
+                If your question is about an existing registration, include the
+                email address you enrolled with so we can identify it quickly.
+              </p>
+            </aside>
 
-            <div className="brand-panel rounded-[2.2rem] p-7 sm:p-9 lg:p-10">
-              <div className="mb-8">
-                <span className="brand-kicker">Send a message</span>
-                <h2 className="font-display text-foreground mt-3 text-4xl font-medium">
-                  Tell us what you need help with.
-                </h2>
-                <p className="text-muted-foreground mt-3 max-w-xl leading-7">
-                  You do not need to phrase it perfectly. Just share the question, course, or concern you have in mind.
-                </p>
-              </div>
+            <div>
+              <p className="ss-kicker">send a message</p>
+              <h2 className="ss-heading-md">Tell us what you need help with.</h2>
+              <p className="mt-4 max-w-2xl text-base leading-7 text-[#65736f]">
+                Short is fine. Specific is fine. Unsure is also fine.
+              </p>
 
               <Form {...form}>
-                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <form
+                  onSubmit={form.handleSubmit(onSubmit)}
+                  className="mt-10 border-t border-[#163f3d]/30"
+                >
                   <FormField
                     control={form.control}
                     name="name"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-primary/75 text-xs font-semibold tracking-[0.12em] uppercase">
-                          Name
+                      <FormItem className="grid gap-3 border-b border-[#163f3d]/18 py-6 md:grid-cols-[9rem_1fr] md:items-start">
+                        <FormLabel className="pt-3 text-[0.7rem] font-semibold tracking-[0.08em] text-[#0f4d4d]/65 lowercase">
+                          your name
                         </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="Your name"
-                            className="h-12 rounded-2xl border-primary/10 bg-[#fffdf9] px-4"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
+                        <div>
+                          <FormControl>
+                            <Input
+                              placeholder="Your name"
+                              className="h-12 border-x-0 border-t-0 border-b border-[#163f3d]/30 bg-transparent px-0 focus-visible:ring-0"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -178,18 +123,20 @@ export default function ContactClient() {
                     control={form.control}
                     name="email"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-primary/75 text-xs font-semibold tracking-[0.12em] uppercase">
-                          Email
+                      <FormItem className="grid gap-3 border-b border-[#163f3d]/18 py-6 md:grid-cols-[9rem_1fr] md:items-start">
+                        <FormLabel className="pt-3 text-[0.7rem] font-semibold tracking-[0.08em] text-[#0f4d4d]/65 lowercase">
+                          email
                         </FormLabel>
-                        <FormControl>
-                          <Input
-                            placeholder="your.email@example.com"
-                            className="h-12 rounded-2xl border-primary/10 bg-[#fffdf9] px-4"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
+                        <div>
+                          <FormControl>
+                            <Input
+                              placeholder="your.email@example.com"
+                              className="h-12 border-x-0 border-t-0 border-b border-[#163f3d]/30 bg-transparent px-0 focus-visible:ring-0"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </div>
                       </FormItem>
                     )}
                   />
@@ -198,42 +145,43 @@ export default function ContactClient() {
                     control={form.control}
                     name="message"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-primary/75 text-xs font-semibold tracking-[0.12em] uppercase">
-                          Message
+                      <FormItem className="grid gap-3 border-b border-[#163f3d]/18 py-6 md:grid-cols-[9rem_1fr] md:items-start">
+                        <FormLabel className="pt-3 text-[0.7rem] font-semibold tracking-[0.08em] text-[#0f4d4d]/65 lowercase">
+                          message
                         </FormLabel>
-                        <FormControl>
-                          <Textarea
-                            placeholder="Tell us how we can help you..."
-                            className="min-h-[160px] rounded-2xl border-primary/10 bg-[#fffdf9] p-4"
-                            {...field}
-                          />
-                        </FormControl>
-                        <FormMessage />
+                        <div>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Tell us how we can help you..."
+                              className="min-h-[180px] resize-y border-x-0 border-t-0 border-b border-[#163f3d]/30 bg-transparent px-0 py-3 focus-visible:ring-0"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </div>
                       </FormItem>
                     )}
                   />
 
-                  <Button
-                    type="submit"
-                    size="lg"
-                    className="w-full rounded-full"
-                    disabled={status === "Sending..."}
-                  >
-                    {status === "Sending..." ? "Sending..." : "Send Message"}
-                  </Button>
-
-                  {status && (
-                    <p
-                      className={`text-center text-sm ${
-                        status.includes("successfully")
-                          ? "text-[#54776d]"
-                          : "text-red-600"
-                      }`}
+                  <div className="mt-7 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <Button
+                      type="submit"
+                      size="lg"
+                      className="min-w-44 bg-[#0f4d4d] text-[#faf8f3]"
+                      disabled={status === "Sending..."}
                     >
-                      {status}
-                    </p>
-                  )}
+                      {status === "Sending..." ? "Sending..." : "Send message"}
+                    </Button>
+                    {status && (
+                      <p
+                        className={`text-sm ${
+                          status.includes("successfully") ? "text-[#54776d]" : "text-red-700"
+                        }`}
+                      >
+                        {status}
+                      </p>
+                    )}
+                  </div>
                 </form>
               </Form>
             </div>
