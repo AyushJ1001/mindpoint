@@ -11,7 +11,26 @@ export default function Footer() {
         className="pointer-events-none absolute -top-32 -right-24 h-72 w-72 rounded-full border border-[#9fd0cf]/10"
         aria-hidden="true"
       />
-      <div className="container relative py-12 sm:py-16">
+      <div className="relative container py-16 sm:py-20">
+        <div className="mb-16 border-b border-white/10 pb-14">
+          <p className="text-[0.66rem] font-bold tracking-[0.26em] text-[#9fd0cf] uppercase">
+            Begin where you are
+          </p>
+          <div className="mt-5 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <p className="font-display max-w-4xl text-5xl leading-[0.9] font-medium tracking-[-0.045em] text-[#faf8f3] sm:text-6xl lg:text-7xl">
+              A kinder, brighter way to
+              <span className="block text-[#b9dedd] italic">
+                learn, grow and heal.
+              </span>
+            </p>
+            <Link
+              href="/courses"
+              className="inline-flex min-h-12 shrink-0 items-center justify-center rounded-full bg-[#faf8f3] px-7 text-xs font-bold tracking-[0.08em] text-[#0f4d4d] uppercase hover:bg-white"
+            >
+              Find your path&nbsp; →
+            </Link>
+          </div>
+        </div>
         <div className="grid grid-cols-1 gap-10 md:grid-cols-4 md:gap-12">
           <div className="md:col-span-2">
             <div className="flex items-center gap-4">
@@ -20,7 +39,7 @@ export default function Footer() {
                 Learn · Grow · Heal · Belong
               </span>
             </div>
-            <h3 className="font-display mt-5 text-4xl font-medium tracking-tight text-[#faf8f3]">
+            <h3 className="font-display mt-5 text-5xl font-medium tracking-tight text-[#faf8f3]">
               The Mind Point
             </h3>
             <p className="mt-4 max-w-xl leading-7 text-[#cfddda]">
@@ -74,11 +93,31 @@ export default function Footer() {
               Explore
             </h4>
             <ul className="space-y-3 text-[#d8e4e1]">
-              <li><Link href="/courses" className="hover:text-white">Programs</Link></li>
-              <li><Link href="/courses/therapy" className="hover:text-white">Personal Support</Link></li>
-              <li><Link href="/about" className="hover:text-white">About TMP</Link></li>
-              <li><Link href="/contact" className="hover:text-white">Contact</Link></li>
-              <li><Link href="/careers" className="hover:text-white">Careers</Link></li>
+              <li>
+                <Link href="/courses" className="hover:text-white">
+                  Programs
+                </Link>
+              </li>
+              <li>
+                <Link href="/courses/therapy" className="hover:text-white">
+                  Personal Support
+                </Link>
+              </li>
+              <li>
+                <Link href="/about" className="hover:text-white">
+                  About TMP
+                </Link>
+              </li>
+              <li>
+                <Link href="/contact" className="hover:text-white">
+                  Contact
+                </Link>
+              </li>
+              <li>
+                <Link href="/careers" className="hover:text-white">
+                  Careers
+                </Link>
+              </li>
             </ul>
           </div>
 
@@ -87,16 +126,29 @@ export default function Footer() {
               Policies
             </h4>
             <ul className="space-y-3 text-[#d8e4e1]">
-              <li><Link href="/toc" className="hover:text-white">Terms & Conditions</Link></li>
-              <li><Link href="/privacy" className="hover:text-white">Privacy Policy</Link></li>
-              <li><Link href="/refund" className="hover:text-white">Refund Policy</Link></li>
+              <li>
+                <Link href="/toc" className="hover:text-white">
+                  Terms & Conditions
+                </Link>
+              </li>
+              <li>
+                <Link href="/privacy" className="hover:text-white">
+                  Privacy Policy
+                </Link>
+              </li>
+              <li>
+                <Link href="/refund" className="hover:text-white">
+                  Refund Policy
+                </Link>
+              </li>
             </ul>
           </div>
         </div>
 
         <div className="mt-12 flex flex-col gap-3 border-t border-white/10 pt-7 text-sm text-[#afc8c4] sm:flex-row sm:items-center sm:justify-between">
           <p>
-            Copyright &copy; {new Date().getFullYear()} The Mind Point. All rights reserved.
+            Copyright &copy; {new Date().getFullYear()} The Mind Point. All
+            rights reserved.
           </p>
           <p>A kinder, brighter tomorrow.</p>
         </div>

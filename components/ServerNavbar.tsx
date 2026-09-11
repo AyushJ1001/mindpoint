@@ -8,6 +8,12 @@ export default function ServerNavbar() {
       data-app-navbar
       className="border-border bg-background/95 text-foreground sticky top-0 z-50 w-full border-b backdrop-blur-xl"
     >
+      <Link
+        href="/courses"
+        className="bg-primary text-primary-foreground flex min-h-8 items-center justify-center px-4 py-2 text-center text-[0.62rem] font-bold tracking-[0.18em] uppercase"
+      >
+        Psychology education, practice & support · Explore what is open&nbsp; →
+      </Link>
       <div className="container flex h-16 items-center">
         <Link
           href="/"
@@ -56,6 +62,13 @@ export default function ServerNavbar() {
               </Link>
             </nav>
           </div>
+
+          <Link
+            href="/courses"
+            className="bg-primary text-primary-foreground hidden min-h-10 items-center rounded-full px-5 text-[0.68rem] font-bold tracking-[0.08em] uppercase xl:inline-flex"
+          >
+            Find your path
+          </Link>
 
           <button className="border-border bg-card text-foreground ml-1 inline-flex h-9 w-9 items-center justify-center rounded-full border shadow-sm">
             <span className="sr-only">Shopping cart</span>

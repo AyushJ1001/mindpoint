@@ -1,65 +1,402 @@
+/* The public site uses the pacing of a modern psychology journal while
+   keeping The Mind Point's own coastal palette, typography, and imagery. */
+
 :root:not(.dark) {
-  --background: #fffdf9;
-  --card: #ffffff;
-  --secondary: #f2f8f6;
-  --muted: #f7f5ef;
-  --accent: #eaf4f2;
-  --border: #dde7e3;
+  --background: #fbfaf6;
+  --foreground: #123f3d;
+  --card: #fffdf8;
+  --card-foreground: #123f3d;
+  --popover: #fffdf8;
+  --popover-foreground: #123f3d;
+  --primary: #0f4d4d;
+  --primary-foreground: #fffdf8;
+  --secondary: #e7f1ee;
+  --secondary-foreground: #123f3d;
+  --muted: #f0ede4;
+  --muted-foreground: #5e706d;
+  --accent: #dcebea;
+  --accent-foreground: #123f3d;
+  --border: #cdd9d5;
+  --input: #f7f5ef;
+  --ring: #69a7a6;
 }
 
-body {
-  background: #fffdf9 !important;
+body[data-route-mode="site"],
+body:not([data-route-mode]) {
+  background-color: var(--background) !important;
   background-image: none !important;
 }
 
-body::before {
+body[data-route-mode="site"]::before,
+body:not([data-route-mode])::before {
   opacity: 0 !important;
   background: none !important;
 }
 
-main {
-  background: #fffdf9;
+body[data-route-mode="site"] main {
+  background: var(--background);
 }
 
-.brand-section-tint,
-.tmp-programs-page .brand-section-tint {
-  background: linear-gradient(180deg, #f4faf8 0%, #fffdf9 100%) !important;
+body[data-route-mode="site"] .container {
+  max-width: 82rem;
 }
 
-.brand-card,
-.brand-panel,
-.tmp-programs-page [data-slot="card"],
-.brand-section-tint [data-slot="card"] {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border-color: rgba(15, 77, 77, 0.1) !important;
-  box-shadow: 0 22px 55px -42px rgba(15, 77, 77, 0.42) !important;
+body[data-route-mode="site"] :where(h1, h2, h3) {
+  text-wrap: balance;
+}
+
+body[data-route-mode="site"] :where(button, a, input, textarea, select) {
+  outline-offset: 4px;
+}
+
+body[data-route-mode="site"] :where(button, a):focus-visible {
+  outline: 2px solid var(--ring);
+}
+
+body[data-route-mode="site"] [data-slot="button"] {
+  min-height: 2.75rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.045em;
 }
 
 .home-section-md,
 .section-padding {
-  background-color: transparent;
+  padding-block: clamp(4.5rem, 8vw, 7.5rem);
 }
 
-.tmp-coastal-hero {
-  background: #fffdf9;
+.brand-section-tint,
+.tmp-programs-page .brand-section-tint {
+  background:
+    linear-gradient(90deg, rgba(15, 77, 77, 0.045) 1px, transparent 1px),
+    linear-gradient(180deg, #edf5f2 0%, var(--background) 100%) !important;
+  background-size:
+    min(8vw, 7rem) 100%,
+    auto !important;
 }
 
-.tmp-coastal-hero::before {
-  content: "";
+.brand-panel,
+.brand-card,
+.tmp-programs-page [data-slot="card"],
+.brand-section-tint [data-slot="card"] {
+  border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent) !important;
+  background: color-mix(in srgb, var(--card) 95%, transparent) !important;
+  box-shadow: 0 24px 64px -52px
+    color-mix(in srgb, var(--primary) 72%, transparent) !important;
+}
+
+.brand-card,
+.tmp-programs-page [data-slot="card"],
+.brand-section-tint [data-slot="card"] {
+  border-radius: 1.15rem !important;
+}
+
+.brand-panel {
+  border-radius: 1.5rem !important;
+}
+
+.brand-card:hover,
+.tmp-programs-page [data-slot="card"]:hover,
+.brand-section-tint [data-slot="card"]:hover {
+  border-color: color-mix(in srgb, var(--primary) 34%, transparent) !important;
+  box-shadow: 0 30px 72px -50px
+    color-mix(in srgb, var(--primary) 82%, transparent) !important;
+}
+
+.brand-kicker,
+.calm-kbd,
+.calm-section-number,
+.calm-module-label,
+.calm-batch-status {
+  font-family: var(--font-sans), sans-serif !important;
+  font-size: 0.68rem !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.24em !important;
+  text-transform: uppercase;
+}
+
+.brand-gold-rule {
+  width: 3rem;
+  background: #b79755;
+}
+
+.tmp-programs-page {
+  background: var(--background);
+}
+
+.tmp-programs-page > section:first-child {
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid color-mix(in srgb, var(--primary) 12%, transparent);
+  background:
+    radial-gradient(
+      circle at 82% 20%,
+      rgba(142, 193, 195, 0.32),
+      transparent 24rem
+    ),
+    linear-gradient(
+      118deg,
+      var(--background),
+      color-mix(in srgb, var(--secondary) 74%, var(--background))
+    );
+}
+
+.tmp-programs-page > section:first-child::after {
+  content: "TMP / ACADEMY";
   position: absolute;
-  left: -12rem;
-  bottom: -14rem;
-  width: 30rem;
-  height: 30rem;
-  border-radius: 999px;
-  background: rgba(142, 193, 195, 0.08);
-  pointer-events: none;
-  z-index: 0;
+  right: clamp(1rem, 7vw, 7rem);
+  bottom: 1.25rem;
+  color: color-mix(in srgb, var(--primary) 24%, transparent);
+  font:
+    700 0.62rem/1 var(--font-sans),
+    sans-serif;
+  letter-spacing: 0.32em;
 }
 
-@media (max-width: 1023px) {
-  .tmp-coastal-hero > div > div:first-child {
-    padding-top: 4rem;
-    padding-bottom: 4rem;
+.tmp-programs-page .calm-catalog-hero-title {
+  max-width: 12ch;
+  font-family: var(--font-display), serif;
+  font-size: clamp(3.25rem, 8vw, 7.5rem);
+  font-weight: 500;
+  line-height: 0.88;
+  letter-spacing: -0.055em;
+}
+
+.tmp-programs-page .calm-catalog-hero-lead {
+  color: var(--muted-foreground);
+  font-size: clamp(1.05rem, 2vw, 1.25rem);
+  line-height: 1.7;
+}
+
+.tmp-programs-page [data-slot="card"] [class*="rounded-t-2xl"] {
+  border-radius: 0 !important;
+}
+
+.tmp-programs-page [data-slot="card-title"],
+.brand-section-tint [data-slot="card-title"] {
+  font-family: var(--font-display), serif;
+  font-size: 1.35rem !important;
+  font-weight: 600 !important;
+  line-height: 1.15 !important;
+}
+
+.tmp-programs-page [data-slot="card"] [data-slot="button"],
+.brand-section-tint [data-slot="card"] [data-slot="button"] {
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.tmp-course-detail-page .calm-page {
+  background:
+    radial-gradient(
+      circle at 92% 4%,
+      rgba(142, 193, 195, 0.22),
+      transparent 28rem
+    ),
+    linear-gradient(
+      165deg,
+      var(--background),
+      color-mix(in srgb, var(--secondary) 34%, var(--background))
+    ) !important;
+}
+
+.tmp-course-detail-page .calm-page::before {
+  opacity: 0.44 !important;
+  filter: hue-rotate(92deg) saturate(0.45);
+}
+
+.tmp-course-detail-page .calm-page::after {
+  opacity: 0.04 !important;
+}
+
+.tmp-course-detail-page h1.calm-hero-title {
+  font-size: clamp(3.1rem, 6vw, 6.4rem) !important;
+  font-weight: 500 !important;
+  line-height: 0.92 !important;
+  letter-spacing: -0.05em !important;
+}
+
+.tmp-course-detail-page .calm-hero-hook {
+  color: var(--primary) !important;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.25rem, 2vw, 1.7rem) !important;
+  font-style: italic;
+}
+
+.tmp-course-detail-page .calm-hero-lead,
+.tmp-course-detail-page .calm-body,
+.tmp-course-detail-page .calm-section-lead {
+  color: var(--muted-foreground) !important;
+}
+
+.tmp-course-detail-page .calm-hero-art,
+.tmp-course-detail-page .calm-card,
+.tmp-course-detail-page [data-slot="card"] {
+  border: 1px solid color-mix(in srgb, var(--primary) 15%, transparent) !important;
+  border-radius: 1.15rem !important;
+  background: color-mix(in srgb, var(--card) 94%, transparent) !important;
+  box-shadow: 0 26px 64px -50px
+    color-mix(in srgb, var(--primary) 72%, transparent) !important;
+}
+
+.tmp-course-detail-page .calm-module-card,
+.tmp-course-detail-page .calm-batch-chip,
+.tmp-course-detail-page .calm-meta-chip {
+  border-radius: 0.75rem !important;
+}
+
+.tmp-course-detail-page .calm-batch-chip[data-selected="true"] {
+  border-color: var(--primary) !important;
+  background: var(--primary) !important;
+  color: var(--primary-foreground) !important;
+}
+
+.tmp-course-detail-page .calm-title-ornament {
+  background: linear-gradient(90deg, #b79755, transparent) !important;
+}
+
+.tmp-contact-page,
+.tmp-careers-page,
+.tmp-cart-page,
+.tmp-about-page,
+body[data-route-mode="site"] [class*="min-h-screen"] {
+  background-color: var(--background);
+}
+
+.tmp-careers-page > .container,
+.tmp-cart-page > .container {
+  padding-block: clamp(3rem, 7vw, 6rem);
+}
+
+.tmp-careers-page h1,
+.tmp-cart-page h1,
+.tmp-contact-page h1,
+.tmp-about-page h1,
+.legal-page h1 {
+  font-family: var(--font-display), serif;
+  font-size: clamp(3.4rem, 7vw, 6.8rem) !important;
+  font-weight: 500 !important;
+  line-height: 0.92 !important;
+  letter-spacing: -0.05em !important;
+}
+
+.tmp-careers-page [class*="bg-card/50"],
+.tmp-cart-page [data-slot="card"] {
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent);
+  border-radius: 1.15rem !important;
+  background: var(--card) !important;
+  box-shadow: 0 26px 68px -54px
+    color-mix(in srgb, var(--primary) 72%, transparent);
+}
+
+.legal-page {
+  width: min(100% - 2rem, 66rem);
+  margin-inline: auto;
+  padding: clamp(3.5rem, 8vw, 7rem) clamp(1rem, 5vw, 4.5rem);
+  color: var(--foreground);
+}
+
+.legal-page > section {
+  padding: clamp(2rem, 5vw, 4.5rem);
+  border: 1px solid color-mix(in srgb, var(--primary) 13%, transparent);
+  border-radius: 1.25rem;
+  background: var(--card);
+}
+
+.legal-page h1 {
+  margin-bottom: clamp(2.5rem, 6vw, 5rem) !important;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--foreground) !important;
+}
+
+.legal-page h2 {
+  margin-top: 3rem;
+  color: var(--foreground) !important;
+  font-family: var(--font-display), serif;
+  font-size: clamp(1.75rem, 3vw, 2.45rem) !important;
+  font-weight: 600 !important;
+}
+
+.legal-page :where(p, li) {
+  color: var(--muted-foreground) !important;
+}
+
+.legal-page strong {
+  color: var(--foreground) !important;
+}
+
+.legal-page
+  :where([class*="bg-yellow-50"], [class*="bg-red-50"], [class*="bg-blue-50"]) {
+  border: 1px solid color-mix(in srgb, var(--primary) 14%, transparent) !important;
+  border-left: 4px solid #b79755 !important;
+  border-radius: 0.75rem;
+  background: var(--secondary) !important;
+}
+
+.dark body[data-route-mode="site"],
+.dark body:not([data-route-mode]) {
+  --background: #102f2e;
+  --foreground: #f7f3ea;
+  --card: #173f3d;
+  --card-foreground: #f7f3ea;
+  --popover: #173f3d;
+  --popover-foreground: #f7f3ea;
+  --primary: #9fd0cf;
+  --primary-foreground: #102f2e;
+  --secondary: #1d4947;
+  --secondary-foreground: #f7f3ea;
+  --muted: #1a4442;
+  --muted-foreground: #c4d2cf;
+  --accent: #245451;
+  --accent-foreground: #f7f3ea;
+  --border: #35615f;
+  --input: #1a4442;
+  --ring: #8ec1c3;
+}
+
+.dark .brand-hero,
+.dark .tmp-programs-page > section:first-child {
+  background:
+    radial-gradient(
+      circle at 82% 20%,
+      rgba(142, 193, 195, 0.14),
+      transparent 24rem
+    ),
+    linear-gradient(125deg, #102f2e, #173f3d) !important;
+}
+
+.dark .brand-section-tint,
+.dark .tmp-programs-page .brand-section-tint {
+  background: linear-gradient(180deg, #173f3d, #102f2e) !important;
+}
+
+.dark .brand-kicker {
+  color: #9fd0cf;
+}
+
+.dark .legal-page :where(h3, h4, h5, h6) {
+  color: var(--foreground) !important;
+}
+
+@media (max-width: 640px) {
+  .legal-page {
+    width: 100%;
+    padding-inline: 0.75rem;
+  }
+
+  .legal-page > section {
+    padding: 1.5rem;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  body[data-route-mode="site"] .brand-card,
+  body[data-route-mode="site"] [data-slot="card"] {
+    transition:
+      transform 260ms ease,
+      border-color 260ms ease,
+      box-shadow 260ms ease;
   }
 }

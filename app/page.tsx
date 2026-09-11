@@ -117,6 +117,29 @@ export default async function Home() {
     <div className="bg-[#fffdf9] text-[#173f3d]">
       <HeroSection canAccessAdmin={canAccessAdmin} />
 
+      <section
+        className="border-y border-[#0f4d4d]/12 bg-[#f0f6f3]"
+        aria-label="The Mind Point at a glance"
+      >
+        <div className="mx-auto grid max-w-7xl divide-y divide-[#0f4d4d]/12 px-6 sm:grid-cols-2 sm:divide-x sm:divide-y-0 sm:px-10 lg:grid-cols-4 lg:px-[7vw]">
+          {[
+            ["One ecosystem", "Education, practice and care"],
+            ["Built in India", "Designed for Indian learners"],
+            ["Human guidance", "Questions are welcome here"],
+            ["Flexible paths", "Start where you are"],
+          ].map(([title, detail]) => (
+            <div key={title} className="py-7 sm:px-6 lg:px-8">
+              <p className="font-display text-2xl font-semibold text-[#173f3d]">
+                {title}
+              </p>
+              <p className="mt-1 text-xs font-semibold tracking-[0.08em] text-[#627572] uppercase">
+                {detail}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* EDITORIAL INTRO — no conventional cards */}
       <section className="px-6 py-24 sm:px-10 lg:px-[7vw] lg:py-32">
         <div className="mx-auto max-w-7xl">

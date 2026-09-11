@@ -20,6 +20,9 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
       <div className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(251,250,246,0.96)_0%,rgba(251,250,246,0.9)_48%,rgba(251,250,246,0)_78%)] lg:bg-[linear-gradient(90deg,rgba(251,250,246,0.6)_0%,rgba(251,250,246,0.15)_42%,transparent_65%)]" />
       <div className="relative container flex min-h-[40rem] items-start pt-12 pb-52 sm:pt-16 lg:min-h-[35rem] lg:items-center lg:py-16">
         <div className="max-w-[34rem]">
+          <p className="mb-6 text-[0.66rem] font-bold tracking-[0.26em] text-[#0f4d4d]/65 uppercase">
+            Psychology · learning · practice · care
+          </p>
           <h1 className="font-display text-4xl leading-[1.04] font-semibold tracking-[-0.025em] text-[#173f3d] sm:text-5xl md:text-6xl lg:text-[4.4rem]">
             A Kinder,
             <br />
@@ -44,7 +47,8 @@ export default function HeroSection({ canAccessAdmin }: HeroSectionProps) {
               Discover TMP
             </Link>
           </div>
-          <p className="mt-9 text-xs font-semibold tracking-[0.2em] text-[#173f3d] uppercase">
+          <p className="mt-9 flex items-center gap-3 text-xs font-semibold tracking-[0.2em] text-[#173f3d] uppercase">
+            <span className="h-px w-8 bg-[#b79755]" aria-hidden="true" />
             Learn · Grow · Heal · Belong
           </p>
           {canAccessAdmin && (

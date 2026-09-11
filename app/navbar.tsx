@@ -161,12 +161,18 @@ export default function Navbar() {
   return (
     <nav
       data-app-navbar
-      className="bg-background/95 border-border text-foreground sticky top-0 z-50 border-b shadow-sm backdrop-blur-sm"
+      className="bg-background/95 border-border text-foreground sticky top-0 z-50 border-b backdrop-blur-xl"
       role="navigation"
       aria-label="Primary"
     >
+      <Link
+        href="/courses"
+        className="bg-primary text-primary-foreground flex min-h-8 items-center justify-center px-4 py-2 text-center text-[0.62rem] font-bold tracking-[0.18em] uppercase"
+      >
+        Psychology education, practice & support · Explore what is open&nbsp; →
+      </Link>
       <div className="container">
-        <div className="flex items-center justify-between py-2.5 sm:py-3">
+        <div className="flex min-h-18 items-center justify-between py-2.5">
           {/* Logo */}
           <Link
             href="/"
@@ -192,7 +198,7 @@ export default function Navbar() {
               <NavigationMenuList className="space-x-2">
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="transition-smooth hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent rounded-full border border-transparent bg-transparent px-4">
-                    Home
+                    Discover
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="w-[400px] p-4">
@@ -255,7 +261,7 @@ export default function Navbar() {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="transition-smooth hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent rounded-full border border-transparent bg-transparent px-4">
-                    TMP Academy
+                    Learn
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="w-[300px] p-4">
@@ -304,7 +310,7 @@ export default function Navbar() {
                 </NavigationMenuItem>
                 <NavigationMenuItem>
                   <NavigationMenuTrigger className="transition-smooth hover:border-border hover:bg-accent data-[state=open]:border-border data-[state=open]:bg-accent rounded-full border border-transparent bg-transparent px-4">
-                    Therapy & Career
+                    Practise & Support
                   </NavigationMenuTrigger>
                   <NavigationMenuContent>
                     <div className="w-[280px] p-4">
@@ -364,6 +370,12 @@ export default function Navbar() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-1 sm:gap-3">
+            <Link
+              href="/courses"
+              className="bg-primary text-primary-foreground hover:bg-foreground hidden min-h-10 items-center rounded-full px-5 text-[0.68rem] font-bold tracking-[0.08em] uppercase xl:inline-flex"
+            >
+              Find your path
+            </Link>
             <ModeToggle />
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
               <SheetTrigger asChild>
@@ -655,7 +667,7 @@ export default function Navbar() {
             <div className="space-y-4 py-3">
               <div className="space-y-2">
                 <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
-                  Home
+                  Discover
                 </h3>
                 {[
                   { href: "/about", label: "About Us" },
@@ -678,7 +690,7 @@ export default function Navbar() {
 
               <div className="space-y-2">
                 <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
-                  TMP Academy
+                  Learn
                 </h3>
                 {[
                   "/courses/certificate",
@@ -708,7 +720,7 @@ export default function Navbar() {
 
               <div className="space-y-2">
                 <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
-                  Therapy & Career
+                  Practise & Support
                 </h3>
                 {[
                   "/courses/therapy",

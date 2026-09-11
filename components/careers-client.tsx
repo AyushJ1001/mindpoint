@@ -191,7 +191,7 @@ export default function CareersClient() {
   };
 
   return (
-    <div className="from-background via-lavender-50 to-lavender-100 min-h-screen bg-gradient-to-br">
+    <div className="tmp-careers-page min-h-screen">
       <div className="container py-12">
         {/* Header Section */}
         <div className="mb-12 text-center">

@@ -813,7 +813,7 @@ export default function CourseTypePage({
   const content = courseTypeContent[type];
 
   return (
-    <div className="min-h-screen">
+    <div className="tmp-programs-page min-h-screen">
       <section className="section-padding">
         <div className="container mx-auto max-w-4xl">
           <ScrollReveal>
