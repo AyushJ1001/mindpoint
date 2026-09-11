@@ -3,6 +3,7 @@ import { JetBrains_Mono, Lora, Montserrat } from "next/font/google";
 import "./globals.css";
 import "./brand.css";
 import "./souled-reference.css";
+import "./editorial-overrides.css";
 import "react-phone-number-input/style.css";
 import ClientProviders from "@/components/ClientProviders";
 import Footer from "./footer";
