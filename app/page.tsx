@@ -9,6 +9,7 @@ import { hasAdminAccess } from "@/lib/admin-access";
 import { resolveAuthEmail } from "@/lib/clerk-email";
 import { isClerkServerConfigured } from "@/lib/clerk-env";
 import HeroSection from "@/components/landing/HeroSection";
+import LearningPortalPromo from "@/components/LearningPortalPromo";
 
 export const revalidate = 3600;
 
@@ -123,10 +124,10 @@ export default async function Home() {
       >
         <div className="mx-auto grid max-w-7xl divide-y divide-[#0f4d4d]/12 px-6 sm:grid-cols-2 sm:divide-x sm:divide-y-0 sm:px-10 lg:grid-cols-4 lg:px-[7vw]">
           {[
-            ["One ecosystem", "Education, practice and care"],
-            ["Built in India", "Designed for Indian learners"],
-            ["Human guidance", "Questions are welcome here"],
-            ["Flexible paths", "Start where you are"],
+            ["MSME registered", "Built responsibly in India"],
+            ["ISO 9001:2015", "Quality-led learning systems"],
+            ["IAOTH accredited", "Recognised training standards"],
+            ["One ecosystem", "Learning, practice and care"],
           ].map(([title, detail]) => (
             <div key={title} className="py-7 sm:px-6 lg:px-8">
               <p className="font-display text-2xl font-semibold text-[#173f3d]">
@@ -284,6 +285,8 @@ export default async function Home() {
           )}
         </div>
       </section>
+
+      <LearningPortalPromo />
 
       {/* PERSONAL SUPPORT SPLIT */}
       <section className="grid min-h-[42rem] lg:grid-cols-2">

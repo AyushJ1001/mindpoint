@@ -99,6 +99,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/learning-portal" className="hover:text-white">
+                  Learning Portal
+                </Link>
+              </li>
+              <li>
                 <Link href="/courses/therapy" className="hover:text-white">
                   Personal Support
                 </Link>

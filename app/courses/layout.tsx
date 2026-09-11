@@ -29,6 +29,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import LearningPortalPromo from "@/components/LearningPortalPromo";
 
 const courseTypes = [
   { name: "All Programs", href: "/courses", label: "All", icon: LayoutGrid },
@@ -94,7 +95,7 @@ function AppSidebar() {
   return (
     <Sidebar
       collapsible="icon"
-      className="border-primary/10 top-16 h-[calc(100svh-4rem)] border-r"
+      className="border-primary/10 top-[6.5rem] h-[calc(100svh-6.5rem)] border-r"
     >
       <SidebarContent className="bg-[#f8f5ee] dark:bg-[#123533]">
         <SidebarGroup className="px-2 py-4">
@@ -144,7 +145,7 @@ export default function CoursesLayout({
       <div className="tmp-program-shell flex min-h-screen w-full overflow-x-clip">
         <AppSidebar />
         <main className="min-w-0 flex-1">
-          <div className="border-primary/10 sticky top-16 z-30 border-b bg-[#faf8f3]/90 shadow-[0_12px_35px_-30px_rgba(15,77,77,0.55)] backdrop-blur-xl dark:bg-[#102f2e]/90">
+          <div className="border-primary/10 sticky top-[6.5rem] z-30 border-b bg-[#faf8f3]/90 shadow-[0_12px_35px_-30px_rgba(15,77,77,0.55)] backdrop-blur-xl dark:bg-[#102f2e]/90">
             <div className="flex min-h-16 items-center gap-3 px-3 py-2.5 sm:px-5">
               <SidebarTrigger className="text-primary border-primary/10 bg-background/70 rounded-full border hover:bg-[#deebe8]" />
               <Link href="/courses" className="flex min-w-0 items-center gap-3">
@@ -167,6 +168,7 @@ export default function CoursesLayout({
             </div>
           </div>
           <div className="px-3 pt-4 pb-20 sm:px-6 sm:pt-6">{children}</div>
+          <LearningPortalPromo compact />
         </main>
       </div>
     </SidebarProvider>

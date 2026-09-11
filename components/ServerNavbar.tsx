@@ -9,12 +9,13 @@ export default function ServerNavbar() {
       className="border-border bg-background/95 text-foreground sticky top-0 z-50 w-full border-b backdrop-blur-xl"
     >
       <Link
-        href="/courses"
+        href="/learning-portal"
         className="bg-primary text-primary-foreground flex min-h-8 items-center justify-center px-4 py-2 text-center text-[0.62rem] font-bold tracking-[0.18em] uppercase"
       >
-        Psychology education, practice & support · Explore what is open&nbsp; →
+        The TMP Learning Portal · Courses, resources and progress in one
+        place&nbsp; →
       </Link>
-      <div className="container flex h-16 items-center">
+      <div className="container flex min-h-18 items-center py-2.5">
         <Link
           href="/"
           className="mr-6 flex min-w-0 items-center"
@@ -41,6 +42,12 @@ export default function ServerNavbar() {
                 className="text-muted-foreground hover:text-foreground transition-colors"
               >
                 Programs
+              </Link>
+              <Link
+                href="/learning-portal"
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Learning Portal
               </Link>
               <Link
                 href="/about"

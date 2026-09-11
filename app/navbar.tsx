@@ -166,10 +166,11 @@ export default function Navbar() {
       aria-label="Primary"
     >
       <Link
-        href="/courses"
+        href="/learning-portal"
         className="bg-primary text-primary-foreground flex min-h-8 items-center justify-center px-4 py-2 text-center text-[0.62rem] font-bold tracking-[0.18em] uppercase"
       >
-        Psychology education, practice & support · Explore what is open&nbsp; →
+        The TMP Learning Portal · Courses, resources and progress in one
+        place&nbsp; →
       </Link>
       <div className="container">
         <div className="flex min-h-18 items-center justify-between py-2.5">
@@ -266,6 +267,27 @@ export default function Navbar() {
                   <NavigationMenuContent>
                     <div className="w-[300px] p-4">
                       <div className="grid gap-2">
+                        <NavigationMenuLink asChild>
+                          <Link
+                            href="/learning-portal"
+                            className={`bg-primary/7 hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground mb-1 block rounded-md p-3 leading-none no-underline transition-colors outline-none select-none ${
+                              isActive("/learning-portal") ? "bg-accent" : ""
+                            }`}
+                            aria-current={
+                              isActive("/learning-portal") ? "page" : undefined
+                            }
+                          >
+                            <div className="flex items-center justify-between gap-3 text-sm font-semibold">
+                              TMP Learning Portal
+                              <span className="text-primary text-[0.58rem] tracking-[0.12em] uppercase">
+                                Portal
+                              </span>
+                            </div>
+                            <p className="text-muted-foreground mt-1.5 text-xs leading-snug">
+                              A dedicated home for the full learning journey.
+                            </p>
+                          </Link>
+                        </NavigationMenuLink>
                         {[
                           {
                             name: "Certificate Courses",
@@ -693,6 +715,7 @@ export default function Navbar() {
                   Learn
                 </h3>
                 {[
+                  "/learning-portal",
                   "/courses/certificate",
                   "/courses/internship",
                   "/courses/diploma",
