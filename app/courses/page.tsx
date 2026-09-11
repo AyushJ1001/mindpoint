@@ -44,8 +44,6 @@ const coursesStructuredData = {
       item: {
         "@type": "Course",
         name: "Certificate Courses",
-        description:
-          "Professional certification programs in psychology and mental health",
         url: "https://themindpoint.org/courses/certificate",
         provider: { "@type": "Organization", name: "The Mind Point" },
       },
@@ -56,8 +54,6 @@ const coursesStructuredData = {
       item: {
         "@type": "Course",
         name: "Diploma Programs",
-        description:
-          "Comprehensive diploma courses for in-depth knowledge and expertise",
         url: "https://themindpoint.org/courses/diploma",
         provider: { "@type": "Organization", name: "The Mind Point" },
       },
@@ -68,8 +64,6 @@ const coursesStructuredData = {
       item: {
         "@type": "Course",
         name: "Therapy Sessions",
-        description:
-          "Professional therapy and counseling services for mental wellness",
         url: "https://themindpoint.org/courses/therapy",
         provider: { "@type": "Organization", name: "The Mind Point" },
       },
@@ -80,21 +74,7 @@ const coursesStructuredData = {
       item: {
         "@type": "Course",
         name: "Internship Programs",
-        description:
-          "Hands-on experience through structured internship opportunities",
         url: "https://themindpoint.org/courses/internship",
-        provider: { "@type": "Organization", name: "The Mind Point" },
-      },
-    },
-    {
-      "@type": "ListItem",
-      position: 5,
-      item: {
-        "@type": "Course",
-        name: "Masterclasses",
-        description:
-          "Focused learning experiences across psychology and mental health topics",
-        url: "https://themindpoint.org/courses/masterclass",
         provider: { "@type": "Organization", name: "The Mind Point" },
       },
     },
@@ -103,13 +83,7 @@ const coursesStructuredData = {
 
 async function getAllCourses() {
   try {
-    if (!process.env.NEXT_PUBLIC_CONVEX_URL) {
-      console.warn(
-        "NEXT_PUBLIC_CONVEX_URL not available, returning empty courses array",
-      );
-      return [];
-    }
-
+    if (!process.env.NEXT_PUBLIC_CONVEX_URL) return [];
     const convex = new ConvexHttpClient(process.env.NEXT_PUBLIC_CONVEX_URL);
     const courses = await convex.query(api.courses.listCourses, {});
     return courses || [];
@@ -123,35 +97,36 @@ export default async function CoursesPage() {
   const courses = await getAllCourses();
 
   return (
-    <div className="tmp-programs-page">
+    <div className="tmp-programs-page ss-page">
       <Script
         id="courses-structured-data"
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(coursesStructuredData),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(coursesStructuredData) }}
       />
       <CoursesHero />
-      <section className="brand-section-tint border-t border-primary/5 py-14 sm:py-18 lg:py-20">
-        <div className="container">
-          <div className="mx-auto mb-10 max-w-3xl text-center">
-            <span className="brand-kicker">Browse all programs</span>
-            <h2 className="font-display text-foreground mt-4 text-4xl font-medium sm:text-5xl">
-              Compare the details. Choose at your pace.
-            </h2>
-            <p className="text-muted-foreground mx-auto mt-4 max-w-2xl text-lg leading-8">
-              Dates, formats, pricing, and enrolment options remain clear and practical — with the new TMP visual language around them.
+
+      <section className="ss-section">
+        <div className="ss-wrap">
+          <p className="ss-kicker">the full catalogue</p>
+          <div className="grid gap-6 lg:grid-cols-[0.75fr_1.25fr] lg:items-end lg:gap-16">
+            <h2 className="ss-heading-lg">Every programme, in one place.</h2>
+            <p className="ss-lead">
+              Compare dates, formats, prices and enrolment options without losing
+              the bigger picture. Choose the programme that fits your stage now.
             </p>
           </div>
-          <Suspense
-            fallback={
-              <div className="py-16 text-center text-muted-foreground">
-                Loading programs...
-              </div>
-            }
-          >
-            <CoursesClient coursesData={courses} />
-          </Suspense>
+
+          <div className="mt-12 border-t border-[#163f3d]/20 pt-10">
+            <Suspense
+              fallback={
+                <div className="py-16 text-center text-[#65736f]">
+                  Loading programmes…
+                </div>
+              }
+            >
+              <CoursesClient coursesData={courses} />
+            </Suspense>
+          </div>
         </div>
       </section>
     </div>
