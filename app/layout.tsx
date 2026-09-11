@@ -1,19 +1,18 @@
 import type { Metadata } from "next";
-import { Cormorant_Garamond, JetBrains_Mono, Manrope } from "next/font/google";
+import { JetBrains_Mono, Lora, Montserrat } from "next/font/google";
 import "./globals.css";
 import "./brand.css";
-import "./brand-refresh.css";
-import "./first-step-hero.css";
+import "./souled-reference.css";
 import "react-phone-number-input/style.css";
 import ClientProviders from "@/components/ClientProviders";
 import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 
-const manrope = Manrope({
+const montserrat = Montserrat({
   variable: "--font-manrope",
   subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: ["400", "500", "600", "700"],
 });
 
 const jetbrainsMono = JetBrains_Mono({
@@ -21,7 +20,7 @@ const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
 });
 
-const cormorant = Cormorant_Garamond({
+const lora = Lora({
   variable: "--font-syne",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
@@ -82,7 +81,7 @@ export default function RootLayout({
         <Analytics />
       </head>
       <body
-        className={`${manrope.variable} ${jetbrainsMono.variable} ${cormorant.variable} flex min-h-screen flex-col antialiased`}
+        className={`${montserrat.variable} ${jetbrainsMono.variable} ${lora.variable} flex min-h-screen flex-col antialiased`}
       >
         <a href="#main-content" className="skip-link">
           Skip to main content
