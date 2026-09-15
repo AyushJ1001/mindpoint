@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { sendEmailWithCopy } from "./_shared/emailDelivery";
+import { sendEmail } from "./_shared/emailDelivery";
 import {
   emailActionResultValidator,
   emailActionSuccess,
@@ -53,7 +53,7 @@ export const sendTestEmail = internalAction({
     try {
       console.log("Attempting to send test email to:", args.userEmail);
 
-      const result = await sendEmailWithCopy({
+      const result = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Test Email from The Mind Point",
@@ -136,7 +136,7 @@ export const sendSimpleTestEmail = internalAction({
     try {
       console.log("Sending simple test email to:", args.to);
       const html = args.body ?? "hi";
-      const result = await sendEmailWithCopy({
+      const result = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.to,
         subject: "Simple Test Email",
@@ -170,7 +170,7 @@ export const sendMindPointsReminderEmail = internalAction({
     try {
       const accountUrl = `${getSiteUrl()}/account?tab=points`;
 
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Your Mind Points are waiting to be redeemed",
@@ -243,7 +243,7 @@ export const sendTestEmailWithAttachment = internalAction({
         ),
       };
 
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Test Email with Attachment",
@@ -335,7 +335,7 @@ export const sendCertificateEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Certificate Course Enrollment Confirmation",
@@ -433,7 +433,7 @@ export const sendInternshipEnrollmentConfirmation = internalAction({
         : "1-month internship cohort";
 
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Internship Program Enrollment Confirmation",
@@ -528,7 +528,7 @@ export const sendDiplomaEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Diploma Course Enrollment Confirmation",
@@ -615,7 +615,7 @@ export const sendPreRecordedEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Pre-Recorded Course Enrollment Confirmation",
@@ -694,7 +694,7 @@ export const sendMasterclassEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Masterclass Enrollment Confirmation",
@@ -785,7 +785,7 @@ export const sendEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Enrollment Confirmation",
@@ -882,7 +882,7 @@ export const sendCartCheckoutConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Enrollment Confirmation",
@@ -1024,7 +1024,7 @@ export const sendTherapyEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Therapy Session Enrollment Confirmation",
@@ -1175,7 +1175,7 @@ export const sendSupervisedTherapyWelcomeEmail = internalAction({
       );
 
       // Send email with attachments
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: `Supervised Therapy Sessions & Training - ${args.sessionType.charAt(0).toUpperCase() + args.sessionType.slice(1)} Session - Payment Confirmation`,
@@ -1332,7 +1332,7 @@ export const sendWorksheetPurchaseConfirmation = internalAction({
         .join("");
 
       // Send email with attachments
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Worksheet Purchase Confirmation",
@@ -1423,7 +1423,7 @@ export const sendAlreadyEnrolledNotification = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Course Enrollment Status - Already Enrolled",

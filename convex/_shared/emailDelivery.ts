@@ -50,7 +50,7 @@ function createResendClient(): EmailDeliveryFailure | Resend {
   return new Resend(resendApiKey);
 }
 
-export async function sendEmailWithCopy(
+export async function sendEmail(
   emailConfig: EmailDeliveryConfig,
 ): Promise<EmailDeliveryResult> {
   const resend = createResendClient();
@@ -61,17 +61,16 @@ export async function sendEmailWithCopy(
   const mainRecipients = Array.isArray(emailConfig.to)
     ? emailConfig.to
     : [emailConfig.to];
-  const allRecipients = [...mainRecipients, "contact.themindpoint@gmail.com"];
 
   try {
     const result = await resend.emails.send({
       ...emailConfig,
-      to: allRecipients,
+      to: mainRecipients,
     });
 
     if (result.error) {
       return emailDeliveryFailure(result.error.message, {
-        recipientCount: allRecipients.length,
+        recipientCount: mainRecipients.length,
         subject: emailConfig.subject,
       });
     }
@@ -81,7 +80,7 @@ export async function sendEmailWithCopy(
     return emailDeliveryFailure(
       error instanceof Error ? error.message : String(error),
       {
-        recipientCount: allRecipients.length,
+        recipientCount: mainRecipients.length,
         subject: emailConfig.subject,
       },
     );
