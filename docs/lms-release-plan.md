@@ -1,6 +1,6 @@
 # Mind Point LMS implementation and release plan
 
-Status: implementation draft. Product decisions and prototypes are complete. Counsel-dependent wording, deadlines, retention periods, provider restrictions, and legal classifications remain blocked by the approved Counsel implementation summary.
+Status: approved implementation handoff. Product decisions, release boundaries, delivery stages, and acceptance rules are complete. Formal legal approval is outside this plan; Mind Point owns the internal policies and assumptions used for implementation and launch.
 
 ## Delivery objective
 
@@ -81,7 +81,7 @@ Complete these changes before exposing LMS functions to Students:
 - inventory every Course, active batch, Enrollment, legacy promise, public claim, Certificate, file, embed, recording, and provider;
 - name privacy, security, accessibility, content-rights, support, migration, and release owners;
 - establish incident, grievance, privacy-request, takedown, and accessibility contacts;
-- obtain the approved Counsel implementation summary before final policy copy or production launch.
+- approve a versioned internal policy baseline for privacy, retention, providers, accessibility, content rights, claims, recordings, migration, and transfers before production launch.
 
 Exit evidence:
 
@@ -198,7 +198,7 @@ Choose one low-complexity academic Course with a small active cohort, identified
 
 Pilot entry gates:
 
-- Counsel implementation summary approved and applied;
+- the versioned internal policy baseline is approved by the named Mind Point owners and applied;
 - Course and Curriculum publication readiness complete;
 - all pilot Enrollments reconciled and previewed;
 - Faculty and support staff trained on Questions, grading, accommodations, Waivers, completion, Certificates, complaints, and incident escalation;
@@ -245,10 +245,10 @@ Retire a legacy Course flow only when:
 | --------------------------- | --------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | Identity and authorization  | Identity links, claims, Roles, Faculty assignments, scoped permissions, sensitive access                  | Stage 0 inventory and approved auth provider                          |
 | Curriculum and publication  | Versions, Modules, activities, release, readiness, manifests, activation                                  | Identity and authorization; Rights and accessibility rules            |
-| Resources and accessibility | Rights records, delivery modes, expiry, alternatives, media metadata, barrier and Accommodation workflows | Counsel rules; provider register                                      |
+| Resources and accessibility | Rights records, delivery modes, expiry, alternatives, media metadata, barrier and Accommodation workflows | Internal policy baseline; provider register                           |
 | Assessments                 | Quiz attempts, Assignment versions, grading, claims, release, corrections, reviews                        | Curriculum activity model; Notifications                              |
-| Discussion and Feedback     | Questions, Official answers, moderation, support periods, Feedback anonymity and reporting                | Identity, Roles, counsel classification and timelines                 |
-| Completion and Certificates | Requirements, evidence, Waivers, approvals, completion lifecycle, issuance and verification               | All required activity evidence; counsel-approved claims and retention |
+| Discussion and Feedback     | Questions, Official answers, moderation, support periods, Feedback anonymity and reporting                | Identity, Roles, approved internal moderation rules and timelines     |
+| Completion and Certificates | Requirements, evidence, Waivers, approvals, completion lifecycle, issuance and verification               | All required activity evidence; approved claims and retention rules   |
 | Notifications               | In-app records, email delivery, preferences, suppression, announcements, failure handling                 | Consent and purpose rules; provider approval                          |
 | Migration and operations    | Inventories, backfills, reconciliation, Activation cohorts, rollback, support and monitoring              | All authoritative models and launch gates                             |
 
@@ -256,11 +256,11 @@ Each workstream must expose its authoritative state through bounded, indexed que
 
 ## Launch acceptance gates
 
-### Counsel and policy
+### Policy and governance
 
-- all 52 counsel ruling IDs have an approved public implementation summary;
-- current Terms, privacy, refunds, consent, grievance, accessibility, resource, recording, transfer, Certificate, and claims copy match the approved rules;
-- an unresolved blocking ruling disables the affected function;
+- named Mind Point owners approve a versioned internal policy baseline for every launch-sensitive area;
+- current Terms, privacy, refunds, consent, grievance, accessibility, resource, recording, transfer, Certificate, and claims copy match that baseline;
+- an unresolved policy value or missing owner disables the affected function;
 - every policy has an owner, effective version, review trigger, and prior-version archive.
 
 ### Privacy and security
@@ -335,31 +335,31 @@ The minimum end-to-end journeys are:
 - Keep high-churn draft or presence data separate from stable records.
 - Make every external side effect idempotent and record its delivery result.
 - Keep generated files, signed URLs, private feedback, accommodations, moderation evidence, and legal material out of analytics.
-- Store configuration values such as response targets and retention periods with an effective version. Do not bury counsel-dependent periods in UI code.
+- Store configuration values such as response targets and retention periods with an effective version. Do not bury policy periods in UI code.
 - Treat prototypes as primary design evidence. Rebuild selected variants with production state, validation, authorization, tests, and error recovery.
 
-## Counsel reconciliation still required
+## Internal policy baseline
 
-The roadmap may guide engineering before counsel responds, but these items cannot reach production until the relevant ruling is approved:
+Formal counsel validation is outside this product-planning effort. Before production launch, named Mind Point owners must approve the following versioned internal rules. These are product risk controls and must not be presented as legal approval.
 
-| Blocked area                                                                      | Counsel ruling groups | Temporary engineering rule                                                            |
-| --------------------------------------------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------- |
-| Q&A classification, grievance, removal, appeals, preservation, and disclosure     | INT                   | Build configurable records and keep Student launch disabled                           |
-| Lawful basis, notices, consent, rights, minors, sensitive data, and breach timing | PRI                   | Build purpose-specific structures; publish no final wording                           |
-| Every retention minimum and disposal trigger                                      | RET                   | Keep periods configurable; do not run destructive disposal from assumptions           |
-| Provider terms, regions, subprocessors, and cross-border access                   | PRO                   | Use a provider register; approve each production provider before use                  |
-| Binding accessibility duties and accommodation wording                            | ACC                   | Keep WCAG 2.2 AA as the product acceptance target; do not claim legal conformance     |
-| Course, accreditation, professional-outcome, and Certificate statements           | CLM                   | Remove or hold unsubstantiated claims                                                 |
-| Statutory exceptions, licences, takedown, and Faculty content terms               | RGT                   | Prefer lawful links; do not publish protected hosted material without approved rights |
-| Recording participation, consent, reuse, retention, and private routes            | REC                   | Keep recording functions disabled                                                     |
-| Existing promises and migration remedies                                          | MIG                   | Do not activate affected legacy Enrollments until reconciled                          |
-| Transfer terms, agreement, money, proof, and remedies                             | TRN                   | Do not replace settled product review with current forfeiture terms                   |
+| Area                                                                    | Internal acceptance rule                                                                                      |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Q&A, grievances, removal, appeals, preservation, and disclosure         | Configure the workflow and timelines; keep Student launch disabled until an owner approves them               |
+| Privacy, notices, consent, rights, sensitive data, and incident timing  | Use purpose-specific structures and approved wording; keep marketing separate from required Course messages  |
+| Retention and disposal                                                  | Define a start event, minimum where needed, maximum or disposal trigger, and Legal-hold behavior per record    |
+| Providers, regions, subprocessors, and cross-border access              | Maintain a Provider register and approve each production provider and data path before use                    |
+| Accessibility and Accommodation wording                                | Treat WCAG 2.2 AA as the product target and do not claim formal legal conformance                             |
+| Course, accreditation, professional-outcome, and Certificate statements | Remove or hold every unsubstantiated claim                                                                    |
+| Licences, takedown, and Faculty content terms                           | Prefer lawful links and do not publish protected hosted material without an approved Rights record            |
+| Recording participation, reuse, retention, and private routes          | Keep recording functions disabled until the internal recording policy and accessible alternative are approved |
+| Existing promises and migration remedies                               | Do not activate affected legacy Enrollments until each entitlement is reconciled                              |
+| Transfer terms, agreement, money, proof, and remedies                   | Use the settled reviewed-transfer model rather than the current forfeiture terms                              |
 
 ## Final completion criteria
 
 This implementation-plan ticket can close when:
 
-- counsel-dependent rules have an approved implementation summary and are reconciled into this plan;
+- the decision to use approved internal product policies without formal counsel validation is reconciled throughout this plan;
 - the MVP, later releases, exclusions, sequencing, owners, acceptance gates, migration, rollback, and test matrix remain internally consistent after that reconciliation;
 - each Stage 0 through Stage 6 deliverable can become a bounded engineering epic with named dependencies and acceptance evidence;
 - no unresolved product decision remains hidden inside an implementation ticket.
