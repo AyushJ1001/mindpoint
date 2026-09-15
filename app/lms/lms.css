@@ -687,6 +687,105 @@ body:has(.lms-preview-page) > footer {
 .lms-live-bank .lms-live-primary {
   width: 100%;
 }
+.lms-live-certificate-panel > svg {
+  width: 28px;
+  height: 28px;
+  margin-bottom: 12px;
+  color: var(--lms-flow);
+}
+.lms-live-certificate-panel code {
+  display: block;
+  margin-top: 12px;
+  color: var(--lms-flow-strong);
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.7rem;
+  overflow-wrap: anywhere;
+}
+.lms-live-certificate-panel form label {
+  margin-top: 18px;
+}
+.lms-live-certificate-panel form input {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 11px;
+  border: 1px solid var(--lms-line);
+  border-radius: 12px;
+  color: var(--lms-ink);
+  background: #fffdf8;
+}
+.lms-live-consent {
+  display: grid !important;
+  grid-template-columns: 18px 1fr;
+  gap: 9px;
+  align-items: start;
+  color: var(--lms-muted);
+  font-size: 0.72rem !important;
+  line-height: 1.5;
+}
+.lms-live-consent input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: var(--lms-flow);
+}
+.lms-live-verify-link {
+  display: inline-flex;
+  gap: 7px;
+  align-items: center;
+  margin-top: 16px;
+  color: var(--lms-flow-strong);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.lms-live-verify-link svg {
+  width: 16px;
+}
+.lms-certificate-print {
+  display: none;
+}
+
+@media print {
+  body > * {
+    visibility: hidden;
+  }
+  .lms-certificate-print,
+  .lms-certificate-print * {
+    visibility: visible;
+  }
+  .lms-certificate-print {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    place-content: center;
+    padding: 12mm;
+    border: 12px double #07575b;
+    color: #123536;
+    background: #fffdf8;
+    text-align: center;
+  }
+  .lms-certificate-print img {
+    width: 190px;
+    margin: 0 auto 20px;
+  }
+  .lms-certificate-print p {
+    margin: 10px 0;
+    color: #466566;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+  .lms-certificate-print h1 {
+    font-size: 36pt;
+  }
+  .lms-certificate-print h2 {
+    font-size: 24pt;
+  }
+  .lms-certificate-print footer {
+    margin-top: 36px;
+    color: #466566;
+    font-family: monospace;
+    font-size: 9pt;
+  }
+}
 
 .lms-live-gateway,
 .lms-live-empty,

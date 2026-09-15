@@ -18,6 +18,10 @@ import {
 import { maybeCreateCompletionRequest } from "./lmsCompletion";
 import { scoreLmsQuiz } from "./_shared/lmsQuiz";
 import {
+  normalizeCertificateName,
+  normalizeVerificationCode,
+} from "./_shared/lmsCertificate";
+import {
   anonymousFeedbackDelayMs,
   summarizeLmsFeedback,
   validateAnonymousMinimumGroupSize,
@@ -878,6 +882,17 @@ export const getMyWorkspace = query({
         };
       }),
     );
+    const completionRequest = await ctx.db
+      .query("lmsCompletionRequests")
+      .withIndex("by_enrollmentId_and_curriculumId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("curriculumId", curriculum._id),
+      )
+      .unique();
+    const certificate = completionRequest?.certificateId
+      ? await ctx.db.get("lmsCertificates", completionRequest.certificateId)
+      : null;
 
     return {
       enrollment: {
@@ -912,6 +927,137 @@ export const getMyWorkspace = query({
         completedAt: item.completedAt,
         updatedAt: item.updatedAt,
       })),
+      completion: completionRequest
+        ? {
+            requestId: completionRequest._id,
+            status: completionRequest.status,
+            confirmedRecipientName: completionRequest.confirmedRecipientName,
+            correctionReason: completionRequest.correctionReason,
+            certificate: certificate
+              ? {
+                  verificationCode: certificate.verificationCode,
+                  recipientName: certificate.recipientName,
+                  courseName: certificate.courseName,
+                  status: certificate.status,
+                  issuedAt: certificate.issuedAt,
+                  publicVerificationEnabled:
+                    certificate.publicVerificationEnabled ?? false,
+                }
+              : undefined,
+          }
+        : undefined,
+    };
+  },
+});
+
+export const confirmCertificateName = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    recipientName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { curriculum, identity } = await requireEnrollmentCurriculum(
+      ctx,
+      args.enrollmentId,
+    );
+    const request = await ctx.db
+      .query("lmsCompletionRequests")
+      .withIndex("by_enrollmentId_and_curriculumId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("curriculumId", curriculum._id),
+      )
+      .unique();
+    if (!request) {
+      throw new Error(
+        "Complete every required activity before confirming your name",
+      );
+    }
+    if (request.status === "approved" || request.status === "revoked") {
+      throw new Error("This Certificate name can no longer be changed here");
+    }
+    const recipientName = normalizeCertificateName(args.recipientName);
+    const now = Date.now();
+    await ctx.db.patch("lmsCompletionRequests", request._id, {
+      confirmedRecipientName: recipientName,
+      nameConfirmedAt: now,
+      status: "pending",
+      correctionReason: undefined,
+    });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.certificate_name.confirmed",
+      entityType: "lmsCompletionRequest",
+      entityId: request._id,
+      before: {
+        status: request.status,
+        confirmedRecipientName: request.confirmedRecipientName,
+      },
+      after: { status: "pending", confirmedRecipientName: recipientName },
+      createdAt: now,
+    });
+    return { status: "pending" as const, recipientName };
+  },
+});
+
+export const setCertificateVerificationConsent = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const { identity } = await requireOwnedEnrollment(ctx, args.enrollmentId);
+    const certificates = await ctx.db
+      .query("lmsCertificates")
+      .withIndex("by_enrollmentId", (q) =>
+        q.eq("enrollmentId", args.enrollmentId),
+      )
+      .order("desc")
+      .take(20);
+    const certificate = certificates.find((item) => item.status === "issued");
+    if (!certificate) throw new Error("An issued Certificate was not found");
+    await ctx.db.patch("lmsCertificates", certificate._id, {
+      publicVerificationEnabled: args.enabled,
+    });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.certificate_verification_consent.updated",
+      entityType: "lmsCertificate",
+      entityId: certificate._id,
+      after: { publicVerificationEnabled: args.enabled },
+      createdAt: Date.now(),
+    });
+    return { enabled: args.enabled };
+  },
+});
+
+export const verifyCertificate = query({
+  args: { verificationCode: v.string() },
+  handler: async (ctx, args) => {
+    let verificationCode: string;
+    try {
+      verificationCode = normalizeVerificationCode(args.verificationCode);
+    } catch {
+      return null;
+    }
+    const certificate = await ctx.db
+      .query("lmsCertificates")
+      .withIndex("by_verificationCode", (q) =>
+        q.eq("verificationCode", verificationCode),
+      )
+      .unique();
+    if (!certificate) return null;
+    return {
+      verificationCode: certificate.verificationCode,
+      courseName: certificate.courseName,
+      recipientName: certificate.publicVerificationEnabled
+        ? certificate.recipientName
+        : undefined,
+      identityVisible: certificate.publicVerificationEnabled ?? false,
+      status: certificate.status,
+      issuedAt: certificate.issuedAt,
     };
   },
 });

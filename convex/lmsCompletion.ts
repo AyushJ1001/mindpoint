@@ -46,7 +46,7 @@ export async function maybeCreateCompletionRequest(
     curriculumId: assignment.curriculumId,
     courseId: enrollment.courseId,
     batchId: enrollment.batchId,
-    status: "pending",
+    status: "awaiting_name",
     requestedAt: Date.now(),
   });
 }

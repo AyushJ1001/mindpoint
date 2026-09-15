@@ -108,6 +108,26 @@ export type StudentLmsWorkspace = {
     completedAt?: number;
     updatedAt: number;
   }>;
+  completion?: {
+    requestId: Id<"lmsCompletionRequests">;
+    status:
+      | "awaiting_name"
+      | "pending"
+      | "approved"
+      | "correction_required"
+      | "under_review"
+      | "revoked";
+    confirmedRecipientName?: string;
+    correctionReason?: string;
+    certificate?: {
+      verificationCode: string;
+      recipientName: string;
+      courseName: string;
+      status: "issued" | "suspended" | "revoked";
+      issuedAt: number;
+      publicVerificationEnabled: boolean;
+    };
+  };
 };
 
 export const studentLmsApi = {
@@ -180,6 +200,33 @@ export const studentLmsApi = {
     },
     { questionId: Id<"lmsQuestions"> }
   >("lms:askQuestion"),
+  confirmCertificateName: makeFunctionReference<
+    "mutation",
+    { enrollmentId: Id<"enrollments">; recipientName: string },
+    { status: "pending"; recipientName: string }
+  >("lms:confirmCertificateName"),
+  setCertificateVerificationConsent: makeFunctionReference<
+    "mutation",
+    { enrollmentId: Id<"enrollments">; enabled: boolean },
+    { enabled: boolean }
+  >("lms:setCertificateVerificationConsent"),
+};
+
+export type PublicCertificateVerification = {
+  verificationCode: string;
+  courseName: string;
+  recipientName?: string;
+  identityVisible: boolean;
+  status: "issued" | "suspended" | "revoked";
+  issuedAt: number;
+};
+
+export const publicCertificateApi = {
+  verify: makeFunctionReference<
+    "query",
+    { verificationCode: string },
+    PublicCertificateVerification | null
+  >("lms:verifyCertificate"),
 };
 
 export type FacultyQueueItem =

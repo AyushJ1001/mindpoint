@@ -246,6 +246,9 @@ function StudentWorkspace() {
   const [feedbackRating, setFeedbackRating] = useState(0);
   const [feedbackComment, setFeedbackComment] = useState("");
   const [feedbackReceipt, setFeedbackReceipt] = useState<string>();
+  const [certificateName, setCertificateName] = useState("Ananya Rao");
+  const [nameConfirmed, setNameConfirmed] = useState(false);
+  const [certificateIssued, setCertificateIssued] = useState(false);
   const selected =
     activities.find((activity) => activity.id === selectedId) ?? activities[2];
   const completedCount = completed.size;
@@ -669,6 +672,76 @@ function StudentWorkspace() {
               </p>
             </div>
           </div>
+          {progress < 100 ? (
+            <Button
+              type="button"
+              variant="outline"
+              className="mt-4 w-full"
+              onClick={() => {
+                setCompleted(
+                  new Set(activities.map((activity) => activity.id)),
+                );
+                setSelectedId("feedback");
+                setFeedbackReceipt("TMP-FB-PREVIEW-6F2A");
+              }}
+            >
+              Preview completed Course
+            </Button>
+          ) : certificateIssued ? (
+            <div className="mt-5 rounded-xl bg-white p-4">
+              <CheckCircle2 className="h-5 w-5 text-emerald-700" />
+              <p className="mt-2 text-sm font-semibold">Certificate issued</p>
+              <p className="mt-1 text-xs text-[var(--lms-muted)]">
+                {certificateName}
+              </p>
+              <code className="mt-3 block font-mono text-[11px] text-[var(--lms-accent-strong)]">
+                TMP-CSC-PREVIEW-2026
+              </code>
+            </div>
+          ) : nameConfirmed ? (
+            <div className="mt-5">
+              <p className="text-xs leading-5 text-[var(--lms-muted)]">
+                Name confirmed. In production, assigned Faculty revalidates the
+                evidence before issuance.
+              </p>
+              <Button
+                type="button"
+                className="mt-3 w-full"
+                onClick={() => setCertificateIssued(true)}
+              >
+                Preview Faculty approval
+              </Button>
+            </div>
+          ) : (
+            <form
+              className="mt-5"
+              onSubmit={(event) => {
+                event.preventDefault();
+                if (certificateName.trim().length >= 2) setNameConfirmed(true);
+              }}
+            >
+              <label
+                htmlFor="preview-certificate-name"
+                className="text-xs font-semibold"
+              >
+                Certificate name
+              </label>
+              <Input
+                id="preview-certificate-name"
+                className="mt-2 bg-white"
+                value={certificateName}
+                maxLength={120}
+                onChange={(event) => setCertificateName(event.target.value)}
+              />
+              <Button
+                type="submit"
+                className="mt-3 w-full"
+                disabled={certificateName.trim().length < 2}
+              >
+                Confirm exact name
+              </Button>
+            </form>
+          )}
         </div>
 
         <div className="mt-7">

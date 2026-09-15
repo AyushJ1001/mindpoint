@@ -6,6 +6,7 @@ import { SignInButton } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
   ArrowUpRight,
+  Award,
   BookOpen,
   Check,
   CheckCircle2,
@@ -13,9 +14,11 @@ import {
   Clock3,
   FileText,
   LockKeyhole,
+  Printer,
   PlayCircle,
   Send,
   Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -135,9 +138,16 @@ function AuthenticatedStudentLmsApp() {
   const submitQuizAttempt = useMutation(studentLmsApi.submitQuizAttempt);
   const submitFeedback = useMutation(studentLmsApi.submitFeedback);
   const askQuestion = useMutation(studentLmsApi.askQuestion);
+  const confirmCertificateName = useMutation(
+    studentLmsApi.confirmCertificateName,
+  );
+  const setCertificateVerificationConsent = useMutation(
+    studentLmsApi.setCertificateVerificationConsent,
+  );
   const [selectedActivityId, setSelectedActivityId] = useState<string>();
   const [assignmentText, setAssignmentText] = useState("");
   const [questionText, setQuestionText] = useState("");
+  const [certificateName, setCertificateName] = useState("");
   const [pendingAction, setPendingAction] = useState<string>();
   const [notice, setNotice] = useState<{
     type: "success" | "error";
@@ -187,6 +197,12 @@ function AuthenticatedStudentLmsApp() {
       current ?? sortedActivities.find((item) => item.isAvailable);
     setSelectedActivityId(available?.activityId);
   }, [progressByActivity, selectedActivityId, sortedActivities, workspace]);
+
+  useEffect(() => {
+    if (workspace?.completion?.confirmedRecipientName) {
+      setCertificateName(workspace.completion.confirmedRecipientName);
+    }
+  }, [workspace?.completion?.confirmedRecipientName]);
 
   if (isAuthLoading)
     return (
@@ -505,6 +521,104 @@ function AuthenticatedStudentLmsApp() {
               activities are ready now.
             </p>
           </section>
+          {workspace.completion && (
+            <section className="lms-live-certificate-panel">
+              <Award aria-hidden="true" />
+              <h2>Course completion</h2>
+              {workspace.completion.certificate ? (
+                <>
+                  <p>
+                    <strong>Certificate issued</strong>
+                    <br />
+                    {workspace.completion.certificate.recipientName}
+                  </p>
+                  <code>
+                    {workspace.completion.certificate.verificationCode}
+                  </code>
+                  <Button
+                    type="button"
+                    className="lms-live-primary"
+                    onClick={() => window.print()}
+                  >
+                    <Printer aria-hidden="true" /> Print or save PDF
+                  </Button>
+                  <label className="lms-live-consent">
+                    <input
+                      type="checkbox"
+                      checked={
+                        workspace.completion.certificate
+                          .publicVerificationEnabled
+                      }
+                      disabled={pendingAction === "verification"}
+                      onChange={(event) =>
+                        runAction(
+                          "verification",
+                          () =>
+                            setCertificateVerificationConsent({
+                              enrollmentId: workspace.enrollment.enrollmentId,
+                              enabled: event.target.checked,
+                            }),
+                          event.target.checked
+                            ? "Public verification now includes your confirmed name."
+                            : "Your name is now hidden from public verification.",
+                        )
+                      }
+                    />
+                    <span>Let public verification show my confirmed name</span>
+                  </label>
+                  <Link
+                    className="lms-live-verify-link"
+                    href={`/verify/${workspace.completion.certificate.verificationCode}`}
+                  >
+                    <ShieldCheck aria-hidden="true" /> Open verification page
+                  </Link>
+                </>
+              ) : workspace.completion.status === "pending" ? (
+                <p>
+                  Your confirmed name is with Faculty for final evidence
+                  approval.
+                </p>
+              ) : (
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    void runAction(
+                      "certificate-name",
+                      () =>
+                        confirmCertificateName({
+                          enrollmentId: workspace.enrollment.enrollmentId,
+                          recipientName: certificateName,
+                        }),
+                      "Name confirmed. Faculty can now approve your Completion.",
+                    );
+                  }}
+                >
+                  <p>
+                    Every required activity is complete. Confirm the exact name
+                    to print on your Certificate.
+                  </p>
+                  <label htmlFor="lms-certificate-name">Certificate name</label>
+                  <input
+                    id="lms-certificate-name"
+                    value={certificateName}
+                    maxLength={120}
+                    autoComplete="name"
+                    onChange={(event) => setCertificateName(event.target.value)}
+                  />
+                  <Button
+                    type="submit"
+                    className="lms-live-primary"
+                    disabled={
+                      certificateName.trim().length < 2 ||
+                      pendingAction === "certificate-name"
+                    }
+                  >
+                    Confirm name
+                  </Button>
+                </form>
+              )}
+            </section>
+          )}
           <section>
             <h2>Ask Faculty privately</h2>
             <p>
@@ -545,6 +659,27 @@ function AuthenticatedStudentLmsApp() {
           </section>
         </aside>
       </div>
+      {workspace.completion?.certificate && (
+        <section className="lms-certificate-print" aria-hidden="true">
+          <Image
+            src="/brand/the-mind-point-logo.png"
+            alt="The Mind Point"
+            width={280}
+            height={220}
+          />
+          <p>Certificate of completion</p>
+          <h1>{workspace.completion.certificate.recipientName}</h1>
+          <p>has completed</p>
+          <h2>{workspace.completion.certificate.courseName}</h2>
+          <footer>
+            Issued{" "}
+            {new Date(
+              workspace.completion.certificate.issuedAt,
+            ).toLocaleDateString()}{" "}
+            · Verify {workspace.completion.certificate.verificationCode}
+          </footer>
+        </section>
+      )}
     </div>
   );
 }

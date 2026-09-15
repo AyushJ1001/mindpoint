@@ -460,8 +460,17 @@ export const approveCompletion = mutation({
     const identity = await requireFacultyIdentity(ctx);
     const request = await ctx.db.get("lmsCompletionRequests", args.requestId);
     if (!request) throw new Error("Completion request not found");
+    if (request.status === "approved" && request.certificateId) {
+      return {
+        status: "approved" as const,
+        certificateId: request.certificateId,
+      };
+    }
     if (request.status !== "pending")
       throw new Error("Completion has already been reviewed");
+    if (!request.confirmedRecipientName) {
+      throw new Error("The Student must confirm the Certificate name first");
+    }
     const enrollment = await ctx.db.get("enrollments", request.enrollmentId);
     if (!enrollment) throw new Error("Enrollment not found");
     await getFacultyAssignment(ctx, enrollment, "canApproveCompletion");
@@ -503,10 +512,11 @@ export const approveCompletion = mutation({
         curriculumId: request.curriculumId,
         verificationCode:
           `${enrollment.enrollmentNumber}-${now.toString(36)}`.toUpperCase(),
-        recipientName: enrollment.userName ?? "Student",
+        recipientName: request.confirmedRecipientName,
         courseName: course?.name ?? enrollment.courseName ?? "Course",
         status: "issued",
         issuedAt: now,
+        publicVerificationEnabled: false,
       });
     }
     await ctx.db.patch("lmsCompletionRequests", request._id, {
