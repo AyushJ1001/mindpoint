@@ -104,24 +104,30 @@ export const listMyQueue = query({
               )
               .order("asc")
               .take(25);
-        const completions = assignment.batchId
-          ? await ctx.db
-              .query("lmsCompletionRequests")
-              .withIndex("by_courseId_and_batchId_and_status", (q) =>
-                q
-                  .eq("courseId", assignment.courseId)
-                  .eq("batchId", assignment.batchId)
-                  .eq("status", "pending"),
-              )
-              .order("asc")
-              .take(25)
-          : await ctx.db
-              .query("lmsCompletionRequests")
-              .withIndex("by_courseId_and_status", (q) =>
-                q.eq("courseId", assignment.courseId).eq("status", "pending"),
-              )
-              .order("asc")
-              .take(25);
+        const completionsFor = (status: "pending" | "under_review") =>
+          assignment.batchId
+            ? ctx.db
+                .query("lmsCompletionRequests")
+                .withIndex("by_courseId_and_batchId_and_status", (q) =>
+                  q
+                    .eq("courseId", assignment.courseId)
+                    .eq("batchId", assignment.batchId)
+                    .eq("status", status),
+                )
+                .order("asc")
+                .take(25)
+            : ctx.db
+                .query("lmsCompletionRequests")
+                .withIndex("by_courseId_and_status", (q) =>
+                  q.eq("courseId", assignment.courseId).eq("status", status),
+                )
+                .order("asc")
+                .take(25);
+        const [pendingCompletions, heldCompletions] = await Promise.all([
+          completionsFor("pending"),
+          completionsFor("under_review"),
+        ]);
+        const completions = [...pendingCompletions, ...heldCompletions];
         const [submitted, inReview] = await Promise.all([
           submissionsFor("submitted"),
           submissionsFor("in_review"),
@@ -228,11 +234,18 @@ export const listMyQueue = query({
           kind: "completion" as const,
           id: request._id,
           enrollmentId: enrollment._id,
-          title: "Completion approval",
+          title:
+            request.status === "under_review"
+              ? "Completion under review"
+              : "Completion approval",
           courseName: course?.name ?? enrollment.courseName ?? "Course",
           studentName: enrollment.userName ?? "Student",
           studentEmail: enrollment.userEmail,
-          body: "Every required activity is complete. Revalidation will run before Certificate issuance.",
+          body:
+            request.status === "under_review"
+              ? (request.correctionReason ??
+                "This Completion is held for an evidence review.")
+              : "Every required activity is complete. Revalidation will run before Certificate issuance.",
           status: request.status,
           createdAt: request.requestedAt,
         };
@@ -412,6 +425,25 @@ export const reviewSubmission = mutation({
       },
       createdAt: now,
     });
+    await ctx.db.insert("lmsNotifications", {
+      recipientUserId: enrollment.userId,
+      enrollmentId: enrollment._id,
+      kind:
+        args.decision === "accepted"
+          ? "submission_accepted"
+          : "submission_returned",
+      title:
+        args.decision === "accepted"
+          ? "Submission accepted"
+          : "Submission returned for revision",
+      body:
+        feedback ||
+        (args.decision === "accepted"
+          ? "Faculty accepted your learning evidence."
+          : "Open the activity to review Faculty feedback."),
+      href: `/lms?enrollment=${enrollment._id}&activity=${submission.activityId}#lms-active-work`,
+      createdAt: now,
+    });
     return { status: args.decision };
   },
 });
@@ -450,7 +482,58 @@ export const answerQuestion = mutation({
       },
       createdAt: now,
     });
+    await ctx.db.insert("lmsNotifications", {
+      recipientUserId: enrollment.userId,
+      enrollmentId: enrollment._id,
+      kind: "question_answered",
+      title: "Faculty answered your Question",
+      body: answer,
+      href: "/lms#lms-questions",
+      createdAt: now,
+    });
     return { status: "answered" as const };
+  },
+});
+
+export const moderateQuestion = mutation({
+  args: {
+    questionId: v.id("lmsQuestions"),
+    reason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await requireFacultyIdentity(ctx);
+    const question = await ctx.db.get("lmsQuestions", args.questionId);
+    if (!question) throw new Error("Question not found");
+    const enrollment = await ctx.db.get("enrollments", question.enrollmentId);
+    if (!enrollment) throw new Error("Enrollment not found");
+    await getFacultyAssignment(ctx, enrollment, "canAnswerQuestions");
+    if (question.status !== "open") {
+      throw new Error("Only an open Question can be moderated");
+    }
+    const reason = args.reason.trim();
+    if (reason.length < 10 || reason.length > 500) {
+      throw new Error(
+        "A moderation reason between 10 and 500 characters is required",
+      );
+    }
+    const now = Date.now();
+    await ctx.db.patch("lmsQuestions", question._id, {
+      status: "closed",
+      moderatedByTokenIdentifier: identity.tokenIdentifier,
+      moderationReason: reason,
+      moderatedAt: now,
+    });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.question.moderated",
+      entityType: "lmsQuestion",
+      entityId: question._id,
+      before: { status: question.status },
+      after: { status: "closed", reason },
+      createdAt: now,
+    });
+    return { status: "closed" as const };
   },
 });
 
@@ -466,7 +549,7 @@ export const approveCompletion = mutation({
         certificateId: request.certificateId,
       };
     }
-    if (request.status !== "pending")
+    if (request.status !== "pending" && request.status !== "under_review")
       throw new Error("Completion has already been reviewed");
     if (!request.confirmedRecipientName) {
       throw new Error("The Student must confirm the Certificate name first");
@@ -505,6 +588,27 @@ export const approveCompletion = mutation({
     );
     const now = Date.now();
     let certificateId = activeCertificate?._id;
+    const suspendedCertificate = request.certificateId
+      ? await ctx.db.get("lmsCertificates", request.certificateId)
+      : null;
+    if (suspendedCertificate?.status === "suspended") {
+      if (
+        suspendedCertificate.recipientName === request.confirmedRecipientName
+      ) {
+        await ctx.db.patch("lmsCertificates", suspendedCertificate._id, {
+          status: "issued",
+          suspendedAt: undefined,
+          suspensionReason: undefined,
+        });
+        certificateId = suspendedCertificate._id;
+      } else {
+        await ctx.db.patch("lmsCertificates", suspendedCertificate._id, {
+          status: "revoked",
+          revokedAt: now,
+          revocationReason: "Replaced after an approved name correction",
+        });
+      }
+    }
     if (!certificateId) {
       const course = await ctx.db.get("courses", enrollment.courseId);
       certificateId = await ctx.db.insert("lmsCertificates", {
@@ -517,6 +621,10 @@ export const approveCompletion = mutation({
         status: "issued",
         issuedAt: now,
         publicVerificationEnabled: false,
+        replacesCertificateId:
+          suspendedCertificate?.status === "suspended"
+            ? suspendedCertificate._id
+            : undefined,
       });
     }
     await ctx.db.patch("lmsCompletionRequests", request._id, {
@@ -548,6 +656,89 @@ export const approveCompletion = mutation({
       },
       createdAt: now,
     });
+    await ctx.db.insert("lmsNotifications", {
+      recipientUserId: enrollment.userId,
+      enrollmentId: enrollment._id,
+      kind: "completion_approved",
+      title: "Your Certificate is ready",
+      body: "Faculty approved your Completion after revalidating the required evidence.",
+      href: "/lms#lms-certificate",
+      createdAt: now,
+    });
     return { status: "approved" as const, certificateId };
+  },
+});
+
+export const updateCompletionReview = mutation({
+  args: {
+    requestId: v.id("lmsCompletionRequests"),
+    status: v.union(
+      v.literal("correction_required"),
+      v.literal("under_review"),
+      v.literal("revoked"),
+    ),
+    reason: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await requireFacultyIdentity(ctx);
+    const request = await ctx.db.get("lmsCompletionRequests", args.requestId);
+    if (!request) throw new Error("Completion request not found");
+    const enrollment = await ctx.db.get("enrollments", request.enrollmentId);
+    if (!enrollment) throw new Error("Enrollment not found");
+    await getFacultyAssignment(ctx, enrollment, "canApproveCompletion");
+    if (request.status === "revoked") {
+      throw new Error("This Completion is already revoked");
+    }
+    const reason = args.reason.trim();
+    if (reason.length < 10 || reason.length > 500) {
+      throw new Error("A reason between 10 and 500 characters is required");
+    }
+    if (args.status === "revoked" && !request.certificateId) {
+      throw new Error("A Certificate must exist before it can be revoked");
+    }
+    const now = Date.now();
+    await ctx.db.patch("lmsCompletionRequests", request._id, {
+      status: args.status,
+      correctionReason: reason,
+      reviewedAt: now,
+      reviewedByTokenIdentifier: identity.tokenIdentifier,
+    });
+    if (request.certificateId) {
+      await ctx.db.patch("lmsCertificates", request.certificateId, {
+        status: args.status === "revoked" ? "revoked" : "suspended",
+        suspendedAt: args.status === "revoked" ? undefined : now,
+        suspensionReason: args.status === "revoked" ? undefined : reason,
+        revokedAt: args.status === "revoked" ? now : undefined,
+        revocationReason: args.status === "revoked" ? reason : undefined,
+      });
+    }
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: `lms.completion.${args.status}`,
+      entityType: "lmsCompletionRequest",
+      entityId: request._id,
+      before: { status: request.status },
+      after: { status: args.status, reason },
+      createdAt: now,
+    });
+    await ctx.db.insert("lmsNotifications", {
+      recipientUserId: enrollment.userId,
+      enrollmentId: enrollment._id,
+      kind:
+        args.status === "correction_required"
+          ? "completion_correction"
+          : "completion_review",
+      title:
+        args.status === "correction_required"
+          ? "Certificate correction needed"
+          : args.status === "revoked"
+            ? "Certificate revoked"
+            : "Completion placed under review",
+      body: reason,
+      href: "/lms#lms-certificate",
+      createdAt: now,
+    });
+    return { status: args.status };
   },
 });

@@ -22,6 +22,10 @@ import {
   normalizeVerificationCode,
 } from "./_shared/lmsCertificate";
 import {
+  canViewLmsQuestion,
+  validateLmsQuestion,
+} from "./_shared/lmsDiscussion";
+import {
   anonymousFeedbackDelayMs,
   summarizeLmsFeedback,
   validateAnonymousMinimumGroupSize,
@@ -737,7 +741,10 @@ async function getActivityAvailability(
 export const getMyWorkspace = query({
   args: { enrollmentId: v.id("enrollments") },
   handler: async (ctx, args) => {
-    const { enrollment } = await requireOwnedEnrollment(ctx, args.enrollmentId);
+    const { enrollment, identity } = await requireOwnedEnrollment(
+      ctx,
+      args.enrollmentId,
+    );
     const assignment = await ctx.db
       .query("lmsEnrollmentCurricula")
       .withIndex("by_enrollmentId", (q) =>
@@ -893,6 +900,55 @@ export const getMyWorkspace = query({
     const certificate = completionRequest?.certificateId
       ? await ctx.db.get("lmsCertificates", completionRequest.certificateId)
       : null;
+    const [openQuestions, answeredQuestions, closedQuestions, notifications] =
+      await Promise.all([
+        ctx.db
+          .query("lmsQuestions")
+          .withIndex("by_curriculumId_and_status", (q) =>
+            q.eq("curriculumId", curriculum._id).eq("status", "open"),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("lmsQuestions")
+          .withIndex("by_curriculumId_and_status", (q) =>
+            q.eq("curriculumId", curriculum._id).eq("status", "answered"),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("lmsQuestions")
+          .withIndex("by_curriculumId_and_status", (q) =>
+            q.eq("curriculumId", curriculum._id).eq("status", "closed"),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("lmsNotifications")
+          .withIndex("by_recipientUserId_and_enrollmentId_and_createdAt", (q) =>
+            q
+              .eq("recipientUserId", enrollment.userId)
+              .eq("enrollmentId", enrollment._id),
+          )
+          .order("desc")
+          .take(20),
+      ]);
+    const visibleQuestions = [
+      ...openQuestions,
+      ...answeredQuestions,
+      ...closedQuestions,
+    ]
+      .filter((question) =>
+        canViewLmsQuestion({
+          authorTokenIdentifier: question.authorTokenIdentifier,
+          viewerTokenIdentifier: identity.tokenIdentifier,
+          visibility: question.visibility,
+          questionBatchId: question.batchId,
+          viewerBatchId: enrollment.batchId,
+        }),
+      )
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 100);
 
     return {
       enrollment: {
@@ -946,7 +1002,52 @@ export const getMyWorkspace = query({
               : undefined,
           }
         : undefined,
+      questions: visibleQuestions.map((question) => ({
+        questionId: question._id,
+        activityId: question.activityId,
+        visibility: question.visibility,
+        body: question.body,
+        status: question.status,
+        officialAnswer: question.officialAnswer,
+        moderationReason: question.moderationReason,
+        isMine: question.authorTokenIdentifier === identity.tokenIdentifier,
+        createdAt: question.createdAt,
+        answeredAt: question.answeredAt,
+      })),
+      notifications: notifications.map((notification) => ({
+        notificationId: notification._id,
+        kind: notification.kind,
+        title: notification.title,
+        body: notification.body,
+        href: notification.href,
+        readAt: notification.readAt,
+        createdAt: notification.createdAt,
+      })),
     };
+  },
+});
+
+export const markNotificationRead = mutation({
+  args: { notificationId: v.id("lmsNotifications") },
+  handler: async (ctx, args) => {
+    const notification = await ctx.db.get(
+      "lmsNotifications",
+      args.notificationId,
+    );
+    if (!notification) throw new Error("Notification not found");
+    const { enrollment } = await requireOwnedEnrollment(
+      ctx,
+      notification.enrollmentId,
+    );
+    if (notification.recipientUserId !== enrollment.userId) {
+      throw new Error("Forbidden: Notification access required");
+    }
+    if (!notification.readAt) {
+      await ctx.db.patch("lmsNotifications", notification._id, {
+        readAt: Date.now(),
+      });
+    }
+    return { read: true as const };
   },
 });
 
@@ -1525,8 +1626,10 @@ export const askQuestion = mutation({
       ctx,
       args.enrollmentId,
     );
-    const body = args.body.trim();
-    if (!body) throw new Error("Question text is required");
+    const body = validateLmsQuestion(args.body);
+    if (args.visibility === "batch" && !enrollment.batchId) {
+      throw new Error("This Enrollment does not belong to a batch");
+    }
     if (args.activityId) {
       const activity = await ctx.db.get("lmsActivities", args.activityId);
       if (!activity || activity.curriculumId !== curriculum._id) {

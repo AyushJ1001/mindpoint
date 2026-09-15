@@ -128,6 +128,33 @@ export type StudentLmsWorkspace = {
       publicVerificationEnabled: boolean;
     };
   };
+  questions: Array<{
+    questionId: Id<"lmsQuestions">;
+    activityId?: Id<"lmsActivities">;
+    visibility: "private" | "course" | "batch";
+    body: string;
+    status: "open" | "answered" | "closed";
+    officialAnswer?: string;
+    moderationReason?: string;
+    isMine: boolean;
+    createdAt: number;
+    answeredAt?: number;
+  }>;
+  notifications: Array<{
+    notificationId: Id<"lmsNotifications">;
+    kind:
+      | "question_answered"
+      | "submission_accepted"
+      | "submission_returned"
+      | "completion_approved"
+      | "completion_correction"
+      | "completion_review";
+    title: string;
+    body: string;
+    href: string;
+    readAt?: number;
+    createdAt: number;
+  }>;
 };
 
 export const studentLmsApi = {
@@ -210,6 +237,11 @@ export const studentLmsApi = {
     { enrollmentId: Id<"enrollments">; enabled: boolean },
     { enabled: boolean }
   >("lms:setCertificateVerificationConsent"),
+  markNotificationRead: makeFunctionReference<
+    "mutation",
+    { notificationId: Id<"lmsNotifications"> },
+    { read: true }
+  >("lms:markNotificationRead"),
 };
 
 export type PublicCertificateVerification = {
@@ -267,7 +299,7 @@ export type FacultyQueueItem =
       studentName: string;
       studentEmail?: string;
       body: string;
-      status: "pending";
+      status: "pending" | "under_review";
       createdAt: number;
     };
 
@@ -321,11 +353,25 @@ export const facultyLmsApi = {
     { questionId: Id<"lmsQuestions">; answer: string },
     { status: "answered" }
   >("lmsFaculty:answerQuestion"),
+  moderateQuestion: makeFunctionReference<
+    "mutation",
+    { questionId: Id<"lmsQuestions">; reason: string },
+    { status: "closed" }
+  >("lmsFaculty:moderateQuestion"),
   approveCompletion: makeFunctionReference<
     "mutation",
     { requestId: Id<"lmsCompletionRequests"> },
     { status: "approved"; certificateId: Id<"lmsCertificates"> }
   >("lmsFaculty:approveCompletion"),
+  updateCompletionReview: makeFunctionReference<
+    "mutation",
+    {
+      requestId: Id<"lmsCompletionRequests">;
+      status: "correction_required" | "under_review" | "revoked";
+      reason: string;
+    },
+    { status: "correction_required" | "under_review" | "revoked" }
+  >("lmsFaculty:updateCompletionReview"),
 };
 
 export type AdminReleaseDesk = {

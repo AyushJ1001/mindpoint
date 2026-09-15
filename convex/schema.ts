@@ -780,8 +780,11 @@ export default defineSchema({
     ),
     officialAnswer: v.optional(v.string()),
     answeredByTokenIdentifier: v.optional(v.string()),
+    moderatedByTokenIdentifier: v.optional(v.string()),
+    moderationReason: v.optional(v.string()),
     createdAt: v.number(),
     answeredAt: v.optional(v.number()),
+    moderatedAt: v.optional(v.number()),
   })
     .index("by_enrollmentId", ["enrollmentId"])
     .index("by_curriculumId_and_status", ["curriculumId", "status"])
@@ -791,6 +794,30 @@ export default defineSchema({
       "courseId",
       "batchId",
       "status",
+    ]),
+
+  lmsNotifications: defineTable({
+    recipientUserId: v.string(),
+    enrollmentId: v.id("enrollments"),
+    kind: v.union(
+      v.literal("question_answered"),
+      v.literal("submission_accepted"),
+      v.literal("submission_returned"),
+      v.literal("completion_approved"),
+      v.literal("completion_correction"),
+      v.literal("completion_review"),
+    ),
+    title: v.string(),
+    body: v.string(),
+    href: v.string(),
+    readAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_recipientUserId_and_createdAt", ["recipientUserId", "createdAt"])
+    .index("by_recipientUserId_and_enrollmentId_and_createdAt", [
+      "recipientUserId",
+      "enrollmentId",
+      "createdAt",
     ]),
 
   lmsCompletionRequests: defineTable({

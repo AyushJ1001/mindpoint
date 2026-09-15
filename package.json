@@ -24,6 +24,7 @@
     "test:lms-quiz": "tsx --test test-lms-quiz.ts",
     "test:lms-feedback": "tsx --test test-lms-feedback.ts",
     "test:lms-certificate": "tsx --test test-lms-certificate.ts",
+    "test:lms-support": "tsx --test test-lms-support.ts",
     "test:analytics-removal": "node test-analytics-removal.js",
     "test:admin-route-protection": "node scripts/test-admin-route-protection.js",
     "test:root-web-doctor": "node test-root-web-doctor.js"

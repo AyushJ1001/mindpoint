@@ -7,6 +7,7 @@ import {
   ArrowLeft,
   ArrowRight,
   BadgeCheck,
+  Bell,
   BookOpen,
   Check,
   CheckCircle2,
@@ -238,6 +239,9 @@ function StudentWorkspace() {
     () => new Set(["foundations", "observation"]),
   );
   const [question, setQuestion] = useState("");
+  const [questionVisibility, setQuestionVisibility] = useState<
+    "private" | "course" | "batch"
+  >("private");
   const [questionSent, setQuestionSent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [quizAnswer, setQuizAnswer] = useState("");
@@ -694,7 +698,7 @@ function StudentWorkspace() {
               <p className="mt-1 text-xs text-[var(--lms-muted)]">
                 {certificateName}
               </p>
-              <code className="mt-3 block font-mono text-[11px] text-[var(--lms-accent-strong)]">
+              <code className="mt-3 block font-mono text-xs text-[var(--lms-accent-strong)]">
                 TMP-CSC-PREVIEW-2026
               </code>
             </div>
@@ -744,13 +748,41 @@ function StudentWorkspace() {
           )}
         </div>
 
+        <div className="mt-7 border-b border-[var(--lms-rule)] pb-7">
+          <p className="flex items-center gap-2 text-sm font-semibold">
+            <Bell className="h-4 w-4 text-[var(--lms-accent)]" /> Updates
+          </p>
+          <div className="mt-3 border-y border-[var(--lms-rule)] py-3">
+            <p className="text-xs font-semibold">
+              Faculty answered your Question
+            </p>
+            <p className="mt-1 text-xs leading-5 text-[var(--lms-muted)]">
+              Open the discussion to read the Official answer.
+            </p>
+          </div>
+        </div>
+
         <div className="mt-7">
           <label
             htmlFor="student-question"
             className="flex items-center gap-2 text-sm font-semibold"
           >
-            <CircleHelp className="h-4 w-4" /> Ask Faculty privately
+            <CircleHelp className="h-4 w-4" /> Ask a Question
           </label>
+          <select
+            aria-label="Question visibility"
+            value={questionVisibility}
+            onChange={(event) =>
+              setQuestionVisibility(
+                event.target.value as "private" | "course" | "batch",
+              )
+            }
+            className="lms-focus mt-3 h-11 w-full rounded-xl border border-[var(--lms-rule)] bg-white px-3 text-sm"
+          >
+            <option value="private">Only me and Faculty</option>
+            <option value="course">Everyone in this Course</option>
+            <option value="batch">Only my batch</option>
+          </select>
           <Textarea
             id="student-question"
             value={question}
@@ -774,9 +806,24 @@ function StudentWorkspace() {
           </Button>
           {questionSent ? (
             <p className="mt-2 text-xs text-emerald-800" role="status">
-              Question sent privately in this preview.
+              {questionVisibility === "private"
+                ? "Question sent privately in this preview."
+                : `Question posted to the ${questionVisibility} discussion.`}
             </p>
           ) : null}
+          <article className="mt-5 border-t border-[var(--lms-rule)] pt-4">
+            <div className="flex items-center justify-between text-xs text-[var(--lms-muted)]">
+              <span>Course discussion</span>
+              <span>Official answer</span>
+            </div>
+            <p className="mt-2 text-xs leading-5">
+              How do I know when reflection starts to feel like advice?
+            </p>
+            <blockquote className="mt-3 rounded-xl bg-white p-3 text-xs leading-5 text-[var(--lms-deep)]">
+              Notice whether your response adds a direction the speaker did not
+              name. A reflection stays close to their words and meaning.
+            </blockquote>
+          </article>
         </div>
 
         <a

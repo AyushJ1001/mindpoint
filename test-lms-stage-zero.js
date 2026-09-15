@@ -57,8 +57,8 @@ assert.match(
 );
 assert.match(
   lmsPageSource,
-  /visibility: "private"/,
-  "The initial Student question flow must remain private",
+  /useState<[\s\S]*"private" \| "course" \| "batch"[\s\S]*>\("private"\)/,
+  "The Student question flow must default to private before any broader visibility choice",
 );
 assert.match(
   facultyLmsSource,

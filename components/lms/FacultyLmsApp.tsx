@@ -74,7 +74,11 @@ function AuthenticatedFacultyLms() {
   );
   const reviewSubmission = useMutation(facultyLmsApi.reviewSubmission);
   const answerQuestion = useMutation(facultyLmsApi.answerQuestion);
+  const moderateQuestion = useMutation(facultyLmsApi.moderateQuestion);
   const approveCompletion = useMutation(facultyLmsApi.approveCompletion);
+  const updateCompletionReview = useMutation(
+    facultyLmsApi.updateCompletionReview,
+  );
   const [selectedId, setSelectedId] = useState<string>();
   const [response, setResponse] = useState("");
   const [pending, setPending] = useState<string>();
@@ -258,12 +262,41 @@ function AuthenticatedFacultyLms() {
                   "Official answer sent and Question closed.",
                 )
               }
+              onModerate={() =>
+                selected.kind === "question" &&
+                act(
+                  "moderate",
+                  () =>
+                    moderateQuestion({
+                      questionId: selected.id,
+                      reason: response,
+                    }),
+                  "Question closed with an audited moderation reason.",
+                )
+              }
               onApproveCompletion={() =>
                 selected.kind === "completion" &&
                 act(
                   "completion",
                   () => approveCompletion({ requestId: selected.id }),
                   "Completion approved and Certificate issued.",
+                )
+              }
+              onCompletionReview={(status) =>
+                selected.kind === "completion" &&
+                act(
+                  status,
+                  () =>
+                    updateCompletionReview({
+                      requestId: selected.id,
+                      status,
+                      reason: response,
+                    }),
+                  status === "correction_required"
+                    ? "Correction requested from the Student."
+                    : status === "under_review"
+                      ? "Completion placed under review."
+                      : "Certificate revoked with an audited reason.",
                 )
               }
             />
@@ -363,7 +396,9 @@ function ReviewRecord({
   onAccept,
   onReturn,
   onAnswer,
+  onModerate,
   onApproveCompletion,
+  onCompletionReview,
 }: {
   item: FacultyQueueItem;
   response: string;
@@ -372,7 +407,11 @@ function ReviewRecord({
   onAccept: () => void;
   onReturn: () => void;
   onAnswer: () => void;
+  onModerate: () => void;
   onApproveCompletion: () => void;
+  onCompletionReview: (
+    status: "correction_required" | "under_review" | "revoked",
+  ) => void;
 }) {
   return (
     <article>
@@ -392,7 +431,7 @@ function ReviewRecord({
         {item.kind === "submission" ? ` · Attempt ${item.attemptNumber}` : ""}
       </p>
       <blockquote>{item.body}</blockquote>
-      {item.kind !== "completion" && (
+      {item.kind !== "completion" ? (
         <>
           <label htmlFor="faculty-response">
             {item.kind === "submission"
@@ -408,6 +447,17 @@ function ReviewRecord({
                 ? "Name what is working and the clearest next step…"
                 : "Write the answer the Student can rely on…"
             }
+          />
+        </>
+      ) : (
+        <>
+          <label htmlFor="faculty-response">Review reason</label>
+          <Textarea
+            id="faculty-response"
+            value={response}
+            onChange={(event) => onResponse(event.target.value)}
+            placeholder="Explain a correction or why this record needs further review…"
+            maxLength={500}
           />
         </>
       )}
@@ -432,25 +482,56 @@ function ReviewRecord({
           </Button>
         </div>
       ) : item.kind === "question" ? (
-        <Button
-          className="lms-live-primary"
-          disabled={!response.trim() || Boolean(pending)}
-          onClick={onAnswer}
-        >
-          <Send />
-          {pending === "answer" ? "Sending…" : "Send official answer"}
-        </Button>
+        <div className="faculty-actions">
+          <Button
+            variant="outline"
+            className="lms-live-outline"
+            disabled={response.trim().length < 10 || Boolean(pending)}
+            onClick={onModerate}
+          >
+            <ShieldCheck />
+            {pending === "moderate" ? "Closing…" : "Close with reason"}
+          </Button>
+          <Button
+            className="lms-live-primary"
+            disabled={!response.trim() || Boolean(pending)}
+            onClick={onAnswer}
+          >
+            <Send />
+            {pending === "answer" ? "Sending…" : "Send official answer"}
+          </Button>
+        </div>
       ) : (
-        <Button
-          className="lms-live-primary"
-          disabled={Boolean(pending)}
-          onClick={onApproveCompletion}
-        >
-          <GraduationCap />
-          {pending === "completion"
-            ? "Issuing Certificate…"
-            : "Approve Completion and issue Certificate"}
-        </Button>
+        <div className="faculty-completion-actions">
+          <div className="faculty-actions">
+            <Button
+              variant="outline"
+              className="lms-live-outline"
+              disabled={response.trim().length < 10 || Boolean(pending)}
+              onClick={() => onCompletionReview("correction_required")}
+            >
+              <RotateCcw /> Request correction
+            </Button>
+            <Button
+              variant="outline"
+              className="lms-live-outline"
+              disabled={response.trim().length < 10 || Boolean(pending)}
+              onClick={() => onCompletionReview("under_review")}
+            >
+              <ShieldCheck /> Hold for review
+            </Button>
+          </div>
+          <Button
+            className="lms-live-primary"
+            disabled={Boolean(pending)}
+            onClick={onApproveCompletion}
+          >
+            <GraduationCap />
+            {pending === "completion"
+              ? "Issuing Certificate…"
+              : "Approve Completion and issue Certificate"}
+          </Button>
+        </div>
       )}
     </article>
   );

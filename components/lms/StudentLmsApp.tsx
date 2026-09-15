@@ -7,6 +7,7 @@ import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import {
   ArrowUpRight,
   Award,
+  Bell,
   BookOpen,
   Check,
   CheckCircle2,
@@ -14,7 +15,9 @@ import {
   Clock3,
   FileText,
   LockKeyhole,
+  MessagesSquare,
   Printer,
+  Search,
   PlayCircle,
   Send,
   Sparkles,
@@ -144,9 +147,14 @@ function AuthenticatedStudentLmsApp() {
   const setCertificateVerificationConsent = useMutation(
     studentLmsApi.setCertificateVerificationConsent,
   );
+  const markNotificationRead = useMutation(studentLmsApi.markNotificationRead);
   const [selectedActivityId, setSelectedActivityId] = useState<string>();
   const [assignmentText, setAssignmentText] = useState("");
   const [questionText, setQuestionText] = useState("");
+  const [questionVisibility, setQuestionVisibility] = useState<
+    "private" | "course" | "batch"
+  >("private");
+  const [questionSearch, setQuestionSearch] = useState("");
   const [certificateName, setCertificateName] = useState("");
   const [pendingAction, setPendingAction] = useState<string>();
   const [notice, setNotice] = useState<{
@@ -156,8 +164,16 @@ function AuthenticatedStudentLmsApp() {
 
   useEffect(() => {
     if (!selectedEnrollmentId && enrollments?.length) {
+      const requestedEnrollmentId = new URLSearchParams(
+        window.location.search,
+      ).get("enrollment");
+      const requestedEnrollment = enrollments.find(
+        (item) => item.enrollmentId === requestedEnrollmentId,
+      );
       const active = enrollments.find((item) => item.lmsStatus === "active");
-      setSelectedEnrollmentId((active ?? enrollments[0]).enrollmentId);
+      setSelectedEnrollmentId(
+        (requestedEnrollment ?? active ?? enrollments[0]).enrollmentId,
+      );
     }
   }, [enrollments, selectedEnrollmentId]);
 
@@ -181,6 +197,15 @@ function AuthenticatedStudentLmsApp() {
       }),
     [workspace],
   );
+  const visibleQuestions = useMemo(() => {
+    const query = questionSearch.trim().toLocaleLowerCase();
+    if (!query) return workspace?.questions ?? [];
+    return (workspace?.questions ?? []).filter(
+      (question) =>
+        question.body.toLocaleLowerCase().includes(query) ||
+        question.officialAnswer?.toLocaleLowerCase().includes(query),
+    );
+  }, [questionSearch, workspace?.questions]);
 
   useEffect(() => {
     if (!workspace) return;
@@ -188,13 +213,21 @@ function AuthenticatedStudentLmsApp() {
       (item) => item.activityId === selectedActivityId,
     );
     if (selected?.isAvailable) return;
+    const requestedActivityId = new URLSearchParams(window.location.search).get(
+      "activity",
+    );
+    const requestedActivity = workspace.activities.find(
+      (item) => item.activityId === requestedActivityId && item.isAvailable,
+    );
     const current = sortedActivities.find(
       (item) =>
         item.isAvailable &&
         progressByActivity.get(item.activityId) !== "completed",
     );
     const available =
-      current ?? sortedActivities.find((item) => item.isAvailable);
+      requestedActivity ??
+      current ??
+      sortedActivities.find((item) => item.isAvailable);
     setSelectedActivityId(available?.activityId);
   }, [progressByActivity, selectedActivityId, sortedActivities, workspace]);
 
@@ -522,10 +555,13 @@ function AuthenticatedStudentLmsApp() {
             </p>
           </section>
           {workspace.completion && (
-            <section className="lms-live-certificate-panel">
+            <section
+              id="lms-certificate"
+              className="lms-live-certificate-panel"
+            >
               <Award aria-hidden="true" />
               <h2>Course completion</h2>
-              {workspace.completion.certificate ? (
+              {workspace.completion.certificate?.status === "issued" ? (
                 <>
                   <p>
                     <strong>Certificate issued</strong>
@@ -573,11 +609,37 @@ function AuthenticatedStudentLmsApp() {
                     <ShieldCheck aria-hidden="true" /> Open verification page
                   </Link>
                 </>
+              ) : workspace.completion.certificate ? (
+                <div className="lms-live-certificate-hold" role="status">
+                  <strong>
+                    Certificate {workspace.completion.certificate.status}
+                  </strong>
+                  <p>
+                    {workspace.completion.correctionReason ??
+                      "The Mind Point team is reviewing this Certificate record."}
+                  </p>
+                </div>
               ) : workspace.completion.status === "pending" ? (
                 <p>
                   Your confirmed name is with Faculty for final evidence
                   approval.
                 </p>
+              ) : workspace.completion.status === "under_review" ? (
+                <div className="lms-live-certificate-hold" role="status">
+                  <strong>Completion under review</strong>
+                  <p>
+                    {workspace.completion.correctionReason ??
+                      "Faculty is reviewing the evidence before making a decision."}
+                  </p>
+                </div>
+              ) : workspace.completion.status === "revoked" ? (
+                <div className="lms-live-certificate-hold" role="status">
+                  <strong>Completion revoked</strong>
+                  <p>
+                    {workspace.completion.correctionReason ??
+                      "Contact The Mind Point team for the reviewed record."}
+                  </p>
+                </div>
               ) : (
                 <form
                   onSubmit={(event) => {
@@ -594,8 +656,9 @@ function AuthenticatedStudentLmsApp() {
                   }}
                 >
                   <p>
-                    Every required activity is complete. Confirm the exact name
-                    to print on your Certificate.
+                    {workspace.completion.status === "correction_required"
+                      ? `A correction is required: ${workspace.completion.correctionReason ?? "confirm the corrected Certificate name."}`
+                      : "Every required activity is complete. Confirm the exact name to print on your Certificate."}
                   </p>
                   <label htmlFor="lms-certificate-name">Certificate name</label>
                   <input
@@ -619,16 +682,64 @@ function AuthenticatedStudentLmsApp() {
               )}
             </section>
           )}
-          <section>
-            <h2>Ask Faculty privately</h2>
+          {workspace.notifications.length > 0 && (
+            <section
+              className="lms-live-notifications"
+              aria-labelledby="notifications-title"
+            >
+              <h2 id="notifications-title">
+                <Bell aria-hidden="true" /> Updates
+              </h2>
+              <div>
+                {workspace.notifications.slice(0, 5).map((notification) => (
+                  <Link
+                    key={notification.notificationId}
+                    href={notification.href}
+                    className={notification.readAt ? "read" : "unread"}
+                    onClick={() => {
+                      if (!notification.readAt) {
+                        void markNotificationRead({
+                          notificationId: notification.notificationId,
+                        });
+                      }
+                    }}
+                  >
+                    <span>{notification.title}</span>
+                    <small>{notification.body}</small>
+                  </Link>
+                ))}
+              </div>
+            </section>
+          )}
+          <section id="lms-questions" className="lms-live-discussion">
+            <h2>
+              <MessagesSquare aria-hidden="true" /> Questions
+            </h2>
             <p>
-              Your question stays connected to this Enrollment and the selected
-              activity.
+              Ask privately, or share a Course or batch Question for other
+              learners to read.
             </p>
+            <label htmlFor="lms-question-visibility">Who can read it?</label>
+            <select
+              id="lms-question-visibility"
+              value={questionVisibility}
+              onChange={(event) =>
+                setQuestionVisibility(
+                  event.target.value as "private" | "course" | "batch",
+                )
+              }
+            >
+              <option value="private">Only me and Faculty</option>
+              <option value="course">Everyone in this Course</option>
+              {workspace.enrollment.batchLabel && (
+                <option value="batch">Only my batch</option>
+              )}
+            </select>
             <label htmlFor="lms-question">Your question</label>
             <Textarea
               id="lms-question"
               value={questionText}
+              maxLength={2000}
               onChange={(event) => setQuestionText(event.target.value)}
               placeholder="What would help you continue?"
             />
@@ -642,20 +753,66 @@ function AuthenticatedStudentLmsApp() {
                     await askQuestion({
                       enrollmentId: workspace.enrollment.enrollmentId,
                       activityId: selectedActivity?.activityId,
-                      visibility: "private",
+                      visibility: questionVisibility,
                       body: questionText,
                     });
                     setQuestionText("");
                   },
-                  "Your private question has been sent to Faculty.",
+                  questionVisibility === "private"
+                    ? "Your private Question has been sent to Faculty."
+                    : "Your Question is now visible in the selected learning space.",
                 )
               }
             >
               <Send aria-hidden="true" />
-              {pendingAction === "question"
-                ? "Sending…"
-                : "Send private question"}
+              {pendingAction === "question" ? "Sending…" : "Post Question"}
             </Button>
+            <label htmlFor="lms-question-search">Search Questions</label>
+            <div className="lms-live-question-search">
+              <Search aria-hidden="true" />
+              <input
+                id="lms-question-search"
+                type="search"
+                value={questionSearch}
+                onChange={(event) => setQuestionSearch(event.target.value)}
+                placeholder="Search Questions and answers"
+              />
+            </div>
+            <div className="lms-live-question-list" aria-live="polite">
+              {visibleQuestions.length ? (
+                visibleQuestions.slice(0, 12).map((question) => (
+                  <article key={question.questionId}>
+                    <div>
+                      <span>{question.visibility}</span>
+                      <small>
+                        {question.isMine ? "Your Question" : "Student Question"}
+                      </small>
+                    </div>
+                    <p>{question.body}</p>
+                    {question.officialAnswer && (
+                      <blockquote>
+                        <strong>Official Faculty answer</strong>
+                        {question.officialAnswer}
+                      </blockquote>
+                    )}
+                    {question.status === "closed" && (
+                      <p className="moderated">
+                        Closed by Faculty
+                        {question.moderationReason
+                          ? ` · ${question.moderationReason}`
+                          : ""}
+                      </p>
+                    )}
+                  </article>
+                ))
+              ) : (
+                <p className="lms-live-question-empty">
+                  {questionSearch
+                    ? "No Questions match this search."
+                    : "No Questions have been posted yet."}
+                </p>
+              )}
+            </div>
           </section>
         </aside>
       </div>
