@@ -27,6 +27,7 @@ const activityTypes: Array<{
   { value: "reading", label: "Reading" },
   { value: "media", label: "Media" },
   { value: "external_resource", label: "External resource" },
+  { value: "quiz", label: "Quiz" },
   { value: "assignment", label: "Assignment" },
 ];
 
@@ -60,6 +61,7 @@ export default function AdminLmsPage() {
   const createDraft = useMutation(adminLmsApi.createDraft);
   const addModule = useMutation(adminLmsApi.addModule);
   const addActivity = useMutation(adminLmsApi.addActivity);
+  const addQuizQuestion = useMutation(adminLmsApi.addQuizQuestion);
   const publish = useMutation(adminLmsApi.publishCurriculum);
   const activate = useMutation(adminLmsApi.activateEnrollment);
   const assignFaculty = useMutation(adminLmsApi.assignFaculty);
@@ -76,6 +78,7 @@ export default function AdminLmsPage() {
   const [accessibleAlternative, setAccessibleAlternative] = useState("");
   const [rightsApproved, setRightsApproved] = useState(false);
   const [duration, setDuration] = useState("");
+  const [passingScore, setPassingScore] = useState("70");
   const [facultyToken, setFacultyToken] = useState("");
   const [pending, setPending] = useState<string>();
   const [notice, setNotice] = useState<{
@@ -112,6 +115,15 @@ export default function AdminLmsPage() {
         curriculum.activities.some(
           (item) => item.type === "media" && !item.accessibleAlternative,
         ) && "Add an accessible alternative to every Media activity",
+        ...curriculum.activities
+          .filter((item) => item.type === "quiz")
+          .map((quiz) =>
+            (curriculum.quizQuestions?.filter(
+              (question) => question.activityId === quiz._id,
+            ).length ?? 0) === 0
+              ? `Add at least one question to “${quiz.title}”`
+              : false,
+          ),
       ].filter(Boolean) as string[]);
 
   async function act(
@@ -324,16 +336,66 @@ export default function AdminLmsPage() {
                   <h3>{module.title}</h3>
                   {curriculum.activities
                     .filter((item) => item.moduleId === module._id)
-                    .map((activity) => (
-                      <div key={activity._id}>
-                        <span>{activity.type.replaceAll("_", " ")}</span>
-                        <strong>{activity.title}</strong>
-                        <small>
-                          {activity.required ? "Required" : "Optional"}
-                          {activity.rightsApproved ? " · Rights approved" : ""}
-                        </small>
-                      </div>
-                    ))}
+                    .map((activity) => {
+                      const questions =
+                        curriculum.quizQuestions?.filter(
+                          (question) => question.activityId === activity._id,
+                        ) ?? [];
+                      return (
+                        <div className="admin-lms-activity" key={activity._id}>
+                          <div className="admin-lms-activity-summary">
+                            <span>{activity.type.replaceAll("_", " ")}</span>
+                            <strong>{activity.title}</strong>
+                            <small>
+                              {activity.required ? "Required" : "Optional"}
+                              {activity.type === "quiz"
+                                ? ` · Pass at ${activity.passingScore ?? 100}%`
+                                : activity.rightsApproved
+                                  ? " · Rights approved"
+                                  : ""}
+                            </small>
+                          </div>
+                          {activity.type === "quiz" && (
+                            <div className="admin-lms-quiz-bank">
+                              <div className="admin-lms-quiz-head">
+                                <strong>Quiz questions</strong>
+                                <span>
+                                  {questions.length} question
+                                  {questions.length === 1 ? "" : "s"}
+                                </span>
+                              </div>
+                              {questions.map((question, index) => (
+                                <div
+                                  className="admin-lms-quiz-question"
+                                  key={question._id}
+                                >
+                                  <span>{index + 1}</span>
+                                  <div>
+                                    <strong>{question.prompt}</strong>
+                                    <small>
+                                      {question.options.length} options · one
+                                      correct answer
+                                    </small>
+                                  </div>
+                                </div>
+                              ))}
+                              {isDraft && (
+                                <QuizQuestionEditor
+                                  activityId={activity._id}
+                                  onSave={(prompt, options) =>
+                                    addQuizQuestion({
+                                      activityId: activity._id,
+                                      prompt,
+                                      options,
+                                    })
+                                  }
+                                />
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                 </section>
               ))}
               {isDraft && activeModuleId && (
@@ -359,9 +421,16 @@ export default function AdminLmsPage() {
                           completionMode:
                             activityType === "assignment"
                               ? "submit"
-                              : "self_confirm",
+                              : activityType === "quiz"
+                                ? "pass"
+                                : "self_confirm",
+                          passingScore:
+                            activityType === "quiz"
+                              ? Number(passingScore)
+                              : undefined,
                           rightsApproved:
                             activityType === "reading" ||
+                            activityType === "quiz" ||
                             activityType === "assignment" ||
                             rightsApproved,
                           accessibleAlternative:
@@ -408,6 +477,21 @@ export default function AdminLmsPage() {
                       />
                     </label>
                   </div>
+                  {activityType === "quiz" && (
+                    <label>
+                      Passing score (%)
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={passingScore}
+                        onChange={(event) =>
+                          setPassingScore(event.target.value)
+                        }
+                        required
+                      />
+                    </label>
+                  )}
                   <label>
                     Title
                     <Input
@@ -605,5 +689,97 @@ export default function AdminLmsPage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+function QuizQuestionEditor({
+  activityId,
+  onSave,
+}: {
+  activityId: Id<"lmsActivities">;
+  onSave: (
+    prompt: string,
+    options: Array<{ label: string; isCorrect: boolean }>,
+  ) => Promise<unknown>;
+}) {
+  const [prompt, setPrompt] = useState("");
+  const [options, setOptions] = useState(["", "", "", ""]);
+  const [correctIndex, setCorrectIndex] = useState(0);
+  const [pending, setPending] = useState(false);
+  const [notice, setNotice] = useState<string>();
+
+  return (
+    <form
+      className="admin-lms-quiz-editor"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setPending(true);
+        setNotice(undefined);
+        try {
+          await onSave(
+            prompt,
+            options.map((label, index) => ({
+              label,
+              isCorrect: index === correctIndex,
+            })),
+          );
+          setPrompt("");
+          setOptions(["", "", "", ""]);
+          setCorrectIndex(0);
+          setNotice("Question added to the Draft.");
+        } catch (error) {
+          setNotice(message(error));
+        } finally {
+          setPending(false);
+        }
+      }}
+    >
+      <h4>Add a question</h4>
+      <label>
+        Question
+        <Textarea
+          value={prompt}
+          onChange={(event) => setPrompt(event.target.value)}
+          placeholder="Ask one clear knowledge-check question"
+          required
+        />
+      </label>
+      <fieldset>
+        <legend>Answer options · select the correct answer</legend>
+        {options.map((option, index) => (
+          <label key={`${activityId}-option-${index}`}>
+            <input
+              type="radio"
+              name={`correct-${activityId}`}
+              checked={correctIndex === index}
+              onChange={() => setCorrectIndex(index)}
+              aria-label={`Mark option ${index + 1} correct`}
+            />
+            <Input
+              value={option}
+              onChange={(event) =>
+                setOptions((current) =>
+                  current.map((item, optionIndex) =>
+                    optionIndex === index ? event.target.value : item,
+                  ),
+                )
+              }
+              placeholder={`Option ${index + 1}`}
+              required
+            />
+          </label>
+        ))}
+      </fieldset>
+      <Button
+        type="submit"
+        variant="outline"
+        disabled={
+          pending || !prompt.trim() || options.some((option) => !option.trim())
+        }
+      >
+        <Plus /> {pending ? "Adding…" : "Add question"}
+      </Button>
+      {notice && <p role="status">{notice}</p>}
+    </form>
   );
 }

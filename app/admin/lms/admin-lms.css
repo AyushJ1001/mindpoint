@@ -134,13 +134,15 @@
 .admin-lms-module {
   margin-top: 24px;
 }
-.admin-lms-module > div {
+.admin-lms-activity {
+  border-bottom: 1px solid rgba(7, 77, 79, 0.15);
+}
+.admin-lms-activity-summary {
   display: grid;
   grid-template-columns: 110px 1fr auto;
   gap: 12px;
   align-items: center;
   padding: 14px 0;
-  border-bottom: 1px solid rgba(7, 77, 79, 0.15);
 }
 .admin-lms-module span,
 .admin-lms-module small {
@@ -149,6 +151,87 @@
 }
 .admin-lms-module span {
   text-transform: capitalize;
+}
+.admin-lms-quiz-bank {
+  padding: 4px 0 22px 122px;
+}
+.admin-lms-quiz-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: baseline;
+  padding: 12px 0;
+  color: #07575b;
+  font-size: 0.72rem;
+}
+.admin-lms-quiz-question {
+  display: grid;
+  grid-template-columns: 26px 1fr;
+  gap: 10px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(7, 77, 79, 0.1);
+}
+.admin-lms-quiz-question > span {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  color: #07575b;
+  background: #dcecea;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 0.75rem;
+}
+.admin-lms-quiz-question strong,
+.admin-lms-quiz-question small {
+  display: block;
+}
+.admin-lms-quiz-question strong {
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.admin-lms-quiz-question small {
+  margin-top: 3px;
+}
+.admin-lms-quiz-editor {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 18px;
+  border-radius: 14px;
+  background: #edf3ed;
+}
+.admin-lms-quiz-editor h4,
+.admin-lms-quiz-editor legend {
+  color: #123f40;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.admin-lms-quiz-editor fieldset {
+  display: grid;
+  gap: 8px;
+}
+.admin-lms-quiz-editor fieldset label {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 8px;
+  align-items: center;
+}
+.admin-lms-quiz-editor input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  appearance: none;
+  border: 2px solid #58706d;
+  border-radius: 999px;
+  background: white;
+}
+.admin-lms-quiz-editor input[type="radio"]:checked {
+  border-color: #0c6f73;
+  background: radial-gradient(circle, #0c6f73 0 34%, white 38% 100%);
+}
+.admin-lms-quiz-editor > p {
+  color: #07575b;
+  font-size: 0.72rem;
 }
 .admin-lms-form-grid {
   display: grid;
@@ -264,7 +347,10 @@
     border-left: 0;
   }
   .admin-lms-form-grid,
-  .admin-lms-module > div {
+  .admin-lms-activity-summary {
     grid-template-columns: 1fr;
+  }
+  .admin-lms-quiz-bank {
+    padding-left: 0;
   }
 }

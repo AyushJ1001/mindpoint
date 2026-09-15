@@ -9,6 +9,7 @@ import {
   BookOpen,
   Check,
   CheckCircle2,
+  CircleHelp,
   Clock3,
   FileText,
   LockKeyhole,
@@ -131,6 +132,7 @@ function AuthenticatedStudentLmsApp() {
   );
   const setSelfCompletion = useMutation(studentLmsApi.setSelfCompletion);
   const submitAssignment = useMutation(studentLmsApi.submitAssignment);
+  const submitQuizAttempt = useMutation(studentLmsApi.submitQuizAttempt);
   const askQuestion = useMutation(studentLmsApi.askQuestion);
   const [selectedActivityId, setSelectedActivityId] = useState<string>();
   const [assignmentText, setAssignmentText] = useState("");
@@ -406,6 +408,7 @@ function AuthenticatedStudentLmsApp() {
         <main className="lms-live-work" id="lms-active-work">
           {selectedActivity ? (
             <ActivityWork
+              key={selectedActivity.activityId}
               activity={selectedActivity}
               status={
                 progressByActivity.get(selectedActivity.activityId) ??
@@ -438,6 +441,18 @@ function AuthenticatedStudentLmsApp() {
                     setAssignmentText("");
                   },
                   "Your response is with Faculty for review.",
+                )
+              }
+              onSubmitQuiz={(answers) =>
+                runAction(
+                  "quiz",
+                  () =>
+                    submitQuizAttempt({
+                      enrollmentId: workspace.enrollment.enrollmentId,
+                      activityId: selectedActivity.activityId,
+                      answers,
+                    }),
+                  "Your Quiz was scored and the result is recorded.",
                 )
               }
             />
@@ -572,6 +587,7 @@ function ActivityWork({
   onAssignmentText,
   onComplete,
   onSubmit,
+  onSubmitQuiz,
 }: {
   activity: StudentLmsActivity;
   status: LmsProgressStatus;
@@ -580,10 +596,23 @@ function ActivityWork({
   onAssignmentText: (value: string) => void;
   onComplete: () => void;
   onSubmit: () => void;
+  onSubmitQuiz: (
+    answers: Array<{
+      questionId: NonNullable<
+        StudentLmsActivity["quiz"]
+      >["questions"][number]["questionId"];
+      optionId: NonNullable<
+        StudentLmsActivity["quiz"]
+      >["questions"][number]["options"][number]["optionId"];
+    }>,
+  ) => Promise<unknown>;
 }) {
+  const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
   const icon =
     activity.type === "media" ? (
       <PlayCircle />
+    ) : activity.type === "quiz" ? (
+      <CircleHelp />
     ) : activity.type === "assignment" ? (
       <FileText />
     ) : (
@@ -652,7 +681,98 @@ function ActivityWork({
           </Button>
         </div>
       )}
-      {(activity.type === "quiz" || activity.type === "feedback") && (
+      {activity.type === "quiz" && activity.quiz && (
+        <form
+          className="lms-live-quiz"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const answers = activity.quiz!.questions.flatMap((question) => {
+              const selectedOption = question.options.find(
+                (option) =>
+                  option.optionId === quizAnswers[question.questionId],
+              );
+              return selectedOption
+                ? [
+                    {
+                      questionId: question.questionId,
+                      optionId: selectedOption.optionId,
+                    },
+                  ]
+                : [];
+            });
+            void onSubmitQuiz(answers);
+          }}
+        >
+          {activity.quiz.latestAttempt && (
+            <div
+              className={`lms-live-quiz-result ${
+                activity.quiz.latestAttempt.passed ? "passed" : "retry"
+              }`}
+              role="status"
+            >
+              <CheckCircle2 />
+              <div>
+                <strong>
+                  {activity.quiz.latestAttempt.score}% · Attempt{" "}
+                  {activity.quiz.latestAttempt.attemptNumber}
+                </strong>
+                <p>
+                  {activity.quiz.latestAttempt.passed
+                    ? "Passed. This result is part of your Completion evidence."
+                    : `Not passed yet. Review the activity and try again; ${activity.passingScore ?? 100}% is required.`}
+                </p>
+              </div>
+            </div>
+          )}
+          {!complete &&
+            activity.quiz.questions.map((question, index) => (
+              <fieldset key={question.questionId}>
+                <legend>
+                  <span>{index + 1}</span>
+                  {question.prompt}
+                </legend>
+                {question.options.map((option) => (
+                  <label key={option.optionId}>
+                    <input
+                      type="radio"
+                      name={`quiz-${question.questionId}`}
+                      value={option.optionId}
+                      checked={
+                        quizAnswers[question.questionId] === option.optionId
+                      }
+                      onChange={() =>
+                        setQuizAnswers((current) => ({
+                          ...current,
+                          [question.questionId]: option.optionId,
+                        }))
+                      }
+                    />
+                    <span>{option.label}</span>
+                  </label>
+                ))}
+              </fieldset>
+            ))}
+          {!complete && (
+            <Button
+              type="submit"
+              className="lms-live-primary"
+              disabled={
+                pendingAction === "quiz" ||
+                Object.keys(quizAnswers).length !==
+                  activity.quiz.questions.length
+              }
+            >
+              <Check />
+              {pendingAction === "quiz"
+                ? "Scoring…"
+                : activity.quiz.latestAttempt
+                  ? "Submit another attempt"
+                  : "Submit Quiz"}
+            </Button>
+          )}
+        </form>
+      )}
+      {activity.type === "feedback" && (
         <div className="lms-live-coming">
           <Sparkles />
           <div>

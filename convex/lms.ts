@@ -9,6 +9,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { requireAdmin } from "./adminAuth";
 import { LmsActivityType, LmsCompletionMode, LmsReleaseMode } from "./schema";
 import { maybeCreateCompletionRequest } from "./lmsCompletion";
+import { scoreLmsQuiz } from "./_shared/lmsQuiz";
 
 type ViewerCtx = QueryCtx | MutationCtx;
 
@@ -45,7 +46,10 @@ async function requireEnrollmentCurriculum(
   ctx: ViewerCtx,
   enrollmentId: Id<"enrollments">,
 ) {
-  const { enrollment } = await requireOwnedEnrollment(ctx, enrollmentId);
+  const { enrollment, identity } = await requireOwnedEnrollment(
+    ctx,
+    enrollmentId,
+  );
   const assignment = await ctx.db
     .query("lmsEnrollmentCurricula")
     .withIndex("by_enrollmentId", (q) => q.eq("enrollmentId", enrollmentId))
@@ -57,7 +61,7 @@ async function requireEnrollmentCurriculum(
   if (!curriculum || curriculum.status !== "published") {
     throw new Error("Published Curriculum not found");
   }
-  return { assignment, curriculum, enrollment };
+  return { assignment, curriculum, enrollment, identity };
 }
 
 function validateHttpsUrl(value?: string) {
@@ -170,6 +174,15 @@ export const addActivity = mutation({
     if (args.completionMode === "pass" && args.passingScore === undefined) {
       throw new Error("A passing-score activity needs a passing score");
     }
+    if (
+      args.type === "quiz" &&
+      (args.completionMode !== "pass" ||
+        args.passingScore === undefined ||
+        args.passingScore < 0 ||
+        args.passingScore > 100)
+    ) {
+      throw new Error("A Quiz needs a passing score between 0 and 100");
+    }
 
     const existing = await ctx.db
       .query("lmsActivities")
@@ -214,6 +227,86 @@ export const addActivity = mutation({
   },
 });
 
+export const addQuizQuestion = mutation({
+  args: {
+    activityId: v.id("lmsActivities"),
+    prompt: v.string(),
+    options: v.array(
+      v.object({
+        label: v.string(),
+        isCorrect: v.boolean(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (!activity || activity.type !== "quiz") {
+      throw new Error("Quiz activity not found");
+    }
+    const curriculum = await ctx.db.get("lmsCurricula", activity.curriculumId);
+    if (!curriculum || curriculum.status !== "draft") {
+      throw new Error("Quiz questions can only be added to a Draft Curriculum");
+    }
+    const prompt = args.prompt.trim();
+    const options = args.options.map((option) => ({
+      label: option.label.trim(),
+      isCorrect: option.isCorrect,
+    }));
+    if (!prompt) throw new Error("Question text is required");
+    if (options.length < 2 || options.length > 6) {
+      throw new Error("A Quiz question needs between 2 and 6 options");
+    }
+    if (options.some((option) => !option.label)) {
+      throw new Error("Every Quiz option needs text");
+    }
+    if (
+      new Set(options.map((option) => option.label.toLowerCase())).size !==
+      options.length
+    ) {
+      throw new Error("Quiz options must be unique");
+    }
+    if (options.filter((option) => option.isCorrect).length !== 1) {
+      throw new Error("Choose exactly one correct answer");
+    }
+    const existing = await ctx.db
+      .query("lmsQuizQuestions")
+      .withIndex("by_activityId_and_sortOrder", (q) =>
+        q.eq("activityId", args.activityId),
+      )
+      .order("desc")
+      .take(1);
+    const now = Date.now();
+    const questionId = await ctx.db.insert("lmsQuizQuestions", {
+      activityId: args.activityId,
+      prompt,
+      sortOrder: (existing[0]?.sortOrder ?? -1) + 1,
+      createdAt: now,
+      updatedAt: now,
+    });
+    for (let index = 0; index < options.length; index += 1) {
+      await ctx.db.insert("lmsQuizOptions", {
+        questionId,
+        label: options[index].label,
+        sortOrder: index,
+        isCorrect: options[index].isCorrect,
+        createdAt: now,
+      });
+    }
+    await ctx.db.patch("lmsCurricula", curriculum._id, { updatedAt: now });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "lms.quiz_question.created",
+      entityType: "lmsQuizQuestion",
+      entityId: questionId,
+      after: { activityId: activity._id, optionCount: options.length },
+      createdAt: now,
+    });
+    return { questionId };
+  },
+});
+
 export const getAdminCurriculum = query({
   args: { curriculumId: v.id("lmsCurricula") },
   handler: async (ctx, args) => {
@@ -232,7 +325,32 @@ export const getAdminCurriculum = query({
         q.eq("curriculumId", args.curriculumId),
       )
       .take(500);
-    return { curriculum, modules, activities };
+    const quizQuestions = (
+      await Promise.all(
+        activities
+          .filter((activity) => activity.type === "quiz")
+          .map(async (activity) => {
+            const questions = await ctx.db
+              .query("lmsQuizQuestions")
+              .withIndex("by_activityId_and_sortOrder", (q) =>
+                q.eq("activityId", activity._id),
+              )
+              .take(100);
+            return await Promise.all(
+              questions.map(async (question) => ({
+                ...question,
+                options: await ctx.db
+                  .query("lmsQuizOptions")
+                  .withIndex("by_questionId_and_sortOrder", (q) =>
+                    q.eq("questionId", question._id),
+                  )
+                  .take(6),
+              })),
+            );
+          }),
+      )
+    ).flat();
+    return { curriculum, modules, activities, quizQuestions };
   },
 });
 
@@ -278,6 +396,39 @@ export const publishCurriculum = mutation({
       )
     ) {
       throw new Error("Media activities need an accessible alternative");
+    }
+    for (const quiz of activities.filter((item) => item.type === "quiz")) {
+      if (
+        quiz.completionMode !== "pass" ||
+        quiz.passingScore === undefined ||
+        quiz.passingScore < 0 ||
+        quiz.passingScore > 100
+      ) {
+        throw new Error("Every Quiz needs a passing score between 0 and 100");
+      }
+      const questions = await ctx.db
+        .query("lmsQuizQuestions")
+        .withIndex("by_activityId_and_sortOrder", (q) =>
+          q.eq("activityId", quiz._id),
+        )
+        .take(100);
+      if (questions.length === 0) {
+        throw new Error(`Quiz “${quiz.title}” needs at least one question`);
+      }
+      for (const question of questions) {
+        const options = await ctx.db
+          .query("lmsQuizOptions")
+          .withIndex("by_questionId_and_sortOrder", (q) =>
+            q.eq("questionId", question._id),
+          )
+          .take(6);
+        if (
+          options.length < 2 ||
+          options.filter((option) => option.isCorrect).length !== 1
+        ) {
+          throw new Error(`Quiz question “${question.prompt}” is incomplete`);
+        }
+      }
     }
 
     const now = Date.now();
@@ -507,6 +658,55 @@ export const getMyWorkspace = query({
           activity,
           completedActivityIds,
         );
+        const quiz =
+          availability.isAvailable && activity.type === "quiz"
+            ? await (async () => {
+                const questions = await ctx.db
+                  .query("lmsQuizQuestions")
+                  .withIndex("by_activityId_and_sortOrder", (q) =>
+                    q.eq("activityId", activity._id),
+                  )
+                  .take(100);
+                const attempts = await ctx.db
+                  .query("lmsQuizAttempts")
+                  .withIndex("by_enrollmentId_and_activityId", (q) =>
+                    q
+                      .eq("enrollmentId", args.enrollmentId)
+                      .eq("activityId", activity._id),
+                  )
+                  .order("desc")
+                  .take(1);
+                return {
+                  questions: await Promise.all(
+                    questions.map(async (question) => ({
+                      questionId: question._id,
+                      prompt: question.prompt,
+                      sortOrder: question.sortOrder,
+                      options: (
+                        await ctx.db
+                          .query("lmsQuizOptions")
+                          .withIndex("by_questionId_and_sortOrder", (q) =>
+                            q.eq("questionId", question._id),
+                          )
+                          .take(6)
+                      ).map((option) => ({
+                        optionId: option._id,
+                        label: option.label,
+                        sortOrder: option.sortOrder,
+                      })),
+                    })),
+                  ),
+                  latestAttempt: attempts[0]
+                    ? {
+                        attemptNumber: attempts[0].attemptNumber,
+                        score: attempts[0].score,
+                        passed: attempts[0].passed,
+                        submittedAt: attempts[0].submittedAt,
+                      }
+                    : undefined,
+                };
+              })()
+            : undefined;
         return {
           activityId: activity._id,
           moduleId: activity.moduleId,
@@ -529,6 +729,7 @@ export const getMyWorkspace = query({
           accessibleAlternative: availability.isAvailable
             ? activity.accessibleAlternative
             : undefined,
+          quiz,
         };
       }),
     );
@@ -638,6 +839,148 @@ export const setSelfCompletion = mutation({
     if (args.completed)
       await maybeCreateCompletionRequest(ctx, args.enrollmentId);
     return { status: patch.status };
+  },
+});
+
+export const submitQuizAttempt = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    answers: v.array(
+      v.object({
+        questionId: v.id("lmsQuizQuestions"),
+        optionId: v.id("lmsQuizOptions"),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const { curriculum, identity } = await requireEnrollmentCurriculum(
+      ctx,
+      args.enrollmentId,
+    );
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (
+      !activity ||
+      activity.curriculumId !== curriculum._id ||
+      activity.type !== "quiz" ||
+      activity.completionMode !== "pass"
+    ) {
+      throw new Error("Quiz activity not found in this Curriculum");
+    }
+    await assertActivityAvailable(ctx, args.enrollmentId, activity);
+    const questions = await ctx.db
+      .query("lmsQuizQuestions")
+      .withIndex("by_activityId_and_sortOrder", (q) =>
+        q.eq("activityId", activity._id),
+      )
+      .take(100);
+    if (questions.length === 0) throw new Error("This Quiz is not ready");
+    if (
+      args.answers.length !== questions.length ||
+      new Set(args.answers.map((answer) => answer.questionId)).size !==
+        questions.length
+    ) {
+      throw new Error("Answer every Quiz question before submitting");
+    }
+    const answersByQuestion = new Map(
+      args.answers.map((answer) => [answer.questionId, answer.optionId]),
+    );
+    const gradedAnswers = [];
+    let correctAnswerCount = 0;
+    for (const question of questions) {
+      const selectedOptionId = answersByQuestion.get(question._id);
+      if (!selectedOptionId) {
+        throw new Error("Answer every Quiz question before submitting");
+      }
+      const option = await ctx.db.get("lmsQuizOptions", selectedOptionId);
+      if (!option || option.questionId !== question._id) {
+        throw new Error("A selected answer does not belong to this Quiz");
+      }
+      if (option.isCorrect) correctAnswerCount += 1;
+      gradedAnswers.push({
+        questionId: question._id,
+        selectedOptionId: option._id,
+        isCorrect: option.isCorrect,
+      });
+    }
+    const { score, passed } = scoreLmsQuiz(
+      questions.length,
+      correctAnswerCount,
+      activity.passingScore ?? 100,
+    );
+    const previousAttempts = await ctx.db
+      .query("lmsQuizAttempts")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .order("desc")
+      .take(20);
+    const now = Date.now();
+    const attemptNumber = (previousAttempts[0]?.attemptNumber ?? 0) + 1;
+    const attemptId = await ctx.db.insert("lmsQuizAttempts", {
+      enrollmentId: args.enrollmentId,
+      activityId: args.activityId,
+      attemptNumber,
+      score,
+      correctAnswerCount,
+      questionCount: questions.length,
+      passed,
+      submittedAt: now,
+    });
+    for (const answer of gradedAnswers) {
+      await ctx.db.insert("lmsQuizAnswers", {
+        attemptId,
+        ...answer,
+        createdAt: now,
+      });
+    }
+    const progress = await ctx.db
+      .query("lmsActivityProgress")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .unique();
+    const progressPatch = {
+      status: passed ? ("completed" as const) : ("in_progress" as const),
+      submittedAt: now,
+      completedAt: passed ? now : undefined,
+      evidenceReference: attemptId,
+      updatedAt: now,
+    };
+    if (progress) {
+      await ctx.db.patch("lmsActivityProgress", progress._id, progressPatch);
+    } else {
+      await ctx.db.insert("lmsActivityProgress", {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+        startedAt: now,
+        ...progressPatch,
+      });
+    }
+    if (passed) await maybeCreateCompletionRequest(ctx, args.enrollmentId);
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.quiz_attempt.submitted",
+      entityType: "lmsQuizAttempt",
+      entityId: attemptId,
+      after: { score, passed, attemptNumber },
+      metadata: {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+      },
+      createdAt: now,
+    });
+    return {
+      attemptId,
+      attemptNumber,
+      score,
+      passed,
+    };
   },
 });
 

@@ -25,6 +25,9 @@ const nextConfig = {
   // Optimize production builds
   poweredByHeader: false,
   reactStrictMode: true,
+  // Allow the temporary localhost.run preview host to hydrate in development.
+  // Production does not use this allowlist.
+  allowedDevOrigins: ["*.lhr.life"],
   images: {
     remotePatterns: [
       {

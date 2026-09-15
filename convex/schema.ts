@@ -612,6 +612,43 @@ export default defineSchema({
     .index("by_curriculumId", ["curriculumId"])
     .index("by_moduleId_and_sortOrder", ["moduleId", "sortOrder"]),
 
+  lmsQuizQuestions: defineTable({
+    activityId: v.id("lmsActivities"),
+    prompt: v.string(),
+    sortOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_activityId_and_sortOrder", ["activityId", "sortOrder"]),
+
+  lmsQuizOptions: defineTable({
+    questionId: v.id("lmsQuizQuestions"),
+    label: v.string(),
+    sortOrder: v.number(),
+    isCorrect: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_questionId_and_sortOrder", ["questionId", "sortOrder"]),
+
+  lmsQuizAttempts: defineTable({
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    attemptNumber: v.number(),
+    score: v.number(),
+    correctAnswerCount: v.number(),
+    questionCount: v.number(),
+    passed: v.boolean(),
+    submittedAt: v.number(),
+  })
+    .index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"])
+    .index("by_activityId_and_passed", ["activityId", "passed"]),
+
+  lmsQuizAnswers: defineTable({
+    attemptId: v.id("lmsQuizAttempts"),
+    questionId: v.id("lmsQuizQuestions"),
+    selectedOptionId: v.id("lmsQuizOptions"),
+    isCorrect: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_attemptId", ["attemptId"]),
+
   lmsEnrollmentCurricula: defineTable({
     enrollmentId: v.id("enrollments"),
     curriculumId: v.id("lmsCurricula"),

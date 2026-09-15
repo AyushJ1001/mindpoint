@@ -49,6 +49,24 @@ export type StudentLmsActivity = {
   content?: string;
   externalUrl?: string;
   accessibleAlternative?: string;
+  quiz?: {
+    questions: Array<{
+      questionId: Id<"lmsQuizQuestions">;
+      prompt: string;
+      sortOrder: number;
+      options: Array<{
+        optionId: Id<"lmsQuizOptions">;
+        label: string;
+        sortOrder: number;
+      }>;
+    }>;
+    latestAttempt?: {
+      attemptNumber: number;
+      score: number;
+      passed: boolean;
+      submittedAt: number;
+    };
+  };
 };
 
 export type StudentLmsWorkspace = {
@@ -113,6 +131,23 @@ export const studentLmsApi = {
     },
     { submissionId: Id<"lmsSubmissions"> }
   >("lms:submitAssignment"),
+  submitQuizAttempt: makeFunctionReference<
+    "mutation",
+    {
+      enrollmentId: Id<"enrollments">;
+      activityId: Id<"lmsActivities">;
+      answers: Array<{
+        questionId: Id<"lmsQuizQuestions">;
+        optionId: Id<"lmsQuizOptions">;
+      }>;
+    },
+    {
+      attemptId: Id<"lmsQuizAttempts">;
+      attemptNumber: number;
+      score: number;
+      passed: boolean;
+    }
+  >("lms:submitQuizAttempt"),
   askQuestion: makeFunctionReference<
     "mutation",
     {
@@ -263,6 +298,19 @@ export type AdminCurriculum = {
     sortOrder: number;
     rightsApproved: boolean;
     accessibleAlternative?: string;
+    passingScore?: number;
+  }>;
+  quizQuestions: Array<{
+    _id: Id<"lmsQuizQuestions">;
+    activityId: Id<"lmsActivities">;
+    prompt: string;
+    sortOrder: number;
+    options: Array<{
+      _id: Id<"lmsQuizOptions">;
+      label: string;
+      sortOrder: number;
+      isCorrect: boolean;
+    }>;
   }>;
 };
 
@@ -308,6 +356,15 @@ export const adminLmsApi = {
     },
     { activityId: Id<"lmsActivities"> }
   >("lms:addActivity"),
+  addQuizQuestion: makeFunctionReference<
+    "mutation",
+    {
+      activityId: Id<"lmsActivities">;
+      prompt: string;
+      options: Array<{ label: string; isCorrect: boolean }>;
+    },
+    { questionId: Id<"lmsQuizQuestions"> }
+  >("lms:addQuizQuestion"),
   publishCurriculum: makeFunctionReference<
     "mutation",
     { curriculumId: Id<"lmsCurricula"> },

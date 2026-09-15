@@ -215,7 +215,7 @@ function RoleRail({
                   <span className="lg:hidden">{meta.mobileLabel}</span>
                   <span className="hidden lg:inline">{meta.label}</span>
                 </span>
-                <span className="mt-0.5 hidden text-xs opacity-75 lg:block">
+                <span className="mt-0.5 hidden text-xs lg:block">
                   {meta.description}
                 </span>
               </span>
@@ -240,6 +240,9 @@ function StudentWorkspace() {
   const [question, setQuestion] = useState("");
   const [questionSent, setQuestionSent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [quizAnswer, setQuizAnswer] = useState("");
+  const [quizResult, setQuizResult] = useState<"passed" | "retry">();
+  const [quizAttemptCount, setQuizAttemptCount] = useState(0);
   const selected =
     activities.find((activity) => activity.id === selectedId) ?? activities[2];
   const completedCount = completed.size;
@@ -251,6 +254,10 @@ function StudentWorkspace() {
     (activity) => activity.id === selected.id,
   );
   const nextActivity = activities[selectedIndex + 1];
+  const nextActivityLocked =
+    nextActivity?.id === "feedback"
+      ? !completed.has("check")
+      : nextActivity?.status === "locked";
   const canSelfComplete =
     selectedStatus !== "locked" &&
     selectedStatus !== "complete" &&
@@ -280,17 +287,23 @@ function StudentWorkspace() {
         <nav aria-label="Course activities">
           {activities.map((activity, index) => {
             const active = activity.id === selected.id;
+            const locked =
+              activity.id === "feedback"
+                ? !completed.has("check")
+                : activity.status === "locked";
             const status = completed.has(activity.id)
               ? "complete"
-              : activity.status;
+              : locked
+                ? "locked"
+                : activity.status === "locked"
+                  ? "available"
+                  : activity.status;
             return (
               <button
                 key={activity.id}
                 type="button"
-                onClick={() =>
-                  activity.status !== "locked" && setSelectedId(activity.id)
-                }
-                disabled={activity.status === "locked"}
+                onClick={() => !locked && setSelectedId(activity.id)}
+                disabled={locked}
                 className={`lms-focus grid w-full grid-cols-[1.5rem_1fr_auto] gap-3 border-b border-[var(--lms-rule)] px-5 py-4 text-left transition-colors ${
                   active ? "bg-[var(--lms-accent-soft)]" : "hover:bg-stone-50"
                 } disabled:cursor-not-allowed disabled:opacity-55`}
@@ -302,7 +315,13 @@ function StudentWorkspace() {
                   <span className="block text-sm leading-5 font-semibold">
                     {activity.title}
                   </span>
-                  <span className="mt-1 block text-xs text-[var(--lms-muted)]">
+                  <span
+                    className={`mt-1 block text-xs ${
+                      active
+                        ? "text-[var(--lms-deep)]"
+                        : "text-[var(--lms-muted)]"
+                    }`}
+                  >
                     {activity.type} · {activity.duration}
                   </span>
                 </span>
@@ -334,10 +353,20 @@ function StudentWorkspace() {
                 <option
                   key={activity.id}
                   value={activity.id}
-                  disabled={activity.status === "locked"}
+                  disabled={
+                    activity.id === "feedback"
+                      ? !completed.has("check")
+                      : activity.status === "locked"
+                  }
                 >
                   {index + 1}. {activity.title}
-                  {activity.status === "locked" ? " · Locked" : ""}
+                  {(
+                    activity.id === "feedback"
+                      ? !completed.has("check")
+                      : activity.status === "locked"
+                  )
+                    ? " · Locked"
+                    : ""}
                 </option>
               ))}
             </select>
@@ -360,55 +389,122 @@ function StudentWorkspace() {
             {selected.title}
           </h1>
           <p className="mt-6 max-w-[68ch] text-base leading-8 text-[var(--lms-muted)]">
-            Read the scenario, identify the moment the listener moved from
-            curiosity to advice, and write a response that keeps the
-            speaker&apos;s meaning at the centre.
+            {selected.type === "Quiz"
+              ? "Choose the response that best protects a listener’s curiosity. Your attempt is scored immediately and retained as learning evidence."
+              : "Read the scenario, identify the moment the listener moved from curiosity to advice, and write a response that keeps the speaker’s meaning at the centre."}
           </p>
 
-          <section
-            className="mt-9 border-y border-[var(--lms-rule)] py-7"
-            aria-labelledby="scenario-heading"
-          >
-            <h2 id="scenario-heading" className="text-base font-semibold">
-              Practice scenario
-            </h2>
-            <blockquote className="font-display mt-4 max-w-[66ch] text-2xl leading-9 text-[var(--lms-deep)]">
-              “I know what I should do. I just need someone to stay with the
-              uncertainty for a minute.”
-            </blockquote>
-            <p className="mt-5 max-w-[68ch] text-sm leading-7 text-[var(--lms-muted)]">
-              Notice what changes when the response begins with an observation
-              rather than a solution. Your submission is private to assigned
-              Faculty.
-            </p>
-          </section>
-
-          <div className="mt-8">
-            <label
-              htmlFor="student-reflection"
-              className="text-sm font-semibold"
+          {selected.type === "Quiz" ? (
+            <form
+              className="mt-9 border-y border-[var(--lms-rule)] py-7"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const passed = quizAnswer === "reflect";
+                setQuizAttemptCount((current) => current + 1);
+                setQuizResult(passed ? "passed" : "retry");
+                if (passed) {
+                  setCompleted((current) => new Set(current).add("check"));
+                }
+              }}
             >
-              Your reflection
-            </label>
-            <Textarea
-              id="student-reflection"
-              className="mt-3 min-h-40 bg-white"
-              defaultValue="I would reflect the tension I heard and ask which part feels hardest to hold right now."
-              onChange={() => setSubmitted(false)}
-            />
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--lms-muted)]">
-              <span role="status">
-                {submitted
-                  ? "Submitted to Faculty in this preview"
-                  : "Draft saved for this preview"}
-              </span>
-              <Button size="sm" onClick={() => setSubmitted(true)}>
-                <Send /> {submitted ? "Submitted" : "Submit for review"}
-              </Button>
-            </div>
-          </div>
+              <fieldset>
+                <legend className="text-base leading-7 font-semibold">
+                  A speaker says, “I know what I should do.” What is the best
+                  listening response?
+                </legend>
+                <div className="mt-5 grid gap-2">
+                  {[
+                    ["advise", "Explain the option you think is safest."],
+                    [
+                      "reflect",
+                      "Reflect the uncertainty and ask what feels hardest to hold.",
+                    ],
+                    ["reassure", "Reassure them that everything will be fine."],
+                  ].map(([value, label]) => (
+                    <label
+                      key={value}
+                      className={`lms-focus flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 text-sm leading-6 ${quizAnswer === value ? "border-[var(--lms-accent)] bg-[var(--lms-accent-soft)]" : "border-[var(--lms-rule)] bg-white"}`}
+                    >
+                      <input
+                        type="radio"
+                        name="preview-quiz"
+                        value={value}
+                        checked={quizAnswer === value}
+                        onChange={() => {
+                          setQuizAnswer(value);
+                          setQuizResult(undefined);
+                        }}
+                      />
+                      {label}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+              <div className="mt-5 flex flex-wrap items-center justify-between gap-3">
+                <p
+                  className={`text-sm ${quizResult === "retry" ? "text-amber-800" : "text-emerald-800"}`}
+                  role="status"
+                >
+                  {quizResult === "passed"
+                    ? `100% · Passed. Attempt ${quizAttemptCount} is recorded.`
+                    : quizResult === "retry"
+                      ? "0% · Not passed yet. Review and try again."
+                      : "Passing score: 70%"}
+                </p>
+                <Button type="submit" disabled={!quizAnswer}>
+                  <Check />{" "}
+                  {quizResult ? "Submit another attempt" : "Submit Quiz"}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <>
+              <section
+                className="mt-9 border-y border-[var(--lms-rule)] py-7"
+                aria-labelledby="scenario-heading"
+              >
+                <h2 id="scenario-heading" className="text-base font-semibold">
+                  Practice scenario
+                </h2>
+                <blockquote className="font-display mt-4 max-w-[66ch] text-2xl leading-9 text-[var(--lms-deep)]">
+                  “I know what I should do. I just need someone to stay with the
+                  uncertainty for a minute.”
+                </blockquote>
+                <p className="mt-5 max-w-[68ch] text-sm leading-7 text-[var(--lms-muted)]">
+                  Notice what changes when the response begins with an
+                  observation rather than a solution. Your submission is private
+                  to assigned Faculty.
+                </p>
+              </section>
 
-          <div className="mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--lms-rule)] pt-6">
+              <div className="mt-8">
+                <label
+                  htmlFor="student-reflection"
+                  className="text-sm font-semibold"
+                >
+                  Your reflection
+                </label>
+                <Textarea
+                  id="student-reflection"
+                  className="mt-3 min-h-40 bg-white"
+                  defaultValue="I would reflect the tension I heard and ask which part feels hardest to hold right now."
+                  onChange={() => setSubmitted(false)}
+                />
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--lms-muted)]">
+                  <span role="status">
+                    {submitted
+                      ? "Submitted to Faculty in this preview"
+                      : "Draft saved for this preview"}
+                  </span>
+                  <Button size="sm" onClick={() => setSubmitted(true)}>
+                    <Send /> {submitted ? "Submitted" : "Submit for review"}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+
+          <div className="lms-preview-actions mt-10 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--lms-rule)] pt-6">
             <Button
               variant="outline"
               disabled={selectedIndex === 0}
@@ -438,7 +534,7 @@ function StudentWorkspace() {
             </Button>
             <Button
               variant="outline"
-              disabled={!nextActivity || nextActivity.status === "locked"}
+              disabled={!nextActivity || nextActivityLocked}
               onClick={() =>
                 setSelectedId(activities[selectedIndex + 1]?.id ?? selected.id)
               }
