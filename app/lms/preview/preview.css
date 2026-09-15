@@ -118,3 +118,6 @@
     animation-iteration-count: 1 !important;
   }
 }
+body:has(.lms-preview-page) > footer {
+  display: none;
+}

@@ -334,6 +334,111 @@ export const activateEnrollment = mutation({
   },
 });
 
+export const listMyLmsEnrollments = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireViewer(ctx);
+    const subjectEnrollments = await ctx.db
+      .query("enrollments")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .order("desc")
+      .take(100);
+    const tokenEnrollments =
+      identity.tokenIdentifier === identity.subject
+        ? []
+        : await ctx.db
+            .query("enrollments")
+            .withIndex("by_userId", (q) =>
+              q.eq("userId", identity.tokenIdentifier),
+            )
+            .order("desc")
+            .take(100);
+    const enrollments = Array.from(
+      new Map(
+        [...subjectEnrollments, ...tokenEnrollments].map((enrollment) => [
+          enrollment._id,
+          enrollment,
+        ]),
+      ).values(),
+    ).filter(
+      (enrollment) => !enrollment.status || enrollment.status === "active",
+    );
+
+    return await Promise.all(
+      enrollments.map(async (enrollment) => {
+        const [course, assignment] = await Promise.all([
+          ctx.db.get("courses", enrollment.courseId),
+          ctx.db
+            .query("lmsEnrollmentCurricula")
+            .withIndex("by_enrollmentId", (q) =>
+              q.eq("enrollmentId", enrollment._id),
+            )
+            .unique(),
+        ]);
+        const curriculum = assignment
+          ? await ctx.db.get("lmsCurricula", assignment.curriculumId)
+          : null;
+
+        return {
+          enrollmentId: enrollment._id,
+          enrollmentNumber: enrollment.enrollmentNumber,
+          courseId: enrollment.courseId,
+          courseName: course?.name ?? enrollment.courseName ?? "Your Course",
+          courseCode: course?.code,
+          batchLabel: enrollment.batchLabel,
+          curriculumTitle: curriculum?.title,
+          curriculumVersion: curriculum?.version,
+          lmsStatus:
+            assignment && curriculum?.status === "published"
+              ? assignment.status
+              : ("awaiting_activation" as const),
+        };
+      }),
+    );
+  },
+});
+
+async function getActivityAvailability(
+  ctx: ViewerCtx,
+  enrollmentId: Id<"enrollments">,
+  activity: Doc<"lmsActivities">,
+  completedActivityIds?: ReadonlySet<Id<"lmsActivities">>,
+) {
+  if (
+    activity.releaseMode === "date" &&
+    (activity.releaseAt ?? 0) > Date.now()
+  ) {
+    return {
+      isAvailable: false,
+      lockReason: `Available ${new Date(activity.releaseAt!).toISOString()}`,
+    };
+  }
+  if (activity.releaseMode === "prerequisite") {
+    if (!activity.prerequisiteActivityId) {
+      return { isAvailable: false, lockReason: "Release is being configured" };
+    }
+    const prerequisiteComplete = completedActivityIds
+      ? completedActivityIds.has(activity.prerequisiteActivityId)
+      : (
+          await ctx.db
+            .query("lmsActivityProgress")
+            .withIndex("by_enrollmentId_and_activityId", (q) =>
+              q
+                .eq("enrollmentId", enrollmentId)
+                .eq("activityId", activity.prerequisiteActivityId!),
+            )
+            .unique()
+        )?.status === "completed";
+    if (!prerequisiteComplete) {
+      return {
+        isAvailable: false,
+        lockReason: "Complete the previous required activity first",
+      };
+    }
+  }
+  return { isAvailable: true, lockReason: undefined };
+}
+
 export const getMyWorkspace = query({
   args: { enrollmentId: v.id("enrollments") },
   handler: async (ctx, args) => {
@@ -367,7 +472,79 @@ export const getMyWorkspace = query({
         q.eq("enrollmentId", args.enrollmentId),
       )
       .take(500);
-    return { enrollment, course, curriculum, modules, activities, progress };
+    const completedActivityIds = new Set(
+      progress
+        .filter((item) => item.status === "completed")
+        .map((item) => item.activityId),
+    );
+    const safeActivities = await Promise.all(
+      activities.map(async (activity) => {
+        const availability = await getActivityAvailability(
+          ctx,
+          args.enrollmentId,
+          activity,
+          completedActivityIds,
+        );
+        return {
+          activityId: activity._id,
+          moduleId: activity.moduleId,
+          type: activity.type,
+          title: activity.title,
+          durationMinutes: activity.durationMinutes,
+          required: activity.required,
+          sortOrder: activity.sortOrder,
+          completionMode: activity.completionMode,
+          passingScore: activity.passingScore,
+          releaseAt: activity.releaseAt,
+          ...availability,
+          instructions: availability.isAvailable
+            ? activity.instructions
+            : undefined,
+          content: availability.isAvailable ? activity.content : undefined,
+          externalUrl: availability.isAvailable
+            ? activity.externalUrl
+            : undefined,
+          accessibleAlternative: availability.isAvailable
+            ? activity.accessibleAlternative
+            : undefined,
+        };
+      }),
+    );
+
+    return {
+      enrollment: {
+        enrollmentId: enrollment._id,
+        enrollmentNumber: enrollment.enrollmentNumber,
+        batchLabel: enrollment.batchLabel,
+      },
+      course: course
+        ? {
+            courseId: course._id,
+            name: course.name,
+            code: course.code,
+            duration: course.duration,
+          }
+        : null,
+      curriculum: {
+        curriculumId: curriculum._id,
+        title: curriculum.title,
+        version: curriculum.version,
+      },
+      modules: modules.map((module) => ({
+        moduleId: module._id,
+        title: module.title,
+        description: module.description,
+        sortOrder: module.sortOrder,
+      })),
+      activities: safeActivities,
+      progress: progress.map((item) => ({
+        activityId: item.activityId,
+        status: item.status,
+        submittedAt: item.submittedAt,
+        completedAt: item.completedAt,
+        updatedAt: item.updatedAt,
+      })),
+    };
   },
 });
 
@@ -376,27 +553,15 @@ async function assertActivityAvailable(
   enrollmentId: Id<"enrollments">,
   activity: Doc<"lmsActivities">,
 ) {
-  if (
-    activity.releaseMode === "date" &&
-    (activity.releaseAt ?? 0) > Date.now()
-  ) {
-    throw new Error("This activity has not been released yet");
-  }
-  if (activity.releaseMode === "prerequisite") {
-    if (!activity.prerequisiteActivityId) {
-      throw new Error("Activity prerequisite is not configured");
-    }
-    const prerequisite = await ctx.db
-      .query("lmsActivityProgress")
-      .withIndex("by_enrollmentId_and_activityId", (q) =>
-        q
-          .eq("enrollmentId", enrollmentId)
-          .eq("activityId", activity.prerequisiteActivityId!),
-      )
-      .unique();
-    if (prerequisite?.status !== "completed") {
-      throw new Error("Complete the prerequisite activity first");
-    }
+  const availability = await getActivityAvailability(
+    ctx,
+    enrollmentId,
+    activity,
+  );
+  if (!availability.isAvailable) {
+    throw new Error(
+      availability.lockReason ?? "This activity is not available",
+    );
   }
 }
 

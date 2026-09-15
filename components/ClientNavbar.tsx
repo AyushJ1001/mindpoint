@@ -14,7 +14,7 @@ export default function ClientNavbar() {
     setIsHydrated(true);
   }, []);
 
-  if (pathname.startsWith("/lms/preview")) return null;
+  if (pathname.startsWith("/lms")) return null;
 
   // Always show server navbar during SSR and initial hydration
   if (!isHydrated) {

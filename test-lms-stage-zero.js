@@ -7,6 +7,11 @@ const emailDeliverySource = fs.readFileSync(
 );
 const emailActionsSource = fs.readFileSync("convex/emailActions.ts", "utf8");
 const whatsappSource = fs.readFileSync("lib/whatsapp.ts", "utf8");
+const lmsSource = fs.readFileSync("convex/lms.ts", "utf8");
+const lmsPageSource = fs.readFileSync(
+  "components/lms/StudentLmsApp.tsx",
+  "utf8",
+);
 
 assert.doesNotMatch(
   emailDeliverySource,
@@ -32,6 +37,26 @@ assert.doesNotMatch(
   whatsappSource,
   /console\.(?:debug|info|log)\(/,
   "Disabled WhatsApp delivery must not log message details",
+);
+assert.match(
+  lmsSource,
+  /export const listMyLmsEnrollments = query\(/,
+  "The Student LMS must derive its Enrollment list from the authenticated backend",
+);
+assert.match(
+  lmsSource,
+  /instructions: availability\.isAvailable[\s\S]*content: availability\.isAvailable[\s\S]*externalUrl: availability\.isAvailable/,
+  "Locked activities must not expose instructions, content, or External resource URLs",
+);
+assert.match(
+  lmsPageSource,
+  /studentLmsApi\.setSelfCompletion/,
+  "The Student workspace must persist eligible activity completion",
+);
+assert.match(
+  lmsPageSource,
+  /visibility: "private"/,
+  "The initial Student question flow must remain private",
 );
 
 console.log("LMS Stage 0 containment checks passed");
