@@ -8,6 +8,7 @@ import {
 import type { Doc, Id } from "./_generated/dataModel";
 import { requireAdmin } from "./adminAuth";
 import { LmsActivityType, LmsCompletionMode, LmsReleaseMode } from "./schema";
+import { maybeCreateCompletionRequest } from "./lmsCompletion";
 
 type ViewerCtx = QueryCtx | MutationCtx;
 
@@ -44,7 +45,7 @@ async function requireEnrollmentCurriculum(
   ctx: ViewerCtx,
   enrollmentId: Id<"enrollments">,
 ) {
-  await requireOwnedEnrollment(ctx, enrollmentId);
+  const { enrollment } = await requireOwnedEnrollment(ctx, enrollmentId);
   const assignment = await ctx.db
     .query("lmsEnrollmentCurricula")
     .withIndex("by_enrollmentId", (q) => q.eq("enrollmentId", enrollmentId))
@@ -56,7 +57,7 @@ async function requireEnrollmentCurriculum(
   if (!curriculum || curriculum.status !== "published") {
     throw new Error("Published Curriculum not found");
   }
-  return { assignment, curriculum };
+  return { assignment, curriculum, enrollment };
 }
 
 function validateHttpsUrl(value?: string) {
@@ -152,7 +153,7 @@ export const addActivity = mutation({
     accessibleAlternative: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    const admin = await requireAdmin(ctx);
     const module = await ctx.db.get("lmsModules", args.moduleId);
     if (!module) throw new Error("Module not found");
     const curriculum = await ctx.db.get("lmsCurricula", module.curriculumId);
@@ -200,6 +201,15 @@ export const addActivity = mutation({
       updatedAt: now,
     });
     await ctx.db.patch("lmsCurricula", module.curriculumId, { updatedAt: now });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "lms.activity.created",
+      entityType: "lmsActivity",
+      entityId: activityId,
+      after: { type: args.type, rightsApproved: args.rightsApproved },
+      createdAt: now,
+    });
     return { activityId };
   },
 });
@@ -329,6 +339,18 @@ export const activateEnrollment = mutation({
       status: "active",
       activatedAt: now,
       activatedByAdminId: admin.userId,
+    });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "lms.enrollment.activated",
+      entityType: "lmsEnrollmentCurriculum",
+      entityId: assignmentId,
+      after: {
+        enrollmentId: args.enrollmentId,
+        curriculumId: args.curriculumId,
+      },
+      createdAt: now,
     });
     return { assignmentId, alreadyActive: false };
   },
@@ -613,6 +635,8 @@ export const setSelfCompletion = mutation({
         ...patch,
       });
     }
+    if (args.completed)
+      await maybeCreateCompletionRequest(ctx, args.enrollmentId);
     return { status: patch.status };
   },
 });
@@ -624,7 +648,7 @@ export const submitAssignment = mutation({
     responseText: v.string(),
   },
   handler: async (ctx, args) => {
-    const { curriculum } = await requireEnrollmentCurriculum(
+    const { curriculum, enrollment } = await requireEnrollmentCurriculum(
       ctx,
       args.enrollmentId,
     );
@@ -651,6 +675,8 @@ export const submitAssignment = mutation({
     const submissionId = await ctx.db.insert("lmsSubmissions", {
       enrollmentId: args.enrollmentId,
       activityId: args.activityId,
+      courseId: enrollment.courseId,
+      batchId: enrollment.batchId,
       attemptNumber: (attempts[0]?.attemptNumber ?? 0) + 1,
       responseText,
       status: "submitted",
@@ -699,7 +725,7 @@ export const askQuestion = mutation({
   },
   handler: async (ctx, args) => {
     const { identity } = await requireOwnedEnrollment(ctx, args.enrollmentId);
-    const { curriculum } = await requireEnrollmentCurriculum(
+    const { curriculum, enrollment } = await requireEnrollmentCurriculum(
       ctx,
       args.enrollmentId,
     );
@@ -714,6 +740,8 @@ export const askQuestion = mutation({
     const questionId = await ctx.db.insert("lmsQuestions", {
       enrollmentId: args.enrollmentId,
       curriculumId: curriculum._id,
+      courseId: enrollment.courseId,
+      batchId: enrollment.batchId,
       activityId: args.activityId,
       authorTokenIdentifier: identity.tokenIdentifier,
       visibility: args.visibility,

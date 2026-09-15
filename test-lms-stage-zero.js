@@ -12,6 +12,8 @@ const lmsPageSource = fs.readFileSync(
   "components/lms/StudentLmsApp.tsx",
   "utf8",
 );
+const facultyLmsSource = fs.readFileSync("convex/lmsFaculty.ts", "utf8");
+const adminLmsSource = fs.readFileSync("convex/lmsAdmin.ts", "utf8");
 
 assert.doesNotMatch(
   emailDeliverySource,
@@ -57,6 +59,41 @@ assert.match(
   lmsPageSource,
   /visibility: "private"/,
   "The initial Student question flow must remain private",
+);
+assert.match(
+  facultyLmsSource,
+  /by_courseId_and_facultyTokenIdentifier[\s\S]*identity\.tokenIdentifier/,
+  "Faculty record access must derive scoped assignments from the authenticated identity",
+);
+assert.match(
+  facultyLmsSource,
+  /assignment\[permission\]/,
+  "Faculty mutations must enforce the specific assigned permission",
+);
+assert.match(
+  facultyLmsSource,
+  /lms\.submission\.\$\{args\.decision\}/,
+  "Faculty evidence decisions must create an audit event",
+);
+assert.match(
+  facultyLmsSource,
+  /by_courseId_and_batchId_and_status/,
+  "Faculty work must be bounded inside assigned Course or batch scope",
+);
+assert.match(
+  facultyLmsSource,
+  /export const approveCompletion = mutation\(/,
+  "Faculty with Completion permission must have an authoritative approval mutation",
+);
+assert.match(
+  facultyLmsSource,
+  /lms\.completion\.approved/,
+  "Completion and Certificate issuance must create an audit event",
+);
+assert.match(
+  adminLmsSource,
+  /await requireAdmin\(ctx\)/,
+  "The LMS Release desk backend must require Administrator access",
 );
 
 console.log("LMS Stage 0 containment checks passed");

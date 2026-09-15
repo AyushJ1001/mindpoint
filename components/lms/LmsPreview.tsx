@@ -745,14 +745,26 @@ function AdministratorWorkspace() {
             }}
             className={`lms-focus grid w-full grid-cols-[1.5rem_1fr] gap-3 border-t border-[var(--lms-rule)] px-5 py-4 text-left ${selectedId === activity.id ? "bg-[var(--lms-accent-soft)]" : "hover:bg-stone-50"}`}
           >
-            <span className="font-mono text-xs text-[var(--lms-muted)]">
+            <span
+              className={`font-mono text-xs ${
+                selectedId === activity.id
+                  ? "text-[var(--lms-deep)]"
+                  : "text-[var(--lms-muted)]"
+              }`}
+            >
               {index + 1}
             </span>
             <span>
               <span className="block text-sm leading-5 font-semibold">
                 {activity.title}
               </span>
-              <span className="mt-1 block text-xs text-[var(--lms-muted)]">
+              <span
+                className={`mt-1 block text-xs ${
+                  selectedId === activity.id
+                    ? "text-[var(--lms-deep)]"
+                    : "text-[var(--lms-muted)]"
+                }`}
+              >
                 {activity.type}
               </span>
             </span>

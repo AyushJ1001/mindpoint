@@ -645,6 +645,8 @@ export default defineSchema({
   lmsSubmissions: defineTable({
     enrollmentId: v.id("enrollments"),
     activityId: v.id("lmsActivities"),
+    courseId: v.optional(v.id("courses")),
+    batchId: v.optional(v.id("courseBatches")),
     attemptNumber: v.number(),
     responseText: v.string(),
     status: v.union(
@@ -663,7 +665,13 @@ export default defineSchema({
   })
     .index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"])
     .index("by_activityId_and_status", ["activityId", "status"])
-    .index("by_status", ["status"]),
+    .index("by_status", ["status"])
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_courseId_and_batchId_and_status", [
+      "courseId",
+      "batchId",
+      "status",
+    ]),
 
   lmsFacultyAssignments: defineTable({
     courseId: v.id("courses"),
@@ -685,6 +693,8 @@ export default defineSchema({
   lmsQuestions: defineTable({
     enrollmentId: v.id("enrollments"),
     curriculumId: v.id("lmsCurricula"),
+    courseId: v.optional(v.id("courses")),
+    batchId: v.optional(v.id("courseBatches")),
     activityId: v.optional(v.id("lmsActivities")),
     authorTokenIdentifier: v.string(),
     visibility: v.union(
@@ -704,7 +714,33 @@ export default defineSchema({
     answeredAt: v.optional(v.number()),
   })
     .index("by_enrollmentId", ["enrollmentId"])
-    .index("by_curriculumId_and_status", ["curriculumId", "status"]),
+    .index("by_curriculumId_and_status", ["curriculumId", "status"])
+    .index("by_status", ["status"])
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_courseId_and_batchId_and_status", [
+      "courseId",
+      "batchId",
+      "status",
+    ]),
+
+  lmsCompletionRequests: defineTable({
+    enrollmentId: v.id("enrollments"),
+    curriculumId: v.id("lmsCurricula"),
+    courseId: v.id("courses"),
+    batchId: v.optional(v.id("courseBatches")),
+    status: v.union(v.literal("pending"), v.literal("approved")),
+    requestedAt: v.number(),
+    reviewedAt: v.optional(v.number()),
+    reviewedByTokenIdentifier: v.optional(v.string()),
+    certificateId: v.optional(v.id("lmsCertificates")),
+  })
+    .index("by_enrollmentId_and_curriculumId", ["enrollmentId", "curriculumId"])
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_courseId_and_batchId_and_status", [
+      "courseId",
+      "batchId",
+      "status",
+    ]),
 
   lmsCertificates: defineTable({
     enrollmentId: v.id("enrollments"),
