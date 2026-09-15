@@ -4,7 +4,7 @@ import "./preview.css";
 
 export const metadata: Metadata = {
   title: "LMS Preview | The Mind Point",
-  description: "Interactive preview of the Mind Point learning workspace.",
+  description: "Interactive preview of The Mind Point learning workspace.",
   robots: { index: false, follow: false },
 };
 

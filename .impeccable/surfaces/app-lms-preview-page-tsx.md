@@ -6,23 +6,24 @@ Operate-mode responsive preview at `app/lms/preview/page.tsx`, with production c
 
 ## Audience, job, and action
 
-Mind Point needs to inspect the complete MVP workflow before live Convex data is activated. The preview must let a viewer switch Roles, resume a Student activity, inspect Faculty work, and see publication readiness without mistaking synthetic records for production data.
+The Mind Point needs to inspect the complete MVP workflow before live Convex data is activated. The preview must let a viewer switch Roles, resume a Student activity, inspect Faculty work, and see publication readiness without mistaking synthetic records for production data.
 
 ## Content and constraints
 
-Use clearly labeled synthetic Course and Student records. Preserve the approved Role desk, Student Study desk, Faculty Review desk, and Administrator Release desk interaction structures. Use the existing Mind Point lavender and warm-neutral product identity, semantic HTML, keyboard-visible controls, readable progress text, and responsive structural collapse.
+Use clearly labeled synthetic Course and Student records. Preserve the approved Role desk, Student Study desk, Faculty Review desk, and Administrator Release desk interaction structures. Use the supplied The Mind Point logo, deep teal and warm natural palette, semantic HTML, keyboard-visible controls, readable progress text, and responsive structural collapse.
 
 ## Direction
 
-The preview opens as the product at work: a compact Role rail, one authoritative workspace, and a context pane that changes with the selected task. Avoid dashboard-card grids. Use quiet ruled rows, a single solid lavender action color, Fraunces only for workspace and activity headings, and Plus Jakarta Sans for controls and dense operational copy.
+The preview opens as a tidal learning sanctuary: one calm Course basin fed by three Role channels. A compact Role rail, authoritative workspace, and contextual bank change with the selected task. Avoid dashboard-card grids. Use quiet ruled rows, deep botanical teal actions, warm ivory working surfaces, soft sage state fields, and the supplied leaf mark as the brand anchor.
 
 ## Direction contract
 
-- THESIS: One Course, seen through three accountable desks.
-- OWN-WORLD: The preview is an uninterrupted operational workspace, not a marketing page.
-- STORY: Study evidence becomes review evidence, then publication evidence.
-- FIRST VIEWPORT: Course identity, all three Roles, the active task, and its consequence are visible without scrolling on desktop.
-- FORM: Preserve the approved Student Study desk (seed `ddf00d31`), Faculty Review desk (seed `eca51f8d`), and selected Administrator Release desk. This composite introduces no new visual seed.
+- THESIS: One Course is a calm body of knowledge fed by three accountable Role channels; refuse the generic lavender admin dashboard.
+- OWN-WORLD: Deep botanical teal, quiet sage, warm ivory, sand, fine waterline rules, generous breathing room, and the supplied TMP leaf mark make the interface recognizable without its copy.
+- STORY: A Student follows one clear learning current; their evidence flows to Faculty review and then to Administrator publication readiness without losing provenance.
+- FIRST VIEWPORT: A teal brand-and-status current spans the top; the Course identity rests below it; all three Roles sit on the left bank, the active learning task owns the wide center, and its consequence sits on the right bank.
+- FORM: Tidal learning sanctuary, third on the grounded list and selected under seed `5b7b6338`; its signature interaction is one slow luminous current traveling through the progress channel while Role changes settle like water.
+- FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, DESIGN.md, and every shipping raster carrying its provenance
 
 ## Quality bar
 
@@ -34,7 +35,7 @@ Switching Role changes the work surface while preserving the same Course context
 
 ## First viewport
 
-At desktop width, a narrow Role rail, a dominant work canvas, and a contextual right rail fill the viewport below a compact synthetic-data notice. On mobile, Role selection becomes a horizontal control, the work canvas leads, and context follows inline.
+At desktop width, a narrow branded Role rail, a dominant ivory work canvas, and a sage contextual bank fill the viewport below a teal flowing status band. On mobile, the TMP mark and Course identity remain visible, all Role choices fit in one row, the work canvas leads, and context follows inline.
 
 ## Unresolved decisions
 

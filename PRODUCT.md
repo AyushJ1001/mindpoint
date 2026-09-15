@@ -14,7 +14,7 @@ web
 
 ## Product Purpose
 
-Mind Point adds a responsive learning-management system to the existing application. Success means a Student can move through a published Curriculum from first activity to verified Completion without staff reconstructing learning evidence by hand.
+The Mind Point adds a responsive learning-management system to the existing application. Success means a Student can move through a published Curriculum from first activity to verified Completion without staff reconstructing learning evidence by hand.
 
 ## Positioning
 
@@ -34,7 +34,7 @@ Courses are organized as ordered Modules containing typed Learning activities. A
 
 ## Brand Commitments
 
-Preserve The Mind Point name and the existing calm lavender and warm-neutral product identity. Product language is supportive, direct, and specific; it must not invent accreditation, career-outcome, or legal-compliance claims.
+Always use the full name “The Mind Point.” The visual identity is deep botanical teal, soft sage, warm ivory, and sand, led by the supplied TMP leaf mark and full wordmark. Interfaces should feel like a calm waterside sanctuary: spacious, grounded, natural, and quietly flowing without becoming decorative or vague. Product language is supportive, direct, and specific; it must not invent accreditation, career-outcome, or legal-compliance claims.
 
 ## Evidence on Hand
 

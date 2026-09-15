@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import {
   Accessibility,
   ArrowLeft,
@@ -157,7 +158,9 @@ function StatusMark({ status }: { status: ActivityStatus }) {
   return (
     <span
       className={`h-2.5 w-2.5 rounded-full ${
-        status === "current" ? "bg-[#72558f]" : "border border-stone-400"
+        status === "current"
+          ? "bg-[var(--lms-accent)]"
+          : "border border-[var(--lms-muted)]"
       }`}
       aria-label={status === "current" ? "Current" : "Available"}
     />
@@ -173,12 +176,17 @@ function RoleRail({
 }) {
   return (
     <aside className="border-b border-[var(--lms-rule)] bg-[var(--lms-panel)] lg:border-r lg:border-b-0">
-      <div className="hidden border-b border-[var(--lms-rule)] px-5 py-5 lg:block">
-        <p className="font-display text-xl font-semibold tracking-[-0.02em]">
-          Mind Point LMS
-        </p>
-        <p className="mt-1 text-xs text-[var(--lms-muted)]">
-          Interactive product preview
+      <div className="hidden border-b border-[var(--lms-rule)] px-5 py-6 lg:block">
+        <Image
+          src="/brand/the-mind-point-logo.png"
+          alt="The Mind Point"
+          width={138}
+          height={100}
+          className="h-auto w-[138px]"
+          priority
+        />
+        <p className="mt-3 text-xs font-medium text-[var(--lms-muted)]">
+          Learning sanctuary
         </p>
       </div>
       <nav
@@ -216,9 +224,7 @@ function RoleRail({
         })}
       </nav>
       <div className="hidden border-t border-[var(--lms-rule)] p-5 text-xs leading-5 text-[var(--lms-muted)] lg:block">
-        <span className="font-semibold text-[var(--lms-ink)]">
-          Synthetic preview
-        </span>
+        <span className="font-semibold text-[var(--lms-ink)]">Gentle demo</span>
         <br />
         No real Student records are shown or changed.
       </div>
@@ -238,15 +244,23 @@ function StudentWorkspace() {
     activities.find((activity) => activity.id === selectedId) ?? activities[2];
   const completedCount = completed.size;
   const progress = Math.round((completedCount / activities.length) * 100);
+  const selectedStatus = completed.has(selected.id)
+    ? "complete"
+    : selected.status;
   const selectedIndex = activities.findIndex(
     (activity) => activity.id === selected.id,
   );
+  const nextActivity = activities[selectedIndex + 1];
+  const canSelfComplete =
+    selectedStatus !== "locked" &&
+    selectedStatus !== "complete" &&
+    (selected.type === "Reading" || selected.type === "Media");
 
   const toggleComplete = () => {
+    if (!canSelfComplete) return;
     setCompleted((current) => {
       const next = new Set(current);
-      if (next.has(selected.id)) next.delete(selected.id);
-      else next.add(selected.id);
+      next.add(selected.id);
       return next;
     });
   };
@@ -333,7 +347,13 @@ function StudentWorkspace() {
             <span aria-hidden="true">·</span>
             <span>{selected.duration}</span>
             <span className="ml-auto rounded-full bg-[var(--lms-accent-soft)] px-3 py-1 font-semibold text-[var(--lms-accent-strong)]">
-              Current activity
+              {selectedStatus === "complete"
+                ? "Complete"
+                : selectedStatus === "current"
+                  ? "In progress"
+                  : selectedStatus === "locked"
+                    ? "Locked"
+                    : "Available"}
             </span>
           </div>
           <h1 className="font-display mt-5 max-w-2xl text-4xl leading-[1.08] font-semibold tracking-[-0.035em] md:text-5xl">
@@ -352,7 +372,7 @@ function StudentWorkspace() {
             <h2 id="scenario-heading" className="text-base font-semibold">
               Practice scenario
             </h2>
-            <blockquote className="font-display mt-4 max-w-[66ch] text-2xl leading-9 text-[#40364c]">
+            <blockquote className="font-display mt-4 max-w-[66ch] text-2xl leading-9 text-[var(--lms-deep)]">
               “I know what I should do. I just need someone to stay with the
               uncertainty for a minute.”
             </blockquote>
@@ -401,13 +421,24 @@ function StudentWorkspace() {
             <Button
               variant={completed.has(selected.id) ? "outline" : "default"}
               onClick={toggleComplete}
+              disabled={!canSelfComplete}
             >
               <Check />{" "}
-              {completed.has(selected.id) ? "Completed" : "Mark complete"}
+              {completed.has(selected.id)
+                ? "Completed"
+                : selected.type === "Assignment"
+                  ? submitted
+                    ? "Awaiting Faculty review"
+                    : "Submit reflection above"
+                  : selected.type === "Quiz"
+                    ? "Pass knowledge check"
+                    : selectedStatus === "locked"
+                      ? "Complete prerequisite first"
+                      : "Mark complete"}
             </Button>
             <Button
               variant="outline"
-              disabled={selectedIndex === activities.length - 1}
+              disabled={!nextActivity || nextActivity.status === "locked"}
               onClick={() =>
                 setSelectedId(activities[selectedIndex + 1]?.id ?? selected.id)
               }
@@ -418,7 +449,7 @@ function StudentWorkspace() {
         </div>
       </article>
 
-      <aside className="border-t border-[var(--lms-rule)] bg-[#f8f4ef] p-6 lg:border-t-0 lg:border-l">
+      <aside className="border-t border-[var(--lms-rule)] bg-[var(--lms-bank)] p-6 lg:border-t-0 lg:border-l">
         <p className="text-sm font-semibold">Course progress</p>
         <div className="mt-4 flex items-end justify-between">
           <span className="font-display text-3xl font-semibold">
@@ -428,9 +459,9 @@ function StudentWorkspace() {
             {completedCount} of {activities.length}
           </span>
         </div>
-        <div className="mt-3 h-2 overflow-hidden rounded-full bg-white">
+        <div className="lms-progress-track mt-3 h-2 overflow-hidden rounded-full bg-white/75">
           <div
-            className="h-full rounded-full bg-[var(--lms-accent)] transition-[width] duration-200"
+            className="lms-progress-current h-full rounded-full bg-[var(--lms-accent)] transition-[width] duration-200"
             style={{ width: `${progress}%` }}
           />
         </div>
@@ -522,21 +553,31 @@ function FacultyWorkspace() {
           <div className="flex gap-2">
             <Button
               size="sm"
-              variant={filter === "all" ? "outline" : "ghost"}
+              variant="ghost"
+              className={
+                filter === "all"
+                  ? "bg-[var(--lms-accent)] text-[var(--lms-ivory)] hover:bg-[var(--lms-accent-strong)] hover:text-[var(--lms-ivory)]"
+                  : "text-[var(--lms-accent-strong)] hover:bg-[var(--lms-accent-soft)]"
+              }
               onClick={() => setFilter("all")}
             >
               All work
             </Button>
             <Button
               size="sm"
-              variant={filter === "mine" ? "outline" : "ghost"}
+              variant="ghost"
+              className={
+                filter === "mine"
+                  ? "bg-[var(--lms-accent)] text-[var(--lms-ivory)] hover:bg-[var(--lms-accent-strong)] hover:text-[var(--lms-ivory)]"
+                  : "text-[var(--lms-accent-strong)] hover:bg-[var(--lms-accent-soft)]"
+              }
               onClick={() => setFilter("mine")}
             >
               Assigned to me
             </Button>
           </div>
         </div>
-        <div className="grid grid-cols-[1fr_auto] border-b border-[var(--lms-rule)] bg-[#f8f4ef] px-6 py-3 text-xs font-semibold text-[var(--lms-muted)] md:grid-cols-[1fr_9rem_6rem] md:px-9">
+        <div className="grid grid-cols-[1fr_auto] border-b border-[var(--lms-rule)] bg-[var(--lms-bank)] px-6 py-3 text-xs font-semibold text-[var(--lms-muted)] md:grid-cols-[1fr_9rem_6rem] md:px-9">
           <span>Priority queue</span>
           <span className="hidden md:block">Student</span>
           <span>Waiting</span>
@@ -584,15 +625,12 @@ function FacultyWorkspace() {
         </div>
       </section>
 
-      <aside className="border-t border-[var(--lms-rule)] bg-[#f8f4ef] p-6 lg:border-t-0 lg:border-l lg:p-8">
-        <p className="text-xs font-semibold text-[var(--lms-accent-strong)]">
-          {selected.kind}
-        </p>
-        <h2 className="font-display mt-3 text-2xl leading-tight font-semibold">
+      <aside className="border-t border-[var(--lms-rule)] bg-[var(--lms-bank)] p-6 lg:border-t-0 lg:border-l lg:p-8">
+        <h2 className="font-display text-2xl leading-tight font-semibold">
           {selected.title}
         </h2>
         <p className="mt-2 text-sm text-[var(--lms-muted)]">
-          {selected.student}
+          {selected.kind} · {selected.student}
         </p>
         <div className="mt-6 border-y border-[var(--lms-rule)] py-6">
           <p className="text-sm leading-7">{selected.detail}</p>
@@ -628,6 +666,7 @@ function FacultyWorkspace() {
           )}
           <Button
             variant="outline"
+            className="border-[var(--lms-accent)] bg-transparent text-[var(--lms-accent-strong)] hover:bg-[var(--lms-accent-soft)] hover:text-[var(--lms-deep)]"
             onClick={() =>
               setEscalated((items) =>
                 items.includes(selected.id) ? items : [...items, selected.id],
@@ -652,6 +691,9 @@ function AdministratorWorkspace() {
   const [selectedBlocker, setSelectedBlocker] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState("Draft saved just now");
   const [activityAdded, setActivityAdded] = useState(false);
+  const [adminActivities, setAdminActivities] = useState<Activity[]>(() => [
+    ...activities,
+  ]);
   const blockers = [
     {
       id: "rights",
@@ -682,7 +724,7 @@ function AdministratorWorkspace() {
 
   return (
     <div className="grid min-h-[760px] lg:grid-cols-[250px_minmax(0,1fr)_310px]">
-      <aside className="border-b border-[var(--lms-rule)] lg:border-r lg:border-b-0">
+      <aside className="order-2 border-b border-[var(--lms-rule)] lg:order-none lg:border-r lg:border-b-0">
         <div className="border-b border-[var(--lms-rule)] px-5 py-4">
           <p className="text-sm font-semibold">Draft Curriculum v2</p>
           <p className="mt-1 text-xs text-[var(--lms-muted)]">
@@ -690,9 +732,9 @@ function AdministratorWorkspace() {
           </p>
         </div>
         <div className="px-5 py-4 text-xs font-semibold text-[var(--lms-muted)]">
-          Module 1 · 5 activities
+          Module 1 · {adminActivities.length} activities
         </div>
-        {activities.map((activity, index) => (
+        {adminActivities.map((activity, index) => (
           <button
             key={activity.id}
             type="button"
@@ -719,9 +761,21 @@ function AdministratorWorkspace() {
         <button
           type="button"
           onClick={() => {
+            if (activityAdded) return;
+            const draft: Activity = {
+              id: "new-draft",
+              title: "Untitled activity",
+              type: "Reading",
+              duration: "Not set",
+              status: "available",
+            };
+            setAdminActivities((items) => [...items, draft]);
+            setSelectedId(draft.id);
+            setTitle(draft.title);
             setActivityAdded(true);
             setSaveMessage("New activity draft added in this preview");
           }}
+          disabled={activityAdded}
           className="lms-focus flex w-full items-center gap-2 border-t border-dashed border-[var(--lms-rule)] px-5 py-4 text-sm font-semibold text-[var(--lms-accent-strong)]"
         >
           <BookOpen className="h-4 w-4" />
@@ -729,7 +783,7 @@ function AdministratorWorkspace() {
         </button>
       </aside>
 
-      <section className="min-w-0 px-6 py-8 md:px-10">
+      <section className="order-1 min-w-0 px-6 py-8 md:px-10 lg:order-none">
         <div className="mx-auto max-w-3xl">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
@@ -820,7 +874,7 @@ function AdministratorWorkspace() {
         </div>
       </section>
 
-      <aside className="border-t border-[var(--lms-rule)] bg-[#f8f4ef] p-6 lg:border-t-0 lg:border-l">
+      <aside className="order-3 border-t border-[var(--lms-rule)] bg-[var(--lms-bank)] p-6 lg:order-none lg:border-t-0 lg:border-l">
         <div className="flex items-center justify-between">
           <p className="text-sm font-semibold">Publication readiness</p>
           <span className="font-mono text-xs text-[var(--lms-muted)]">
@@ -886,20 +940,38 @@ export function LmsPreview({
 
   return (
     <div className="mx-auto w-full max-w-[1600px] px-3 py-4 sm:px-5 sm:py-6">
-      <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 rounded-xl bg-[#352b40] px-4 py-3 text-xs text-[#f7f0fa] shadow-[0_10px_30px_rgba(39,27,49,0.15)]">
-        <span className="font-semibold">Synthetic preview</span>
-        <span className="text-[#d8cce1]">
+      <div className="lms-current-band mb-3 flex flex-wrap items-center gap-x-4 gap-y-2 overflow-hidden rounded-[18px] bg-[var(--lms-deep)] px-4 py-3 text-xs text-[var(--lms-ivory)] shadow-[0_14px_36px_rgba(0,62,65,0.16)]">
+        <span className="relative z-10 font-semibold">Interactive preview</span>
+        <span className="relative z-10 text-[var(--lms-mist)]">
           Explore the same Course as each Role. Nothing here changes production
           data.
         </span>
-        <span className="ml-auto flex items-center gap-2 font-semibold">
+        <span className="relative z-10 ml-auto flex items-center gap-2 font-semibold">
           <ShieldCheck className="h-4 w-4" /> {roleLabel} scope
         </span>
       </div>
-      <div className="overflow-hidden rounded-2xl border border-[var(--lms-rule)] bg-white">
-        <header className="flex flex-wrap items-center justify-between gap-4 border-b border-[var(--lms-rule)] px-5 py-4 md:px-7">
-          <div>
-            <p className="font-display text-lg font-semibold">
+      <div className="overflow-hidden rounded-[24px] bg-[var(--lms-ivory)] shadow-[0_20px_55px_rgba(0,62,65,0.11)]">
+        <header className="grid items-center gap-4 border-b border-[var(--lms-rule)] px-5 py-4 sm:grid-cols-[auto_1fr_auto] md:px-7">
+          <div className="flex items-center gap-3">
+            <Image
+              src="/brand/the-mind-point-mark.png"
+              alt=""
+              width={44}
+              height={44}
+              className="h-11 w-11 object-contain"
+              priority
+            />
+            <div>
+              <p className="font-display text-lg leading-none font-semibold text-[var(--lms-deep)]">
+                The Mind Point
+              </p>
+              <p className="mt-1.5 text-[10px] font-semibold tracking-[0.14em] text-[var(--lms-muted)] uppercase">
+                Learn · Grow · Heal · Belong
+              </p>
+            </div>
+          </div>
+          <div className="sm:border-l sm:border-[var(--lms-rule)] sm:pl-5">
+            <p className="text-sm font-semibold">
               Counselling Skills Certificate
             </p>
             <p className="mt-1 text-xs text-[var(--lms-muted)]">
