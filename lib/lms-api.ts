@@ -9,12 +9,16 @@ export type LmsProgressStatus =
   | "completed"
   | "blocked";
 
+export type LmsLearningMode = "self_paced" | "hybrid" | "cohort" | "event";
+
 export type StudentLmsEnrollment = {
   enrollmentId: Id<"enrollments">;
   enrollmentNumber: string;
   courseId: Id<"courses">;
   courseName: string;
   courseCode?: string;
+  courseType?: string;
+  learningMode: LmsLearningMode;
   batchLabel?: string;
   curriculumTitle?: string;
   curriculumVersion?: number;
@@ -87,6 +91,8 @@ export type StudentLmsWorkspace = {
     courseId: Id<"courses">;
     name: string;
     code: string;
+    type: string;
+    learningMode: LmsLearningMode;
     duration?: string;
   } | null;
   curriculum: {

@@ -25,6 +25,7 @@ import {
   canViewLmsQuestion,
   validateLmsQuestion,
 } from "./_shared/lmsDiscussion";
+import { getLmsLearningMode, isLmsCourseType } from "./_shared/lmsCourseScope";
 import {
   anonymousFeedbackDelayMs,
   summarizeLmsFeedback,
@@ -663,8 +664,12 @@ export const listMyLmsEnrollments = query({
       (enrollment) => !enrollment.status || enrollment.status === "active",
     );
 
+    const academicEnrollments = enrollments.filter((enrollment) =>
+      isLmsCourseType(enrollment.courseType),
+    );
+
     return await Promise.all(
-      enrollments.map(async (enrollment) => {
+      academicEnrollments.map(async (enrollment) => {
         const [course, assignment] = await Promise.all([
           ctx.db.get("courses", enrollment.courseId),
           ctx.db
@@ -684,6 +689,10 @@ export const listMyLmsEnrollments = query({
           courseId: enrollment.courseId,
           courseName: course?.name ?? enrollment.courseName ?? "Your Course",
           courseCode: course?.code,
+          courseType: course?.type ?? enrollment.courseType,
+          learningMode:
+            getLmsLearningMode(course?.type ?? enrollment.courseType) ??
+            "self_paced",
           batchLabel: enrollment.batchLabel,
           curriculumTitle: curriculum?.title,
           curriculumVersion: curriculum?.version,
@@ -961,6 +970,8 @@ export const getMyWorkspace = query({
             courseId: course._id,
             name: course.name,
             code: course.code,
+            type: course.type,
+            learningMode: getLmsLearningMode(course.type) ?? "self_paced",
             duration: course.duration,
           }
         : null,

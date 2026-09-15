@@ -29,6 +29,7 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   studentLmsApi,
   type LmsProgressStatus,
+  type LmsLearningMode,
   type StudentLmsActivity,
 } from "@/lib/lms-api";
 
@@ -44,6 +45,13 @@ const activityLabels: Record<StudentLmsActivity["type"], string> = {
   quiz: "Knowledge check",
   assignment: "Assignment",
   feedback: "Feedback",
+};
+
+const learningModeLabels: Record<LmsLearningMode, string> = {
+  self_paced: "Self-paced learning",
+  hybrid: "Live + self-paced learning",
+  cohort: "Cohort learning",
+  event: "Live learning event",
 };
 
 function formatError(error: unknown) {
@@ -295,6 +303,11 @@ function AuthenticatedStudentLmsApp() {
           <h1>
             {selectedEnrollment?.courseName ?? "Your Course"} is enrolled.
           </h1>
+          {selectedEnrollment && (
+            <span className="lms-live-mode">
+              {learningModeLabels[selectedEnrollment.learningMode]}
+            </span>
+          )}
           <p>
             {selectedEnrollment?.lmsStatus === "suspended"
               ? "Learning access is paused. Please contact The Mind Point team for help."
@@ -385,6 +398,8 @@ function AuthenticatedStudentLmsApp() {
         <div>
           <h1>{workspace.course?.name ?? selectedEnrollment.courseName}</h1>
           <p>
+            {learningModeLabels[workspace.course?.learningMode ?? "self_paced"]}
+            {" · "}
             {workspace.curriculum.title} · Version{" "}
             {workspace.curriculum.version}
           </p>
