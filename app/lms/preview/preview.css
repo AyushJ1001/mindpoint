@@ -1,0 +1,57 @@
+.lms-preview-page {
+  --lms-ink: #272134;
+  --lms-muted: #696174;
+  --lms-rule: rgba(69, 54, 86, 0.16);
+  --lms-accent: #72558f;
+  --lms-accent-strong: #5f437b;
+  --lms-accent-soft: #eee8f3;
+  --lms-paper: #fcfaf7;
+  --lms-panel: #f5f0ea;
+  min-height: 100vh;
+  overflow-x: hidden;
+  color: var(--lms-ink);
+  background: var(--lms-paper);
+}
+
+.lms-preview-page textarea::placeholder,
+.lms-preview-page input::placeholder {
+  color: #302b37;
+  opacity: 1;
+}
+
+.lms-role-surface {
+  animation: lms-role-enter 180ms ease-out;
+}
+
+@keyframes lms-role-enter {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+}
+
+.lms-preview-page ::selection {
+  color: white;
+  background: var(--lms-accent);
+}
+
+.lms-focus:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--lms-accent) 42%, white);
+  outline-offset: 3px;
+}
+
+.lms-scrollbar {
+  scrollbar-color: color-mix(in srgb, var(--lms-accent) 48%, transparent)
+    transparent;
+  scrollbar-width: thin;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lms-preview-page *,
+  .lms-preview-page *::before,
+  .lms-preview-page *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

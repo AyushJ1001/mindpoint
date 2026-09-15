@@ -148,6 +148,44 @@ export const EnrollmentSessionType = v.union(
   v.literal("elevate"),
 );
 
+export const LmsCurriculumStatus = v.union(
+  v.literal("draft"),
+  v.literal("published"),
+  v.literal("archived"),
+);
+
+export const LmsActivityType = v.union(
+  v.literal("reading"),
+  v.literal("media"),
+  v.literal("external_resource"),
+  v.literal("quiz"),
+  v.literal("assignment"),
+  v.literal("feedback"),
+);
+
+export const LmsReleaseMode = v.union(
+  v.literal("immediate"),
+  v.literal("date"),
+  v.literal("prerequisite"),
+);
+
+export const LmsCompletionMode = v.union(
+  v.literal("view"),
+  v.literal("self_confirm"),
+  v.literal("submit"),
+  v.literal("pass"),
+  v.literal("faculty_approval"),
+);
+
+export const LmsProgressStatus = v.union(
+  v.literal("not_started"),
+  v.literal("in_progress"),
+  v.literal("submitted"),
+  v.literal("awaiting_review"),
+  v.literal("completed"),
+  v.literal("blocked"),
+);
+
 const sharedCourseFields = {
   name: v.string(),
   description: v.optional(v.string()),
@@ -525,6 +563,167 @@ export default defineSchema({
     .index("by_entityType", ["entityType"])
     .index("by_entityType_and_actorAdminId", ["entityType", "actorAdminId"])
     .index("by_actorAdminId", ["actorAdminId"]),
+
+  lmsCurricula: defineTable({
+    courseId: v.id("courses"),
+    version: v.number(),
+    title: v.string(),
+    status: LmsCurriculumStatus,
+    createdByAdminId: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    publishedAt: v.optional(v.number()),
+    manifestHash: v.optional(v.string()),
+  })
+    .index("by_courseId", ["courseId"])
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_courseId_and_version", ["courseId", "version"]),
+
+  lmsModules: defineTable({
+    curriculumId: v.id("lmsCurricula"),
+    title: v.string(),
+    description: v.optional(v.string()),
+    sortOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_curriculumId_and_sortOrder", ["curriculumId", "sortOrder"]),
+
+  lmsActivities: defineTable({
+    curriculumId: v.id("lmsCurricula"),
+    moduleId: v.id("lmsModules"),
+    type: LmsActivityType,
+    title: v.string(),
+    instructions: v.optional(v.string()),
+    content: v.optional(v.string()),
+    externalUrl: v.optional(v.string()),
+    durationMinutes: v.optional(v.number()),
+    required: v.boolean(),
+    sortOrder: v.number(),
+    releaseMode: LmsReleaseMode,
+    releaseAt: v.optional(v.number()),
+    prerequisiteActivityId: v.optional(v.id("lmsActivities")),
+    completionMode: LmsCompletionMode,
+    passingScore: v.optional(v.number()),
+    rightsApproved: v.boolean(),
+    accessibleAlternative: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_curriculumId", ["curriculumId"])
+    .index("by_moduleId_and_sortOrder", ["moduleId", "sortOrder"]),
+
+  lmsEnrollmentCurricula: defineTable({
+    enrollmentId: v.id("enrollments"),
+    curriculumId: v.id("lmsCurricula"),
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("suspended"),
+    ),
+    activatedAt: v.number(),
+    activatedByAdminId: v.string(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_curriculumId", ["curriculumId"])
+    .index("by_enrollmentId_and_status", ["enrollmentId", "status"]),
+
+  lmsActivityProgress: defineTable({
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    status: LmsProgressStatus,
+    evidenceReference: v.optional(v.string()),
+    startedAt: v.optional(v.number()),
+    submittedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"])
+    .index("by_activityId_and_status", ["activityId", "status"]),
+
+  lmsSubmissions: defineTable({
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    attemptNumber: v.number(),
+    responseText: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("submitted"),
+      v.literal("in_review"),
+      v.literal("returned"),
+      v.literal("accepted"),
+    ),
+    submittedAt: v.optional(v.number()),
+    reviewedAt: v.optional(v.number()),
+    reviewedByTokenIdentifier: v.optional(v.string()),
+    feedback: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"])
+    .index("by_activityId_and_status", ["activityId", "status"])
+    .index("by_status", ["status"]),
+
+  lmsFacultyAssignments: defineTable({
+    courseId: v.id("courses"),
+    batchId: v.optional(v.id("courseBatches")),
+    facultyTokenIdentifier: v.string(),
+    canGrade: v.boolean(),
+    canAnswerQuestions: v.boolean(),
+    canApproveCompletion: v.boolean(),
+    assignedByAdminId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_courseId", ["courseId"])
+    .index("by_facultyTokenIdentifier", ["facultyTokenIdentifier"])
+    .index("by_courseId_and_facultyTokenIdentifier", [
+      "courseId",
+      "facultyTokenIdentifier",
+    ]),
+
+  lmsQuestions: defineTable({
+    enrollmentId: v.id("enrollments"),
+    curriculumId: v.id("lmsCurricula"),
+    activityId: v.optional(v.id("lmsActivities")),
+    authorTokenIdentifier: v.string(),
+    visibility: v.union(
+      v.literal("private"),
+      v.literal("course"),
+      v.literal("batch"),
+    ),
+    body: v.string(),
+    status: v.union(
+      v.literal("open"),
+      v.literal("answered"),
+      v.literal("closed"),
+    ),
+    officialAnswer: v.optional(v.string()),
+    answeredByTokenIdentifier: v.optional(v.string()),
+    createdAt: v.number(),
+    answeredAt: v.optional(v.number()),
+  })
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_curriculumId_and_status", ["curriculumId", "status"]),
+
+  lmsCertificates: defineTable({
+    enrollmentId: v.id("enrollments"),
+    curriculumId: v.id("lmsCurricula"),
+    verificationCode: v.string(),
+    recipientName: v.string(),
+    courseName: v.string(),
+    status: v.union(
+      v.literal("issued"),
+      v.literal("suspended"),
+      v.literal("revoked"),
+    ),
+    issuedAt: v.number(),
+    revokedAt: v.optional(v.number()),
+    revocationReason: v.optional(v.string()),
+    replacesCertificateId: v.optional(v.id("lmsCertificates")),
+  })
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_verificationCode", ["verificationCode"]),
 
   adminManagers: defineTable({
     clerkUserId: v.optional(v.string()),
