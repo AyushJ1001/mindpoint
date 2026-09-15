@@ -163,6 +163,11 @@ export const LmsActivityType = v.union(
   v.literal("feedback"),
 );
 
+export const LmsFeedbackMode = v.union(
+  v.literal("identified"),
+  v.literal("anonymous"),
+);
+
 export const LmsReleaseMode = v.union(
   v.literal("immediate"),
   v.literal("date"),
@@ -604,6 +609,8 @@ export default defineSchema({
     prerequisiteActivityId: v.optional(v.id("lmsActivities")),
     completionMode: LmsCompletionMode,
     passingScore: v.optional(v.number()),
+    feedbackMode: v.optional(LmsFeedbackMode),
+    feedbackMinimumGroupSize: v.optional(v.number()),
     rightsApproved: v.boolean(),
     accessibleAlternative: v.optional(v.string()),
     createdAt: v.number(),
@@ -648,6 +655,32 @@ export default defineSchema({
     isCorrect: v.boolean(),
     createdAt: v.number(),
   }).index("by_attemptId", ["attemptId"]),
+
+  lmsFeedbackResponses: defineTable({
+    activityId: v.id("lmsActivities"),
+    curriculumId: v.id("lmsCurricula"),
+    courseId: v.id("courses"),
+    mode: LmsFeedbackMode,
+    enrollmentId: v.optional(v.id("enrollments")),
+    batchId: v.optional(v.id("courseBatches")),
+    rating: v.number(),
+    comment: v.optional(v.string()),
+    reportingPeriod: v.string(),
+    submittedAt: v.optional(v.number()),
+  })
+    .index("by_activityId", ["activityId"])
+    .index("by_courseId", ["courseId"])
+    .index("by_courseId_and_batchId", ["courseId", "batchId"])
+    .index("by_courseId_and_activityId", ["courseId", "activityId"])
+    .index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"]),
+
+  lmsFeedbackReceipts: defineTable({
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    mode: LmsFeedbackMode,
+    receiptCode: v.string(),
+    submittedAt: v.number(),
+  }).index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"]),
 
   lmsEnrollmentCurricula: defineTable({
     enrollmentId: v.id("enrollments"),

@@ -133,6 +133,7 @@ function AuthenticatedStudentLmsApp() {
   const setSelfCompletion = useMutation(studentLmsApi.setSelfCompletion);
   const submitAssignment = useMutation(studentLmsApi.submitAssignment);
   const submitQuizAttempt = useMutation(studentLmsApi.submitQuizAttempt);
+  const submitFeedback = useMutation(studentLmsApi.submitFeedback);
   const askQuestion = useMutation(studentLmsApi.askQuestion);
   const [selectedActivityId, setSelectedActivityId] = useState<string>();
   const [assignmentText, setAssignmentText] = useState("");
@@ -455,6 +456,19 @@ function AuthenticatedStudentLmsApp() {
                   "Your Quiz was scored and the result is recorded.",
                 )
               }
+              onSubmitFeedback={(rating, comment) =>
+                runAction(
+                  "feedback",
+                  () =>
+                    submitFeedback({
+                      enrollmentId: workspace.enrollment.enrollmentId,
+                      activityId: selectedActivity.activityId,
+                      rating,
+                      comment,
+                    }),
+                  "Feedback received. Your separate Completion receipt is ready.",
+                )
+              }
             />
           ) : (
             <div className="lms-live-work-empty">
@@ -588,6 +602,7 @@ function ActivityWork({
   onComplete,
   onSubmit,
   onSubmitQuiz,
+  onSubmitFeedback,
 }: {
   activity: StudentLmsActivity;
   status: LmsProgressStatus;
@@ -606,8 +621,11 @@ function ActivityWork({
       >["questions"][number]["options"][number]["optionId"];
     }>,
   ) => Promise<unknown>;
+  onSubmitFeedback: (rating: number, comment: string) => Promise<unknown>;
 }) {
   const [quizAnswers, setQuizAnswers] = useState<Record<string, string>>({});
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackComment, setFeedbackComment] = useState("");
   const icon =
     activity.type === "media" ? (
       <PlayCircle />
@@ -772,15 +790,89 @@ function ActivityWork({
           )}
         </form>
       )}
-      {activity.type === "feedback" && (
-        <div className="lms-live-coming">
-          <Sparkles />
-          <div>
-            <strong>This activity is being prepared.</strong>
-            <p>It will open when its secure response flow is ready.</p>
-          </div>
-        </div>
-      )}
+      {activity.type === "feedback" &&
+        activity.feedback &&
+        (activity.feedback.receipt ? (
+          <section className="lms-live-feedback-receipt" aria-live="polite">
+            <CheckCircle2 />
+            <div>
+              <strong>Feedback received</strong>
+              <p>
+                Your response is complete. Keep this separate receipt for your
+                records.
+              </p>
+              <code>{activity.feedback.receipt.receiptCode}</code>
+            </div>
+          </section>
+        ) : (
+          <form
+            className="lms-live-feedback"
+            onSubmit={(event) => {
+              event.preventDefault();
+              void onSubmitFeedback(feedbackRating, feedbackComment);
+            }}
+          >
+            <div className="lms-live-feedback-privacy">
+              <Sparkles />
+              <div>
+                <strong>
+                  {activity.feedback.mode === "anonymous"
+                    ? "Your response is anonymous."
+                    : "Your response is identified."}
+                </strong>
+                <p>
+                  {activity.feedback.mode === "anonymous"
+                    ? `Your answers contain no Student or Enrollment reference. Results open only after ${activity.feedback.minimumGroupSize ?? 5} responses; your Completion receipt is stored separately.`
+                    : "Assigned Course staff can connect this response to your Enrollment. Your Completion receipt is stored with your progress."}
+                </p>
+              </div>
+            </div>
+            <fieldset>
+              <legend>How useful was this learning experience?</legend>
+              <div className="lms-live-rating">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <label key={rating}>
+                    <input
+                      type="radio"
+                      name={`feedback-rating-${activity.activityId}`}
+                      value={rating}
+                      checked={feedbackRating === rating}
+                      onChange={() => setFeedbackRating(rating)}
+                    />
+                    <span>{rating}</span>
+                  </label>
+                ))}
+              </div>
+              <p className="lms-live-rating-scale">
+                <span>Not useful yet</span>
+                <span>Deeply useful</span>
+              </p>
+            </fieldset>
+            <label htmlFor={`feedback-comment-${activity.activityId}`}>
+              What should we keep or improve? <span>Optional</span>
+            </label>
+            <Textarea
+              id={`feedback-comment-${activity.activityId}`}
+              value={feedbackComment}
+              maxLength={1500}
+              onChange={(event) => setFeedbackComment(event.target.value)}
+              placeholder="Share what supported your learning, or what would make this clearer…"
+            />
+            <div className="lms-live-feedback-submit">
+              <span>{feedbackComment.length} / 1,500</span>
+              <Button
+                type="submit"
+                className="lms-live-primary"
+                disabled={feedbackRating === 0 || pendingAction === "feedback"}
+              >
+                <Send />
+                {pendingAction === "feedback"
+                  ? "Sending securely…"
+                  : "Submit Feedback"}
+              </Button>
+            </div>
+          </form>
+        ))}
       {(activity.completionMode === "view" ||
         activity.completionMode === "self_confirm") &&
         activity.type !== "quiz" &&

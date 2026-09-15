@@ -1,15 +1,28 @@
 import { v } from "convex/values";
 import {
+  internalMutation,
   mutation,
   query,
   type MutationCtx,
   type QueryCtx,
 } from "./_generated/server";
+import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { requireAdmin } from "./adminAuth";
-import { LmsActivityType, LmsCompletionMode, LmsReleaseMode } from "./schema";
+import {
+  LmsActivityType,
+  LmsCompletionMode,
+  LmsFeedbackMode,
+  LmsReleaseMode,
+} from "./schema";
 import { maybeCreateCompletionRequest } from "./lmsCompletion";
 import { scoreLmsQuiz } from "./_shared/lmsQuiz";
+import {
+  anonymousFeedbackDelayMs,
+  summarizeLmsFeedback,
+  validateAnonymousMinimumGroupSize,
+  validateLmsFeedbackInput,
+} from "./_shared/lmsFeedback";
 
 type ViewerCtx = QueryCtx | MutationCtx;
 
@@ -153,6 +166,8 @@ export const addActivity = mutation({
     prerequisiteActivityId: v.optional(v.id("lmsActivities")),
     completionMode: LmsCompletionMode,
     passingScore: v.optional(v.number()),
+    feedbackMode: v.optional(LmsFeedbackMode),
+    feedbackMinimumGroupSize: v.optional(v.number()),
     rightsApproved: v.boolean(),
     accessibleAlternative: v.optional(v.string()),
   },
@@ -183,6 +198,18 @@ export const addActivity = mutation({
     ) {
       throw new Error("A Quiz needs a passing score between 0 and 100");
     }
+    if (args.type === "feedback") {
+      if (args.completionMode !== "submit" || !args.feedbackMode) {
+        throw new Error(
+          "Feedback needs a response mode and submit-based Completion",
+        );
+      }
+      if (args.feedbackMode === "anonymous") {
+        validateAnonymousMinimumGroupSize(
+          args.feedbackMinimumGroupSize ?? Number.NaN,
+        );
+      }
+    }
 
     const existing = await ctx.db
       .query("lmsActivities")
@@ -208,6 +235,11 @@ export const addActivity = mutation({
       prerequisiteActivityId: args.prerequisiteActivityId,
       completionMode: args.completionMode,
       passingScore: args.passingScore,
+      feedbackMode: args.type === "feedback" ? args.feedbackMode : undefined,
+      feedbackMinimumGroupSize:
+        args.type === "feedback" && args.feedbackMode === "anonymous"
+          ? args.feedbackMinimumGroupSize
+          : undefined,
       rightsApproved: args.rightsApproved,
       accessibleAlternative: args.accessibleAlternative?.trim() || undefined,
       createdAt: now,
@@ -307,6 +339,67 @@ export const addQuizQuestion = mutation({
   },
 });
 
+async function getFeedbackReport(
+  ctx: QueryCtx,
+  activity: Doc<"lmsActivities">,
+) {
+  const responses = await ctx.db
+    .query("lmsFeedbackResponses")
+    .withIndex("by_activityId", (q) => q.eq("activityId", activity._id))
+    .order("desc")
+    .take(500);
+  const summary = summarizeLmsFeedback(
+    responses.map((response) => response.rating),
+  );
+  const mode = activity.feedbackMode ?? "identified";
+  const minimumGroupSize =
+    mode === "anonymous" ? (activity.feedbackMinimumGroupSize ?? 5) : 1;
+  const released =
+    mode === "identified" || responses.length >= minimumGroupSize;
+
+  if (mode === "anonymous") {
+    return {
+      activityId: activity._id,
+      mode,
+      minimumGroupSize,
+      responseCount: summary.responseCount,
+      released,
+      averageRating: released ? summary.averageRating : null,
+      comments: released
+        ? responses
+            .map((response) => response.comment)
+            .filter((comment): comment is string => Boolean(comment))
+            .slice(0, 50)
+        : [],
+      identifiedResponses: [],
+    };
+  }
+
+  const identifiedResponses = await Promise.all(
+    responses.slice(0, 50).map(async (response) => {
+      const enrollment = response.enrollmentId
+        ? await ctx.db.get("enrollments", response.enrollmentId)
+        : null;
+      return {
+        studentName: enrollment?.userName ?? "Student",
+        rating: response.rating,
+        comment: response.comment,
+        submittedAt: response.submittedAt ?? response._creationTime,
+      };
+    }),
+  );
+  return {
+    activityId: activity._id,
+    mode,
+    minimumGroupSize,
+    responseCount: summary.responseCount,
+    released,
+    averageRating: summary.averageRating,
+    comments: [],
+    identifiedResponses,
+  };
+}
+
 export const getAdminCurriculum = query({
   args: { curriculumId: v.id("lmsCurricula") },
   handler: async (ctx, args) => {
@@ -350,7 +443,18 @@ export const getAdminCurriculum = query({
           }),
       )
     ).flat();
-    return { curriculum, modules, activities, quizQuestions };
+    const feedbackReports = await Promise.all(
+      activities
+        .filter((activity) => activity.type === "feedback")
+        .map((activity) => getFeedbackReport(ctx, activity)),
+    );
+    return {
+      curriculum,
+      modules,
+      activities,
+      quizQuestions,
+      feedbackReports,
+    };
   },
 });
 
@@ -428,6 +532,20 @@ export const publishCurriculum = mutation({
         ) {
           throw new Error(`Quiz question “${question.prompt}” is incomplete`);
         }
+      }
+    }
+    for (const feedback of activities.filter(
+      (item) => item.type === "feedback",
+    )) {
+      if (feedback.completionMode !== "submit" || !feedback.feedbackMode) {
+        throw new Error(
+          `Feedback “${feedback.title}” needs a response mode and submit-based Completion`,
+        );
+      }
+      if (feedback.feedbackMode === "anonymous") {
+        validateAnonymousMinimumGroupSize(
+          feedback.feedbackMinimumGroupSize ?? Number.NaN,
+        );
       }
     }
 
@@ -707,6 +825,32 @@ export const getMyWorkspace = query({
                 };
               })()
             : undefined;
+        const feedback =
+          availability.isAvailable && activity.type === "feedback"
+            ? await (async () => {
+                const receipt = await ctx.db
+                  .query("lmsFeedbackReceipts")
+                  .withIndex("by_enrollmentId_and_activityId", (q) =>
+                    q
+                      .eq("enrollmentId", args.enrollmentId)
+                      .eq("activityId", activity._id),
+                  )
+                  .unique();
+                return {
+                  mode: activity.feedbackMode ?? ("identified" as const),
+                  minimumGroupSize:
+                    activity.feedbackMode === "anonymous"
+                      ? activity.feedbackMinimumGroupSize
+                      : undefined,
+                  receipt: receipt
+                    ? {
+                        receiptCode: receipt.receiptCode,
+                        submittedAt: receipt.submittedAt,
+                      }
+                    : undefined,
+                };
+              })()
+            : undefined;
         return {
           activityId: activity._id,
           moduleId: activity.moduleId,
@@ -730,6 +874,7 @@ export const getMyWorkspace = query({
             ? activity.accessibleAlternative
             : undefined,
           quiz,
+          feedback,
         };
       }),
     );
@@ -981,6 +1126,168 @@ export const submitQuizAttempt = mutation({
       score,
       passed,
     };
+  },
+});
+
+export const recordAnonymousFeedback = internalMutation({
+  args: {
+    activityId: v.id("lmsActivities"),
+    curriculumId: v.id("lmsCurricula"),
+    courseId: v.id("courses"),
+    rating: v.number(),
+    comment: v.optional(v.string()),
+    reportingPeriod: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (
+      !activity ||
+      activity.type !== "feedback" ||
+      activity.feedbackMode !== "anonymous" ||
+      activity.curriculumId !== args.curriculumId
+    ) {
+      throw new Error("Anonymous Feedback activity is no longer valid");
+    }
+    await ctx.db.insert("lmsFeedbackResponses", {
+      activityId: args.activityId,
+      curriculumId: args.curriculumId,
+      courseId: args.courseId,
+      mode: "anonymous",
+      rating: args.rating,
+      comment: args.comment,
+      reportingPeriod: args.reportingPeriod,
+    });
+    return null;
+  },
+});
+
+export const submitFeedback = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    rating: v.number(),
+    comment: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { curriculum, enrollment, identity } =
+      await requireEnrollmentCurriculum(ctx, args.enrollmentId);
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (
+      !activity ||
+      activity.curriculumId !== curriculum._id ||
+      activity.type !== "feedback" ||
+      activity.completionMode !== "submit" ||
+      !activity.feedbackMode
+    ) {
+      throw new Error("Feedback activity not found in this Curriculum");
+    }
+    await assertActivityAvailable(ctx, args.enrollmentId, activity);
+    const existingReceipt = await ctx.db
+      .query("lmsFeedbackReceipts")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .unique();
+    if (existingReceipt) {
+      return {
+        receiptCode: existingReceipt.receiptCode,
+        submittedAt: existingReceipt.submittedAt,
+        alreadySubmitted: true,
+      };
+    }
+    const feedback = validateLmsFeedbackInput(args.rating, args.comment);
+    if (activity.feedbackMode === "anonymous") {
+      validateAnonymousMinimumGroupSize(
+        activity.feedbackMinimumGroupSize ?? Number.NaN,
+      );
+    }
+    const now = Date.now();
+    const reportingPeriod = new Date(now).toISOString().slice(0, 7);
+    const receiptId = await ctx.db.insert("lmsFeedbackReceipts", {
+      enrollmentId: args.enrollmentId,
+      activityId: activity._id,
+      mode: activity.feedbackMode,
+      receiptCode: "pending",
+      submittedAt: now,
+    });
+    const receiptCode = `TMP-FB-${receiptId.slice(-10).toUpperCase()}`;
+    await ctx.db.patch("lmsFeedbackReceipts", receiptId, { receiptCode });
+    let responseId: Id<"lmsFeedbackResponses"> | undefined;
+    if (activity.feedbackMode === "identified") {
+      responseId = await ctx.db.insert("lmsFeedbackResponses", {
+        activityId: activity._id,
+        curriculumId: curriculum._id,
+        courseId: enrollment.courseId,
+        mode: "identified",
+        enrollmentId: args.enrollmentId,
+        batchId: enrollment.batchId,
+        rating: feedback.rating,
+        comment: feedback.comment,
+        reportingPeriod,
+        submittedAt: now,
+      });
+    } else {
+      await ctx.scheduler.runAfter(
+        anonymousFeedbackDelayMs(receiptId),
+        internal.lms.recordAnonymousFeedback,
+        {
+          activityId: activity._id,
+          curriculumId: curriculum._id,
+          courseId: enrollment.courseId,
+          rating: feedback.rating,
+          comment: feedback.comment,
+          reportingPeriod,
+        },
+      );
+    }
+    const progress = await ctx.db
+      .query("lmsActivityProgress")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .unique();
+    const progressPatch = {
+      status: "completed" as const,
+      submittedAt: now,
+      completedAt: now,
+      evidenceReference: `feedback-receipt:${receiptId}`,
+      updatedAt: now,
+    };
+    if (progress) {
+      await ctx.db.patch("lmsActivityProgress", progress._id, progressPatch);
+    } else {
+      await ctx.db.insert("lmsActivityProgress", {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+        startedAt: now,
+        ...progressPatch,
+      });
+    }
+    await maybeCreateCompletionRequest(ctx, args.enrollmentId);
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.feedback.submitted",
+      entityType:
+        activity.feedbackMode === "anonymous"
+          ? "lmsFeedbackReceipt"
+          : "lmsFeedbackResponse",
+      entityId:
+        activity.feedbackMode === "anonymous"
+          ? receiptId
+          : (responseId ?? receiptId),
+      after: { mode: activity.feedbackMode },
+      metadata: {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+      },
+      createdAt: now,
+    });
+    return { receiptCode, submittedAt: now, alreadySubmitted: false };
   },
 });
 

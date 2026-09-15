@@ -67,6 +67,14 @@ export type StudentLmsActivity = {
       submittedAt: number;
     };
   };
+  feedback?: {
+    mode: "identified" | "anonymous";
+    minimumGroupSize?: number;
+    receipt?: {
+      receiptCode: string;
+      submittedAt: number;
+    };
+  };
 };
 
 export type StudentLmsWorkspace = {
@@ -148,6 +156,20 @@ export const studentLmsApi = {
       passed: boolean;
     }
   >("lms:submitQuizAttempt"),
+  submitFeedback: makeFunctionReference<
+    "mutation",
+    {
+      enrollmentId: Id<"enrollments">;
+      activityId: Id<"lmsActivities">;
+      rating: number;
+      comment: string;
+    },
+    {
+      receiptCode: string;
+      submittedAt: number;
+      alreadySubmitted: boolean;
+    }
+  >("lms:submitFeedback"),
   askQuestion: makeFunctionReference<
     "mutation",
     {
@@ -215,12 +237,29 @@ export type FacultyQueue = {
   items: FacultyQueueItem[];
 };
 
+export type FacultyFeedbackReport = {
+  activityId: Id<"lmsActivities">;
+  activityTitle: string;
+  courseName: string;
+  mode: "identified" | "anonymous";
+  minimumGroupSize: number;
+  responseCount: number;
+  released: boolean;
+  averageRating: number | null;
+  comments: string[];
+};
+
 export const facultyLmsApi = {
   listMyQueue: makeFunctionReference<
     "query",
     Record<string, never>,
     FacultyQueue
   >("lmsFaculty:listMyQueue"),
+  listMyFeedbackReports: makeFunctionReference<
+    "query",
+    Record<string, never>,
+    FacultyFeedbackReport[]
+  >("lmsFaculty:listMyFeedbackReports"),
   reviewSubmission: makeFunctionReference<
     "mutation",
     {
@@ -299,6 +338,8 @@ export type AdminCurriculum = {
     rightsApproved: boolean;
     accessibleAlternative?: string;
     passingScore?: number;
+    feedbackMode?: "identified" | "anonymous";
+    feedbackMinimumGroupSize?: number;
   }>;
   quizQuestions: Array<{
     _id: Id<"lmsQuizQuestions">;
@@ -310,6 +351,21 @@ export type AdminCurriculum = {
       label: string;
       sortOrder: number;
       isCorrect: boolean;
+    }>;
+  }>;
+  feedbackReports: Array<{
+    activityId: Id<"lmsActivities">;
+    mode: "identified" | "anonymous";
+    minimumGroupSize: number;
+    responseCount: number;
+    released: boolean;
+    averageRating: number | null;
+    comments: string[];
+    identifiedResponses: Array<{
+      studentName: string;
+      rating: number;
+      comment?: string;
+      submittedAt: number;
     }>;
   }>;
 };
@@ -351,6 +407,8 @@ export const adminLmsApi = {
       prerequisiteActivityId?: Id<"lmsActivities">;
       completionMode: StudentLmsActivity["completionMode"];
       passingScore?: number;
+      feedbackMode?: "identified" | "anonymous";
+      feedbackMinimumGroupSize?: number;
       rightsApproved: boolean;
       accessibleAlternative?: string;
     },

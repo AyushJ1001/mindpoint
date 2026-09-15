@@ -7,6 +7,7 @@ import {
 } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
 import { maybeCreateCompletionRequest } from "./lmsCompletion";
+import { summarizeLmsFeedback } from "./_shared/lmsFeedback";
 
 type FacultyPermission =
   | "canGrade"
@@ -259,6 +260,90 @@ export const listMyQueue = query({
         .filter((item) => item !== null)
         .sort((a, b) => a.createdAt - b.createdAt),
     };
+  },
+});
+
+export const listMyFeedbackReports = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireFacultyIdentity(ctx);
+    const assignments = await ctx.db
+      .query("lmsFacultyAssignments")
+      .withIndex("by_facultyTokenIdentifier", (q) =>
+        q.eq("facultyTokenIdentifier", identity.tokenIdentifier),
+      )
+      .take(100);
+    const scopedResponses = await Promise.all(
+      assignments.slice(0, 10).map(async (assignment) => {
+        return assignment.batchId
+          ? await ctx.db
+              .query("lmsFeedbackResponses")
+              .withIndex("by_courseId_and_batchId", (q) =>
+                q
+                  .eq("courseId", assignment.courseId)
+                  .eq("batchId", assignment.batchId),
+              )
+              .order("desc")
+              .take(500)
+          : await ctx.db
+              .query("lmsFeedbackResponses")
+              .withIndex("by_courseId", (q) =>
+                q.eq("courseId", assignment.courseId),
+              )
+              .order("desc")
+              .take(500);
+      }),
+    );
+    const responses = Array.from(
+      new Map(
+        scopedResponses
+          .flat()
+          .map((response) => [response._id, response] as const),
+      ).values(),
+    );
+    const byActivity = new Map<string, typeof responses>();
+    for (const response of responses) {
+      const group = byActivity.get(response.activityId) ?? [];
+      group.push(response);
+      byActivity.set(response.activityId, group);
+    }
+    const reports = await Promise.all(
+      Array.from(byActivity.values()).map(async (group) => {
+        const first = group[0];
+        const [activity, course] = await Promise.all([
+          ctx.db.get("lmsActivities", first.activityId),
+          ctx.db.get("courses", first.courseId),
+        ]);
+        if (!activity || activity.type !== "feedback") return null;
+        const minimumGroupSize =
+          activity.feedbackMode === "anonymous"
+            ? (activity.feedbackMinimumGroupSize ?? 5)
+            : 1;
+        const released =
+          activity.feedbackMode !== "anonymous" ||
+          group.length >= minimumGroupSize;
+        const summary = summarizeLmsFeedback(
+          group.map((response) => response.rating),
+        );
+        return {
+          activityId: activity._id,
+          activityTitle: activity.title,
+          courseName: course?.name ?? "Course",
+          mode: activity.feedbackMode ?? ("identified" as const),
+          minimumGroupSize,
+          responseCount: summary.responseCount,
+          released,
+          averageRating: released ? summary.averageRating : null,
+          comments: released
+            ? group
+                .map((response) => response.comment)
+                .filter((comment): comment is string => Boolean(comment))
+                .slice(0, 20)
+            : [],
+        };
+      }),
+    );
+    return reports.filter((report) => report !== null);
   },
 });
 

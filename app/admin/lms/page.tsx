@@ -16,7 +16,11 @@ import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { adminLmsApi, type StudentLmsActivity } from "@/lib/lms-api";
+import {
+  adminLmsApi,
+  type AdminCurriculum,
+  type StudentLmsActivity,
+} from "@/lib/lms-api";
 import type { Id } from "@/convex/_generated/dataModel";
 import "./admin-lms.css";
 
@@ -29,6 +33,7 @@ const activityTypes: Array<{
   { value: "external_resource", label: "External resource" },
   { value: "quiz", label: "Quiz" },
   { value: "assignment", label: "Assignment" },
+  { value: "feedback", label: "Feedback" },
 ];
 
 function message(error: unknown) {
@@ -79,6 +84,10 @@ export default function AdminLmsPage() {
   const [rightsApproved, setRightsApproved] = useState(false);
   const [duration, setDuration] = useState("");
   const [passingScore, setPassingScore] = useState("70");
+  const [feedbackMode, setFeedbackMode] = useState<"identified" | "anonymous">(
+    "anonymous",
+  );
+  const [feedbackMinimumGroupSize, setFeedbackMinimumGroupSize] = useState("5");
   const [facultyToken, setFacultyToken] = useState("");
   const [pending, setPending] = useState<string>();
   const [notice, setNotice] = useState<{
@@ -122,6 +131,16 @@ export default function AdminLmsPage() {
               (question) => question.activityId === quiz._id,
             ).length ?? 0) === 0
               ? `Add at least one question to “${quiz.title}”`
+              : false,
+          ),
+        ...curriculum.activities
+          .filter((item) => item.type === "feedback")
+          .map((feedback) =>
+            !feedback.feedbackMode ||
+            (feedback.feedbackMode === "anonymous" &&
+              ((feedback.feedbackMinimumGroupSize ?? 0) < 3 ||
+                (feedback.feedbackMinimumGroupSize ?? 0) > 50))
+              ? `Finish the privacy settings for “${feedback.title}”`
               : false,
           ),
       ].filter(Boolean) as string[]);
@@ -341,6 +360,9 @@ export default function AdminLmsPage() {
                         curriculum.quizQuestions?.filter(
                           (question) => question.activityId === activity._id,
                         ) ?? [];
+                      const feedbackReport = curriculum.feedbackReports?.find(
+                        (report) => report.activityId === activity._id,
+                      );
                       return (
                         <div className="admin-lms-activity" key={activity._id}>
                           <div className="admin-lms-activity-summary">
@@ -350,9 +372,11 @@ export default function AdminLmsPage() {
                               {activity.required ? "Required" : "Optional"}
                               {activity.type === "quiz"
                                 ? ` · Pass at ${activity.passingScore ?? 100}%`
-                                : activity.rightsApproved
-                                  ? " · Rights approved"
-                                  : ""}
+                                : activity.type === "feedback"
+                                  ? ` · ${activity.feedbackMode === "anonymous" ? "Anonymous" : "Identified"}`
+                                  : activity.rightsApproved
+                                    ? " · Rights approved"
+                                    : ""}
                             </small>
                           </div>
                           {activity.type === "quiz" && (
@@ -393,6 +417,9 @@ export default function AdminLmsPage() {
                               )}
                             </div>
                           )}
+                          {activity.type === "feedback" && feedbackReport && (
+                            <FeedbackReport report={feedbackReport} />
+                          )}
                         </div>
                       );
                     })}
@@ -423,10 +450,21 @@ export default function AdminLmsPage() {
                               ? "submit"
                               : activityType === "quiz"
                                 ? "pass"
-                                : "self_confirm",
+                                : activityType === "feedback"
+                                  ? "submit"
+                                  : "self_confirm",
                           passingScore:
                             activityType === "quiz"
                               ? Number(passingScore)
+                              : undefined,
+                          feedbackMode:
+                            activityType === "feedback"
+                              ? feedbackMode
+                              : undefined,
+                          feedbackMinimumGroupSize:
+                            activityType === "feedback" &&
+                            feedbackMode === "anonymous"
+                              ? Number(feedbackMinimumGroupSize)
                               : undefined,
                           rightsApproved:
                             activityType === "reading" ||
@@ -443,6 +481,8 @@ export default function AdminLmsPage() {
                         setAccessibleAlternative("");
                         setRightsApproved(false);
                         setDuration("");
+                        setFeedbackMode("anonymous");
+                        setFeedbackMinimumGroupSize("5");
                       },
                       "Activity added to the Draft.",
                     );
@@ -491,6 +531,58 @@ export default function AdminLmsPage() {
                         required
                       />
                     </label>
+                  )}
+                  {activityType === "feedback" && (
+                    <fieldset className="admin-lms-feedback-settings">
+                      <legend>Response privacy</legend>
+                      <label>
+                        <input
+                          type="radio"
+                          name="feedback-mode"
+                          checked={feedbackMode === "anonymous"}
+                          onChange={() => setFeedbackMode("anonymous")}
+                        />
+                        <span>
+                          <strong>Anonymous</strong>
+                          <small>
+                            Responses carry no Student or Enrollment reference.
+                          </small>
+                        </span>
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name="feedback-mode"
+                          checked={feedbackMode === "identified"}
+                          onChange={() => setFeedbackMode("identified")}
+                        />
+                        <span>
+                          <strong>Identified</strong>
+                          <small>
+                            Course staff can connect responses to Enrollments.
+                          </small>
+                        </span>
+                      </label>
+                      {feedbackMode === "anonymous" && (
+                        <label className="admin-lms-feedback-threshold">
+                          Minimum reporting group
+                          <Input
+                            type="number"
+                            min="3"
+                            max="50"
+                            value={feedbackMinimumGroupSize}
+                            onChange={(event) =>
+                              setFeedbackMinimumGroupSize(event.target.value)
+                            }
+                            required
+                          />
+                          <small>
+                            Ratings and comments remain hidden until this many
+                            responses exist.
+                          </small>
+                        </label>
+                      )}
+                    </fieldset>
                   )}
                   <label>
                     Title
@@ -562,7 +654,11 @@ export default function AdminLmsPage() {
                       pending === "activity" ||
                       ((activityType === "media" ||
                         activityType === "external_resource") &&
-                        !rightsApproved)
+                        !rightsApproved) ||
+                      (activityType === "feedback" &&
+                        feedbackMode === "anonymous" &&
+                        (Number(feedbackMinimumGroupSize) < 3 ||
+                          Number(feedbackMinimumGroupSize) > 50))
                     }
                   >
                     <Plus />
@@ -689,6 +785,56 @@ export default function AdminLmsPage() {
         </aside>
       </div>
     </div>
+  );
+}
+
+function FeedbackReport({
+  report,
+}: {
+  report: AdminCurriculum["feedbackReports"][number];
+}) {
+  return (
+    <section className="admin-lms-feedback-report">
+      <div className="admin-lms-feedback-report-head">
+        <strong>Feedback responses</strong>
+        <span>
+          {report.responseCount} response
+          {report.responseCount === 1 ? "" : "s"}
+        </span>
+      </div>
+      {!report.released ? (
+        <p className="admin-lms-feedback-held">
+          <ShieldCheck />
+          Anonymous results remain sealed until {report.minimumGroupSize}
+          responses are available.
+        </p>
+      ) : (
+        <>
+          <p className="admin-lms-feedback-average">
+            <strong>{report.averageRating?.toFixed(1) ?? "—"}</strong>
+            <span>average usefulness rating out of 5</span>
+          </p>
+          {report.identifiedResponses.map((response, index) => (
+            <blockquote key={`${response.submittedAt}-${index}`}>
+              <strong>{response.studentName}</strong>
+              <span>{response.rating} / 5</span>
+              {response.comment && <p>{response.comment}</p>}
+            </blockquote>
+          ))}
+          {report.comments.map((comment, index) => (
+            <blockquote key={`${index}-${comment}`}>
+              <strong>Anonymous Student</strong>
+              <p>{comment}</p>
+            </blockquote>
+          ))}
+          {report.responseCount === 0 && (
+            <p className="admin-lms-feedback-empty">
+              No responses have arrived yet.
+            </p>
+          )}
+        </>
+      )}
+    </section>
   );
 }
 

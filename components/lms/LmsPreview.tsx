@@ -243,13 +243,18 @@ function StudentWorkspace() {
   const [quizAnswer, setQuizAnswer] = useState("");
   const [quizResult, setQuizResult] = useState<"passed" | "retry">();
   const [quizAttemptCount, setQuizAttemptCount] = useState(0);
+  const [feedbackRating, setFeedbackRating] = useState(0);
+  const [feedbackComment, setFeedbackComment] = useState("");
+  const [feedbackReceipt, setFeedbackReceipt] = useState<string>();
   const selected =
     activities.find((activity) => activity.id === selectedId) ?? activities[2];
   const completedCount = completed.size;
   const progress = Math.round((completedCount / activities.length) * 100);
   const selectedStatus = completed.has(selected.id)
     ? "complete"
-    : selected.status;
+    : selected.id === "feedback" && completed.has("check")
+      ? "available"
+      : selected.status;
   const selectedIndex = activities.findIndex(
     (activity) => activity.id === selected.id,
   );
@@ -391,7 +396,9 @@ function StudentWorkspace() {
           <p className="mt-6 max-w-[68ch] text-base leading-8 text-[var(--lms-muted)]">
             {selected.type === "Quiz"
               ? "Choose the response that best protects a listener’s curiosity. Your attempt is scored immediately and retained as learning evidence."
-              : "Read the scenario, identify the moment the listener moved from curiosity to advice, and write a response that keeps the speaker’s meaning at the centre."}
+              : selected.type === "Feedback"
+                ? "Tell us what supported your learning. This preview demonstrates anonymous reporting with a separate Completion receipt."
+                : "Read the scenario, identify the moment the listener moved from curiosity to advice, and write a response that keeps the speaker’s meaning at the centre."}
           </p>
 
           {selected.type === "Quiz" ? (
@@ -457,6 +464,94 @@ function StudentWorkspace() {
                 </Button>
               </div>
             </form>
+          ) : selected.type === "Feedback" ? (
+            feedbackReceipt ? (
+              <section className="mt-9 flex gap-3 rounded-2xl bg-[var(--lms-accent-soft)] p-5 text-[var(--lms-deep)]">
+                <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0" />
+                <div>
+                  <h2 className="text-sm font-semibold">Feedback received</h2>
+                  <p className="mt-1 max-w-[64ch] text-sm leading-6 text-[var(--lms-deep)]">
+                    Your anonymous response and this Completion receipt are
+                    stored separately.
+                  </p>
+                  <code className="mt-3 inline-block rounded-lg bg-white/70 px-3 py-2 font-mono text-xs">
+                    {feedbackReceipt}
+                  </code>
+                </div>
+              </section>
+            ) : (
+              <form
+                className="mt-9 border-y border-[var(--lms-rule)] py-7"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  setFeedbackReceipt("TMP-FB-PREVIEW-6F2A");
+                  setCompleted((current) => new Set(current).add("feedback"));
+                }}
+              >
+                <div className="flex gap-3 rounded-2xl bg-[var(--lms-accent-soft)] p-4">
+                  <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-[var(--lms-accent)]" />
+                  <div>
+                    <strong className="text-sm">Anonymous by design</strong>
+                    <p className="mt-1 text-sm leading-6 text-[var(--lms-deep)]">
+                      This response carries no Student or Enrollment reference.
+                      Results stay sealed until five responses are available.
+                    </p>
+                  </div>
+                </div>
+                <fieldset className="mt-7">
+                  <legend className="text-sm font-semibold">
+                    How useful was this learning experience?
+                  </legend>
+                  <div className="mt-4 grid grid-cols-5 gap-2">
+                    {[1, 2, 3, 4, 5].map((rating) => (
+                      <label
+                        key={rating}
+                        className={`lms-focus flex cursor-pointer items-center justify-center gap-2 rounded-xl border px-2 py-3 text-sm font-semibold ${feedbackRating === rating ? "border-[var(--lms-accent)] bg-[var(--lms-accent)] text-white" : "border-[var(--lms-rule)] bg-white"}`}
+                      >
+                        <input
+                          type="radio"
+                          name="preview-feedback-rating"
+                          value={rating}
+                          checked={feedbackRating === rating}
+                          onChange={() => setFeedbackRating(rating)}
+                          className="sr-only"
+                        />
+                        {rating}
+                      </label>
+                    ))}
+                  </div>
+                  <div className="mt-2 flex justify-between text-xs text-[var(--lms-muted)]">
+                    <span>Not useful yet</span>
+                    <span>Deeply useful</span>
+                  </div>
+                </fieldset>
+                <label
+                  htmlFor="preview-feedback-comment"
+                  className="mt-7 block text-sm font-semibold"
+                >
+                  What should we keep or improve?{" "}
+                  <span className="font-normal text-[var(--lms-muted)]">
+                    Optional
+                  </span>
+                </label>
+                <Textarea
+                  id="preview-feedback-comment"
+                  value={feedbackComment}
+                  onChange={(event) => setFeedbackComment(event.target.value)}
+                  maxLength={1500}
+                  className="mt-3 min-h-32 bg-white"
+                  placeholder="Share what supported your learning…"
+                />
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <span className="text-xs text-[var(--lms-muted)]">
+                    {feedbackComment.length} / 1,500
+                  </span>
+                  <Button type="submit" disabled={!feedbackRating}>
+                    <Send /> Submit Feedback
+                  </Button>
+                </div>
+              </form>
+            )
           ) : (
             <>
               <section
@@ -528,9 +623,11 @@ function StudentWorkspace() {
                     : "Submit reflection above"
                   : selected.type === "Quiz"
                     ? "Pass knowledge check"
-                    : selectedStatus === "locked"
-                      ? "Complete prerequisite first"
-                      : "Mark complete"}
+                    : selected.type === "Feedback"
+                      ? "Submit feedback above"
+                      : selectedStatus === "locked"
+                        ? "Complete prerequisite first"
+                        : "Mark complete"}
             </Button>
             <Button
               variant="outline"
@@ -719,6 +816,24 @@ function FacultyWorkspace() {
             </p>
           ) : null}
         </div>
+        <section className="border-t border-[var(--lms-rule)] bg-[var(--lms-bank)] px-6 py-6 md:px-9">
+          <div className="flex items-start justify-between gap-5">
+            <div>
+              <h2 className="text-sm font-semibold">Learning feedback</h2>
+              <p className="mt-1 text-xs leading-5 text-[var(--lms-muted)]">
+                Anonymous · Module feedback
+              </p>
+            </div>
+            <span className="font-mono text-xs text-[var(--lms-accent-strong)]">
+              3 / 5
+            </span>
+          </div>
+          <p className="mt-4 flex items-center gap-2 text-xs leading-5 text-[var(--lms-muted)]">
+            <ShieldCheck className="h-4 w-4 shrink-0 text-[var(--lms-accent)]" />
+            Ratings and comments remain sealed until the promised reporting
+            group is met.
+          </p>
+        </section>
       </section>
 
       <aside className="border-t border-[var(--lms-rule)] bg-[var(--lms-bank)] p-6 lg:border-t-0 lg:border-l lg:p-8">
@@ -787,6 +902,9 @@ function AdministratorWorkspace() {
   const [selectedBlocker, setSelectedBlocker] = useState<string | null>(null);
   const [saveMessage, setSaveMessage] = useState("Draft saved just now");
   const [activityAdded, setActivityAdded] = useState(false);
+  const [previewFeedbackMode, setPreviewFeedbackMode] = useState<
+    "anonymous" | "identified"
+  >("anonymous");
   const [adminActivities, setAdminActivities] = useState<Activity[]>(() => [
     ...activities,
   ]);
@@ -816,6 +934,9 @@ function AdministratorWorkspace() {
   ];
   const activeBlocker = blockers.find(
     (blocker) => blocker.id === selectedBlocker,
+  );
+  const selectedAdminActivity = adminActivities.find(
+    (activity) => activity.id === selectedId,
   );
 
   return (
@@ -923,9 +1044,16 @@ function AdministratorWorkspace() {
                 Student instructions
               </label>
               <Textarea
+                key={selectedId}
                 id="instructions"
                 className="mt-2 min-h-36 bg-white"
-                defaultValue="Read the scenario and submit a short reflection. Name what you noticed, the response you would try, and one question you still have."
+                defaultValue={
+                  selectedAdminActivity?.type === "Feedback"
+                    ? "Rate the learning experience and optionally tell us what supported you or what should be clearer. Read the privacy promise before submitting."
+                    : selectedAdminActivity?.type === "Quiz"
+                      ? "Answer every question. Your attempt is scored immediately and retained as learning evidence."
+                      : "Read the scenario and submit a short reflection. Name what you noticed, the response you would try, and one question you still have."
+                }
               />
             </div>
             <div className="grid gap-5 md:grid-cols-2">
@@ -950,15 +1078,66 @@ function AdministratorWorkspace() {
                   Completion evidence
                 </label>
                 <select
+                  key={`${selectedId}-completion`}
                   id="completion-rule"
                   className="lms-focus border-input mt-2 h-10 w-full rounded-md border bg-white px-3 text-sm"
                 >
-                  <option>Faculty-reviewed submission</option>
+                  <option>
+                    {selectedAdminActivity?.type === "Feedback"
+                      ? "Separate feedback receipt"
+                      : selectedAdminActivity?.type === "Quiz"
+                        ? "Passing score"
+                        : "Faculty-reviewed submission"}
+                  </option>
                   <option>Student confirmation</option>
                   <option>Passing score</option>
                 </select>
               </div>
             </div>
+            {selectedId === "feedback" && (
+              <fieldset className="rounded-2xl bg-[var(--lms-bank)] p-5">
+                <legend className="text-sm font-semibold">
+                  Response privacy
+                </legend>
+                <div className="mt-4 grid gap-3 md:grid-cols-2">
+                  {(["anonymous", "identified"] as const).map((mode) => (
+                    <label
+                      key={mode}
+                      className={`lms-focus flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${previewFeedbackMode === mode ? "border-[var(--lms-accent)] bg-[var(--lms-accent-soft)]" : "border-[var(--lms-rule)] bg-white"}`}
+                    >
+                      <input
+                        type="radio"
+                        name="admin-preview-feedback-mode"
+                        checked={previewFeedbackMode === mode}
+                        onChange={() => setPreviewFeedbackMode(mode)}
+                      />
+                      <span>
+                        <strong className="block text-sm capitalize">
+                          {mode}
+                        </strong>
+                        <small className="mt-1 block text-xs leading-5 text-[var(--lms-muted)]">
+                          {mode === "anonymous"
+                            ? "No Student or Enrollment reference is stored with the response."
+                            : "Course staff can connect the response to its Enrollment."}
+                        </small>
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                {previewFeedbackMode === "anonymous" && (
+                  <label className="mt-5 block text-sm font-semibold">
+                    Minimum reporting group
+                    <Input
+                      type="number"
+                      min="3"
+                      max="50"
+                      defaultValue="5"
+                      className="mt-2 max-w-36 bg-white"
+                    />
+                  </label>
+                )}
+              </fieldset>
+            )}
             <div className="border-y border-[var(--lms-rule)] py-6">
               <div className="flex items-start gap-3">
                 <Accessibility className="mt-0.5 h-5 w-5 text-[var(--lms-accent)]" />

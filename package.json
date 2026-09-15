@@ -22,6 +22,7 @@
     "test:checkout-reconciliation": "tsx test-checkout-reconciliation.js",
     "test:lms-stage-zero": "node test-lms-stage-zero.js",
     "test:lms-quiz": "tsx --test test-lms-quiz.ts",
+    "test:lms-feedback": "tsx --test test-lms-feedback.ts",
     "test:analytics-removal": "node test-analytics-removal.js",
     "test:admin-route-protection": "node scripts/test-admin-route-protection.js",
     "test:root-web-doctor": "node test-root-web-doctor.js"

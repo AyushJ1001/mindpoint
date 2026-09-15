@@ -12,6 +12,7 @@ import {
   MessageSquareText,
   RotateCcw,
   Send,
+  ShieldCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -67,6 +68,10 @@ function AuthenticatedFacultyLms() {
     facultyLmsApi.listMyQueue,
     isAuthenticated ? {} : "skip",
   );
+  const feedbackReports = useQuery(
+    facultyLmsApi.listMyFeedbackReports,
+    isAuthenticated ? {} : "skip",
+  );
   const reviewSubmission = useMutation(facultyLmsApi.reviewSubmission);
   const answerQuestion = useMutation(facultyLmsApi.answerQuestion);
   const approveCompletion = useMutation(facultyLmsApi.approveCompletion);
@@ -80,7 +85,10 @@ function AuthenticatedFacultyLms() {
   const selected =
     queue?.items.find((item) => item.id === selectedId) ?? queue?.items[0];
 
-  if (isLoading || (isAuthenticated && queue === undefined))
+  if (
+    isLoading ||
+    (isAuthenticated && (queue === undefined || feedbackReports === undefined))
+  )
     return (
       <div className="lms-live-page">
         <div className="lms-live-state" aria-busy="true">
@@ -299,6 +307,50 @@ function AuthenticatedFacultyLms() {
           </p>
         </aside>
       </div>
+      <section className="faculty-feedback-reports">
+        <div>
+          <h2>Learning feedback</h2>
+          <p>
+            Anonymous reports open only when their promised group size is met.
+            Batch-only Faculty never receive course-wide anonymous responses.
+          </p>
+        </div>
+        {feedbackReports?.length ? (
+          <div className="faculty-feedback-list">
+            {feedbackReports.map((report) => (
+              <article key={report.activityId}>
+                <div>
+                  <strong>{report.activityTitle}</strong>
+                  <span>
+                    {report.courseName} · {report.mode}
+                  </span>
+                </div>
+                {report.released ? (
+                  <p>
+                    <strong>{report.averageRating?.toFixed(1) ?? "—"}</strong>
+                    <span>
+                      / 5 from {report.responseCount} response
+                      {report.responseCount === 1 ? "" : "s"}
+                    </span>
+                  </p>
+                ) : (
+                  <p className="held">
+                    <ShieldCheck />
+                    Sealed until {report.minimumGroupSize} responses
+                  </p>
+                )}
+                {report.comments.slice(0, 3).map((comment, index) => (
+                  <blockquote key={`${index}-${comment}`}>{comment}</blockquote>
+                ))}
+              </article>
+            ))}
+          </div>
+        ) : (
+          <p className="faculty-feedback-empty">
+            No released Feedback reports are available yet.
+          </p>
+        )}
+      </section>
     </div>
   );
 }

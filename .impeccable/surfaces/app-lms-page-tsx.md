@@ -19,7 +19,7 @@ An enrolled Student needs to find the next available activity, understand why la
 
 ## Content and constraints
 
-Use real identity-derived Enrollments and published Curriculum data only. Never expose locked activity content. Completion and submission controls must represent real backend mutations, with honest loading, success, error, empty, unconfigured, and awaiting-activation states. Keep quiz and feedback actions visibly unavailable until their production handlers exist.
+Use real identity-derived Enrollments and published Curriculum data only. Never expose locked activity content. Completion and submission controls must represent real backend mutations, with honest loading, success, error, empty, unconfigured, and awaiting-activation states. Quiz answers are scored server-side without exposing answer keys. Feedback clearly names its privacy mode; anonymous responses carry no Student or Enrollment reference, while a separate receipt proves Completion.
 
 ## Responsive behavior
 

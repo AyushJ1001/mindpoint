@@ -15,4 +15,4 @@ Operate-mode authenticated Faculty queue at `app/lms/faculty/page.tsx`, graduati
 
 ## Constraints
 
-All records are derived from the signed-in Faculty identity. Course and batch assignments are enforced in Convex, not only hidden in the client. Decisions preserve prior Student evidence and require meaningful feedback when work is returned.
+All records are derived from the signed-in Faculty identity. Course and batch assignments are enforced in Convex, not only hidden in the client. Decisions preserve prior Student evidence and require meaningful feedback when work is returned. Course-wide anonymous Feedback is shown only after its minimum reporting group is met; batch-only Faculty do not receive course-wide anonymous responses.
