@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   Circle,
   CircleAlert,
+  ClipboardCheck,
   GraduationCap,
   Plus,
   ShieldCheck,
@@ -91,6 +92,8 @@ export default function AdminLmsPage() {
   const [feedbackMinimumGroupSize, setFeedbackMinimumGroupSize] = useState("5");
   const [facultyName, setFacultyName] = useState("");
   const [facultyEmail, setFacultyEmail] = useState("");
+  const [manifestOpen, setManifestOpen] = useState(false);
+  const [manifestConfirmed, setManifestConfirmed] = useState(false);
   const [pending, setPending] = useState<string>();
   const [notice, setNotice] = useState<{
     type: "success" | "error";
@@ -185,7 +188,7 @@ export default function AdminLmsPage() {
       action: "Review the checks",
     },
     {
-      title: "Publish and activate",
+      title: "Publish, then activate",
       detail: "Lock this version, then give eligible Students access.",
       complete: currentCurriculumPublished && awaiting.length === 0,
       href: currentCurriculumPublished
@@ -269,6 +272,8 @@ export default function AdminLmsPage() {
               setCourseId(event.target.value);
               setCurriculumId("");
               setModuleId("");
+              setManifestOpen(false);
+              setManifestConfirmed(false);
             }}
           >
             <option value="">Choose a Course</option>
@@ -286,6 +291,8 @@ export default function AdminLmsPage() {
             onChange={(event) => {
               setCurriculumId(event.target.value);
               setModuleId("");
+              setManifestOpen(false);
+              setManifestConfirmed(false);
             }}
           >
             <option value="">No Curriculum yet</option>
@@ -363,6 +370,131 @@ export default function AdminLmsPage() {
           )}
         </div>
       </section>
+      {manifestOpen && curriculum && selectedCourse && (
+        <section
+          className="admin-lms-manifest"
+          id="publish-manifest"
+          aria-labelledby="publish-manifest-title"
+        >
+          <div className="admin-lms-manifest-head">
+            <div>
+              <h2 id="publish-manifest-title">
+                Review the exact Published Curriculum
+              </h2>
+              <p>
+                {selectedCourse.name} · {curriculum.curriculum.title} · version{" "}
+                {curriculum.curriculum.version}
+              </p>
+            </div>
+            <span>{selectedCourse.learningModeLabel}</span>
+          </div>
+          <div className="admin-lms-manifest-summary">
+            <div>
+              <strong>{curriculum.modules.length}</strong>
+              <span>Modules</span>
+            </div>
+            <div>
+              <strong>{curriculum.activities.length}</strong>
+              <span>Activities</span>
+            </div>
+            <div>
+              <strong>
+                {curriculum.activities.filter((item) => item.required).length}
+              </strong>
+              <span>Required</span>
+            </div>
+            <p>
+              Publishing makes this version read-only. It does not activate or
+              change any Student Enrollment.
+            </p>
+          </div>
+          <div className="admin-lms-manifest-modules">
+            {curriculum.modules.map((module, moduleIndex) => {
+              const moduleActivities = curriculum.activities.filter(
+                (activity) => activity.moduleId === module._id,
+              );
+              return (
+                <section key={module._id}>
+                  <div>
+                    <span>Module {moduleIndex + 1}</span>
+                    <h3>{module.title}</h3>
+                    {module.description && <p>{module.description}</p>}
+                  </div>
+                  <ol>
+                    {moduleActivities.map((activity) => (
+                      <li key={activity._id}>
+                        <span>{activity.type.replaceAll("_", " ")}</span>
+                        <strong>{activity.title}</strong>
+                        <small>
+                          {activity.required ? "Required" : "Optional"} ·{" "}
+                          {activity.releaseMode.replaceAll("_", " ")} release ·{" "}
+                          {activity.completionMode.replaceAll("_", " ")}
+                          {activity.durationMinutes
+                            ? ` · ${activity.durationMinutes} min`
+                            : ""}
+                          {activity.type === "quiz"
+                            ? ` · pass at ${activity.passingScore ?? 100}%`
+                            : ""}
+                        </small>
+                      </li>
+                    ))}
+                  </ol>
+                </section>
+              );
+            })}
+          </div>
+          <div className="admin-lms-manifest-commit">
+            <label>
+              <input
+                type="checkbox"
+                checked={manifestConfirmed}
+                onChange={(event) => setManifestConfirmed(event.target.checked)}
+              />
+              <span>
+                <strong>I reviewed this exact version</strong>
+                <small>
+                  I understand it becomes immutable after publication and
+                  Student activation remains a separate action.
+                </small>
+              </span>
+            </label>
+            <div>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setManifestOpen(false);
+                  setManifestConfirmed(false);
+                }}
+              >
+                Return to editing
+              </Button>
+              <Button
+                className="admin-lms-primary"
+                disabled={!manifestConfirmed || pending === "publish"}
+                onClick={() =>
+                  currentCurriculumId &&
+                  act(
+                    "publish",
+                    async () => {
+                      await publish({
+                        curriculumId: currentCurriculumId as Id<"lmsCurricula">,
+                      });
+                      setManifestOpen(false);
+                      setManifestConfirmed(false);
+                    },
+                    "Curriculum published. Enrollments remain unchanged until activation.",
+                  )
+                }
+              >
+                <ShieldCheck />
+                {pending === "publish"
+                  ? "Publishing…"
+                  : "Publish immutable version"}
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
       <div className="admin-lms-basin">
         <aside className="admin-lms-outline">
           <h2>Course outline</h2>
@@ -817,26 +949,34 @@ export default function AdminLmsPage() {
                 Automated gates are clear.
               </p>
             )}
-            {isDraft && (
-              <Button
-                className="admin-lms-primary"
-                disabled={blockers.length > 0 || pending === "publish"}
-                onClick={() =>
-                  currentCurriculumId &&
-                  act(
-                    "publish",
-                    () =>
-                      publish({
-                        curriculumId: currentCurriculumId as Id<"lmsCurricula">,
-                      }),
-                    "Curriculum published. Enrollments remain unchanged until activation.",
-                  )
-                }
-              >
-                <ShieldCheck />
-                Publish immutable version
-              </Button>
-            )}
+            {isDraft &&
+              (manifestOpen ? (
+                <Button asChild variant="outline">
+                  <a href="#publish-manifest">
+                    <ClipboardCheck />
+                    Return to manifest
+                  </a>
+                </Button>
+              ) : (
+                <Button
+                  className="admin-lms-primary"
+                  disabled={blockers.length > 0}
+                  onClick={() => {
+                    setManifestOpen(true);
+                    requestAnimationFrame(() =>
+                      document
+                        .getElementById("publish-manifest")
+                        ?.scrollIntoView({
+                          behavior: "smooth",
+                          block: "start",
+                        }),
+                    );
+                  }}
+                >
+                  <ClipboardCheck />
+                  Review publish manifest
+                </Button>
+              ))}
           </section>
           <section id="enrollment-activation">
             <h2>Enrollment activation</h2>

@@ -144,6 +144,164 @@
   color: #123f40;
   font-size: 0.75rem;
 }
+.admin-lms-manifest {
+  margin-bottom: 18px;
+  overflow: hidden;
+  border-radius: 20px;
+  background: #fffaf0;
+  box-shadow: 0 20px 55px rgba(0, 62, 65, 0.11);
+  scroll-margin-top: 24px;
+}
+.admin-lms-manifest-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: flex-start;
+  padding: 24px;
+  color: #fffaf0;
+  background: #003f43;
+}
+.admin-lms-manifest-head h2 {
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.admin-lms-manifest-head p {
+  margin-top: 6px;
+  color: #bcd8d3;
+  font-size: 0.75rem;
+}
+.admin-lms-manifest-head > span {
+  flex: 0 0 auto;
+  padding: 6px 11px;
+  border-radius: 999px;
+  color: #003f43;
+  background: #dcecea;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.admin-lms-manifest-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(90px, 0.4fr)) 1fr;
+  gap: 0;
+  border-bottom: 1px solid rgba(7, 77, 79, 0.15);
+  background: #edf3ed;
+}
+.admin-lms-manifest-summary > * {
+  padding: 18px 24px;
+}
+.admin-lms-manifest-summary > * + * {
+  border-left: 1px solid rgba(7, 77, 79, 0.15);
+}
+.admin-lms-manifest-summary strong,
+.admin-lms-manifest-summary span {
+  display: block;
+}
+.admin-lms-manifest-summary strong {
+  color: #07575b;
+  font-family: var(--font-jetbrains-mono), monospace;
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+.admin-lms-manifest-summary span,
+.admin-lms-manifest-summary p {
+  color: #58706d;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+.admin-lms-manifest-modules {
+  padding: 0 24px;
+}
+.admin-lms-manifest-modules > section {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.55fr) 1fr;
+  gap: 28px;
+  padding: 24px 0;
+}
+.admin-lms-manifest-modules > section + section {
+  border-top: 1px solid rgba(7, 77, 79, 0.15);
+}
+.admin-lms-manifest-modules > section > div > span,
+.admin-lms-manifest-modules li > span {
+  color: #07575b;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.admin-lms-manifest-modules h3 {
+  margin-top: 6px;
+  font-family: var(--font-fraunces), Georgia, serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+.admin-lms-manifest-modules p,
+.admin-lms-manifest-modules small {
+  display: block;
+  margin-top: 6px;
+  color: #58706d;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+.admin-lms-manifest-modules ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid rgba(7, 77, 79, 0.15);
+}
+.admin-lms-manifest-modules li {
+  display: grid;
+  grid-template-columns: 120px 1fr;
+  gap: 4px 16px;
+  padding: 13px 0;
+  border-bottom: 1px solid rgba(7, 77, 79, 0.15);
+}
+.admin-lms-manifest-modules li strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+}
+.admin-lms-manifest-modules li small {
+  grid-column: 2;
+  margin-top: 0;
+}
+.admin-lms-manifest-commit {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  align-items: center;
+  padding: 20px 24px;
+  border-top: 1px solid rgba(7, 77, 79, 0.15);
+  background: #edf3ed;
+}
+.admin-lms-manifest-commit > label {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 10px;
+  max-width: 620px;
+  cursor: pointer;
+}
+.admin-lms-manifest-commit input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #0c6f73;
+}
+.admin-lms-manifest-commit strong,
+.admin-lms-manifest-commit small {
+  display: block;
+}
+.admin-lms-manifest-commit small {
+  margin-top: 4px;
+  color: #58706d;
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+.admin-lms-manifest-commit > div {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+}
 .admin-lms-mode {
   display: grid;
   align-content: center;
@@ -637,6 +795,41 @@
   }
   .admin-lms-next-action a {
     width: 100%;
+  }
+  .admin-lms-manifest-head,
+  .admin-lms-manifest-commit {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .admin-lms-manifest-head > span {
+    align-self: flex-start;
+  }
+  .admin-lms-manifest-summary {
+    grid-template-columns: repeat(3, 1fr);
+  }
+  .admin-lms-manifest-summary p {
+    grid-column: 1 / -1;
+    border-top: 1px solid rgba(7, 77, 79, 0.15);
+    border-left: 0;
+  }
+  .admin-lms-manifest-summary > * {
+    padding: 16px;
+  }
+  .admin-lms-manifest-modules {
+    padding: 0 20px;
+  }
+  .admin-lms-manifest-modules > section {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+  .admin-lms-manifest-modules li {
+    grid-template-columns: 1fr;
+  }
+  .admin-lms-manifest-modules li small {
+    grid-column: auto;
+  }
+  .admin-lms-manifest-commit > div {
+    display: grid;
   }
   .admin-lms-basin {
     display: flex;

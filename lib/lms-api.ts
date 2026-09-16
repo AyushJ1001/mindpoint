@@ -458,6 +458,9 @@ export type AdminCurriculum = {
     type: StudentLmsActivity["type"];
     required: boolean;
     sortOrder: number;
+    durationMinutes?: number;
+    releaseMode: "immediate" | "date" | "prerequisite";
+    completionMode: StudentLmsActivity["completionMode"];
     rightsApproved: boolean;
     accessibleAlternative?: string;
     passingScore?: number;

@@ -23,7 +23,6 @@ import {
   MessageSquareText,
   PanelLeft,
   PenLine,
-  Play,
   Send,
   ShieldCheck,
   Users,
@@ -1029,6 +1028,11 @@ function AdministratorWorkspace() {
   const [previewFacultyName, setPreviewFacultyName] = useState("");
   const [previewFacultyEmail, setPreviewFacultyEmail] = useState("");
   const [previewFacultyInvited, setPreviewFacultyInvited] = useState(false);
+  const [resolvedBlockers] = useState(["rights", "alternative", "evidence"]);
+  const [previewManifestOpen, setPreviewManifestOpen] = useState(true);
+  const [previewManifestConfirmed, setPreviewManifestConfirmed] =
+    useState(false);
+  const [previewPublished, setPreviewPublished] = useState(false);
   const [adminActivities, setAdminActivities] = useState<Activity[]>(() => [
     ...activities,
   ]);
@@ -1059,6 +1063,9 @@ function AdministratorWorkspace() {
   const activeBlocker = blockers.find(
     (blocker) => blocker.id === selectedBlocker,
   );
+  const visibleBlockers = blockers.filter(
+    (blocker) => !resolvedBlockers.includes(blocker.id),
+  );
   const selectedAdminActivity = adminActivities.find(
     (activity) => activity.id === selectedId,
   );
@@ -1067,7 +1074,7 @@ function AdministratorWorkspace() {
     "Create the Curriculum",
     "Build the learning path",
     "Clear the checks",
-    "Publish and activate",
+    "Publish, then activate",
   ];
 
   return (
@@ -1085,13 +1092,13 @@ function AdministratorWorkspace() {
             </p>
           </div>
           <span className="w-fit rounded-full bg-[var(--lms-accent-soft)] px-3 py-1.5 font-mono text-xs text-[var(--lms-accent-strong)]">
-            3 of 5 ready
+            {previewPublished ? "5" : "4"} of 5 ready
           </span>
         </div>
         <ol className="grid border-y border-[var(--lms-rule)] sm:grid-cols-2 lg:grid-cols-5">
           {previewLaunchSteps.map((step, index) => {
-            const complete = index < 3;
-            const current = index === 3;
+            const complete = index < 4 || previewPublished;
+            const current = index === 4 && !previewPublished;
             return (
               <li
                 key={step}
@@ -1117,17 +1124,120 @@ function AdministratorWorkspace() {
               Next step
             </strong>
             <small className="mt-1 block text-sm text-[var(--lms-ink)]">
-              Clear the three publication checks
+              {previewPublished
+                ? "This demo Curriculum is published"
+                : "Review the immutable publication manifest"}
             </small>
           </span>
           <Button
-            onClick={() => setSelectedBlocker(blockers[0].id)}
+            onClick={() => setPreviewManifestOpen(true)}
             className="sm:w-auto"
           >
-            Review the checks
+            {previewPublished ? "Publication complete" : "Review manifest"}
           </Button>
         </div>
       </section>
+      {previewManifestOpen && (
+        <section className="border-b border-[var(--lms-rule)] bg-[var(--lms-ivory)]">
+          <div className="bg-[var(--lms-deep)] px-5 py-6 text-[var(--lms-ivory)] md:px-7">
+            <h2 className="font-display text-2xl font-semibold tracking-[-0.03em]">
+              Review the exact Published Curriculum
+            </h2>
+            <p className="mt-2 text-sm text-[var(--lms-mist)]">
+              Counselling Skills Certificate · Curriculum v2 · Live + self-paced
+              learning
+            </p>
+          </div>
+          <div className="grid border-b border-[var(--lms-rule)] bg-[var(--lms-bank)] sm:grid-cols-[repeat(3,120px)_1fr]">
+            {[
+              ["1", "Module"],
+              [String(adminActivities.length), "Activities"],
+              ["5", "Required"],
+            ].map(([value, label]) => (
+              <div
+                key={label}
+                className="border-b border-[var(--lms-rule)] px-5 py-4 sm:border-r sm:border-b-0"
+              >
+                <strong className="block font-mono text-xl text-[var(--lms-accent-strong)]">
+                  {value}
+                </strong>
+                <span className="text-xs text-[var(--lms-muted)]">{label}</span>
+              </div>
+            ))}
+            <p className="px-5 py-4 text-xs leading-5 text-[var(--lms-muted)]">
+              Publishing makes this version read-only. Student Enrollment
+              activation remains a separate action.
+            </p>
+          </div>
+          <div className="grid gap-6 px-5 py-6 md:grid-cols-[260px_1fr] md:px-7">
+            <div>
+              <span className="text-xs font-semibold text-[var(--lms-accent-strong)]">
+                Module 1
+              </span>
+              <h3 className="font-display mt-2 text-xl font-semibold">
+                Foundations of therapeutic listening
+              </h3>
+            </div>
+            <ol className="divide-y divide-[var(--lms-rule)] border-y border-[var(--lms-rule)]">
+              {adminActivities.map((activity) => (
+                <li key={activity.id} className="py-3">
+                  <span className="text-xs font-semibold text-[var(--lms-accent-strong)]">
+                    {activity.type}
+                  </span>
+                  <strong className="mt-1 block text-sm">
+                    {activity.title}
+                  </strong>
+                  <small className="mt-1 block text-xs text-[var(--lms-muted)]">
+                    Required · immediate release
+                  </small>
+                </li>
+              ))}
+            </ol>
+          </div>
+          <div className="flex flex-col gap-4 border-t border-[var(--lms-rule)] bg-[var(--lms-bank)] px-5 py-5 md:flex-row md:items-center md:justify-between md:px-7">
+            <label className="flex max-w-2xl cursor-pointer items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="mt-1 h-4 w-4 accent-[var(--lms-accent)]"
+                checked={previewManifestConfirmed}
+                onChange={(event) =>
+                  setPreviewManifestConfirmed(event.target.checked)
+                }
+              />
+              <span>
+                <strong className="block">I reviewed this exact version</strong>
+                <small className="mt-1 block text-xs leading-5 text-[var(--lms-muted)]">
+                  I understand it becomes immutable and does not activate
+                  Students.
+                </small>
+              </span>
+            </label>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setPreviewManifestOpen(false);
+                  setPreviewManifestConfirmed(false);
+                }}
+              >
+                Return to editing
+              </Button>
+              <Button
+                disabled={!previewManifestConfirmed || previewPublished}
+                onClick={() => {
+                  setPreviewPublished(true);
+                  setPreviewManifestConfirmed(false);
+                }}
+              >
+                <ShieldCheck />
+                {previewPublished
+                  ? "Published in preview"
+                  : "Publish immutable version"}
+              </Button>
+            </div>
+          </div>
+        </section>
+      )}
       <div className="grid min-h-[760px] lg:grid-cols-[250px_minmax(0,1fr)_310px]">
         <aside className="order-2 border-b border-[var(--lms-rule)] lg:order-none lg:border-r lg:border-b-0">
           <div className="border-b border-[var(--lms-rule)] px-5 py-4">
@@ -1363,11 +1473,11 @@ function AdministratorWorkspace() {
           <div className="flex items-center justify-between">
             <p className="text-sm font-semibold">Publication readiness</p>
             <span className="font-mono text-xs text-[var(--lms-muted)]">
-              {blockers.length} blockers
+              {visibleBlockers.length} blockers
             </span>
           </div>
           <div className="mt-5 divide-y divide-[var(--lms-rule)] border-y border-[var(--lms-rule)]">
-            {blockers.map((blocker) => {
+            {visibleBlockers.map((blocker) => {
               const active = blocker.id === selectedBlocker;
               return (
                 <button
@@ -1407,8 +1517,17 @@ function AdministratorWorkspace() {
               ? `${activeBlocker.activity}: ${activeBlocker.guidance}`
               : "Select a blocker to open its exact activity and required evidence."}
           </p>
-          <Button className="mt-6 w-full" disabled>
-            <Play /> Review publish manifest
+          {visibleBlockers.length === 0 && (
+            <p className="mt-5 flex items-center gap-2 text-xs font-semibold text-[var(--lms-accent-strong)]">
+              <CheckCircle2 className="h-4 w-4" /> Automated gates are clear.
+            </p>
+          )}
+          <Button
+            className="mt-6 w-full"
+            disabled={visibleBlockers.length > 0}
+            onClick={() => setPreviewManifestOpen(true)}
+          >
+            <ClipboardCheck /> Review publish manifest
           </Button>
           <section className="mt-8 border-t border-[var(--lms-rule)] pt-7">
             <h2 className="text-sm font-semibold">Faculty access</h2>
