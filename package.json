@@ -26,6 +26,7 @@
     "test:lms-certificate": "tsx --test test-lms-certificate.ts",
     "test:lms-support": "tsx --test test-lms-support.ts",
     "test:lms-course-scope": "tsx --test test-lms-course-scope.ts",
+    "test:auth-deployment": "tsx --test test-auth-deployment.ts",
     "test:analytics-removal": "node test-analytics-removal.js",
     "test:admin-route-protection": "node scripts/test-admin-route-protection.js",
     "test:root-web-doctor": "node test-root-web-doctor.js"

@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import { resolveConvexUrlForBuild } from "./lib/config/deployment";
+
+const publicConvexUrl = resolveConvexUrlForBuild();
 
 const nextConfig = {
   /* config options here */
@@ -10,7 +13,7 @@ const nextConfig = {
     CLERK_SKIP_KEY_VALIDATION: process.env.CLERK_SKIP_KEY_VALIDATION || "false",
     NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY:
       process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-    NEXT_PUBLIC_CONVEX_URL: process.env.NEXT_PUBLIC_CONVEX_URL,
+    NEXT_PUBLIC_CONVEX_URL: publicConvexUrl,
     NEXT_PUBLIC_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
   },
   // Remove console logs in production builds
