@@ -20,3 +20,10 @@ test("services and standalone resources stay outside the academic LMS", () => {
     assert.equal(isLmsCourseType(type), false);
   }
 });
+
+test("every LMS learning mode has release-desk copy", () => {
+  assert.equal(getLmsLearningModeLabel("self_paced"), "Self-paced learning");
+  assert.equal(getLmsLearningModeLabel("hybrid"), "Live + self-paced learning");
+  assert.equal(getLmsLearningModeLabel("cohort"), "Cohort learning");
+  assert.equal(getLmsLearningModeLabel("event"), "Live learning event");
+});

@@ -208,7 +208,7 @@ export default function AdminLmsPage() {
             <option value="">Choose a Course</option>
             {desk.courses.map((course) => (
               <option key={course.courseId} value={course.courseId}>
-                {course.name} · {course.code}
+                {course.name} · {course.learningModeLabel}
               </option>
             ))}
           </select>
@@ -230,6 +230,17 @@ export default function AdminLmsPage() {
             ))}
           </select>
         </label>
+        <div className="admin-lms-mode" aria-live="polite">
+          <span>Delivery model</span>
+          <strong>
+            {selectedCourse?.learningModeLabel ?? "Choose an academic Course"}
+          </strong>
+          <small>
+            {selectedCourse
+              ? `${selectedCourse.code} · ${selectedCourse.courseType}`
+              : "Therapy and standalone services are intentionally kept outside the LMS."}
+          </small>
+        </div>
       </section>
       <div className="admin-lms-basin">
         <aside className="admin-lms-outline">

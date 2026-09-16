@@ -381,7 +381,14 @@ export const facultyLmsApi = {
 };
 
 export type AdminReleaseDesk = {
-  courses: Array<{ courseId: Id<"courses">; name: string; code: string }>;
+  courses: Array<{
+    courseId: Id<"courses">;
+    name: string;
+    code: string;
+    courseType: string;
+    learningMode: LmsLearningMode;
+    learningModeLabel: string;
+  }>;
   curricula: Array<{
     curriculumId: Id<"lmsCurricula">;
     courseId: Id<"courses">;

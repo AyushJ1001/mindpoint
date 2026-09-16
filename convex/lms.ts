@@ -104,6 +104,9 @@ export const createDraftCurriculum = mutation({
     const admin = await requireAdmin(ctx);
     const course = await ctx.db.get("courses", args.courseId);
     if (!course) throw new Error("Course not found");
+    if (!isLmsCourseType(course.type)) {
+      throw new Error("This Course type does not use the academic LMS");
+    }
 
     const existing = await ctx.db
       .query("lmsCurricula")
@@ -475,6 +478,10 @@ export const publishCurriculum = mutation({
     if (!curriculum || curriculum.status !== "draft") {
       throw new Error("Draft Curriculum not found");
     }
+    const course = await ctx.db.get("courses", curriculum.courseId);
+    if (!course || !isLmsCourseType(course.type)) {
+      throw new Error("This Course type does not use the academic LMS");
+    }
     const modules = await ctx.db
       .query("lmsModules")
       .withIndex("by_curriculumId_and_sortOrder", (q) =>
@@ -588,6 +595,10 @@ export const activateEnrollment = mutation({
     const curriculum = await ctx.db.get("lmsCurricula", args.curriculumId);
     if (!enrollment || !curriculum)
       throw new Error("Enrollment or Curriculum not found");
+    const course = await ctx.db.get("courses", curriculum.courseId);
+    if (!course || !isLmsCourseType(course.type)) {
+      throw new Error("This Course type does not use the academic LMS");
+    }
     if (curriculum.status !== "published") {
       throw new Error("Only a Published Curriculum can be activated");
     }

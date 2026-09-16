@@ -1,6 +1,11 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
+import {
+  getLmsLearningMode,
+  getLmsLearningModeLabel,
+  isLmsCourseType,
+} from "./_shared/lmsCourseScope";
 
 export const getReleaseDesk = query({
   args: {},
@@ -27,6 +32,12 @@ export const getReleaseDesk = query({
         .take(200),
       ctx.db.query("lmsFacultyAssignments").order("desc").take(200),
     ]);
+    const academicCourses = courses.filter((course) =>
+      isLmsCourseType(course.type),
+    );
+    const academicCourseById = new Map(
+      academicCourses.map((course) => [course._id, course]),
+    );
     const eligibleEnrollments = Array.from(
       new Map(
         [...activeEnrollments, ...legacyActiveEnrollments].map((enrollment) => [
@@ -34,7 +45,7 @@ export const getReleaseDesk = query({
           enrollment,
         ]),
       ).values(),
-    );
+    ).filter((enrollment) => academicCourseById.has(enrollment.courseId));
     const enrollmentRows = await Promise.all(
       eligibleEnrollments.map(async (enrollment) => {
         const assignment = await ctx.db
@@ -49,8 +60,7 @@ export const getReleaseDesk = query({
           courseId: enrollment.courseId,
           courseName:
             enrollment.courseName ??
-            courses.find((course) => course._id === enrollment.courseId)
-              ?.name ??
+            academicCourseById.get(enrollment.courseId)?.name ??
             "Course",
           studentName: enrollment.userName ?? "Student",
           batchLabel: enrollment.batchLabel,
@@ -61,30 +71,43 @@ export const getReleaseDesk = query({
       }),
     );
     return {
-      courses: courses.map((course) => ({
-        courseId: course._id,
-        name: course.name,
-        code: course.code,
-      })),
-      curricula: curricula.map((curriculum) => ({
-        curriculumId: curriculum._id,
-        courseId: curriculum.courseId,
-        title: curriculum.title,
-        version: curriculum.version,
-        status: curriculum.status,
-        updatedAt: curriculum.updatedAt,
-        publishedAt: curriculum.publishedAt,
-      })),
+      courses: academicCourses.map((course) => {
+        const learningMode = getLmsLearningMode(course.type);
+        if (!learningMode) {
+          throw new Error("Academic Course has no LMS learning mode");
+        }
+        return {
+          courseId: course._id,
+          name: course.name,
+          code: course.code,
+          courseType: course.type,
+          learningMode,
+          learningModeLabel: getLmsLearningModeLabel(learningMode),
+        };
+      }),
+      curricula: curricula
+        .filter((curriculum) => academicCourseById.has(curriculum.courseId))
+        .map((curriculum) => ({
+          curriculumId: curriculum._id,
+          courseId: curriculum.courseId,
+          title: curriculum.title,
+          version: curriculum.version,
+          status: curriculum.status,
+          updatedAt: curriculum.updatedAt,
+          publishedAt: curriculum.publishedAt,
+        })),
       enrollments: enrollmentRows,
-      facultyAssignments: facultyAssignments.map((assignment) => ({
-        assignmentId: assignment._id,
-        courseId: assignment.courseId,
-        batchId: assignment.batchId,
-        facultyTokenIdentifier: assignment.facultyTokenIdentifier,
-        canGrade: assignment.canGrade,
-        canAnswerQuestions: assignment.canAnswerQuestions,
-        canApproveCompletion: assignment.canApproveCompletion,
-      })),
+      facultyAssignments: facultyAssignments
+        .filter((assignment) => academicCourseById.has(assignment.courseId))
+        .map((assignment) => ({
+          assignmentId: assignment._id,
+          courseId: assignment.courseId,
+          batchId: assignment.batchId,
+          facultyTokenIdentifier: assignment.facultyTokenIdentifier,
+          canGrade: assignment.canGrade,
+          canAnswerQuestions: assignment.canAnswerQuestions,
+          canApproveCompletion: assignment.canApproveCompletion,
+        })),
     };
   },
 });
@@ -104,6 +127,11 @@ export const assignFaculty = mutation({
     if (!token) throw new Error("Faculty token identifier is required");
     const course = await ctx.db.get("courses", args.courseId);
     if (!course) throw new Error("Course not found");
+    if (!isLmsCourseType(course.type)) {
+      throw new Error(
+        "Faculty LMS scope is only available for academic Courses",
+      );
+    }
     if (args.batchId) {
       const batch = await ctx.db.get("courseBatches", args.batchId);
       if (!batch || batch.courseId !== args.courseId)
