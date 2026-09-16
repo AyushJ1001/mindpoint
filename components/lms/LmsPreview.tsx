@@ -15,6 +15,7 @@ import {
   CircleHelp,
   ClipboardCheck,
   Clock3,
+  Circle,
   FileQuestion,
   GraduationCap,
   LayoutDashboard,
@@ -1058,281 +1059,356 @@ function AdministratorWorkspace() {
   const selectedAdminActivity = adminActivities.find(
     (activity) => activity.id === selectedId,
   );
+  const previewLaunchSteps = [
+    "Choose the Course",
+    "Create the Curriculum",
+    "Build the learning path",
+    "Clear the checks",
+    "Publish and activate",
+  ];
 
   return (
-    <div className="grid min-h-[760px] lg:grid-cols-[250px_minmax(0,1fr)_310px]">
-      <aside className="order-2 border-b border-[var(--lms-rule)] lg:order-none lg:border-r lg:border-b-0">
-        <div className="border-b border-[var(--lms-rule)] px-5 py-4">
-          <p className="text-sm font-semibold">Draft Curriculum v2</p>
-          <p className="mt-1 text-xs text-[var(--lms-muted)]">
-            Not active for Students
-          </p>
+    <div>
+      <section className="border-b border-[var(--lms-rule)] bg-[var(--lms-ivory)]">
+        <div className="flex flex-col gap-4 px-5 py-6 sm:flex-row sm:items-start sm:justify-between md:px-7">
+          <div>
+            <h1 className="font-display text-2xl font-semibold tracking-[-0.03em]">
+              Your Course launch path
+            </h1>
+            <p className="mt-2 max-w-[72ch] text-sm leading-6 text-[var(--lms-muted)]">
+              For this certificate Course, the Curriculum holds pre-work,
+              resources, assessments, and completion evidence alongside live
+              teaching.
+            </p>
+          </div>
+          <span className="w-fit rounded-full bg-[var(--lms-accent-soft)] px-3 py-1.5 font-mono text-xs text-[var(--lms-accent-strong)]">
+            3 of 5 ready
+          </span>
         </div>
-        <div className="px-5 py-4 text-xs font-semibold text-[var(--lms-muted)]">
-          Module 1 · {adminActivities.length} activities
-        </div>
-        {adminActivities.map((activity, index) => (
-          <button
-            key={activity.id}
-            type="button"
-            onClick={() => {
-              setSelectedId(activity.id);
-              setTitle(activity.title);
-              setSelectedBlocker(null);
-            }}
-            className={`lms-focus grid w-full grid-cols-[1.5rem_1fr] gap-3 border-t border-[var(--lms-rule)] px-5 py-4 text-left ${selectedId === activity.id ? "bg-[var(--lms-accent-soft)]" : "hover:bg-stone-50"}`}
+        <ol className="grid border-y border-[var(--lms-rule)] sm:grid-cols-2 lg:grid-cols-5">
+          {previewLaunchSteps.map((step, index) => {
+            const complete = index < 3;
+            const current = index === 3;
+            return (
+              <li
+                key={step}
+                aria-current={current ? "step" : undefined}
+                className={`relative flex min-w-0 gap-3 border-b border-[var(--lms-rule)] px-5 py-4 last:border-b-0 sm:border-r lg:border-b-0 ${current ? "bg-[var(--lms-bank)]" : ""}`}
+              >
+                {complete ? (
+                  <CheckCircle2 className="h-5 w-5 shrink-0 text-[var(--lms-accent)]" />
+                ) : (
+                  <Circle className="h-5 w-5 shrink-0 text-[var(--lms-muted)]" />
+                )}
+                <span className="text-sm leading-5 font-semibold">{step}</span>
+                <span className="absolute top-1 right-2 font-mono text-xs text-[var(--lms-muted)]">
+                  {index + 1}
+                </span>
+              </li>
+            );
+          })}
+        </ol>
+        <div className="flex flex-col gap-3 bg-[var(--lms-bank)] px-5 py-4 sm:flex-row sm:items-center sm:justify-between md:px-7">
+          <span>
+            <strong className="block text-xs text-[var(--lms-accent-strong)]">
+              Next step
+            </strong>
+            <small className="mt-1 block text-sm text-[var(--lms-ink)]">
+              Clear the three publication checks
+            </small>
+          </span>
+          <Button
+            onClick={() => setSelectedBlocker(blockers[0].id)}
+            className="sm:w-auto"
           >
-            <span
-              className={`font-mono text-xs ${
-                selectedId === activity.id
-                  ? "text-[var(--lms-deep)]"
-                  : "text-[var(--lms-muted)]"
-              }`}
+            Review the checks
+          </Button>
+        </div>
+      </section>
+      <div className="grid min-h-[760px] lg:grid-cols-[250px_minmax(0,1fr)_310px]">
+        <aside className="order-2 border-b border-[var(--lms-rule)] lg:order-none lg:border-r lg:border-b-0">
+          <div className="border-b border-[var(--lms-rule)] px-5 py-4">
+            <p className="text-sm font-semibold">Draft Curriculum v2</p>
+            <p className="mt-1 text-xs text-[var(--lms-muted)]">
+              Not active for Students
+            </p>
+          </div>
+          <div className="px-5 py-4 text-xs font-semibold text-[var(--lms-muted)]">
+            Module 1 · {adminActivities.length} activities
+          </div>
+          {adminActivities.map((activity, index) => (
+            <button
+              key={activity.id}
+              type="button"
+              onClick={() => {
+                setSelectedId(activity.id);
+                setTitle(activity.title);
+                setSelectedBlocker(null);
+              }}
+              className={`lms-focus grid w-full grid-cols-[1.5rem_1fr] gap-3 border-t border-[var(--lms-rule)] px-5 py-4 text-left ${selectedId === activity.id ? "bg-[var(--lms-accent-soft)]" : "hover:bg-stone-50"}`}
             >
-              {index + 1}
-            </span>
-            <span>
-              <span className="block text-sm leading-5 font-semibold">
-                {activity.title}
-              </span>
               <span
-                className={`mt-1 block text-xs ${
+                className={`font-mono text-xs ${
                   selectedId === activity.id
                     ? "text-[var(--lms-deep)]"
                     : "text-[var(--lms-muted)]"
                 }`}
               >
-                {activity.type}
+                {index + 1}
               </span>
-            </span>
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => {
-            if (activityAdded) return;
-            const draft: Activity = {
-              id: "new-draft",
-              title: "Untitled activity",
-              type: "Reading",
-              duration: "Not set",
-              status: "available",
-            };
-            setAdminActivities((items) => [...items, draft]);
-            setSelectedId(draft.id);
-            setTitle(draft.title);
-            setActivityAdded(true);
-            setSaveMessage("New activity draft added in this preview");
-          }}
-          disabled={activityAdded}
-          className="lms-focus flex w-full items-center gap-2 border-t border-dashed border-[var(--lms-rule)] px-5 py-4 text-sm font-semibold text-[var(--lms-accent-strong)]"
-        >
-          <BookOpen className="h-4 w-4" />
-          {activityAdded ? "Activity draft added" : "Add activity"}
-        </button>
-      </aside>
-
-      <section className="order-1 min-w-0 px-6 py-8 md:px-10 lg:order-none">
-        <div className="mx-auto max-w-3xl">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h1 className="font-display text-3xl font-semibold tracking-[-0.03em]">
-                Activity settings
-              </h1>
-            </div>
-            <span className="text-xs text-[var(--lms-muted)]" role="status">
-              {saveMessage}
-            </span>
-          </div>
-          <div className="mt-8 grid gap-6">
-            <div>
-              <label htmlFor="activity-title" className="text-sm font-semibold">
-                Activity title
-              </label>
-              <Input
-                id="activity-title"
-                className="mt-2 bg-white"
-                value={title}
-                onChange={(event) => {
-                  setTitle(event.target.value);
-                  setSaveMessage("Unsaved changes");
-                }}
-              />
-            </div>
-            <div>
-              <label htmlFor="instructions" className="text-sm font-semibold">
-                Student instructions
-              </label>
-              <Textarea
-                key={selectedId}
-                id="instructions"
-                className="mt-2 min-h-36 bg-white"
-                defaultValue={
-                  selectedAdminActivity?.type === "Feedback"
-                    ? "Rate the learning experience and optionally tell us what supported you or what should be clearer. Read the privacy promise before submitting."
-                    : selectedAdminActivity?.type === "Quiz"
-                      ? "Answer every question. Your attempt is scored immediately and retained as learning evidence."
-                      : "Read the scenario and submit a short reflection. Name what you noticed, the response you would try, and one question you still have."
-                }
-              />
-            </div>
-            <div className="grid gap-5 md:grid-cols-2">
-              <div>
-                <label htmlFor="release-rule" className="text-sm font-semibold">
-                  Release rule
-                </label>
-                <select
-                  id="release-rule"
-                  className="lms-focus border-input mt-2 h-10 w-full rounded-md border bg-white px-3 text-sm"
+              <span>
+                <span className="block text-sm leading-5 font-semibold">
+                  {activity.title}
+                </span>
+                <span
+                  className={`mt-1 block text-xs ${
+                    selectedId === activity.id
+                      ? "text-[var(--lms-deep)]"
+                      : "text-[var(--lms-muted)]"
+                  }`}
                 >
-                  <option>After previous activity</option>
-                  <option>Immediately</option>
-                  <option>On a date</option>
-                </select>
+                  {activity.type}
+                </span>
+              </span>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => {
+              if (activityAdded) return;
+              const draft: Activity = {
+                id: "new-draft",
+                title: "Untitled activity",
+                type: "Reading",
+                duration: "Not set",
+                status: "available",
+              };
+              setAdminActivities((items) => [...items, draft]);
+              setSelectedId(draft.id);
+              setTitle(draft.title);
+              setActivityAdded(true);
+              setSaveMessage("New activity draft added in this preview");
+            }}
+            disabled={activityAdded}
+            className="lms-focus flex w-full items-center gap-2 border-t border-dashed border-[var(--lms-rule)] px-5 py-4 text-sm font-semibold text-[var(--lms-accent-strong)]"
+          >
+            <BookOpen className="h-4 w-4" />
+            {activityAdded ? "Activity draft added" : "Add activity"}
+          </button>
+        </aside>
+
+        <section className="order-1 min-w-0 px-6 py-8 md:px-10 lg:order-none">
+          <div className="mx-auto max-w-3xl">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <div>
+                <h1 className="font-display text-3xl font-semibold tracking-[-0.03em]">
+                  Activity settings
+                </h1>
               </div>
+              <span className="text-xs text-[var(--lms-muted)]" role="status">
+                {saveMessage}
+              </span>
+            </div>
+            <div className="mt-8 grid gap-6">
               <div>
                 <label
-                  htmlFor="completion-rule"
+                  htmlFor="activity-title"
                   className="text-sm font-semibold"
                 >
-                  Completion evidence
+                  Activity title
                 </label>
-                <select
-                  key={`${selectedId}-completion`}
-                  id="completion-rule"
-                  className="lms-focus border-input mt-2 h-10 w-full rounded-md border bg-white px-3 text-sm"
-                >
-                  <option>
-                    {selectedAdminActivity?.type === "Feedback"
-                      ? "Separate feedback receipt"
+                <Input
+                  id="activity-title"
+                  className="mt-2 bg-white"
+                  value={title}
+                  onChange={(event) => {
+                    setTitle(event.target.value);
+                    setSaveMessage("Unsaved changes");
+                  }}
+                />
+              </div>
+              <div>
+                <label htmlFor="instructions" className="text-sm font-semibold">
+                  Student instructions
+                </label>
+                <Textarea
+                  key={selectedId}
+                  id="instructions"
+                  className="mt-2 min-h-36 bg-white"
+                  defaultValue={
+                    selectedAdminActivity?.type === "Feedback"
+                      ? "Rate the learning experience and optionally tell us what supported you or what should be clearer. Read the privacy promise before submitting."
                       : selectedAdminActivity?.type === "Quiz"
-                        ? "Passing score"
-                        : "Faculty-reviewed submission"}
-                  </option>
-                  <option>Student confirmation</option>
-                  <option>Passing score</option>
-                </select>
+                        ? "Answer every question. Your attempt is scored immediately and retained as learning evidence."
+                        : "Read the scenario and submit a short reflection. Name what you noticed, the response you would try, and one question you still have."
+                  }
+                />
               </div>
-            </div>
-            {selectedId === "feedback" && (
-              <fieldset className="rounded-2xl bg-[var(--lms-bank)] p-5">
-                <legend className="text-sm font-semibold">
-                  Response privacy
-                </legend>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  {(["anonymous", "identified"] as const).map((mode) => (
-                    <label
-                      key={mode}
-                      className={`lms-focus flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${previewFeedbackMode === mode ? "border-[var(--lms-accent)] bg-[var(--lms-accent-soft)]" : "border-[var(--lms-rule)] bg-white"}`}
-                    >
-                      <input
-                        type="radio"
-                        name="admin-preview-feedback-mode"
-                        checked={previewFeedbackMode === mode}
-                        onChange={() => setPreviewFeedbackMode(mode)}
-                      />
-                      <span>
-                        <strong className="block text-sm capitalize">
-                          {mode}
-                        </strong>
-                        <small className="mt-1 block text-xs leading-5 text-[var(--lms-muted)]">
-                          {mode === "anonymous"
-                            ? "No Student or Enrollment reference is stored with the response."
-                            : "Course staff can connect the response to its Enrollment."}
-                        </small>
-                      </span>
-                    </label>
-                  ))}
-                </div>
-                {previewFeedbackMode === "anonymous" && (
-                  <label className="mt-5 block text-sm font-semibold">
-                    Minimum reporting group
-                    <Input
-                      type="number"
-                      min="3"
-                      max="50"
-                      defaultValue="5"
-                      className="mt-2 max-w-36 bg-white"
-                    />
-                  </label>
-                )}
-              </fieldset>
-            )}
-            <div className="border-y border-[var(--lms-rule)] py-6">
-              <div className="flex items-start gap-3">
-                <Accessibility className="mt-0.5 h-5 w-5 text-[var(--lms-accent)]" />
+              <div className="grid gap-5 md:grid-cols-2">
                 <div>
-                  <p className="text-sm font-semibold">Accessible by design</p>
-                  <p className="mt-1 text-sm leading-6 text-[var(--lms-muted)]">
-                    Instructions, labels, keyboard order, error recovery, and
-                    equivalent routes are checked before publication.
-                  </p>
+                  <label
+                    htmlFor="release-rule"
+                    className="text-sm font-semibold"
+                  >
+                    Release rule
+                  </label>
+                  <select
+                    id="release-rule"
+                    className="lms-focus border-input mt-2 h-10 w-full rounded-md border bg-white px-3 text-sm"
+                  >
+                    <option>After previous activity</option>
+                    <option>Immediately</option>
+                    <option>On a date</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    htmlFor="completion-rule"
+                    className="text-sm font-semibold"
+                  >
+                    Completion evidence
+                  </label>
+                  <select
+                    key={`${selectedId}-completion`}
+                    id="completion-rule"
+                    className="lms-focus border-input mt-2 h-10 w-full rounded-md border bg-white px-3 text-sm"
+                  >
+                    <option>
+                      {selectedAdminActivity?.type === "Feedback"
+                        ? "Separate feedback receipt"
+                        : selectedAdminActivity?.type === "Quiz"
+                          ? "Passing score"
+                          : "Faculty-reviewed submission"}
+                    </option>
+                    <option>Student confirmation</option>
+                    <option>Passing score</option>
+                  </select>
                 </div>
               </div>
-            </div>
-            <div className="flex justify-end">
-              <Button
-                onClick={() => setSaveMessage("Activity saved in this preview")}
-              >
-                <Check /> Save activity
-              </Button>
+              {selectedId === "feedback" && (
+                <fieldset className="rounded-2xl bg-[var(--lms-bank)] p-5">
+                  <legend className="text-sm font-semibold">
+                    Response privacy
+                  </legend>
+                  <div className="mt-4 grid gap-3 md:grid-cols-2">
+                    {(["anonymous", "identified"] as const).map((mode) => (
+                      <label
+                        key={mode}
+                        className={`lms-focus flex cursor-pointer items-start gap-3 rounded-xl border p-4 ${previewFeedbackMode === mode ? "border-[var(--lms-accent)] bg-[var(--lms-accent-soft)]" : "border-[var(--lms-rule)] bg-white"}`}
+                      >
+                        <input
+                          type="radio"
+                          name="admin-preview-feedback-mode"
+                          checked={previewFeedbackMode === mode}
+                          onChange={() => setPreviewFeedbackMode(mode)}
+                        />
+                        <span>
+                          <strong className="block text-sm capitalize">
+                            {mode}
+                          </strong>
+                          <small className="mt-1 block text-xs leading-5 text-[var(--lms-muted)]">
+                            {mode === "anonymous"
+                              ? "No Student or Enrollment reference is stored with the response."
+                              : "Course staff can connect the response to its Enrollment."}
+                          </small>
+                        </span>
+                      </label>
+                    ))}
+                  </div>
+                  {previewFeedbackMode === "anonymous" && (
+                    <label className="mt-5 block text-sm font-semibold">
+                      Minimum reporting group
+                      <Input
+                        type="number"
+                        min="3"
+                        max="50"
+                        defaultValue="5"
+                        className="mt-2 max-w-36 bg-white"
+                      />
+                    </label>
+                  )}
+                </fieldset>
+              )}
+              <div className="border-y border-[var(--lms-rule)] py-6">
+                <div className="flex items-start gap-3">
+                  <Accessibility className="mt-0.5 h-5 w-5 text-[var(--lms-accent)]" />
+                  <div>
+                    <p className="text-sm font-semibold">
+                      Accessible by design
+                    </p>
+                    <p className="mt-1 text-sm leading-6 text-[var(--lms-muted)]">
+                      Instructions, labels, keyboard order, error recovery, and
+                      equivalent routes are checked before publication.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <div className="flex justify-end">
+                <Button
+                  onClick={() =>
+                    setSaveMessage("Activity saved in this preview")
+                  }
+                >
+                  <Check /> Save activity
+                </Button>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      <aside className="order-3 border-t border-[var(--lms-rule)] bg-[var(--lms-bank)] p-6 lg:order-none lg:border-t-0 lg:border-l">
-        <div className="flex items-center justify-between">
-          <p className="text-sm font-semibold">Publication readiness</p>
-          <span className="font-mono text-xs text-[var(--lms-muted)]">
-            {blockers.length} blockers
-          </span>
-        </div>
-        <div className="mt-5 divide-y divide-[var(--lms-rule)] border-y border-[var(--lms-rule)]">
-          {blockers.map((blocker) => {
-            const active = blocker.id === selectedBlocker;
-            return (
-              <button
-                key={blocker.id}
-                type="button"
-                onClick={() => {
-                  const activity = activities.find(
-                    (item) => item.id === blocker.activityId,
-                  );
-                  setSelectedBlocker(blocker.id);
-                  setSelectedId(blocker.activityId);
-                  if (activity) setTitle(activity.title);
-                }}
-                className={`lms-focus flex w-full items-start gap-3 py-4 text-left ${active ? "text-[var(--lms-accent-strong)]" : ""}`}
-              >
-                <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border border-amber-600 text-amber-700">
-                  <span className="h-1.5 w-1.5 rounded-full bg-current" />
-                </span>
-                <span>
-                  <span className="block text-sm font-semibold">
-                    {blocker.label}
+        <aside className="order-3 border-t border-[var(--lms-rule)] bg-[var(--lms-bank)] p-6 lg:order-none lg:border-t-0 lg:border-l">
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold">Publication readiness</p>
+            <span className="font-mono text-xs text-[var(--lms-muted)]">
+              {blockers.length} blockers
+            </span>
+          </div>
+          <div className="mt-5 divide-y divide-[var(--lms-rule)] border-y border-[var(--lms-rule)]">
+            {blockers.map((blocker) => {
+              const active = blocker.id === selectedBlocker;
+              return (
+                <button
+                  key={blocker.id}
+                  type="button"
+                  onClick={() => {
+                    const activity = activities.find(
+                      (item) => item.id === blocker.activityId,
+                    );
+                    setSelectedBlocker(blocker.id);
+                    setSelectedId(blocker.activityId);
+                    if (activity) setTitle(activity.title);
+                  }}
+                  className={`lms-focus flex w-full items-start gap-3 py-4 text-left ${active ? "text-[var(--lms-accent-strong)]" : ""}`}
+                >
+                  <span className="mt-0.5 flex h-5 w-5 items-center justify-center rounded-full border border-amber-600 text-amber-700">
+                    <span className="h-1.5 w-1.5 rounded-full bg-current" />
                   </span>
-                  <span className="mt-1 block text-xs text-[var(--lms-muted)]">
-                    {blocker.activity}
+                  <span>
+                    <span className="block text-sm font-semibold">
+                      {blocker.label}
+                    </span>
+                    <span className="mt-1 block text-xs text-[var(--lms-muted)]">
+                      {blocker.activity}
+                    </span>
                   </span>
-                </span>
-                <ChevronRight className="mt-1 ml-auto h-4 w-4 text-[var(--lms-muted)]" />
-              </button>
-            );
-          })}
-        </div>
-        <p
-          className="mt-5 text-xs leading-5 text-[var(--lms-muted)]"
-          role="status"
-        >
-          {activeBlocker
-            ? `${activeBlocker.activity}: ${activeBlocker.guidance}`
-            : "Select a blocker to open its exact activity and required evidence."}
-        </p>
-        <Button className="mt-6 w-full" disabled>
-          <Play /> Review publish manifest
-        </Button>
-      </aside>
+                  <ChevronRight className="mt-1 ml-auto h-4 w-4 text-[var(--lms-muted)]" />
+                </button>
+              );
+            })}
+          </div>
+          <p
+            className="mt-5 text-xs leading-5 text-[var(--lms-muted)]"
+            role="status"
+          >
+            {activeBlocker
+              ? `${activeBlocker.activity}: ${activeBlocker.guidance}`
+              : "Select a blocker to open its exact activity and required evidence."}
+          </p>
+          <Button className="mt-6 w-full" disabled>
+            <Play /> Review publish manifest
+          </Button>
+        </aside>
+      </div>
     </div>
   );
 }

@@ -6,6 +6,7 @@ import { useMutation, useQuery } from "convex/react";
 import {
   BookOpen,
   CheckCircle2,
+  Circle,
   CircleAlert,
   GraduationCap,
   Plus,
@@ -144,6 +145,66 @@ export default function AdminLmsPage() {
               : false,
           ),
       ].filter(Boolean) as string[]);
+  const hasLearningStructure = Boolean(
+    curriculum?.modules.length && curriculum.activities.length,
+  );
+  const currentCurriculumPublished =
+    curriculum?.curriculum.status === "published";
+  const launchSteps = [
+    {
+      title: "Choose the Course",
+      detail: "Confirm the Course and its delivery model.",
+      complete: Boolean(selectedCourse),
+      href: "#course-setup",
+      action: "Choose a Course",
+    },
+    {
+      title: "Create the Curriculum",
+      detail: "Start the version Students will eventually receive.",
+      complete: Boolean(curriculum),
+      href: "#curriculum-author",
+      action: "Create a Draft",
+    },
+    {
+      title: "Build the learning path",
+      detail: "Add at least one Module and one activity.",
+      complete: hasLearningStructure,
+      href: "#curriculum-author",
+      action: "Build the Curriculum",
+    },
+    {
+      title: "Clear the checks",
+      detail: "Resolve content, Rights, access, and assessment gates.",
+      complete: Boolean(curriculum) && blockers.length === 0,
+      href: "#publication-readiness",
+      action: "Review the checks",
+    },
+    {
+      title: "Publish and activate",
+      detail: "Lock this version, then give eligible Students access.",
+      complete: currentCurriculumPublished && awaiting.length === 0,
+      href: currentCurriculumPublished
+        ? "#enrollment-activation"
+        : "#publication-readiness",
+      action: currentCurriculumPublished
+        ? "Activate Enrollments"
+        : "Publish the Curriculum",
+    },
+  ];
+  const nextLaunchStep = launchSteps.find((step) => !step.complete);
+  const launchProgress = launchSteps.filter((step) => step.complete).length;
+  const deliveryGuidance = selectedCourse
+    ? {
+        self_paced:
+          "Build the complete Student journey here: lessons, resources, activities, and completion evidence.",
+        hybrid:
+          "Use the Curriculum for pre-work, resources, assessments, and certificate evidence alongside live teaching.",
+        cohort:
+          "Use the Curriculum as the shared learning path for each batch; live sessions continue alongside it.",
+        event:
+          "Use the Curriculum for preparation, event resources, feedback, and any completion evidence you need.",
+      }[selectedCourse.learningMode]
+    : "Choose an academic Course to see the right setup path. Therapy and standalone services stay outside the LMS.";
 
   async function act(
     key: string,
@@ -194,7 +255,7 @@ export default function AdminLmsPage() {
           {notice.text}
         </p>
       )}
-      <section className="admin-lms-coursebar">
+      <section className="admin-lms-coursebar" id="course-setup">
         <label>
           Course
           <select
@@ -240,6 +301,61 @@ export default function AdminLmsPage() {
               ? `${selectedCourse.code} · ${selectedCourse.courseType}`
               : "Therapy and standalone services are intentionally kept outside the LMS."}
           </small>
+        </div>
+      </section>
+      <section className="admin-lms-launch" aria-labelledby="launch-path-title">
+        <div className="admin-lms-launch-intro">
+          <div>
+            <h2 id="launch-path-title">Your Course launch path</h2>
+            <p>{deliveryGuidance}</p>
+          </div>
+          <span className="admin-lms-launch-progress">
+            {launchProgress} of {launchSteps.length} ready
+          </span>
+        </div>
+        <ol className="admin-lms-launch-steps">
+          {launchSteps.map((step, index) => {
+            const isCurrent = step === nextLaunchStep;
+            return (
+              <li
+                key={step.title}
+                className={step.complete ? "complete" : undefined}
+                aria-current={isCurrent ? "step" : undefined}
+              >
+                <span className="admin-lms-launch-mark" aria-hidden="true">
+                  {step.complete ? <CheckCircle2 /> : <Circle />}
+                </span>
+                <span>
+                  <strong>{step.title}</strong>
+                  <small>{step.detail}</small>
+                </span>
+                <span className="admin-lms-launch-number">{index + 1}</span>
+              </li>
+            );
+          })}
+        </ol>
+        <div className="admin-lms-next-action" aria-live="polite">
+          <span>
+            <strong>
+              {nextLaunchStep ? "Next step" : "Launch path clear"}
+            </strong>
+            <small>
+              {nextLaunchStep
+                ? nextLaunchStep.action
+                : "This Curriculum is published and no Enrollments are waiting for access."}
+            </small>
+          </span>
+          {nextLaunchStep ? (
+            <Button asChild className="admin-lms-primary">
+              <a href={nextLaunchStep.href}>{nextLaunchStep.action}</a>
+            </Button>
+          ) : (
+            <Button asChild variant="outline">
+              <Link href="/lms/preview?role=student" target="_blank">
+                Review Student view
+              </Link>
+            </Button>
+          )}
         </div>
       </section>
       <div className="admin-lms-basin">
@@ -310,7 +426,7 @@ export default function AdminLmsPage() {
             </form>
           )}
         </aside>
-        <main className="admin-lms-author">
+        <main className="admin-lms-author" id="curriculum-author">
           <h2>
             {isDraft
               ? "Author the active Module"
@@ -681,7 +797,7 @@ export default function AdminLmsPage() {
           )}
         </main>
         <aside className="admin-lms-readiness">
-          <section>
+          <section id="publication-readiness">
             <h2>Publication readiness</h2>
             {blockers.length ? (
               blockers.map((blocker) => (
@@ -717,7 +833,7 @@ export default function AdminLmsPage() {
               </Button>
             )}
           </section>
-          <section>
+          <section id="enrollment-activation">
             <h2>Enrollment activation</h2>
             <p>{awaiting.length} active Enrollments await an LMS Curriculum.</p>
             {awaiting.slice(0, 8).map((item) => (
