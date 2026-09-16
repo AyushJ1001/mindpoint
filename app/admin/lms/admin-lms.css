@@ -264,6 +264,13 @@
   grid-column: 2;
   margin-top: 0;
 }
+.admin-lms-manifest-modules li > p {
+  grid-column: 2;
+  margin-top: 4px;
+  color: #58706d;
+  font-size: 0.75rem;
+  line-height: 1.55;
+}
 .admin-lms-manifest-commit {
   display: flex;
   justify-content: space-between;
@@ -424,6 +431,20 @@
   gap: 12px;
   align-items: center;
   padding: 14px 0;
+}
+.admin-lms-assignment-criteria {
+  padding: 4px 0 22px 122px;
+}
+.admin-lms-assignment-criteria strong {
+  color: #07575b;
+  font-size: 0.75rem;
+}
+.admin-lms-assignment-criteria p {
+  max-width: 68ch;
+  margin-top: 6px;
+  color: #58706d;
+  font-size: 0.75rem;
+  line-height: 1.65;
 }
 .admin-lms-module span,
 .admin-lms-module small {
@@ -828,6 +849,9 @@
   .admin-lms-manifest-modules li small {
     grid-column: auto;
   }
+  .admin-lms-manifest-modules li > p {
+    grid-column: auto;
+  }
   .admin-lms-manifest-commit > div {
     display: grid;
   }
@@ -852,6 +876,9 @@
     grid-template-columns: 1fr;
   }
   .admin-lms-quiz-bank {
+    padding-left: 0;
+  }
+  .admin-lms-assignment-criteria {
     padding-left: 0;
   }
   .admin-lms-feedback-settings {

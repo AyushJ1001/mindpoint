@@ -53,6 +53,27 @@ export type StudentLmsActivity = {
   content?: string;
   externalUrl?: string;
   accessibleAlternative?: string;
+  gradingCriteria?: string;
+  assignment?: {
+    latestAttempt?: {
+      submissionId: Id<"lmsSubmissions">;
+      attemptNumber: number;
+      responseText: string;
+      status: "draft" | "submitted" | "in_review" | "returned" | "accepted";
+      feedback?: string;
+      submittedAt?: number;
+      reviewedAt?: number;
+      updatedAt: number;
+    };
+    history: Array<{
+      submissionId: Id<"lmsSubmissions">;
+      attemptNumber: number;
+      status: "submitted" | "in_review" | "returned" | "accepted";
+      feedback?: string;
+      submittedAt?: number;
+      reviewedAt?: number;
+    }>;
+  };
   quiz?: {
     questions: Array<{
       questionId: Id<"lmsQuizQuestions">;
@@ -192,6 +213,15 @@ export const studentLmsApi = {
     },
     { submissionId: Id<"lmsSubmissions"> }
   >("lms:submitAssignment"),
+  saveAssignmentDraft: makeFunctionReference<
+    "mutation",
+    {
+      enrollmentId: Id<"enrollments">;
+      activityId: Id<"lmsActivities">;
+      responseText: string;
+    },
+    { submissionId: Id<"lmsSubmissions">; savedAt: number }
+  >("lms:saveAssignmentDraft"),
   submitQuizAttempt: makeFunctionReference<
     "mutation",
     {
@@ -278,8 +308,10 @@ export type FacultyQueueItem =
       studentName: string;
       studentEmail?: string;
       body: string;
+      gradingCriteria?: string;
       attemptNumber: number;
       status: "submitted" | "in_review";
+      claimState: "unclaimed" | "claimed_by_me" | "claimed_by_other";
       createdAt: number;
     }
   | {
@@ -368,6 +400,11 @@ export const facultyLmsApi = {
     },
     { status: "accepted" | "returned" }
   >("lmsFaculty:reviewSubmission"),
+  claimSubmission: makeFunctionReference<
+    "mutation",
+    { submissionId: Id<"lmsSubmissions"> },
+    { status: "in_review"; alreadyClaimed: boolean }
+  >("lmsFaculty:claimSubmission"),
   answerQuestion: makeFunctionReference<
     "mutation",
     { questionId: Id<"lmsQuestions">; answer: string },
@@ -461,6 +498,7 @@ export type AdminCurriculum = {
     durationMinutes?: number;
     releaseMode: "immediate" | "date" | "prerequisite";
     completionMode: StudentLmsActivity["completionMode"];
+    gradingCriteria?: string;
     rightsApproved: boolean;
     accessibleAlternative?: string;
     passingScore?: number;
@@ -532,6 +570,7 @@ export const adminLmsApi = {
       releaseAt?: number;
       prerequisiteActivityId?: Id<"lmsActivities">;
       completionMode: StudentLmsActivity["completionMode"];
+      gradingCriteria?: string;
       passingScore?: number;
       feedbackMode?: "identified" | "anonymous";
       feedbackMinimumGroupSize?: number;

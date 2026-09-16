@@ -80,6 +80,7 @@ export default function AdminLmsPage() {
     useState<StudentLmsActivity["type"]>("reading");
   const [activityTitle, setActivityTitle] = useState("");
   const [instructions, setInstructions] = useState("");
+  const [gradingCriteria, setGradingCriteria] = useState("");
   const [content, setContent] = useState("");
   const [externalUrl, setExternalUrl] = useState("");
   const [accessibleAlternative, setAccessibleAlternative] = useState("");
@@ -133,6 +134,11 @@ export default function AdminLmsPage() {
         curriculum.activities.some(
           (item) => item.type === "media" && !item.accessibleAlternative,
         ) && "Add an accessible alternative to every Media activity",
+        curriculum.activities.some(
+          (item) =>
+            item.type === "assignment" &&
+            (item.gradingCriteria?.trim().length ?? 0) < 10,
+        ) && "Add Faculty review criteria to every Assignment",
         ...curriculum.activities
           .filter((item) => item.type === "quiz")
           .map((quiz) =>
@@ -436,6 +442,10 @@ export default function AdminLmsPage() {
                             ? ` · pass at ${activity.passingScore ?? 100}%`
                             : ""}
                         </small>
+                        {activity.type === "assignment" &&
+                          activity.gradingCriteria && (
+                            <p>Review criteria: {activity.gradingCriteria}</p>
+                          )}
                       </li>
                     ))}
                   </ol>
@@ -643,6 +653,13 @@ export default function AdminLmsPage() {
                                     : ""}
                             </small>
                           </div>
+                          {activity.type === "assignment" &&
+                            activity.gradingCriteria && (
+                              <div className="admin-lms-assignment-criteria">
+                                <strong>Faculty review criteria</strong>
+                                <p>{activity.gradingCriteria}</p>
+                              </div>
+                            )}
                           {activity.type === "quiz" && (
                             <div className="admin-lms-quiz-bank">
                               <div className="admin-lms-quiz-head">
@@ -702,6 +719,10 @@ export default function AdminLmsPage() {
                           type: activityType,
                           title: activityTitle,
                           instructions: instructions || undefined,
+                          gradingCriteria:
+                            activityType === "assignment"
+                              ? gradingCriteria
+                              : undefined,
                           content: content || undefined,
                           externalUrl: externalUrl || undefined,
                           durationMinutes: duration
@@ -740,6 +761,7 @@ export default function AdminLmsPage() {
                         });
                         setActivityTitle("");
                         setInstructions("");
+                        setGradingCriteria("");
                         setContent("");
                         setExternalUrl("");
                         setAccessibleAlternative("");
@@ -863,6 +885,23 @@ export default function AdminLmsPage() {
                       onChange={(event) => setInstructions(event.target.value)}
                     />
                   </label>
+                  {activityType === "assignment" && (
+                    <label>
+                      Faculty review criteria
+                      <Textarea
+                        value={gradingCriteria}
+                        onChange={(event) =>
+                          setGradingCriteria(event.target.value)
+                        }
+                        placeholder="Describe the evidence Faculty must see before accepting this work."
+                        required
+                      />
+                      <small>
+                        Students see these criteria before submitting; Faculty
+                        use the same criteria during review.
+                      </small>
+                    </label>
+                  )}
                   <label>
                     Learning content
                     <Textarea
@@ -915,6 +954,8 @@ export default function AdminLmsPage() {
                     className="admin-lms-primary"
                     disabled={
                       !activityTitle.trim() ||
+                      (activityType === "assignment" &&
+                        gradingCriteria.trim().length < 10) ||
                       pending === "activity" ||
                       ((activityType === "media" ||
                         activityType === "external_resource") &&

@@ -177,6 +177,7 @@ export const addActivity = mutation({
     releaseAt: v.optional(v.number()),
     prerequisiteActivityId: v.optional(v.id("lmsActivities")),
     completionMode: LmsCompletionMode,
+    gradingCriteria: v.optional(v.string()),
     passingScore: v.optional(v.number()),
     feedbackMode: v.optional(LmsFeedbackMode),
     feedbackMinimumGroupSize: v.optional(v.number()),
@@ -200,6 +201,14 @@ export const addActivity = mutation({
     }
     if (args.completionMode === "pass" && args.passingScore === undefined) {
       throw new Error("A passing-score activity needs a passing score");
+    }
+    if (
+      args.type === "assignment" &&
+      (args.gradingCriteria?.trim().length ?? 0) < 10
+    ) {
+      throw new Error(
+        "An Assignment needs review criteria of at least 10 characters",
+      );
     }
     if (
       args.type === "quiz" &&
@@ -246,6 +255,10 @@ export const addActivity = mutation({
       releaseAt: args.releaseAt,
       prerequisiteActivityId: args.prerequisiteActivityId,
       completionMode: args.completionMode,
+      gradingCriteria:
+        args.type === "assignment"
+          ? args.gradingCriteria?.trim() || undefined
+          : undefined,
       passingScore: args.passingScore,
       feedbackMode: args.type === "feedback" ? args.feedbackMode : undefined,
       feedbackMinimumGroupSize:
@@ -516,6 +529,15 @@ export const publishCurriculum = mutation({
       )
     ) {
       throw new Error("Media activities need an accessible alternative");
+    }
+    if (
+      activities.some(
+        (item) =>
+          item.type === "assignment" &&
+          (item.gradingCriteria?.trim().length ?? 0) < 10,
+      )
+    ) {
+      throw new Error("Every Assignment needs Faculty review criteria");
     }
     for (const quiz of activities.filter((item) => item.type === "quiz")) {
       if (
@@ -882,6 +904,45 @@ export const getMyWorkspace = query({
                 };
               })()
             : undefined;
+        const assignment =
+          availability.isAvailable && activity.type === "assignment"
+            ? await (async () => {
+                const submissions = await ctx.db
+                  .query("lmsSubmissions")
+                  .withIndex("by_enrollmentId_and_activityId", (q) =>
+                    q
+                      .eq("enrollmentId", args.enrollmentId)
+                      .eq("activityId", activity._id),
+                  )
+                  .order("desc")
+                  .take(20);
+                const latestAttempt = submissions[0];
+                return {
+                  latestAttempt: latestAttempt
+                    ? {
+                        submissionId: latestAttempt._id,
+                        attemptNumber: latestAttempt.attemptNumber,
+                        responseText: latestAttempt.responseText,
+                        status: latestAttempt.status,
+                        feedback: latestAttempt.feedback,
+                        submittedAt: latestAttempt.submittedAt,
+                        reviewedAt: latestAttempt.reviewedAt,
+                        updatedAt: latestAttempt.updatedAt,
+                      }
+                    : undefined,
+                  history: submissions
+                    .filter((submission) => submission.status !== "draft")
+                    .map((submission) => ({
+                      submissionId: submission._id,
+                      attemptNumber: submission.attemptNumber,
+                      status: submission.status,
+                      feedback: submission.feedback,
+                      submittedAt: submission.submittedAt,
+                      reviewedAt: submission.reviewedAt,
+                    })),
+                };
+              })()
+            : undefined;
         return {
           activityId: activity._id,
           moduleId: activity.moduleId,
@@ -891,6 +952,7 @@ export const getMyWorkspace = query({
           required: activity.required,
           sortOrder: activity.sortOrder,
           completionMode: activity.completionMode,
+          gradingCriteria: activity.gradingCriteria,
           passingScore: activity.passingScore,
           releaseAt: activity.releaseAt,
           ...availability,
@@ -906,6 +968,7 @@ export const getMyWorkspace = query({
             : undefined,
           quiz,
           feedback,
+          assignment,
         };
       }),
     );
@@ -1560,7 +1623,7 @@ export const submitFeedback = mutation({
   },
 });
 
-export const submitAssignment = mutation({
+export const saveAssignmentDraft = mutation({
   args: {
     enrollmentId: v.id("enrollments"),
     activityId: v.id("lmsActivities"),
@@ -1571,6 +1634,69 @@ export const submitAssignment = mutation({
       ctx,
       args.enrollmentId,
     );
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (
+      !activity ||
+      activity.curriculumId !== curriculum._id ||
+      activity.type !== "assignment"
+    ) {
+      throw new Error("Assignment activity not found in this Curriculum");
+    }
+    await assertActivityAvailable(ctx, args.enrollmentId, activity);
+    const responseText = args.responseText.trim();
+    if (!responseText)
+      throw new Error("Write a response before saving a Draft");
+    const attempts = await ctx.db
+      .query("lmsSubmissions")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .order("desc")
+      .take(20);
+    if (
+      attempts.some(
+        (attempt) =>
+          attempt.status === "submitted" || attempt.status === "in_review",
+      )
+    ) {
+      throw new Error("This Assignment is already with Faculty for review");
+    }
+    const now = Date.now();
+    const draft = attempts.find((attempt) => attempt.status === "draft");
+    if (draft) {
+      await ctx.db.patch("lmsSubmissions", draft._id, {
+        responseText,
+        updatedAt: now,
+      });
+      return { submissionId: draft._id, savedAt: now };
+    }
+    const submissionId = await ctx.db.insert("lmsSubmissions", {
+      enrollmentId: args.enrollmentId,
+      activityId: args.activityId,
+      courseId: enrollment.courseId,
+      batchId: enrollment.batchId,
+      attemptNumber:
+        Math.max(0, ...attempts.map((attempt) => attempt.attemptNumber)) + 1,
+      responseText,
+      status: "draft",
+      createdAt: now,
+      updatedAt: now,
+    });
+    return { submissionId, savedAt: now };
+  },
+});
+
+export const submitAssignment = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    responseText: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { curriculum, enrollment, identity } =
+      await requireEnrollmentCurriculum(ctx, args.enrollmentId);
     const activity = await ctx.db.get("lmsActivities", args.activityId);
     if (!activity || activity.curriculumId !== curriculum._id) {
       throw new Error("Activity not found in this Curriculum");
@@ -1590,19 +1716,40 @@ export const submitAssignment = mutation({
       )
       .order("desc")
       .take(20);
+    if (
+      attempts.some(
+        (attempt) =>
+          attempt.status === "submitted" || attempt.status === "in_review",
+      )
+    ) {
+      throw new Error("This Assignment is already with Faculty for review");
+    }
     const now = Date.now();
-    const submissionId = await ctx.db.insert("lmsSubmissions", {
-      enrollmentId: args.enrollmentId,
-      activityId: args.activityId,
-      courseId: enrollment.courseId,
-      batchId: enrollment.batchId,
-      attemptNumber: (attempts[0]?.attemptNumber ?? 0) + 1,
-      responseText,
-      status: "submitted",
-      submittedAt: now,
-      createdAt: now,
-      updatedAt: now,
-    });
+    const draft = attempts.find((attempt) => attempt.status === "draft");
+    const submissionId = draft
+      ? draft._id
+      : await ctx.db.insert("lmsSubmissions", {
+          enrollmentId: args.enrollmentId,
+          activityId: args.activityId,
+          courseId: enrollment.courseId,
+          batchId: enrollment.batchId,
+          attemptNumber:
+            Math.max(0, ...attempts.map((attempt) => attempt.attemptNumber)) +
+            1,
+          responseText,
+          status: "submitted",
+          submittedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        });
+    if (draft) {
+      await ctx.db.patch("lmsSubmissions", draft._id, {
+        responseText,
+        status: "submitted",
+        submittedAt: now,
+        updatedAt: now,
+      });
+    }
     const progress = await ctx.db
       .query("lmsActivityProgress")
       .withIndex("by_enrollmentId_and_activityId", (q) =>
@@ -1627,6 +1774,24 @@ export const submitAssignment = mutation({
         ...progressPatch,
       });
     }
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.submission.submitted",
+      entityType: "lmsSubmission",
+      entityId: submissionId,
+      after: {
+        status: "submitted",
+        attemptNumber:
+          draft?.attemptNumber ??
+          Math.max(0, ...attempts.map((attempt) => attempt.attemptNumber)) + 1,
+      },
+      metadata: {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+      },
+      createdAt: now,
+    });
     return { submissionId };
   },
 });

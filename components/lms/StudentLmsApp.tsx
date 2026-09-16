@@ -18,6 +18,7 @@ import {
   MessagesSquare,
   Printer,
   Search,
+  Save,
   PlayCircle,
   Send,
   Sparkles,
@@ -146,6 +147,7 @@ function AuthenticatedStudentLmsApp() {
   );
   const setSelfCompletion = useMutation(studentLmsApi.setSelfCompletion);
   const submitAssignment = useMutation(studentLmsApi.submitAssignment);
+  const saveAssignmentDraft = useMutation(studentLmsApi.saveAssignmentDraft);
   const submitQuizAttempt = useMutation(studentLmsApi.submitQuizAttempt);
   const submitFeedback = useMutation(studentLmsApi.submitFeedback);
   const askQuestion = useMutation(studentLmsApi.askQuestion);
@@ -244,6 +246,22 @@ function AuthenticatedStudentLmsApp() {
       setCertificateName(workspace.completion.confirmedRecipientName);
     }
   }, [workspace?.completion?.confirmedRecipientName]);
+
+  useEffect(() => {
+    const activity = workspace?.activities.find(
+      (item) => item.activityId === selectedActivityId,
+    );
+    if (activity?.type !== "assignment") {
+      setAssignmentText("");
+      return;
+    }
+    const latest = activity.assignment?.latestAttempt;
+    setAssignmentText(
+      latest?.status === "draft" || latest?.status === "returned"
+        ? latest.responseText
+        : "",
+    );
+  }, [selectedActivityId, workspace?.activities]);
 
   if (isAuthLoading)
     return (
@@ -482,6 +500,18 @@ function AuthenticatedStudentLmsApp() {
               assignmentText={assignmentText}
               pendingAction={pendingAction}
               onAssignmentText={setAssignmentText}
+              onSaveDraft={() =>
+                runAction(
+                  "save-draft",
+                  () =>
+                    saveAssignmentDraft({
+                      enrollmentId: workspace.enrollment.enrollmentId,
+                      activityId: selectedActivity.activityId,
+                      responseText: assignmentText,
+                    }),
+                  "Draft saved. You can safely return to it later.",
+                )
+              }
               onComplete={() =>
                 runAction(
                   "complete",
@@ -906,6 +936,7 @@ function ActivityWork({
   assignmentText,
   pendingAction,
   onAssignmentText,
+  onSaveDraft,
   onComplete,
   onSubmit,
   onSubmitQuiz,
@@ -916,6 +947,7 @@ function ActivityWork({
   assignmentText: string;
   pendingAction?: string;
   onAssignmentText: (value: string) => void;
+  onSaveDraft: () => void;
   onComplete: () => void;
   onSubmit: () => void;
   onSubmitQuiz: (
@@ -985,25 +1017,109 @@ function ActivityWork({
           </a>
         </Button>
       )}
-      {activity.type === "assignment" && !awaiting && !complete && (
-        <div className="lms-live-response">
-          <label htmlFor="lms-assignment">Your response</label>
-          <Textarea
-            id="lms-assignment"
-            value={assignmentText}
-            onChange={(event) => onAssignmentText(event.target.value)}
-            placeholder="Write your reflection or response here…"
-          />
-          <Button
-            className="lms-live-primary"
-            disabled={!assignmentText.trim() || pendingAction === "submit"}
-            onClick={onSubmit}
-          >
-            <Send />
-            {pendingAction === "submit"
-              ? "Submitting…"
-              : "Submit for Faculty review"}
-          </Button>
+      {activity.type === "assignment" && (
+        <div className="lms-live-assignment-flow">
+          {activity.gradingCriteria && (
+            <section className="lms-live-review-criteria">
+              <h3>What Faculty will review</h3>
+              <p>{activity.gradingCriteria}</p>
+            </section>
+          )}
+          {activity.assignment?.latestAttempt &&
+            activity.assignment.latestAttempt.status !== "draft" && (
+              <section className="lms-live-submission-state" aria-live="polite">
+                <div>
+                  <strong>
+                    Attempt {activity.assignment.latestAttempt.attemptNumber} ·{" "}
+                    {activity.assignment.latestAttempt.status.replaceAll(
+                      "_",
+                      " ",
+                    )}
+                  </strong>
+                  {activity.assignment.latestAttempt.submittedAt && (
+                    <span>
+                      Submitted{" "}
+                      {new Date(
+                        activity.assignment.latestAttempt.submittedAt,
+                      ).toLocaleDateString()}
+                    </span>
+                  )}
+                </div>
+                {activity.assignment.latestAttempt.feedback && (
+                  <p>
+                    <strong>Faculty feedback</strong>
+                    {activity.assignment.latestAttempt.feedback}
+                  </p>
+                )}
+              </section>
+            )}
+          {!awaiting && !complete && (
+            <div className="lms-live-response">
+              <label htmlFor="lms-assignment">
+                {activity.assignment?.latestAttempt?.status === "returned"
+                  ? "Revise your response"
+                  : "Your response"}
+              </label>
+              <Textarea
+                id="lms-assignment"
+                value={assignmentText}
+                onChange={(event) => onAssignmentText(event.target.value)}
+                placeholder="Write your reflection or response here…"
+              />
+              <div className="lms-live-response-actions">
+                <Button
+                  variant="outline"
+                  className="lms-live-outline"
+                  disabled={
+                    !assignmentText.trim() || pendingAction === "save-draft"
+                  }
+                  onClick={onSaveDraft}
+                >
+                  <Save />
+                  {pendingAction === "save-draft" ? "Saving…" : "Save Draft"}
+                </Button>
+                <Button
+                  className="lms-live-primary"
+                  disabled={!assignmentText.trim() || Boolean(pendingAction)}
+                  onClick={onSubmit}
+                >
+                  <Send />
+                  {pendingAction === "submit"
+                    ? "Submitting…"
+                    : activity.assignment?.latestAttempt?.status === "returned"
+                      ? "Resubmit for review"
+                      : "Submit for Faculty review"}
+                </Button>
+              </div>
+              {activity.assignment?.latestAttempt?.status === "draft" && (
+                <small role="status">
+                  Draft saved{" "}
+                  {new Date(
+                    activity.assignment.latestAttempt.updatedAt,
+                  ).toLocaleString()}
+                </small>
+              )}
+            </div>
+          )}
+          {(awaiting || complete) && activity.assignment?.latestAttempt && (
+            <blockquote className="lms-live-submitted-response">
+              {activity.assignment.latestAttempt.responseText}
+            </blockquote>
+          )}
+          {(activity.assignment?.history.length ?? 0) > 1 && (
+            <details className="lms-live-attempt-history">
+              <summary>Earlier attempts</summary>
+              <ol>
+                {activity.assignment?.history.slice(1).map((attempt) => (
+                  <li key={attempt.submissionId}>
+                    <strong>Attempt {attempt.attemptNumber}</strong>
+                    <span>{attempt.status.replaceAll("_", " ")}</span>
+                    {attempt.feedback && <p>{attempt.feedback}</p>}
+                  </li>
+                ))}
+              </ol>
+            </details>
+          )}
         </div>
       )}
       {activity.type === "quiz" && activity.quiz && (

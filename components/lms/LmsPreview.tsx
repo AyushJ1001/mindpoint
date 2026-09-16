@@ -23,6 +23,7 @@ import {
   MessageSquareText,
   PanelLeft,
   PenLine,
+  Save,
   Send,
   ShieldCheck,
   Users,
@@ -244,6 +245,10 @@ function StudentWorkspace() {
   >("private");
   const [questionSent, setQuestionSent] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [assignmentText, setAssignmentText] = useState(
+    "I would reflect the tension I heard and ask which part feels hardest to hold right now.",
+  );
+  const [draftSaved, setDraftSaved] = useState(true);
   const [quizAnswer, setQuizAnswer] = useState("");
   const [quizResult, setQuizResult] = useState<"passed" | "retry">();
   const [quizAttemptCount, setQuizAttemptCount] = useState(0);
@@ -580,28 +585,81 @@ function StudentWorkspace() {
               </section>
 
               <div className="mt-8">
-                <label
-                  htmlFor="student-reflection"
-                  className="text-sm font-semibold"
-                >
-                  Your reflection
-                </label>
-                <Textarea
-                  id="student-reflection"
-                  className="mt-3 min-h-40 bg-white"
-                  defaultValue="I would reflect the tension I heard and ask which part feels hardest to hold right now."
-                  onChange={() => setSubmitted(false)}
-                />
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--lms-muted)]">
-                  <span role="status">
-                    {submitted
-                      ? "Submitted to Faculty in this preview"
-                      : "Draft saved for this preview"}
-                  </span>
-                  <Button size="sm" onClick={() => setSubmitted(true)}>
-                    <Send /> {submitted ? "Submitted" : "Submit for review"}
-                  </Button>
-                </div>
+                <section className="mb-7 border-y border-[var(--lms-rule)] bg-[var(--lms-bank)] px-5 py-5">
+                  <h2 className="text-sm font-semibold">
+                    What Faculty will review
+                  </h2>
+                  <p className="mt-2 max-w-[68ch] text-sm leading-6 text-[var(--lms-muted)]">
+                    Name the observation without diagnosing, connect it to the
+                    listening principle, and offer one open question rather than
+                    advice.
+                  </p>
+                </section>
+                {submitted ? (
+                  <section
+                    className="flex gap-3 border-y border-[var(--lms-rule)] bg-[var(--lms-accent-soft)] px-5 py-5"
+                    aria-live="polite"
+                  >
+                    <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-[var(--lms-accent)]" />
+                    <div>
+                      <h2 className="text-sm font-semibold">
+                        Attempt 1 is with Faculty
+                      </h2>
+                      <p className="mt-1 text-sm leading-6 text-[var(--lms-muted)]">
+                        The submitted response is immutable. Faculty must claim
+                        the review before recording feedback.
+                      </p>
+                      <blockquote className="font-display mt-4 text-lg leading-7 text-[var(--lms-deep)]">
+                        {assignmentText}
+                      </blockquote>
+                    </div>
+                  </section>
+                ) : (
+                  <>
+                    <label
+                      htmlFor="student-reflection"
+                      className="text-sm font-semibold"
+                    >
+                      Your reflection
+                    </label>
+                    <Textarea
+                      id="student-reflection"
+                      className="mt-3 min-h-40 bg-white"
+                      value={assignmentText}
+                      onChange={(event) => {
+                        setAssignmentText(event.target.value);
+                        setDraftSaved(false);
+                      }}
+                    />
+                    <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--lms-muted)]">
+                      <span role="status">
+                        {draftSaved
+                          ? "Draft saved for this preview"
+                          : "Unsaved changes"}
+                      </span>
+                      <div className="flex flex-wrap gap-2">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          disabled={!assignmentText.trim()}
+                          onClick={() => setDraftSaved(true)}
+                        >
+                          <Save /> Save Draft
+                        </Button>
+                        <Button
+                          size="sm"
+                          disabled={!assignmentText.trim()}
+                          onClick={() => {
+                            setDraftSaved(true);
+                            setSubmitted(true);
+                          }}
+                        >
+                          <Send /> Submit for review
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             </>
           )}
@@ -966,6 +1024,22 @@ function FacultyWorkspace() {
         <div className="mt-6 border-y border-[var(--lms-rule)] py-6">
           <p className="text-sm leading-7">{selected.detail}</p>
         </div>
+        {selected.kind === "Assignment" && (
+          <section className="mt-6 border-y border-[var(--lms-rule)] bg-white/65 px-4 py-4">
+            <h3 className="text-sm font-semibold">Shared review criteria</h3>
+            <p className="mt-2 text-xs leading-5 text-[var(--lms-muted)]">
+              Look for an observation without diagnosis, a clear connection to
+              the listening principle, and one open question rather than advice.
+            </p>
+          </section>
+        )}
+        {!claimed.includes(selected.id) && (
+          <p className="mt-5 flex gap-2 text-xs leading-5 text-[var(--lms-muted)]">
+            <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[var(--lms-accent)]" />
+            Claiming creates one active reviewer and prevents conflicting
+            decisions.
+          </p>
+        )}
         <label
           htmlFor="faculty-response"
           className="mt-6 block text-sm font-semibold"
@@ -975,6 +1049,7 @@ function FacultyWorkspace() {
         <Textarea
           id="faculty-response"
           className="mt-3 min-h-32 bg-white"
+          disabled={!claimed.includes(selected.id)}
           defaultValue="You kept the response open and grounded in what the speaker said. Before offering a next step, try one more reflection that names the uncertainty."
         />
         <div className="mt-4 grid gap-2">

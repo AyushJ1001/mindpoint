@@ -78,6 +78,7 @@ function AuthenticatedFacultyLms() {
     isAuthenticated && hasActiveAccess ? {} : "skip",
   );
   const claimFacultyAccess = useMutation(facultyLmsApi.claimFacultyAccess);
+  const claimSubmission = useMutation(facultyLmsApi.claimSubmission);
   const reviewSubmission = useMutation(facultyLmsApi.reviewSubmission);
   const answerQuestion = useMutation(facultyLmsApi.answerQuestion);
   const moderateQuestion = useMutation(facultyLmsApi.moderateQuestion);
@@ -276,6 +277,14 @@ function AuthenticatedFacultyLms() {
               response={response}
               pending={pending}
               onResponse={setResponse}
+              onClaim={() =>
+                selected.kind === "submission" &&
+                act(
+                  "claim",
+                  () => claimSubmission({ submissionId: selected.id }),
+                  "Review claimed. Other Faculty can see that this work is in progress.",
+                )
+              }
               onAccept={() =>
                 selected.kind === "submission" &&
                 act(
@@ -446,6 +455,7 @@ function ReviewRecord({
   pending,
   onResponse,
   onAccept,
+  onClaim,
   onReturn,
   onAnswer,
   onModerate,
@@ -457,6 +467,7 @@ function ReviewRecord({
   pending?: string;
   onResponse: (value: string) => void;
   onAccept: () => void;
+  onClaim: () => void;
   onReturn: () => void;
   onAnswer: () => void;
   onModerate: () => void;
@@ -465,6 +476,8 @@ function ReviewRecord({
     status: "correction_required" | "under_review" | "revoked",
   ) => void;
 }) {
+  const canReviewSubmission =
+    item.kind !== "submission" || item.claimState === "claimed_by_me";
   return (
     <article>
       <div className="faculty-meta">
@@ -483,6 +496,38 @@ function ReviewRecord({
         {item.kind === "submission" ? ` · Attempt ${item.attemptNumber}` : ""}
       </p>
       <blockquote>{item.body}</blockquote>
+      {item.kind === "submission" && item.gradingCriteria && (
+        <section className="faculty-review-criteria">
+          <h3>Shared review criteria</h3>
+          <p>{item.gradingCriteria}</p>
+        </section>
+      )}
+      {item.kind === "submission" && item.claimState !== "claimed_by_me" && (
+        <section className="faculty-claim-state">
+          <ShieldCheck />
+          <div>
+            <strong>
+              {item.claimState === "claimed_by_other"
+                ? "Another Faculty reviewer has claimed this work"
+                : "Claim this review before opening a decision"}
+            </strong>
+            <p>
+              A single active reviewer prevents conflicting feedback and keeps
+              the audit trail clear.
+            </p>
+          </div>
+          {item.claimState === "unclaimed" && (
+            <Button
+              className="lms-live-primary"
+              disabled={Boolean(pending)}
+              onClick={onClaim}
+            >
+              <ShieldCheck />
+              {pending === "claim" ? "Claiming…" : "Claim review"}
+            </Button>
+          )}
+        </section>
+      )}
       {item.kind !== "completion" ? (
         <>
           <label htmlFor="faculty-response">
@@ -494,6 +539,7 @@ function ReviewRecord({
             id="faculty-response"
             value={response}
             onChange={(event) => onResponse(event.target.value)}
+            disabled={!canReviewSubmission}
             placeholder={
               item.kind === "submission"
                 ? "Name what is working and the clearest next step…"
@@ -518,7 +564,11 @@ function ReviewRecord({
           <Button
             variant="outline"
             className="lms-live-outline"
-            disabled={response.trim().length < 10 || Boolean(pending)}
+            disabled={
+              !canReviewSubmission ||
+              response.trim().length < 10 ||
+              Boolean(pending)
+            }
             onClick={onReturn}
           >
             <RotateCcw />
@@ -526,7 +576,7 @@ function ReviewRecord({
           </Button>
           <Button
             className="lms-live-primary"
-            disabled={Boolean(pending)}
+            disabled={!canReviewSubmission || Boolean(pending)}
             onClick={onAccept}
           >
             <CheckCircle2 />

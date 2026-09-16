@@ -121,6 +121,39 @@
   font-size: 1.5rem;
   line-height: 1.55;
 }
+.faculty-review-criteria,
+.faculty-claim-state {
+  margin-bottom: 28px;
+  padding: 18px;
+  border-block: 1px solid rgba(7, 77, 79, 0.15);
+  background: #edf3ed;
+}
+.faculty-review-criteria h3,
+.faculty-claim-state strong {
+  color: #07575b;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.faculty-review-criteria p,
+.faculty-claim-state p {
+  margin-top: 6px;
+  color: #58706d;
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+.faculty-claim-state {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: start;
+}
+.faculty-claim-state > svg {
+  width: 18px;
+  color: #0c6f73;
+}
+.faculty-claim-state .lms-live-primary {
+  margin-top: 0;
+}
 .faculty-record label {
   display: block;
   margin-bottom: 9px;
@@ -284,6 +317,12 @@
   .faculty-record,
   .faculty-bank {
     padding: 28px 20px;
+  }
+  .faculty-claim-state {
+    grid-template-columns: 20px 1fr;
+  }
+  .faculty-claim-state .lms-live-primary {
+    grid-column: 1 / -1;
   }
   .faculty-record h2 {
     font-size: 1.875rem;

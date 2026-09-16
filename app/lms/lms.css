@@ -360,6 +360,87 @@ body:has(.lms-preview-page) > footer {
   box-shadow: none;
   line-height: 1.65;
 }
+.lms-live-assignment-flow {
+  display: grid;
+  gap: 24px;
+  margin-top: 36px;
+}
+.lms-live-review-criteria,
+.lms-live-submission-state {
+  padding: 20px;
+  border-block: 1px solid var(--lms-line);
+  background: var(--lms-bank);
+}
+.lms-live-review-criteria h3,
+.lms-live-submission-state strong {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.lms-live-review-criteria p,
+.lms-live-submission-state span,
+.lms-live-submission-state p,
+.lms-live-response small {
+  color: var(--lms-muted);
+  font-size: 0.75rem;
+  line-height: 1.65;
+}
+.lms-live-review-criteria p,
+.lms-live-submission-state p {
+  margin-top: 8px;
+}
+.lms-live-submission-state p strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--lms-flow-strong);
+}
+.lms-live-response {
+  margin-top: 0;
+}
+.lms-live-response-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 14px;
+}
+.lms-live-response-actions .lms-live-primary,
+.lms-live-response-actions .lms-live-outline {
+  margin-top: 0;
+}
+.lms-live-response small {
+  display: block;
+  margin-top: 10px;
+}
+.lms-live-submitted-response {
+  margin: 0;
+  padding: 24px 0;
+  border-block: 1px solid var(--lms-line);
+  font-family: var(--font-syne), Georgia, serif;
+  font-size: 1.25rem;
+  line-height: 1.55;
+}
+.lms-live-attempt-history summary {
+  cursor: pointer;
+  color: var(--lms-flow-strong);
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.lms-live-attempt-history ol {
+  margin-top: 12px;
+  border-top: 1px solid var(--lms-line);
+}
+.lms-live-attempt-history li {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 4px 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--lms-line);
+  font-size: 0.75rem;
+}
+.lms-live-attempt-history li p {
+  grid-column: 1 / -1;
+  margin: 0;
+}
 
 .lms-live-quiz {
   display: grid;

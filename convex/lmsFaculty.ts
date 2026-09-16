@@ -250,8 +250,14 @@ export const listMyQueue = query({
           studentName: enrollment.userName ?? "Student",
           studentEmail: enrollment.userEmail,
           body: submission.responseText,
+          gradingCriteria: activity.gradingCriteria,
           attemptNumber: submission.attemptNumber,
           status: submission.status,
+          claimState: !submission.claimedByTokenIdentifier
+            ? ("unclaimed" as const)
+            : submission.claimedByTokenIdentifier === identity.tokenIdentifier
+              ? ("claimed_by_me" as const)
+              : ("claimed_by_other" as const),
           createdAt: submission.submittedAt ?? submission.createdAt,
         };
       }),
@@ -427,6 +433,57 @@ export const listMyFeedbackReports = query({
   },
 });
 
+export const claimSubmission = mutation({
+  args: { submissionId: v.id("lmsSubmissions") },
+  handler: async (ctx, args) => {
+    const identity = await requireFacultyIdentity(ctx);
+    const submission = await ctx.db.get("lmsSubmissions", args.submissionId);
+    if (!submission) throw new Error("Submission not found");
+    const enrollment = await ctx.db.get("enrollments", submission.enrollmentId);
+    if (!enrollment) throw new Error("Enrollment not found");
+    await getFacultyAssignment(ctx, enrollment, "canGrade");
+    if (
+      submission.status !== "submitted" &&
+      submission.status !== "in_review"
+    ) {
+      throw new Error("This submission is no longer available for review");
+    }
+    if (
+      submission.claimedByTokenIdentifier &&
+      submission.claimedByTokenIdentifier !== identity.tokenIdentifier
+    ) {
+      throw new Error(
+        "Another Faculty reviewer is already working on this submission",
+      );
+    }
+    if (submission.claimedByTokenIdentifier === identity.tokenIdentifier) {
+      return { status: "in_review" as const, alreadyClaimed: true };
+    }
+    const now = Date.now();
+    await ctx.db.patch("lmsSubmissions", submission._id, {
+      status: "in_review",
+      claimedAt: now,
+      claimedByTokenIdentifier: identity.tokenIdentifier,
+      updatedAt: now,
+    });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.submission.claimed",
+      entityType: "lmsSubmission",
+      entityId: submission._id,
+      before: { status: submission.status },
+      after: { status: "in_review" },
+      metadata: {
+        enrollmentId: submission.enrollmentId,
+        activityId: submission.activityId,
+      },
+      createdAt: now,
+    });
+    return { status: "in_review" as const, alreadyClaimed: false };
+  },
+});
+
 export const reviewSubmission = mutation({
   args: {
     submissionId: v.id("lmsSubmissions"),
@@ -440,11 +497,14 @@ export const reviewSubmission = mutation({
     const enrollment = await ctx.db.get("enrollments", submission.enrollmentId);
     if (!enrollment) throw new Error("Enrollment not found");
     await getFacultyAssignment(ctx, enrollment, "canGrade");
-    if (
-      submission.status !== "submitted" &&
-      submission.status !== "in_review"
-    ) {
+    if (submission.status === "submitted") {
+      throw new Error("Claim this submission before recording a decision");
+    }
+    if (submission.status !== "in_review") {
       throw new Error("This submission has already been reviewed");
+    }
+    if (submission.claimedByTokenIdentifier !== identity.tokenIdentifier) {
+      throw new Error("Claim this submission before recording a decision");
     }
     const feedback = args.feedback.trim();
     if (args.decision === "returned" && feedback.length < 10) {
@@ -457,6 +517,8 @@ export const reviewSubmission = mutation({
       status: args.decision,
       feedback: feedback || undefined,
       reviewedAt: now,
+      claimedAt: undefined,
+      claimedByTokenIdentifier: undefined,
       reviewedByTokenIdentifier: identity.tokenIdentifier,
       updatedAt: now,
     });
