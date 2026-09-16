@@ -104,6 +104,11 @@ export const getReleaseDesk = query({
           courseId: assignment.courseId,
           batchId: assignment.batchId,
           facultyTokenIdentifier: assignment.facultyTokenIdentifier,
+          facultyEmail: assignment.facultyEmail,
+          facultyName: assignment.facultyName,
+          invitationStatus: assignment.facultyTokenIdentifier
+            ? ("active" as const)
+            : ("pending" as const),
           canGrade: assignment.canGrade,
           canAnswerQuestions: assignment.canAnswerQuestions,
           canApproveCompletion: assignment.canApproveCompletion,
@@ -116,15 +121,20 @@ export const assignFaculty = mutation({
   args: {
     courseId: v.id("courses"),
     batchId: v.optional(v.id("courseBatches")),
-    facultyTokenIdentifier: v.string(),
+    facultyEmail: v.string(),
+    facultyName: v.string(),
     canGrade: v.boolean(),
     canAnswerQuestions: v.boolean(),
     canApproveCompletion: v.boolean(),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
-    const token = args.facultyTokenIdentifier.trim();
-    if (!token) throw new Error("Faculty token identifier is required");
+    const email = args.facultyEmail.trim().toLowerCase();
+    const name = args.facultyName.trim();
+    if (!name) throw new Error("Faculty name is required");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      throw new Error("Enter a valid Faculty email address");
+    }
     const course = await ctx.db.get("courses", args.courseId);
     if (!course) throw new Error("Course not found");
     if (!isLmsCourseType(course.type)) {
@@ -139,12 +149,14 @@ export const assignFaculty = mutation({
     }
     const existing = await ctx.db
       .query("lmsFacultyAssignments")
-      .withIndex("by_courseId_and_facultyTokenIdentifier", (q) =>
-        q.eq("courseId", args.courseId).eq("facultyTokenIdentifier", token),
+      .withIndex("by_courseId_and_facultyEmail", (q) =>
+        q.eq("courseId", args.courseId).eq("facultyEmail", email),
       )
       .take(100);
     const sameScope = existing.find((item) => item.batchId === args.batchId);
     const values = {
+      facultyEmail: email,
+      facultyName: name,
       canGrade: args.canGrade,
       canAnswerQuestions: args.canAnswerQuestions,
       canApproveCompletion: args.canApproveCompletion,
@@ -165,7 +177,6 @@ export const assignFaculty = mutation({
     const assignmentId = await ctx.db.insert("lmsFacultyAssignments", {
       courseId: args.courseId,
       batchId: args.batchId,
-      facultyTokenIdentifier: token,
       ...values,
       assignedByAdminId: admin.userId,
       createdAt: Date.now(),

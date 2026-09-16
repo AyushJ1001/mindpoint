@@ -524,6 +524,48 @@
   width: 100%;
   margin-top: 16px;
 }
+.admin-lms-faculty-form {
+  display: grid;
+  gap: 12px;
+  margin-top: 16px;
+}
+.admin-lms-faculty-list {
+  margin-top: 18px;
+  border-top: 1px solid rgba(7, 77, 79, 0.15);
+}
+.admin-lms-faculty-list > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(7, 77, 79, 0.15);
+}
+.admin-lms-faculty-list strong,
+.admin-lms-faculty-list small {
+  display: block;
+  font-size: 0.75rem;
+}
+.admin-lms-faculty-list small {
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+  color: #58706d;
+}
+.admin-lms-faculty-status {
+  flex: 0 0 auto;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.admin-lms-faculty-status.active {
+  color: #07575b;
+  background: #dcecea;
+}
+.admin-lms-faculty-status.pending {
+  color: #58706d;
+  background: #edf3ed;
+}
 .admin-lms-enrollment {
   display: flex;
   justify-content: space-between;

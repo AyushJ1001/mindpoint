@@ -1026,6 +1026,9 @@ function AdministratorWorkspace() {
   const [previewFeedbackMode, setPreviewFeedbackMode] = useState<
     "anonymous" | "identified"
   >("anonymous");
+  const [previewFacultyName, setPreviewFacultyName] = useState("");
+  const [previewFacultyEmail, setPreviewFacultyEmail] = useState("");
+  const [previewFacultyInvited, setPreviewFacultyInvited] = useState(false);
   const [adminActivities, setAdminActivities] = useState<Activity[]>(() => [
     ...activities,
   ]);
@@ -1407,6 +1410,60 @@ function AdministratorWorkspace() {
           <Button className="mt-6 w-full" disabled>
             <Play /> Review publish manifest
           </Button>
+          <section className="mt-8 border-t border-[var(--lms-rule)] pt-7">
+            <h2 className="text-sm font-semibold">Faculty access</h2>
+            <p className="mt-2 text-xs leading-5 text-[var(--lms-muted)]">
+              Add the name and email they use to sign in. Access activates only
+              after they confirm that account in the Faculty workspace.
+            </p>
+            {previewFacultyInvited ? (
+              <div className="mt-5 border-y border-[var(--lms-rule)] py-4">
+                <strong className="block text-sm">{previewFacultyName}</strong>
+                <span className="mt-1 block text-xs text-[var(--lms-muted)]">
+                  {previewFacultyEmail}
+                </span>
+                <span className="mt-3 inline-flex rounded-full bg-[var(--lms-accent-soft)] px-3 py-1 text-xs font-semibold text-[var(--lms-muted)]">
+                  Awaiting sign-in
+                </span>
+              </div>
+            ) : (
+              <div className="mt-5 grid gap-4">
+                <label className="text-xs font-semibold">
+                  Faculty name
+                  <Input
+                    className="mt-2 bg-white"
+                    value={previewFacultyName}
+                    onChange={(event) =>
+                      setPreviewFacultyName(event.target.value)
+                    }
+                    placeholder="Dr. Ananya Rao"
+                  />
+                </label>
+                <label className="text-xs font-semibold">
+                  Sign-in email
+                  <Input
+                    className="mt-2 bg-white"
+                    type="email"
+                    value={previewFacultyEmail}
+                    onChange={(event) =>
+                      setPreviewFacultyEmail(event.target.value)
+                    }
+                    placeholder="faculty@example.com"
+                  />
+                </label>
+                <Button
+                  variant="outline"
+                  className="border-[var(--lms-accent)] bg-transparent text-[var(--lms-accent-strong)] hover:bg-[var(--lms-accent-soft)]"
+                  disabled={
+                    !previewFacultyName.trim() || !previewFacultyEmail.trim()
+                  }
+                  onClick={() => setPreviewFacultyInvited(true)}
+                >
+                  <Users /> Prepare Faculty access
+                </Button>
+              </div>
+            )}
+          </section>
         </aside>
       </div>
     </div>

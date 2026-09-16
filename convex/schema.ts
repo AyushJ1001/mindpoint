@@ -746,7 +746,9 @@ export default defineSchema({
   lmsFacultyAssignments: defineTable({
     courseId: v.id("courses"),
     batchId: v.optional(v.id("courseBatches")),
-    facultyTokenIdentifier: v.string(),
+    facultyTokenIdentifier: v.optional(v.string()),
+    facultyEmail: v.optional(v.string()),
+    facultyName: v.optional(v.string()),
     canGrade: v.boolean(),
     canAnswerQuestions: v.boolean(),
     canApproveCompletion: v.boolean(),
@@ -755,10 +757,12 @@ export default defineSchema({
   })
     .index("by_courseId", ["courseId"])
     .index("by_facultyTokenIdentifier", ["facultyTokenIdentifier"])
+    .index("by_facultyEmail", ["facultyEmail"])
     .index("by_courseId_and_facultyTokenIdentifier", [
       "courseId",
       "facultyTokenIdentifier",
-    ]),
+    ])
+    .index("by_courseId_and_facultyEmail", ["courseId", "facultyEmail"]),
 
   lmsQuestions: defineTable({
     enrollmentId: v.id("enrollments"),

@@ -335,6 +335,20 @@ export type FacultyFeedbackReport = {
 };
 
 export const facultyLmsApi = {
+  getAccessStatus: makeFunctionReference<
+    "query",
+    Record<string, never>,
+    {
+      email?: string;
+      activeAssignments: number;
+      pendingAssignments: number;
+    }
+  >("lmsFaculty:getAccessStatus"),
+  claimFacultyAccess: makeFunctionReference<
+    "mutation",
+    Record<string, never>,
+    { claimed: number }
+  >("lmsFaculty:claimFacultyAccess"),
   listMyQueue: makeFunctionReference<
     "query",
     Record<string, never>,
@@ -413,7 +427,10 @@ export type AdminReleaseDesk = {
     assignmentId: Id<"lmsFacultyAssignments">;
     courseId: Id<"courses">;
     batchId?: Id<"courseBatches">;
-    facultyTokenIdentifier: string;
+    facultyTokenIdentifier?: string;
+    facultyEmail?: string;
+    facultyName?: string;
+    invitationStatus: "pending" | "active";
     canGrade: boolean;
     canAnswerQuestions: boolean;
     canApproveCompletion: boolean;
@@ -544,7 +561,8 @@ export const adminLmsApi = {
     {
       courseId: Id<"courses">;
       batchId?: Id<"courseBatches">;
-      facultyTokenIdentifier: string;
+      facultyEmail: string;
+      facultyName: string;
       canGrade: boolean;
       canAnswerQuestions: boolean;
       canApproveCompletion: boolean;

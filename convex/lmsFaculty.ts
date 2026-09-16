@@ -20,6 +20,73 @@ async function requireFacultyIdentity(ctx: QueryCtx | MutationCtx) {
   return identity;
 }
 
+export const getAccessStatus = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireFacultyIdentity(ctx);
+    const email = identity.email?.trim().toLowerCase();
+    const [activeAssignments, emailAssignments] = await Promise.all([
+      ctx.db
+        .query("lmsFacultyAssignments")
+        .withIndex("by_facultyTokenIdentifier", (q) =>
+          q.eq("facultyTokenIdentifier", identity.tokenIdentifier),
+        )
+        .take(100),
+      email
+        ? ctx.db
+            .query("lmsFacultyAssignments")
+            .withIndex("by_facultyEmail", (q) => q.eq("facultyEmail", email))
+            .take(100)
+        : Promise.resolve([]),
+    ]);
+
+    return {
+      email,
+      activeAssignments: activeAssignments.length,
+      pendingAssignments: emailAssignments.filter(
+        (assignment) => !assignment.facultyTokenIdentifier,
+      ).length,
+    };
+  },
+});
+
+export const claimFacultyAccess = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireFacultyIdentity(ctx);
+    const email = identity.email?.trim().toLowerCase();
+    if (!email) {
+      throw new Error("Your signed-in account does not provide an email");
+    }
+    const assignments = await ctx.db
+      .query("lmsFacultyAssignments")
+      .withIndex("by_facultyEmail", (q) => q.eq("facultyEmail", email))
+      .take(100);
+    const pending = assignments.filter(
+      (assignment) => !assignment.facultyTokenIdentifier,
+    );
+    for (const assignment of pending) {
+      await ctx.db.patch("lmsFacultyAssignments", assignment._id, {
+        facultyTokenIdentifier: identity.tokenIdentifier,
+        facultyName: assignment.facultyName ?? identity.name ?? email,
+      });
+      await ctx.db.insert("adminAuditLogs", {
+        actorAdminId: identity.tokenIdentifier,
+        actorEmail: email,
+        action: "lms.faculty_assignment.claimed",
+        entityType: "lmsFacultyAssignment",
+        entityId: assignment._id,
+        after: {
+          facultyEmail: email,
+          facultyTokenIdentifier: identity.tokenIdentifier,
+        },
+        createdAt: Date.now(),
+      });
+    }
+    return { claimed: pending.length };
+  },
+});
+
 async function getFacultyAssignment(
   ctx: QueryCtx | MutationCtx,
   enrollment: Doc<"enrollments">,

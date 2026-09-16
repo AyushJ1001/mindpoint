@@ -64,14 +64,20 @@ export function FacultyLmsApp() {
 
 function AuthenticatedFacultyLms() {
   const { isAuthenticated, isLoading } = useConvexAuth();
+  const accessStatus = useQuery(
+    facultyLmsApi.getAccessStatus,
+    isAuthenticated ? {} : "skip",
+  );
+  const hasActiveAccess = (accessStatus?.activeAssignments ?? 0) > 0;
   const queue = useQuery(
     facultyLmsApi.listMyQueue,
-    isAuthenticated ? {} : "skip",
+    isAuthenticated && hasActiveAccess ? {} : "skip",
   );
   const feedbackReports = useQuery(
     facultyLmsApi.listMyFeedbackReports,
-    isAuthenticated ? {} : "skip",
+    isAuthenticated && hasActiveAccess ? {} : "skip",
   );
+  const claimFacultyAccess = useMutation(facultyLmsApi.claimFacultyAccess);
   const reviewSubmission = useMutation(facultyLmsApi.reviewSubmission);
   const answerQuestion = useMutation(facultyLmsApi.answerQuestion);
   const moderateQuestion = useMutation(facultyLmsApi.moderateQuestion);
@@ -86,12 +92,17 @@ function AuthenticatedFacultyLms() {
     type: "success" | "error";
     text: string;
   }>();
+  const [claimingAccess, setClaimingAccess] = useState(false);
+  const [accessError, setAccessError] = useState<string>();
   const selected =
     queue?.items.find((item) => item.id === selectedId) ?? queue?.items[0];
 
   if (
     isLoading ||
-    (isAuthenticated && (queue === undefined || feedbackReports === undefined))
+    (isAuthenticated &&
+      (accessStatus === undefined ||
+        (hasActiveAccess &&
+          (queue === undefined || feedbackReports === undefined))))
   )
     return (
       <div className="lms-live-page">
@@ -118,6 +129,46 @@ function AuthenticatedFacultyLms() {
         </section>
       </div>
     );
+  if (!accessStatus) return null;
+  if (accessStatus.pendingAssignments > 0)
+    return (
+      <div className="lms-live-page faculty-gateway">
+        <section className="lms-live-empty">
+          <ShieldCheck />
+          <h1>Your Faculty access is ready.</h1>
+          <p>
+            Confirm that {accessStatus.email} is your Faculty sign-in account.
+            This securely connects your assigned Courses without sharing any
+            technical account identifiers.
+          </p>
+          <Button
+            className="lms-live-primary"
+            disabled={claimingAccess}
+            onClick={async () => {
+              setClaimingAccess(true);
+              setAccessError(undefined);
+              try {
+                await claimFacultyAccess({});
+              } catch (error) {
+                setAccessError(readableError(error));
+              } finally {
+                setClaimingAccess(false);
+              }
+            }}
+          >
+            <ShieldCheck />
+            {claimingAccess
+              ? "Activating Faculty access…"
+              : "Confirm and activate access"}
+          </Button>
+          {accessError && (
+            <p className="lms-live-notice error" role="alert">
+              {accessError}
+            </p>
+          )}
+        </section>
+      </div>
+    );
   if (!queue?.assignments.length)
     return (
       <div className="lms-live-page faculty-gateway">
@@ -125,8 +176,9 @@ function AuthenticatedFacultyLms() {
           <GraduationCap />
           <h1>No Faculty scope is assigned.</h1>
           <p>
-            An Administrator must assign your Convex token identifier to a
-            Course or batch before Student evidence can appear.
+            Ask an Administrator to invite{" "}
+            {accessStatus.email ?? "the email you use to sign in"} to a Course.
+            Student evidence stays private until that assignment is confirmed.
           </p>
           <Button asChild variant="outline" className="lms-live-outline">
             <Link href="/lms">Go to Student learning</Link>

@@ -89,7 +89,8 @@ export default function AdminLmsPage() {
     "anonymous",
   );
   const [feedbackMinimumGroupSize, setFeedbackMinimumGroupSize] = useState("5");
-  const [facultyToken, setFacultyToken] = useState("");
+  const [facultyName, setFacultyName] = useState("");
+  const [facultyEmail, setFacultyEmail] = useState("");
   const [pending, setPending] = useState<string>();
   const [notice, setNotice] = useState<{
     type: "success" | "error";
@@ -107,6 +108,10 @@ export default function AdminLmsPage() {
   const published = courseCurricula.filter(
     (item) => item.status === "published",
   );
+  const courseFaculty =
+    desk?.facultyAssignments.filter(
+      (item) => item.courseId === currentCourseId,
+    ) ?? [];
   const isDraft = curriculum?.curriculum.status === "draft";
   const activeModuleId =
     moduleId && curriculum?.modules.some((item) => item._id === moduleId)
@@ -873,19 +878,37 @@ export default function AdminLmsPage() {
           <section>
             <h2>Assign Faculty</h2>
             <p>
-              Paste the Faculty member’s full Convex token identifier.
-              Course-wide scope includes every batch.
+              Add the name and email they use to sign in. Their review access
+              activates only after they confirm that account in the Faculty
+              workspace.
             </p>
-            <Input
-              value={facultyToken}
-              onChange={(event) => setFacultyToken(event.target.value)}
-              placeholder="issuer|clerk-user-id"
-            />
+            <div className="admin-lms-faculty-form">
+              <label>
+                Faculty name
+                <Input
+                  value={facultyName}
+                  onChange={(event) => setFacultyName(event.target.value)}
+                  placeholder="Dr. Ananya Rao"
+                  autoComplete="name"
+                />
+              </label>
+              <label>
+                Sign-in email
+                <Input
+                  type="email"
+                  value={facultyEmail}
+                  onChange={(event) => setFacultyEmail(event.target.value)}
+                  placeholder="faculty@example.com"
+                  autoComplete="email"
+                />
+              </label>
+            </div>
             <Button
               className="admin-lms-primary"
               disabled={
                 !currentCourseId ||
-                !facultyToken.trim() ||
+                !facultyName.trim() ||
+                !facultyEmail.trim() ||
                 pending === "faculty"
               }
               onClick={() =>
@@ -894,20 +917,46 @@ export default function AdminLmsPage() {
                   async () => {
                     await assignFaculty({
                       courseId: currentCourseId as Id<"courses">,
-                      facultyTokenIdentifier: facultyToken,
+                      facultyName,
+                      facultyEmail,
                       canGrade: true,
                       canAnswerQuestions: true,
                       canApproveCompletion: true,
                     });
-                    setFacultyToken("");
+                    setFacultyName("");
+                    setFacultyEmail("");
                   },
-                  "Faculty Course scope assigned.",
+                  "Faculty access prepared. Ask them to open the Faculty workspace and confirm their signed-in account.",
                 )
               }
             >
               <Users />
-              Assign review scope
+              Prepare Faculty access
             </Button>
+            {courseFaculty.length > 0 && (
+              <div className="admin-lms-faculty-list">
+                {courseFaculty.map((assignment) => (
+                  <div key={assignment.assignmentId}>
+                    <span>
+                      <strong>
+                        {assignment.facultyName ?? "Assigned Faculty"}
+                      </strong>
+                      <small>
+                        {assignment.facultyEmail ??
+                          "Existing secure assignment"}
+                      </small>
+                    </span>
+                    <span
+                      className={`admin-lms-faculty-status ${assignment.invitationStatus}`}
+                    >
+                      {assignment.invitationStatus === "active"
+                        ? "Access active"
+                        : "Awaiting sign-in"}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )}
           </section>
         </aside>
       </div>
