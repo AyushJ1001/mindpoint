@@ -109,7 +109,7 @@ export function MindPointsTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="mb-2 text-2xl font-semibold">Mind Points</h2>
+        <h2 className="font-display mb-2 text-3xl tracking-tight">Mind Points</h2>
         <p className="text-muted-foreground">
           Earn points with every purchase and redeem them for free courses!
         </p>

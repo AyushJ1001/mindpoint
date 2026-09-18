@@ -102,7 +102,7 @@ export default async function CoursePage({ params, searchParams }: Props) {
       return (
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <h1 className="mb-4 text-2xl font-bold">Course Unavailable</h1>
+            <h1 className="font-display mb-4 text-3xl tracking-tight">Course Unavailable</h1>
             <p className="text-muted-foreground">
               Course data is currently unavailable.
             </p>
@@ -129,7 +129,7 @@ export default async function CoursePage({ params, searchParams }: Props) {
       return (
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <h1 className="mb-4 text-2xl font-bold">Course Not Found</h1>
+            <h1 className="font-display mb-4 text-3xl tracking-tight">Course Not Found</h1>
             <p className="text-muted-foreground">
               The requested course could not be found.
             </p>
@@ -220,7 +220,7 @@ export default async function CoursePage({ params, searchParams }: Props) {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h1 className="mb-4 text-2xl font-bold">Error Loading Course</h1>
+          <h1 className="font-display mb-4 text-3xl tracking-tight">Error Loading Course</h1>
           <p className="text-muted-foreground">
             There was an error loading the course. Please try again later.
           </p>

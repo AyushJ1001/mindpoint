@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>About — The Mind Point</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400;1,9..144,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="pages.css" />
+</head>
+<body>
+<header id="nav" class="solid">
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="index.html"><img src="logo.png" alt="The Mind Point" /><b>THE MIND POINT</b></a>
+      <div class="menu">
+        <a href="about.html" style="border-color:var(--teal)">About</a>
+        <a href="programs.html">Programs</a>
+        <a href="resources.html">Resources</a>
+        <a href="community.html">Community</a>
+      </div>
+      <a class="btn" href="join.html">Join us</a>
+    </nav>
+  </div>
+</header>
+<main>  <section class="page-hero">
+    <div class="wrap grid">
+      <div class="rv">
+        <span class="eyebrow">About</span>
+        <h1 style="margin-top:1rem">We teach the mind with <em>warmth and rigour.</em></h1>
+        <p class="lead">The Mind Point is a learning home for psychology students, career changers and practising therapists in India.</p>
+      </div>
+      <div class="img rv"><img src="shore.jpg" alt="" /></div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap grid2 rv">
+      <div>
+        <span class="eyebrow">Why we exist</span>
+        <h2 style="margin:1rem 0">A learning home for people who take mental health seriously — and gently.</h2>
+      </div>
+      <div>
+        <p style="color:var(--muted)">The Mind Point began as a small practice and a big frustration: too much mental-health training was either cold and clinical, or warm but vague. We wanted both rigour and humanity in one place.</p>
+        <p style="color:var(--muted)">Today we run live cohorts, self-paced courses and therapy for psychology students, career changers and practising therapists across India.</p>
+      </div>
+    </div>
+  </section>
+  <hr class="rule" />
+  <section>
+    <div class="wrap">
+      <div class="head rv"><div><span class="eyebrow">How we teach</span><h2 style="margin-top:1rem">Four things we refuse to compromise on.</h2></div></div>
+      <div class="grid3 rv">
+        <div class="pillar"><b>Evidence, not vibes</b><p>Every method we teach has a research base, and we say plainly where the evidence is thin.</p></div>
+        <div class="pillar"><b>Practice, not just theory</b><p>Live cohorts and supervision put the skills in your hands, not just your notes.</p></div>
+        <div class="pillar"><b>Honest certificates</b><p>Completion, never a degree or licence — and every certificate is publicly verifiable.</p></div>
+        <div class="pillar"><b>Small and human</b><p>Cohorts stay small so teaching stays personal. You are never a number here.</p></div>
+        <div class="pillar"><b>Built for India</b><p>Paced for real life, phone-first, and priced for where our students actually are.</p></div>
+        <div class="pillar"><b>Support that shows up</b><p>Faculty answer within 48–72 hours on working days. Real people, not a bot.</p></div>
+      </div>
+    </div>
+  </section>
+  <section class="strip">
+    <div class="wrap grid2 rv">
+      <div class="img-frame"><img src="calm.jpg" alt="" /></div>
+      <div>
+        <span class="eyebrow">Our promise on honesty</span>
+        <h2 style="margin:1rem 0">No accreditation claims. No career guarantees.</h2>
+        <p style="color:var(--muted)">We removed every claim we couldn't document. What remains is what we can stand behind: real teaching, real practice, and certificates that state only what you completed.</p>
+        <a class="btn" href="programs.html" style="margin-top:1.4rem">See our programs <span class="arw">→</span></a>
+      </div>
+    </div>
+  </section>
+  <section style="padding-top:0;padding-bottom:5rem">
+    <div class="wrap pagenav rv">
+      <a href="programs.html">Next · Programs →</a>
+      <a href="join.html">Join us →</a>
+    </div>
+  </section>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div class="brand">
+        <img src="logo.png" alt="" style="width:48px;margin-bottom:.7rem" />
+        <b>THE MIND POINT</b>
+        <p style="color:rgba(248,246,240,.65);max-width:30ch;margin-top:.7rem">Practical tools. Compassionate guidance. A more mindful tomorrow.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul><li><a href="programs.html">Programs</a></li><li><a href="about.html">About</a></li><li><a href="resources.html">Resources</a></li><li><a href="#">Verify a certificate</a></li></ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul><li><a href="community.html">Community</a></li><li><a href="#">Careers</a></li><li><a href="join.html">Contact</a></li></ul>
+      </div>
+      <div class="crisis">
+        <b>In crisis?</b> Please reach out to a local helpline or emergency service right away. This platform is education and support — not emergency care.
+      </div>
+    </div>
+    <div class="copy">
+      <span>© 2026 The Mind Point. All rights reserved.</span>
+      <span><a href="#">Terms</a> · <a href="#">Privacy</a> · <a href="#">Refunds</a></span>
+    </div>
+  </div>
+</footer>
+<script>
+  const io = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} }), {threshold:.12});
+  if (new URLSearchParams(location.search).has('static')) { document.querySelectorAll('.rv').forEach(el => el.classList.add('in')); }
+  document.querySelectorAll('.rv').forEach(el => io.observe(el));
+  const header = document.getElementById('nav');
+  addEventListener('scroll', () => header.classList.toggle('solid', scrollY > 40));
+</script>
+</body>
+</html>

@@ -53,7 +53,7 @@ export default function HomeHero({
 
         <div className="relative z-10 container grid gap-10 md:grid-cols-[1.05fr_0.95fr] md:items-center lg:gap-14">
           <div className="space-y-7">
-            <div className="inline-flex items-center gap-2 rounded-full border border-lavender-200 bg-white/70 px-4 py-2 text-sm font-medium text-lavender-900 shadow-[0_12px_25px_-20px_rgba(124,111,155,0.9)] backdrop-blur dark:border-lavender-700/70 dark:bg-card/50 dark:text-foreground">
+            <div className="inline-flex items-center gap-2 rounded-full border border-lavender-200 bg-white/70 px-4 py-2 text-sm font-medium text-lavender-900 shadow-[0_12px_25px_-20px_rgba(19,46,43,0.9)] backdrop-blur dark:border-lavender-700/70 dark:bg-card/50 dark:text-foreground">
               <span className="h-2 w-2 rounded-full bg-primary" />
               Nurture mind & wellbeing
             </div>
@@ -109,19 +109,19 @@ export default function HomeHero({
             </div>
 
             <div className="grid grid-cols-3 gap-3 sm:max-w-[520px] sm:gap-4">
-              <div className="rounded-2xl border border-lavender-200 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.8)] backdrop-blur dark:border-lavender-700/45 dark:bg-card/55">
+              <div className="rounded-2xl border border-lavender-200 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(19,46,43,0.8)] backdrop-blur dark:border-lavender-700/45 dark:bg-card/55">
                 <div className="bg-gradient-to-r from-primary to-accent bg-clip-text text-2xl font-semibold text-transparent">
                   <AnimatedCounter target={10000} suffix="+" />
                 </div>
                 <p className="text-muted-foreground text-xs">Learners</p>
               </div>
-              <div className="rounded-2xl border border-lavender-200 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.8)] backdrop-blur dark:border-lavender-700/45 dark:bg-card/55">
+              <div className="rounded-2xl border border-lavender-200 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(19,46,43,0.8)] backdrop-blur dark:border-lavender-700/45 dark:bg-card/55">
                 <div className="bg-gradient-to-r from-primary to-accent bg-clip-text text-2xl font-semibold text-transparent">
                   <AnimatedCounter target={50} suffix="+" />
                 </div>
                 <p className="text-muted-foreground text-xs">Courses</p>
               </div>
-              <div className="rounded-2xl border border-lavender-200 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.8)] backdrop-blur dark:border-lavender-700/45 dark:bg-card/55">
+              <div className="rounded-2xl border border-lavender-200 bg-white/70 p-3 shadow-[0_10px_22px_-18px_rgba(19,46,43,0.8)] backdrop-blur dark:border-lavender-700/45 dark:bg-card/55">
                 <div className="bg-gradient-to-r from-primary to-accent bg-clip-text text-2xl font-semibold text-transparent">
                   <AnimatedCounter target={4.8} decimals={1} />
                 </div>
@@ -130,7 +130,7 @@ export default function HomeHero({
             </div>
           </div>
 
-          <div className="hero-video-container relative mx-auto w-full max-w-md rounded-[2rem] border border-lavender-200 bg-white/65 p-3 shadow-[0_34px_58px_-36px_rgba(124,111,155,0.95)] backdrop-blur-md dark:border-lavender-700/45 dark:bg-card/55">
+          <div className="hero-video-container relative mx-auto w-full max-w-md rounded-[2rem] border border-lavender-200 bg-white/65 p-3 shadow-[0_34px_58px_-36px_rgba(19,46,43,0.95)] backdrop-blur-md dark:border-lavender-700/45 dark:bg-card/55">
             <div className="absolute -right-4 -bottom-4 flex items-center gap-2 rounded-2xl border border-emerald-200/80 bg-emerald-50/95 px-3 py-2 text-xs font-semibold text-emerald-700 shadow-md dark:border-emerald-800/70 dark:bg-emerald-950/50 dark:text-emerald-300">
               <ShieldCheck className="h-4 w-4" />
               Trusted by thousands
@@ -172,7 +172,7 @@ export default function HomeHero({
             {HIGHLIGHTS.map((item) => (
               <article
                 key={item.title}
-                className="group rounded-[1.4rem] border border-lavender-200 bg-white/78 p-6 shadow-[0_20px_38px_-28px_rgba(124,111,155,0.9)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 dark:border-lavender-700/45 dark:bg-card/58"
+                className="group rounded-[1.4rem] border border-lavender-200 bg-white/78 p-6 shadow-[0_20px_38px_-28px_rgba(19,46,43,0.9)] backdrop-blur transition-transform duration-300 hover:-translate-y-1 dark:border-lavender-700/45 dark:bg-card/58"
               >
                 <div className="mb-4 inline-flex rounded-2xl border border-lavender-200 bg-lavender-100/75 p-3 text-primary dark:border-lavender-700/70 dark:bg-card/60 dark:text-foreground">
                   <item.icon className="h-5 w-5" />

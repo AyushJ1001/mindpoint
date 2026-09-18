@@ -195,7 +195,7 @@ export default function CareersClient() {
       <div className="container py-12">
         {/* Header Section */}
         <div className="mb-12 text-center">
-          <h1 className="text-foreground mb-4 text-4xl font-bold md:text-5xl">
+          <h1 className="font-display text-foreground mb-4 text-4xl tracking-tight md:text-5xl">
             Join Our Mission
           </h1>
           <p className="text-muted-foreground mx-auto mb-8 max-w-2xl text-lg">
@@ -242,7 +242,7 @@ export default function CareersClient() {
         {/* Application Form – soft container instead of hard Card */}
         <div className="bg-card/50 mx-auto max-w-4xl rounded-2xl p-6 shadow-sm backdrop-blur-sm sm:p-8 lg:p-10">
           <div className="mb-6">
-            <h2 className="text-foreground text-2xl font-semibold">
+            <h2 className="font-display text-foreground text-2xl">
               Apply Now
             </h2>
             <p className="text-muted-foreground mt-1">
