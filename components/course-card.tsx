@@ -198,7 +198,7 @@ export function CourseCard({
 
   return (
     <Card
-      className="group bg-card/50 @container relative h-full cursor-pointer overflow-hidden rounded-2xl border-none shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
+      className="group bg-card @container relative h-full cursor-pointer overflow-hidden rounded border border-border shadow-[0_20px_50px_-34px_rgba(19,46,43,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_40px_70px_-46px_rgba(19,46,43,0.6)]"
       onClick={handleCardClick}
     >
       {/* Course Image */}
@@ -255,7 +255,7 @@ export function CourseCard({
       )}
 
       <CardHeader className="pb-3">
-        <CardTitle className="group-hover:text-primary line-clamp-2 text-base font-semibold transition-colors">
+        <CardTitle className="font-display group-hover:text-primary line-clamp-2 text-lg transition-colors">
           {course.name}
         </CardTitle>
       </CardHeader>
@@ -509,7 +509,7 @@ export function UpcomingCourseCard({
 
   return (
     <Card
-      className="group bg-card/50 @container relative h-full cursor-pointer overflow-hidden rounded-2xl border-none shadow-[0_8px_24px_-16px_rgba(124,111,155,0.25)] backdrop-blur-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_14px_32px_-14px_rgba(124,111,155,0.35)]"
+      className="group bg-card @container relative h-full cursor-pointer overflow-hidden rounded border border-border shadow-[0_20px_50px_-34px_rgba(19,46,43,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_40px_70px_-46px_rgba(19,46,43,0.6)]"
       onClick={handleCardClick}
     >
       <div className="pointer-events-none absolute inset-x-3 top-3 z-20 flex items-start justify-between gap-2">
@@ -568,7 +568,7 @@ export function UpcomingCourseCard({
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
 
       <CardHeader className="pb-3">
-        <CardTitle className="group-hover:text-primary line-clamp-2 text-base font-semibold transition-colors group-hover:underline">
+        <CardTitle className="font-display group-hover:text-primary line-clamp-2 text-lg transition-colors group-hover:underline">
           {course.name}
         </CardTitle>
 

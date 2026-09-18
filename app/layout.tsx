@@ -1,5 +1,11 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono, Fraunces } from "next/font/google";
+import {
+  Plus_Jakarta_Sans,
+  JetBrains_Mono,
+  Fraunces,
+  DM_Sans,
+  Caveat,
+} from "next/font/google";
 import "./globals.css";
 import "react-phone-number-input/style.css";
 import ClientProviders from "@/components/ClientProviders";
@@ -22,6 +28,18 @@ const fraunces = Fraunces({
   variable: "--font-syne",
   subsets: ["latin"],
   weight: ["400", "500", "600", "700", "800"],
+});
+
+const dmSans = DM_Sans({
+  variable: "--font-dm-sans",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
+
+const caveat = Caveat({
+  variable: "--font-caveat",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -77,7 +95,7 @@ export default function RootLayout({
         <Analytics />
       </head>
       <body
-        className={`${plusJakarta.variable} ${jetbrainsMono.variable} ${fraunces.variable} flex min-h-screen flex-col antialiased`}
+        className={`${plusJakarta.variable} ${jetbrainsMono.variable} ${fraunces.variable} ${dmSans.variable} ${caveat.variable} flex min-h-screen flex-col antialiased`}
       >
         {/* Skip link for keyboard users */}
         <a href="#main-content" className="skip-link">

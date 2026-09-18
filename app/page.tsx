@@ -2,18 +2,10 @@ import { ConvexHttpClient } from "convex/browser";
 import { auth } from "@clerk/nextjs/server";
 import { api } from "@/lib/backend/api";
 import { readPublicEnv } from "@/lib/config";
-import { Suspense } from "react";
 import { hasAdminAccess } from "@/lib/admin-access";
 import { resolveAuthEmail } from "@/lib/clerk-email";
 import { isClerkServerConfigured } from "@/lib/clerk-env";
-import HeroSection from "@/components/landing/HeroSection";
-import TwoPathsSection from "@/components/landing/TwoPathsSection";
-import WhoThisIsForSection from "@/components/landing/WhoThisIsForSection";
-import WhatWeOfferSection from "@/components/landing/WhatWeOfferSection";
-import FeaturedEntrySection from "@/components/landing/FeaturedEntrySection";
-import TestimonialsSection from "@/components/landing/TestimonialsSection";
-import CoursePreviewSection from "@/components/landing/CoursePreviewSection";
-import FinalCtaSection from "@/components/landing/FinalCtaSection";
+import CoastalHome from "@/components/landing/CoastalHome";
 
 export const revalidate = 3600; // Revalidate every hour
 
@@ -86,24 +78,10 @@ export default async function Home() {
 
     if (!userId && !sessionEmail) {
       return (
-        <>
-          <HeroSection canAccessAdmin={canAccessAdmin} />
-          <TwoPathsSection />
-          <WhoThisIsForSection />
-          <WhatWeOfferSection />
-          <FeaturedEntrySection />
-          <TestimonialsSection />
-          <Suspense
-            fallback={
-              <div className="section-padding text-muted-foreground text-center">
-                Loading courses...
-              </div>
-            }
-          >
-            <CoursePreviewSection upcomingCourses={upcomingCourses} />
-          </Suspense>
-          <FinalCtaSection />
-        </>
+        <CoastalHome
+          canAccessAdmin={canAccessAdmin}
+          upcomingCourses={upcomingCourses}
+        />
       );
     }
 
@@ -116,23 +94,9 @@ export default async function Home() {
   }
 
   return (
-    <>
-      <HeroSection canAccessAdmin={canAccessAdmin} />
-      <TwoPathsSection />
-      <WhoThisIsForSection />
-      <WhatWeOfferSection />
-      <FeaturedEntrySection />
-      <TestimonialsSection />
-      <Suspense
-        fallback={
-          <div className="section-padding text-muted-foreground text-center">
-            Loading courses...
-          </div>
-        }
-      >
-        <CoursePreviewSection upcomingCourses={upcomingCourses} />
-      </Suspense>
-      <FinalCtaSection />
-    </>
+    <CoastalHome
+      canAccessAdmin={canAccessAdmin}
+      upcomingCourses={upcomingCourses}
+    />
   );
 }
