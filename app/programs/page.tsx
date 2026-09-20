@@ -36,6 +36,26 @@ export default function ProgramsPage() {
         image="/coastal/calm.jpg"
       />
 
+      <section className="container pt-10">
+        <Link
+          href="/january-2027"
+          className="bg-primary text-primary-foreground flex flex-wrap items-center justify-between gap-4 rounded-2xl px-6 py-5"
+        >
+          <span>
+            <b className="font-display block text-xl">
+              January 2027 cohorts are open
+            </b>
+            <span className="text-sm opacity-80">
+              Three live certificate cohorts. Early bird ₹1,999 until 15
+              December.
+            </span>
+          </span>
+          <span className="text-xs font-semibold tracking-[0.16em] uppercase">
+            See January 2027 →
+          </span>
+        </Link>
+      </section>
+
       <section className="container pb-20 sm:pb-28">
         <ProgramTabs />
       </section>

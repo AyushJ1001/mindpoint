@@ -101,6 +101,36 @@ export default async function JanuaryLandingPage() {
     };
   });
 
+  const structuredData = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "The Mind Point — January 2027 certificate cohorts",
+    itemListElement: cohorts.map((cohort, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      item: {
+        "@type": "Course",
+        name: cohort.name,
+        description: cohort.blurb,
+        inLanguage: "en",
+        courseMode: "online",
+        url: `https://themindpoint.org${cohort.href}`,
+        provider: {
+          "@type": "Organization",
+          name: "The Mind Point",
+          url: "https://themindpoint.org",
+        },
+        offers: {
+          "@type": "Offer",
+          price: cohort.price,
+          priceCurrency: "INR",
+          availability: "https://schema.org/PreOrder",
+          url: "https://themindpoint.org/january-2027",
+        },
+      },
+    })),
+  };
+
   return (
     <>
       <PageHero
@@ -266,6 +296,11 @@ export default async function JanuaryLandingPage() {
           </div>
         </div>
       </section>
+
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
+      />
     </>
   );
 }
