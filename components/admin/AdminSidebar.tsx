@@ -28,6 +28,7 @@ import {
   Settings,
   Shield,
   MessageSquareQuote,
+  Mails,
 } from "lucide-react";
 
 const items = [
@@ -36,6 +37,7 @@ const items = [
   { href: "/admin/offers", label: "Offer Manager", icon: TicketPercent },
   { href: "/admin/coupons", label: "Coupons", icon: BadgePercent },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquareQuote },
+  { href: "/admin/leads", label: "Leads", icon: Mails },
   { href: "/admin/enrollments", label: "Enrollments", icon: GraduationCap },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/loyalty", label: "Loyalty", icon: Gift },
