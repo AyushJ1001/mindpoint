@@ -25,6 +25,12 @@ export function ScrollReveal({
       return;
     }
 
+    // Without IntersectionObserver, never leave content hidden.
+    if (typeof IntersectionObserver === "undefined") {
+      setIsVisible(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
