@@ -157,6 +157,62 @@ export const sendSimpleTestEmail = internalAction({
   },
 });
 
+// Sent when a storefront form captures a lead, so the "check your inbox"
+// promise is kept. This is the requested resource, not marketing; the separate
+// marketing consent governs future sends.
+export const sendLeadConfirmation = internalAction({
+  args: {
+    email: v.string(),
+    name: v.optional(v.string()),
+    source: v.string(),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
+    try {
+      const siteUrl = getSiteUrl();
+      const greeting = args.name ? `Dear ${escapeHtml(args.name)},` : "Hello,";
+
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.email,
+        subject: "Thanks from The Mind Point — your next step",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color:#1d4e4a;">Thank you for reaching out</h2>
+            <p>${greeting}</p>
+            <p>We have your details. You can start right away:</p>
+            <ul>
+              <li><a href="${siteUrl}/resources">Free resources and the recorded masterclass</a></li>
+              <li><a href="${siteUrl}/programs">Programs, cohorts and therapy</a></li>
+            </ul>
+            <p>If you asked a question, a person will reply within 48–72 hours on working days.</p>
+            <p style="margin: 24px 0;">
+              <a href="${siteUrl}/programs" style="background:#1d4e4a;color:#fff;padding:12px 18px;text-decoration:none;border-radius:999px;display:inline-block;font-weight:600;">See what is open</a>
+            </p>
+            <p>The Mind Point is education and support — not emergency care. If you are in distress, please contact a local helpline right away.</p>
+            <br>
+            <p>Warmly,<br>The Mind Point Team</p>
+          </div>
+        `,
+      });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
+    } catch (error) {
+      console.error("Failed to send lead confirmation email:", {
+        email: args.email,
+        source: args.source,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+
+    return emailActionSuccess();
+  },
+});
+
 export const sendMindPointsReminderEmail = internalAction({
   args: {
     userEmail: v.string(),
