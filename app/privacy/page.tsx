@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 export const metadata = {
   title: "Privacy Policy - The Mind Point",
   description:
@@ -5,6 +6,7 @@ export const metadata = {
   keywords:
     "privacy policy, data protection, personal information, mental health education, The Mind Point",
   openGraph: {
+    images: [openGraphImage],
     title: "Privacy Policy - The Mind Point",
     description: "Learn how we protect and handle your personal data.",
     type: "website",

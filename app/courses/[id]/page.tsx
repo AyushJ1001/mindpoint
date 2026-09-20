@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import type { Metadata } from "next";
 import { api } from "@/lib/backend/api";
 import CourseClient from "./CourseClient";
@@ -74,7 +75,7 @@ export async function generateMetadata({
                   alt: course.name,
                 },
               ]
-            : undefined,
+            : [openGraphImage],
       },
       twitter: {
         card: "summary_large_image",

@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CourseTypePage from "@/components/CourseTypePage";
 import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import { ConvexHttpClient } from "convex/browser";
@@ -13,6 +14,7 @@ export const metadata = {
   keywords:
     "therapy programs, mental health therapy, counseling services, therapy training, mental health professionals",
   openGraph: {
+    images: [openGraphImage],
     title: "Therapy Programs - The Mind Point",
     description: "Explore our therapy programs and mental health services.",
     type: "website",

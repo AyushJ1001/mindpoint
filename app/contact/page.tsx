@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import ContactClient from "@/components/ContactClient";
 
 export const metadata = {
@@ -7,6 +8,7 @@ export const metadata = {
   keywords:
     "contact us, support, mental health education, psychology courses, help, inquiry",
   openGraph: {
+    images: [openGraphImage],
     title: "Contact Us - The Mind Point",
     description: "Get in touch with The Mind Point for questions and support.",
     type: "website",

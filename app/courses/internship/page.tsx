@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CourseTypePage from "@/components/CourseTypePage";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
@@ -11,6 +12,7 @@ export const metadata = {
   keywords:
     "internship programs, psychology internships, mental health training, practical experience, supervised learning",
   openGraph: {
+    images: [openGraphImage],
     title: "Internship Programs - The Mind Point",
     description:
       "Gain practical experience through our supervised internship programs.",

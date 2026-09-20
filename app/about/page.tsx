@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import { PageHero } from "@/components/coastal/PageHero";
 import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
@@ -11,6 +12,7 @@ export const metadata = {
   keywords:
     "about us, mental health education, psychology courses, professional development, The Mind Point mission",
   openGraph: {
+    images: [openGraphImage],
     title: "About Us - The Mind Point",
     description:
       "Learn about The Mind Point's mission to transform mental health education.",

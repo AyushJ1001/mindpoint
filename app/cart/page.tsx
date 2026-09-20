@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CartClient from "@/components/CartClient";
 
 export const metadata = {
@@ -7,6 +8,7 @@ export const metadata = {
   keywords:
     "shopping cart, checkout, mental health courses, payment, enrollment",
   openGraph: {
+    images: [openGraphImage],
     title: "Shopping Cart - The Mind Point",
     description: "Review and checkout your selected courses.",
     type: "website",

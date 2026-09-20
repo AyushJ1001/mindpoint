@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CourseTypePage from "@/components/CourseTypePage";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
@@ -11,6 +12,7 @@ export const metadata = {
   keywords:
     "masterclass programs, psychology masterclasses, expert-led training, intensive learning, mental health education",
   openGraph: {
+    images: [openGraphImage],
     title: "Masterclass Programs - The Mind Point",
     description:
       "Join our exclusive masterclass programs led by industry experts.",
