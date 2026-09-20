@@ -1,124 +1,39 @@
 import { internalMutation } from "./_generated/server";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 
-// Idempotent bootstrap for the January 2027 pilot cohort.
+// Idempotent bootstrap for the January 2027 certificate cohorts.
 //
-// Creates (or updates) the CCCFT certificate course and its published January
-// 2027 batch, so the cohort goes on sale without the multi-step admin dance
-// (draft course -> published batch -> publish), which cannot be done in one
-// admin call.
+// Opens December registrations for the three January certificate courses by
+// ensuring each course exists, carries the January pricing and offer, and has
+// one published January 2027 batch. Existing courses keep their authored
+// content — only the January pricing, offer and batch are written.
 //
 // Run once against a deployment:
 //   npx convex run bootstrapJanuaryCohort:createJanuaryCohort            # dev
 //   npx convex run bootstrapJanuaryCohort:createJanuaryCohort --prod     # production
 //
-// Safe to re-run: the course is matched by name + type, the batch by course +
+// Safe to re-run: a course is matched by name (then code), a batch by course +
 // label, and existing rows are patched rather than duplicated.
 
-// Pricing and offer follow the locked January decision (#133): full price
-// ₹2,999, early bird ₹1,999 until 15 December, no bundle. Schedule, capacity
-// and timeline follow the registration plan (#134): 30 seats, starts mid
-// January 2027.
+// Pricing follows the locked January decision (#133): ₹2,999 with an early
+// bird of ₹1,999 until 15 December, full payment only. Schedule and capacity
+// follow the registration plan (#134): 30 seats, shared Tue/Thu evening slot
+// from mid January 2027.
 //
-// REVIEW BEFORE RUNNING: the descriptive copy below is founder-review copy.
-// Confirm the name, code, description, modules, outcomes and image before you
-// publish this to production.
-const COURSE = {
-  name: "Relationship Psychology: Marital & Family Therapy",
-  code: "CCCFT",
-  type: "certificate" as const,
-  price: 2999,
-  offer: {
-    name: "Early bird",
-    discountType: "fixedPrice" as const,
-    discountValue: 1999,
-    startDate: "2026-11-15",
-    endDate: "2026-12-15",
-  },
-  duration: "8 weeks · live online · Tuesdays & Thursdays",
-  prerequisites:
-    "Open to psychology students, graduates and practising counsellors. No prior clinical practice required.",
-  description:
-    "An eight-week live certificate in relationship psychology, focused on marital and family therapy. Learn to assess, formulate and work with couples and families using established approaches, in a small supervised group — built for psychology students, graduates and counsellors in India.",
-  content:
-    "Marital and family therapy relationship psychology couple therapy certificate live cohort January 2027",
-  learningOutcomes: [
-    { icon: "users", title: "Assess couples and families as a system" },
-    {
-      icon: "clipboard",
-      title: "Formulate relationship and family difficulties",
-    },
-    {
-      icon: "message-circle",
-      title: "Use core couple and family therapy skills",
-    },
-    { icon: "shield", title: "Work ethically within your scope of practice" },
-    { icon: "file-check", title: "Plan and review a course of therapy" },
-  ],
-  modules: [
-    {
-      title: "Foundations of relationship psychology",
-      description:
-        "Attachment, systems thinking and how relationships shape us. What the evidence supports, and where it is still thin.",
-    },
-    {
-      title: "Assessment and formulation",
-      description:
-        "Meeting a couple or family, mapping the system, and building a shared formulation.",
-    },
-    {
-      title: "Core couple therapy skills",
-      description:
-        "Communication, conflict and repair. Active listening, reframing and structuring a session.",
-    },
-    {
-      title: "Family therapy across the lifespan",
-      description:
-        "Parenting, transitions, loss and intergenerational patterns. Working with children in the system.",
-    },
-    {
-      title: "Working with difference and context",
-      description:
-        "Culture, gender, class and family structure in the Indian context. Staying curious, not prescriptive.",
-    },
-    {
-      title: "Ethics, scope and referrals",
-      description:
-        "Consent, confidentiality, couple-versus-individual work, and when to refer on.",
-    },
-    {
-      title: "Supervised practice",
-      description:
-        "Simulated and role-played sessions with feedback, so you build confidence before real clients.",
-    },
-    {
-      title: "Integration and next steps",
-      description:
-        "Pulling it together, a personal development plan, and the honest limits of the certificate.",
-    },
-  ],
-  outcomes: [
-    "You can meet a couple or family without freezing.",
-    "You can hold a formulation and share it clearly.",
-    "You know the core techniques and when to use them.",
-    "You know your scope — and when to refer on.",
-    "You have a plan for continued supervised practice.",
-  ],
-  painPoints: [
-    "Most courses stop at theory and never put you in the room.",
-    "Live practice is expensive and hard to find in India.",
-    "You want skills you can actually use, not just notes.",
-  ],
-  whyDifferent: [
-    "Live, small cohorts with real practice and feedback.",
-    "Taught by practising clinicians, not marketers.",
-    "A certificate that states completion honestly.",
-    "Paced for real life, phone-first and affordable.",
-  ],
-  imageUrls: ["/coastal/shore.jpg", "/coastal/calm.jpg"],
+// REVIEW BEFORE RUNNING: the Personality Disorders copy is founder-review
+// copy. Confirm it before publishing to production. It is the only course
+// created from scratch; the other two already exist.
+const JANUARY_PRICE = 2999;
+
+const JANUARY_OFFER = {
+  name: "Early bird",
+  discountType: "fixedPrice" as const,
+  discountValue: 1999,
+  startDate: "2026-11-15",
+  endDate: "2026-12-15",
 };
 
-const BATCH = {
+const JANUARY_BATCH = {
   label: "January 2027 cohort",
   startDate: "2027-01-12",
   endDate: "2027-03-09",
@@ -128,91 +43,396 @@ const BATCH = {
   capacity: 30,
 };
 
+type CourseSeed = {
+  // Distinctive name fragment used to find an existing course before the code.
+  match: string;
+  code: string;
+  name: string;
+  type: "certificate";
+  description: string;
+  searchText: string;
+  imageUrls: string[];
+  learningOutcomes: { icon: string; title: string }[];
+  modules: { title: string; description: string }[];
+  outcomes: string[];
+  painPoints: string[];
+  whyDifferent: string[];
+};
+
+const COURSES: CourseSeed[] = [
+  {
+    match: "CBMT",
+    code: "CCCBT",
+    name: "CBT, REBT, CBMT",
+    type: "certificate",
+    description:
+      "An eight-week live certificate covering the three core cognitive and behavioural approaches — CBT, REBT and CBMT — and how to use them with real clients, in a small supervised group.",
+    searchText:
+      "CBT REBT CBMT cognitive behavioural therapy rational emotive behaviour therapy mindfulness certificate live cohort January 2027",
+    imageUrls: ["/coastal/shore.jpg"],
+    learningOutcomes: [
+      { icon: "brain", title: "Explain the cognitive model and where it fits" },
+      {
+        icon: "refresh",
+        title: "Challenge and restructure unhelpful thinking",
+      },
+      {
+        icon: "message-circle",
+        title: "Use REBT's disputation with real clients",
+      },
+      { icon: "leaf", title: "Weave mindfulness into behavioural work" },
+      { icon: "shield", title: "Work safely within your scope of practice" },
+    ],
+    modules: [
+      {
+        title: "Foundations of CBT",
+        description:
+          "The cognitive model — thoughts, emotions and behaviour. Where CBT came from, what the evidence supports, and where it is thin.",
+      },
+      {
+        title: "Cognitive restructuring",
+        description:
+          "Identifying and challenging cognitive distortions, and building a shared formulation with a client.",
+      },
+      {
+        title: "Behavioural work",
+        description:
+          "Behavioural activation, exposure and graded tasks, applied carefully and with consent.",
+      },
+      {
+        title: "REBT: rational emotive behaviour therapy",
+        description:
+          "The ABC model, irrational beliefs and disputation. How REBT differs from and complements CBT.",
+      },
+      {
+        title: "CBMT: mindfulness in practice",
+        description:
+          "Bringing mindfulness into cognitive and behavioural work — attention, acceptance and present-moment practice.",
+      },
+      {
+        title: "Working across the three",
+        description:
+          "Choosing an approach for the person in front of you, and combining them without muddle.",
+      },
+      {
+        title: "Supervised practice",
+        description:
+          "Role-played and simulated sessions with feedback, so you build confidence before real clients.",
+      },
+      {
+        title: "Integration and next steps",
+        description:
+          "Pulling it together, a development plan, and the honest limits of the certificate.",
+      },
+    ],
+    outcomes: [
+      "You can explain the cognitive model plainly.",
+      "You can challenge a thought without arguing with the person.",
+      "You can use REBT's disputation and CBMT's mindfulness.",
+      "You can choose an approach for the person in front of you.",
+      "You know your scope — and when to refer on.",
+    ],
+    painPoints: [
+      "CBT, REBT and CBMT are usually taught separately and never joined up.",
+      "Most courses stop at theory and never put you in the room.",
+      "You want skills you can actually use, not just notes.",
+    ],
+    whyDifferent: [
+      "All three approaches in one coherent certificate.",
+      "Live, small cohorts with real practice and feedback.",
+      "Taught by practising clinicians, not marketers.",
+      "A certificate that states completion honestly.",
+    ],
+  },
+  {
+    match: "Inner Child Healing",
+    code: "CCICH",
+    name: "Inner Child Healing",
+    type: "certificate",
+    description:
+      "A six-week live certificate guiding you through inner child healing: how childhood experiences shape adult beliefs and relationships, and practical, trauma-informed ways to nurture, validate and reconnect with the inner child.",
+    searchText:
+      "inner child healing trauma informed self compassion certificate live cohort January 2027",
+    imageUrls: ["/coastal/calm.jpg"],
+    learningOutcomes: [
+      {
+        icon: "heart",
+        title: "Understand the inner child and its role in wellbeing",
+      },
+      {
+        icon: "history",
+        title: "Recognise childhood wounds in adult patterns",
+      },
+      { icon: "hands", title: "Nurture, validate and comfort the inner child" },
+      {
+        icon: "sparkles",
+        title: "Use visualisation, expressive arts and relationship work",
+      },
+      { icon: "shield", title: "Stay trauma-informed and within your scope" },
+    ],
+    modules: [
+      {
+        title: "Understanding the inner child",
+        description:
+          "What the inner child means, and the impact of childhood experience on adult life.",
+      },
+      {
+        title: "Healing through self-compassion",
+        description:
+          "Cultivating self-compassion and practices for nurturing and comforting the inner child.",
+      },
+      {
+        title: "Childhood wounds and adult patterns",
+        description:
+          "Recognising attachment and relational patterns, and how they show up with clients.",
+      },
+      {
+        title: "Expressive and creative approaches",
+        description:
+          "Guided visualisation, expressive arts and relationship-focused healing approaches.",
+      },
+      {
+        title: "Integration and forgiveness",
+        description:
+          "Working with grief, anger and forgiveness at a pace the person can carry.",
+      },
+      {
+        title: "Supervised practice",
+        description:
+          "Role-played practice with feedback, and the honest limits of the certificate.",
+      },
+    ],
+    outcomes: [
+      "You can explain inner child work without jargon.",
+      "You can recognise childhood wounds in adult patterns.",
+      "You can guide simple, safe healing practices.",
+      "You work in a trauma-informed way.",
+      "You know your scope — and when to refer on.",
+    ],
+    painPoints: [
+      "Inner child work is often taught as vague, feel-good content.",
+      "Clients arrive with old wounds and most courses never show you how to hold them.",
+      "You want a trauma-informed foundation, not just exercises.",
+    ],
+    whyDifferent: [
+      "Trauma-informed and grounded, not vague.",
+      "Live, small cohorts with real practice and feedback.",
+      "Taught by practising clinicians, not marketers.",
+      "A certificate that states completion honestly.",
+    ],
+  },
+  {
+    match: "Personality Disorders",
+    code: "CCPD",
+    name: "Personality Disorders",
+    type: "certificate",
+    description:
+      "An eight-week live certificate introducing personality disorders — how they are classified, assessed and understood, and how to work with them ethically and effectively. Covers the clusters, formulation, risk, and CBT, DBT and schema-informed approaches, with a trauma-informed, non-stigmatising stance throughout.",
+    searchText:
+      "personality disorders cluster A B C borderline narcissistic avoidant assessment formulation risk CBT DBT schema certificate live cohort January 2027",
+    imageUrls: ["/coastal/hero.jpg"],
+    learningOutcomes: [
+      {
+        icon: "book-open",
+        title: "Describe the recognised personality disorder categories",
+      },
+      {
+        icon: "clipboard",
+        title: "Assess and formulate without reducing a person to a label",
+      },
+      {
+        icon: "heart-handshake",
+        title: "Hold a trauma-informed, non-stigmatising stance",
+      },
+      {
+        icon: "brain",
+        title: "Use core CBT, DBT and schema-informed strategies",
+      },
+      { icon: "shield", title: "Recognise risk, set boundaries and refer on" },
+    ],
+    modules: [
+      {
+        title: "What personality disorders are — and are not",
+        description:
+          "Classification, the DSM-5 and ICD clusters, the debate around labels, and the stigma that surrounds them.",
+      },
+      {
+        title: "Cluster A: odd and eccentric",
+        description:
+          "Paranoid, schizoid and schizotypal presentations, and the therapeutic stance that helps.",
+      },
+      {
+        title: "Cluster B: dramatic and emotional, part one",
+        description:
+          "Borderline personality disorder — emotional dysregulation, self-harm, and the therapeutic relationship.",
+      },
+      {
+        title: "Cluster B: dramatic and emotional, part two",
+        description:
+          "Narcissistic, histrionic and antisocial presentations, and working without judgement.",
+      },
+      {
+        title: "Cluster C: anxious and fearful",
+        description:
+          "Avoidant, dependent and obsessive-compulsive presentations in practice.",
+      },
+      {
+        title: "Assessment, formulation and risk",
+        description:
+          "Gathering history, building a shared formulation, and assessing risk carefully.",
+      },
+      {
+        title: "Evidence-based approaches",
+        description:
+          "CBT, DBT-informed and schema-informed work, compassion-focused practice, and their limits.",
+      },
+      {
+        title: "Ethics, boundaries and supervision",
+        description:
+          "Boundaries, supervision, referral, and the honest limits of the certificate.",
+      },
+    ],
+    outcomes: [
+      "You can discuss personality disorders accurately and without stigma.",
+      "You recognise the clusters and their common presentations.",
+      "You can formulate difficulties and plan a course of support.",
+      "You know evidence-based approaches and their limits.",
+      "You know your scope — and when to refer on.",
+    ],
+    painPoints: [
+      "Personality disorders are widely misunderstood and stigmatised.",
+      "Most training stops at labels and never covers how to work with the person.",
+      "You want an ethical, evidence-informed foundation before you practise.",
+    ],
+    whyDifferent: [
+      "A trauma-informed, non-stigmatising stance throughout.",
+      "Live, small cohorts with case discussion.",
+      "Taught by practising clinicians, not marketers.",
+      "A certificate that states completion honestly.",
+    ],
+  },
+];
+
+function findCourse(
+  courses: Doc<"courses">[],
+  seed: CourseSeed,
+): Doc<"courses"> | undefined {
+  const byName = courses.find((course) =>
+    course.name.toLowerCase().includes(seed.match.toLowerCase()),
+  );
+  if (byName) {
+    return byName;
+  }
+  return courses.find((course) => course.code === seed.code);
+}
+
 export const createJanuaryCohort = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
+    const actor = "bootstrap:january-2027";
+    const courses = await ctx.db.query("courses").take(2000);
 
-    const existingCourse = await ctx.db
-      .query("courses")
-      .withIndex("by_name_and_type", (q) =>
-        q.eq("name", COURSE.name).eq("type", COURSE.type),
-      )
-      .first();
+    const results: {
+      name: string;
+      code: string;
+      courseId: Id<"courses">;
+      batchId: Id<"courseBatches">;
+      courseCreated: boolean;
+      batchCreated: boolean;
+    }[] = [];
 
-    const courseFields = {
-      name: COURSE.name,
-      code: COURSE.code,
-      type: COURSE.type,
-      price: COURSE.price,
-      offer: COURSE.offer,
-      description: COURSE.description,
-      content: COURSE.content,
-      duration: COURSE.duration,
-      prerequisites: COURSE.prerequisites,
-      learningOutcomes: COURSE.learningOutcomes,
-      modules: COURSE.modules,
-      outcomes: COURSE.outcomes,
-      painPoints: COURSE.painPoints,
-      whyDifferent: COURSE.whyDifferent,
-      imageUrls: COURSE.imageUrls,
-      usesBatches: true,
-      lifecycleStatus: "published" as const,
-      updatedAt: now,
-    };
+    for (const seed of COURSES) {
+      const existing = findCourse(courses, seed);
+      const januaryCourseFields = {
+        price: JANUARY_PRICE,
+        offer: JANUARY_OFFER,
+        usesBatches: true,
+        lifecycleStatus: "published" as const,
+        updatedAt: now,
+        updatedByAdminId: actor,
+      };
 
-    let courseId: Id<"courses">;
-    let courseCreated = false;
-    if (existingCourse) {
-      await ctx.db.patch(existingCourse._id, courseFields);
-      courseId = existingCourse._id;
-    } else {
-      courseId = await ctx.db.insert("courses", {
-        ...courseFields,
-        enrolledUsers: [],
-        reviews: [],
-        publishedAt: now,
-        createdByAdminId: "bootstrap:january-2027",
-        updatedByAdminId: "bootstrap:january-2027",
+      let courseId: Id<"courses">;
+      let courseCreated = false;
+      if (existing) {
+        // Preserve the authored content; only the January pricing and
+        // offer are written.
+        await ctx.db.patch(existing._id, {
+          ...januaryCourseFields,
+          publishedAt: existing.publishedAt ?? now,
+        });
+        courseId = existing._id;
+      } else {
+        courseId = await ctx.db.insert("courses", {
+          name: seed.name,
+          code: seed.code,
+          type: seed.type,
+          ...januaryCourseFields,
+          description: seed.description,
+          content: seed.searchText,
+          imageUrls: seed.imageUrls,
+          learningOutcomes: seed.learningOutcomes,
+          modules: seed.modules,
+          outcomes: seed.outcomes,
+          painPoints: seed.painPoints,
+          whyDifferent: seed.whyDifferent,
+          prerequisites:
+            "Open to psychology students, graduates and practising counsellors. No prior clinical practice required.",
+          enrolledUsers: [],
+          reviews: [],
+          publishedAt: now,
+          createdByAdminId: actor,
+        });
+        courseCreated = true;
+      }
+
+      const batches = await ctx.db
+        .query("courseBatches")
+        .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
+        .collect();
+      const existingBatch = batches.find(
+        (batch) => batch.label === JANUARY_BATCH.label,
+      );
+      const batchFields = {
+        courseId,
+        label: JANUARY_BATCH.label,
+        startDate: JANUARY_BATCH.startDate,
+        endDate: JANUARY_BATCH.endDate,
+        startTime: JANUARY_BATCH.startTime,
+        endTime: JANUARY_BATCH.endTime,
+        daysOfWeek: JANUARY_BATCH.daysOfWeek,
+        capacity: JANUARY_BATCH.capacity,
+        lifecycleStatus: "published" as const,
+        updatedAt: now,
+        updatedByAdminId: actor,
+      };
+
+      let batchId: Id<"courseBatches">;
+      let batchCreated = false;
+      if (existingBatch) {
+        await ctx.db.patch(existingBatch._id, batchFields);
+        batchId = existingBatch._id;
+      } else {
+        batchId = await ctx.db.insert("courseBatches", {
+          ...batchFields,
+          enrolledUsers: [],
+          sortOrder: batches.length,
+          createdByAdminId: actor,
+        });
+        batchCreated = true;
+      }
+
+      results.push({
+        name: seed.name,
+        code: seed.code,
+        courseId,
+        batchId,
+        courseCreated,
+        batchCreated,
       });
-      courseCreated = true;
     }
 
-    const batches = await ctx.db
-      .query("courseBatches")
-      .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
-      .collect();
-
-    const existingBatch = batches.find((b) => b.label === BATCH.label);
-    const batchFields = {
-      courseId,
-      label: BATCH.label,
-      startDate: BATCH.startDate,
-      endDate: BATCH.endDate,
-      startTime: BATCH.startTime,
-      endTime: BATCH.endTime,
-      daysOfWeek: BATCH.daysOfWeek,
-      capacity: BATCH.capacity,
-      lifecycleStatus: "published" as const,
-      updatedAt: now,
-    };
-
-    let batchId: Id<"courseBatches">;
-    let batchCreated = false;
-    if (existingBatch) {
-      await ctx.db.patch(existingBatch._id, batchFields);
-      batchId = existingBatch._id;
-    } else {
-      batchId = await ctx.db.insert("courseBatches", {
-        ...batchFields,
-        enrolledUsers: [],
-        sortOrder: batches.length,
-        createdByAdminId: "bootstrap:january-2027",
-        updatedByAdminId: "bootstrap:january-2027",
-      });
-      batchCreated = true;
-    }
-
-    return { courseId, batchId, courseCreated, batchCreated };
+    return { courses: results };
   },
 });
