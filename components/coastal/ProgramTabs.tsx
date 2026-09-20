@@ -12,28 +12,28 @@ const TABS = [
 
 const LIVE = [
   {
-    name: "Relationship Psychology: Marital & Family Therapy",
+    name: "CBT, REBT, CBMT",
     type: "Certificate · 8 weeks · Live",
-    when: "Starts Tue 22 Sep · Tue & Thu · 7:30 pm",
-    price: "₹5,000",
+    when: "Starts Tue 12 Jan 2027 · Tue & Thu · 7:30 pm",
+    price: "₹2,999",
     image: "/coastal/shore.jpg",
     badge: "Upcoming",
   },
   {
-    name: "Inner Child Healing Certification",
-    type: "Certificate · Live cohort",
-    when: "Starts Tue 6 Oct · Tue & Thu · 6:30 pm",
-    price: "₹5,000",
+    name: "Inner Child Healing",
+    type: "Certificate · 6 weeks · Live",
+    when: "Starts Tue 12 Jan 2027 · Tue & Thu · 7:30 pm",
+    price: "₹2,999",
     image: "/coastal/calm.jpg",
     badge: "Upcoming",
   },
   {
-    name: "Advanced Certificate in Counselling Practice",
-    type: "Certificate · Live cohort",
-    when: "Details to be announced",
-    price: "TBA",
+    name: "Personality Disorders",
+    type: "Certificate · 8 weeks · Live",
+    when: "Starts Tue 12 Jan 2027 · Tue & Thu · 7:30 pm",
+    price: "₹2,999",
     image: "/coastal/hero.jpg",
-    badge: "Coming soon",
+    badge: "New",
   },
 ];
 
