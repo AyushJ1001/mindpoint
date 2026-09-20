@@ -17,9 +17,9 @@ function StructuredDataContent() {
     name: "The Mind Point",
     description:
       "A platform for mental health education and support, offering comprehensive courses in psychology, counseling, and professional development.",
-    url: "https://themindpoint.org",
-    logo: "https://themindpoint.org/logo.png",
-    sameAs: ["https://themindpoint.org"],
+    url: "https://www.themindpoint.org",
+    logo: "https://www.themindpoint.org/logo.png",
+    sameAs: ["https://www.themindpoint.org"],
     address: {
       "@type": "PostalAddress",
       addressCountry: "IN",
@@ -49,7 +49,7 @@ function StructuredDataContent() {
           provider: {
             "@type": "EducationalOrganization",
             name: "The Mind Point",
-            url: "https://themindpoint.org",
+            url: "https://www.themindpoint.org",
           },
         },
       })),

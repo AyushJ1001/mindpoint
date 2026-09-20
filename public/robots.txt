@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Host
-Host: https://themindpoint.org
+Host: https://www.themindpoint.org
 
 # Sitemaps
-Sitemap: https://themindpoint.org/sitemap.xml
+Sitemap: https://www.themindpoint.org/sitemap.xml
