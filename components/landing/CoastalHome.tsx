@@ -84,6 +84,25 @@ const FALLBACK_COURSES = [
   },
 ];
 
+const FAQ = [
+  {
+    q: "Is this a recognised degree?",
+    a: "No. Our certificates document completion of a training programme — they are not a degree, licence or accreditation. We say so plainly, and we verify every certificate publicly.",
+  },
+  {
+    q: "Do I need a psychology background?",
+    a: "Not always. Some programs assume no prior training; others are built for students and practitioners. Each program page states who it's for.",
+  },
+  {
+    q: "How do the live classes work?",
+    a: "Cohorts are small and run live every week. If you miss one, the recording is available to your cohort for the access window.",
+  },
+  {
+    q: "What if I'm not sure where to start?",
+    a: "Start with one calm conversation. It's a single session with a licensed professional — a low-pressure way to get oriented.",
+  },
+];
+
 function formatPrice(value?: number) {
   if (!value || value <= 0) return "Free";
   return `₹${value.toLocaleString("en-IN")}`;
@@ -466,6 +485,30 @@ export default function CoastalHome({
             teach.
           </p>
           <EmailCapture source="masterclass" />
+        </div>
+      </section>
+
+      {/* ── FAQ ── */}
+      <section className="py-20 sm:py-28">
+        <div className="container grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
+          <div>
+            <span className={eyebrowVariants()}>Questions</span>
+            <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-5xl">
+              A few honest answers.
+            </h2>
+          </div>
+          <div className="border-border border-t border-dashed">
+            {FAQ.map((item) => (
+              <details key={item.q} className="faq-item py-5">
+                <summary className="font-display text-xl leading-snug">
+                  {item.q}
+                </summary>
+                <p className="text-muted-foreground mt-3 max-w-prose">
+                  {item.a}
+                </p>
+              </details>
+            ))}
+          </div>
         </div>
       </section>
 
