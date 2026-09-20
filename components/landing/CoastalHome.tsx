@@ -72,16 +72,25 @@ const STORIES = [
 
 const FALLBACK_COURSES = [
   {
-    id: "cccft",
-    name: "Relationship Psychology: Marital & Family Therapy",
-    meta: "Starts Tue 22 Sep · Tue & Thu · 7:30 pm",
-    price: "₹5,000",
+    id: "cccbt",
+    name: "CBT, REBT, CBMT",
+    meta: "Starts 12 Jan 2027 · Tue & Thu · 7:30 pm",
+    price: "₹2,999",
+    href: "/january-2027",
   },
   {
     id: "ccich",
-    name: "Inner Child Healing Certification",
-    meta: "Starts Tue 6 Oct · Tue & Thu · 6:30 pm",
-    price: "₹5,000",
+    name: "Inner Child Healing",
+    meta: "Starts 12 Jan 2027 · Tue & Thu · 7:30 pm",
+    price: "₹2,999",
+    href: "/january-2027",
+  },
+  {
+    id: "ccpd",
+    name: "Personality Disorders",
+    meta: "Starts 12 Jan 2027 · Tue & Thu · 7:30 pm",
+    price: "₹2,999",
+    href: "/january-2027",
   },
 ];
 
@@ -124,10 +133,7 @@ export default function CoastalHome({
     href: `/courses/${course._id}`,
   }));
 
-  const cards =
-    programCards.length > 0
-      ? programCards
-      : FALLBACK_COURSES.map((c) => ({ ...c, href: "/courses" }));
+  const cards = programCards.length > 0 ? programCards : FALLBACK_COURSES;
 
   return (
     <>
@@ -271,7 +277,7 @@ export default function CoastalHome({
                       className="object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                     <span className="bg-background/90 text-primary absolute top-4 left-4 rounded-full px-3 py-1 text-[0.6rem] font-semibold tracking-[0.2em] uppercase">
-                      {i === 2 ? "Coming soon" : "Upcoming"}
+                      Upcoming
                     </span>
                   </div>
                   <div className="flex flex-1 flex-col gap-3 p-7">

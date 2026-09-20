@@ -6,8 +6,9 @@ import { api } from "@/lib/backend/api";
 import { ctaVariants } from "@/components/coastal/cta";
 
 const INTERESTS = [
-  "Relationship Psychology cohort",
+  "CBT, REBT, CBMT cohort",
   "Inner Child Healing cohort",
+  "Personality Disorders cohort",
   "Self-paced course",
   "A therapy session",
   "Supervision",
