@@ -13,7 +13,7 @@ export default function ServerNavbar() {
               alt="The Mind Point"
               width={36}
               height={36}
-              className="h-8 w-8 rounded-xl ring-1 ring-border sm:h-9 sm:w-9"
+              className="ring-border h-8 w-8 rounded-xl ring-1 sm:h-9 sm:w-9"
             />
             <span className="text-foreground font-display text-base font-bold tracking-tight sm:text-xl">
               The Mind Point
@@ -27,27 +27,33 @@ export default function ServerNavbar() {
               <nav className="flex items-center space-x-7 text-[0.72rem] font-medium tracking-[0.18em] uppercase">
                 <Link
                   href="/programs"
-                  className="text-foreground/70 transition-colors hover:text-primary"
+                  className="text-foreground/70 hover:text-primary transition-colors"
                 >
                   Programs
                 </Link>
                 <Link
                   href="/about"
-                  className="text-foreground/70 transition-colors hover:text-primary"
+                  className="text-foreground/70 hover:text-primary transition-colors"
                 >
                   About
                 </Link>
                 <Link
                   href="/resources"
-                  className="text-foreground/70 transition-colors hover:text-primary"
+                  className="text-foreground/70 hover:text-primary transition-colors"
                 >
                   Resources
                 </Link>
                 <Link
                   href="/community"
-                  className="text-foreground/70 transition-colors hover:text-primary"
+                  className="text-foreground/70 hover:text-primary transition-colors"
                 >
                   Community
+                </Link>
+                <Link
+                  href="/january-2027"
+                  className="text-primary hover:text-primary/80 transition-colors"
+                >
+                  January 2027
                 </Link>
               </nav>
             </div>
@@ -57,12 +63,12 @@ export default function ServerNavbar() {
             {/* Placeholder for cart and auth - will be hydrated client-side */}
             <Link
               href="/join"
-              className="hidden rounded-full bg-primary px-5 py-2.5 text-[0.7rem] font-medium tracking-[0.16em] text-primary-foreground uppercase transition-transform hover:-translate-y-0.5 md:inline-flex"
+              className="bg-primary text-primary-foreground hidden rounded-full px-5 py-2.5 text-[0.7rem] font-medium tracking-[0.16em] uppercase transition-transform hover:-translate-y-0.5 md:inline-flex"
             >
               Join us
             </Link>
 
-          <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2">
               <div className="relative">
                 <button className="p-2">
                   <span className="sr-only">Shopping cart</span>

@@ -339,6 +339,23 @@ export default function Navbar() {
                     </div>
                   </NavigationMenuContent>
                 </NavigationMenuItem>
+                <NavigationMenuItem>
+                  <NavigationMenuLink asChild>
+                    <Link
+                      href="/january-2027"
+                      className={`bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-4 py-2 text-sm font-medium transition-colors ${
+                        isActive("/january-2027")
+                          ? "ring-primary/40 ring-2"
+                          : ""
+                      }`}
+                      aria-current={
+                        isActive("/january-2027") ? "page" : undefined
+                      }
+                    >
+                      January 2027
+                    </Link>
+                  </NavigationMenuLink>
+                </NavigationMenuItem>
               </NavigationMenuList>
             </NavigationMenu>
           </div>
@@ -651,6 +668,20 @@ export default function Navbar() {
             id="mobile-menu"
           >
             <div className="space-y-4 py-3">
+              <div className="space-y-2">
+                <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
+                  January 2027
+                </h3>
+                <Link
+                  href="/january-2027"
+                  className="bg-primary text-primary-foreground mx-2 block rounded-md px-4 py-2 text-sm font-medium"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  aria-current={isActive("/january-2027") ? "page" : undefined}
+                >
+                  Three live certificate cohorts — early bird ₹1,999
+                </Link>
+              </div>
+
               <div className="space-y-2">
                 <h3 className="text-muted-foreground px-4 text-sm font-semibold tracking-wider uppercase">
                   Home
