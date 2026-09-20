@@ -98,7 +98,7 @@ function AppSidebar() {
     <Sidebar collapsible="icon" className="top-16 h-[calc(100svh-4rem)]">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Course Types</SidebarGroupLabel>
+          <SidebarGroupLabel className="tracking-[0.2em] uppercase">Course Types</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {courseTypes.map((item) => {
@@ -137,12 +137,12 @@ export default function CoursesLayout({
       <div className="flex min-h-screen w-full overflow-x-clip">
         <AppSidebar />
         <main className="min-w-0 flex-1">
-          <div className="border-border bg-secondary/50 border-b shadow-sm backdrop-blur-md">
+          <div className="border-border bg-background/80 border-b border-dashed backdrop-blur-md">
             <div className="flex h-14 items-center gap-2 px-3 sm:h-16 sm:px-4">
               <SidebarTrigger className="text-foreground hover:border-lavender-200 hover:bg-accent rounded-xl border border-transparent" />
               <div className="min-w-0">
                 <Link href="/courses">
-                  <h1 className="font-display text-foreground truncate text-xl font-semibold tracking-tight sm:text-2xl">
+                  <h1 className="text-foreground/70 truncate text-[0.72rem] font-semibold tracking-[0.22em] uppercase">
                     Courses
                   </h1>
                 </Link>

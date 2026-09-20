@@ -7,13 +7,17 @@ import ServerNavbar from "./ServerNavbar";
 
 export default function ClientNavbar() {
   const [isHydrated, setIsHydrated] = useState(false);
+  const clerkConfigured = Boolean(
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
+  );
 
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // Always show server navbar during SSR and initial hydration
-  if (!isHydrated) {
+  // Without Clerk keys there is no ClerkProvider, so the interactive navbar
+  // (which uses Clerk components) cannot mount. Keep the server navbar.
+  if (!isHydrated || !clerkConfigured) {
     return <ServerNavbar />;
   }
 

@@ -13,13 +13,13 @@ export const metadata = {
 
 export default function TOC() {
   return (
-    <div className="mx-auto max-w-4xl bg-white p-6">
+    <div className="container max-w-3xl py-16">
       {/* Terms and Conditions Section */}
       <section className="mb-12">
-        <h1 className="mb-6 text-3xl font-bold text-gray-900">
+        <h1 className="font-display mb-8 text-4xl tracking-tight text-foreground">
           Terms and Conditions
         </h1>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           These Terms and Conditions (&quot;Terms&quot;) outline the rules and
           regulations for the use of The Mind Point&apos;s website, located at
           www.themindpoint.org (the &quot;Website&quot;), and the services
@@ -31,21 +31,21 @@ export default function TOC() {
           part of these Terms, you must not access the Website or use the
           Services.
         </p>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           The Mind Point reserves the right to update or modify these Terms at
           any time without prior notice. Your continued use of the Website or
           Services after any changes constitutes acceptance of those changes. It
           is your responsibility to review these Terms periodically.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           1. Terminology and Definitions
         </h2>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           The following terminology applies to these Terms and all related
           agreements:
         </p>
-        <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+        <ul className="mb-6 ml-4 list-inside list-disc text-foreground/80">
           <li>
             &quot;Client,&quot; &quot;You,&quot; and &quot;Your&quot; refer to
             you, the individual accessing the Website, enrolling in Services, or
@@ -67,27 +67,27 @@ export default function TOC() {
             and The Mind Point.
           </li>
         </ul>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           All terms relate to the offer, acceptance, and payment necessary to
           provide our Services in accordance with applicable laws.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           2. License and Intellectual Property
         </h2>
-        <p className="mb-4 leading-relaxed text-gray-700">
+        <p className="mb-4 leading-relaxed text-foreground/80">
           Unless otherwise stated, The Mind Point and/or its licensors own all
           intellectual property rights to the materials on the Website and in
           the Services, including but not limited to course content, recordings,
           diplomas, certificates, and any related documents. All intellectual
           property rights are reserved.
         </p>
-        <p className="mb-4 leading-relaxed text-gray-700">
+        <p className="mb-4 leading-relaxed text-foreground/80">
           You may access and use materials from the Website and Services for
           your personal, non-commercial use only, subject to the following
           restrictions:
         </p>
-        <ul className="mb-4 ml-4 list-inside list-disc text-gray-700">
+        <ul className="mb-4 ml-4 list-inside list-disc text-foreground/80">
           <li>
             You must not republish, sell, rent, sub-license, reproduce,
             duplicate, copy, or redistribute any materials from the Website or
@@ -106,17 +106,17 @@ export default function TOC() {
             will be granted under any circumstances.
           </li>
         </ul>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           Violation of these restrictions may result in immediate termination of
           access to Services, forfeiture of any payments made, and potential
           legal action, including claims for damages.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           3. Professional Enhancement Disclaimer
         </h2>
         <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
-          <p className="leading-relaxed text-gray-700">
+          <p className="leading-relaxed text-foreground/80">
             All Services offered by The Mind Point are intended solely for
             professional enhancement and skill development. They are not
             equivalent to formal educational degrees, qualifications, or
@@ -133,25 +133,25 @@ export default function TOC() {
           </p>
         </div>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           4. Enrollment, Registration, and Course Policies
         </h2>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="mb-3 text-xl font-semibold text-foreground">
           Registration Confirmation
         </h3>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           Once you register for any Service, your enrollment is confirmed and
           final. By registering, you confirm that you have reviewed and accepted
           all details, including timings, dates, faculty, and content, and waive
           any right to dispute them later.
         </p>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="mb-3 text-xl font-semibold text-foreground">
           Course Timings, Dates, and Schedules
         </h3>
         <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
-          <p className="mb-4 leading-relaxed text-gray-700">
+          <p className="mb-4 leading-relaxed text-foreground/80">
             No adjustments, rescheduling, postponements, or modifications to
             course timings, dates, or schedules will be made under any
             circumstances, including but not limited to personal conflicts,
@@ -163,7 +163,7 @@ export default function TOC() {
             the next available batch may be permitted only under the following
             strict conditions:
           </p>
-          <ul className="mb-4 ml-4 list-inside list-disc text-gray-700">
+          <ul className="mb-4 ml-4 list-inside list-disc text-foreground/80">
             <li>The original course batch has not yet started; or</li>
             <li>
               Extreme circumstances are demonstrated with verifiable proof, such
@@ -176,14 +176,14 @@ export default function TOC() {
               dissatisfaction, will qualify.
             </li>
           </ul>
-          <p className="mb-4 leading-relaxed text-gray-700">
+          <p className="mb-4 leading-relaxed text-foreground/80">
             Transfers are subject to availability in the next batch, and no
             guarantees are made regarding the timing, faculty, format, or
             availability of future batches. If no suitable batch is available
             within a reasonable timeframe (as determined by The Mind Point), no
             transfer or refund will be provided.
           </p>
-          <p className="leading-relaxed text-gray-700">
+          <p className="leading-relaxed text-foreground/80">
             Students who attend even one lecture (or partial session) are
             ineligible for any transfer, regardless of complaints about faculty,
             timings, content, or other factors. Attendance constitutes full
@@ -194,11 +194,11 @@ export default function TOC() {
           </p>
         </div>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="mb-3 text-xl font-semibold text-foreground">
           Exams and Guidelines
         </h3>
         <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
-          <p className="leading-relaxed text-gray-700">
+          <p className="leading-relaxed text-foreground/80">
             All exams, assessment patterns, grading criteria, and guidelines set
             by the respective faculty or The Mind Point must be followed
             strictly and without exception. No adjustments, accommodations,
@@ -214,10 +214,10 @@ export default function TOC() {
           </p>
         </div>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="mb-3 text-xl font-semibold text-foreground">
           Recording Access
         </h3>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           Access to recordings for all courses, internships, diplomas,
           workshops, and pre-recorded Services is strictly limited to 3 months
           from the date of enrollment or initial access grant. This access is
@@ -226,10 +226,10 @@ export default function TOC() {
           extensions, even for medical or personal reasons, will be considered.
         </p>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="mb-3 text-xl font-semibold text-foreground">
           User-Generated Content
         </h3>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           Certain Services may allow you to post comments, feedback, or other
           content. Such content does not reflect the views of The Mind Point,
           and we are not liable for it. We reserve the right to remove any
@@ -238,14 +238,14 @@ export default function TOC() {
           content may lead to termination of Services and legal action.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           5. Terms for Therapy and Supervised Sessions
         </h2>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="mb-3 text-xl font-semibold text-foreground">
           Scheduling and Adjustments
         </h3>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           Appointments for therapy sessions (individual, couples/family, group)
           and supervised sessions (individual, group, case discussion) are fixed
           upon booking and confirmation. No adjustments, rescheduling,
@@ -257,10 +257,10 @@ export default function TOC() {
           partial attendance does not entitle you to extensions or credits.
         </p>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="mb-3 text-xl font-semibold text-foreground">
           Conduct During Sessions
         </h3>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           Participants must adhere to all guidelines provided by the facilitator
           or faculty. Disruptive behavior, including but not limited to
           interruptions, non-participation, or technical issues on your end, may
@@ -268,10 +268,10 @@ export default function TOC() {
           rescheduling.
         </p>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="mb-3 text-xl font-semibold text-foreground">
           Confidentiality and Liability
         </h3>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           All sessions are conducted with the expectation of mutual
           confidentiality. However, The Mind Point reserves the right to
           disclose information if required by law or in cases of imminent harm.
@@ -279,26 +279,26 @@ export default function TOC() {
           which are provided for enhancement purposes only.
         </p>
 
-        <h3 className="mb-3 text-xl font-semibold text-gray-800">
+        <h3 className="mb-3 text-xl font-semibold text-foreground">
           Hypothetical Client Participation
         </h3>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           Where applicable, participation as a hypothetical client in supervised
           sessions is mandatory if assigned and must be completed respectfully
           and in full compliance with instructions. Failure to participate may
           result in disqualification from the Service.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           6. Conduct and Respectful Treatment
         </h2>
-        <p className="mb-4 leading-relaxed text-gray-700">
+        <p className="mb-4 leading-relaxed text-foreground/80">
           All participants in Services must treat faculties, staff, fellow
           participants, and representatives of The Mind Point with the utmost
           respect and professionalism at all times. This includes but is not
           limited to:
         </p>
-        <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+        <ul className="mb-6 ml-4 list-inside list-disc text-foreground/80">
           <li>
             Refraining from harassment, discrimination, verbal abuse, or any
             form of disrespectful communication (e.g., complaints about faculty
@@ -314,17 +314,17 @@ export default function TOC() {
             immediate termination of Services without refund.
           </li>
         </ul>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           Violation of this policy may result in suspension or permanent ban
           from all Services, forfeiture of fees, and potential reporting to
           relevant authorities if warranted. The Mind Point&apos;s decision on
           conduct violations is final and non-appealable.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           7. Certificates, Letters of Recommendation (LOR), and Remakes
         </h2>
-        <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+        <ul className="mb-6 ml-4 list-inside list-disc text-foreground/80">
           <li>
             Certificates and diplomas are issued only upon successful completion
             of the Service and meeting all requirements, as determined solely by
@@ -345,14 +345,14 @@ export default function TOC() {
           </li>
         </ul>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           8. Hyperlinking to Our Content
         </h2>
-        <p className="mb-2 leading-relaxed text-gray-700">
+        <p className="mb-2 leading-relaxed text-foreground/80">
           Approved organizations may hyperlink to our Website under the
           following conditions:
         </p>
-        <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+        <ul className="mb-6 ml-4 list-inside list-disc text-foreground/80">
           <li>
             Use of our corporate name, URL, or other appropriate description
             that fits the context.
@@ -361,26 +361,26 @@ export default function TOC() {
             No use of our logo or artwork without a trademark license agreement.
           </li>
         </ul>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           We reserve the right to request removal of any link at our discretion.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           9. Content Liability and External Links
         </h2>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           We are not responsible for content on external websites linked to or
           from our Website. Links do not imply endorsement, and we disclaim
           liability for any loss or damage arising from such links.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           10. Reservation of Rights
         </h2>
-        <p className="mb-4 leading-relaxed text-gray-700">
+        <p className="mb-4 leading-relaxed text-foreground/80">
           We reserve the right to:
         </p>
-        <ul className="mb-6 ml-4 list-inside list-disc text-gray-700">
+        <ul className="mb-6 ml-4 list-inside list-disc text-foreground/80">
           <li>Request removal of any unauthorized links or content.</li>
           <li>
             Terminate access to the Website or Services for any user violating
@@ -392,24 +392,24 @@ export default function TOC() {
           </li>
         </ul>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           11. Removal of Links from Our Website
         </h2>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           If you identify an offensive link on our Website, contact us at
           themindpoint06@gmail.com. We will consider removal requests but are
           not obligated to respond or act.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           12. Disclaimer and Limitation of Liability
         </h2>
-        <p className="mb-4 leading-relaxed text-gray-700">
+        <p className="mb-4 leading-relaxed text-foreground/80">
           To the fullest extent permitted by law, we exclude all
           representations, warranties, and conditions relating to the Website
           and Services. Nothing in these Terms will:
         </p>
-        <ul className="mb-4 ml-4 list-inside list-disc text-gray-700">
+        <ul className="mb-4 ml-4 list-inside list-disc text-foreground/80">
           <li>
             Limit or exclude liability for death or personal injury caused by
             negligence.
@@ -420,7 +420,7 @@ export default function TOC() {
           </li>
           <li>Limit liabilities not excludable under applicable law.</li>
         </ul>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           The Mind Point will not be liable for any direct, indirect,
           incidental, consequential, or special damages arising from use of the
           Website or Services, including but not limited to loss of data,
@@ -430,23 +430,23 @@ export default function TOC() {
           participation are at your sole risk.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           13. Governing Law
         </h2>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           These Terms shall be governed by and construed in accordance with the
           laws of India. Any disputes arising from these Terms or use of the
           Website/Services shall be subject to the exclusive jurisdiction of the
           courts in Pune, Maharashtra, India.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-gray-900">
+        <h2 className="mb-4 text-2xl font-semibold text-foreground">
           14. Contact Information
         </h2>
-        <p className="mb-6 leading-relaxed text-gray-700">
+        <p className="mb-6 leading-relaxed text-foreground/80">
           For questions about these Terms, contact us at:
         </p>
-        <div className="mb-6 ml-4 text-gray-700">
+        <div className="mb-6 ml-4 text-foreground/80">
           <p>
             <strong>The Mind Point</strong>
           </p>

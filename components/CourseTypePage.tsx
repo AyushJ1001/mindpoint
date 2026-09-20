@@ -25,6 +25,7 @@ import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { getEnrolledCount } from "@/lib/course-enrollment";
 import { courseTypeContent } from "@/lib/course-content-data";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
 
 // Type for courses with sessions (therapy)
 type TherapyCourse = CourseLike & {
@@ -250,7 +251,7 @@ const CourseGroupCard = ({
 
   return (
     <Card
-      className="group border-lavender-200 bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="group border-border bg-card @container relative h-full cursor-pointer overflow-hidden rounded border shadow-[0_20px_50px_-34px_rgba(19,46,43,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_40px_70px_-46px_rgba(19,46,43,0.6)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
@@ -646,7 +647,7 @@ const CourseCard = ({
 
   return (
     <Card
-      className="group border-lavender-200 bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(124,111,155,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(124,111,155,0.95)]"
+      className="group border-border bg-card @container relative h-full cursor-pointer overflow-hidden rounded border shadow-[0_20px_50px_-34px_rgba(19,46,43,0.4)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_40px_70px_-46px_rgba(19,46,43,0.6)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
@@ -814,14 +815,14 @@ export default function CourseTypePage({
 
   return (
     <div className="min-h-screen">
-      <section className="section-padding">
-        <div className="container mx-auto max-w-4xl">
+      <section className="py-14 sm:py-20">
+        <div className="container max-w-4xl">
           <ScrollReveal>
-            <p className="text-primary text-sm font-semibold tracking-wide uppercase">
-              {content.tagline}
-            </p>
-            <h1 className="calm-catalog-hero-title mt-2">{content.title}</h1>
-            <p className="calm-catalog-hero-lead mt-4 max-w-2xl">
+            <p className={eyebrowVariants()}>{content.tagline}</p>
+            <h1 className="font-display mt-4 text-4xl leading-[1.05] tracking-[-0.03em] sm:text-6xl">
+              {content.title}
+            </h1>
+            <p className="text-muted-foreground mt-5 max-w-2xl text-lg">
               {content.description}
             </p>
           </ScrollReveal>

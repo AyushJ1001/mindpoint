@@ -1,22 +1,13 @@
-import { Separator } from "@/components/ui/separator";
-import {
-  Globe,
-  Users,
-  BookOpen,
-  Award,
-  Heart,
-  Target,
-  Lightbulb,
-  CheckCircle,
-} from "lucide-react";
+import { PageHero } from "@/components/coastal/PageHero";
+import { ctaVariants } from "@/components/coastal/cta";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
+import Link from "next/link";
 import Image from "next/image";
-import Script from "next/script";
-import { LeafAccent } from "@/components/illustrations";
 
 export const metadata = {
   title: "About Us - The Mind Point",
   description:
-    "Learn about The Mind Point's mission to transform mental health education through compassionate, evidence-based programs and professional development courses.",
+    "Learn about The Mind Point's mission to transform mental health education through compassionate, evidence-based programs and professional development.",
   keywords:
     "about us, mental health education, psychology courses, professional development, The Mind Point mission",
   openGraph: {
@@ -25,308 +16,131 @@ export const metadata = {
       "Learn about The Mind Point's mission to transform mental health education.",
     type: "website",
   },
+  alternates: { canonical: "/about" },
 };
 
-// Structured data for the organization
-const aboutStructuredData = {
-  "@context": "https://schema.org",
-  "@type": "EducationalOrganization",
-  name: "The Mind Point",
-  description:
-    "A platform for mental health education and support, offering comprehensive courses in psychology, counseling, and professional development.",
-  url: "https://themindpoint.org",
-  logo: "https://themindpoint.org/logo.png",
-  foundingDate: "2020",
-  address: {
-    "@type": "PostalAddress",
-    addressCountry: "IN",
-  },
-  contactPoint: {
-    "@type": "ContactPoint",
-    contactType: "customer service",
-    availableLanguage: "English",
-  },
-  hasOfferCatalog: {
-    "@type": "OfferCatalog",
-    name: "Mental Health Education Courses",
-    itemListElement: [
-      {
-        "@type": "Offer",
-        itemOffered: {
-          "@type": "Course",
-          name: "Certificate Courses",
-          description:
-            "Professional certification programs in psychology and mental health",
-        },
-      },
-      {
-        "@type": "Offer",
-        itemOffered: {
-          "@type": "Course",
-          name: "Diploma Programs",
-          description:
-            "Comprehensive diploma courses for in-depth knowledge and expertise",
-        },
-      },
-      {
-        "@type": "Offer",
-        itemOffered: {
-          "@type": "Course",
-          name: "Therapy Sessions",
-          description:
-            "Professional therapy and counseling services for mental wellness",
-        },
-      },
-    ],
-  },
-  award: ["MSME", "IAOTH", "ISO 9001:2015"],
-  numberOfEmployees: "50+",
-  knowsAbout: [
-    "Mental Health Education",
-    "Psychology",
-    "Counseling",
-    "Therapy",
-    "Professional Development",
-    "Online Learning",
+const TEACH = [
+  [
+    "Evidence, not vibes",
+    "Every method we teach has a research base, and we say plainly where the evidence is thin.",
   ],
-};
-
-const SERVICES = [
-  {
-    icon: Award,
-    title: "Certificate & Diploma Programs",
-    description:
-      "Comprehensive programs in counselling, therapy, and psychology-related disciplines",
-  },
-  {
-    icon: Users,
-    title: "Live Online Classes",
-    description:
-      "Interactive sessions led by trained mental health professionals",
-  },
-  {
-    icon: BookOpen,
-    title: "Self-Paced Courses",
-    description:
-      "Pre-recorded courses for flexible, independent learning",
-  },
-  {
-    icon: Target,
-    title: "Supervised Internships",
-    description:
-      "Practical experience to help students apply theory to practice",
-  },
-  {
-    icon: Lightbulb,
-    title: "Workshops & Masterclasses",
-    description: "Explore therapeutic tools, trends, and innovations",
-  },
-  {
-    icon: Heart,
-    title: "Personal Growth",
-    description:
-      "Programs focused on healing and personal development",
-  },
+  [
+    "Practice, not just theory",
+    "Live cohorts and supervision put the skills in your hands, not just your notes.",
+  ],
+  [
+    "Honest certificates",
+    "Completion, never a degree or licence — and every certificate is publicly verifiable.",
+  ],
+  [
+    "Small and human",
+    "Cohorts stay small so teaching stays personal. You are never a number here.",
+  ],
+  [
+    "Built for India",
+    "Paced for real life, phone-first, and priced for where our students actually are.",
+  ],
+  [
+    "Support that shows up",
+    "Faculty answer within 48–72 hours on working days. Real people, not a bot.",
+  ],
 ];
 
-const WHY_CHOOSE = [
-  { icon: Globe, text: "Certificates accepted globally" },
-  { icon: BookOpen, text: "Practical Application along with Theory" },
-  { icon: Users, text: "Personal Attention" },
-  { icon: Target, text: "Job Opportunities" },
-  { icon: Award, text: "Affordable Prices & Discount Offers" },
-  { icon: Heart, text: "Case Studies" },
-  { icon: Lightbulb, text: "Detailed Study Material" },
-  { icon: CheckCircle, text: "Recording for the Lectures" },
-];
-
-export default function About() {
+export default function AboutPage() {
   return (
     <>
-      <Script
-        id="about-structured-data"
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(aboutStructuredData),
-        }}
+      <PageHero
+        eyebrow="About"
+        title={
+          <>
+            We teach the mind with{" "}
+            <em className="italic">warmth and rigour.</em>
+          </>
+        }
+        lead="The Mind Point is a learning home for psychology students, career changers and practising therapists in India."
+        image="/coastal/shore.jpg"
       />
-      <div className="min-h-screen">
-        {/* Hero Section – community.jpg as subtle backdrop */}
-        <section className="section-padding relative overflow-hidden from-primary/5 via-background to-accent/5 bg-gradient-to-br">
-          <Image
-            src="/illustrations/community.jpg"
-            alt=""
-            fill
-            className="object-cover opacity-[0.08] mix-blend-multiply dark:mix-blend-screen dark:opacity-[0.05]"
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-background" aria-hidden="true" />
-          <div className="relative z-10 container">
-            <div className="mx-auto max-w-4xl text-center">
-              <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-                About The Mind Point
-              </h1>
-              <p className="text-muted-foreground text-xl leading-relaxed">
-                We&apos;re more than just an organization — we&apos;re a
-                compassionate, curious, and creative community committed to
-                transforming the way mental health education is experienced.
-              </p>
+
+      <section className="container grid gap-12 pb-20 lg:grid-cols-2">
+        <div>
+          <span className={eyebrowVariants()}>Why we exist</span>
+          <h2 className="font-display mt-4 text-3xl leading-tight tracking-tight sm:text-5xl">
+            A learning home for people who take mental health seriously — and
+            gently.
+          </h2>
+        </div>
+        <div>
+          <p className="text-muted-foreground text-lg leading-8">
+            The Mind Point began as a small practice and a big frustration: too
+            much mental-health training was either cold and clinical, or warm
+            but vague. We wanted both rigour and humanity in one place.
+          </p>
+          <p className="text-muted-foreground mt-4 text-lg leading-8">
+            Today we run live cohorts, self-paced courses and therapy for
+            psychology students, career changers and practising therapists
+            across India.
+          </p>
+        </div>
+      </section>
+
+      <hr className="border-border container border-0 border-t border-dashed" />
+
+      <section className="container py-20 sm:py-24">
+        <span className={eyebrowVariants()}>How we teach</span>
+        <h2 className="font-display mt-4 mb-10 text-3xl tracking-tight sm:text-5xl">
+          Four things we refuse to compromise on.
+        </h2>
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
+          {TEACH.map(([title, copy]) => (
+            <div
+              key={title}
+              className="border-border border-t border-dashed pt-4"
+            >
+              <b className="font-display block text-xl font-medium">{title}</b>
+              <p className="text-muted-foreground mt-1 text-sm">{copy}</p>
             </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="bg-secondary py-20 sm:py-24">
+        <div className="container grid items-center gap-12 lg:grid-cols-2">
+          <div className="relative aspect-[4/3] overflow-hidden rounded">
+            <Image
+              src="/coastal/wave.jpg"
+              alt=""
+              fill
+              sizes="(min-width: 1024px) 50vw, 100vw"
+              className="object-cover"
+            />
           </div>
-        </section>
-
-        {/* Main Content */}
-        <section className="section-padding">
-          <div className="container max-w-6xl">
-            {/* Mission – text + illustration, no stat cards */}
-            <div className="mb-16 grid items-center gap-12 lg:grid-cols-2">
-              <div>
-                <h2 className="mb-6 text-3xl font-bold">Our Mission</h2>
-                <p className="text-muted-foreground mb-6 leading-relaxed">
-                  We specialize in online psychological education, offering a
-                  rich blend of certificate courses, diploma programs,
-                  workshops, internships, and training experiences that are
-                  rooted in both scientific rigor and human warmth.
-                </p>
-                <p className="text-muted-foreground leading-relaxed">
-                  Our platform is designed to be inclusive, accessible, and
-                  deeply engaging — where learning feels like a meaningful
-                  conversation over a cup of tea.
-                </p>
-
-                {/* Stats as simple inline items, not cards */}
-                <div className="mt-8 flex flex-wrap gap-8">
-                  <div>
-                    <p className="text-foreground text-3xl font-bold">10000+</p>
-                    <p className="text-muted-foreground text-sm">
-                      Students enrolled
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-foreground text-3xl font-bold">50+</p>
-                    <p className="text-muted-foreground text-sm">
-                      Courses Available
-                    </p>
-                  </div>
-                </div>
-              </div>
-              <div />
-              {/* Community illustration moved to hero backdrop */}
-            </div>
-
-            <Separator className="my-16" />
-
-            {/* What We Do – alternating feature rows instead of card grid */}
-            <div className="mb-16">
-              <h2 className="mb-12 text-center text-3xl font-bold">
-                What We Do
-              </h2>
-              <div className="mx-auto max-w-3xl space-y-8">
-                {SERVICES.map((service, index) => {
-                  const isReversed = index % 2 !== 0;
-                  return (
-                    <div
-                      key={index}
-                      className={`flex flex-col gap-4 sm:flex-row sm:items-start sm:gap-6 ${
-                        isReversed ? "sm:flex-row-reverse" : ""
-                      }`}
-                    >
-                      <div className="bg-primary/8 flex h-12 w-12 shrink-0 items-center justify-center rounded-full">
-                        <service.icon className="text-primary h-6 w-6" />
-                      </div>
-                      <div className={isReversed ? "sm:text-right" : ""}>
-                        <h3 className="text-foreground font-semibold">
-                          {service.title}
-                        </h3>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                          {service.description}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            <Separator className="my-16" />
-
-            {/* Core Beliefs */}
-            <div className="mb-16">
-              <h2 className="mb-12 text-center text-3xl font-bold">
-                Our Core Beliefs
-              </h2>
-              <div className="mx-auto max-w-3xl space-y-6">
-                {[
-                  "Mental health education should be accessible and joyful",
-                  "Learning should feel safe, engaging, and inspiring",
-                  "Psychology isn't just something to study — it's something to live, explore, and celebrate",
-                ].map((belief, index) => (
-                  <div key={index} className="flex items-start gap-4">
-                    <CheckCircle className="text-primary mt-1 h-6 w-6 flex-shrink-0" />
-                    <p className="text-muted-foreground">{belief}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            <Separator className="my-16" />
-
-            {/* Accreditations – keep images but no card wrappers */}
-            <div className="mb-16">
-              <h2 className="mb-12 text-center text-3xl font-bold">
-                Our Accreditations
-              </h2>
-              <div className="flex flex-wrap items-center justify-center gap-12">
-                {[
-                  { name: "MSME", image: "/accreditions/msme.avif" },
-                  { name: "IAOTH", image: "/accreditions/iaoth.avif" },
-                  { name: "ISO 9001:2015", image: "/accreditions/iso.avif" },
-                ].map((accreditation, index) => (
-                  <div
-                    key={index}
-                    className="flex flex-col items-center gap-4"
-                  >
-                    <Image
-                      src={accreditation.image}
-                      alt={`${accreditation.name} Logo`}
-                      width={160}
-                      height={80}
-                      className="object-contain"
-                    />
-                    <p className="text-muted-foreground text-sm font-medium">
-                      {accreditation.name}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Why Choose Us – icon items in clean grid, no cards */}
-            <div className="relative rounded-2xl bg-gradient-to-br from-primary/5 to-accent/5 p-8 md:p-12">
-              <h2 className="mb-12 text-center text-3xl font-bold">
-                Why Choose The Mind Point?
-              </h2>
-              <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                {WHY_CHOOSE.map((feature, index) => (
-                  <div key={index} className="text-center">
-                    <div className="bg-primary/8 mb-4 inline-flex h-14 w-14 items-center justify-center rounded-full">
-                      <feature.icon className="text-primary h-7 w-7" />
-                    </div>
-                    <p className="text-foreground font-medium">
-                      {feature.text}
-                    </p>
-                  </div>
-                ))}
-              </div>
-
-              {/* Decorative accents */}
-              <LeafAccent className="pointer-events-none absolute top-4 right-6 hidden h-10 w-10 rotate-[20deg] opacity-40 lg:block" />
-              <LeafAccent className="pointer-events-none absolute bottom-4 left-6 hidden h-8 w-8 -rotate-[30deg] opacity-30 lg:block" />
-            </div>
-
+          <div>
+            <span className={eyebrowVariants()}>Our promise on honesty</span>
+            <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-4xl">
+              No accreditation claims. No career guarantees.
+            </h2>
+            <p className="text-muted-foreground mt-4">
+              We removed every claim we couldn&apos;t document. What remains is
+              what we can stand behind: real teaching, real practice, and
+              certificates that state only what you completed.
+            </p>
+            <Link href="/programs" className={`mt-6 ${ctaVariants()}`}>
+              See our programs →
+            </Link>
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
+
+      <section className="container py-16">
+        <div className="border-border flex flex-wrap items-center justify-between gap-4 border-t border-dashed pt-6 text-[0.72rem] font-semibold tracking-[0.2em] uppercase">
+          <Link href="/programs" className="text-primary">
+            Next · Programs →
+          </Link>
+          <Link href="/join" className="text-primary">
+            Join us →
+          </Link>
+        </div>
+      </section>
     </>
   );
 }

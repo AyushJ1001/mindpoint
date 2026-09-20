@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Resources — The Mind Point</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400;1,9..144,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="pages.css" />
+</head>
+<body>
+<header id="nav" class="solid">
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="index.html"><img src="../../public/logo.png" alt="The Mind Point" /><b>THE MIND POINT</b></a>
+      <div class="menu">
+        <a href="about.html">About</a>
+        <a href="programs.html">Programs</a>
+        <a href="resources.html" style="border-color:var(--teal)">Resources</a>
+        <a href="community.html">Community</a>
+      </div>
+      <a class="btn" href="join.html">Join us</a>
+    </nav>
+  </div>
+</header>
+<main>  <section class="page-hero">
+    <div class="wrap grid">
+      <div class="rv">
+        <span class="eyebrow">Resources</span>
+        <h1 style="margin-top:1rem">Free tools to start <em>before you commit.</em></h1>
+        <p class="lead">Guides, downloads and one full recorded masterclass — no card required.</p>
+      </div>
+      <div class="img rv"><img src="../../public/coastal/wave.jpg" alt="" /></div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap capture rv" style="text-align:left">
+      <div class="callout" style="max-width:680px">
+        <span class="eyebrow">Free masterclass</span>
+        <h2 style="margin:.6rem 0;font-size:clamp(1.6rem,3vw,2.4rem)">Watch one full session, free.</h2>
+        <p>No card, no pressure — just a real taste of how we teach.</p>
+        <form style="display:flex;gap:.6rem;flex-wrap:wrap;margin-top:1rem" onsubmit="event.preventDefault();this.querySelector('input').value='';this.querySelector('button').textContent='Sent ✓'">
+          <input type="email" placeholder="you@email.com" aria-label="Email" required style="flex:1;min-width:240px;padding:1rem 1.2rem;border-radius:999px;border:1.5px solid var(--teal);background:var(--paper);font-family:var(--body);font-size:1rem;color:var(--ink)" />
+          <button class="btn" type="submit">Send it to me</button>
+        </form>
+      </div>
+    </div>
+  </section>
+  <section>
+    <div class="wrap">
+      <div class="head rv"><div><span class="eyebrow">Guides &amp; tools</span><h2 style="margin-top:1rem">Start before you commit.</h2></div><p>Free resources we update as we teach.</p></div>
+      <div class="rows rv">
+        <a class="row" href="#"><div><h3>Understanding overthinking</h3><div class="meta">A short guide to why the mind loops, and what actually helps.</div></div><span class="tagline">Read</span></a>
+        <a class="row" href="#"><div><h3>Choosing a therapy path</h3><div class="meta">What to look for in a programme — and what to be wary of.</div></div><span class="tagline">Read</span></a>
+        <a class="row" href="#"><div><h3>CBT tool pack</h3><div class="meta">Printable exercises for anxiety and overthinking.</div></div><span class="tagline">Download</span></a>
+        <a class="row" href="#"><div><h3>How to verify a certificate</h3><div class="meta">Check any The Mind Point certificate in seconds.</div></div><span class="tagline">Verify</span></a>
+      </div>
+    </div>
+  </section>
+  <section class="strip">
+    <div class="wrap grid2 rv">
+      <div>
+        <span class="eyebrow">Not sure where to start?</span>
+        <h2 style="margin:1rem 0">Tell us where you are, we'll point the way.</h2>
+        <p style="color:var(--muted)">Answer one line on the home page and we'll recommend a next step. No form, no sales call.</p>
+        <a class="btn" href="index.html#doors" style="margin-top:1.4rem">Find your path <span class="arw">→</span></a>
+      </div>
+      <div class="img-frame"><img src="../../public/coastal/wave.jpg" alt="" /></div>
+    </div>
+  </section>
+  <section style="padding-top:0;padding-bottom:5rem">
+    <div class="wrap pagenav rv"><a href="community.html">Next · Community →</a><a href="join.html">Join us →</a></div>
+  </section>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div class="brand">
+        <img src="../../public/logo.png" alt="" style="width:48px;margin-bottom:.7rem" />
+        <b>THE MIND POINT</b>
+        <p style="color:rgba(248,246,240,.65);max-width:30ch;margin-top:.7rem">Practical tools. Compassionate guidance. A more mindful tomorrow.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul><li><a href="programs.html">Programs</a></li><li><a href="about.html">About</a></li><li><a href="resources.html">Resources</a></li><li><a href="#">Verify a certificate</a></li></ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul><li><a href="community.html">Community</a></li><li><a href="#">Careers</a></li><li><a href="join.html">Contact</a></li></ul>
+      </div>
+      <div class="crisis">
+        <b>In crisis?</b> Please reach out to a local helpline or emergency service right away. This platform is education and support — not emergency care.
+      </div>
+    </div>
+    <div class="copy">
+      <span>© 2026 The Mind Point. All rights reserved.</span>
+      <span><a href="#">Terms</a> · <a href="#">Privacy</a> · <a href="#">Refunds</a></span>
+    </div>
+  </div>
+</footer>
+<script>
+  const io = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} }), {threshold:.12});
+  if (new URLSearchParams(location.search).has('static')) { document.querySelectorAll('.rv').forEach(el => el.classList.add('in')); }
+  document.querySelectorAll('.rv').forEach(el => io.observe(el));
+  const header = document.getElementById('nav');
+  addEventListener('scroll', () => header.classList.toggle('solid', scrollY > 40));
+</script>
+</body>
+</html>

@@ -24,12 +24,12 @@ export default function ServerNavbar() {
         <div className="flex flex-1 items-center justify-between space-x-2 md:justify-end">
           <div className="w-full flex-1 md:w-auto md:flex-none">
             <div className="hidden md:flex">
-              <nav className="flex items-center space-x-6 text-sm font-medium">
+              <nav className="flex items-center space-x-7 text-[0.72rem] font-medium tracking-[0.18em] uppercase">
                 <Link
-                  href="/courses"
+                  href="/programs"
                   className="text-foreground/70 transition-colors hover:text-primary"
                 >
-                  Courses
+                  Programs
                 </Link>
                 <Link
                   href="/about"
@@ -38,16 +38,16 @@ export default function ServerNavbar() {
                   About
                 </Link>
                 <Link
-                  href="/contact"
+                  href="/resources"
                   className="text-foreground/70 transition-colors hover:text-primary"
                 >
-                  Contact
+                  Resources
                 </Link>
                 <Link
-                  href="/careers"
+                  href="/community"
                   className="text-foreground/70 transition-colors hover:text-primary"
                 >
-                  Careers
+                  Community
                 </Link>
               </nav>
             </div>
@@ -55,7 +55,14 @@ export default function ServerNavbar() {
 
           <div className="flex items-center space-x-2">
             {/* Placeholder for cart and auth - will be hydrated client-side */}
-            <div className="flex items-center space-x-2">
+            <Link
+              href="/join"
+              className="hidden rounded-full bg-primary px-5 py-2.5 text-[0.7rem] font-medium tracking-[0.16em] text-primary-foreground uppercase transition-transform hover:-translate-y-0.5 md:inline-flex"
+            >
+              Join us
+            </Link>
+
+          <div className="flex items-center space-x-2">
               <div className="relative">
                 <button className="p-2">
                   <span className="sr-only">Shopping cart</span>

@@ -19,6 +19,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Trash2,
@@ -1132,29 +1133,30 @@ const CartContent = () => {
 
   if (isEmpty) {
     return (
-      <div className="container mx-auto py-16">
-        <div className="text-center">
-          <ShoppingCart className="text-muted-foreground mx-auto mb-4 h-16 w-16" />
-          <h2 className="mb-2 text-2xl font-semibold">Your cart is empty</h2>
-          <p className="text-muted-foreground mb-6">
-            Add some courses to get started with your learning journey.
-          </p>
-          <Button asChild>
-            <Link href="/courses">Browse Courses</Link>
-          </Button>
-        </div>
+      <div className="container py-20 text-center">
+        <span className={eyebrowVariants()}>Cart</span>
+        <h2 className="font-display mt-4 mb-3 text-4xl tracking-tight">
+          Your cart is empty.
+        </h2>
+        <p className="text-muted-foreground mb-8">
+          Add a programme to get started with your learning journey.
+        </p>
+        <Button asChild>
+          <Link href="/programs">Browse programs</Link>
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="container py-6 sm:py-8">
-      <div className="mb-6 sm:mb-8">
-        <h1 className="mb-2 text-4xl font-bold tracking-tight sm:text-5xl">
-          Shopping Cart
+    <div className="container py-10 sm:py-14">
+      <div className="mb-8 sm:mb-10">
+        <span className={eyebrowVariants()}>Cart</span>
+        <h1 className="font-display mt-3 text-4xl tracking-tight sm:text-5xl">
+          Review and check out.
         </h1>
-        <p className="text-muted-foreground">
-          Review your selected courses and proceed to checkout.
+        <p className="text-muted-foreground mt-3">
+          Review your selected programs and proceed to checkout.
         </p>
       </div>
 
@@ -1239,7 +1241,7 @@ const CartContent = () => {
                 return (
                   <div
                     key={item.id}
-                    className="border-lavender-200 bg-card rounded-xl border p-3 shadow-[0_10px_22px_-18px_rgba(124,111,155,0.7)]"
+                    className="border-lavender-200 bg-card rounded-xl border p-3 shadow-[0_10px_22px_-18px_rgba(19,46,43,0.7)]"
                   >
                     <div className="flex items-start gap-3">
                       <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md sm:h-16 sm:w-16">
@@ -1795,7 +1797,9 @@ const CartContent = () => {
                   className="h-7 px-2"
                   onClick={() => {
                     if (!navigator.clipboard) {
-                      toast.error(`Copy not supported. UPI ID: ${PAYMENT_UPI_ID}`);
+                      toast.error(
+                        `Copy not supported. UPI ID: ${PAYMENT_UPI_ID}`,
+                      );
                       return;
                     }
                     void navigator.clipboard

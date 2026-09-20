@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Phone, Mail, Clock } from "lucide-react";
 import { submitContactForm } from "@/lib/services/contact";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
 
 import { contactFormSchema } from "@/lib/utils";
 
@@ -70,15 +71,16 @@ export default function ContactClient() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="section-padding from-primary/5 via-background to-accent/5 bg-gradient-to-br">
+      <section className="py-14 sm:py-20">
         <div className="container">
-          <div className="mx-auto max-w-4xl text-center">
-            <h1 className="from-primary to-primary/70 mb-6 bg-gradient-to-r bg-clip-text text-4xl font-bold text-transparent md:text-5xl">
-              Contact Us
+          <div className="mx-auto max-w-3xl text-center">
+            <span className={eyebrowVariants()}>Contact</span>
+            <h1 className="font-display mt-4 mb-5 text-4xl tracking-[-0.03em] md:text-6xl">
+              We&apos;re here to <em className="italic">help.</em>
             </h1>
-            <p className="text-muted-foreground text-xl leading-relaxed">
-              Get in touch with us for any questions, support, or to learn more
-              about our programs
+            <p className="text-muted-foreground text-lg leading-relaxed sm:text-xl">
+              Questions, support, or just want to know more about our programs —
+              reach out and we&apos;ll reply within 48–72 hours on working days.
             </p>
           </div>
         </div>
@@ -91,7 +93,9 @@ export default function ContactClient() {
             {/* Contact Information – simple list items, no cards */}
             <div className="space-y-8">
               <div>
-                <h2 className="mb-6 text-3xl font-bold">Get In Touch</h2>
+                <h2 className="font-display mb-6 text-3xl tracking-tight">
+                  Get in touch
+                </h2>
                 <p className="text-muted-foreground mb-8 leading-relaxed">
                   We&apos;d love to hear from you. Send us a message and
                   we&apos;ll respond as soon as possible.

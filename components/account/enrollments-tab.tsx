@@ -38,7 +38,7 @@ export function EnrollmentsTab() {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-semibold">My Enrollments</h2>
+      <h2 className="font-display text-3xl tracking-tight">My Enrollments</h2>
       <div className="grid gap-4">
         {enrollments.map((enrollment) => {
           const course = enrollment.course;

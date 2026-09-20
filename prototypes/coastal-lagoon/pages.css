@@ -1,0 +1,50 @@
+/* Page-level components shared by the interior pages. Relies on styles.css tokens. */
+
+.page-hero{padding:8.5rem 0 3.5rem;position:relative}
+.page-hero .grid{display:grid;grid-template-columns:1.1fr .9fr;gap:clamp(2rem,6vw,5rem);align-items:center}
+.page-hero h1{font-size:clamp(2.4rem,5.6vw,4.6rem);letter-spacing:-.03em}
+.page-hero .lead{font-size:1.12rem;color:var(--muted);max-width:44ch;margin-top:1.2rem}
+.page-hero .img{border-radius:4px;overflow:hidden;aspect-ratio:5/4;box-shadow:0 40px 80px -50px rgba(19,46,43,.6)}
+.page-hero .img img{width:100%;height:100%;object-fit:cover}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:clamp(2rem,6vw,4rem);align-items:center}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:1.8rem}
+.stack{display:grid;gap:1.2rem}
+.img-frame{border-radius:4px;overflow:hidden;aspect-ratio:4/3}
+.img-frame img{width:100%;height:100%;object-fit:cover}
+
+.tabs{display:flex;gap:.6rem;flex-wrap:wrap;margin-bottom:2rem}
+.tab{border:1.5px solid var(--line);background:transparent;border-radius:999px;padding:.7rem 1.2rem;font-family:var(--body);font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;cursor:pointer;color:var(--teal);transition:background .25s,color .25s,border-color .25s}
+.tab.active{background:var(--teal);color:var(--ivory);border-color:var(--teal)}
+.panel{display:none}
+.panel.active{display:block;animation:fade .4s ease}
+
+.rows{border-top:1.5px solid var(--teal)}
+.row{display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:center;padding:1.5rem .3rem;border-bottom:1.5px dashed var(--line);transition:padding .25s,background .25s;text-decoration:none;color:inherit}
+.row:hover{padding-inline:1rem;background:var(--paper)}
+.row h3{font-size:1.35rem}
+.row .meta{color:var(--muted);font-size:.92rem;margin-top:.2rem}
+.row .tagline{color:var(--teal);font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;font-weight:600;white-space:nowrap}
+
+.form{display:grid;gap:1rem;max-width:560px}
+.field{display:grid;gap:.45rem}
+.field label{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--muted)}
+.field input,.field select,.field textarea{padding:.95rem 1.1rem;border:1.5px solid var(--line);background:var(--paper);border-radius:6px;font-family:var(--body);font-size:1rem;color:var(--ink)}
+.field textarea{min-height:140px;resize:vertical}
+.field input:focus,.field select:focus,.field textarea:focus{outline:2px solid var(--teal);outline-offset:2px}
+
+.callout{border:1.5px dashed var(--line);border-radius:6px;padding:1.6rem;background:var(--cream)}
+.callout h3{margin-bottom:.5rem}
+.callout p{color:var(--muted);margin:0}
+
+.strip{background:var(--cream);padding:clamp(3rem,7vw,5rem) 0}
+.strip .grid3{gap:2rem}
+
+.pagenav{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;border-top:1.5px dashed var(--line);padding-top:1.4rem;margin-top:3rem;font-size:.72rem;letter-spacing:.2em;text-transform:uppercase}
+.pagenav a{color:var(--teal);font-weight:600}
+
+@media(max-width:960px){
+  .page-hero{padding-top:7.5rem}
+  .page-hero .grid,.grid2,.grid3{grid-template-columns:1fr}
+  .row{grid-template-columns:1fr}
+}

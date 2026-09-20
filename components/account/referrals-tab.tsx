@@ -31,7 +31,7 @@ export function ReferralsTab() {
     return (
       <div className="space-y-4">
         <div>
-          <h2 className="mb-2 text-2xl font-semibold">My Referrals</h2>
+          <h2 className="font-display mb-2 text-3xl tracking-tight">My Referrals</h2>
           <p className="text-muted-foreground">
             Track the people who used your referral link and the rewards
             you&apos;ve earned.
@@ -52,7 +52,7 @@ export function ReferralsTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="mb-2 text-2xl font-semibold">My Referrals</h2>
+        <h2 className="font-display mb-2 text-3xl tracking-tight">My Referrals</h2>
         <p className="text-muted-foreground">
           Track the people who used your referral link and the rewards
           you&apos;ve earned.

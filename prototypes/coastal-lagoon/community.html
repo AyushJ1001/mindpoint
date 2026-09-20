@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Community — The Mind Point</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400;1,9..144,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css" />
+<link rel="stylesheet" href="pages.css" />
+</head>
+<body>
+<header id="nav" class="solid">
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="index.html"><img src="../../public/logo.png" alt="The Mind Point" /><b>THE MIND POINT</b></a>
+      <div class="menu">
+        <a href="about.html">About</a>
+        <a href="programs.html">Programs</a>
+        <a href="resources.html">Resources</a>
+        <a href="community.html" style="border-color:var(--teal)">Community</a>
+      </div>
+      <a class="btn" href="join.html">Join us</a>
+    </nav>
+  </div>
+</header>
+<main>  <section class="page-hero">
+    <div class="wrap grid">
+      <div class="rv">
+        <span class="eyebrow">Community</span>
+        <h1 style="margin-top:1rem">You're never <em>learning alone.</em></h1>
+        <p class="lead">A small, moderated community of people who take mental health seriously, gently.</p>
+      </div>
+      <div class="img rv"><img src="../../public/coastal/hero.jpg" alt="" /></div>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap">
+      <div class="stories rv">
+        <div class="story"><blockquote>“I finally understood why my mind keeps overthinking everything. The tools actually work.”</blockquote><div class="who">S.K. · Intern</div></div>
+        <div class="story"><blockquote>“I came in confused about my career. Now I'm a practising counsellor.”</blockquote><div class="who">R.M. · Certificate graduate</div></div>
+        <div class="story"><blockquote>“What sets TMP apart is the community. You're never learning alone.”</blockquote><div class="who">A.P. · Diploma student</div></div>
+      </div>
+    </div>
+  </section>
+  <hr class="rule" />
+  <section>
+    <div class="wrap">
+      <div class="head rv"><div><span class="eyebrow">How we support you</span><h2 style="margin-top:1rem">Real people, real answers.</h2></div></div>
+      <div class="grid3 rv">
+        <div class="card" style="padding:1.8rem"><h3 style="font-size:1.25rem">Support within 48–72 hours</h3><p style="color:var(--muted)">Assigned faculty answer on working days — not a bot, not a queue.</p></div>
+        <div class="card" style="padding:1.8rem"><h3 style="font-size:1.25rem">Your cohort, private</h3><p style="color:var(--muted)">A small, moderated space to ask and learn without performing.</p></div>
+        <div class="card" style="padding:1.8rem"><h3 style="font-size:1.25rem">Question &amp; answer</h3><p style="color:var(--muted)">Ask openly or privately. Faculty answers are labelled and visible.</p></div>
+      </div>
+    </div>
+  </section>
+  <section class="strip">
+    <div class="wrap grid2 rv">
+      <div class="img-frame"><img src="../../public/coastal/hero.jpg" alt="" /></div>
+      <div>
+        <span class="eyebrow">Community guidelines</span>
+        <h2 style="margin:1rem 0">Kind, private, and honest about limits.</h2>
+        <ul class="checks" style="margin:0">
+          <li>Be kind — everyone here is learning.</li>
+          <li>Keep others' stories private.</li>
+          <li>No medical advice or diagnosis between members.</li>
+          <li>Consent before recording or sharing anything.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+  <section style="padding-top:0;padding-bottom:5rem">
+    <div class="wrap pagenav rv"><a href="about.html">About →</a><a href="join.html">Join us →</a></div>
+  </section>
+</main>
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div class="brand">
+        <img src="../../public/logo.png" alt="" style="width:48px;margin-bottom:.7rem" />
+        <b>THE MIND POINT</b>
+        <p style="color:rgba(248,246,240,.65);max-width:30ch;margin-top:.7rem">Practical tools. Compassionate guidance. A more mindful tomorrow.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul><li><a href="programs.html">Programs</a></li><li><a href="about.html">About</a></li><li><a href="resources.html">Resources</a></li><li><a href="#">Verify a certificate</a></li></ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul><li><a href="community.html">Community</a></li><li><a href="#">Careers</a></li><li><a href="join.html">Contact</a></li></ul>
+      </div>
+      <div class="crisis">
+        <b>In crisis?</b> Please reach out to a local helpline or emergency service right away. This platform is education and support — not emergency care.
+      </div>
+    </div>
+    <div class="copy">
+      <span>© 2026 The Mind Point. All rights reserved.</span>
+      <span><a href="#">Terms</a> · <a href="#">Privacy</a> · <a href="#">Refunds</a></span>
+    </div>
+  </div>
+</footer>
+<script>
+  const io = new IntersectionObserver(es => es.forEach(en => { if(en.isIntersecting){ en.target.classList.add('in'); io.unobserve(en.target);} }), {threshold:.12});
+  if (new URLSearchParams(location.search).has('static')) { document.querySelectorAll('.rv').forEach(el => el.classList.add('in')); }
+  document.querySelectorAll('.rv').forEach(el => io.observe(el));
+  const header = document.getElementById('nav');
+  addEventListener('scroll', () => header.classList.toggle('solid', scrollY > 40));
+</script>
+</body>
+</html>
