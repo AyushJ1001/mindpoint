@@ -47,6 +47,7 @@ export const metadata: Metadata = {
   description: "A platform for mental health education and support",
   icons: {
     icon: "/logo.ico",
+    apple: "/apple-icon.png",
   },
   metadataBase: new URL("https://themindpoint.org"),
   alternates: {
@@ -59,7 +60,7 @@ export const metadata: Metadata = {
     siteName: "The Mind Point",
     images: [
       {
-        url: "/logo.png",
+        url: "/og-image.png",
         width: 1200,
         height: 630,
         alt: "The Mind Point - Mental Health Education Platform",
