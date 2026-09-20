@@ -7,6 +7,7 @@ import { ArrowRight, Check, Shield } from "lucide-react";
 import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { EmailCapture } from "@/components/coastal/EmailCapture";
+import { ScrollReveal } from "@/components/ScrollReveal";
 import type { PublicCourse } from "@/lib/backend";
 
 interface CoastalHomeProps {
@@ -253,44 +254,43 @@ export default function CoastalHome({
           </div>
           <div className="grid gap-7 md:grid-cols-3">
             {cards.map((card, i) => (
-              <article
-                key={card.id}
-                className="group border-border bg-card flex flex-col overflow-hidden rounded border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_40px_70px_-46px_rgba(19,46,43,0.6)]"
-              >
-                <div className="relative h-56 overflow-hidden">
-                  <Image
-                    src={
-                      i === 2
-                        ? "/coastal/hero.jpg"
-                        : i === 1
-                          ? "/coastal/calm.jpg"
-                          : "/coastal/shore.jpg"
-                    }
-                    alt=""
-                    fill
-                    sizes="(min-width: 768px) 33vw, 100vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                  <span className="bg-background/90 text-primary absolute top-4 left-4 rounded-full px-3 py-1 text-[0.6rem] font-semibold tracking-[0.2em] uppercase">
-                    {i === 2 ? "Coming soon" : "Upcoming"}
-                  </span>
-                </div>
-                <div className="flex flex-1 flex-col gap-3 p-7">
-                  <h3 className="font-display text-2xl leading-snug">
-                    {card.name}
-                  </h3>
-                  <p className="text-muted-foreground text-sm">{card.meta}</p>
-                  <div className="border-border mt-auto flex items-center justify-between border-t border-dashed pt-4">
-                    <span className="font-display text-xl">{card.price}</span>
-                    <Link
-                      href={card.href}
-                      className="text-primary text-[0.7rem] font-semibold tracking-[0.2em] uppercase"
-                    >
-                      Enroll →
-                    </Link>
+              <ScrollReveal key={card.id} transitionDelayMs={i * 80}>
+                <article className="group border-border bg-card flex h-full flex-col overflow-hidden rounded border transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_40px_70px_-46px_rgba(19,46,43,0.6)]">
+                  <div className="relative h-56 overflow-hidden">
+                    <Image
+                      src={
+                        i === 2
+                          ? "/coastal/hero.jpg"
+                          : i === 1
+                            ? "/coastal/calm.jpg"
+                            : "/coastal/shore.jpg"
+                      }
+                      alt=""
+                      fill
+                      sizes="(min-width: 768px) 33vw, 100vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                    <span className="bg-background/90 text-primary absolute top-4 left-4 rounded-full px-3 py-1 text-[0.6rem] font-semibold tracking-[0.2em] uppercase">
+                      {i === 2 ? "Coming soon" : "Upcoming"}
+                    </span>
                   </div>
-                </div>
-              </article>
+                  <div className="flex flex-1 flex-col gap-3 p-7">
+                    <h3 className="font-display text-2xl leading-snug">
+                      {card.name}
+                    </h3>
+                    <p className="text-muted-foreground text-sm">{card.meta}</p>
+                    <div className="border-border mt-auto flex items-center justify-between border-t border-dashed pt-4">
+                      <span className="font-display text-xl">{card.price}</span>
+                      <Link
+                        href={card.href}
+                        className="text-primary text-[0.7rem] font-semibold tracking-[0.2em] uppercase"
+                      >
+                        Enroll →
+                      </Link>
+                    </div>
+                  </div>
+                </article>
+              </ScrollReveal>
             ))}
           </div>
         </div>
@@ -313,24 +313,26 @@ export default function CoastalHome({
           </div>
           <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">
             {PATHS.map((p, i) => (
-              <button
-                key={p.key}
-                type="button"
-                aria-pressed={activePath === p.key}
-                onClick={() => setActivePath(p.key)}
-                className={`rounded border border-dashed p-7 text-left transition-colors ${
-                  activePath === p.key
-                    ? "border-primary bg-card"
-                    : "border-border hover:border-primary hover:bg-card"
-                }`}
-              >
-                <span className="font-display text-primary text-2xl italic">
-                  {["i.", "ii.", "iii.", "iv."][i]}
-                </span>
-                <span className="font-display mt-3 block text-xl leading-snug">
-                  {p.label}
-                </span>
-              </button>
+              <ScrollReveal key={p.key} transitionDelayMs={i * 80}>
+                <button
+                  key={p.key}
+                  type="button"
+                  aria-pressed={activePath === p.key}
+                  onClick={() => setActivePath(p.key)}
+                  className={`h-full w-full rounded border border-dashed p-7 text-left transition-colors ${
+                    activePath === p.key
+                      ? "border-primary bg-card"
+                      : "border-border hover:border-primary hover:bg-card"
+                  }`}
+                >
+                  <span className="font-display text-primary text-2xl italic">
+                    {["i.", "ii.", "iii.", "iv."][i]}
+                  </span>
+                  <span className="font-display mt-3 block text-xl leading-snug">
+                    {p.label}
+                  </span>
+                </button>
+              </ScrollReveal>
             ))}
           </div>
           {active && (
@@ -419,15 +421,17 @@ export default function CoastalHome({
             </p>
           </div>
           <div className="grid gap-8 md:grid-cols-3">
-            {STORIES.map(([quote, who]) => (
-              <figure key={who} className="border-primary border-t-2 pt-5">
-                <blockquote className="font-display text-2xl leading-snug italic">
-                  “{quote}”
-                </blockquote>
-                <figcaption className="text-muted-foreground mt-4 text-[0.68rem] tracking-[0.24em] uppercase">
-                  {who}
-                </figcaption>
-              </figure>
+            {STORIES.map(([quote, who], i) => (
+              <ScrollReveal key={who} transitionDelayMs={i * 80}>
+                <figure className="border-primary h-full border-t-2 pt-5">
+                  <blockquote className="font-display text-2xl leading-snug italic">
+                    “{quote}”
+                  </blockquote>
+                  <figcaption className="text-muted-foreground mt-4 text-[0.68rem] tracking-[0.24em] uppercase">
+                    {who}
+                  </figcaption>
+                </figure>
+              </ScrollReveal>
             ))}
           </div>
         </div>
