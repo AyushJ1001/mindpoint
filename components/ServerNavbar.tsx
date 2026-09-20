@@ -13,7 +13,7 @@ export default function ServerNavbar() {
               alt="The Mind Point"
               width={36}
               height={36}
-              className="ring-border h-8 w-8 rounded-xl ring-1 sm:h-9 sm:w-9"
+              className="h-8 w-8 sm:h-9 sm:w-9"
             />
             <span className="text-foreground font-display text-base font-bold tracking-tight sm:text-xl">
               The Mind Point

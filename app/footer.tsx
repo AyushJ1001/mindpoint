@@ -13,11 +13,11 @@ export default function Footer() {
           <div>
             <div className="mb-4 flex items-center gap-3">
               <Image
-                src="/logo.png"
+                src="/logo-light.png"
                 alt="The Mind Point"
                 width={44}
                 height={44}
-                className="h-11 w-11 rounded-xl"
+                className="h-11 w-11"
               />
               <span className="font-display text-lg font-medium tracking-[0.06em]">
                 THE MIND POINT
