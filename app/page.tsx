@@ -24,7 +24,7 @@ export const metadata = {
       "Empowering minds through comprehensive mental health education and professional development.",
     type: "website",
   },
-  metadataBase: new URL("https://themindpoint.org"),
+  metadataBase: new URL("https://www.themindpoint.org"),
   alternates: {
     canonical: "/",
   },

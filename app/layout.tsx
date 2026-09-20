@@ -49,14 +49,14 @@ export const metadata: Metadata = {
     icon: "/logo.ico",
     apple: "/apple-icon.png",
   },
-  metadataBase: new URL("https://themindpoint.org"),
+  metadataBase: new URL("https://www.themindpoint.org"),
   alternates: {
     canonical: "/",
   },
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://themindpoint.org",
+    url: "https://www.themindpoint.org",
     siteName: "The Mind Point",
     images: [
       {

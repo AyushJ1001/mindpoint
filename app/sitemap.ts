@@ -3,7 +3,7 @@ import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const baseUrl = "https://themindpoint.org";
+  const baseUrl = "https://www.themindpoint.org";
 
   // Static pages
   const staticPages = [
