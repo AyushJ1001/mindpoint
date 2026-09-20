@@ -52,6 +52,11 @@ export default function Footer() {
             </h2>
             <ul className="space-y-2.5 text-sm">
               <li>
+                <Link href="/january-2027" className="hover:text-[#bcd6dd]">
+                  January 2027 cohorts
+                </Link>
+              </li>
+              <li>
                 <Link href="/programs" className="hover:text-[#bcd6dd]">
                   Programs
                 </Link>
