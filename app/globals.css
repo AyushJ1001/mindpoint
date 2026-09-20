@@ -176,7 +176,6 @@
       "calt" 1;
   }
 
-  
   a {
     @apply transition-colors duration-300;
   }
@@ -473,11 +472,12 @@
     isolation: isolate;
     /* Warmer base than flat grey — lavender + cream + terracotta wash */
     background: linear-gradient(
-        165deg,
-        color-mix(in oklab, var(--color-lavender-50) 55%, var(--background)),
-        color-mix(in oklab, var(--color-terracotta-light) 22%, var(--background)) 45%,
-        var(--background) 100%
-      );
+      165deg,
+      color-mix(in oklab, var(--color-lavender-50) 55%, var(--background)),
+      color-mix(in oklab, var(--color-terracotta-light) 22%, var(--background))
+        45%,
+      var(--background) 100%
+    );
   }
 
   /* Atmospheric glow + corner depth */
@@ -515,7 +515,7 @@
     background: linear-gradient(
       165deg,
       color-mix(in oklab, var(--color-primary) 8%, var(--background)),
-        var(--background)
+      var(--background)
     );
   }
 
@@ -643,12 +643,12 @@
   }
 
   .calm-lead {
-    @apply text-lg leading-[1.7] text-foreground/80 sm:text-[1.2rem];
+    @apply text-foreground/80 text-lg leading-[1.7] sm:text-[1.2rem];
     font-feature-settings: "ss01", "ss02";
   }
 
   .calm-body {
-    @apply text-base leading-[1.75] text-foreground/70 sm:text-[1.05rem];
+    @apply text-foreground/70 text-base leading-[1.75] sm:text-[1.05rem];
   }
 
   /* Section stack — matches FAQ / editorial course sections (not page hero). */
@@ -702,7 +702,8 @@
   }
 
   .calm-tile {
-    border: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--color-foreground) 10%, transparent);
     background: transparent;
     border-radius: 0.25rem;
     padding: 1.25rem 1.375rem;
@@ -717,7 +718,8 @@
   }
 
   .calm-card {
-    border: 1px solid color-mix(in oklab, var(--color-foreground) 12%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--color-foreground) 12%, transparent);
     background: color-mix(in oklab, var(--color-background) 75%, white);
     border-radius: 0.375rem;
   }
@@ -742,7 +744,11 @@
   }
 
   .calm-arrow {
-    color: color-mix(in oklab, var(--color-primary) 80%, var(--color-foreground));
+    color: color-mix(
+      in oklab,
+      var(--color-primary) 80%,
+      var(--color-foreground)
+    );
     font-family: var(--font-sans), monospace;
     font-size: 1rem;
     line-height: 1.1;
@@ -887,11 +893,7 @@
   }
 
   .calm-module-card:hover {
-    background: color-mix(
-      in oklab,
-      var(--color-primary) 4%,
-      transparent
-    );
+    background: color-mix(in oklab, var(--color-primary) 4%, transparent);
   }
 
   .calm-module-card:hover::before {
@@ -989,9 +991,13 @@
     width: 100%;
     border-radius: 1rem;
     overflow: hidden;
-    background: color-mix(in oklab, var(--hero-tint, var(--color-terracotta-light)) 62%, white);
-    box-shadow:
-      0 12px 40px -16px color-mix(in oklab, var(--color-foreground) 22%, transparent);
+    background: color-mix(
+      in oklab,
+      var(--hero-tint, var(--color-terracotta-light)) 62%,
+      white
+    );
+    box-shadow: 0 12px 40px -16px
+      color-mix(in oklab, var(--color-foreground) 22%, transparent);
   }
 
   .calm-hero-art::before {
@@ -1003,7 +1009,11 @@
   }
 
   .dark .calm-hero-art {
-    background: color-mix(in oklab, var(--hero-tint, var(--color-primary)) 28%, var(--color-card));
+    background: color-mix(
+      in oklab,
+      var(--hero-tint, var(--color-primary)) 28%,
+      var(--color-card)
+    );
   }
 
   .calm-hero-art img {
@@ -1021,15 +1031,33 @@
   }
 
   /* Type-specific poster tints. Each sets --hero-tint. */
-  .calm-tint-certificate { --hero-tint: #e9dcc4; }
-  .calm-tint-diploma { --hero-tint: #d9e6df; }
-  .calm-tint-therapy { --hero-tint: #d3e7e3; }
-  .calm-tint-supervised { --hero-tint: #e3ddd0; }
-  .calm-tint-internship { --hero-tint: #ecdfc6; }
-  .calm-tint-pre-recorded { --hero-tint: #d9e6df; }
-  .calm-tint-masterclass { --hero-tint: #f0d9c9; }
-  .calm-tint-worksheet { --hero-tint: #e9dcc4; }
-  .calm-tint-resume-studio { --hero-tint: #d3e0e6; }
+  .calm-tint-certificate {
+    --hero-tint: #e9dcc4;
+  }
+  .calm-tint-diploma {
+    --hero-tint: #d9e6df;
+  }
+  .calm-tint-therapy {
+    --hero-tint: #d3e7e3;
+  }
+  .calm-tint-supervised {
+    --hero-tint: #e3ddd0;
+  }
+  .calm-tint-internship {
+    --hero-tint: #ecdfc6;
+  }
+  .calm-tint-pre-recorded {
+    --hero-tint: #d9e6df;
+  }
+  .calm-tint-masterclass {
+    --hero-tint: #f0d9c9;
+  }
+  .calm-tint-worksheet {
+    --hero-tint: #e9dcc4;
+  }
+  .calm-tint-resume-studio {
+    --hero-tint: #d3e0e6;
+  }
 
   .calm-hero-copy {
     min-width: 0;
@@ -1080,7 +1108,11 @@
     gap: 0.5rem;
     padding: 0.4rem 0.85rem 0.4rem 0.4rem;
     border-radius: 999px;
-    background: color-mix(in oklab, var(--color-primary) 12%, var(--color-card));
+    background: color-mix(
+      in oklab,
+      var(--color-primary) 12%,
+      var(--color-card)
+    );
     border: 1px solid color-mix(in oklab, var(--color-primary) 30%, transparent);
     color: color-mix(in oklab, var(--color-foreground) 92%, transparent);
     font-size: 0.85rem;
@@ -1114,7 +1146,8 @@
     background: var(--color-primary);
     color: var(--color-primary-foreground);
     flex: none;
-    box-shadow: 0 1px 2px color-mix(in oklab, var(--color-primary) 45%, transparent);
+    box-shadow: 0 1px 2px
+      color-mix(in oklab, var(--color-primary) 45%, transparent);
   }
 
   .calm-meta-chip svg {
@@ -1125,7 +1158,11 @@
   }
 
   .dark .calm-meta-chip {
-    background: color-mix(in oklab, var(--color-primary) 22%, var(--color-card));
+    background: color-mix(
+      in oklab,
+      var(--color-primary) 22%,
+      var(--color-card)
+    );
     border-color: color-mix(in oklab, var(--color-primary) 45%, transparent);
     box-shadow:
       0 1px 2px color-mix(in oklab, var(--color-primary) 20%, transparent),
@@ -1173,17 +1210,29 @@
       color 160ms ease;
   }
 
-  .calm-batch-chip:hover:not([data-disabled="true"]):not([data-selected="true"]) {
-    border-color: color-mix(in srgb, var(--color-primary) 50%, var(--color-background));
-    background: color-mix(in srgb, var(--color-primary) 6%, var(--color-background));
-    box-shadow: 0 2px 8px -3px color-mix(in srgb, var(--color-primary) 18%, transparent);
+  .calm-batch-chip:hover:not([data-disabled="true"]):not(
+      [data-selected="true"]
+    ) {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 50%,
+      var(--color-background)
+    );
+    background: color-mix(
+      in srgb,
+      var(--color-primary) 6%,
+      var(--color-background)
+    );
+    box-shadow: 0 2px 8px -3px
+      color-mix(in srgb, var(--color-primary) 18%, transparent);
   }
 
   .calm-batch-chip[data-selected="true"] {
     background: var(--color-primary);
     border-color: var(--color-primary);
     color: var(--color-primary-foreground);
-    box-shadow: 0 2px 8px -2px color-mix(in srgb, var(--color-primary) 35%, transparent);
+    box-shadow: 0 2px 8px -2px
+      color-mix(in srgb, var(--color-primary) 35%, transparent);
   }
 
   .calm-batch-chip[data-selected="true"] .calm-batch-status {
@@ -1199,11 +1248,22 @@
 
   .dark .calm-batch-chip {
     background: var(--color-card);
-    border-color: color-mix(in srgb, var(--color-foreground) 16%, var(--color-card));
+    border-color: color-mix(
+      in srgb,
+      var(--color-foreground) 16%,
+      var(--color-card)
+    );
   }
 
-  .dark .calm-batch-chip:hover:not([data-disabled="true"]):not([data-selected="true"]) {
-    border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-card));
+  .dark
+    .calm-batch-chip:hover:not([data-disabled="true"]):not(
+      [data-selected="true"]
+    ) {
+    border-color: color-mix(
+      in srgb,
+      var(--color-primary) 45%,
+      var(--color-card)
+    );
     background: color-mix(in srgb, var(--color-primary) 10%, var(--color-card));
   }
 
@@ -1247,7 +1307,11 @@
     position: absolute;
     inset: 0;
     z-index: -1;
-    background: color-mix(in oklab, var(--color-terracotta-light) 34%, transparent);
+    background: color-mix(
+      in oklab,
+      var(--color-terracotta-light) 34%,
+      transparent
+    );
     opacity: 0.5;
   }
 
@@ -1281,7 +1345,11 @@
     font-style: italic;
     line-height: 0.9;
     font-size: clamp(3rem, 7vw, 5rem);
-    color: color-mix(in oklab, var(--color-primary) 55%, var(--color-foreground));
+    color: color-mix(
+      in oklab,
+      var(--color-primary) 55%,
+      var(--color-foreground)
+    );
     opacity: 0.28;
     user-select: none;
     pointer-events: none;
@@ -1304,7 +1372,11 @@
   }
 
   .dark .calm-pricing-stage::before {
-    background: color-mix(in oklab, var(--color-primary) 20%, var(--color-card));
+    background: color-mix(
+      in oklab,
+      var(--color-primary) 20%,
+      var(--color-card)
+    );
     opacity: 0.55;
   }
 
@@ -1338,6 +1410,36 @@
 
   .transition-smooth {
     @apply transition-all duration-300 ease-[cubic-bezier(0.22,1,0.36,1)];
+  }
+
+  /* Coastal FAQ rows — dashed dividers with a +/– marker (prototype parity). */
+  .faq-item {
+    border-bottom: 1.5px dashed
+      color-mix(in oklab, var(--color-foreground) 30%, transparent);
+  }
+
+  .faq-item summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  .faq-item summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .faq-item summary::after {
+    content: "+";
+    flex: none;
+    color: var(--color-primary);
+    font-family: var(--font-sans), sans-serif;
+  }
+
+  .faq-item[open] summary::after {
+    content: "–";
   }
 }
 
@@ -1411,11 +1513,7 @@
 }
 
 .dark .card-video-harmony {
-  background: linear-gradient(
-    135deg,
-    #0a2d29 0%,
-    #123a37 100%
-  );
+  background: linear-gradient(135deg, #0a2d29 0%, #123a37 100%);
   border: 1px solid rgba(29, 78, 74, 0.22);
 }
 
