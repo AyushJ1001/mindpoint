@@ -25,6 +25,7 @@ import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { getEnrolledCount } from "@/lib/course-enrollment";
 import { courseTypeContent } from "@/lib/course-content-data";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
 
 // Type for courses with sessions (therapy)
 type TherapyCourse = CourseLike & {
@@ -817,13 +818,11 @@ export default function CourseTypePage({
       <section className="py-14 sm:py-20">
         <div className="container max-w-4xl">
           <ScrollReveal>
-            <p className="text-[0.7rem] font-semibold tracking-[0.28em] text-primary uppercase">
-              {content.tagline}
-            </p>
+            <p className={eyebrowVariants()}>{content.tagline}</p>
             <h1 className="font-display mt-4 text-4xl leading-[1.05] tracking-[-0.03em] sm:text-6xl">
               {content.title}
             </h1>
-            <p className="mt-5 max-w-2xl text-lg text-muted-foreground">
+            <p className="text-muted-foreground mt-5 max-w-2xl text-lg">
               {content.description}
             </p>
           </ScrollReveal>

@@ -19,6 +19,7 @@ import { Suspense } from "react";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Trash2,
@@ -1133,9 +1134,7 @@ const CartContent = () => {
   if (isEmpty) {
     return (
       <div className="container py-20 text-center">
-        <span className="text-[0.7rem] font-semibold tracking-[0.28em] text-primary uppercase">
-          Cart
-        </span>
+        <span className={eyebrowVariants()}>Cart</span>
         <h2 className="font-display mt-4 mb-3 text-4xl tracking-tight">
           Your cart is empty.
         </h2>
@@ -1152,9 +1151,7 @@ const CartContent = () => {
   return (
     <div className="container py-10 sm:py-14">
       <div className="mb-8 sm:mb-10">
-        <span className="text-[0.7rem] font-semibold tracking-[0.28em] text-primary uppercase">
-          Cart
-        </span>
+        <span className={eyebrowVariants()}>Cart</span>
         <h1 className="font-display mt-3 text-4xl tracking-tight sm:text-5xl">
           Review and check out.
         </h1>
@@ -1800,7 +1797,9 @@ const CartContent = () => {
                   className="h-7 px-2"
                   onClick={() => {
                     if (!navigator.clipboard) {
-                      toast.error(`Copy not supported. UPI ID: ${PAYMENT_UPI_ID}`);
+                      toast.error(
+                        `Copy not supported. UPI ID: ${PAYMENT_UPI_ID}`,
+                      );
                       return;
                     }
                     void navigator.clipboard

@@ -1,4 +1,5 @@
 import { PageHero } from "@/components/coastal/PageHero";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { Check } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -11,15 +12,33 @@ export const metadata = {
 };
 
 const STORIES = [
-  ["I finally understood why my mind keeps overthinking everything. The tools actually work.", "S.K. · Intern"],
-  ["I came in confused about my career. Now I'm a practising counsellor.", "R.M. · Certificate graduate"],
-  ["What sets TMP apart is the community. You're never learning alone.", "A.P. · Diploma student"],
+  [
+    "I finally understood why my mind keeps overthinking everything. The tools actually work.",
+    "S.K. · Intern",
+  ],
+  [
+    "I came in confused about my career. Now I'm a practising counsellor.",
+    "R.M. · Certificate graduate",
+  ],
+  [
+    "What sets TMP apart is the community. You're never learning alone.",
+    "A.P. · Diploma student",
+  ],
 ];
 
 const SUPPORT = [
-  ["Support within 48–72 hours", "Assigned faculty answer on working days — not a bot, not a queue."],
-  ["Your cohort, private", "A small, moderated space to ask and learn without performing."],
-  ["Question & answer", "Ask openly or privately. Faculty answers are labelled and visible."],
+  [
+    "Support within 48–72 hours",
+    "Assigned faculty answer on working days — not a bot, not a queue.",
+  ],
+  [
+    "Your cohort, private",
+    "A small, moderated space to ask and learn without performing.",
+  ],
+  [
+    "Question & answer",
+    "Ask openly or privately. Faculty answers are labelled and visible.",
+  ],
 ];
 
 const GUIDELINES = [
@@ -46,11 +65,11 @@ export default function CommunityPage() {
       <section className="container pb-20">
         <div className="grid gap-8 md:grid-cols-3">
           {STORIES.map(([quote, who]) => (
-            <figure key={who} className="border-t-2 border-primary pt-5">
-              <blockquote className="font-display text-2xl italic leading-snug">
+            <figure key={who} className="border-primary border-t-2 pt-5">
+              <blockquote className="font-display text-2xl leading-snug italic">
                 “{quote}”
               </blockquote>
-              <figcaption className="mt-4 text-[0.68rem] tracking-[0.24em] text-muted-foreground uppercase">
+              <figcaption className="text-muted-foreground mt-4 text-[0.68rem] tracking-[0.24em] uppercase">
                 {who}
               </figcaption>
             </figure>
@@ -58,20 +77,21 @@ export default function CommunityPage() {
         </div>
       </section>
 
-      <hr className="container border-0 border-t border-dashed border-border" />
+      <hr className="border-border container border-0 border-t border-dashed" />
 
       <section className="container py-20 sm:py-24">
-        <span className="text-[0.7rem] font-semibold tracking-[0.28em] text-primary uppercase">
-          How we support you
-        </span>
+        <span className={eyebrowVariants()}>How we support you</span>
         <h2 className="font-display mt-4 mb-10 text-3xl tracking-tight sm:text-5xl">
           Real people, real answers.
         </h2>
         <div className="grid gap-6 md:grid-cols-3">
           {SUPPORT.map(([title, copy]) => (
-            <div key={title} className="rounded border border-border bg-card p-7">
+            <div
+              key={title}
+              className="border-border bg-card rounded border p-7"
+            >
               <h3 className="font-display text-xl">{title}</h3>
-              <p className="mt-2 text-muted-foreground">{copy}</p>
+              <p className="text-muted-foreground mt-2">{copy}</p>
             </div>
           ))}
         </div>
@@ -89,16 +109,14 @@ export default function CommunityPage() {
             />
           </div>
           <div>
-            <span className="text-[0.7rem] font-semibold tracking-[0.28em] text-primary uppercase">
-              Community guidelines
-            </span>
+            <span className={eyebrowVariants()}>Community guidelines</span>
             <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-4xl">
               Kind, private, and honest about limits.
             </h2>
             <ul className="mt-6 space-y-3">
               {GUIDELINES.map((g) => (
                 <li key={g} className="flex items-start gap-3">
-                  <Check className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                  <Check className="text-primary mt-1 h-4 w-4 shrink-0" />
                   <span>{g}</span>
                 </li>
               ))}
@@ -108,7 +126,7 @@ export default function CommunityPage() {
       </section>
 
       <section className="container py-16">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-dashed border-border pt-6 text-[0.72rem] font-semibold tracking-[0.2em] uppercase">
+        <div className="border-border flex flex-wrap items-center justify-between gap-4 border-t border-dashed pt-6 text-[0.72rem] font-semibold tracking-[0.2em] uppercase">
           <Link href="/about" className="text-primary">
             About →
           </Link>

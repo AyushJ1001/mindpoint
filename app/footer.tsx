@@ -47,9 +47,9 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-[0.66rem] tracking-[0.28em] text-[#f1ece0]/50 uppercase">
+            <h2 className="mb-4 text-[0.66rem] tracking-[0.28em] text-[#f1ece0]/50 uppercase">
               Explore
-            </h4>
+            </h2>
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link href="/programs" className="hover:text-[#bcd6dd]">
@@ -75,9 +75,9 @@ export default function Footer() {
           </div>
 
           <div>
-            <h4 className="mb-4 text-[0.66rem] tracking-[0.28em] text-[#f1ece0]/50 uppercase">
+            <h2 className="mb-4 text-[0.66rem] tracking-[0.28em] text-[#f1ece0]/50 uppercase">
               Company
-            </h4>
+            </h2>
             <ul className="space-y-2.5 text-sm">
               <li>
                 <Link href="/community" className="hover:text-[#bcd6dd]">

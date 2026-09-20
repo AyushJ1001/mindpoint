@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Phone, Mail, Clock } from "lucide-react";
 import { submitContactForm } from "@/lib/services/contact";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
 
 import { contactFormSchema } from "@/lib/utils";
 
@@ -73,9 +74,7 @@ export default function ContactClient() {
       <section className="py-14 sm:py-20">
         <div className="container">
           <div className="mx-auto max-w-3xl text-center">
-            <span className="text-[0.7rem] font-semibold tracking-[0.28em] text-primary uppercase">
-              Contact
-            </span>
+            <span className={eyebrowVariants()}>Contact</span>
             <h1 className="font-display mt-4 mb-5 text-4xl tracking-[-0.03em] md:text-6xl">
               We&apos;re here to <em className="italic">help.</em>
             </h1>
@@ -94,7 +93,9 @@ export default function ContactClient() {
             {/* Contact Information – simple list items, no cards */}
             <div className="space-y-8">
               <div>
-                <h2 className="font-display mb-6 text-3xl tracking-tight">Get in touch</h2>
+                <h2 className="font-display mb-6 text-3xl tracking-tight">
+                  Get in touch
+                </h2>
                 <p className="text-muted-foreground mb-8 leading-relaxed">
                   We&apos;d love to hear from you. Send us a message and
                   we&apos;ll respond as soon as possible.

@@ -1,5 +1,6 @@
 import { PageHero } from "@/components/coastal/PageHero";
 import { ProgramTabs } from "@/components/coastal/ProgramTabs";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { Check } from "lucide-react";
 import Link from "next/link";
 
@@ -41,16 +42,14 @@ export default function ProgramsPage() {
 
       <section className="bg-secondary py-20 sm:py-24">
         <div className="container">
-          <span className="text-[0.7rem] font-semibold tracking-[0.28em] text-primary uppercase">
-            Included in every cohort
-          </span>
+          <span className={eyebrowVariants()}>Included in every cohort</span>
           <h2 className="font-display mt-4 mb-10 text-3xl tracking-tight sm:text-5xl">
             What you can count on.
           </h2>
           <ul className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
             {INCLUDED.map((item) => (
               <li key={item} className="flex items-start gap-3">
-                <Check className="mt-1 h-4 w-4 shrink-0 text-primary" />
+                <Check className="text-primary mt-1 h-4 w-4 shrink-0" />
                 <span>{item}</span>
               </li>
             ))}
@@ -59,7 +58,7 @@ export default function ProgramsPage() {
       </section>
 
       <section className="container py-16">
-        <div className="flex flex-wrap items-center justify-between gap-4 border-t border-dashed border-border pt-6 text-[0.72rem] font-semibold tracking-[0.2em] uppercase">
+        <div className="border-border flex flex-wrap items-center justify-between gap-4 border-t border-dashed pt-6 text-[0.72rem] font-semibold tracking-[0.2em] uppercase">
           <Link href="/resources" className="text-primary">
             Next · Resources →
           </Link>

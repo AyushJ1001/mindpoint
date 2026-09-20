@@ -1,4 +1,5 @@
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -69,14 +70,11 @@ export default function CoursesHero() {
       <section className="py-14 sm:py-20">
         <div className="container grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <span className="text-[0.7rem] font-semibold tracking-[0.28em] text-primary uppercase">
-              Programs
-            </span>
+            <span className={eyebrowVariants()}>Programs</span>
             <h1 className="font-display mt-4 text-4xl leading-[1.05] tracking-[-0.03em] sm:text-6xl">
-              Find your path in{" "}
-              <em className="italic">mental health.</em>
+              Find your path in <em className="italic">mental health.</em>
             </h1>
-            <p className="mt-5 max-w-xl text-lg text-muted-foreground">
+            <p className="text-muted-foreground mt-5 max-w-xl text-lg">
               Structured programs, live workshops, self-paced learning, and
               professional support — all in one place. Start wherever feels
               right for you.
@@ -101,7 +99,7 @@ export default function CoursesHero() {
             <ScrollReveal key={category.href}>
               <Link
                 href={category.href}
-                className="group block h-full rounded border border-dashed border-border p-7 transition-all duration-300 hover:-translate-y-1 hover:border-primary hover:bg-card hover:shadow-[0_30px_60px_-46px_rgba(19,46,43,0.5)]"
+                className="group border-border hover:border-primary hover:bg-card block h-full rounded border border-dashed p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_30px_60px_-46px_rgba(19,46,43,0.5)]"
               >
                 <div className="text-primary mb-5">
                   <category.icon className="h-6 w-6" strokeWidth={1.5} />

@@ -43,7 +43,7 @@
 
   /* ---------- hero ---------- */
   .hero{position:relative;min-height:clamp(620px,96vh,940px);display:flex;flex-direction:column;justify-content:center;overflow:hidden}
-  .hero .bg{position:absolute;inset:0;background:url(hero.jpg) center 38%/cover no-repeat;transform:scale(1.03)}
+  .hero .bg{position:absolute;inset:0;background:url(../../public/coastal/hero.jpg) center 38%/cover no-repeat;transform:scale(1.03)}
   .hero .wash{position:absolute;inset:0;background:
       radial-gradient(46% 72% at 88% 34%,rgba(248,246,240,.94),rgba(248,246,240,0) 72%),
       linear-gradient(100deg,rgba(248,246,240,.96) 0%,rgba(248,246,240,.86) 34%,rgba(248,246,240,.35) 58%,rgba(188,214,221,.18) 100%)}
@@ -98,7 +98,7 @@
 
   /* ---------- band ---------- */
   .band{position:relative;overflow:hidden;color:var(--ivory)}
-  .band .bg{position:absolute;inset:0;background:url(wave.jpg) center/cover no-repeat}
+  .band .bg{position:absolute;inset:0;background:url(../../public/coastal/wave.jpg) center/cover no-repeat}
   .band .wash{position:absolute;inset:0;background:linear-gradient(120deg,rgba(10,40,38,.9),rgba(29,78,74,.72) 55%,rgba(44,106,99,.55))}
   .band .in{position:relative;z-index:2;padding:clamp(4rem,9vw,7rem) 0;display:grid;grid-template-columns:1.1fr .9fr;gap:3rem;align-items:center}
   .band h2{font-size:clamp(2rem,4.4vw,3.4rem);max-width:20ch}
