@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CourseTypePage from "@/components/CourseTypePage";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
@@ -11,6 +12,7 @@ export const metadata = {
   keywords:
     "diploma courses, psychology diplomas, mental health education, advanced training, professional development",
   openGraph: {
+    images: [openGraphImage],
     title: "Diploma Courses - The Mind Point",
     description:
       "Explore our comprehensive diploma programs in psychology and mental health.",

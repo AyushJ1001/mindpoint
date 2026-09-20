@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CourseTypePage from "@/components/CourseTypePage";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
@@ -11,6 +12,7 @@ export const metadata = {
   keywords:
     "certificate courses, psychology courses, mental health education, professional development, online learning",
   openGraph: {
+    images: [openGraphImage],
     title: "Certificate Courses - The Mind Point",
     description:
       "Discover our expertly designed certificate courses in psychology and mental health.",

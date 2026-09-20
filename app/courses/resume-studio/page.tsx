@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CourseTypePage from "@/components/CourseTypePage";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
@@ -11,6 +12,7 @@ export const metadata = {
   keywords:
     "resume studio, career development, professional resume, mental health careers, job preparation",
   openGraph: {
+    images: [openGraphImage],
     title: "Resume Studio - The Mind Point",
     description:
       "Build your professional resume and career development skills.",

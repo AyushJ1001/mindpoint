@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CourseTypePage from "@/components/CourseTypePage";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
@@ -11,6 +12,7 @@ export const metadata = {
   keywords:
     "pre-recorded courses, self-paced learning, psychology courses, mental health education, online learning",
   openGraph: {
+    images: [openGraphImage],
     title: "Pre-recorded Courses - The Mind Point",
     description: "Learn at your own pace with our pre-recorded courses.",
     type: "website",

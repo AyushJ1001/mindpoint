@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import { ConvexHttpClient } from "convex/browser";
 import { auth } from "@clerk/nextjs/server";
 import { api } from "@/lib/backend/api";
@@ -16,6 +17,7 @@ export const metadata = {
   keywords:
     "mental health, psychology, education, therapy, counseling, professional development, online courses",
   openGraph: {
+    images: [openGraphImage],
     title:
       "The Mind Point - Mental Health Education & Professional Development",
     description:

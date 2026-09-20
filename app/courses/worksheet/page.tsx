@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CourseTypePage from "@/components/CourseTypePage";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
@@ -11,6 +12,7 @@ export const metadata = {
   keywords:
     "worksheets, psychology worksheets, mental health resources, downloadable PDFs, learning materials",
   openGraph: {
+    images: [openGraphImage],
     title: "Worksheets - The Mind Point",
     description:
       "Download comprehensive worksheets and resources for your learning journey.",

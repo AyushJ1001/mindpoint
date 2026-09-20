@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 export const metadata = {
   title: "Refund Policy - The Mind Point",
   description:
@@ -5,6 +6,7 @@ export const metadata = {
   keywords:
     "refund policy, payment policy, cancellation, mental health education, The Mind Point",
   openGraph: {
+    images: [openGraphImage],
     title: "Refund Policy - The Mind Point",
     description: "Learn about our refund and payment terms.",
     type: "website",

@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import CourseTypePage from "@/components/CourseTypePage";
 import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
 import { ConvexHttpClient } from "convex/browser";
@@ -12,6 +13,7 @@ export const metadata = {
   keywords:
     "supervised courses, psychology supervision, mental health training, expert guidance, personalized learning",
   openGraph: {
+    images: [openGraphImage],
     title: "Supervised Courses - The Mind Point",
     description: "Learn under expert supervision with personalized guidance.",
     type: "website",

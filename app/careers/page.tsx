@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 import type { Metadata } from "next";
 import CareersClient from "@/components/careers-client";
 
@@ -8,6 +9,7 @@ export const metadata: Metadata = {
   keywords:
     "careers, jobs, mental health careers, psychology jobs, therapy careers, education jobs",
   openGraph: {
+    images: [openGraphImage],
     title: "Careers - The Mind Point | Join Our Mental Health Mission",
     description:
       "Join The Mind Point team and help us empower minds through mental health education.",

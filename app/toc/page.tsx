@@ -1,3 +1,4 @@
+import { openGraphImage } from "@/lib/seo";
 export const metadata = {
   title: "Terms & Conditions - The Mind Point",
   description:
@@ -5,6 +6,7 @@ export const metadata = {
   keywords:
     "terms and conditions, legal, mental health education, courses, The Mind Point",
   openGraph: {
+    images: [openGraphImage],
     title: "Terms & Conditions - The Mind Point",
     description: "Read our terms and conditions for using our services.",
     type: "website",
