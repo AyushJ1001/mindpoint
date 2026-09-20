@@ -1455,6 +1455,36 @@
   }
 }
 
+/* Field Guide nav drawer — one authored entrance. */
+@keyframes fg-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fg-slide {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes fg-row {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
 @keyframes float-slower {
   0% {
     transform: translateY(0px) translateX(0px) rotate(0deg);
