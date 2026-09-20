@@ -161,11 +161,11 @@ export default async function JanuaryLandingPage() {
                   <div className="border-border mt-auto flex items-end justify-between border-t border-dashed pt-4">
                     <div>
                       <div className="font-display text-xl">
-                        ₹{EARLY_BIRD_PRICE.toLocaleString("en-IN")}
+                        ₹{cohort.price.toLocaleString("en-IN")}
                       </div>
                       <div className="text-muted-foreground text-xs">
-                        <s>₹{cohort.price.toLocaleString("en-IN")}</s> early
-                        bird until 15 Dec
+                        Early bird ₹{EARLY_BIRD_PRICE.toLocaleString("en-IN")} ·
+                        register by 15 Dec
                       </div>
                     </div>
                     <Link
