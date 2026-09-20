@@ -25,6 +25,7 @@ import type * as adminCoupons from "../adminCoupons.js";
 import type * as adminCourses from "../adminCourses.js";
 import type * as adminDashboard from "../adminDashboard.js";
 import type * as adminEnrollments from "../adminEnrollments.js";
+import type * as adminLeads from "../adminLeads.js";
 import type * as adminLoyalty from "../adminLoyalty.js";
 import type * as adminManagers from "../adminManagers.js";
 import type * as adminOffers from "../adminOffers.js";
@@ -73,6 +74,7 @@ declare const fullApi: ApiFromModules<{
   adminCourses: typeof adminCourses;
   adminDashboard: typeof adminDashboard;
   adminEnrollments: typeof adminEnrollments;
+  adminLeads: typeof adminLeads;
   adminLoyalty: typeof adminLoyalty;
   adminManagers: typeof adminManagers;
   adminOffers: typeof adminOffers;
