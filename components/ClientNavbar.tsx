@@ -1,30 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Suspense } from "react";
-import Navbar from "@/app/navbar";
+import FieldGuideNav from "@/components/field-guide/FieldGuideNav";
 import ServerNavbar from "./ServerNavbar";
 
 export default function ClientNavbar() {
   const [isHydrated, setIsHydrated] = useState(false);
-  const clerkConfigured = Boolean(
-    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
-  );
 
   useEffect(() => {
     setIsHydrated(true);
   }, []);
 
-  // Without Clerk keys there is no ClerkProvider, so the interactive navbar
-  // (which uses Clerk components) cannot mount. Keep the server navbar.
-  if (!isHydrated || !clerkConfigured) {
+  // Server-render the static bar for the first paint, then mount the
+  // interactive Field Guide nav (which handles Clerk presence internally).
+  if (!isHydrated) {
     return <ServerNavbar />;
   }
 
-  // Once hydrated, show the full interactive navbar with Suspense fallback
-  return (
-    <Suspense fallback={<ServerNavbar />}>
-      <Navbar />
-    </Suspense>
-  );
+  return <FieldGuideNav />;
 }
