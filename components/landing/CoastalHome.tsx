@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ArrowRight, Check, Shield } from "lucide-react";
 import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
+import { EmailCapture } from "@/components/coastal/EmailCapture";
 import type { PublicCourse } from "@/lib/backend";
 
 interface CoastalHomeProps {
@@ -93,7 +94,6 @@ export default function CoastalHome({
   upcomingCourses,
 }: CoastalHomeProps) {
   const [activePath, setActivePath] = useState<string | null>(null);
-  const [emailSent, setEmailSent] = useState(false);
   const active = PATHS.find((p) => p.key === activePath);
 
   const programCards = upcomingCourses.slice(0, 3).map((course) => ({
@@ -465,30 +465,7 @@ export default function CoastalHome({
             One recorded session, no card, no pressure — just a taste of how we
             teach.
           </p>
-          <form
-            className="mt-2 flex w-full max-w-lg flex-col gap-3 sm:flex-row"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setEmailSent(true);
-            }}
-          >
-            <input
-              type="email"
-              required
-              placeholder="you@email.com"
-              aria-label="Email"
-              className="border-primary bg-card focus-visible:ring-primary flex-1 rounded-full border px-5 py-3.5 text-base outline-none focus-visible:ring-2"
-            />
-            <button
-              type="submit"
-              className="bg-primary text-primary-foreground rounded-full px-6 py-3.5 text-xs font-medium tracking-[0.16em] uppercase"
-            >
-              {emailSent ? "Sent ✓" : "Send it to me"}
-            </button>
-          </form>
-          <span className="text-muted-foreground text-[0.62rem] tracking-[0.3em] uppercase">
-            No spam. Unsubscribe any time.
-          </span>
+          <EmailCapture source="masterclass" />
         </div>
       </section>
 

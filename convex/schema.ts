@@ -403,6 +403,29 @@ export default defineSchema({
     phone: v.string(),
   }).index("by_email", ["email"]),
 
+  // Marketing leads captured from the storefront's free resources and forms.
+  // Marketing consent is stored separately from Course communication, with its
+  // purpose and the wording version agreed at the moment of capture.
+  leads: defineTable({
+    email: v.string(),
+    name: v.optional(v.string()),
+    phone: v.optional(v.string()),
+    city: v.optional(v.string()),
+    educationStatus: v.optional(v.string()),
+    interest: v.optional(v.string()),
+    message: v.optional(v.string()),
+    source: v.string(),
+    marketingConsent: v.boolean(),
+    consentPurpose: v.optional(v.string()),
+    consentTextVersion: v.optional(v.string()),
+    consentAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_source", ["source"])
+    .index("by_createdAt", ["createdAt"]),
+
   // User profiles for storing additional user data (e.g., WhatsApp number)
   userProfiles: defineTable({
     clerkUserId: v.string(), // Clerk user ID

@@ -58,7 +58,7 @@ export default function ResourcesPage() {
           <p className="text-muted-foreground mt-2">
             No card, no pressure — just a real taste of how we teach.
           </p>
-          <EmailCapture />
+          <EmailCapture source="resources" />
         </div>
       </section>
 
