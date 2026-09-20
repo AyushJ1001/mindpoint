@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 // Storefront lead capture. Marketing consent is recorded separately from Course
 // communication, with the purpose and wording version agreed at capture
@@ -89,6 +90,18 @@ export const submitLead = mutation({
       createdAt: now,
       updatedAt: now,
     });
+
+    // Deliver the resource the visitor asked for. Only on first capture, so a
+    // repeat submission does not re-send.
+    await ctx.scheduler.runAfter(
+      0,
+      internal.emailActions.sendLeadConfirmation,
+      {
+        email,
+        name: clean(args.name),
+        source,
+      },
+    );
 
     return { ok: true };
   },
