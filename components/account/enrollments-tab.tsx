@@ -5,7 +5,17 @@ import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Clock, BookOpen } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Calendar, Clock, BookOpen, Waves } from "lucide-react";
+import Link from "next/link";
+
+const lmsCourseTypes = new Set([
+  "pre-recorded",
+  "certificate",
+  "diploma",
+  "internship",
+  "masterclass",
+]);
 
 export function EnrollmentsTab() {
   const { user } = useUser();
@@ -98,6 +108,19 @@ export function EnrollmentsTab() {
                     <Badge variant="default" className="bg-emerald-500">
                       BOGO Free Course
                     </Badge>
+                  )}
+                  {lmsCourseTypes.has(enrollment.courseType ?? "") && (
+                    <div className="pt-3">
+                      <Button
+                        asChild
+                        className="rounded-xl bg-[#0c6f73] text-[#fffaf0] hover:bg-[#07575b]"
+                      >
+                        <Link href="/lms">
+                          <Waves className="mr-2 h-4 w-4" aria-hidden="true" />
+                          Open My Learning
+                        </Link>
+                      </Button>
+                    </div>
                   )}
                 </div>
               </CardContent>

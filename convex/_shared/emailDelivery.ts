@@ -50,6 +50,44 @@ function createResendClient(): EmailDeliveryFailure | Resend {
   return new Resend(resendApiKey);
 }
 
+export async function sendEmail(
+  emailConfig: EmailDeliveryConfig,
+): Promise<EmailDeliveryResult> {
+  const resend = createResendClient();
+  if ("_tag" in resend) {
+    return resend;
+  }
+
+  const mainRecipients = Array.isArray(emailConfig.to)
+    ? emailConfig.to
+    : [emailConfig.to];
+
+  try {
+    const result = await resend.emails.send({
+      ...emailConfig,
+      to: mainRecipients,
+    });
+
+    if (result.error) {
+      return emailDeliveryFailure(result.error.message, {
+        recipientCount: mainRecipients.length,
+        subject: emailConfig.subject,
+      });
+    }
+
+    return convexSuccess({});
+  } catch (error) {
+    return emailDeliveryFailure(
+      error instanceof Error ? error.message : String(error),
+      {
+        recipientCount: mainRecipients.length,
+        subject: emailConfig.subject,
+      },
+    );
+  }
+}
+
+// Sends the email and BCCs the team inbox so staff keep a copy.
 export async function sendEmailWithCopy(
   emailConfig: EmailDeliveryConfig,
 ): Promise<EmailDeliveryResult> {

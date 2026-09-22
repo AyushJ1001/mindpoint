@@ -1,907 +1,1840 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import type { MutationCtx } from "./_generated/server";
-import type { Doc } from "./_generated/dataModel";
+import {
+  internalMutation,
+  mutation,
+  query,
+  type MutationCtx,
+  type QueryCtx,
+} from "./_generated/server";
 import { internal } from "./_generated/api";
+import type { Doc, Id } from "./_generated/dataModel";
 import { requireAdmin } from "./adminAuth";
 import {
-  getEnrollmentAccess,
-  hasActiveEnrollment,
-  resolveViewer,
-  type Viewer,
-} from "./_shared/viewer";
+  LmsActivityType,
+  LmsCompletionMode,
+  LmsFeedbackMode,
+  LmsReleaseMode,
+} from "./schema";
+import { maybeCreateCompletionRequest } from "./lmsCompletion";
+import { scoreLmsQuiz } from "./_shared/lmsQuiz";
+import {
+  normalizeCertificateName,
+  normalizeVerificationCode,
+} from "./_shared/lmsCertificate";
+import {
+  canViewLmsQuestion,
+  validateLmsQuestion,
+} from "./_shared/lmsDiscussion";
+import { getLmsLearningMode, isLmsCourseType } from "./_shared/lmsCourseScope";
+import {
+  anonymousFeedbackDelayMs,
+  summarizeLmsFeedback,
+  validateAnonymousMinimumGroupSize,
+  validateLmsFeedbackInput,
+} from "./_shared/lmsFeedback";
 
-// ---------------------------------------------------------------------------
-// LMS: authored lessons per course + per-learner completion tracking.
-// Lesson content is only returned to enrolled learners (or admins), and that
-// gate is enforced here, not just in the UI.
-// ---------------------------------------------------------------------------
+type ViewerCtx = QueryCtx | MutationCtx;
 
-const lessonKind = v.union(
-  v.literal("video"),
-  v.literal("pdf"),
-  v.literal("link"),
-  v.literal("text"),
-);
-
-function makeVerificationCode(): string {
-  const random = Math.random().toString(36).slice(2, 8).toUpperCase();
-  const time = Date.now().toString(36).slice(-4).toUpperCase();
-  return `TMP-${time}${random}`;
+async function requireViewer(ctx: ViewerCtx) {
+  const identity = await ctx.auth.getUserIdentity();
+  if (!identity) {
+    throw new Error("Unauthorized: sign in required");
+  }
+  return identity;
 }
 
-function shapeCertificate(cert: Doc<"certificates">) {
-  return {
-    verificationCode: cert.verificationCode,
-    userName: cert.userName,
-    courseName: cert.courseName,
-    enrollmentNumber: cert.enrollmentNumber ?? null,
-    issuedAt: cert.issuedAt,
-  };
+async function requireOwnedEnrollment(
+  ctx: ViewerCtx,
+  enrollmentId: Id<"enrollments">,
+) {
+  const identity = await requireViewer(ctx);
+  const enrollment = await ctx.db.get("enrollments", enrollmentId);
+  if (!enrollment) {
+    throw new Error("Enrollment not found");
+  }
+  if (
+    enrollment.userId !== identity.subject &&
+    enrollment.userId !== identity.tokenIdentifier
+  ) {
+    throw new Error("Forbidden: Enrollment access required");
+  }
+  if (enrollment.status && enrollment.status !== "active") {
+    throw new Error("Enrollment is not active");
+  }
+  return { enrollment, identity };
 }
 
-const certificateValue = v.object({
-  verificationCode: v.string(),
-  userName: v.string(),
-  courseName: v.string(),
-  enrollmentNumber: v.union(v.string(), v.null()),
-  issuedAt: v.number(),
-});
-
-// Issue a certificate once every published lesson for the course is complete.
-// Idempotent: returns the existing certificate if one was already issued.
-async function ensureCertificate(
-  ctx: MutationCtx,
-  viewer: Viewer,
-  courseId: Doc<"courses">["_id"],
-): Promise<Doc<"certificates"> | null> {
-  const existing = await ctx.db
-    .query("certificates")
-    .withIndex("by_userId_and_courseId", (q) =>
-      q.eq("userId", viewer.userId).eq("courseId", courseId),
-    )
-    .first();
-  if (existing) return existing;
-
-  const course = await ctx.db.get(courseId);
-  if (!course) return null;
-
-  const lessons = (
-    await ctx.db
-      .query("lessons")
-      .withIndex("by_courseId_and_sortOrder", (q) =>
-        q.eq("courseId", courseId),
-      )
-      .collect()
-  ).filter((lesson) => lesson.isPublished);
-  if (lessons.length === 0) return null;
-
-  const progress = await ctx.db
-    .query("lessonProgress")
-    .withIndex("by_userId_and_courseId", (q) =>
-      q.eq("userId", viewer.userId).eq("courseId", courseId),
-    )
-    .collect();
-  const completedIds = new Set(
-    progress.filter((row) => row.completed).map((row) => String(row.lessonId)),
+async function requireEnrollmentCurriculum(
+  ctx: ViewerCtx,
+  enrollmentId: Id<"enrollments">,
+) {
+  const { enrollment, identity } = await requireOwnedEnrollment(
+    ctx,
+    enrollmentId,
   );
-  if (!lessons.every((lesson) => completedIds.has(String(lesson._id)))) {
-    return null;
+  const assignment = await ctx.db
+    .query("lmsEnrollmentCurricula")
+    .withIndex("by_enrollmentId", (q) => q.eq("enrollmentId", enrollmentId))
+    .unique();
+  if (!assignment || assignment.status === "suspended") {
+    throw new Error("LMS access has not been activated for this Enrollment");
   }
-
-  // If the course has a published quiz with questions, it must also be passed.
-  const quiz = await ctx.db
-    .query("quizzes")
-    .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
-    .first();
-  if (quiz?.isPublished) {
-    const questions = await ctx.db
-      .query("quizQuestions")
-      .withIndex("by_quizId", (q) => q.eq("quizId", quiz._id))
-      .collect();
-    if (questions.length > 0) {
-      const attempts = await ctx.db
-        .query("quizAttempts")
-        .withIndex("by_userId_and_quizId", (q) =>
-          q.eq("userId", viewer.userId).eq("quizId", quiz._id),
-        )
-        .collect();
-      if (!attempts.some((attempt) => attempt.passed)) return null;
-    }
+  const curriculum = await ctx.db.get("lmsCurricula", assignment.curriculumId);
+  if (!curriculum || curriculum.status !== "published") {
+    throw new Error("Published Curriculum not found");
   }
-
-  const enrollment = await ctx.db
-    .query("enrollments")
-    .withIndex("by_userId_and_courseId", (q) =>
-      q.eq("userId", viewer.userId).eq("courseId", courseId),
-    )
-    .first();
-
-  const certificateId = await ctx.db.insert("certificates", {
-    userId: viewer.userId,
-    userName: viewer.name ?? viewer.email ?? "Learner",
-    courseId,
-    courseName: course.name,
-    enrollmentNumber: enrollment?.enrollmentNumber,
-    verificationCode: makeVerificationCode(),
-    issuedAt: Date.now(),
-  });
-
-  const certificate = await ctx.db.get(certificateId);
-
-  // Email the learner their certificate (non-blocking; failure is logged by
-  // the action and never blocks issuance).
-  if (certificate && viewer.email) {
-    await ctx.scheduler.runAfter(
-      0,
-      internal.emailActions.sendCertificateIssuedEmail,
-      {
-        userEmail: viewer.email,
-        userName: certificate.userName,
-        courseName: certificate.courseName,
-        verificationCode: certificate.verificationCode,
-        courseId: String(courseId),
-      },
-    );
-  }
-
-  return certificate;
+  return { assignment, curriculum, enrollment, identity };
 }
 
-function shapeAdminLesson(lesson: Doc<"lessons">) {
-  return {
-    _id: lesson._id,
-    courseId: lesson.courseId,
-    moduleTitle: lesson.moduleTitle ?? null,
-    title: lesson.title,
-    description: lesson.description ?? null,
-    kind: lesson.kind,
-    contentUrl: lesson.contentUrl ?? null,
-    textContent: lesson.textContent ?? null,
-    durationMinutes: lesson.durationMinutes ?? null,
-    sortOrder: lesson.sortOrder,
-    isPublished: lesson.isPublished,
-  };
+function validateHttpsUrl(value?: string) {
+  if (!value) return undefined;
+  const url = new URL(value);
+  if (url.protocol !== "https:") {
+    throw new Error("External resources must use HTTPS");
+  }
+  return url.href;
 }
 
-const adminLessonValue = v.object({
-  _id: v.id("lessons"),
-  courseId: v.id("courses"),
-  moduleTitle: v.union(v.string(), v.null()),
-  title: v.string(),
-  description: v.union(v.string(), v.null()),
-  kind: lessonKind,
-  contentUrl: v.union(v.string(), v.null()),
-  textContent: v.union(v.string(), v.null()),
-  durationMinutes: v.union(v.number(), v.null()),
-  sortOrder: v.number(),
-  isPublished: v.boolean(),
-});
-
-// ---------------------------------------------------------------------------
-// Admin: authoring
-// ---------------------------------------------------------------------------
-
-async function getSequentialModules(
-  ctx: MutationCtx | Parameters<typeof requireAdmin>[0],
-  courseId: Doc<"courses">["_id"],
-): Promise<boolean> {
-  const settings = await ctx.db
-    .query("lmsSettings")
-    .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
-    .first();
-  return settings?.sequentialModules ?? false;
-}
-
-// A module is locked when any earlier module still has incomplete lessons.
-function computeLockedLessonIds(
-  lessons: Doc<"lessons">[],
-  completedIds: Set<string>,
-): Set<string> {
-  const modules: Doc<"lessons">[][] = [];
-  let currentTitle: string | null | undefined;
-  for (const lesson of lessons) {
-    const title = lesson.moduleTitle ?? null;
-    if (modules.length === 0 || title !== currentTitle) {
-      modules.push([]);
-      currentTitle = title;
-    }
-    modules[modules.length - 1].push(lesson);
-  }
-
-  const locked = new Set<string>();
-  let sawIncompleteModule = false;
-  for (const module of modules) {
-    if (sawIncompleteModule) {
-      for (const lesson of module) locked.add(String(lesson._id));
-    }
-    const complete = module.every((lesson) =>
-      completedIds.has(String(lesson._id)),
-    );
-    if (!complete) sawIncompleteModule = true;
-  }
-  return locked;
-}
-
-export const getLmsSettings = query({
-  args: { courseId: v.id("courses") },
-  returns: v.object({ sequentialModules: v.boolean() }),
-  handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    return {
-      sequentialModules: await getSequentialModules(ctx, args.courseId),
-    };
-  },
-});
-
-export const setLmsSettings = mutation({
-  args: {
-    courseId: v.id("courses"),
-    sequentialModules: v.boolean(),
-  },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    const admin = await requireAdmin(ctx);
-    const now = Date.now();
-    const existing = await ctx.db
-      .query("lmsSettings")
-      .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId))
-      .first();
-    if (existing) {
-      await ctx.db.patch(existing._id, {
-        sequentialModules: args.sequentialModules,
-        updatedAt: now,
-        updatedByAdminId: admin.userId,
-      });
-    } else {
-      await ctx.db.insert("lmsSettings", {
-        courseId: args.courseId,
-        sequentialModules: args.sequentialModules,
-        updatedAt: now,
-        updatedByAdminId: admin.userId,
-      });
-    }
-    return null;
-  },
-});
-
-export const listLessonsForAdmin = query({
-  args: { courseId: v.id("courses") },
-  returns: v.array(adminLessonValue),
-  handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    const lessons = await ctx.db
-      .query("lessons")
-      .withIndex("by_courseId_and_sortOrder", (q) =>
-        q.eq("courseId", args.courseId),
-      )
-      .collect();
-    return lessons.map(shapeAdminLesson);
-  },
-});
-
-function validateLessonContent(input: {
-  kind: "video" | "pdf" | "link" | "text";
-  contentUrl?: string;
-  textContent?: string;
-}) {
-  const url = input.contentUrl?.trim();
-  const text = input.textContent?.trim();
-  if (input.kind === "text") {
-    if (!text) throw new Error("Text lessons need body content");
-    return;
-  }
-  if (!url) {
-    throw new Error("This lesson type needs a URL");
-  }
-  if (!/^https?:\/\//i.test(url)) {
-    throw new Error("Lesson URL must start with http:// or https://");
-  }
-}
-
-export const createLesson = mutation({
+export const createDraftCurriculum = mutation({
   args: {
     courseId: v.id("courses"),
     title: v.string(),
-    description: v.optional(v.string()),
-    kind: lessonKind,
-    contentUrl: v.optional(v.string()),
-    textContent: v.optional(v.string()),
-    moduleTitle: v.optional(v.string()),
-    durationMinutes: v.optional(v.number()),
-    isPublished: v.optional(v.boolean()),
   },
-  returns: v.id("lessons"),
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
-    const title = args.title.trim();
-    if (!title) throw new Error("Lesson title is required");
-    validateLessonContent(args);
+    const course = await ctx.db.get("courses", args.courseId);
+    if (!course) throw new Error("Course not found");
+    if (!isLmsCourseType(course.type)) {
+      throw new Error("This Course type does not use the academic LMS");
+    }
 
     const existing = await ctx.db
-      .query("lessons")
-      .withIndex("by_courseId_and_sortOrder", (q) =>
-        q.eq("courseId", args.courseId),
-      )
-      .collect();
+      .query("lmsCurricula")
+      .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId))
+      .order("desc")
+      .take(100);
+    const version =
+      existing.reduce((highest, item) => Math.max(highest, item.version), 0) +
+      1;
     const now = Date.now();
-
-    return await ctx.db.insert("lessons", {
+    const curriculumId = await ctx.db.insert("lmsCurricula", {
       courseId: args.courseId,
-      moduleTitle: args.moduleTitle?.trim() || undefined,
-      title,
-      description: args.description?.trim() || undefined,
-      kind: args.kind,
-      contentUrl: args.contentUrl?.trim() || undefined,
-      textContent: args.textContent || undefined,
-      durationMinutes: args.durationMinutes,
-      sortOrder:
-        existing.reduce((max, lesson) => Math.max(max, lesson.sortOrder), -1) +
-        1,
-      isPublished: args.isPublished ?? true,
+      version,
+      title: args.title.trim() || `${course.name} Curriculum`,
+      status: "draft",
+      createdByAdminId: admin.userId,
       createdAt: now,
       updatedAt: now,
-      createdByAdminId: admin.userId,
     });
+    return { curriculumId, version };
   },
 });
 
-export const updateLesson = mutation({
+export const addModule = mutation({
   args: {
-    lessonId: v.id("lessons"),
-    title: v.optional(v.string()),
+    curriculumId: v.id("lmsCurricula"),
+    title: v.string(),
     description: v.optional(v.string()),
-    kind: v.optional(lessonKind),
-    contentUrl: v.optional(v.string()),
-    textContent: v.optional(v.string()),
-    moduleTitle: v.optional(v.string()),
-    durationMinutes: v.optional(v.number()),
-    isPublished: v.optional(v.boolean()),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
     await requireAdmin(ctx);
-    const lesson = await ctx.db.get(args.lessonId);
-    if (!lesson) throw new Error("Lesson not found");
-
-    const nextKind = args.kind ?? lesson.kind;
-    const nextUrl =
-      args.contentUrl !== undefined ? args.contentUrl : lesson.contentUrl;
-    const nextText =
-      args.textContent !== undefined ? args.textContent : lesson.textContent;
-    validateLessonContent({
-      kind: nextKind,
-      contentUrl: nextUrl,
-      textContent: nextText,
-    });
-
-    await ctx.db.patch(args.lessonId, {
-      title: args.title !== undefined ? args.title.trim() : lesson.title,
-      description:
-        args.description !== undefined
-          ? args.description.trim() || undefined
-          : lesson.description,
-      kind: nextKind,
-      contentUrl:
-        args.contentUrl !== undefined
-          ? args.contentUrl.trim() || undefined
-          : lesson.contentUrl,
-      textContent:
-        args.textContent !== undefined ? args.textContent : lesson.textContent,
-      moduleTitle:
-        args.moduleTitle !== undefined
-          ? args.moduleTitle.trim() || undefined
-          : lesson.moduleTitle,
-      durationMinutes:
-        args.durationMinutes !== undefined
-          ? args.durationMinutes
-          : lesson.durationMinutes,
-      isPublished:
-        args.isPublished !== undefined ? args.isPublished : lesson.isPublished,
-      updatedAt: Date.now(),
-    });
-    return null;
-  },
-});
-
-export const deleteLesson = mutation({
-  args: { lessonId: v.id("lessons") },
-  returns: v.null(),
-  handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-    const progress = await ctx.db
-      .query("lessonProgress")
-      .withIndex("by_lessonId", (q) => q.eq("lessonId", args.lessonId))
-      .collect();
-    for (const row of progress) {
-      await ctx.db.delete(row._id);
+    const curriculum = await ctx.db.get("lmsCurricula", args.curriculumId);
+    if (!curriculum || curriculum.status !== "draft") {
+      throw new Error("Only a Draft Curriculum can be edited");
     }
-    await ctx.db.delete(args.lessonId);
-    return null;
+    const modules = await ctx.db
+      .query("lmsModules")
+      .withIndex("by_curriculumId_and_sortOrder", (q) =>
+        q.eq("curriculumId", args.curriculumId),
+      )
+      .order("desc")
+      .take(1);
+    const now = Date.now();
+    const moduleId = await ctx.db.insert("lmsModules", {
+      curriculumId: args.curriculumId,
+      title: args.title.trim(),
+      description: args.description?.trim() || undefined,
+      sortOrder: (modules[0]?.sortOrder ?? -1) + 1,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await ctx.db.patch("lmsCurricula", args.curriculumId, { updatedAt: now });
+    return { moduleId };
   },
 });
 
-export const reorderLessons = mutation({
+export const addActivity = mutation({
   args: {
-    courseId: v.id("courses"),
-    orderedLessonIds: v.array(v.id("lessons")),
+    moduleId: v.id("lmsModules"),
+    type: LmsActivityType,
+    title: v.string(),
+    instructions: v.optional(v.string()),
+    content: v.optional(v.string()),
+    externalUrl: v.optional(v.string()),
+    durationMinutes: v.optional(v.number()),
+    required: v.boolean(),
+    releaseMode: LmsReleaseMode,
+    releaseAt: v.optional(v.number()),
+    prerequisiteActivityId: v.optional(v.id("lmsActivities")),
+    completionMode: LmsCompletionMode,
+    gradingCriteria: v.optional(v.string()),
+    passingScore: v.optional(v.number()),
+    feedbackMode: v.optional(LmsFeedbackMode),
+    feedbackMinimumGroupSize: v.optional(v.number()),
+    rightsApproved: v.boolean(),
+    accessibleAlternative: v.optional(v.string()),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
-    await requireAdmin(ctx);
+    const admin = await requireAdmin(ctx);
+    const module = await ctx.db.get("lmsModules", args.moduleId);
+    if (!module) throw new Error("Module not found");
+    const curriculum = await ctx.db.get("lmsCurricula", module.curriculumId);
+    if (!curriculum || curriculum.status !== "draft") {
+      throw new Error("Only a Draft Curriculum can be edited");
+    }
+    if (!args.title.trim()) throw new Error("Activity title is required");
+    if (args.releaseMode === "date" && !args.releaseAt) {
+      throw new Error("A date-based release needs a release date");
+    }
+    if (args.releaseMode === "prerequisite" && !args.prerequisiteActivityId) {
+      throw new Error("A prerequisite release needs an activity");
+    }
+    if (args.completionMode === "pass" && args.passingScore === undefined) {
+      throw new Error("A passing-score activity needs a passing score");
+    }
+    if (
+      args.type === "assignment" &&
+      (args.gradingCriteria?.trim().length ?? 0) < 10
+    ) {
+      throw new Error(
+        "An Assignment needs review criteria of at least 10 characters",
+      );
+    }
+    if (
+      args.type === "quiz" &&
+      (args.completionMode !== "pass" ||
+        args.passingScore === undefined ||
+        args.passingScore < 0 ||
+        args.passingScore > 100)
+    ) {
+      throw new Error("A Quiz needs a passing score between 0 and 100");
+    }
+    if (args.type === "feedback") {
+      if (args.completionMode !== "submit" || !args.feedbackMode) {
+        throw new Error(
+          "Feedback needs a response mode and submit-based Completion",
+        );
+      }
+      if (args.feedbackMode === "anonymous") {
+        validateAnonymousMinimumGroupSize(
+          args.feedbackMinimumGroupSize ?? Number.NaN,
+        );
+      }
+    }
+
+    const existing = await ctx.db
+      .query("lmsActivities")
+      .withIndex("by_moduleId_and_sortOrder", (q) =>
+        q.eq("moduleId", args.moduleId),
+      )
+      .order("desc")
+      .take(1);
     const now = Date.now();
-    for (let index = 0; index < args.orderedLessonIds.length; index++) {
-      await ctx.db.patch(args.orderedLessonIds[index], {
+    const activityId = await ctx.db.insert("lmsActivities", {
+      curriculumId: module.curriculumId,
+      moduleId: args.moduleId,
+      type: args.type,
+      title: args.title.trim(),
+      instructions: args.instructions?.trim() || undefined,
+      content: args.content?.trim() || undefined,
+      externalUrl: validateHttpsUrl(args.externalUrl),
+      durationMinutes: args.durationMinutes,
+      required: args.required,
+      sortOrder: (existing[0]?.sortOrder ?? -1) + 1,
+      releaseMode: args.releaseMode,
+      releaseAt: args.releaseAt,
+      prerequisiteActivityId: args.prerequisiteActivityId,
+      completionMode: args.completionMode,
+      gradingCriteria:
+        args.type === "assignment"
+          ? args.gradingCriteria?.trim() || undefined
+          : undefined,
+      passingScore: args.passingScore,
+      feedbackMode: args.type === "feedback" ? args.feedbackMode : undefined,
+      feedbackMinimumGroupSize:
+        args.type === "feedback" && args.feedbackMode === "anonymous"
+          ? args.feedbackMinimumGroupSize
+          : undefined,
+      rightsApproved: args.rightsApproved,
+      accessibleAlternative: args.accessibleAlternative?.trim() || undefined,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await ctx.db.patch("lmsCurricula", module.curriculumId, { updatedAt: now });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "lms.activity.created",
+      entityType: "lmsActivity",
+      entityId: activityId,
+      after: { type: args.type, rightsApproved: args.rightsApproved },
+      createdAt: now,
+    });
+    return { activityId };
+  },
+});
+
+export const addQuizQuestion = mutation({
+  args: {
+    activityId: v.id("lmsActivities"),
+    prompt: v.string(),
+    options: v.array(
+      v.object({
+        label: v.string(),
+        isCorrect: v.boolean(),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (!activity || activity.type !== "quiz") {
+      throw new Error("Quiz activity not found");
+    }
+    const curriculum = await ctx.db.get("lmsCurricula", activity.curriculumId);
+    if (!curriculum || curriculum.status !== "draft") {
+      throw new Error("Quiz questions can only be added to a Draft Curriculum");
+    }
+    const prompt = args.prompt.trim();
+    const options = args.options.map((option) => ({
+      label: option.label.trim(),
+      isCorrect: option.isCorrect,
+    }));
+    if (!prompt) throw new Error("Question text is required");
+    if (options.length < 2 || options.length > 6) {
+      throw new Error("A Quiz question needs between 2 and 6 options");
+    }
+    if (options.some((option) => !option.label)) {
+      throw new Error("Every Quiz option needs text");
+    }
+    if (
+      new Set(options.map((option) => option.label.toLowerCase())).size !==
+      options.length
+    ) {
+      throw new Error("Quiz options must be unique");
+    }
+    if (options.filter((option) => option.isCorrect).length !== 1) {
+      throw new Error("Choose exactly one correct answer");
+    }
+    const existing = await ctx.db
+      .query("lmsQuizQuestions")
+      .withIndex("by_activityId_and_sortOrder", (q) =>
+        q.eq("activityId", args.activityId),
+      )
+      .order("desc")
+      .take(1);
+    const now = Date.now();
+    const questionId = await ctx.db.insert("lmsQuizQuestions", {
+      activityId: args.activityId,
+      prompt,
+      sortOrder: (existing[0]?.sortOrder ?? -1) + 1,
+      createdAt: now,
+      updatedAt: now,
+    });
+    for (let index = 0; index < options.length; index += 1) {
+      await ctx.db.insert("lmsQuizOptions", {
+        questionId,
+        label: options[index].label,
         sortOrder: index,
-        updatedAt: now,
+        isCorrect: options[index].isCorrect,
+        createdAt: now,
       });
     }
-    return null;
+    await ctx.db.patch("lmsCurricula", curriculum._id, { updatedAt: now });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "lms.quiz_question.created",
+      entityType: "lmsQuizQuestion",
+      entityId: questionId,
+      after: { activityId: activity._id, optionCount: options.length },
+      createdAt: now,
+    });
+    return { questionId };
   },
 });
 
-// ---------------------------------------------------------------------------
-// Learner: enrolled users (or admins) only
-// ---------------------------------------------------------------------------
+async function getFeedbackReport(
+  ctx: QueryCtx,
+  activity: Doc<"lmsActivities">,
+) {
+  const responses = await ctx.db
+    .query("lmsFeedbackResponses")
+    .withIndex("by_activityId", (q) => q.eq("activityId", activity._id))
+    .order("desc")
+    .take(500);
+  const summary = summarizeLmsFeedback(
+    responses.map((response) => response.rating),
+  );
+  const mode = activity.feedbackMode ?? "identified";
+  const minimumGroupSize =
+    mode === "anonymous" ? (activity.feedbackMinimumGroupSize ?? 5) : 1;
+  const released =
+    mode === "identified" || responses.length >= minimumGroupSize;
 
-const learnerLessonValue = v.object({
-  _id: v.id("lessons"),
-  moduleTitle: v.union(v.string(), v.null()),
-  title: v.string(),
-  description: v.union(v.string(), v.null()),
-  kind: lessonKind,
-  contentUrl: v.union(v.string(), v.null()),
-  textContent: v.union(v.string(), v.null()),
-  durationMinutes: v.union(v.number(), v.null()),
-  completed: v.boolean(),
-  locked: v.boolean(),
+  if (mode === "anonymous") {
+    return {
+      activityId: activity._id,
+      mode,
+      minimumGroupSize,
+      responseCount: summary.responseCount,
+      released,
+      averageRating: released ? summary.averageRating : null,
+      comments: released
+        ? responses
+            .map((response) => response.comment)
+            .filter((comment): comment is string => Boolean(comment))
+            .slice(0, 50)
+        : [],
+      identifiedResponses: [],
+    };
+  }
+
+  const identifiedResponses = await Promise.all(
+    responses.slice(0, 50).map(async (response) => {
+      const enrollment = response.enrollmentId
+        ? await ctx.db.get("enrollments", response.enrollmentId)
+        : null;
+      return {
+        studentName: enrollment?.userName ?? "Student",
+        rating: response.rating,
+        comment: response.comment,
+        submittedAt: response.submittedAt ?? response._creationTime,
+      };
+    }),
+  );
+  return {
+    activityId: activity._id,
+    mode,
+    minimumGroupSize,
+    responseCount: summary.responseCount,
+    released,
+    averageRating: summary.averageRating,
+    comments: [],
+    identifiedResponses,
+  };
+}
+
+export const getAdminCurriculum = query({
+  args: { curriculumId: v.id("lmsCurricula") },
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+    const curriculum = await ctx.db.get("lmsCurricula", args.curriculumId);
+    if (!curriculum) return null;
+    const modules = await ctx.db
+      .query("lmsModules")
+      .withIndex("by_curriculumId_and_sortOrder", (q) =>
+        q.eq("curriculumId", args.curriculumId),
+      )
+      .take(100);
+    const activities = await ctx.db
+      .query("lmsActivities")
+      .withIndex("by_curriculumId", (q) =>
+        q.eq("curriculumId", args.curriculumId),
+      )
+      .take(500);
+    const quizQuestions = (
+      await Promise.all(
+        activities
+          .filter((activity) => activity.type === "quiz")
+          .map(async (activity) => {
+            const questions = await ctx.db
+              .query("lmsQuizQuestions")
+              .withIndex("by_activityId_and_sortOrder", (q) =>
+                q.eq("activityId", activity._id),
+              )
+              .take(100);
+            return await Promise.all(
+              questions.map(async (question) => ({
+                ...question,
+                options: await ctx.db
+                  .query("lmsQuizOptions")
+                  .withIndex("by_questionId_and_sortOrder", (q) =>
+                    q.eq("questionId", question._id),
+                  )
+                  .take(6),
+              })),
+            );
+          }),
+      )
+    ).flat();
+    const feedbackReports = await Promise.all(
+      activities
+        .filter((activity) => activity.type === "feedback")
+        .map((activity) => getFeedbackReport(ctx, activity)),
+    );
+    return {
+      curriculum,
+      modules,
+      activities,
+      quizQuestions,
+      feedbackReports,
+    };
+  },
 });
 
-export const listCourseLessons = query({
-  args: { courseId: v.id("courses") },
-  returns: v.object({
-    allowed: v.boolean(),
-    reason: v.union(
-      v.literal("unauthorized"),
-      v.literal("not_enrolled"),
-      v.literal("pending_verification"),
-      v.null(),
-    ),
-    courseName: v.union(v.string(), v.null()),
-    completedCount: v.number(),
-    totalCount: v.number(),
-    sequentialModules: v.boolean(),
-    lessons: v.array(learnerLessonValue),
-  }),
+export const publishCurriculum = mutation({
+  args: { curriculumId: v.id("lmsCurricula") },
   handler: async (ctx, args) => {
-    const course = await ctx.db.get(args.courseId);
-    const empty = {
-      allowed: false,
-      courseName: course?.name ?? null,
-      completedCount: 0,
-      totalCount: 0,
-      sequentialModules: false,
-      lessons: [],
-    };
-
-    const viewer = await resolveViewer(ctx);
-    if (!viewer) return { ...empty, reason: "unauthorized" as const };
-
-    if (!viewer.isAdmin) {
-      const access = await getEnrollmentAccess(
-        ctx,
-        viewer.userId,
-        args.courseId,
-      );
-      if (access === "pending") {
-        return { ...empty, reason: "pending_verification" as const };
+    const admin = await requireAdmin(ctx);
+    const curriculum = await ctx.db.get("lmsCurricula", args.curriculumId);
+    if (!curriculum || curriculum.status !== "draft") {
+      throw new Error("Draft Curriculum not found");
+    }
+    const course = await ctx.db.get("courses", curriculum.courseId);
+    if (!course || !isLmsCourseType(course.type)) {
+      throw new Error("This Course type does not use the academic LMS");
+    }
+    const modules = await ctx.db
+      .query("lmsModules")
+      .withIndex("by_curriculumId_and_sortOrder", (q) =>
+        q.eq("curriculumId", args.curriculumId),
+      )
+      .take(100);
+    const activities = await ctx.db
+      .query("lmsActivities")
+      .withIndex("by_curriculumId", (q) =>
+        q.eq("curriculumId", args.curriculumId),
+      )
+      .take(500);
+    if (modules.length === 0 || activities.length === 0) {
+      throw new Error("A Curriculum needs at least one Module and activity");
+    }
+    const moduleIds = new Set(modules.map((item) => item._id));
+    if (activities.some((item) => !moduleIds.has(item.moduleId))) {
+      throw new Error("Every activity must belong to this Curriculum");
+    }
+    if (
+      activities.some(
+        (item) =>
+          (item.type === "media" || item.type === "external_resource") &&
+          !item.rightsApproved,
+      )
+    ) {
+      throw new Error("Media and External resources need Rights approval");
+    }
+    if (
+      activities.some(
+        (item) => item.type === "media" && !item.accessibleAlternative,
+      )
+    ) {
+      throw new Error("Media activities need an accessible alternative");
+    }
+    if (
+      activities.some(
+        (item) =>
+          item.type === "assignment" &&
+          (item.gradingCriteria?.trim().length ?? 0) < 10,
+      )
+    ) {
+      throw new Error("Every Assignment needs Faculty review criteria");
+    }
+    for (const quiz of activities.filter((item) => item.type === "quiz")) {
+      if (
+        quiz.completionMode !== "pass" ||
+        quiz.passingScore === undefined ||
+        quiz.passingScore < 0 ||
+        quiz.passingScore > 100
+      ) {
+        throw new Error("Every Quiz needs a passing score between 0 and 100");
       }
-      if (access !== "active") {
-        return { ...empty, reason: "not_enrolled" as const };
+      const questions = await ctx.db
+        .query("lmsQuizQuestions")
+        .withIndex("by_activityId_and_sortOrder", (q) =>
+          q.eq("activityId", quiz._id),
+        )
+        .take(100);
+      if (questions.length === 0) {
+        throw new Error(`Quiz “${quiz.title}” needs at least one question`);
+      }
+      for (const question of questions) {
+        const options = await ctx.db
+          .query("lmsQuizOptions")
+          .withIndex("by_questionId_and_sortOrder", (q) =>
+            q.eq("questionId", question._id),
+          )
+          .take(6);
+        if (
+          options.length < 2 ||
+          options.filter((option) => option.isCorrect).length !== 1
+        ) {
+          throw new Error(`Quiz question “${question.prompt}” is incomplete`);
+        }
+      }
+    }
+    for (const feedback of activities.filter(
+      (item) => item.type === "feedback",
+    )) {
+      if (feedback.completionMode !== "submit" || !feedback.feedbackMode) {
+        throw new Error(
+          `Feedback “${feedback.title}” needs a response mode and submit-based Completion`,
+        );
+      }
+      if (feedback.feedbackMode === "anonymous") {
+        validateAnonymousMinimumGroupSize(
+          feedback.feedbackMinimumGroupSize ?? Number.NaN,
+        );
       }
     }
 
-    const lessons = (
-      await ctx.db
-        .query("lessons")
-        .withIndex("by_courseId_and_sortOrder", (q) =>
-          q.eq("courseId", args.courseId),
-        )
-        .collect()
-    ).filter((lesson) => lesson.isPublished || viewer.isAdmin);
+    const now = Date.now();
+    await ctx.db.patch("lmsCurricula", args.curriculumId, {
+      status: "published",
+      publishedAt: now,
+      updatedAt: now,
+    });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "lms.curriculum.published",
+      entityType: "lmsCurriculum",
+      entityId: args.curriculumId,
+      after: { version: curriculum.version, publishedAt: now },
+      createdAt: now,
+    });
+    return { publishedAt: now };
+  },
+});
 
-    const progress = await ctx.db
-      .query("lessonProgress")
-      .withIndex("by_userId_and_courseId", (q) =>
-        q.eq("userId", viewer.userId).eq("courseId", args.courseId),
+export const activateEnrollment = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    curriculumId: v.id("lmsCurricula"),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const enrollment = await ctx.db.get("enrollments", args.enrollmentId);
+    const curriculum = await ctx.db.get("lmsCurricula", args.curriculumId);
+    if (!enrollment || !curriculum)
+      throw new Error("Enrollment or Curriculum not found");
+    const course = await ctx.db.get("courses", curriculum.courseId);
+    if (!course || !isLmsCourseType(course.type)) {
+      throw new Error("This Course type does not use the academic LMS");
+    }
+    if (curriculum.status !== "published") {
+      throw new Error("Only a Published Curriculum can be activated");
+    }
+    if (enrollment.courseId !== curriculum.courseId) {
+      throw new Error(
+        "Enrollment and Curriculum must belong to the same Course",
+      );
+    }
+    const existing = await ctx.db
+      .query("lmsEnrollmentCurricula")
+      .withIndex("by_enrollmentId", (q) =>
+        q.eq("enrollmentId", args.enrollmentId),
       )
-      .collect();
-    const completedIds = new Set(
-      progress.filter((row) => row.completed).map((row) => String(row.lessonId)),
+      .unique();
+    if (existing) {
+      if (existing.curriculumId !== args.curriculumId) {
+        throw new Error(
+          "Enrollment is already pinned to another Curriculum version",
+        );
+      }
+      return { assignmentId: existing._id, alreadyActive: true };
+    }
+    const now = Date.now();
+    const assignmentId = await ctx.db.insert("lmsEnrollmentCurricula", {
+      enrollmentId: args.enrollmentId,
+      curriculumId: args.curriculumId,
+      status: "active",
+      activatedAt: now,
+      activatedByAdminId: admin.userId,
+    });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "lms.enrollment.activated",
+      entityType: "lmsEnrollmentCurriculum",
+      entityId: assignmentId,
+      after: {
+        enrollmentId: args.enrollmentId,
+        curriculumId: args.curriculumId,
+      },
+      createdAt: now,
+    });
+    return { assignmentId, alreadyActive: false };
+  },
+});
+
+export const listMyLmsEnrollments = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await requireViewer(ctx);
+    const subjectEnrollments = await ctx.db
+      .query("enrollments")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .order("desc")
+      .take(100);
+    const tokenEnrollments =
+      identity.tokenIdentifier === identity.subject
+        ? []
+        : await ctx.db
+            .query("enrollments")
+            .withIndex("by_userId", (q) =>
+              q.eq("userId", identity.tokenIdentifier),
+            )
+            .order("desc")
+            .take(100);
+    const enrollments = Array.from(
+      new Map(
+        [...subjectEnrollments, ...tokenEnrollments].map((enrollment) => [
+          enrollment._id,
+          enrollment,
+        ]),
+      ).values(),
+    ).filter(
+      (enrollment) => !enrollment.status || enrollment.status === "active",
     );
 
-    const sequentialModules = await getSequentialModules(ctx, args.courseId);
-    const lockedIds = sequentialModules
-      ? computeLockedLessonIds(lessons, completedIds)
-      : new Set<string>();
+    const academicEnrollments = enrollments.filter((enrollment) =>
+      isLmsCourseType(enrollment.courseType),
+    );
+
+    return await Promise.all(
+      academicEnrollments.map(async (enrollment) => {
+        const [course, assignment] = await Promise.all([
+          ctx.db.get("courses", enrollment.courseId),
+          ctx.db
+            .query("lmsEnrollmentCurricula")
+            .withIndex("by_enrollmentId", (q) =>
+              q.eq("enrollmentId", enrollment._id),
+            )
+            .unique(),
+        ]);
+        const curriculum = assignment
+          ? await ctx.db.get("lmsCurricula", assignment.curriculumId)
+          : null;
+
+        return {
+          enrollmentId: enrollment._id,
+          enrollmentNumber: enrollment.enrollmentNumber,
+          courseId: enrollment.courseId,
+          courseName: course?.name ?? enrollment.courseName ?? "Your Course",
+          courseCode: course?.code,
+          courseType: course?.type ?? enrollment.courseType,
+          learningMode:
+            getLmsLearningMode(course?.type ?? enrollment.courseType) ??
+            "self_paced",
+          batchLabel: enrollment.batchLabel,
+          curriculumTitle: curriculum?.title,
+          curriculumVersion: curriculum?.version,
+          lmsStatus:
+            assignment && curriculum?.status === "published"
+              ? assignment.status
+              : ("awaiting_activation" as const),
+        };
+      }),
+    );
+  },
+});
+
+async function getActivityAvailability(
+  ctx: ViewerCtx,
+  enrollmentId: Id<"enrollments">,
+  activity: Doc<"lmsActivities">,
+  completedActivityIds?: ReadonlySet<Id<"lmsActivities">>,
+) {
+  if (
+    activity.releaseMode === "date" &&
+    (activity.releaseAt ?? 0) > Date.now()
+  ) {
+    return {
+      isAvailable: false,
+      lockReason: `Available ${new Date(activity.releaseAt!).toISOString()}`,
+    };
+  }
+  if (activity.releaseMode === "prerequisite") {
+    if (!activity.prerequisiteActivityId) {
+      return { isAvailable: false, lockReason: "Release is being configured" };
+    }
+    const prerequisiteComplete = completedActivityIds
+      ? completedActivityIds.has(activity.prerequisiteActivityId)
+      : (
+          await ctx.db
+            .query("lmsActivityProgress")
+            .withIndex("by_enrollmentId_and_activityId", (q) =>
+              q
+                .eq("enrollmentId", enrollmentId)
+                .eq("activityId", activity.prerequisiteActivityId!),
+            )
+            .unique()
+        )?.status === "completed";
+    if (!prerequisiteComplete) {
+      return {
+        isAvailable: false,
+        lockReason: "Complete the previous required activity first",
+      };
+    }
+  }
+  return { isAvailable: true, lockReason: undefined };
+}
+
+export const getMyWorkspace = query({
+  args: { enrollmentId: v.id("enrollments") },
+  handler: async (ctx, args) => {
+    const { enrollment, identity } = await requireOwnedEnrollment(
+      ctx,
+      args.enrollmentId,
+    );
+    const assignment = await ctx.db
+      .query("lmsEnrollmentCurricula")
+      .withIndex("by_enrollmentId", (q) =>
+        q.eq("enrollmentId", args.enrollmentId),
+      )
+      .unique();
+    if (!assignment || assignment.status === "suspended") return null;
+    const curriculum = await ctx.db.get(
+      "lmsCurricula",
+      assignment.curriculumId,
+    );
+    if (!curriculum || curriculum.status !== "published") return null;
+    const course = await ctx.db.get("courses", enrollment.courseId);
+    const modules = await ctx.db
+      .query("lmsModules")
+      .withIndex("by_curriculumId_and_sortOrder", (q) =>
+        q.eq("curriculumId", curriculum._id),
+      )
+      .take(100);
+    const activities = await ctx.db
+      .query("lmsActivities")
+      .withIndex("by_curriculumId", (q) => q.eq("curriculumId", curriculum._id))
+      .take(500);
+    const progress = await ctx.db
+      .query("lmsActivityProgress")
+      .withIndex("by_enrollmentId", (q) =>
+        q.eq("enrollmentId", args.enrollmentId),
+      )
+      .take(500);
+    const completedActivityIds = new Set(
+      progress
+        .filter((item) => item.status === "completed")
+        .map((item) => item.activityId),
+    );
+    const safeActivities = await Promise.all(
+      activities.map(async (activity) => {
+        const availability = await getActivityAvailability(
+          ctx,
+          args.enrollmentId,
+          activity,
+          completedActivityIds,
+        );
+        const quiz =
+          availability.isAvailable && activity.type === "quiz"
+            ? await (async () => {
+                const questions = await ctx.db
+                  .query("lmsQuizQuestions")
+                  .withIndex("by_activityId_and_sortOrder", (q) =>
+                    q.eq("activityId", activity._id),
+                  )
+                  .take(100);
+                const attempts = await ctx.db
+                  .query("lmsQuizAttempts")
+                  .withIndex("by_enrollmentId_and_activityId", (q) =>
+                    q
+                      .eq("enrollmentId", args.enrollmentId)
+                      .eq("activityId", activity._id),
+                  )
+                  .order("desc")
+                  .take(1);
+                return {
+                  questions: await Promise.all(
+                    questions.map(async (question) => ({
+                      questionId: question._id,
+                      prompt: question.prompt,
+                      sortOrder: question.sortOrder,
+                      options: (
+                        await ctx.db
+                          .query("lmsQuizOptions")
+                          .withIndex("by_questionId_and_sortOrder", (q) =>
+                            q.eq("questionId", question._id),
+                          )
+                          .take(6)
+                      ).map((option) => ({
+                        optionId: option._id,
+                        label: option.label,
+                        sortOrder: option.sortOrder,
+                      })),
+                    })),
+                  ),
+                  latestAttempt: attempts[0]
+                    ? {
+                        attemptNumber: attempts[0].attemptNumber,
+                        score: attempts[0].score,
+                        passed: attempts[0].passed,
+                        submittedAt: attempts[0].submittedAt,
+                      }
+                    : undefined,
+                };
+              })()
+            : undefined;
+        const feedback =
+          availability.isAvailable && activity.type === "feedback"
+            ? await (async () => {
+                const receipt = await ctx.db
+                  .query("lmsFeedbackReceipts")
+                  .withIndex("by_enrollmentId_and_activityId", (q) =>
+                    q
+                      .eq("enrollmentId", args.enrollmentId)
+                      .eq("activityId", activity._id),
+                  )
+                  .unique();
+                return {
+                  mode: activity.feedbackMode ?? ("identified" as const),
+                  minimumGroupSize:
+                    activity.feedbackMode === "anonymous"
+                      ? activity.feedbackMinimumGroupSize
+                      : undefined,
+                  receipt: receipt
+                    ? {
+                        receiptCode: receipt.receiptCode,
+                        submittedAt: receipt.submittedAt,
+                      }
+                    : undefined,
+                };
+              })()
+            : undefined;
+        const assignment =
+          availability.isAvailable && activity.type === "assignment"
+            ? await (async () => {
+                const submissions = await ctx.db
+                  .query("lmsSubmissions")
+                  .withIndex("by_enrollmentId_and_activityId", (q) =>
+                    q
+                      .eq("enrollmentId", args.enrollmentId)
+                      .eq("activityId", activity._id),
+                  )
+                  .order("desc")
+                  .take(20);
+                const latestAttempt = submissions[0];
+                return {
+                  latestAttempt: latestAttempt
+                    ? {
+                        submissionId: latestAttempt._id,
+                        attemptNumber: latestAttempt.attemptNumber,
+                        responseText: latestAttempt.responseText,
+                        status: latestAttempt.status,
+                        feedback: latestAttempt.feedback,
+                        submittedAt: latestAttempt.submittedAt,
+                        reviewedAt: latestAttempt.reviewedAt,
+                        updatedAt: latestAttempt.updatedAt,
+                      }
+                    : undefined,
+                  history: submissions
+                    .filter((submission) => submission.status !== "draft")
+                    .map((submission) => ({
+                      submissionId: submission._id,
+                      attemptNumber: submission.attemptNumber,
+                      status: submission.status,
+                      feedback: submission.feedback,
+                      submittedAt: submission.submittedAt,
+                      reviewedAt: submission.reviewedAt,
+                    })),
+                };
+              })()
+            : undefined;
+        return {
+          activityId: activity._id,
+          moduleId: activity.moduleId,
+          type: activity.type,
+          title: activity.title,
+          durationMinutes: activity.durationMinutes,
+          required: activity.required,
+          sortOrder: activity.sortOrder,
+          completionMode: activity.completionMode,
+          gradingCriteria: activity.gradingCriteria,
+          passingScore: activity.passingScore,
+          releaseAt: activity.releaseAt,
+          ...availability,
+          instructions: availability.isAvailable
+            ? activity.instructions
+            : undefined,
+          content: availability.isAvailable ? activity.content : undefined,
+          externalUrl: availability.isAvailable
+            ? activity.externalUrl
+            : undefined,
+          accessibleAlternative: availability.isAvailable
+            ? activity.accessibleAlternative
+            : undefined,
+          quiz,
+          feedback,
+          assignment,
+        };
+      }),
+    );
+    const completionRequest = await ctx.db
+      .query("lmsCompletionRequests")
+      .withIndex("by_enrollmentId_and_curriculumId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("curriculumId", curriculum._id),
+      )
+      .unique();
+    const certificate = completionRequest?.certificateId
+      ? await ctx.db.get("lmsCertificates", completionRequest.certificateId)
+      : null;
+    const [openQuestions, answeredQuestions, closedQuestions, notifications] =
+      await Promise.all([
+        ctx.db
+          .query("lmsQuestions")
+          .withIndex("by_curriculumId_and_status", (q) =>
+            q.eq("curriculumId", curriculum._id).eq("status", "open"),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("lmsQuestions")
+          .withIndex("by_curriculumId_and_status", (q) =>
+            q.eq("curriculumId", curriculum._id).eq("status", "answered"),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("lmsQuestions")
+          .withIndex("by_curriculumId_and_status", (q) =>
+            q.eq("curriculumId", curriculum._id).eq("status", "closed"),
+          )
+          .order("desc")
+          .take(100),
+        ctx.db
+          .query("lmsNotifications")
+          .withIndex("by_recipientUserId_and_enrollmentId_and_createdAt", (q) =>
+            q
+              .eq("recipientUserId", enrollment.userId)
+              .eq("enrollmentId", enrollment._id),
+          )
+          .order("desc")
+          .take(20),
+      ]);
+    const visibleQuestions = [
+      ...openQuestions,
+      ...answeredQuestions,
+      ...closedQuestions,
+    ]
+      .filter((question) =>
+        canViewLmsQuestion({
+          authorTokenIdentifier: question.authorTokenIdentifier,
+          viewerTokenIdentifier: identity.tokenIdentifier,
+          visibility: question.visibility,
+          questionBatchId: question.batchId,
+          viewerBatchId: enrollment.batchId,
+        }),
+      )
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 100);
 
     return {
-      allowed: true,
-      reason: null,
-      courseName: course?.name ?? null,
-      completedCount: lessons.filter((lesson) =>
-        completedIds.has(String(lesson._id)),
-      ).length,
-      totalCount: lessons.length,
-      sequentialModules,
-      lessons: lessons.map((lesson) => ({
-        _id: lesson._id,
-        moduleTitle: lesson.moduleTitle ?? null,
-        title: lesson.title,
-        description: lesson.description ?? null,
-        kind: lesson.kind,
-        contentUrl: lesson.contentUrl ?? null,
-        textContent: lesson.textContent ?? null,
-        durationMinutes: lesson.durationMinutes ?? null,
-        completed: completedIds.has(String(lesson._id)),
-        locked: lockedIds.has(String(lesson._id)),
+      enrollment: {
+        enrollmentId: enrollment._id,
+        enrollmentNumber: enrollment.enrollmentNumber,
+        batchLabel: enrollment.batchLabel,
+      },
+      course: course
+        ? {
+            courseId: course._id,
+            name: course.name,
+            code: course.code,
+            type: course.type,
+            learningMode: getLmsLearningMode(course.type) ?? "self_paced",
+            duration: course.duration,
+          }
+        : null,
+      curriculum: {
+        curriculumId: curriculum._id,
+        title: curriculum.title,
+        version: curriculum.version,
+      },
+      modules: modules.map((module) => ({
+        moduleId: module._id,
+        title: module.title,
+        description: module.description,
+        sortOrder: module.sortOrder,
+      })),
+      activities: safeActivities,
+      progress: progress.map((item) => ({
+        activityId: item.activityId,
+        status: item.status,
+        submittedAt: item.submittedAt,
+        completedAt: item.completedAt,
+        updatedAt: item.updatedAt,
+      })),
+      completion: completionRequest
+        ? {
+            requestId: completionRequest._id,
+            status: completionRequest.status,
+            confirmedRecipientName: completionRequest.confirmedRecipientName,
+            correctionReason: completionRequest.correctionReason,
+            certificate: certificate
+              ? {
+                  verificationCode: certificate.verificationCode,
+                  recipientName: certificate.recipientName,
+                  courseName: certificate.courseName,
+                  status: certificate.status,
+                  issuedAt: certificate.issuedAt,
+                  publicVerificationEnabled:
+                    certificate.publicVerificationEnabled ?? false,
+                }
+              : undefined,
+          }
+        : undefined,
+      questions: visibleQuestions.map((question) => ({
+        questionId: question._id,
+        activityId: question.activityId,
+        visibility: question.visibility,
+        body: question.body,
+        status: question.status,
+        officialAnswer: question.officialAnswer,
+        moderationReason: question.moderationReason,
+        isMine: question.authorTokenIdentifier === identity.tokenIdentifier,
+        createdAt: question.createdAt,
+        answeredAt: question.answeredAt,
+      })),
+      notifications: notifications.map((notification) => ({
+        notificationId: notification._id,
+        kind: notification.kind,
+        title: notification.title,
+        body: notification.body,
+        href: notification.href,
+        readAt: notification.readAt,
+        createdAt: notification.createdAt,
       })),
     };
   },
 });
 
-export const setLessonComplete = mutation({
+export const markNotificationRead = mutation({
+  args: { notificationId: v.id("lmsNotifications") },
+  handler: async (ctx, args) => {
+    const notification = await ctx.db.get(
+      "lmsNotifications",
+      args.notificationId,
+    );
+    if (!notification) throw new Error("Notification not found");
+    const { enrollment } = await requireOwnedEnrollment(
+      ctx,
+      notification.enrollmentId,
+    );
+    if (notification.recipientUserId !== enrollment.userId) {
+      throw new Error("Forbidden: Notification access required");
+    }
+    if (!notification.readAt) {
+      await ctx.db.patch("lmsNotifications", notification._id, {
+        readAt: Date.now(),
+      });
+    }
+    return { read: true as const };
+  },
+});
+
+export const confirmCertificateName = mutation({
   args: {
-    lessonId: v.id("lessons"),
+    enrollmentId: v.id("enrollments"),
+    recipientName: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { curriculum, identity } = await requireEnrollmentCurriculum(
+      ctx,
+      args.enrollmentId,
+    );
+    const request = await ctx.db
+      .query("lmsCompletionRequests")
+      .withIndex("by_enrollmentId_and_curriculumId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("curriculumId", curriculum._id),
+      )
+      .unique();
+    if (!request) {
+      throw new Error(
+        "Complete every required activity before confirming your name",
+      );
+    }
+    if (request.status === "approved" || request.status === "revoked") {
+      throw new Error("This Certificate name can no longer be changed here");
+    }
+    const recipientName = normalizeCertificateName(args.recipientName);
+    const now = Date.now();
+    await ctx.db.patch("lmsCompletionRequests", request._id, {
+      confirmedRecipientName: recipientName,
+      nameConfirmedAt: now,
+      status: "pending",
+      correctionReason: undefined,
+    });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.certificate_name.confirmed",
+      entityType: "lmsCompletionRequest",
+      entityId: request._id,
+      before: {
+        status: request.status,
+        confirmedRecipientName: request.confirmedRecipientName,
+      },
+      after: { status: "pending", confirmedRecipientName: recipientName },
+      createdAt: now,
+    });
+    return { status: "pending" as const, recipientName };
+  },
+});
+
+export const setCertificateVerificationConsent = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    enabled: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const { identity } = await requireOwnedEnrollment(ctx, args.enrollmentId);
+    const certificates = await ctx.db
+      .query("lmsCertificates")
+      .withIndex("by_enrollmentId", (q) =>
+        q.eq("enrollmentId", args.enrollmentId),
+      )
+      .order("desc")
+      .take(20);
+    const certificate = certificates.find((item) => item.status === "issued");
+    if (!certificate) throw new Error("An issued Certificate was not found");
+    await ctx.db.patch("lmsCertificates", certificate._id, {
+      publicVerificationEnabled: args.enabled,
+    });
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.certificate_verification_consent.updated",
+      entityType: "lmsCertificate",
+      entityId: certificate._id,
+      after: { publicVerificationEnabled: args.enabled },
+      createdAt: Date.now(),
+    });
+    return { enabled: args.enabled };
+  },
+});
+
+export const verifyCertificate = query({
+  args: { verificationCode: v.string() },
+  handler: async (ctx, args) => {
+    let verificationCode: string;
+    try {
+      verificationCode = normalizeVerificationCode(args.verificationCode);
+    } catch {
+      return null;
+    }
+    const certificate = await ctx.db
+      .query("lmsCertificates")
+      .withIndex("by_verificationCode", (q) =>
+        q.eq("verificationCode", verificationCode),
+      )
+      .unique();
+    if (!certificate) return null;
+    return {
+      verificationCode: certificate.verificationCode,
+      courseName: certificate.courseName,
+      recipientName: certificate.publicVerificationEnabled
+        ? certificate.recipientName
+        : undefined,
+      identityVisible: certificate.publicVerificationEnabled ?? false,
+      status: certificate.status,
+      issuedAt: certificate.issuedAt,
+    };
+  },
+});
+
+async function assertActivityAvailable(
+  ctx: ViewerCtx,
+  enrollmentId: Id<"enrollments">,
+  activity: Doc<"lmsActivities">,
+) {
+  const availability = await getActivityAvailability(
+    ctx,
+    enrollmentId,
+    activity,
+  );
+  if (!availability.isAvailable) {
+    throw new Error(
+      availability.lockReason ?? "This activity is not available",
+    );
+  }
+}
+
+export const setSelfCompletion = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
     completed: v.boolean(),
   },
-  returns: v.null(),
   handler: async (ctx, args) => {
-    const viewer = await resolveViewer(ctx);
-    if (!viewer) throw new Error("Unauthorized: sign in required");
-
-    const lesson = await ctx.db.get(args.lessonId);
-    if (!lesson) throw new Error("Lesson not found");
-
-    const enrolled =
-      viewer.isAdmin ||
-      (await hasActiveEnrollment(ctx, viewer.userId, lesson.courseId));
-    if (!enrolled) throw new Error("Forbidden: enrollment required");
-
-    if (args.completed) {
-      const sequential = await getSequentialModules(ctx, lesson.courseId);
-      if (sequential) {
-        const publishedLessons = (
-          await ctx.db
-            .query("lessons")
-            .withIndex("by_courseId_and_sortOrder", (q) =>
-              q.eq("courseId", lesson.courseId),
-            )
-            .collect()
-        ).filter((item) => item.isPublished);
-        const allProgress = await ctx.db
-          .query("lessonProgress")
-          .withIndex("by_userId_and_courseId", (q) =>
-            q.eq("userId", viewer.userId).eq("courseId", lesson.courseId),
-          )
-          .collect();
-        const completedIds = new Set(
-          allProgress
-            .filter((row) => row.completed)
-            .map((row) => String(row.lessonId)),
-        );
-        const locked = computeLockedLessonIds(publishedLessons, completedIds);
-        if (locked.has(String(lesson._id))) {
-          throw new Error("Complete the earlier module first");
-        }
-      }
+    const { curriculum } = await requireEnrollmentCurriculum(
+      ctx,
+      args.enrollmentId,
+    );
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (!activity || activity.curriculumId !== curriculum._id) {
+      throw new Error("Activity not found in this Curriculum");
     }
-
+    if (
+      activity.completionMode !== "view" &&
+      activity.completionMode !== "self_confirm"
+    ) {
+      throw new Error("This activity requires submitted evidence or review");
+    }
+    await assertActivityAvailable(ctx, args.enrollmentId, activity);
     const existing = await ctx.db
-      .query("lessonProgress")
-      .withIndex("by_userId_and_lessonId", (q) =>
-        q.eq("userId", viewer.userId).eq("lessonId", args.lessonId),
+      .query("lmsActivityProgress")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
       )
-      .first();
-
+      .unique();
     const now = Date.now();
-    if (existing) {
-      await ctx.db.patch(existing._id, {
-        completed: args.completed,
-        completedAt: args.completed ? now : undefined,
-        updatedAt: now,
-      });
-    } else {
-      await ctx.db.insert("lessonProgress", {
-        userId: viewer.userId,
-        lessonId: args.lessonId,
-        courseId: lesson.courseId,
-        completed: args.completed,
-        completedAt: args.completed ? now : undefined,
-        updatedAt: now,
+    const patch = args.completed
+      ? { status: "completed" as const, completedAt: now, updatedAt: now }
+      : {
+          status: "in_progress" as const,
+          completedAt: undefined,
+          updatedAt: now,
+        };
+    if (existing)
+      await ctx.db.patch("lmsActivityProgress", existing._id, patch);
+    else {
+      await ctx.db.insert("lmsActivityProgress", {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+        startedAt: now,
+        ...patch,
       });
     }
+    if (args.completed)
+      await maybeCreateCompletionRequest(ctx, args.enrollmentId);
+    return { status: patch.status };
+  },
+});
 
-    if (args.completed) {
-      await ensureCertificate(ctx, viewer, lesson.courseId);
+export const submitQuizAttempt = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    answers: v.array(
+      v.object({
+        questionId: v.id("lmsQuizQuestions"),
+        optionId: v.id("lmsQuizOptions"),
+      }),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const { curriculum, identity } = await requireEnrollmentCurriculum(
+      ctx,
+      args.enrollmentId,
+    );
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (
+      !activity ||
+      activity.curriculumId !== curriculum._id ||
+      activity.type !== "quiz" ||
+      activity.completionMode !== "pass"
+    ) {
+      throw new Error("Quiz activity not found in this Curriculum");
     }
+    await assertActivityAvailable(ctx, args.enrollmentId, activity);
+    const questions = await ctx.db
+      .query("lmsQuizQuestions")
+      .withIndex("by_activityId_and_sortOrder", (q) =>
+        q.eq("activityId", activity._id),
+      )
+      .take(100);
+    if (questions.length === 0) throw new Error("This Quiz is not ready");
+    if (
+      args.answers.length !== questions.length ||
+      new Set(args.answers.map((answer) => answer.questionId)).size !==
+        questions.length
+    ) {
+      throw new Error("Answer every Quiz question before submitting");
+    }
+    const answersByQuestion = new Map(
+      args.answers.map((answer) => [answer.questionId, answer.optionId]),
+    );
+    const gradedAnswers = [];
+    let correctAnswerCount = 0;
+    for (const question of questions) {
+      const selectedOptionId = answersByQuestion.get(question._id);
+      if (!selectedOptionId) {
+        throw new Error("Answer every Quiz question before submitting");
+      }
+      const option = await ctx.db.get("lmsQuizOptions", selectedOptionId);
+      if (!option || option.questionId !== question._id) {
+        throw new Error("A selected answer does not belong to this Quiz");
+      }
+      if (option.isCorrect) correctAnswerCount += 1;
+      gradedAnswers.push({
+        questionId: question._id,
+        selectedOptionId: option._id,
+        isCorrect: option.isCorrect,
+      });
+    }
+    const { score, passed } = scoreLmsQuiz(
+      questions.length,
+      correctAnswerCount,
+      activity.passingScore ?? 100,
+    );
+    const previousAttempts = await ctx.db
+      .query("lmsQuizAttempts")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .order("desc")
+      .take(20);
+    const now = Date.now();
+    const attemptNumber = (previousAttempts[0]?.attemptNumber ?? 0) + 1;
+    const attemptId = await ctx.db.insert("lmsQuizAttempts", {
+      enrollmentId: args.enrollmentId,
+      activityId: args.activityId,
+      attemptNumber,
+      score,
+      correctAnswerCount,
+      questionCount: questions.length,
+      passed,
+      submittedAt: now,
+    });
+    for (const answer of gradedAnswers) {
+      await ctx.db.insert("lmsQuizAnswers", {
+        attemptId,
+        ...answer,
+        createdAt: now,
+      });
+    }
+    const progress = await ctx.db
+      .query("lmsActivityProgress")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .unique();
+    const progressPatch = {
+      status: passed ? ("completed" as const) : ("in_progress" as const),
+      submittedAt: now,
+      completedAt: passed ? now : undefined,
+      evidenceReference: attemptId,
+      updatedAt: now,
+    };
+    if (progress) {
+      await ctx.db.patch("lmsActivityProgress", progress._id, progressPatch);
+    } else {
+      await ctx.db.insert("lmsActivityProgress", {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+        startedAt: now,
+        ...progressPatch,
+      });
+    }
+    if (passed) await maybeCreateCompletionRequest(ctx, args.enrollmentId);
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.quiz_attempt.submitted",
+      entityType: "lmsQuizAttempt",
+      entityId: attemptId,
+      after: { score, passed, attemptNumber },
+      metadata: {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+      },
+      createdAt: now,
+    });
+    return {
+      attemptId,
+      attemptNumber,
+      score,
+      passed,
+    };
+  },
+});
+
+export const recordAnonymousFeedback = internalMutation({
+  args: {
+    activityId: v.id("lmsActivities"),
+    curriculumId: v.id("lmsCurricula"),
+    courseId: v.id("courses"),
+    rating: v.number(),
+    comment: v.optional(v.string()),
+    reportingPeriod: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (
+      !activity ||
+      activity.type !== "feedback" ||
+      activity.feedbackMode !== "anonymous" ||
+      activity.curriculumId !== args.curriculumId
+    ) {
+      throw new Error("Anonymous Feedback activity is no longer valid");
+    }
+    await ctx.db.insert("lmsFeedbackResponses", {
+      activityId: args.activityId,
+      curriculumId: args.curriculumId,
+      courseId: args.courseId,
+      mode: "anonymous",
+      rating: args.rating,
+      comment: args.comment,
+      reportingPeriod: args.reportingPeriod,
+    });
     return null;
   },
 });
 
-export const getMyLearning = query({
-  args: {},
-  returns: v.array(
-    v.object({
-      courseId: v.id("courses"),
-      courseName: v.string(),
-      courseType: v.union(v.string(), v.null()),
-      imageUrl: v.union(v.string(), v.null()),
-      totalLessons: v.number(),
-      completedLessons: v.number(),
-    }),
-  ),
-  handler: async (ctx) => {
-    const viewer = await resolveViewer(ctx);
-    if (!viewer) return [];
-
-    const enrollments = await ctx.db
-      .query("enrollments")
-      .withIndex("by_userId", (q) => q.eq("userId", viewer.userId))
-      .take(200);
-    const activeCourseIds = [
-      ...new Set(
-        enrollments
-          .filter(
-            (row) =>
-              (row.status ?? "active") === "active" &&
-              row.paymentVerification !== "pending" &&
-              row.paymentVerification !== "rejected",
-          )
-          .map((row) => String(row.courseId)),
-      ),
-    ];
-
-    const result = [];
-    for (const courseId of activeCourseIds) {
-      const course = await ctx.db.get(courseId as Doc<"courses">["_id"]);
-      if (!course) continue;
-
-      const lessons = (
-        await ctx.db
-          .query("lessons")
-          .withIndex("by_courseId_and_sortOrder", (q) =>
-            q.eq("courseId", course._id),
-          )
-          .collect()
-      ).filter((lesson) => lesson.isPublished);
-
-      const progress = await ctx.db
-        .query("lessonProgress")
-        .withIndex("by_userId_and_courseId", (q) =>
-          q.eq("userId", viewer.userId).eq("courseId", course._id),
-        )
-        .collect();
-      const completedIds = new Set(
-        progress
-          .filter((row) => row.completed)
-          .map((row) => String(row.lessonId)),
-      );
-
-      result.push({
-        courseId: course._id,
-        courseName: course.name,
-        courseType: course.type ?? null,
-        imageUrl: course.imageUrls?.[0] ?? null,
-        totalLessons: lessons.length,
-        completedLessons: lessons.filter((lesson) =>
-          completedIds.has(String(lesson._id)),
-        ).length,
-      });
-    }
-    return result;
+export const submitFeedback = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    rating: v.number(),
+    comment: v.string(),
   },
-});
-
-// Live-class schedule and join links for the batches a learner is enrolled in.
-export const getMyLiveSessions = query({
-  args: {},
-  returns: v.array(
-    v.object({
-      courseId: v.id("courses"),
-      courseName: v.string(),
-      batchId: v.id("courseBatches"),
-      batchLabel: v.string(),
-      startDate: v.string(),
-      endDate: v.string(),
-      startTime: v.string(),
-      endTime: v.string(),
-      daysOfWeek: v.array(v.string()),
-      meetingUrl: v.union(v.string(), v.null()),
-      meetingNote: v.union(v.string(), v.null()),
-    }),
-  ),
-  handler: async (ctx) => {
-    const viewer = await resolveViewer(ctx);
-    if (!viewer) return [];
-
-    const enrollments = await ctx.db
-      .query("enrollments")
-      .withIndex("by_userId", (q) => q.eq("userId", viewer.userId))
-      .take(200);
-
-    const seen = new Set<string>();
-    const result = [];
-    for (const enrollment of enrollments) {
-      if ((enrollment.status ?? "active") !== "active") continue;
-      if (
-        enrollment.paymentVerification === "pending" ||
-        enrollment.paymentVerification === "rejected"
-      ) {
-        continue;
-      }
-      if (!enrollment.batchId) continue;
-      const key = String(enrollment.batchId);
-      if (seen.has(key)) continue;
-
-      const batch = await ctx.db.get(enrollment.batchId);
-      if (!batch) continue;
-      seen.add(key);
-
-      const course = await ctx.db.get(batch.courseId);
-      result.push({
-        courseId: batch.courseId,
-        courseName: course?.name ?? "Course",
-        batchId: batch._id,
-        batchLabel: batch.label,
-        startDate: batch.startDate,
-        endDate: batch.endDate,
-        startTime: batch.startTime,
-        endTime: batch.endTime,
-        daysOfWeek: batch.daysOfWeek,
-        meetingUrl: batch.meetingUrl ?? null,
-        meetingNote: batch.meetingNote ?? null,
-      });
-    }
-
-    return result.sort((a, b) => a.startDate.localeCompare(b.startDate));
-  },
-});
-
-export const getMyCertificate = query({
-  args: { courseId: v.id("courses") },
-  returns: v.union(certificateValue, v.null()),
   handler: async (ctx, args) => {
-    const viewer = await resolveViewer(ctx);
-    if (!viewer) return null;
-    const cert = await ctx.db
-      .query("certificates")
-      .withIndex("by_userId_and_courseId", (q) =>
-        q.eq("userId", viewer.userId).eq("courseId", args.courseId),
+    const { curriculum, enrollment, identity } =
+      await requireEnrollmentCurriculum(ctx, args.enrollmentId);
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (
+      !activity ||
+      activity.curriculumId !== curriculum._id ||
+      activity.type !== "feedback" ||
+      activity.completionMode !== "submit" ||
+      !activity.feedbackMode
+    ) {
+      throw new Error("Feedback activity not found in this Curriculum");
+    }
+    await assertActivityAvailable(ctx, args.enrollmentId, activity);
+    const existingReceipt = await ctx.db
+      .query("lmsFeedbackReceipts")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
       )
-      .first();
-    return cert ? shapeCertificate(cert) : null;
-  },
-});
-
-// Idempotently issues a certificate if the learner has completed the course.
-export const ensureMyCertificate = mutation({
-  args: { courseId: v.id("courses") },
-  returns: v.union(certificateValue, v.null()),
-  handler: async (ctx, args) => {
-    const viewer = await resolveViewer(ctx);
-    if (!viewer) return null;
-    const enrolled =
-      viewer.isAdmin ||
-      (await hasActiveEnrollment(ctx, viewer.userId, args.courseId));
-    if (!enrolled) throw new Error("Forbidden: enrollment required");
-    const cert = await ensureCertificate(ctx, viewer, args.courseId);
-    return cert ? shapeCertificate(cert) : null;
-  },
-});
-
-// Public verification: no auth required, returns only non-sensitive fields.
-export const getCertificateByCode = query({
-  args: { code: v.string() },
-  returns: v.union(certificateValue, v.null()),
-  handler: async (ctx, args) => {
-    const code = args.code.trim().toUpperCase();
-    if (!code) return null;
-    const cert = await ctx.db
-      .query("certificates")
-      .withIndex("by_verificationCode", (q) => q.eq("verificationCode", code))
-      .first();
-    return cert ? shapeCertificate(cert) : null;
-  },
-});
-
-// Admin: per-learner progress for a course (lessons, quiz, certificate).
-export const getCourseProgressForAdmin = query({
-  args: { courseId: v.id("courses") },
-  returns: v.array(
-    v.object({
-      userId: v.string(),
-      userName: v.union(v.string(), v.null()),
-      userEmail: v.union(v.string(), v.null()),
-      enrollmentNumber: v.union(v.string(), v.null()),
-      completedLessons: v.number(),
-      totalLessons: v.number(),
-      certificateCode: v.union(v.string(), v.null()),
-      quizScore: v.union(v.number(), v.null()),
-      quizPassed: v.boolean(),
-    }),
-  ),
-  handler: async (ctx, args) => {
-    await requireAdmin(ctx);
-
-    const lessons = (
-      await ctx.db
-        .query("lessons")
-        .withIndex("by_courseId_and_sortOrder", (q) =>
-          q.eq("courseId", args.courseId),
-        )
-        .collect()
-    ).filter((lesson) => lesson.isPublished);
-    const totalLessons = lessons.length;
-
-    const enrollments = await ctx.db
-      .query("enrollments")
-      .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId))
-      .take(1000);
-    const active = enrollments.filter(
-      (enrollment) => (enrollment.status ?? "active") === "active",
-    );
-
-    const quiz = await ctx.db
-      .query("quizzes")
-      .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId))
-      .first();
-
-    const rows = [];
-    for (const enrollment of active) {
-      const progress = await ctx.db
-        .query("lessonProgress")
-        .withIndex("by_userId_and_courseId", (q) =>
-          q.eq("userId", enrollment.userId).eq("courseId", args.courseId),
-        )
-        .collect();
-      const completedLessons = progress.filter((row) => row.completed).length;
-
-      const certificate = await ctx.db
-        .query("certificates")
-        .withIndex("by_userId_and_courseId", (q) =>
-          q.eq("userId", enrollment.userId).eq("courseId", args.courseId),
-        )
-        .first();
-
-      let quizScore: number | null = null;
-      let quizPassed = false;
-      if (quiz) {
-        const attempts = await ctx.db
-          .query("quizAttempts")
-          .withIndex("by_userId_and_quizId", (q) =>
-            q.eq("userId", enrollment.userId).eq("quizId", quiz._id),
-          )
-          .collect();
-        if (attempts.length > 0) {
-          quizScore = Math.max(...attempts.map((attempt) => attempt.score));
-          quizPassed = attempts.some((attempt) => attempt.passed);
-        }
-      }
-
-      rows.push({
-        userId: enrollment.userId,
-        userName: enrollment.userName ?? null,
-        userEmail: enrollment.userEmail ?? null,
-        enrollmentNumber: enrollment.enrollmentNumber ?? null,
-        completedLessons,
-        totalLessons,
-        certificateCode: certificate?.verificationCode ?? null,
-        quizScore,
-        quizPassed,
+      .unique();
+    if (existingReceipt) {
+      return {
+        receiptCode: existingReceipt.receiptCode,
+        submittedAt: existingReceipt.submittedAt,
+        alreadySubmitted: true,
+      };
+    }
+    const feedback = validateLmsFeedbackInput(args.rating, args.comment);
+    if (activity.feedbackMode === "anonymous") {
+      validateAnonymousMinimumGroupSize(
+        activity.feedbackMinimumGroupSize ?? Number.NaN,
+      );
+    }
+    const now = Date.now();
+    const reportingPeriod = new Date(now).toISOString().slice(0, 7);
+    const receiptId = await ctx.db.insert("lmsFeedbackReceipts", {
+      enrollmentId: args.enrollmentId,
+      activityId: activity._id,
+      mode: activity.feedbackMode,
+      receiptCode: "pending",
+      submittedAt: now,
+    });
+    const receiptCode = `TMP-FB-${receiptId.slice(-10).toUpperCase()}`;
+    await ctx.db.patch("lmsFeedbackReceipts", receiptId, { receiptCode });
+    let responseId: Id<"lmsFeedbackResponses"> | undefined;
+    if (activity.feedbackMode === "identified") {
+      responseId = await ctx.db.insert("lmsFeedbackResponses", {
+        activityId: activity._id,
+        curriculumId: curriculum._id,
+        courseId: enrollment.courseId,
+        mode: "identified",
+        enrollmentId: args.enrollmentId,
+        batchId: enrollment.batchId,
+        rating: feedback.rating,
+        comment: feedback.comment,
+        reportingPeriod,
+        submittedAt: now,
+      });
+    } else {
+      await ctx.scheduler.runAfter(
+        anonymousFeedbackDelayMs(receiptId),
+        internal.lms.recordAnonymousFeedback,
+        {
+          activityId: activity._id,
+          curriculumId: curriculum._id,
+          courseId: enrollment.courseId,
+          rating: feedback.rating,
+          comment: feedback.comment,
+          reportingPeriod,
+        },
+      );
+    }
+    const progress = await ctx.db
+      .query("lmsActivityProgress")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .unique();
+    const progressPatch = {
+      status: "completed" as const,
+      submittedAt: now,
+      completedAt: now,
+      evidenceReference: `feedback-receipt:${receiptId}`,
+      updatedAt: now,
+    };
+    if (progress) {
+      await ctx.db.patch("lmsActivityProgress", progress._id, progressPatch);
+    } else {
+      await ctx.db.insert("lmsActivityProgress", {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+        startedAt: now,
+        ...progressPatch,
       });
     }
+    await maybeCreateCompletionRequest(ctx, args.enrollmentId);
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.feedback.submitted",
+      entityType:
+        activity.feedbackMode === "anonymous"
+          ? "lmsFeedbackReceipt"
+          : "lmsFeedbackResponse",
+      entityId:
+        activity.feedbackMode === "anonymous"
+          ? receiptId
+          : (responseId ?? receiptId),
+      after: { mode: activity.feedbackMode },
+      metadata: {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+      },
+      createdAt: now,
+    });
+    return { receiptCode, submittedAt: now, alreadySubmitted: false };
+  },
+});
 
-    return rows;
+export const saveAssignmentDraft = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    responseText: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { curriculum, enrollment } = await requireEnrollmentCurriculum(
+      ctx,
+      args.enrollmentId,
+    );
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (
+      !activity ||
+      activity.curriculumId !== curriculum._id ||
+      activity.type !== "assignment"
+    ) {
+      throw new Error("Assignment activity not found in this Curriculum");
+    }
+    await assertActivityAvailable(ctx, args.enrollmentId, activity);
+    const responseText = args.responseText.trim();
+    if (!responseText)
+      throw new Error("Write a response before saving a Draft");
+    const attempts = await ctx.db
+      .query("lmsSubmissions")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .order("desc")
+      .take(20);
+    if (
+      attempts.some(
+        (attempt) =>
+          attempt.status === "submitted" || attempt.status === "in_review",
+      )
+    ) {
+      throw new Error("This Assignment is already with Faculty for review");
+    }
+    const now = Date.now();
+    const draft = attempts.find((attempt) => attempt.status === "draft");
+    if (draft) {
+      await ctx.db.patch("lmsSubmissions", draft._id, {
+        responseText,
+        updatedAt: now,
+      });
+      return { submissionId: draft._id, savedAt: now };
+    }
+    const submissionId = await ctx.db.insert("lmsSubmissions", {
+      enrollmentId: args.enrollmentId,
+      activityId: args.activityId,
+      courseId: enrollment.courseId,
+      batchId: enrollment.batchId,
+      attemptNumber:
+        Math.max(0, ...attempts.map((attempt) => attempt.attemptNumber)) + 1,
+      responseText,
+      status: "draft",
+      createdAt: now,
+      updatedAt: now,
+    });
+    return { submissionId, savedAt: now };
+  },
+});
+
+export const submitAssignment = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    responseText: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { curriculum, enrollment, identity } =
+      await requireEnrollmentCurriculum(ctx, args.enrollmentId);
+    const activity = await ctx.db.get("lmsActivities", args.activityId);
+    if (!activity || activity.curriculumId !== curriculum._id) {
+      throw new Error("Activity not found in this Curriculum");
+    }
+    if (activity.type !== "assignment") {
+      throw new Error("Only Assignment activities accept this submission");
+    }
+    await assertActivityAvailable(ctx, args.enrollmentId, activity);
+    const responseText = args.responseText.trim();
+    if (!responseText) throw new Error("A response is required");
+    const attempts = await ctx.db
+      .query("lmsSubmissions")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .order("desc")
+      .take(20);
+    if (
+      attempts.some(
+        (attempt) =>
+          attempt.status === "submitted" || attempt.status === "in_review",
+      )
+    ) {
+      throw new Error("This Assignment is already with Faculty for review");
+    }
+    const now = Date.now();
+    const draft = attempts.find((attempt) => attempt.status === "draft");
+    const submissionId = draft
+      ? draft._id
+      : await ctx.db.insert("lmsSubmissions", {
+          enrollmentId: args.enrollmentId,
+          activityId: args.activityId,
+          courseId: enrollment.courseId,
+          batchId: enrollment.batchId,
+          attemptNumber:
+            Math.max(0, ...attempts.map((attempt) => attempt.attemptNumber)) +
+            1,
+          responseText,
+          status: "submitted",
+          submittedAt: now,
+          createdAt: now,
+          updatedAt: now,
+        });
+    if (draft) {
+      await ctx.db.patch("lmsSubmissions", draft._id, {
+        responseText,
+        status: "submitted",
+        submittedAt: now,
+        updatedAt: now,
+      });
+    }
+    const progress = await ctx.db
+      .query("lmsActivityProgress")
+      .withIndex("by_enrollmentId_and_activityId", (q) =>
+        q
+          .eq("enrollmentId", args.enrollmentId)
+          .eq("activityId", args.activityId),
+      )
+      .unique();
+    const progressPatch = {
+      status: "awaiting_review" as const,
+      submittedAt: now,
+      updatedAt: now,
+      evidenceReference: submissionId,
+    };
+    if (progress)
+      await ctx.db.patch("lmsActivityProgress", progress._id, progressPatch);
+    else {
+      await ctx.db.insert("lmsActivityProgress", {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+        startedAt: now,
+        ...progressPatch,
+      });
+    }
+    await ctx.db.insert("adminAuditLogs", {
+      actorAdminId: identity.tokenIdentifier,
+      actorEmail: identity.email,
+      action: "lms.submission.submitted",
+      entityType: "lmsSubmission",
+      entityId: submissionId,
+      after: {
+        status: "submitted",
+        attemptNumber:
+          draft?.attemptNumber ??
+          Math.max(0, ...attempts.map((attempt) => attempt.attemptNumber)) + 1,
+      },
+      metadata: {
+        enrollmentId: args.enrollmentId,
+        activityId: args.activityId,
+      },
+      createdAt: now,
+    });
+    return { submissionId };
+  },
+});
+
+export const askQuestion = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    activityId: v.optional(v.id("lmsActivities")),
+    visibility: v.union(
+      v.literal("private"),
+      v.literal("course"),
+      v.literal("batch"),
+    ),
+    body: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const { identity } = await requireOwnedEnrollment(ctx, args.enrollmentId);
+    const { curriculum, enrollment } = await requireEnrollmentCurriculum(
+      ctx,
+      args.enrollmentId,
+    );
+    const body = validateLmsQuestion(args.body);
+    if (args.visibility === "batch" && !enrollment.batchId) {
+      throw new Error("This Enrollment does not belong to a batch");
+    }
+    if (args.activityId) {
+      const activity = await ctx.db.get("lmsActivities", args.activityId);
+      if (!activity || activity.curriculumId !== curriculum._id) {
+        throw new Error("Activity not found in this Curriculum");
+      }
+    }
+    const questionId = await ctx.db.insert("lmsQuestions", {
+      enrollmentId: args.enrollmentId,
+      curriculumId: curriculum._id,
+      courseId: enrollment.courseId,
+      batchId: enrollment.batchId,
+      activityId: args.activityId,
+      authorTokenIdentifier: identity.tokenIdentifier,
+      visibility: args.visibility,
+      body,
+      status: "open",
+      createdAt: Date.now(),
+    });
+    return { questionId };
   },
 });

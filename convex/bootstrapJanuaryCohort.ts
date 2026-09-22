@@ -343,7 +343,6 @@ export const createJanuaryCohort = internalMutation({
       batchId: Id<"courseBatches">;
       courseCreated: boolean;
       batchCreated: boolean;
-      lessonsCreated: number;
     }[] = [];
 
     for (const seed of COURSES) {
@@ -427,34 +426,6 @@ export const createJanuaryCohort = internalMutation({
         batchCreated = true;
       }
 
-      // Seed LMS lessons from the module outline (one lesson per module) so the
-      // course is usable in the learner dashboard straight away. Skipped if the
-      // course already has lessons, so admins can safely enrich/replace them.
-      const existingLessons = await ctx.db
-        .query("lessons")
-        .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
-        .collect();
-      let lessonsCreated = 0;
-      if (existingLessons.length === 0) {
-        for (let index = 0; index < seed.modules.length; index++) {
-          const module = seed.modules[index];
-          await ctx.db.insert("lessons", {
-            courseId,
-            moduleTitle: module.title,
-            title: module.title,
-            description: module.description,
-            kind: "text" as const,
-            textContent: module.description,
-            sortOrder: index,
-            isPublished: true,
-            createdAt: now,
-            updatedAt: now,
-            createdByAdminId: actor,
-          });
-          lessonsCreated += 1;
-        }
-      }
-
       results.push({
         name: seed.name,
         code: seed.code,
@@ -462,7 +433,6 @@ export const createJanuaryCohort = internalMutation({
         batchId,
         courseCreated,
         batchCreated,
-        lessonsCreated,
       });
     }
 

@@ -266,11 +266,11 @@ test("email delivery implementation is behind a shared module", () => {
     "utf8",
   );
 
-  assert.match(emailSource, /sendEmailWithCopy/);
+  assert.match(emailSource, /sendEmail/);
   assert.match(emailSource, /emailActionResultValidator/);
   assert.doesNotMatch(emailSource, /returns:\s*v\.null/);
   assert.doesNotMatch(emailSource, /throw error/);
-  assert.doesNotMatch(emailSource, /sendEmailWithCopyOrThrow/);
+  assert.doesNotMatch(emailSource, /sendEmailOrThrow/);
   assert.match(emailResultSource, /EmailActionResult/);
   assert.doesNotMatch(emailResultSource, /\bany\b|\bunknown\b/);
   assert.doesNotMatch(emailSource, /new Resend/);
@@ -279,8 +279,8 @@ test("email delivery implementation is behind a shared module", () => {
     /RESEND_API_KEY environment variable is required/,
   );
   assert.match(deliverySource, /EmailDeliveryFailure/);
-  assert.match(deliverySource, /sendEmailWithCopy/);
-  assert.doesNotMatch(deliverySource, /sendEmailWithCopyOrThrow/);
+  assert.match(deliverySource, /sendEmail/);
+  assert.doesNotMatch(deliverySource, /sendEmailOrThrow/);
   assert.doesNotMatch(deliverySource, /assertEmailDelivered/);
 });
 

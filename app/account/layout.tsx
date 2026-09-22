@@ -64,7 +64,7 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
                 <Button
                   variant="ghost"
                   className="w-full justify-start"
-                  onClick={() => router.push("/learn")}
+                  onClick={() => router.push("/lms")}
                 >
                   <GraduationCap className="mr-2 h-4 w-4" />
                   My Learning

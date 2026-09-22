@@ -42,6 +42,7 @@ import {
   type EnrollmentBatchResolution,
 } from "./_shared/enrollmentSchedule";
 import { calculatePointsEarned } from "./_shared/mindPoints";
+import { activatePublishedLmsCurriculum } from "./_shared/lmsActivation";
 import type { GoogleSheetsActionResult } from "./_shared/enrollmentSheet";
 import {
   convexFailure,
@@ -209,14 +210,18 @@ async function addEnrollmentToGoogleSheets(
     } = enrollmentData;
 
     // Schedule the Google Sheets action
-    await ctx.scheduler.runAfter(0, internal.googleSheets.addEnrollmentToSheet, {
-      enrollmentData: {
-        ...sheetsData,
-        enrollmentDate: new Date().toISOString(),
+    await ctx.scheduler.runAfter(
+      0,
+      internal.googleSheets.addEnrollmentToSheet,
+      {
+        enrollmentData: {
+          ...sheetsData,
+          enrollmentDate: new Date().toISOString(),
+        },
+        spreadsheetId,
+        sheetName,
       },
-      spreadsheetId,
-      sheetName,
-    });
+    );
   } catch (error) {
     console.error("Error scheduling Google Sheets update:", error);
     // Don't throw error to avoid breaking the enrollment process
@@ -630,16 +635,20 @@ async function scheduleEnrollmentConfirmationForSummary(
     return;
   }
 
-  await ctx.scheduler.runAfter(0, internal.emailActions.sendEnrollmentConfirmation, {
-    userEmail: args.recipientEmail,
-    userPhone: args.userPhone,
-    courseName: args.enrollment.courseName,
-    enrollmentNumber: args.enrollment.enrollmentNumber,
-    startDate,
-    endDate,
-    startTime,
-    endTime,
-  });
+  await ctx.scheduler.runAfter(
+    0,
+    internal.emailActions.sendEnrollmentConfirmation,
+    {
+      userEmail: args.recipientEmail,
+      userPhone: args.userPhone,
+      courseName: args.enrollment.courseName,
+      enrollmentNumber: args.enrollment.enrollmentNumber,
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+    },
+  );
 }
 
 function getEnrollmentEmailSchedule(
@@ -1034,6 +1043,14 @@ async function createBogoEnrollment(
     registrationSource: userContext.isGuestUser ? "guest_checkout" : "checkout",
   });
 
+  if (!userContext.isGuestUser) {
+    await activatePublishedLmsCurriculum(ctx, {
+      enrollmentId,
+      courseId: freeCourse._id,
+      courseType: freeCourse.type,
+    });
+  }
+
   await addEnrollmentToGoogleSheets(ctx, {
     userId: userContext.userId,
     userName: userContext.userName || userContext.userEmail,
@@ -1198,6 +1215,12 @@ export const handleSuccessfulPayment = internalMutation({
       sessions: course.sessions, // Store number of sessions for therapy courses
       ...buildEnrollmentPricingFields(course, pricingItem),
       registrationSource: "checkout",
+    });
+
+    await activatePublishedLmsCurriculum(ctx, {
+      enrollmentId,
+      courseId: course._id,
+      courseType: course.type,
     });
 
     // Add enrollment to Google Sheets
@@ -1555,7 +1578,9 @@ export const handleCartCheckout = mutation({
     // is client-supplied (any authenticated user can call this mutation directly)
     // and is later rendered into the admin dashboard, so we reject arbitrary URLs
     // to avoid pointing an admin's browser at attacker-controlled hosts.
-    const paymentScreenshotUrl = sanitizeUploadThingUrl(args.paymentScreenshotUrl);
+    const paymentScreenshotUrl = sanitizeUploadThingUrl(
+      args.paymentScreenshotUrl,
+    );
     // Manual (screenshot) payments need admin verification before access.
     const requiresPaymentVerification =
       Boolean(paymentScreenshotUrl) && !paymentReference;
@@ -1853,6 +1878,12 @@ export const handleCartCheckout = mutation({
           },
         );
       }
+
+      await activatePublishedLmsCurriculum(ctx, {
+        enrollmentId,
+        courseId: course._id,
+        courseType: course.type,
+      });
 
       await addEnrollmentToGoogleSheets(ctx, {
         userId: args.userId,

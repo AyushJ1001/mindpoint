@@ -55,6 +55,7 @@ import Link from "next/link";
 import { Check, CheckCircle2, Clock, Copy, ShieldCheck, Smartphone, X } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import { useMemo } from "react";
+import { CheckoutConfirmation } from "@/components/checkout/CheckoutConfirmation";
 
 export const dynamic = "force-dynamic";
 
@@ -77,6 +78,16 @@ type AppliedCheckoutCoupon =
       source: "admin";
       coupon: ReconciliationAdminCoupon;
     };
+
+type CheckoutConfirmationState = {
+  email: string;
+  enrollments: Array<{
+    courseName: string;
+    courseType?: string;
+    enrollmentNumber: string;
+    isBogoFree?: boolean;
+  }>;
+};
 
 /**
  * Collapsible progress section shown when a bundle is partially fulfilled.
@@ -239,6 +250,8 @@ const CartContent = () => {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] =
     useState<AppliedCheckoutCoupon | null>(null);
+  const [checkoutConfirmation, setCheckoutConfirmation] =
+    useState<CheckoutConfirmationState | null>(null);
   const { user, isLoaded: isUserLoaded } = useUser();
   const { openSignIn } = useClerk();
   const { isAuthenticated } = useConvexAuth();
@@ -925,6 +938,11 @@ const CartContent = () => {
         setCouponCode("");
       }
 
+      setCheckoutConfirmation({
+        email: user.primaryEmailAddress?.emailAddress || "your email address",
+        enrollments: result.enrollments ?? [],
+      });
+
       const pointsEarned = totalPointsEarned;
 
       if (pointsEarned > 0 && user?.id) {
@@ -1130,6 +1148,10 @@ const CartContent = () => {
         </div>
       </div>
     );
+  }
+
+  if (checkoutConfirmation) {
+    return <CheckoutConfirmation {...checkoutConfirmation} />;
   }
 
   if (isEmpty) {
@@ -1821,7 +1843,7 @@ const CartContent = () => {
                 </Button>
                 <Button asChild>
                   <Link
-                    href="/learn"
+                    href="/lms"
                     onClick={() => setShowQrPaymentDialog(false)}
                   >
                     Go to my learning

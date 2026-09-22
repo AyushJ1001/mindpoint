@@ -13,11 +13,8 @@ export interface WhatsAppMessage {
 
 export class WhatsAppService {
   private static instance: WhatsAppService;
-  private apiKey: string;
 
-  private constructor() {
-    this.apiKey = process.env.WHATSAPP_API_KEY || "";
-  }
+  private constructor() {}
 
   public static getInstance(): WhatsAppService {
     if (!WhatsAppService.instance) {
@@ -27,55 +24,11 @@ export class WhatsAppService {
   }
 
   /**
-   * Send a WhatsApp message using WhatsApp Business API
-   * This is a placeholder implementation - you'll need to integrate with your preferred WhatsApp API provider
+   * Automated WhatsApp delivery is intentionally disabled until Mind Point has
+   * an approved provider, consent, template, withdrawal, and audit workflow.
    */
-  async sendMessage(message: WhatsAppMessage): Promise<boolean> {
-    try {
-      // Format phone number (remove all non-digits)
-      const formattedPhone = message.phone.replace(/\D/g, "");
-
-      // Add country code if not present (assuming India +91)
-      const phoneWithCountryCode = formattedPhone.startsWith("91")
-        ? formattedPhone
-        : `91${formattedPhone}`;
-
-      // This is where you would integrate with your WhatsApp API provider
-      // Examples: Twilio, MessageBird, WhatsApp Business API, etc.
-
-      // For now, we'll log the message and return success
-      console.log("WhatsApp Message to be sent:", {
-        to: phoneWithCountryCode,
-        message: message.message,
-        timestamp: new Date().toISOString(),
-      });
-
-      // TODO: Replace with actual WhatsApp API integration
-      // Example with a hypothetical API:
-      /*
-      const response = await fetch('https://your-whatsapp-api.com/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          to: phoneWithCountryCode,
-          message: message.message,
-          type: 'text'
-        })
-      });
-
-      if (!response.ok) {
-        return false;
-      }
-      */
-
-      return true;
-    } catch (error) {
-      console.error("WhatsApp message sending failed:", error);
-      return false;
-    }
+  async sendMessage(_message: WhatsAppMessage): Promise<boolean> {
+    return false;
   }
 
   /**

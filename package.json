@@ -21,6 +21,13 @@
     "test:effect-boundary": "NODE_OPTIONS='--conditions react-server' tsx --test test-effect-boundary.ts",
     "test:convex-result": "tsx --test test-convex-result.ts",
     "test:checkout-reconciliation": "tsx test-checkout-reconciliation.js",
+    "test:lms-stage-zero": "node test-lms-stage-zero.js",
+    "test:lms-quiz": "tsx --test test-lms-quiz.ts",
+    "test:lms-feedback": "tsx --test test-lms-feedback.ts",
+    "test:lms-certificate": "tsx --test test-lms-certificate.ts",
+    "test:lms-support": "tsx --test test-lms-support.ts",
+    "test:lms-course-scope": "tsx --test test-lms-course-scope.ts",
+    "test:auth-deployment": "tsx --test test-auth-deployment.ts",
     "test:analytics-removal": "node test-analytics-removal.js",
     "test:admin-route-protection": "node scripts/test-admin-route-protection.js",
     "test:root-web-doctor": "node test-root-web-doctor.js"

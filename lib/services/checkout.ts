@@ -55,6 +55,8 @@ type SingleEnrollmentCheckoutSuccess = {
 export type EnrollmentSummary = {
   courseId?: string;
   courseName: string;
+  courseType?: string;
+  batchLabel?: string;
   enrollmentId: string;
   enrollmentNumber: string;
   isBogoFree?: boolean;
