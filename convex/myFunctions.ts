@@ -1879,11 +1879,16 @@ export const handleCartCheckout = mutation({
         );
       }
 
-      await activatePublishedLmsCurriculum(ctx, {
-        enrollmentId,
-        courseId: course._id,
-        courseType: course.type,
-      });
+      // Manual payments stay pending until an admin approves them, so their
+      // LMS curriculum is activated on approval instead (see
+      // adminEnrollments.approveEnrollmentPayment).
+      if (!requiresPaymentVerification) {
+        await activatePublishedLmsCurriculum(ctx, {
+          enrollmentId,
+          courseId: course._id,
+          courseType: course.type,
+        });
+      }
 
       await addEnrollmentToGoogleSheets(ctx, {
         userId: args.userId,

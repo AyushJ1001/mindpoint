@@ -15,6 +15,7 @@ import {
   type InternshipPlan,
 } from "./_shared/enrollment";
 import { calculatePointsEarned } from "./_shared/mindPoints";
+import { activatePublishedLmsCurriculum } from "./_shared/lmsActivation";
 import {
   convexFailure,
   convexResultErrorCode,
@@ -1770,6 +1771,13 @@ export const approveEnrollmentPayment = mutation({
     await ctx.db.patch(args.enrollmentId, {
       paymentVerification: "approved",
       paymentVerificationNote: args.note?.trim() || undefined,
+    });
+
+    // Unlock the LMS now that the payment is verified.
+    await activatePublishedLmsCurriculum(ctx, {
+      enrollmentId: enrollment._id,
+      courseId: enrollment.courseId,
+      courseType: enrollment.courseType,
     });
 
     if (enrollment.userEmail) {
