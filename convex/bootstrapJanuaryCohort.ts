@@ -61,7 +61,9 @@ type CourseSeed = {
 
 const COURSES: CourseSeed[] = [
   {
-    match: "CBMT",
+    // Matched by the comma form so the standalone "CBT, REBT & CBMT"
+    // (bootstrapCbtRebtCbmt.ts, code CCBT3) is never picked up by accident.
+    match: "CBT, REBT, CBMT",
     code: "CCCBT",
     name: "CBT, REBT, CBMT",
     type: "certificate",
@@ -135,7 +137,8 @@ const COURSES: CourseSeed[] = [
     painPoints: [
       "CBT, REBT and CBMT are usually taught separately and never joined up.",
       "Most courses stop at theory and never put you in the room.",
-      "You want skills you can actually use, not just notes.",
+      "You want skills you can actually use with a client, not just notes.",
+      "You're not sure which approach to reach for — or how to combine them safely.",
     ],
     whyDifferent: [
       "All three approaches in one coherent certificate.",
@@ -340,6 +343,7 @@ export const createJanuaryCohort = internalMutation({
       batchId: Id<"courseBatches">;
       courseCreated: boolean;
       batchCreated: boolean;
+      lessonsCreated: number;
     }[] = [];
 
     for (const seed of COURSES) {
@@ -423,6 +427,34 @@ export const createJanuaryCohort = internalMutation({
         batchCreated = true;
       }
 
+      // Seed LMS lessons from the module outline (one lesson per module) so the
+      // course is usable in the learner dashboard straight away. Skipped if the
+      // course already has lessons, so admins can safely enrich/replace them.
+      const existingLessons = await ctx.db
+        .query("lessons")
+        .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
+        .collect();
+      let lessonsCreated = 0;
+      if (existingLessons.length === 0) {
+        for (let index = 0; index < seed.modules.length; index++) {
+          const module = seed.modules[index];
+          await ctx.db.insert("lessons", {
+            courseId,
+            moduleTitle: module.title,
+            title: module.title,
+            description: module.description,
+            kind: "text" as const,
+            textContent: module.description,
+            sortOrder: index,
+            isPublished: true,
+            createdAt: now,
+            updatedAt: now,
+            createdByAdminId: actor,
+          });
+          lessonsCreated += 1;
+        }
+      }
+
       results.push({
         name: seed.name,
         code: seed.code,
@@ -430,6 +462,7 @@ export const createJanuaryCohort = internalMutation({
         batchId,
         courseCreated,
         batchCreated,
+        lessonsCreated,
       });
     }
 

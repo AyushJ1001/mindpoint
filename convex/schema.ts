@@ -301,6 +301,15 @@ const publicEnrollmentFields = {
   registrationSource: v.optional(EnrollmentRegistrationSource),
   status: v.optional(EnrollmentStatus),
   statusReason: v.optional(v.string()),
+  // Manual payment verification (screenshot/UPI checkouts). Absent = verified.
+  paymentVerification: v.optional(
+    v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    ),
+  ),
+  paymentVerificationNote: v.optional(v.string()),
   cancelledAt: v.optional(v.number()),
   transferredAt: v.optional(v.number()),
   transferredToCourseId: v.optional(v.id("courses")),
@@ -346,6 +355,9 @@ export default defineSchema({
     enrolledUsers: v.array(v.string()),
     lifecycleStatus: v.optional(CourseLifecycleStatus),
     sortOrder: v.number(),
+    // Optional live-class link shown to learners enrolled in this batch.
+    meetingUrl: v.optional(v.string()),
+    meetingNote: v.optional(v.string()),
     legacySourceCourseId: v.optional(v.id("courses")),
     createdByAdminId: v.optional(v.string()),
     updatedByAdminId: v.optional(v.string()),
@@ -444,6 +456,7 @@ export default defineSchema({
     .index("by_razorpayPaymentId", ["razorpayPaymentId"])
     .index("by_status", ["status"])
     .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_paymentVerification", ["paymentVerification"])
     .index("by_courseId_and_status_and_userId", [
       "courseId",
       "status",
@@ -567,4 +580,118 @@ export default defineSchema({
     .index("by_adminEmail", ["adminEmail"])
     .index("by_isActive", ["isActive"])
     .index("by_addedAt", ["addedAt"]),
+
+  // Editorial overrides for storefront copy (course category pages and
+  // bespoke landing pages). Absent rows fall back to the code defaults.
+  siteContent: defineTable({
+    key: v.string(),
+    data: v.any(),
+    updatedAt: v.number(),
+    updatedByAdminId: v.string(),
+    updatedByEmail: v.optional(v.string()),
+  }).index("by_key", ["key"]),
+
+  // LMS: authored lesson content for a course.
+  lessons: defineTable({
+    courseId: v.id("courses"),
+    moduleTitle: v.optional(v.string()),
+    title: v.string(),
+    description: v.optional(v.string()),
+    kind: v.union(
+      v.literal("video"),
+      v.literal("pdf"),
+      v.literal("link"),
+      v.literal("text"),
+    ),
+    contentUrl: v.optional(v.string()),
+    textContent: v.optional(v.string()),
+    durationMinutes: v.optional(v.number()),
+    sortOrder: v.number(),
+    isPublished: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdByAdminId: v.string(),
+  })
+    .index("by_courseId", ["courseId"])
+    .index("by_courseId_and_sortOrder", ["courseId", "sortOrder"]),
+
+  // LMS: per-learner completion of a lesson.
+  lessonProgress: defineTable({
+    userId: v.string(),
+    lessonId: v.id("lessons"),
+    courseId: v.id("courses"),
+    completed: v.boolean(),
+    completedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_userId_and_lessonId", ["userId", "lessonId"])
+    .index("by_userId_and_courseId", ["userId", "courseId"])
+    .index("by_lessonId", ["lessonId"]),
+
+  // LMS: certificates issued when a learner completes every published lesson.
+  certificates: defineTable({
+    userId: v.string(),
+    userName: v.string(),
+    courseId: v.id("courses"),
+    courseName: v.string(),
+    enrollmentNumber: v.optional(v.string()),
+    verificationCode: v.string(),
+    issuedAt: v.number(),
+  })
+    .index("by_userId_and_courseId", ["userId", "courseId"])
+    .index("by_verificationCode", ["verificationCode"])
+    .index("by_userId", ["userId"]),
+
+  // LMS: per-course learning settings.
+  lmsSettings: defineTable({
+    courseId: v.id("courses"),
+    // When true, a module is locked until every earlier module is complete.
+    sequentialModules: v.boolean(),
+    updatedAt: v.number(),
+    updatedByAdminId: v.string(),
+  }).index("by_courseId", ["courseId"]),
+
+  // LMS: one optional end-of-course quiz per course.
+  quizzes: defineTable({
+    courseId: v.id("courses"),
+    title: v.string(),
+    description: v.optional(v.string()),
+    passingScore: v.number(), // percentage 0-100
+    isPublished: v.boolean(),
+    updatedAt: v.number(),
+    updatedByAdminId: v.string(),
+  }).index("by_courseId", ["courseId"]),
+
+  quizQuestions: defineTable({
+    quizId: v.id("quizzes"),
+    courseId: v.id("courses"),
+    prompt: v.string(),
+    options: v.array(v.string()),
+    correctIndex: v.number(),
+    explanation: v.optional(v.string()),
+    sortOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_quizId", ["quizId"])
+    .index("by_quizId_and_sortOrder", ["quizId", "sortOrder"]),
+
+  quizAttempts: defineTable({
+    userId: v.string(),
+    quizId: v.id("quizzes"),
+    courseId: v.id("courses"),
+    score: v.number(),
+    passed: v.boolean(),
+    correctCount: v.number(),
+    totalCount: v.number(),
+    answers: v.array(
+      v.object({
+        questionId: v.id("quizQuestions"),
+        selectedIndex: v.number(),
+      }),
+    ),
+    createdAt: v.number(),
+  })
+    .index("by_userId_and_quizId", ["userId", "quizId"])
+    .index("by_userId_and_courseId", ["userId", "courseId"]),
 });

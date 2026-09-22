@@ -6,16 +6,16 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Worksheets - The Mind Point",
+  title: "Psychology Worksheets & Resources - The Mind Point",
   description:
-    "Download comprehensive worksheets and resources in psychology and mental health. Practical tools and exercises for your learning journey.",
+    "Evidence-based, professionally designed worksheets for therapists and clients. Download, print and put them to work in the very next session.",
   keywords:
     "worksheets, psychology worksheets, mental health resources, downloadable PDFs, learning materials",
   openGraph: {
     images: [openGraphImage],
-    title: "Worksheets - The Mind Point",
+    title: "Psychology Worksheets & Resources - The Mind Point",
     description:
-      "Download comprehensive worksheets and resources for your learning journey.",
+      "Evidence-based worksheets you can download and use in the very next session.",
     type: "website",
   },
 };

@@ -15,6 +15,7 @@
     "type-check:convex": "tsc --project convex/tsconfig.json --noEmit",
     "dev:convex": "convex dev",
     "doctor": "node scripts/check-root-web-app.js",
+    "check:launch": "node scripts/check-launch-readiness.js",
     "test:email": "node test-resend-email.js",
     "test:email:direct": "node test-resend-direct.js",
     "test:effect-boundary": "NODE_OPTIONS='--conditions react-server' tsx --test test-effect-boundary.ts",

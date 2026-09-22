@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQuery } from "convex/react";
+import { api } from "@/lib/backend/api";
 import { AdminTimeZoneProvider } from "@/components/admin/AdminTimeZoneProvider";
 import { AdminTimeZoneSelect } from "@/components/admin/AdminTimeZoneSelect";
 import {
@@ -19,6 +21,7 @@ import {
 import {
   LayoutDashboard,
   BookOpen,
+  FileText,
   Users,
   GraduationCap,
   Gift,
@@ -27,6 +30,7 @@ import {
   ClipboardList,
   Settings,
   Shield,
+  ShieldCheck,
   MessageSquareQuote,
   Mails,
 } from "lucide-react";
@@ -34,11 +38,17 @@ import {
 const items = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/courses", label: "Courses", icon: BookOpen },
+  { href: "/admin/content", label: "Content", icon: FileText },
   { href: "/admin/offers", label: "Offer Manager", icon: TicketPercent },
   { href: "/admin/coupons", label: "Coupons", icon: BadgePercent },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquareQuote },
   { href: "/admin/leads", label: "Leads", icon: Mails },
   { href: "/admin/enrollments", label: "Enrollments", icon: GraduationCap },
+  {
+    href: "/admin/enrollments/approvals",
+    label: "Payment Approvals",
+    icon: ShieldCheck,
+  },
   { href: "/admin/users", label: "Users", icon: Users },
   { href: "/admin/loyalty", label: "Loyalty", icon: Gift },
   { href: "/admin/admins", label: "Admin Manager", icon: Shield },
@@ -48,6 +58,10 @@ const items = [
 
 export function AdminSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const pendingApprovals = useQuery(
+    api.adminEnrollments.countPendingPaymentVerifications,
+    {},
+  );
 
   return (
     <AdminTimeZoneProvider>
@@ -71,6 +85,13 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
                             <Link href={item.href}>
                               <Icon className="h-4 w-4" />
                               <span>{item.label}</span>
+                              {item.href ===
+                                "/admin/enrollments/approvals" &&
+                                (pendingApprovals ?? 0) > 0 && (
+                                  <span className="bg-destructive text-destructive-foreground ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[0.65rem] font-semibold">
+                                    {pendingApprovals}
+                                  </span>
+                                )}
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>

@@ -6,16 +6,16 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Certificate Courses - The Mind Point",
+  title: "Certificate Courses in Psychology - The Mind Point",
   description:
-    "Discover our expertly designed certificate courses in psychology and mental health. Learn from experienced professionals with evidence-based theory and practical exercises.",
+    "Expert-led, practice-first certificate courses in psychology and mental health. Small cohorts, real exercises, and a verifiable certificate you can put to work.",
   keywords:
     "certificate courses, psychology courses, mental health education, professional development, online learning",
   openGraph: {
     images: [openGraphImage],
-    title: "Certificate Courses - The Mind Point",
+    title: "Certificate Courses in Psychology - The Mind Point",
     description:
-      "Discover our expertly designed certificate courses in psychology and mental health.",
+      "Practice-first certificate courses with small cohorts, real exercises, and a verifiable certificate.",
     type: "website",
   },
 };

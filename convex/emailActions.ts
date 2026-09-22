@@ -910,163 +910,6 @@ export const sendEnrollmentConfirmation = internalAction({
   },
 });
 
-export const sendCartCheckoutConfirmation = internalAction({
-  args: {
-    userEmail: v.string(),
-    userName: v.string(),
-    userPhone: v.optional(v.string()),
-    enrollments: v.array(
-      v.object({
-        enrollmentId: v.id("enrollments"),
-        enrollmentNumber: v.string(),
-        courseName: v.string(),
-        courseId: v.id("courses"),
-        courseType: v.optional(v.string()),
-        startDate: v.string(),
-        endDate: v.string(),
-        startTime: v.string(),
-        endTime: v.string(),
-        internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
-        sessions: v.optional(v.number()),
-        sessionType: v.optional(
-          v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
-        ),
-      }),
-    ),
-  },
-  returns: emailActionResultValidator,
-  handler: async (ctx, args) => {
-    try {
-      // Send email
-      const emailDelivery = await sendEmailWithCopy({
-        from: "The Mind Point <no-reply@themindpoint.org>",
-        to: args.userEmail,
-        subject: "Enrollment Confirmation",
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-            <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
-            <p>Dear ${escapeHtml(args.userName)},</p>
-            <p>We are happy to confirm that your payments for the following courses have been successfully received:</p>
-
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-              <thead>
-                <tr>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Name</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Type</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Start Date</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">End Date</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Time</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Enrollment No</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${args.enrollments
-                  .map((e) => {
-                    const courseType = e.courseType
-                      ? e.courseType.charAt(0).toUpperCase() +
-                        e.courseType.slice(1)
-                      : "Course";
-                    const planInfo = e.internshipPlan
-                      ? ` (${e.internshipPlan === "120" ? "2 week" : "4 week"} plan)`
-                      : "";
-                    const sessionInfo =
-                      e.sessions && e.courseType === "therapy"
-                        ? ` (${e.sessions} session${e.sessions > 1 ? "s" : ""})`
-                        : "";
-
-                    // Add therapy type or session type information
-                    let typeInfo = "";
-                    if (e.courseType === "therapy") {
-                      // Extract therapy type from course name (Spark, Express, Connection)
-                      const therapyType = e.courseName.includes("Spark")
-                        ? "Spark"
-                        : e.courseName.includes("Express")
-                          ? "Express"
-                          : e.courseName.includes("Connection")
-                            ? "Connection"
-                            : e.courseName;
-                      typeInfo = ` - ${therapyType}`;
-                    } else if (e.courseType === "supervised" && e.sessionType) {
-                      typeInfo = ` - ${e.sessionType.charAt(0).toUpperCase() + e.sessionType.slice(1)}`;
-                    }
-
-                    // Only show enrollment number for non-therapy and non-supervised courses
-                    const showEnrollmentNumber =
-                      e.courseType !== "therapy" &&
-                      e.courseType !== "supervised";
-
-                    return `
-                  <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(e.courseName)}${planInfo}${sessionInfo}${typeInfo}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${courseType}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${e.startDate}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${e.endDate}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${e.startTime} - ${e.endTime}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${showEnrollmentNumber ? e.enrollmentNumber : "N/A"}</td>
-                  </tr>
-                `;
-                  })
-                  .join("")}
-              </tbody>
-            </table>
-
-            <h3 style="margin-top: 24px;">Please Note</h3>
-            <ul>
-              ${
-                args.enrollments.some((e) => e.courseType === "pre-recorded")
-                  ? `<li>For pre-recorded courses: Course content material and videos will be sent to you in 2-3 business days of the date of purchase.</li>`
-                  : ""
-              }
-              ${
-                args.enrollments.some(
-                  (e) =>
-                    e.courseType !== "pre-recorded" &&
-                    e.courseType !== "therapy" &&
-                    e.courseType !== "supervised",
-                )
-                  ? `<li>For live courses: You will be added to the group a day prior to the course.</li>
-              <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>`
-                  : ""
-              }
-              <li>Please provide your WhatsApp number if not provided on <strong>+91 9770780086</strong>.</li>
-            </ul>
-
-            <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
-            ${
-              args.enrollments.some(
-                (e) =>
-                  e.courseType !== "therapy" && e.courseType !== "supervised",
-              )
-                ? '<p style="margin-top: 20px;">Please save these enrollment numbers for future reference and access to course materials.</p>'
-                : ""
-            }
-            <p>Thank you for learning with us!</p>
-            <br>
-            <p>Best regards,<br>The Mind Point Team</p>
-          </div>
-        `,
-      });
-      if (isEmailActionFailure(emailDelivery)) {
-        return emailDelivery;
-      }
-
-      console.log(
-        `Cart checkout confirmation email sent successfully to ${args.userEmail}`,
-      );
-    } catch (error) {
-      console.error(
-        `Failed to send cart checkout confirmation email to ${args.userEmail}:`,
-        error,
-      );
-      return emailDeliveryFailureFromThrowable(
-        error as Error | object | string,
-      );
-    }
-
-    return emailActionSuccess();
-  },
-});
-
 export const sendTherapyEnrollmentConfirmation = internalAction({
   args: {
     userEmail: v.string(),
@@ -1550,5 +1393,155 @@ export const sendAlreadyEnrolledNotification = internalAction({
     }
 
     return emailActionSuccess();
+  },
+});
+
+export const sendCertificateIssuedEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    courseName: v.string(),
+    verificationCode: v.string(),
+    courseId: v.string(),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const siteUrl = getSiteUrl();
+      const certificateUrl = `${siteUrl}/learn/${args.courseId}/certificate`;
+      const verificationUrl = `${siteUrl}/verify/${args.verificationCode}`;
+
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: `Your certificate for ${args.courseName}`,
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #2E7D32;">Congratulations, ${escapeHtml(args.userName)}!</h2>
+          <p>You've completed <strong>${escapeHtml(args.courseName)}</strong>. Your certificate of completion is ready.</p>
+
+          <table style="width: 100%; border-collapse: collapse; margin-top: 16px;">
+            <tbody>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9; width: 40%;">Course</td>
+                <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(args.courseName)}</td>
+              </tr>
+              <tr>
+                <td style="padding: 8px; border: 1px solid #ddd; background-color: #f9f9f9;">Verification code</td>
+                <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${escapeHtml(args.verificationCode)}</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p style="margin-top: 20px;">
+            <a href="${certificateUrl}" style="background-color: #2E7D32; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">View &amp; download your certificate</a>
+          </p>
+          <p style="margin-top: 12px;">Anyone can confirm it at <a href="${verificationUrl}">${verificationUrl}</a>.</p>
+
+          <p>Thank you for learning with us.</p>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+      });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
+
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send certificate issued email:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});
+
+export const sendPaymentPendingEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    courseName: v.string(),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "We've received your payment",
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #2E7D32;">Thanks, ${escapeHtml(args.userName)}!</h2>
+          <p>We've received your payment for <strong>${escapeHtml(args.courseName)}</strong> and it's now being verified by our team.</p>
+          <p>This usually takes a short while. You'll get another email the moment it's approved, and your course access will unlock automatically.</p>
+          <p>If we need anything else to confirm the payment, we'll reach out to you directly.</p>
+          <p>Thank you for your patience.</p>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+      });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send payment pending email:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});
+
+export const sendPaymentApprovedEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    courseName: v.string(),
+    courseId: v.string(),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const learnUrl = `${getSiteUrl()}/learn/${args.courseId}`;
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: `Your payment is verified — ${args.courseName} is unlocked`,
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #2E7D32;">You're all set, ${escapeHtml(args.userName)}!</h2>
+          <p>Your payment for <strong>${escapeHtml(args.courseName)}</strong> has been verified and your course access is now unlocked.</p>
+          <p style="margin-top: 20px;">
+            <a href="${learnUrl}" style="background-color: #2E7D32; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">Start learning</a>
+          </p>
+          <p>See you inside.</p>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+      });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send payment approved email:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
   },
 });

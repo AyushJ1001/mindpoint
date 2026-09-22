@@ -603,6 +603,7 @@ export const createManualEnrollment = mutation({
           },
           lineItems: [{ courseId: args.courseId, batchId: args.batchId }],
           sessionType: args.sessionType,
+          checkoutServerSecret: process.env.CHECKOUT_SERVER_SECRET,
           internshipPlan: course.usesBatches ? undefined : args.internshipPlan,
           checkoutPricing: {
             totalAmountPaid: pricingItem.amountPaid,
@@ -1698,5 +1699,136 @@ export const transferEnrollment = mutation({
       sourceEnrollment: updatedSource,
       newEnrollment: createdTarget,
     });
+  },
+});
+
+// ---------------------------------------------------------------------------
+// Manual payment verification (screenshot / UPI checkouts)
+// ---------------------------------------------------------------------------
+
+export const listPendingPaymentVerifications = query({
+  args: {},
+  returns: v.array(
+    v.object({
+      _id: v.id("enrollments"),
+      _creationTime: v.number(),
+      userName: v.union(v.string(), v.null()),
+      userEmail: v.union(v.string(), v.null()),
+      courseName: v.union(v.string(), v.null()),
+      amountPaid: v.union(v.number(), v.null()),
+      paymentScreenshotUrl: v.union(v.string(), v.null()),
+      enrollmentNumber: v.union(v.string(), v.null()),
+    }),
+  ),
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+    const rows = await ctx.db
+      .query("enrollments")
+      .withIndex("by_paymentVerification", (q) =>
+        q.eq("paymentVerification", "pending"),
+      )
+      .take(500);
+    return rows.map((row) => ({
+      _id: row._id,
+      _creationTime: row._creationTime,
+      userName: row.userName ?? null,
+      userEmail: row.userEmail ?? null,
+      courseName: row.courseName ?? null,
+      amountPaid: row.amountPaid ?? null,
+      paymentScreenshotUrl: row.paymentScreenshotUrl ?? null,
+      enrollmentNumber: row.enrollmentNumber ?? null,
+    }));
+  },
+});
+
+export const countPendingPaymentVerifications = query({
+  args: {},
+  returns: v.number(),
+  handler: async (ctx) => {
+    await requireAdmin(ctx);
+    const rows = await ctx.db
+      .query("enrollments")
+      .withIndex("by_paymentVerification", (q) =>
+        q.eq("paymentVerification", "pending"),
+      )
+      .take(1000);
+    return rows.length;
+  },
+});
+
+export const approveEnrollmentPayment = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    note: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const enrollment = await ctx.db.get(args.enrollmentId);
+    if (!enrollment) throw new Error("Enrollment not found");
+
+    await ctx.db.patch(args.enrollmentId, {
+      paymentVerification: "approved",
+      paymentVerificationNote: args.note?.trim() || undefined,
+    });
+
+    if (enrollment.userEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendPaymentApprovedEmail,
+        {
+          userEmail: enrollment.userEmail,
+          userName: enrollment.userName ?? enrollment.userEmail,
+          courseName: enrollment.courseName ?? "your course",
+          courseId: String(enrollment.courseId),
+        },
+      );
+    }
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "enrollment.payment_approved",
+      entityType: "enrollment",
+      entityId: String(args.enrollmentId),
+      before: { paymentVerification: enrollment.paymentVerification ?? null },
+      after: { paymentVerification: "approved" },
+    });
+
+    return null;
+  },
+});
+
+export const rejectEnrollmentPayment = mutation({
+  args: {
+    enrollmentId: v.id("enrollments"),
+    note: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const enrollment = await ctx.db.get(args.enrollmentId);
+    if (!enrollment) throw new Error("Enrollment not found");
+
+    const note = args.note?.trim();
+    await ctx.db.patch(args.enrollmentId, {
+      paymentVerification: "rejected",
+      paymentVerificationNote: note,
+      status: "cancelled",
+      statusReason: note || "Payment could not be verified",
+      cancelledAt: Date.now(),
+    });
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "enrollment.payment_rejected",
+      entityType: "enrollment",
+      entityId: String(args.enrollmentId),
+      before: { paymentVerification: enrollment.paymentVerification ?? null },
+      after: { paymentVerification: "rejected" },
+    });
+
+    return null;
   },
 });

@@ -551,6 +551,7 @@ export function handleGuestUserPaymentSuccessEffect(
         {
           courseIds,
           userEmail,
+          checkoutServerSecret: process.env.CHECKOUT_SERVER_SECRET,
         },
         context,
         options,
@@ -620,6 +621,7 @@ export function handleGuestUserPaymentSuccessWithDataEffect(
           lineItems,
           sessionType,
           userData,
+          checkoutServerSecret: process.env.CHECKOUT_SERVER_SECRET,
         },
         context,
         options,
@@ -693,6 +695,7 @@ export function handleGuestUserSingleEnrollmentEffect(
       {
         courseId,
         userEmail,
+        checkoutServerSecret: process.env.CHECKOUT_SERVER_SECRET,
       },
       context,
       options,
@@ -854,6 +857,7 @@ export function handleGuestUserSupervisedTherapyEnrollmentEffect(
         studentName,
         userEmail,
         userPhone,
+        checkoutServerSecret: process.env.CHECKOUT_SERVER_SECRET,
       },
       context,
       options,

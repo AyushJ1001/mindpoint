@@ -116,6 +116,26 @@ export default function AdminEditCoursePage() {
               Archive
             </Button>
             <Button variant="outline" asChild>
+              <Link href={`/admin/courses/${courseId}/lessons`}>
+                Manage Lessons
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/admin/courses/${courseId}/sessions`}>
+                Live Sessions
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/admin/courses/${courseId}/quiz`}>
+                Quiz
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link href={`/admin/courses/${courseId}/progress`}>
+                Progress
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
               <Link href={`/admin/reviews?courseId=${courseId}`}>
                 Manage Reviews
               </Link>

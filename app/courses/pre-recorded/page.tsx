@@ -8,13 +8,14 @@ export const revalidate = 1800; // 30 min ISR
 export const metadata = {
   title: "Pre-recorded Courses - The Mind Point",
   description:
-    "Learn at your own pace with our pre-recorded courses in psychology and mental health. Flexible, self-paced learning with comprehensive content.",
+    "Self-paced, professionally produced courses in psychology and mental health. Start tonight, revisit any module, and keep the downloadable resources for good.",
   keywords:
     "pre-recorded courses, self-paced learning, psychology courses, mental health education, online learning",
   openGraph: {
     images: [openGraphImage],
     title: "Pre-recorded Courses - The Mind Point",
-    description: "Learn at your own pace with our pre-recorded courses.",
+    description:
+      "Self-paced, professionally produced courses you can start tonight and revisit anytime.",
     type: "website",
   },
 };

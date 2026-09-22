@@ -18,6 +18,7 @@ import type * as _shared_enrollmentSheet from "../_shared/enrollmentSheet.js";
 import type * as _shared_googleSheetsClient from "../_shared/googleSheetsClient.js";
 import type * as _shared_mindPoints from "../_shared/mindPoints.js";
 import type * as _shared_result from "../_shared/result.js";
+import type * as _shared_viewer from "../_shared/viewer.js";
 import type * as adminAudit from "../adminAudit.js";
 import type * as adminAuth from "../adminAuth.js";
 import type * as adminBundles from "../adminBundles.js";
@@ -32,6 +33,7 @@ import type * as adminOffers from "../adminOffers.js";
 import type * as adminReviews from "../adminReviews.js";
 import type * as adminUsers from "../adminUsers.js";
 import type * as adminUtils from "../adminUtils.js";
+import type * as bootstrapCbtRebtCbmt from "../bootstrapCbtRebtCbmt.js";
 import type * as bootstrapJanuaryCohort from "../bootstrapJanuaryCohort.js";
 import type * as bundleCampaigns from "../bundleCampaigns.js";
 import type * as checkout from "../checkout.js";
@@ -43,11 +45,14 @@ import type * as emailActionsWithRateLimit from "../emailActionsWithRateLimit.js
 import type * as googleSheets from "../googleSheets.js";
 import type * as image from "../image.js";
 import type * as leads from "../leads.js";
+import type * as lms from "../lms.js";
 import type * as loyaltySearch from "../loyaltySearch.js";
 import type * as migrations from "../migrations.js";
 import type * as mindPoints from "../mindPoints.js";
 import type * as myFunctions from "../myFunctions.js";
+import type * as quizzes from "../quizzes.js";
 import type * as rateLimit from "../rateLimit.js";
+import type * as siteContent from "../siteContent.js";
 import type * as viewer from "../viewer.js";
 
 import type {
@@ -67,6 +72,7 @@ declare const fullApi: ApiFromModules<{
   "_shared/googleSheetsClient": typeof _shared_googleSheetsClient;
   "_shared/mindPoints": typeof _shared_mindPoints;
   "_shared/result": typeof _shared_result;
+  "_shared/viewer": typeof _shared_viewer;
   adminAudit: typeof adminAudit;
   adminAuth: typeof adminAuth;
   adminBundles: typeof adminBundles;
@@ -81,6 +87,7 @@ declare const fullApi: ApiFromModules<{
   adminReviews: typeof adminReviews;
   adminUsers: typeof adminUsers;
   adminUtils: typeof adminUtils;
+  bootstrapCbtRebtCbmt: typeof bootstrapCbtRebtCbmt;
   bootstrapJanuaryCohort: typeof bootstrapJanuaryCohort;
   bundleCampaigns: typeof bundleCampaigns;
   checkout: typeof checkout;
@@ -92,11 +99,14 @@ declare const fullApi: ApiFromModules<{
   googleSheets: typeof googleSheets;
   image: typeof image;
   leads: typeof leads;
+  lms: typeof lms;
   loyaltySearch: typeof loyaltySearch;
   migrations: typeof migrations;
   mindPoints: typeof mindPoints;
   myFunctions: typeof myFunctions;
+  quizzes: typeof quizzes;
   rateLimit: typeof rateLimit;
+  siteContent: typeof siteContent;
   viewer: typeof viewer;
 }>;
 

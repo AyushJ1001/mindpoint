@@ -2,9 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig = {
   /* config options here */
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   // Disable Clerk key validation during build if keys are dummy
   env: {
     CLERK_SKIP_KEY_VALIDATION: process.env.CLERK_SKIP_KEY_VALIDATION || "false",

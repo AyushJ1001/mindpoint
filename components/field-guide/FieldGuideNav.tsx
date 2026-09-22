@@ -7,7 +7,6 @@ import { usePathname } from "next/navigation";
 import { useCart } from "react-use-cart";
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
-import { ModeToggle } from "@/components/theme-toggle";
 
 const GROUPS: {
   label: string;
@@ -195,7 +194,6 @@ export default function FieldGuideNav() {
             >
               Find your fit
             </Link>
-            <ModeToggle />
             <Link
               href="/cart"
               className="text-foreground/80 hover:text-primary relative rounded-full p-2 transition-colors"

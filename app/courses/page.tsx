@@ -6,20 +6,24 @@ import CoursesClient from "@/components/CoursesClient";
 import CoursesHero from "@/components/CoursesHero";
 import Script from "next/script";
 import { Suspense } from "react";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { ctaVariants } from "@/components/coastal/cta";
+import { ScrollReveal } from "@/components/ScrollReveal";
 
 export const revalidate = 1800; // Revalidate every 30 minutes
 
 export const metadata: Metadata = {
   title: "All Courses - The Mind Point",
   description:
-    "Explore our comprehensive collection of mental health courses, including certificate programs, diplomas, internships, therapy sessions, and professional development courses.",
+    "Explore certificate courses, diplomas, internships, therapy, supervision, masterclasses and career tools in psychology and mental health. Expert-led, practice-first, and built to fit real life.",
   keywords:
     "mental health courses, psychology courses, certificate programs, diploma courses, therapy sessions, counseling courses, professional development, online learning",
   openGraph: {
     images: [openGraphImage],
     title: "All Courses - The Mind Point",
     description:
-      "Explore our comprehensive collection of mental health courses and professional development programs.",
+      "Certificate courses, diplomas, internships, therapy and career tools — expert-led and built to fit real life.",
     type: "website",
     url: "https://www.themindpoint.org/courses",
   },
@@ -27,7 +31,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "All Courses - The Mind Point",
     description:
-      "Explore our comprehensive collection of mental health courses and professional development programs.",
+      "Certificate courses, diplomas, internships, therapy and career tools — expert-led and built to fit real life.",
   },
 };
 
@@ -154,6 +158,31 @@ export default async function CoursesPage() {
       <Suspense fallback={<div>Loading courses...</div>}>
         <CoursesClient coursesData={courses} />
       </Suspense>
+
+      <section className="section-padding pt-0">
+        <div className="container mx-auto max-w-3xl">
+          <ScrollReveal>
+            <div className="border-border bg-card rounded-3xl border border-dashed px-7 py-12 text-center sm:px-12">
+              <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
+                Not sure which one is right?
+              </h2>
+              <p className="text-muted-foreground mx-auto mt-4 max-w-xl text-lg">
+                Tell us where you are and what you want to do next. We&apos;ll
+                point you to the course that fits — no pressure, no hard sell.
+              </p>
+              <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
+                <Link href="/contact" className={ctaVariants({ layout: "flex" })}>
+                  Talk to an advisor
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+                <a href="#catalog" className="calm-link text-sm font-medium">
+                  Browse the full catalogue
+                </a>
+              </div>
+            </div>
+          </ScrollReveal>
+        </div>
+      </section>
     </>
   );
 }

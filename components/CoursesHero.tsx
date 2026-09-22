@@ -1,47 +1,51 @@
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
+import { ctaVariants } from "@/components/coastal/cta";
 import Link from "next/link";
 import Image from "next/image";
 import {
+  ArrowRight,
   Award,
   BriefcaseBusiness,
+  Check,
   GraduationCap,
   PlaySquare,
   Sparkles,
   HeartPulse,
   Telescope,
   FileText,
+  BookOpen,
 } from "lucide-react";
 
 const CATEGORIES = [
   {
     title: "Certificate Courses",
     href: "/courses/certificate",
-    desc: "Structured learning with a credential you can build on.",
+    desc: "Structured, practice-first learning with a credential you can actually use.",
     icon: Award,
   },
   {
     title: "Internship Programs",
     href: "/courses/internship",
-    desc: "Hands-on practice with a mentor in your corner.",
+    desc: "Real cases, clear milestones, and a mentor in your corner.",
     icon: BriefcaseBusiness,
   },
   {
     title: "Diploma Programs",
     href: "/courses/diploma",
-    desc: "A deeper commitment for those ready to go further.",
+    desc: "The deeper commitment, for when you're ready to go all in.",
     icon: GraduationCap,
   },
   {
     title: "Pre-recorded Courses",
     href: "/courses/pre-recorded",
-    desc: "Self-paced modules you can revisit anytime.",
+    desc: "Self-paced modules you can start tonight and revisit anytime.",
     icon: PlaySquare,
   },
   {
     title: "Masterclasses",
     href: "/courses/masterclass",
-    desc: "Focused sessions on one topic, taught by someone who lives it.",
+    desc: "One topic, taught with depth by someone who lives it.",
     icon: Sparkles,
   },
   {
@@ -53,15 +57,28 @@ const CATEGORIES = [
   {
     title: "Supervised Programs",
     href: "/courses/supervised",
-    desc: "Guided feedback on real clinical work, from someone who cares.",
+    desc: "Honest feedback on real clinical work, from a working clinician.",
     icon: Telescope,
   },
   {
     title: "Resume Studio",
     href: "/courses/resume-studio",
-    desc: "Help telling your professional story clearly and compellingly.",
+    desc: "A psychology-specific CV that finally tells your story clearly.",
     icon: FileText,
   },
+  {
+    title: "Worksheets & Resources",
+    href: "/courses/worksheet",
+    desc: "Evidence-based tools you can download and use in the next session.",
+    icon: BookOpen,
+  },
+];
+
+const TRUST_POINTS = [
+  "Expert-led and practice-first",
+  "Small, attentive cohorts",
+  "Certificates with honest wording",
+  "Support that continues after the course",
 ];
 
 export default function CoursesHero() {
@@ -72,13 +89,33 @@ export default function CoursesHero() {
           <div>
             <span className={eyebrowVariants()}>Programs</span>
             <h1 className="font-display mt-4 text-4xl leading-[1.05] tracking-[-0.03em] sm:text-6xl">
-              Find your path in <em className="italic">mental health.</em>
+              There&apos;s a way in.{" "}
+              <em className="italic">Find the one that fits.</em>
             </h1>
             <p className="text-muted-foreground mt-5 max-w-xl text-lg">
-              Structured programs, live workshops, self-paced learning, and
-              professional support — all in one place. Start wherever feels
-              right for you.
+              Live cohorts, self-paced modules, therapy, supervision and career
+              tools — each priced and paced for real life. Start where you are;
+              we&apos;ll meet you there.
             </p>
+            <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <a href="#catalog" className={ctaVariants({ layout: "flex" })}>
+                Browse all courses
+              </a>
+              <Link href="/contact" className="calm-link text-sm font-medium">
+                Not sure where to start? Ask us
+              </Link>
+            </div>
+            <ul className="border-border mt-10 flex flex-wrap gap-x-6 gap-y-3 border-t border-dashed pt-6">
+              {TRUST_POINTS.map((point) => (
+                <li
+                  key={point}
+                  className="text-foreground/70 inline-flex items-center gap-2 text-sm"
+                >
+                  <Check className="text-primary h-4 w-4 shrink-0" />
+                  {point}
+                </li>
+              ))}
+            </ul>
           </div>
           <div className="relative aspect-[5/4] overflow-hidden rounded shadow-[0_40px_80px_-50px_rgba(19,46,43,0.6)]">
             <Image
@@ -114,6 +151,29 @@ export default function CoursesHero() {
             </ScrollReveal>
           ))}
         </div>
+      </section>
+      <section className="container pb-20 sm:pb-28">
+        <Link
+          href="/courses/cbt-rebt-cbmt"
+          className="group border-border hover:border-primary bg-card flex flex-col gap-5 rounded-2xl border border-dashed p-7 transition-all duration-300 hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between sm:p-8"
+        >
+          <div className="max-w-2xl">
+            <span className={eyebrowVariants({ size: "micro" })}>
+              Featured course
+            </span>
+            <h2 className="font-display group-hover:text-primary mt-3 text-2xl transition-colors sm:text-3xl">
+              CBT, REBT &amp; CBMT
+            </h2>
+            <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+              An eight-week live certificate covering all three approaches — and
+              how to use them with real clients, in a small supervised group.
+            </p>
+          </div>
+          <span className="text-primary inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase">
+            See the course
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </span>
+        </Link>
       </section>
     </>
   );
