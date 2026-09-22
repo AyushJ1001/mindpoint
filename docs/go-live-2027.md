@@ -83,13 +83,13 @@ still missing.
 
 ## 6. LMS content
 
-The January bootstrap (`bootstrapJanuaryCohort`) already seeds **one lesson per
-module** for each of the three courses, so the LMS works immediately. See
-`docs/launch-courses.md` for the per-course checklist.
+The January bootstrap (`bootstrapJanuaryCohort`) already seeds a **published LMS
+curriculum** (one module + reading activity per course module) for each of the
+three courses. See `docs/launch-courses.md`.
 
-- [ ] Per course: **Manage Lessons** — replace the seeded text lessons with the
-      real content (video/PDF/link), enrich notes, add lessons as needed.
-- [ ] Optional: **Learning settings** → "Require modules in order".
+- [ ] `/admin/lms` (Release desk) — enrich the curricula (media/quiz/assignment/
+      feedback activities, rights approval, accessible alternatives), then
+      publish the new version.
 - [ ] **Live Sessions** — set the meeting link per batch (shown to enrolled
       learners on `/learn`).
 - [ ] Optional: **Quiz** — add questions + pass mark (required for the

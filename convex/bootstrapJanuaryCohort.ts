@@ -343,6 +343,7 @@ export const createJanuaryCohort = internalMutation({
       batchId: Id<"courseBatches">;
       courseCreated: boolean;
       batchCreated: boolean;
+      curriculumCreated: boolean;
     }[] = [];
 
     for (const seed of COURSES) {
@@ -426,6 +427,55 @@ export const createJanuaryCohort = internalMutation({
         batchCreated = true;
       }
 
+      // Seed a published LMS curriculum (one module + a reading activity per
+      // course module) so the course is usable in the academic LMS. Skipped if
+      // the course already has any curriculum, so admins can edit freely.
+      const existingCurricula = await ctx.db
+        .query("lmsCurricula")
+        .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
+        .take(1);
+      let curriculumCreated = false;
+      if (existingCurricula.length === 0) {
+        const curriculumId = await ctx.db.insert("lmsCurricula", {
+          courseId,
+          version: 1,
+          title: `${seed.name} Curriculum`,
+          status: "published" as const,
+          createdByAdminId: actor,
+          createdAt: now,
+          updatedAt: now,
+          publishedAt: now,
+        });
+        for (let index = 0; index < seed.modules.length; index++) {
+          const module = seed.modules[index];
+          const moduleId = await ctx.db.insert("lmsModules", {
+            curriculumId,
+            title: module.title,
+            description: module.description,
+            sortOrder: index,
+            createdAt: now,
+            updatedAt: now,
+          });
+          await ctx.db.insert("lmsActivities", {
+            curriculumId,
+            moduleId,
+            type: "reading" as const,
+            title: module.title,
+            instructions: module.description,
+            content: module.description,
+            durationMinutes: 20,
+            required: true,
+            sortOrder: 0,
+            releaseMode: "immediate" as const,
+            completionMode: "self_confirm" as const,
+            rightsApproved: true,
+            createdAt: now,
+            updatedAt: now,
+          });
+        }
+        curriculumCreated = true;
+      }
+
       results.push({
         name: seed.name,
         code: seed.code,
@@ -433,6 +483,7 @@ export const createJanuaryCohort = internalMutation({
         batchId,
         courseCreated,
         batchCreated,
+        curriculumCreated,
       });
     }
 
