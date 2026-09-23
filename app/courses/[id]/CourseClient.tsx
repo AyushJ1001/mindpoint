@@ -21,6 +21,16 @@ import {
 
 import CourseHero from "@/components/course/course-hero";
 import CourseTaste from "@/components/course/course-taste";
+import {
+  CourseAbilities,
+  CourseCertificate,
+  CourseCohortPhases,
+  CourseEnrollmentBar,
+  CourseFinalCta,
+  CourseLiveCover,
+  CourseMetaStrip,
+  CourseProgression,
+} from "@/components/course/course-journey";
 import CourseWhyThisExists from "@/components/course/course-why-this-exists";
 import CourseCurriculum from "@/components/course/course-curriculum";
 import CourseOutcomes from "@/components/course/course-outcomes";
@@ -411,12 +421,18 @@ export default function CourseClient({
 
   return (
     <div className="calm-page">
+      <CourseEnrollmentBar course={displayCourse} />
+
       <CourseHero
         course={displayCourse}
         batches={usesBatches ? batchOptions : []}
         activeBatchId={activeBatch?._id ?? null}
         onAddToCart={() => handleIncreaseQuantity(displayCourse)}
       />
+
+      <div className="container">
+        <CourseMetaStrip course={displayCourse} />
+      </div>
 
       <WaveDivider className="mx-auto w-full max-w-3xl opacity-50" />
 
@@ -466,38 +482,47 @@ export default function CourseClient({
         <CourseOutcomes course={displayCourse} />
       </div>
 
+      <CourseAbilities course={displayCourse} />
+      <CourseCohortPhases course={displayCourse} />
+      <CourseProgression />
+      <CourseLiveCover course={displayCourse} />
+
       <div className="relative">
         <LeafAccent className="pointer-events-none absolute -top-2 left-[6%] w-7 -scale-x-100 -rotate-[20deg] opacity-20 sm:w-9" />
       </div>
 
-      {displayCourse.type !== "internship" ? (
-        <PricingSection
-          course={course}
-          activeCourse={displayCourse}
-          variants={variants}
-          isOutOfStock={isOutOfStock}
-          seatsLeft={seatsLeft}
-          hasValidOffer={hasValidOffer}
-          offerDetails={offerDetails}
-          shouldShowVariantSelect={shouldShowVariantSelect}
-          normalizedVariants={normalizedVariants}
-          variantLabel={variantLabel}
-          handleVariantSelect={handleVariantSelect}
-          handleIncreaseQuantity={handleIncreaseQuantity}
-          handleDecreaseQuantity={handleDecreaseQuantity}
-          handleBuyNow={handleBuyNow}
-          getCurrentQuantity={getCurrentQuantity}
-          inCart={(id) =>
-            mounted ? inCart(usesBatches ? cartLineId : id) : false
-          }
-          removeItem={removeCurrentCartLine}
-          mounted={mounted}
-          usesBatches={usesBatches}
-          batchOptions={batchOptions}
-          activeBatchId={activeBatch?._id ?? null}
-          onBatchSelect={usesBatches ? handleBatchSelect : undefined}
-        />
-      ) : null}
+      <div id="ways" className="scroll-mt-24">
+        {displayCourse.type !== "internship" ? (
+          <PricingSection
+            course={course}
+            activeCourse={displayCourse}
+            variants={variants}
+            isOutOfStock={isOutOfStock}
+            seatsLeft={seatsLeft}
+            hasValidOffer={hasValidOffer}
+            offerDetails={offerDetails}
+            shouldShowVariantSelect={shouldShowVariantSelect}
+            normalizedVariants={normalizedVariants}
+            variantLabel={variantLabel}
+            handleVariantSelect={handleVariantSelect}
+            handleIncreaseQuantity={handleIncreaseQuantity}
+            handleDecreaseQuantity={handleDecreaseQuantity}
+            handleBuyNow={handleBuyNow}
+            getCurrentQuantity={getCurrentQuantity}
+            inCart={(id) =>
+              mounted ? inCart(usesBatches ? cartLineId : id) : false
+            }
+            removeItem={removeCurrentCartLine}
+            mounted={mounted}
+            usesBatches={usesBatches}
+            batchOptions={batchOptions}
+            activeBatchId={activeBatch?._id ?? null}
+            onBatchSelect={usesBatches ? handleBatchSelect : undefined}
+          />
+        ) : null}
+      </div>
+
+      <CourseCertificate course={displayCourse} />
 
       <CourseFromStudents
         courseId={displayCourse._id}
@@ -518,6 +543,8 @@ export default function CourseClient({
           handleIncreaseQuantity(displayCourse);
         }}
       />
+
+      <CourseFinalCta course={displayCourse} />
 
       <WaveDivider className="mx-auto w-full max-w-3xl opacity-40" />
 
