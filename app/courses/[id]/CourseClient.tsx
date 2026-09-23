@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dialog";
 
 import CourseHero from "@/components/course/course-hero";
+import CourseTaste from "@/components/course/course-taste";
 import CourseWhyThisExists from "@/components/course/course-why-this-exists";
 import CourseCurriculum from "@/components/course/course-curriculum";
 import CourseOutcomes from "@/components/course/course-outcomes";
@@ -418,6 +419,8 @@ export default function CourseClient({
       />
 
       <WaveDivider className="mx-auto w-full max-w-3xl opacity-50" />
+
+      <CourseTaste />
 
       {displayCourse.type === "internship" ? (
         <PricingSection
