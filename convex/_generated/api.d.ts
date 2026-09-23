@@ -24,7 +24,6 @@ import type * as _shared_lmsFeedback from "../_shared/lmsFeedback.js";
 import type * as _shared_lmsQuiz from "../_shared/lmsQuiz.js";
 import type * as _shared_mindPoints from "../_shared/mindPoints.js";
 import type * as _shared_result from "../_shared/result.js";
-import type * as _shared_viewer from "../_shared/viewer.js";
 import type * as adminAudit from "../adminAudit.js";
 import type * as adminAuth from "../adminAuth.js";
 import type * as adminBundles from "../adminBundles.js";
@@ -86,7 +85,6 @@ declare const fullApi: ApiFromModules<{
   "_shared/lmsQuiz": typeof _shared_lmsQuiz;
   "_shared/mindPoints": typeof _shared_mindPoints;
   "_shared/result": typeof _shared_result;
-  "_shared/viewer": typeof _shared_viewer;
   adminAudit: typeof adminAudit;
   adminAuth: typeof adminAuth;
   adminBundles: typeof adminBundles;

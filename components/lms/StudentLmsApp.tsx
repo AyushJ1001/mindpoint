@@ -311,8 +311,8 @@ function AuthenticatedStudentLmsApp() {
           <Image
             src="/brand/the-mind-point-logo.png"
             alt="The Mind Point"
-            width={250}
-            height={190}
+            width={300}
+            height={228}
           />
           <span>Secure Student workspace</span>
         </header>
@@ -394,8 +394,8 @@ function AuthenticatedStudentLmsApp() {
         <Image
           src="/brand/the-mind-point-logo.png"
           alt="The Mind Point"
-          width={250}
-          height={190}
+          width={300}
+          height={228}
           priority
         />
         <div>
@@ -866,8 +866,8 @@ function AuthenticatedStudentLmsApp() {
           <Image
             src="/brand/the-mind-point-logo.png"
             alt="The Mind Point"
-            width={280}
-            height={220}
+            width={340}
+            height={268}
           />
           <p>Certificate of completion</p>
           <h1>{workspace.completion.certificate.recipientName}</h1>

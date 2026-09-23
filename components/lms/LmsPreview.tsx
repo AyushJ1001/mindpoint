@@ -182,9 +182,9 @@ function RoleRail({
         <Image
           src="/brand/the-mind-point-logo.png"
           alt="The Mind Point"
-          width={138}
-          height={100}
-          className="h-auto w-[138px]"
+          width={180}
+          height={130}
+          className="h-auto w-[180px]"
           priority
         />
         <p className="mt-3 text-xs font-medium text-[var(--lms-muted)]">

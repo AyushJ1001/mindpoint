@@ -212,8 +212,8 @@ function AuthenticatedFacultyLms() {
         <Image
           src="/brand/the-mind-point-logo.png"
           alt="The Mind Point"
-          width={250}
-          height={190}
+          width={300}
+          height={228}
           priority
         />
         <div>

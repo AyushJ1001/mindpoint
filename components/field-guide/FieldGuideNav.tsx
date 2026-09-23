@@ -161,9 +161,9 @@ export default function FieldGuideNav() {
             <Image
               src="/logo.png"
               alt=""
-              width={36}
-              height={36}
-              className="h-8 w-8"
+              width={48}
+              height={48}
+              className="h-11 w-11"
               priority
             />
             <span className="font-display text-foreground text-base font-bold tracking-tight sm:text-lg">

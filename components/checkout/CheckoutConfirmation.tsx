@@ -36,9 +36,9 @@ export function CheckoutConfirmation({
           <Image
             src="/brand/the-mind-point-logo.png"
             alt="The Mind Point"
-            width={220}
-            height={168}
-            className="h-auto w-36 brightness-0 invert sm:w-44"
+            width={280}
+            height={214}
+            className="h-auto w-44 brightness-0 invert sm:w-52"
             priority
           />
           <div className="flex items-center gap-3 text-sm text-[#bcd8d3]">
