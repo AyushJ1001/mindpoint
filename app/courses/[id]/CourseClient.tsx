@@ -19,7 +19,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import CourseHero from "@/components/course/course-hero";
+import CourseHeroBrand from "@/components/course/course-hero-brand";
 import CourseTaste from "@/components/course/course-taste";
 import {
   CourseAbilities,
@@ -28,7 +28,6 @@ import {
   CourseEnrollmentBar,
   CourseFinalCta,
   CourseLiveCover,
-  CourseMetaStrip,
   CourseProgression,
 } from "@/components/course/course-journey";
 import CourseWhyThisExists from "@/components/course/course-why-this-exists";
@@ -423,16 +422,12 @@ export default function CourseClient({
     <div className="calm-page">
       <CourseEnrollmentBar course={displayCourse} />
 
-      <CourseHero
+      <CourseHeroBrand
         course={displayCourse}
         batches={usesBatches ? batchOptions : []}
         activeBatchId={activeBatch?._id ?? null}
         onAddToCart={() => handleIncreaseQuantity(displayCourse)}
       />
-
-      <div className="container">
-        <CourseMetaStrip course={displayCourse} />
-      </div>
 
       <WaveDivider className="mx-auto w-full max-w-3xl opacity-50" />
 
