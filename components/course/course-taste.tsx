@@ -57,7 +57,7 @@ export default function CourseTaste({
           <p className="calm-section-number">{content.eyebrow}</p>
           <h2 className="calm-section-title mt-5">
             {content.heading}{" "}
-            <em className="italic">{content.emphasis}</em>
+            <em className="text-terracotta italic">{content.emphasis}</em>
           </h2>
           <p className="calm-section-lead mt-5 max-w-[60ch]">{content.intro}</p>
 

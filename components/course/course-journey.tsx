@@ -12,7 +12,6 @@ import {
 
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
-import { ctaVariants } from "@/components/coastal/cta";
 import { showRupees } from "@/lib/utils";
 import type { PublicCourse } from "@/lib/backend";
 
@@ -87,7 +86,7 @@ export function CourseAbilities({ course }: { course: PublicCourse }) {
         <ScrollReveal>
           <p className={eyebrowVariants()}>What you&apos;ll be able to do</p>
           <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-4xl">
-            Not topics. <em className="italic">Abilities.</em>
+            Not topics. <em className="text-terracotta italic">Abilities.</em>
           </h2>
           <p className="text-muted-foreground mt-3 max-w-[60ch]">
             First the model, then the room. Every idea is something you practise
@@ -145,7 +144,7 @@ export function CourseCohortPhases({ course }: { course: PublicCourse }) {
         <ScrollReveal>
           <p className={eyebrowVariants()}>How the live cohort runs</p>
           <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-4xl">
-            Learn it, do it, <em className="italic">prove it.</em>
+            Learn it, do it, <em className="text-terracotta italic">prove it.</em>
           </h2>
           <div className="mt-10 grid gap-6 sm:grid-cols-3">
             {phases.map((phase) => (
@@ -183,7 +182,7 @@ export function CourseProgression() {
         <ScrollReveal>
           <p className={eyebrowVariants()}>Where this takes you</p>
           <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-4xl">
-            A rung, not a <em className="italic">dead end.</em>
+            A rung, not a <em className="text-terracotta italic">dead end.</em>
           </h2>
           <p className="text-muted-foreground mt-3 max-w-[60ch]">
             A certificate here isn&apos;t the finish line. It&apos;s a step
@@ -220,7 +219,7 @@ export function CourseLiveCover({ course }: { course: PublicCourse }) {
         <ScrollReveal>
           <p className={eyebrowVariants()}>Inside the live cohort</p>
           <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-4xl">
-            What the live classes <em className="italic">cover.</em>
+            What the live classes <em className="text-terracotta italic">cover.</em>
           </h2>
           <ul className="mt-8 grid gap-x-8 gap-y-3 sm:grid-cols-2">
             {items.map((item) => (
@@ -260,7 +259,7 @@ export function CourseCertificate({ course }: { course: PublicCourse }) {
           <div className="border-primary/20 bg-primary/[0.04] rounded-3xl border px-7 py-10 sm:px-12">
             <p className={eyebrowVariants()}>How you earn it</p>
             <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-4xl">
-              A certificate you <em className="italic">earn,</em> not collect.
+              A certificate you <em className="text-terracotta italic">earn,</em> not collect.
             </h2>
             <p className="text-muted-foreground mt-3 max-w-[60ch]">
               Honest wording, assessed completion, and a verification code that
@@ -295,22 +294,25 @@ export function CourseFinalCta({ course }: { course: PublicCourse }) {
             <p className={eyebrowVariants()}>Ready when you are</p>
             <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-5xl">
               Stop reading about it.{" "}
-              <em className="italic">Do it.</em>
+              <em className="text-terracotta italic">Do it.</em>
             </h2>
             <p className="text-muted-foreground mx-auto mt-4 max-w-xl">
               Start today, or join the next live cohort. Same faculty, same
               skill — at your pace.
             </p>
             <div className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <a href="#ways" className={ctaVariants({ layout: "flex" })}>
+              <a
+                href="#ways"
+                className="bg-primary text-primary-foreground inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-transform hover:-translate-y-0.5"
+              >
                 Choose how you train
-                <ArrowRight className="h-4 w-4" />
+                <span aria-hidden="true">›</span>
               </a>
               <a
                 href={whatsappHref(course.name)}
                 target="_blank"
                 rel="noreferrer"
-                className="calm-link text-sm font-medium"
+                className="border-primary/30 text-primary hover:bg-primary/5 inline-flex items-center gap-2 rounded-full border px-6 py-3 text-sm font-medium transition-colors"
               >
                 Questions? Talk to us on WhatsApp
               </a>
