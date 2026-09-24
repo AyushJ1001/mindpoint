@@ -6,13 +6,25 @@ import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/lib/backend/data-model";
 import Script from "next/script";
 import { redirect } from "next/navigation";
+import { programmeSlugForCode } from "@/lib/course-content";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 const convex = convexUrl ? new ConvexHttpClient(convexUrl) : null;
 
+/** Next.js signals `redirect()` by throwing; never swallow it in a catch. */
+function isRedirectError(error: unknown): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "digest" in error &&
+    typeof (error as { digest?: unknown }).digest === "string" &&
+    (error as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+  );
+}
+
 type Props = {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ batch?: string }>;
+  searchParams: Promise<{ batch?: string; checkout?: string }>;
 };
 
 export async function generateMetadata({
@@ -103,7 +115,9 @@ export default async function CoursePage({ params, searchParams }: Props) {
       return (
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <h1 className="font-display mb-4 text-3xl tracking-tight">Course Unavailable</h1>
+            <h1 className="font-display mb-4 text-3xl tracking-tight">
+              Course Unavailable
+            </h1>
             <p className="text-muted-foreground">
               Course data is currently unavailable.
             </p>
@@ -112,7 +126,8 @@ export default async function CoursePage({ params, searchParams }: Props) {
       );
     }
 
-    const [{ id }, { batch }] = await Promise.all([params, searchParams]);
+    const [{ id }, search] = await Promise.all([params, searchParams]);
+    const { batch, checkout } = search;
     const pageData = await convex.query(api.courses.getCoursePageData, {
       id: id as Id<"courses">,
       batchId: batch as Id<"courseBatches"> | undefined,
@@ -130,13 +145,22 @@ export default async function CoursePage({ params, searchParams }: Props) {
       return (
         <div className="flex min-h-screen items-center justify-center">
           <div className="text-center">
-            <h1 className="font-display mb-4 text-3xl tracking-tight">Course Not Found</h1>
+            <h1 className="font-display mb-4 text-3xl tracking-tight">
+              Course Not Found
+            </h1>
             <p className="text-muted-foreground">
               The requested course could not be found.
             </p>
           </div>
         </div>
       );
+    }
+
+    // Flagship programmes have a richer `/programs/<slug>` page. Send browsing
+    // traffic there; `?checkout=1` keeps the catalogue page for enrolment.
+    const programmeSlug = programmeSlugForCode(course.code);
+    if (programmeSlug && checkout !== "1") {
+      redirect(`/programs/${programmeSlug}`);
     }
 
     // Prefetch related variants (same name & type) to enable instant switching
@@ -217,11 +241,14 @@ export default async function CoursePage({ params, searchParams }: Props) {
       </>
     );
   } catch (error) {
+    if (isRedirectError(error)) throw error;
     console.error("Error loading course:", error);
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <h1 className="font-display mb-4 text-3xl tracking-tight">Error Loading Course</h1>
+          <h1 className="font-display mb-4 text-3xl tracking-tight">
+            Error Loading Course
+          </h1>
           <p className="text-muted-foreground">
             There was an error loading the course. Please try again later.
           </p>

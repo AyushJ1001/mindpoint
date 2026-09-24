@@ -40,10 +40,10 @@ export default function ServerNavbar() {
             alt=""
             width={72}
             height={72}
-            className="h-12 w-12 sm:h-[68px] sm:w-[68px]"
+            className="h-12 w-12 shrink-0 sm:h-[68px] sm:w-[68px]"
             priority
           />
-          <span className="font-display text-foreground text-xl font-bold tracking-[-0.02em] sm:text-[1.75rem]">
+          <span className="font-display text-foreground text-base leading-none font-bold tracking-[-0.01em] sm:text-lg">
             The Mind Point
           </span>
         </Link>

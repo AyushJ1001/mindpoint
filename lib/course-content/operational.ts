@@ -1,4 +1,5 @@
 import type { PublicCourse } from "@/lib/backend";
+import { programmeSlugForCode } from "@/lib/course-content";
 import type {
   CourseContent,
   ProgrammeOption,
@@ -109,7 +110,11 @@ export function attachOperationalData(
       schedule: scheduleFor(match),
       cta: {
         ...option.cta,
-        href: `/courses/${match._id}`,
+        // Applied flagship courses redirect to their programme page when
+        // browsed, so enrolment asks for the catalogue page explicitly.
+        href: `/courses/${match._id}${
+          programmeSlugForCode(match.code) ? "?checkout=1" : ""
+        }`,
         state: "enroll" as const,
       },
     };

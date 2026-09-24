@@ -19,3 +19,20 @@ export function getCampaignCourses(): CourseContent[] {
 export function courseSlugs(): string[] {
   return courses.map((course) => course.slug);
 }
+
+/**
+ * Maps an applied catalogue course code to its rich programme page. Used to
+ * send browsing traffic from the legacy `/courses/<id>` detail view to the new
+ * `/programs/<slug>` page (checkout still opens the catalogue page directly).
+ */
+const PROGRAMME_BY_CODE: Record<string, string> = {
+  CCCBT: "cbt-rebt-cbmt",
+  CCICH: "inner-child-healing",
+  CCPD: "personality-disorders",
+  INCLP: "counselling-internship",
+};
+
+export function programmeSlugForCode(code?: string | null): string | undefined {
+  if (!code) return undefined;
+  return PROGRAMME_BY_CODE[code];
+}
