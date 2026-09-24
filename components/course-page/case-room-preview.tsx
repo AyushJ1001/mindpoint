@@ -134,9 +134,6 @@ export function CaseRoomPreview({
           )}
         </div>
 
-        <p className="water-caption mt-6 text-lg">
-          A quiet shoreline at sunrise.
-        </p>
       </div>
     </section>
   );

@@ -90,9 +90,7 @@ export function LearningJourney() {
               className="object-cover"
             />
           </div>
-          <figcaption className="water-caption mt-3 text-lg">
-            A wave breaking near the shore.
-          </figcaption>
+
         </figure>
       </div>
     </Section>

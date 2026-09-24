@@ -62,9 +62,6 @@ export function ProgrammeHeroSection({ hero }: { hero: ProgrammeHero }) {
         />
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#eaf3f4] to-transparent" />
       </div>
-      <p className="water-caption container mt-3 text-lg">
-        A wave breaking near the shore.
-      </p>
     </section>
   );
 }

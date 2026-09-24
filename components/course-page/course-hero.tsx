@@ -111,9 +111,6 @@ export function CourseHero({ course }: { course: CourseContent }) {
           </div>
         ) : null}
 
-        <p className="water-caption mt-4 text-center text-lg">
-          A calm sea at first light.
-        </p>
       </div>
     </section>
   );

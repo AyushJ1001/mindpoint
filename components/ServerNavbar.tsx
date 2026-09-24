@@ -15,7 +15,7 @@ export default function ServerNavbar() {
       aria-label="Primary"
       className="border-border bg-background/90 sticky top-0 z-50 border-b backdrop-blur-md"
     >
-      <div className="mx-auto flex h-[60px] w-full max-w-[1200px] items-center gap-3 px-4 sm:px-6">
+      <div className="mx-auto flex h-[68px] w-full max-w-[1200px] items-center gap-3 px-4 sm:h-[84px] sm:px-6">
         <span
           aria-hidden="true"
           className="text-foreground -ml-1 flex h-10 w-10 shrink-0 items-center justify-center"
@@ -38,12 +38,12 @@ export default function ServerNavbar() {
           <Image
             src="/logo.png"
             alt=""
-            width={36}
-            height={36}
-            className="h-8 w-8"
+            width={72}
+            height={72}
+            className="h-12 w-12 sm:h-[68px] sm:w-[68px]"
             priority
           />
-          <span className="font-display text-foreground text-base font-bold tracking-tight sm:text-lg">
+          <span className="font-display text-foreground text-xl font-bold tracking-[-0.02em] sm:text-[1.75rem]">
             The Mind Point
           </span>
         </Link>

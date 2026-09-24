@@ -45,9 +45,6 @@ export function FinalCTA({ cta }: { cta: CourseCta }) {
             </a>
           ) : null}
         </div>
-        <p className="water-caption mt-8 text-lg">
-          Turquoise water meeting pale sand.
-        </p>
       </div>
     </section>
   );

@@ -17,7 +17,6 @@ export function PageHero({
   lead,
   image,
   imageAlt = "",
-  caption,
   actions,
 }: PageHeroProps) {
   return (
@@ -48,9 +47,6 @@ export function PageHero({
             />
             <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#f4f8f7] to-transparent" />
           </div>
-          {caption ? (
-            <p className="water-caption container mt-3 text-lg">{caption}</p>
-          ) : null}
         </div>
       ) : null}
     </section>
