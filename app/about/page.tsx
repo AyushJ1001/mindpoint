@@ -61,6 +61,8 @@ export default function AboutPage() {
         }
         lead="The Mind Point is a learning home for psychology students, career changers and practising therapists in India."
         image="/coastal/shore.jpg"
+        imageAlt="A quiet shoreline at sunrise, seen from the water's edge."
+        caption="A quiet shoreline at sunrise."
       />
 
       <section className="container grid gap-12 pb-20 lg:grid-cols-2">

@@ -127,11 +127,39 @@ function AppSidebar() {
   );
 }
 
+const STATIC_COURSE_ROUTES = new Set<string>([
+  "certificate",
+  "internship",
+  "diploma",
+  "pre-recorded",
+  "masterclass",
+  "worksheet",
+  "therapy",
+  "supervised",
+  "resume-studio",
+  "cbt-rebt-cbmt",
+]);
+
+function isCourseDetail(pathname: string): boolean {
+  const segments = pathname.split("/").filter(Boolean);
+  return (
+    segments[0] === "courses" &&
+    segments.length === 2 &&
+    !STATIC_COURSE_ROUTES.has(segments[1])
+  );
+}
+
 export default function CoursesLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const pathname = usePathname();
+
+  if (isCourseDetail(pathname)) {
+    return <div className="w-full overflow-x-clip">{children}</div>;
+  }
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full overflow-x-clip">
@@ -139,7 +167,7 @@ export default function CoursesLayout({
         <main className="min-w-0 flex-1">
           <div className="border-border bg-background/80 border-b border-dashed backdrop-blur-md">
             <div className="flex h-14 items-center gap-2 px-3 sm:h-16 sm:px-4">
-              <SidebarTrigger className="text-foreground hover:border-lavender-200 hover:bg-accent rounded-xl border border-transparent" />
+              <SidebarTrigger className="text-foreground hover:border-border hover:bg-accent rounded-xl border border-transparent" />
               <div className="min-w-0">
                 <Link href="/courses">
                   <h1 className="text-foreground/70 truncate text-[0.72rem] font-semibold tracking-[0.22em] uppercase">

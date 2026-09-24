@@ -138,74 +138,68 @@ export default function CoastalHome({
   return (
     <>
       {/* ── Hero ── */}
-      <section className="relative flex min-h-[clamp(620px,88vh,860px)] flex-col justify-center overflow-hidden">
-        <Image
-          src="/coastal/hero.jpg"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div
-          className="absolute inset-0 bg-[linear-gradient(100deg,rgba(248,246,240,0.96)_0%,rgba(248,246,240,0.86)_34%,rgba(248,246,240,0.35)_58%,rgba(188,214,221,0.18)_100%)]"
-          aria-hidden="true"
-        />
-        <div
-          className="absolute inset-0 bg-[radial-gradient(46%_72%_at_88%_34%,rgba(248,246,240,0.94),transparent_72%)]"
-          aria-hidden="true"
-        />
-
-        <div className="relative z-10 container grid items-center gap-8 py-28 md:grid-cols-[1.35fr_0.65fr]">
-          <div>
-            <h1 className="font-display text-4xl leading-[1.03] tracking-[-0.03em] sm:text-6xl lg:text-7xl">
-              A Kinder,
-              <em className="block font-normal italic">Brighter You.</em>
-            </h1>
-            <p className="text-foreground/90 mt-6 max-w-2xl text-lg sm:text-xl">
-              Practical tools. Compassionate guidance. A more mindful tomorrow.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-4">
-              <Link href="/courses" className={ctaVariants({ layout: "flex" })}>
-                Start your journey <ArrowRight className="h-4 w-4" />
-              </Link>
-            </div>
-            <div className="text-primary mt-10 flex flex-wrap items-center gap-3 text-[0.72rem] tracking-[0.32em] uppercase">
-              <span>Learn</span>
-              <span className="bg-primary h-1 w-1 rounded-full" />
-              <span>Grow</span>
-              <span className="bg-primary h-1 w-1 rounded-full" />
-              <span>Heal</span>
-              <span className="bg-primary h-1 w-1 rounded-full" />
-              <span>Belong</span>
-            </div>
-            {canAccessAdmin && (
-              <Link
-                href="/admin"
-                className="text-muted-foreground hover:text-foreground mt-6 inline-flex items-center gap-2 text-sm"
-              >
-                <Shield className="h-4 w-4" /> Admin
-              </Link>
-            )}
-          </div>
-          <aside className="text-left md:text-right">
-            <div className="font-display text-primary text-2xl leading-tight italic sm:text-3xl">
-              Wellness
-              <br />
-              Belongs
-              <br />
-              Here.
-            </div>
-            <div className="border-border mt-4 h-px w-14 border-t md:ml-auto" />
-            <div
-              className={`mt-4 ${eyebrowVariants({ size: "micro", tone: "muted", leading: "relaxed" })}`}
+      <section className="pt-14 sm:pt-20">
+        <div className="container">
+          <span className="water-eyebrow text-[0.7rem] font-semibold tracking-[0.32em] uppercase">
+            The Mind Point · Psychology education
+          </span>
+          <h1 className="font-display text-foreground mt-5 max-w-[16ch] text-4xl leading-[1.02] tracking-[-0.03em] sm:text-6xl lg:text-7xl">
+            A learning home for{" "}
+            <em className="text-primary italic">psychology</em>.
+          </h1>
+          <p className="text-muted-foreground mt-6 max-w-2xl text-lg sm:text-xl">
+            Evidence-based teaching with real practice, for psychology students,
+            career changers and practising therapists in India — at a pace that
+            stays kind.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-4">
+            <Link href="/programs" className={ctaVariants({ layout: "flex" })}>
+              Find your programme <ArrowRight className="h-4 w-4" />
+            </Link>
+            <Link
+              href="/courses"
+              className="border-primary/30 text-primary hover:bg-primary/5 inline-flex items-center gap-2 rounded-full border px-7 py-3.5 text-xs font-medium tracking-[0.16em] uppercase transition-colors"
             >
-              Mindful People
-              <br />
-              Brighter Tomorrows
-            </div>
-          </aside>
+              Browse all courses
+            </Link>
+          </div>
+          <div className="text-primary mt-10 flex flex-wrap items-center gap-3 text-[0.72rem] tracking-[0.3em] uppercase">
+            <span>Learn</span>
+            <span className="bg-primary h-1 w-1 rounded-full" />
+            <span>Understand</span>
+            <span className="bg-primary h-1 w-1 rounded-full" />
+            <span>Observe</span>
+            <span className="bg-primary h-1 w-1 rounded-full" />
+            <span>Apply</span>
+            <span className="bg-primary h-1 w-1 rounded-full" />
+            <span>Practise</span>
+            <span className="bg-primary h-1 w-1 rounded-full" />
+            <span>Integrate</span>
+          </div>
+          {canAccessAdmin && (
+            <Link
+              href="/admin"
+              className="text-muted-foreground hover:text-foreground mt-6 inline-flex items-center gap-2 text-sm"
+            >
+              <Shield className="h-4 w-4" /> Admin
+            </Link>
+          )}
         </div>
+
+        <div className="relative mt-12 h-[300px] w-full overflow-hidden sm:mt-16 sm:h-[460px]">
+          <Image
+            src="/coastal/hero.jpg"
+            alt="Turquoise water meeting pale sand, seen from above."
+            fill
+            priority
+            sizes="100vw"
+            className="water-drift-slow object-cover"
+          />
+          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#eaf3f4] to-transparent" />
+        </div>
+        <p className="water-caption container mt-3 text-lg">
+          A coastline, seen from above.
+        </p>
       </section>
 
       {/* ── Why we exist ── */}

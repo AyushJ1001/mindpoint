@@ -117,7 +117,7 @@ export default function TOC() {
         <h2 className="mb-4 text-2xl font-semibold text-foreground">
           3. Professional Enhancement Disclaimer
         </h2>
-        <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
+        <div className="mb-6 border-l-4 border-[#e6a53c] bg-[#e6a53c]/10 p-4">
           <p className="leading-relaxed text-foreground/80">
             All Services offered by The Mind Point are intended solely for
             professional enhancement and skill development. They are not
@@ -152,7 +152,7 @@ export default function TOC() {
         <h3 className="mb-3 text-xl font-semibold text-foreground">
           Course Timings, Dates, and Schedules
         </h3>
-        <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
+        <div className="mb-6 border-l-4 border-[#e6a53c] bg-[#e6a53c]/10 p-4">
           <p className="mb-4 leading-relaxed text-foreground/80">
             No adjustments, rescheduling, postponements, or modifications to
             course timings, dates, or schedules will be made under any
@@ -199,7 +199,7 @@ export default function TOC() {
         <h3 className="mb-3 text-xl font-semibold text-foreground">
           Exams and Guidelines
         </h3>
-        <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
+        <div className="mb-6 border-l-4 border-[#e6a53c] bg-[#e6a53c]/10 p-4">
           <p className="leading-relaxed text-foreground/80">
             All exams, assessment patterns, grading criteria, and guidelines set
             by the respective faculty or The Mind Point must be followed

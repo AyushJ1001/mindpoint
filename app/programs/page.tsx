@@ -3,6 +3,7 @@ import { ProgramTabs } from "@/components/coastal/ProgramTabs";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { Check } from "lucide-react";
 import Link from "next/link";
+import { getCampaignCourses, januaryCampaign } from "@/lib/course-content";
 
 export const metadata = {
   title: "Programs - The Mind Point",
@@ -34,7 +35,43 @@ export default function ProgramsPage() {
         }
         lead="Live cohorts, self-paced courses, therapy and supervision — each priced and paced for real life."
         image="/coastal/calm.jpg"
+        imageAlt="Sunrise over a calm sea, with gentle surf reaching wet sand."
+        caption="A calm sea at first light."
       />
+
+      <section className="container pt-14 sm:pt-20">
+        <span className={eyebrowVariants()}>{januaryCampaign.eyebrow}</span>
+        <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-5xl">
+          {januaryCampaign.headline}
+        </h2>
+        <p className="text-muted-foreground mt-4 max-w-[52ch] text-lg">
+          {januaryCampaign.supporting}
+        </p>
+
+        <ul className="mt-10 grid gap-4 sm:grid-cols-2">
+          {getCampaignCourses().map((course) => (
+            <li key={course.slug}>
+              <Link
+                href={`/programs/${course.slug}`}
+                className="border-border bg-card hover:border-primary/40 group flex h-full flex-col rounded-2xl border p-6 transition-colors"
+              >
+                <span className="text-foreground/45 text-[0.66rem] font-semibold tracking-[0.22em] uppercase">
+                  {course.category}
+                </span>
+                <h3 className="font-display text-foreground mt-3 text-2xl">
+                  {course.title}
+                </h3>
+                <p className="text-muted-foreground mt-2 flex-1 text-sm leading-relaxed">
+                  {course.tagline}
+                </p>
+                <span className="text-primary mt-5 text-xs font-semibold tracking-[0.16em] uppercase">
+                  Explore programme →
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       <section className="container pt-10">
         <Link

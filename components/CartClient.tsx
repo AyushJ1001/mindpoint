@@ -1241,7 +1241,7 @@ const CartContent = () => {
                 return (
                   <div
                     key={item.id}
-                    className="border-lavender-200 bg-card rounded-xl border p-3 shadow-[0_10px_22px_-18px_rgba(19,46,43,0.7)]"
+                    className="border-border bg-card rounded-xl border p-3 shadow-[0_10px_22px_-18px_rgba(19,46,43,0.7)]"
                   >
                     <div className="flex items-start gap-3">
                       <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-md sm:h-16 sm:w-16">
@@ -1262,15 +1262,15 @@ const CartContent = () => {
                         </p>
                         {itemHasBundle && pricingItem?.bundleCampaignName ? (
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                            <span className="inline-flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-[11px] font-semibold text-blue-800">
+                            <span className="inline-flex items-center gap-1 rounded bg-primary/15 px-2 py-1 text-[11px] font-semibold text-primary">
                               <Layers className="h-3 w-3" />
                               Bundle Applied
                             </span>
-                            <span className="font-medium text-blue-700">
+                            <span className="font-medium text-primary">
                               {pricingItem.bundleCampaignName}
                             </span>
                             {pricingItem.redemptionDiscountAmount > 0 && (
-                              <span className="font-medium text-blue-600">
+                              <span className="font-medium text-primary">
                                 (save{" "}
                                 {showRupees(
                                   pricingItem.redemptionDiscountAmount,
@@ -1436,7 +1436,7 @@ const CartContent = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {appliedBundle ? (
-                <div className="space-y-2 rounded-md border border-blue-200 bg-blue-50 px-3 py-3 text-sm text-blue-900">
+                <div className="space-y-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-3 text-sm text-primary">
                   <div className="flex items-center gap-2 font-semibold">
                     <Layers className="h-4 w-4" />
                     <span>{appliedBundle.campaignName}</span>
@@ -1449,7 +1449,7 @@ const CartContent = () => {
                     covered for {showRupees(appliedBundle.flatFee)}.
                   </p>
                   {/* List covered courses with per-item savings */}
-                  <div className="space-y-1 border-t border-blue-200 pt-2">
+                  <div className="space-y-1 border-t border-primary/30 pt-2">
                     {appliedBundle.allocations.map((alloc) => {
                       const cartItem = items.find(
                         (i) => String(i.id) === String(alloc.courseId),
@@ -1459,12 +1459,12 @@ const CartContent = () => {
                           key={alloc.courseId}
                           className="flex items-start gap-2 text-xs"
                         >
-                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-blue-600" />
+                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
                           <span className="min-w-0 flex-1 truncate">
                             {cartItem?.name ?? "Course"}
                           </span>
                           {alloc.savings > 0 && (
-                            <span className="shrink-0 font-medium text-blue-700">
+                            <span className="shrink-0 font-medium text-primary">
                               -{showRupees(alloc.savings)}
                             </span>
                           )}
@@ -1472,7 +1472,7 @@ const CartContent = () => {
                       );
                     })}
                   </div>
-                  <p className="text-xs text-blue-700">
+                  <p className="text-xs text-primary">
                     Existing discounts, BOGO, and coupon reductions do not apply
                     to the covered courses.
                   </p>
@@ -1529,7 +1529,7 @@ const CartContent = () => {
                 <span>{showRupees(listedCartTotal)}</span>
               </div>
               {appliedBundle ? (
-                <div className="flex justify-between text-blue-700">
+                <div className="flex justify-between text-primary">
                   <span>Bundle savings</span>
                   <span>-{showRupees(appliedBundle.coveredSavings)}</span>
                 </div>

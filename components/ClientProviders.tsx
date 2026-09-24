@@ -10,6 +10,7 @@ import ClientNavbar from "@/components/ClientNavbar";
 import RouteBodyClass from "@/components/RouteBodyClass";
 import StructuredData from "@/components/structured-data";
 import { ThemeProvider } from "@/components/theme-provider";
+import { WaterMain } from "@/components/water/water-main";
 
 interface ClientProvidersProps {
   children: ReactNode;
@@ -17,13 +18,11 @@ interface ClientProvidersProps {
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
   const appShell = (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
       <RouteBodyClass />
       <StructuredData />
       <ClientNavbar />
-      <main id="main-content" className="flex-grow" role="main" tabIndex={-1}>
-        {children}
-      </main>
+      <WaterMain>{children}</WaterMain>
     </ThemeProvider>
   );
 
