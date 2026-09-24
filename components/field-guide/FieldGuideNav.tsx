@@ -160,15 +160,15 @@ export default function FieldGuideNav() {
 
           <Link
             href="/"
-            className="flex items-center gap-2.5"
+            className="flex items-baseline gap-2.5"
             aria-label="The Mind Point, home"
           >
             <Image
-              src="/logo.png"
+              src="/logo-mark.png"
               alt=""
-              width={72}
-              height={72}
-              className="h-12 w-12 shrink-0 sm:h-[68px] sm:w-[68px]"
+              width={448}
+              height={356}
+              className="h-10 w-auto shrink-0 sm:h-12"
               priority
             />
             <span className="font-display text-foreground text-base leading-none font-bold tracking-[-0.01em] sm:text-lg">
