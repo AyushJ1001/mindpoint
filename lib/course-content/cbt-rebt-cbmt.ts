@@ -14,7 +14,8 @@ export const cbtRebtCbmt: CourseContent = {
   title: "CBT, REBT and CBMT",
   shortTitle: "CBT, REBT and CBMT",
   category: "Certificate course",
-  tagline: "Understand the models. Practise the reasoning. Learn where each approach fits.",
+  tagline:
+    "Understand the models. Practise the reasoning. Learn where each approach fits.",
   description:
     "A two-stage certificate course: a self-paced introduction, then live applied classes working through fictional cases.",
   heroCopy:
@@ -76,7 +77,8 @@ export const cbtRebtCbmt: CourseContent = {
         "No prior psychology study is required for the introductory self-paced stage. The lessons begin with ordinary situations and define the technical terms before using them in cases.",
     },
     {
-      question: "I already study or work in psychology. Should I start with the introduction?",
+      question:
+        "I already study or work in psychology. Should I start with the introduction?",
       answer:
         "The introduction is useful as a shared foundation and refresher. If you are comfortable with automatic thoughts, behavioural cycles, the REBT ABCDE map and self-instruction, the applied stage is designed to give you more demanding case reasoning. Follow any actual enrolment prerequisite displayed for the live cohort.",
     },
@@ -96,12 +98,14 @@ export const cbtRebtCbmt: CourseContent = {
         "You will study models and practise reasoning through fictional cases. Professionals can relate the applied exercises to their existing training and supervision. This certificate alone does not qualify someone to diagnose, provide psychotherapy or work independently with clients.",
     },
     {
-      question: "What if I am from another field and simply want to explore psychology?",
+      question:
+        "What if I am from another field and simply want to explore psychology?",
       answer:
         "You are welcome in the introductory stage. It is designed to build understanding without expecting clinical knowledge or personal disclosure. You can decide whether the applied live classes fit your goals after you have seen the foundations.",
     },
     {
-      question: "Are the reading notes separate from the videos and live classes?",
+      question:
+        "Are the reading notes separate from the videos and live classes?",
       answer:
         "Yes. The student reading notes are substantive standalone materials for each stage. The introductory teaching script and applied faculty guide are separate internal teaching documents.",
     },
@@ -115,7 +119,8 @@ export const cbtRebtCbmt: CourseContent = {
     "Educational certificate course. Real clinical practice requires the appropriate qualifications, consent and supervision. This course does not confer an independent clinical qualification, and the certificate does not authorise psychotherapy practice.",
 
   cta: {
-    heading: "Build a foundation you can explain. Practise decisions you can revise.",
+    heading:
+      "Build a foundation you can explain. Practise decisions you can revise.",
     body: "The Mind Point brings the foundational models and applied learning into one clear route. Start at your own pace, then join the live work when you are ready to analyse cases, test assumptions and think carefully about the person and the setting behind every technique.",
     primaryLabel: "Explore course options",
     secondaryLabel: "Talk to us on WhatsApp",
@@ -127,7 +132,8 @@ export const cbtRebtCbmt: CourseContent = {
   hero: {
     eyebrow: "The Mind Point certificate course",
     title: "CBT, REBT and CBMT",
-    supporting: "Understand the models. Practise the reasoning. Learn where each approach fits.",
+    supporting:
+      "Understand the models. Practise the reasoning. Learn where each approach fits.",
     description:
       "Start with a self-paced introduction that makes psychology understandable even if it is new to you. Then move into live applied classes where you can work through fictional cases, try structured exercises and learn how a thoughtful practitioner decides what to ask before choosing a technique. The two stages are designed to connect, while giving experienced learners enough depth to examine familiar ideas more carefully.",
     primaryCta: { label: "Explore course options", href: "#options" },
@@ -338,8 +344,9 @@ export const cbtRebtCbmt: CourseContent = {
         outcome:
           "Explain core concepts, distinguish the three approaches and analyse a fictional case without jumping to diagnosis or a technique.",
         cta: { label: "Choose self-paced introduction", state: "enroll" },
+        catalogueCode: "PRCBTI",
         upgradeNote:
-          "Upgrade to the live cohort later for the ₹1,200 difference.",
+          "Upgrade to the live cohort later for the ₹2,000 difference.",
       },
       {
         key: "applied",
@@ -354,12 +361,14 @@ export const cbtRebtCbmt: CourseContent = {
         outcome:
           "Practise formulation, method selection, role play, adaptation and review with faculty guidance.",
         cta: { label: "Explore live applied course", state: "enroll" },
+        catalogueCode: "CCCBT",
       },
     ],
   },
 
   closing: {
-    heading: "Build a foundation you can explain. Practise decisions you can revise.",
+    heading:
+      "Build a foundation you can explain. Practise decisions you can revise.",
     body: "The Mind Point brings the foundational models and applied learning into one clear route. Start at your own pace, then join the live work when you are ready to analyse cases, test assumptions and think carefully about the person and the setting behind every technique.",
     ctaLabel: "Explore course options",
     ctaHref: "#options",

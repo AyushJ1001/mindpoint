@@ -1,9 +1,36 @@
 import type { PublicCourse } from "@/lib/backend";
-import type { CourseContent, ProgrammeOption } from "@/lib/course-content/types";
+import type {
+  CourseContent,
+  ProgrammeOption,
+} from "@/lib/course-content/types";
 
 const APPLIED_MATCH = /\b(cbt|rebt|cbmt)\b/i;
 const INTRO_MATCH =
   /(intro|introduction|foundation|self[\s-]?paced).*(cbt|rebt|cbmt)|(cbt|rebt|cbmt).*(intro|introduction|foundation|self[\s-]?paced)/i;
+
+/**
+ * Resolve the catalogue row for an option. `catalogueCode` is authoritative
+ * when present; the CBT-era name regexes remain as a fallback.
+ */
+function matchCatalogue(
+  key: string,
+  catalogueCode: string | undefined,
+  catalogue: PublicCourse[],
+): PublicCourse | undefined {
+  if (catalogueCode) {
+    const byCode = catalogue.find((item) => item.code === catalogueCode);
+    if (byCode) return byCode;
+  }
+  if (key === "applied") {
+    return catalogue.find(
+      (item) => item.type === "certificate" && APPLIED_MATCH.test(item.name),
+    );
+  }
+  if (key === "introductory" || key === "self-paced") {
+    return catalogue.find((item) => INTRO_MATCH.test(item.name));
+  }
+  return undefined;
+}
 
 function formatDate(value?: string): string | undefined {
   if (!value) return undefined;
@@ -71,18 +98,8 @@ export function attachOperationalData(
 ): CourseContent {
   if (course.layout !== "brief" || !course.options) return course;
 
-  const applied = catalogue.find(
-    (item) => item.type === "certificate" && APPLIED_MATCH.test(item.name),
-  );
-  const introductory = catalogue.find((item) => INTRO_MATCH.test(item.name));
-
   const items = course.options.items.map((option) => {
-    const match =
-      option.key === "applied"
-        ? applied
-        : option.key === "introductory"
-          ? introductory
-          : undefined;
+    const match = matchCatalogue(option.key, option.catalogueCode, catalogue);
 
     if (!match) return option;
 
@@ -90,7 +107,11 @@ export function attachOperationalData(
       ...option,
       price: priceFor(match),
       schedule: scheduleFor(match),
-      cta: { ...option.cta, href: `/courses/${match._id}`, state: "enroll" as const },
+      cta: {
+        ...option.cta,
+        href: `/courses/${match._id}`,
+        state: "enroll" as const,
+      },
     };
   });
 

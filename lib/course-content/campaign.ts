@@ -29,13 +29,15 @@ export const learningModel: LearningStage[] = [
   {
     key: "learn",
     label: "Learn",
-    description: "Take in the frameworks, language and evidence at your own pace.",
+    description:
+      "Take in the frameworks, language and evidence at your own pace.",
     part: "foundations",
   },
   {
     key: "understand",
     label: "Understand",
-    description: "Make sense of why each idea holds up, and where it breaks down.",
+    description:
+      "Make sense of why each idea holds up, and where it breaks down.",
     part: "foundations",
   },
   {

@@ -18,7 +18,7 @@ export const metadata = {
   alternates: { canonical: "/january-2027" },
 };
 
-const FULL_PRICE = 2499;
+const FULL_PRICE = 3499;
 
 const COHORTS = [
   {
@@ -37,7 +37,7 @@ const COHORTS = [
     blurb:
       "How childhood experiences shape adult life, and trauma-informed ways to nurture and reconnect with the inner child.",
     image: "/coastal/calm.jpg",
-    duration: "6 weeks",
+    duration: "8 weeks",
   },
   {
     code: "CCPD",
@@ -239,16 +239,16 @@ export default async function JanuaryLandingPage() {
               Registration
             </b>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-              Certificate cohorts are ₹2,499 for the live eight weeks. A
-              self-paced introduction is ₹1,299, and you can upgrade to the live
-              cohort later for the ₹1,200 difference.
+              Certificate cohorts are ₹3,499 for the live eight weeks. A
+              self-paced introduction is ₹1,499, and you can upgrade to the live
+              cohort later for the ₹2,000 difference.
             </p>
           </div>
           <div className="border-border border-primary border-t-2 pt-5">
             <b className="font-display block text-xl font-medium">Schedule</b>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-              Live online, Tuesdays and Thursdays in January 2027, times in
-              IST. Recordings stay available for your access window.
+              Live online, Tuesdays and Thursdays in January 2027, times in IST.
+              Recordings stay available for your access window.
             </p>
           </div>
           <div className="border-border border-primary border-t-2 pt-5">

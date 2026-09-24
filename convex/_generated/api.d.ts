@@ -33,6 +33,7 @@ import type * as adminReviews from "../adminReviews.js";
 import type * as adminUsers from "../adminUsers.js";
 import type * as adminUtils from "../adminUtils.js";
 import type * as bootstrapJanuaryCohort from "../bootstrapJanuaryCohort.js";
+import type * as bootstrapStorefrontPricing from "../bootstrapStorefrontPricing.js";
 import type * as bundleCampaigns from "../bundleCampaigns.js";
 import type * as checkout from "../checkout.js";
 import type * as courseBatchHelpers from "../courseBatchHelpers.js";
@@ -82,6 +83,7 @@ declare const fullApi: ApiFromModules<{
   adminUsers: typeof adminUsers;
   adminUtils: typeof adminUtils;
   bootstrapJanuaryCohort: typeof bootstrapJanuaryCohort;
+  bootstrapStorefrontPricing: typeof bootstrapStorefrontPricing;
   bundleCampaigns: typeof bundleCampaigns;
   checkout: typeof checkout;
   courseBatchHelpers: typeof courseBatchHelpers;
