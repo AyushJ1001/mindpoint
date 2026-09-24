@@ -183,6 +183,8 @@ export interface ProgrammeOption {
   outcome: string;
   /** CTA label is always shown; href/state are rendered only when configured. */
   cta: { label: string; href?: string; state: OptionState };
+  /** Catalogue course code to bind price/schedule/checkout from. */
+  catalogueCode?: string;
   price?: { amount: number; currency: string; note?: string };
   schedule?: string;
   availability?: string;
