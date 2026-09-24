@@ -47,6 +47,8 @@ export default function ResourcesPage() {
         }
         lead="Guides, downloads and one full recorded masterclass — no card required."
         image="/coastal/wave.jpg"
+        imageAlt="A wave breaking near the shore, spray catching the light."
+        caption="A wave breaking near the shore."
       />
 
       <section className="container pb-20">

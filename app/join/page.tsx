@@ -46,6 +46,8 @@ export default function JoinPage() {
         }
         lead="Enrol, book a session, or just ask a question. We reply like people, because we are."
         image="/coastal/calm.jpg"
+        imageAlt="Sunrise over a calm sea, with gentle surf reaching wet sand."
+        caption="A calm sea at first light."
       />
 
       <section className="container pb-20">

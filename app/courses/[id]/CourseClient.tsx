@@ -19,28 +19,21 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
-import CourseHeroBrand from "@/components/course/course-hero-brand";
-import CourseTaste from "@/components/course/course-taste";
-import {
-  CourseAbilities,
-  CourseCertificate,
-  CourseCohortPhases,
-  CourseEnrollmentBar,
-  CourseFinalCta,
-  CourseLiveCover,
-  CourseProgression,
-} from "@/components/course/course-journey";
-import CourseWhyThisExists from "@/components/course/course-why-this-exists";
-import CourseCurriculum from "@/components/course/course-curriculum";
-import CourseOutcomes from "@/components/course/course-outcomes";
+import CourseAnnouncementBar from "@/components/course/editorial/course-announcement-bar";
+import CourseEditorialHero from "@/components/course/editorial/course-editorial-hero";
+import CourseTaste from "@/components/course/editorial/course-taste";
+import CourseNarrative from "@/components/course/editorial/course-narrative";
+import CourseAbilities from "@/components/course/editorial/course-abilities";
+import CourseModules from "@/components/course/editorial/course-modules";
+import CoursePhases from "@/components/course/editorial/course-phases";
+import CourseCertificate from "@/components/course/editorial/course-certificate";
+import CourseFinalCta from "@/components/course/editorial/course-final-cta";
 import PricingSection from "@/components/course/pricing-section";
 import CourseFromStudents from "@/components/course/course-from-students";
-import CourseTerminalCTA from "@/components/course/course-terminal-cta";
 import FAQSection from "@/components/course/faq-section";
 import CourseFooterNote from "@/components/course/course-footer-note";
 import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
-import { LeafAccent, WaveDivider } from "@/components/illustrations";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import {
   getOfferDetails,
@@ -419,21 +412,24 @@ export default function CourseClient({
   }));
 
   return (
-    <div className="calm-page">
-      <CourseEnrollmentBar course={displayCourse} />
+    <div className="relative">
+      <CourseAnnouncementBar course={displayCourse} />
 
-      <CourseHeroBrand
+      <CourseEditorialHero
         course={displayCourse}
         batches={usesBatches ? batchOptions : []}
         activeBatchId={activeBatch?._id ?? null}
-        onAddToCart={() => handleIncreaseQuantity(displayCourse)}
       />
 
-      <WaveDivider className="mx-auto w-full max-w-3xl opacity-50" />
+      <CourseTaste course={displayCourse} />
 
-      <CourseTaste />
+      <CourseNarrative course={displayCourse} />
 
-      {displayCourse.type === "internship" ? (
+      <CourseAbilities course={displayCourse} />
+
+      <CourseModules course={displayCourse} />
+
+      <div id="ways" className="scroll-mt-24">
         <PricingSection
           course={course}
           activeCourse={displayCourse}
@@ -460,62 +456,9 @@ export default function CourseClient({
           activeBatchId={activeBatch?._id ?? null}
           onBatchSelect={usesBatches ? handleBatchSelect : undefined}
         />
-      ) : null}
-
-      <div className="calm-section-warm">
-        <CourseWhyThisExists course={displayCourse} />
       </div>
 
-      <div className="relative">
-        <LeafAccent className="pointer-events-none absolute -top-3 right-[8%] w-8 rotate-12 opacity-25 sm:w-10" />
-        <CourseCurriculum course={displayCourse} />
-      </div>
-
-      <WaveDivider className="mx-auto w-full max-w-3xl opacity-40" />
-
-      <div className="calm-section-cool">
-        <CourseOutcomes course={displayCourse} />
-      </div>
-
-      <CourseAbilities course={displayCourse} />
-      <CourseCohortPhases course={displayCourse} />
-      <CourseProgression />
-      <CourseLiveCover course={displayCourse} />
-
-      <div className="relative">
-        <LeafAccent className="pointer-events-none absolute -top-2 left-[6%] w-7 -scale-x-100 -rotate-[20deg] opacity-20 sm:w-9" />
-      </div>
-
-      <div id="ways" className="scroll-mt-24">
-        {displayCourse.type !== "internship" ? (
-          <PricingSection
-            course={course}
-            activeCourse={displayCourse}
-            variants={variants}
-            isOutOfStock={isOutOfStock}
-            seatsLeft={seatsLeft}
-            hasValidOffer={hasValidOffer}
-            offerDetails={offerDetails}
-            shouldShowVariantSelect={shouldShowVariantSelect}
-            normalizedVariants={normalizedVariants}
-            variantLabel={variantLabel}
-            handleVariantSelect={handleVariantSelect}
-            handleIncreaseQuantity={handleIncreaseQuantity}
-            handleDecreaseQuantity={handleDecreaseQuantity}
-            handleBuyNow={handleBuyNow}
-            getCurrentQuantity={getCurrentQuantity}
-            inCart={(id) =>
-              mounted ? inCart(usesBatches ? cartLineId : id) : false
-            }
-            removeItem={removeCurrentCartLine}
-            mounted={mounted}
-            usesBatches={usesBatches}
-            batchOptions={batchOptions}
-            activeBatchId={activeBatch?._id ?? null}
-            onBatchSelect={usesBatches ? handleBatchSelect : undefined}
-          />
-        ) : null}
-      </div>
+      <CoursePhases course={displayCourse} />
 
       <CourseCertificate course={displayCourse} />
 
@@ -524,7 +467,7 @@ export default function CourseClient({
         courseType={displayCourse.type}
       />
 
-      <CourseTerminalCTA
+      <CourseFinalCta
         course={displayCourse}
         isOutOfStock={isOutOfStock}
         onReserve={() => {
@@ -538,10 +481,6 @@ export default function CourseClient({
           handleIncreaseQuantity(displayCourse);
         }}
       />
-
-      <CourseFinalCta course={displayCourse} />
-
-      <WaveDivider className="mx-auto w-full max-w-3xl opacity-40" />
 
       {displayCourse.type === "therapy" ? (
         <TherapyFAQSection />

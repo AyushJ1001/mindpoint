@@ -279,7 +279,7 @@ const CourseGroupCard = ({
               </Badge>
             )}
             {bundleInfo && (
-              <Badge className="max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Badge className="max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
                 <Layers className="mr-1 h-3 w-3" />
                 <span className="sm:hidden">Bundle</span>
                 <span className="hidden sm:inline">Bundle Deal</span>
@@ -291,7 +291,7 @@ const CourseGroupCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+                  className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountLabel}
@@ -455,7 +455,7 @@ const CourseGroupCard = ({
               </div>
             )}
             {bundleInfo && (
-              <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+              <div className="flex items-center gap-1 text-xs font-medium text-primary">
                 <Layers className="h-3 w-3 shrink-0" />
                 <span className="truncate">{bundleInfo.dealSummary}</span>
               </div>
@@ -675,7 +675,7 @@ const CourseCard = ({
               </Badge>
             )}
             {bundleInfo && (
-              <Badge className="max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Badge className="max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
                 <Layers className="mr-1 h-3 w-3" />
                 <span className="sm:hidden">Bundle</span>
                 <span className="hidden sm:inline">Bundle Deal</span>
@@ -687,7 +687,7 @@ const CourseCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+                  className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountLabel}
@@ -786,7 +786,7 @@ const CourseCard = ({
           </div>
         )}
         {bundleInfo && (
-          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-blue-700">
+          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-primary">
             <Layers className="h-3 w-3 shrink-0" />
             <span className="truncate">{bundleInfo.dealSummary}</span>
           </div>

@@ -32,7 +32,7 @@ export default function RefundPolicy() {
         <h2 className="mb-4 text-2xl font-semibold text-foreground">
           1. General Refund Rules
         </h2>
-        <div className="mb-6 border-l-4 border-yellow-400 bg-yellow-50 p-4">
+        <div className="mb-6 border-l-4 border-[#e6a53c] bg-[#e6a53c]/10 p-4">
           <p className="mb-4 leading-relaxed text-foreground/80">
             All sales and enrollments are final. No refunds, partial refunds,
             cancellations, or credits will be issued for any Services once
@@ -77,7 +77,7 @@ export default function RefundPolicy() {
           </li>
         </ul>
 
-        <div className="mb-6 border-l-4 border-red-400 bg-red-50 p-4">
+        <div className="mb-6 border-l-4 border-[#b4442a] bg-[#b4442a]/10 p-4">
           <p className="mb-2 font-semibold text-foreground">
             No refunds will be provided for:
           </p>

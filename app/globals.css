@@ -166,11 +166,6 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     position: relative;
-    background-image: radial-gradient(
-      color-mix(in oklab, var(--color-foreground) 7%, transparent) 1.4px,
-      transparent 1.4px
-    );
-    background-size: 7px 7px;
     font-feature-settings:
       "rlig" 1,
       "calt" 1;
@@ -1573,6 +1568,150 @@
   top: 0.5rem;
   left: 0.5rem;
   outline: 3px solid var(--ring);
+}
+
+/* ------------------------------------------------------------------ */
+/*  TMP water system — Coastal Lagoon surface for the premium course   */
+/*  pages. Scoped to .water-page so the rest of the site is untouched. */
+/* ------------------------------------------------------------------ */
+@layer components {
+  .water-page {
+    position: relative;
+    isolation: isolate;
+    background: linear-gradient(
+      180deg,
+      #eaf3f4 0%,
+      #f4f8f7 24%,
+      #f8f6f0 56%,
+      #f1e8d8 100%
+    );
+  }
+
+  .water-page::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(
+      1200px ellipse at 50% -8%,
+      color-mix(in oklab, #bcd6dd 58%, transparent),
+      transparent 62%
+    );
+    opacity: 0.75;
+  }
+
+  .water-band {
+    background: color-mix(in oklab, #eaf3f4 62%, var(--background));
+  }
+
+  .water-band-mist {
+    background: color-mix(in oklab, #f4f8f7 74%, var(--background));
+  }
+
+  .water-band-deep {
+    background: linear-gradient(180deg, #0f2a28 0%, #1d4e4a 100%);
+    color: #f1ece0;
+  }
+
+  .water-rule {
+    height: 1px;
+    background: color-mix(in oklab, #bcd6dd 85%, transparent);
+  }
+
+  .water-eyebrow {
+    color: #2c6a63;
+  }
+
+  .water-accent {
+    color: #2c6a63;
+  }
+
+  .water-caption {
+    font-family: var(--font-caveat), cursive;
+    color: color-mix(in oklab, var(--foreground) 55%, transparent);
+  }
+
+  .water-glass {
+    background: color-mix(in oklab, white 68%, transparent);
+    backdrop-filter: blur(12px);
+    border: 1px solid color-mix(in oklab, #bcd6dd 70%, transparent);
+  }
+
+  .water-drift {
+    animation: float-slow 36s ease-in-out infinite alternate;
+  }
+
+  .water-drift-slow {
+    animation: float-slower 52s ease-in-out infinite alternate;
+  }
+
+  /* Night water */
+  .dark .water-page {
+    background: linear-gradient(
+      180deg,
+      #0b2422 0%,
+      #0f2a28 42%,
+      #0f2a28 100%
+    );
+  }
+
+  .dark .water-page::before {
+    opacity: 0.4;
+  }
+
+  .dark .water-band {
+    background: color-mix(in oklab, #123a37 60%, var(--background));
+  }
+
+  .dark .water-band-mist {
+    background: color-mix(in oklab, #143330 60%, var(--background));
+  }
+
+  .dark .water-band-deep {
+    background: linear-gradient(180deg, #0a2d29 0%, #123a37 100%);
+  }
+
+  .dark .water-rule {
+    background: color-mix(in oklab, #2a4d49 85%, transparent);
+  }
+
+  .dark .water-eyebrow,
+  .dark .water-accent {
+    color: #8ad6ca;
+  }
+
+  .dark .water-caption {
+    color: color-mix(in oklab, var(--foreground) 55%, transparent);
+  }
+
+  .dark .water-glass {
+    background: color-mix(in oklab, #143330 72%, transparent);
+    border-color: color-mix(in oklab, #2a4d49 80%, transparent);
+  }
+
+  /* On the immersive deep bands the palette is fixed regardless of theme. */
+  .water-on-deep {
+    color: #f1ece0;
+  }
+
+  .water-on-deep .water-eyebrow,
+  .water-on-deep .water-accent {
+    color: #8ad6ca;
+  }
+
+  .water-on-deep .water-rule {
+    background: color-mix(in oklab, #bcd6dd 35%, transparent);
+  }
+
+  .water-on-deep .water-caption {
+    color: color-mix(in oklab, #f1ece0 65%, transparent);
+  }
+
+  .water-on-deep .water-glass {
+    background: color-mix(in oklab, #f1ece0 10%, transparent);
+    border-color: color-mix(in oklab, #bcd6dd 28%, transparent);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

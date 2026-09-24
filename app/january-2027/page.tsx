@@ -142,7 +142,8 @@ export default async function JanuaryLandingPage() {
         }
         lead="Small, live certificate cohorts for psychology students, graduates and practising counsellors. Registration opens 15 November — early bird ₹1,999 until 15 December."
         image="/coastal/hero.jpg"
-        imageAlt=""
+        imageAlt="Turquoise water meeting pale sand, seen from above."
+        caption="A coastline, seen from above."
       />
 
       <section className="py-16 sm:py-20">

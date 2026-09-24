@@ -1,13 +1,14 @@
 import Image from "next/image";
 import type { ReactNode } from "react";
-import { eyebrowVariants } from "@/components/coastal/eyebrow";
 
 interface PageHeroProps {
   eyebrow: string;
   title: ReactNode;
   lead: string;
-  image: string;
+  image?: string;
   imageAlt?: string;
+  caption?: string;
+  actions?: ReactNode;
 }
 
 export function PageHero({
@@ -16,28 +17,42 @@ export function PageHero({
   lead,
   image,
   imageAlt = "",
+  caption,
+  actions,
 }: PageHeroProps) {
   return (
-    <section className="py-14 sm:py-20">
-      <div className="container grid items-center gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-        <div>
-          <span className={eyebrowVariants()}>{eyebrow}</span>
-          <h1 className="font-display mt-4 text-4xl leading-[1.05] tracking-[-0.03em] sm:text-6xl">
-            {title}
-          </h1>
-          <p className="text-muted-foreground mt-5 max-w-xl text-lg">{lead}</p>
-        </div>
-        <div className="relative aspect-[5/4] overflow-hidden rounded shadow-[0_40px_80px_-50px_rgba(19,46,43,0.6)]">
-          <Image
-            src={image}
-            alt={imageAlt}
-            fill
-            priority
-            sizes="(min-width: 1024px) 45vw, 100vw"
-            className="object-cover"
-          />
-        </div>
+    <section className="pt-14 pb-10 sm:pt-20 sm:pb-16">
+      <div className="container">
+        <span className="water-eyebrow text-[0.7rem] font-semibold tracking-[0.32em] uppercase">
+          {eyebrow}
+        </span>
+        <h1 className="font-display text-foreground mt-4 max-w-[20ch] text-4xl leading-[1.04] tracking-[-0.03em] sm:text-6xl">
+          {title}
+        </h1>
+        <p className="text-muted-foreground mt-5 max-w-xl text-lg">{lead}</p>
+        {actions ? (
+          <div className="mt-8 flex flex-wrap items-center gap-3">{actions}</div>
+        ) : null}
       </div>
+
+      {image ? (
+        <div className="mt-12 sm:mt-16">
+          <div className="relative h-[280px] w-full overflow-hidden sm:h-[420px]">
+            <Image
+              src={image}
+              alt={imageAlt}
+              fill
+              priority
+              sizes="100vw"
+              className="water-drift-slow object-cover"
+            />
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#f4f8f7] to-transparent" />
+          </div>
+          {caption ? (
+            <p className="water-caption container mt-3 text-lg">{caption}</p>
+          ) : null}
+        </div>
+      ) : null}
     </section>
   );
 }

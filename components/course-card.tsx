@@ -219,7 +219,7 @@ export function CourseCard({
               </Badge>
             )}
             {bundleInfo && (
-              <Badge className="max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Badge className="max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
                 <Layers className="mr-1 h-3 w-3" />
                 <span className="sm:hidden">Bundle</span>
                 <span className="hidden sm:inline">Bundle Deal</span>
@@ -231,7 +231,7 @@ export function CourseCard({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+                  className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountLabel}
@@ -309,7 +309,7 @@ export function CourseCard({
             </div>
           )}
           {bundleInfo && (
-            <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+            <div className="flex items-center gap-1 text-xs font-medium text-primary">
               <Layers className="h-3 w-3 shrink-0" />
               <span className="truncate">{bundleInfo.dealSummary}</span>
             </div>
@@ -525,13 +525,13 @@ export function UpcomingCourseCard({
           )}
           <Badge
             variant="default"
-            className="w-fit max-w-full bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+            className="w-fit max-w-full bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
           >
             <Clock className="mr-1 h-3 w-3" />
             Upcoming
           </Badge>
           {bundleInfo && (
-            <Badge className="w-fit max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+            <Badge className="w-fit max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
               <Layers className="mr-1 h-3 w-3" />
               <span className="sm:hidden">Bundle</span>
               <span className="hidden sm:inline">Bundle Deal</span>
@@ -544,7 +544,7 @@ export function UpcomingCourseCard({
             {offerDetails?.hasDiscount && (
               <Badge
                 variant="destructive"
-                className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+                className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
               >
                 <span className="sm:hidden">{offerDetails.discountLabel}</span>
                 <span className="hidden sm:inline">
@@ -632,7 +632,7 @@ export function UpcomingCourseCard({
               </div>
             )}
             {bundleInfo && (
-              <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+              <div className="flex items-center gap-1 text-xs font-medium text-primary">
                 <Layers className="h-3 w-3 shrink-0" />
                 <span className="truncate">{bundleInfo.dealSummary}</span>
               </div>
@@ -654,7 +654,7 @@ export function UpcomingCourseCard({
                 onClick={handleAddToCart}
                 disabled={isInCart || isOutOfStock}
                 size="sm"
-                className="relative z-10 w-full shrink-0 bg-gradient-to-r from-orange-500 to-red-500 text-white hover:from-orange-600 hover:to-red-600 @min-[300px]:w-auto"
+                className="relative z-10 w-full shrink-0 bg-primary text-white hover:opacity-90 @min-[300px]:w-auto"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {isOutOfStock

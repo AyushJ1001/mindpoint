@@ -60,6 +60,8 @@ export default function CommunityPage() {
         }
         lead="A small, moderated community of people who take mental health seriously, gently."
         image="/coastal/hero.jpg"
+        imageAlt="Turquoise water meeting pale sand, seen from above."
+        caption="A coastline, seen from above."
       />
 
       <section className="container pb-20">

@@ -283,7 +283,7 @@ const CourseGroupCard = ({
 
   return (
     <Card
-      className="group border-lavender-200 bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(19,46,43,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(19,46,43,0.95)]"
+      className="group border-border bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(19,46,43,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(19,46,43,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={selectedCourse.imageUrls || []} />
@@ -303,7 +303,7 @@ const CourseGroupCard = ({
               </Badge>
             )}
             {bundleInfo && (
-              <Badge className="max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Badge className="max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
                 <Layers className="mr-1 h-3 w-3" />
                 <span className="sm:hidden">Bundle</span>
                 <span className="hidden sm:inline">Bundle Deal</span>
@@ -315,7 +315,7 @@ const CourseGroupCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+                  className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountLabel}
@@ -478,7 +478,7 @@ const CourseGroupCard = ({
               </div>
             )}
             {bundleInfo && (
-              <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+              <div className="flex items-center gap-1 text-xs font-medium text-primary">
                 <Layers className="h-3 w-3 shrink-0" />
                 <span className="truncate">{bundleInfo.dealSummary}</span>
               </div>
@@ -667,7 +667,7 @@ const CourseCard = ({
 
   return (
     <Card
-      className="group border-lavender-200 bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(19,46,43,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(19,46,43,0.95)]"
+      className="group border-border bg-secondary/50 @container relative h-full cursor-pointer overflow-hidden rounded-[1.35rem] border shadow-[0_14px_35px_-24px_rgba(19,46,43,0.85)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_22px_45px_-22px_rgba(19,46,43,0.95)]"
       onClick={handleCardClick}
     >
       <CourseImageCarousel imageUrls={course.imageUrls || []} />
@@ -687,7 +687,7 @@ const CourseCard = ({
               </Badge>
             )}
             {bundleInfo && (
-              <Badge className="max-w-full bg-blue-600/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Badge className="max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
                 <Layers className="mr-1 h-3 w-3" />
                 <span className="sm:hidden">Bundle</span>
                 <span className="hidden sm:inline">Bundle Deal</span>
@@ -699,7 +699,7 @@ const CourseCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse bg-gradient-to-r from-orange-500 to-red-500 text-[11px] whitespace-nowrap text-white shadow-lg"
+                  className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountLabel}
@@ -768,7 +768,7 @@ const CourseCard = ({
               </div>
             )}
             {bundleInfo && (
-              <div className="flex items-center gap-1 text-xs font-medium text-blue-700">
+              <div className="flex items-center gap-1 text-xs font-medium text-primary">
                 <Layers className="h-3 w-3 shrink-0" />
                 <span className="truncate">{bundleInfo.dealSummary}</span>
               </div>
