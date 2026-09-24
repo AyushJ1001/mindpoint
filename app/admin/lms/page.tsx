@@ -24,6 +24,7 @@ import {
   type StudentLmsActivity,
 } from "@/lib/lms-api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { UploadDropzone } from "@/lib/uploadthing";
 import "./admin-lms.css";
 
 const activityTypes: Array<{
@@ -924,6 +925,23 @@ export default function AdminLmsPage() {
                           required
                         />
                       </label>
+                      <div className="admin-lms-video-upload">
+                        <UploadDropzone
+                          endpoint="videoUploader"
+                          config={{ mode: "auto" }}
+                          onClientUploadComplete={(files) => {
+                            const url = files?.[0]?.ufsUrl;
+                            if (url) setExternalUrl(url);
+                          }}
+                          onUploadError={(error: Error) => {
+                            console.error("Video upload failed", error);
+                          }}
+                        />
+                        <small>
+                          Upload a video to host it here, or paste an HTTPS URL
+                          above. Uploaded videos play inside the lesson.
+                        </small>
+                      </div>
                       <label className="admin-lms-check">
                         <input
                           type="checkbox"

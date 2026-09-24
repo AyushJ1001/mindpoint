@@ -96,6 +96,22 @@ export const ourFileRouter = {
       };
     }),
 
+  videoUploader: f({
+    video: {
+      // Bounded by the UploadThing plan; large lecture recordings may need an
+      // external host (Cloudflare Stream / unlisted YouTube) instead.
+      maxFileSize: "256MB",
+      maxFileCount: 1,
+    },
+  })
+    .middleware(adminMiddleware)
+    .onUploadComplete(async ({ metadata, file }) => {
+      return {
+        uploadedBy: metadata.userId,
+        url: file.ufsUrl,
+      };
+    }),
+
   paymentScreenshotUploader: f({
     image: {
       maxFileSize: "4MB",

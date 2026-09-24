@@ -1010,13 +1010,29 @@ function ActivityWork({
           <p>{activity.accessibleAlternative}</p>
         </details>
       )}
-      {activity.externalUrl && (
-        <Button asChild variant="outline" className="lms-live-outline">
-          <a href={activity.externalUrl} target="_blank" rel="noreferrer">
-            Open secure resource <ArrowUpRight />
-          </a>
-        </Button>
-      )}
+      {activity.externalUrl &&
+        (activity.type === "media" ? (
+          <div className="lms-live-media">
+            <video
+              controls
+              preload="metadata"
+              src={activity.externalUrl}
+              className="w-full rounded-lg border"
+            >
+              Your browser cannot play this video.{" "}
+              <a href={activity.externalUrl} target="_blank" rel="noreferrer">
+                Open it in a new tab
+              </a>
+              .
+            </video>
+          </div>
+        ) : (
+          <Button asChild variant="outline" className="lms-live-outline">
+            <a href={activity.externalUrl} target="_blank" rel="noreferrer">
+              Open secure resource <ArrowUpRight />
+            </a>
+          </Button>
+        ))}
       {activity.type === "assignment" && (
         <div className="lms-live-assignment-flow">
           {activity.gradingCriteria && (
