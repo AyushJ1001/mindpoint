@@ -18,6 +18,9 @@ export async function revalidateCourses() {
   // the shared app/courses/layout.tsx — i.e. all category listings and the
   // [id] detail page — in a single call, so new category pages are covered too.
   revalidatePath("/courses", "layout");
+  // Rich programme pages read price/schedule/seat state from the catalogue.
+  revalidatePath("/programs", "layout");
+  revalidatePath("/january-2027");
   // Homepage renders an upcoming-courses section.
   revalidatePath("/");
 }

@@ -10,6 +10,10 @@ import { attachOperationalData } from "@/lib/course-content/operational";
 
 type Props = { params: Promise<{ slug: string }> };
 
+// Prices, cohort dates and seats come from the Convex catalogue. Re-render at
+// least every 10 minutes so backend edits appear without a redeploy.
+export const revalidate = 600;
+
 export function generateStaticParams() {
   return courseSlugs().map((slug) => ({ slug }));
 }
