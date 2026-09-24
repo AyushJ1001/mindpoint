@@ -11,7 +11,7 @@
    All live sessions are recorded and available to watch anytime for up to 3 months after the course start date via a secure link.
 
 5. Will I receive a certificate after course completion?
-   Yes, you will receive a digital certificate accredited by The Mind Point upon successful completion.
+   Yes. On successful completion you receive a digital certificate of completion issued by The Mind Point. It documents that you completed the training — it is not a degree, a licence or an accreditation.
 
 6. Can international students join?
    Absolutely! Our online courses are accessible worldwide, with recordings available for flexible learning across time zones.
