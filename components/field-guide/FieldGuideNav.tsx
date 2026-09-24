@@ -158,39 +158,41 @@ export default function FieldGuideNav() {
             <DotGrid />
           </button>
 
-          <Link
-            href="/"
-            className="flex items-baseline gap-2.5"
-            aria-label="The Mind Point, home"
-          >
-            <Image
-              src="/logo-mark.png"
-              alt=""
-              width={448}
-              height={356}
-              className="h-10 w-auto shrink-0 sm:h-12"
-              priority
-            />
-            <span className="font-display text-foreground text-base leading-none font-bold tracking-[-0.01em] sm:text-lg">
-              The Mind Point
-            </span>
-          </Link>
+          <div className="flex items-baseline gap-6">
+            <Link
+              href="/"
+              className="flex items-baseline gap-2.5"
+              aria-label="The Mind Point, home"
+            >
+              <Image
+                src="/logo-mark.png"
+                alt=""
+                width={448}
+                height={356}
+                className="h-10 w-auto shrink-0 self-baseline sm:h-11"
+                priority
+              />
+              <span className="font-display text-foreground text-base leading-none font-bold tracking-[-0.01em] sm:text-lg">
+                The Mind Point
+              </span>
+            </Link>
 
-          <nav
-            className="ml-6 hidden items-center gap-6 lg:flex"
-            aria-label="Sections"
-          >
-            {PRIMARY.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                aria-current={pathname === link.href ? "page" : undefined}
-                className="text-foreground/70 hover:text-primary text-[0.72rem] font-medium tracking-[0.16em] uppercase transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </nav>
+            <nav
+              className="hidden items-baseline gap-6 lg:flex"
+              aria-label="Sections"
+            >
+              {PRIMARY.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  aria-current={pathname === link.href ? "page" : undefined}
+                  className="text-foreground/70 hover:text-primary text-[0.72rem] font-medium tracking-[0.16em] uppercase transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
 
           <div className="ml-auto flex items-center gap-3 sm:gap-4">
             <Link
