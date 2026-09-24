@@ -52,15 +52,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { UploadDropzone } from "@/lib/uploadthing";
 import Link from "next/link";
-import { Check, Copy, X } from "lucide-react";
+import { Check, CheckCircle2, Clock, Copy, ShieldCheck, Smartphone, X } from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import { useMemo } from "react";
+import { CheckoutConfirmation } from "@/components/checkout/CheckoutConfirmation";
 
 export const dynamic = "force-dynamic";
 
 // UPI ID shown on the Scan-to-pay dialog as a fallback for users who can't
 // scan the QR code.
 const PAYMENT_UPI_ID = "akshajuvekar6@okhdfcbank";
+const PAYMENT_PAYEE_NAME = "The Mind Point";
 
 import type { EvaluatedBundleCampaign } from "@/lib/domain/bundles";
 
@@ -76,6 +78,16 @@ type AppliedCheckoutCoupon =
       source: "admin";
       coupon: ReconciliationAdminCoupon;
     };
+
+type CheckoutConfirmationState = {
+  email: string;
+  enrollments: Array<{
+    courseName: string;
+    courseType?: string;
+    enrollmentNumber: string;
+    isBogoFree?: boolean;
+  }>;
+};
 
 /**
  * Collapsible progress section shown when a bundle is partially fulfilled.
@@ -220,6 +232,7 @@ const CartContent = () => {
   const [showWhatsAppModal, setShowWhatsAppModal] = useState(false);
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const [showQrPaymentDialog, setShowQrPaymentDialog] = useState(false);
+  const [qrPaymentCompleted, setQrPaymentCompleted] = useState(false);
   const [qrImageAvailable, setQrImageAvailable] = useState(true);
   const [qrPaymentSession, setQrPaymentSession] =
     useState<PaymentSession | null>(null);
@@ -237,6 +250,8 @@ const CartContent = () => {
   const [couponCode, setCouponCode] = useState("");
   const [appliedCoupon, setAppliedCoupon] =
     useState<AppliedCheckoutCoupon | null>(null);
+  const [checkoutConfirmation, setCheckoutConfirmation] =
+    useState<CheckoutConfirmationState | null>(null);
   const { user, isLoaded: isUserLoaded } = useUser();
   const { openSignIn } = useClerk();
   const { isAuthenticated } = useConvexAuth();
@@ -923,6 +938,11 @@ const CartContent = () => {
         setCouponCode("");
       }
 
+      setCheckoutConfirmation({
+        email: user.primaryEmailAddress?.emailAddress || "your email address",
+        enrollments: result.enrollments ?? [],
+      });
+
       const pointsEarned = totalPointsEarned;
 
       if (pointsEarned > 0 && user?.id) {
@@ -1047,8 +1067,7 @@ const CartContent = () => {
 
       if (enrollmentCompleted) {
         emptyCart();
-        setShowQrPaymentDialog(false);
-        setQrPaymentSession(null);
+        setQrPaymentCompleted(true);
         setPaymentScreenshotUrl("");
         setIsUploadingScreenshot(false);
         setPendingQrWhatsAppNumber(undefined);
@@ -1129,6 +1148,10 @@ const CartContent = () => {
         </div>
       </div>
     );
+  }
+
+  if (checkoutConfirmation) {
+    return <CheckoutConfirmation {...checkoutConfirmation} />;
   }
 
   if (isEmpty) {
@@ -1745,152 +1768,275 @@ const CartContent = () => {
             setPendingQrWhatsAppNumber(undefined);
             setPaymentScreenshotUrl("");
             setIsUploadingScreenshot(false);
+            setQrPaymentCompleted(false);
           }
         }}
       >
         <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <QrCode className="h-5 w-5" />
-              Scan to pay
-            </DialogTitle>
-            <DialogDescription>Pay with any UPI app.</DialogDescription>
-          </DialogHeader>
+          {qrPaymentCompleted ? (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <CheckCircle2 className="text-primary h-5 w-5" />
+                  Payment submitted
+                </DialogTitle>
+                <DialogDescription>
+                  Thanks! We&apos;re verifying your payment now.
+                </DialogDescription>
+              </DialogHeader>
 
-          <div className="space-y-4">
-            <div className="bg-muted/50 rounded-md border px-4 py-3 text-center">
-              <div className="text-muted-foreground text-sm">Amount to pay</div>
-              <div className="text-2xl font-semibold">
-                {showRupees(qrPaymentSession?.amount ?? discountedTotal)}
+              <ol className="space-y-4">
+                {[
+                  {
+                    label: "Payment made",
+                    state: "done" as const,
+                    hint: "You've paid via UPI.",
+                  },
+                  {
+                    label: "Under review",
+                    state: "current" as const,
+                    hint: "Our team checks your screenshot — usually within a few hours.",
+                  },
+                  {
+                    label: "Access unlocked",
+                    state: "todo" as const,
+                    hint: "You'll get an email and your lessons open automatically.",
+                  },
+                ].map((step) => (
+                  <li key={step.label} className="flex items-start gap-3">
+                    <span
+                      className={
+                        step.state === "done"
+                          ? "bg-primary text-primary-foreground mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full"
+                          : step.state === "current"
+                            ? "border-primary text-primary mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
+                            : "border-muted-foreground/40 text-muted-foreground mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border"
+                      }
+                    >
+                      {step.state === "done" ? (
+                        <Check className="h-3.5 w-3.5" />
+                      ) : (
+                        <Clock className="h-3.5 w-3.5" />
+                      )}
+                    </span>
+                    <div>
+                      <p className="text-sm font-medium">{step.label}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {step.hint}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
+
+              <div className="bg-muted/50 text-muted-foreground rounded-md border px-4 py-3 text-xs">
+                Reference: <span className="font-medium">{qrPaymentSession?.id ?? "—"}</span>. Keep
+                this handy if you contact us.
               </div>
-            </div>
 
-            {qrImageAvailable ? (
-              <Image
-                src="/payment/phonepe-qr-code.jpeg"
-                alt="UPI QR code for payment"
-                width={550}
-                height={550}
-                className="mx-auto h-auto w-full max-w-[340px] rounded-md border bg-black object-contain"
-                priority
-                onError={() => setQrImageAvailable(false)}
-              />
-            ) : (
-              <div className="bg-muted/50 text-muted-foreground mx-auto flex min-h-[320px] w-full max-w-[340px] items-center justify-center rounded-md border border-dashed p-4 text-center text-sm">
-                UPI QR image is missing from
-                public/payment/phonepe-qr-code.jpeg.
-              </div>
-            )}
-
-            <div className="text-center">
-              <p className="text-muted-foreground text-xs">
-                Can&apos;t scan? Pay to this UPI ID
-              </p>
-              <div className="mt-1 flex items-center justify-center gap-2">
-                <span className="font-medium break-all select-all">
-                  {PAYMENT_UPI_ID}
-                </span>
+              <DialogFooter className="gap-2 sm:gap-0">
                 <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 px-2"
-                  onClick={() => {
-                    if (!navigator.clipboard) {
-                      toast.error(
-                        `Copy not supported. UPI ID: ${PAYMENT_UPI_ID}`,
-                      );
-                      return;
-                    }
-                    void navigator.clipboard
-                      .writeText(PAYMENT_UPI_ID)
-                      .then(() => toast.success("UPI ID copied"))
-                      .catch(() =>
-                        toast.error("Couldn't copy. Please copy it manually."),
-                      );
-                  }}
+                  variant="outline"
+                  onClick={() => setShowQrPaymentDialog(false)}
                 >
-                  <Copy className="h-3.5 w-3.5" />
-                  <span className="sr-only">Copy UPI ID</span>
+                  Close
                 </Button>
-              </div>
-            </div>
-
-            <div className="space-y-2 text-sm">
-              <span className="font-medium">Payment screenshot</span>
-              <p className="text-muted-foreground text-xs">
-                After paying, upload a screenshot of the successful transaction
-                from your UPI app.
-              </p>
-              {paymentScreenshotUrl ? (
-                <div className="space-y-2">
-                  <div className="mx-auto w-full max-w-[220px] overflow-hidden rounded-md border">
-                    <Image
-                      src={paymentScreenshotUrl}
-                      alt="Uploaded payment screenshot"
-                      width={440}
-                      height={440}
-                      className="h-auto w-full object-contain"
-                      unoptimized
-                    />
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="w-full"
-                    onClick={() => setPaymentScreenshotUrl("")}
-                    disabled={isProcessing}
+                <Button asChild>
+                  <Link
+                    href="/lms"
+                    onClick={() => setShowQrPaymentDialog(false)}
                   >
-                    Replace screenshot
-                  </Button>
-                </div>
-              ) : (
-                <UploadDropzone
-                  endpoint="paymentScreenshotUploader"
-                  onUploadBegin={() => setIsUploadingScreenshot(true)}
-                  onClientUploadComplete={(res) => {
-                    setIsUploadingScreenshot(false);
-                    const url = res?.[0]?.serverData?.url;
-                    if (url) {
-                      setPaymentScreenshotUrl(url);
-                      toast.success("Screenshot uploaded.");
-                    } else {
-                      toast.error("Upload failed. Please try again.");
-                    }
-                  }}
-                  onUploadError={(error) => {
-                    setIsUploadingScreenshot(false);
-                    toast.error(error.message || "Screenshot upload failed.");
-                  }}
-                  config={{ mode: "auto" }}
-                  className="ut-button:bg-primary ut-button:text-primary-foreground ut-label:text-foreground border-muted-foreground/30 mt-0"
-                />
-              )}
-            </div>
-          </div>
+                    Go to my learning
+                  </Link>
+                </Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2">
+                  <QrCode className="h-5 w-5" />
+                  Pay securely
+                </DialogTitle>
+                <DialogDescription>
+                  Pay with any UPI app — then upload the receipt to confirm.
+                </DialogDescription>
+              </DialogHeader>
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setShowQrPaymentDialog(false)}
-              disabled={isProcessing || isUploadingScreenshot}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleQrPaymentConfirmed}
-              disabled={
-                isProcessing || isUploadingScreenshot || !paymentScreenshotUrl
-              }
-            >
-              {isProcessing
-                ? "Finishing..."
-                : isUploadingScreenshot
-                  ? "Uploading..."
-                  : "Confirm payment"}
-            </Button>
-          </DialogFooter>
+              <div className="text-muted-foreground flex items-center justify-center gap-2 text-[0.7rem] font-semibold tracking-[0.14em] uppercase">
+                <span className="text-primary">1 Pay</span>
+                <span>·</span>
+                <span>2 Upload</span>
+                <span>·</span>
+                <span>3 Verified</span>
+              </div>
+
+              <div className="space-y-4">
+                <div className="bg-muted/50 rounded-md border px-4 py-3 text-center">
+                  <div className="text-muted-foreground text-sm">
+                    Amount to pay
+                  </div>
+                  <div className="text-2xl font-semibold">
+                    {showRupees(qrPaymentSession?.amount ?? discountedTotal)}
+                  </div>
+                </div>
+
+                {qrImageAvailable ? (
+                  <Image
+                    src="/payment/phonepe-qr-code.jpeg"
+                    alt="UPI QR code for payment"
+                    width={550}
+                    height={550}
+                    className="mx-auto h-auto w-full max-w-[340px] rounded-md border bg-black object-contain"
+                    priority
+                    onError={() => setQrImageAvailable(false)}
+                  />
+                ) : (
+                  <div className="bg-muted/50 text-muted-foreground mx-auto flex min-h-[320px] w-full max-w-[340px] items-center justify-center rounded-md border border-dashed p-4 text-center text-sm">
+                    UPI QR image is missing from
+                    public/payment/phonepe-qr-code.jpeg.
+                  </div>
+                )}
+
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full"
+                >
+                  <a
+                    href={`upi://pay?pa=${encodeURIComponent(PAYMENT_UPI_ID)}&pn=${encodeURIComponent(PAYMENT_PAYEE_NAME)}&am=${(qrPaymentSession?.amount ?? discountedTotal).toFixed(2)}&cu=INR&tn=${encodeURIComponent("The Mind Point course")}`}
+                  >
+                    <Smartphone className="mr-2 h-4 w-4" />
+                    Open UPI app to pay
+                  </a>
+                </Button>
+
+                <div className="text-center">
+                  <p className="text-muted-foreground text-xs">
+                    Can&apos;t scan? Pay to this UPI ID
+                  </p>
+                  <div className="mt-1 flex items-center justify-center gap-2">
+                    <span className="font-medium break-all select-all">
+                      {PAYMENT_UPI_ID}
+                    </span>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2"
+                      onClick={() => {
+                        if (!navigator.clipboard) {
+                          toast.error(
+                            `Copy not supported. UPI ID: ${PAYMENT_UPI_ID}`,
+                          );
+                          return;
+                        }
+                        void navigator.clipboard
+                          .writeText(PAYMENT_UPI_ID)
+                          .then(() => toast.success("UPI ID copied"))
+                          .catch(() =>
+                            toast.error(
+                              "Couldn't copy. Please copy it manually.",
+                            ),
+                          );
+                      }}
+                    >
+                      <Copy className="h-3.5 w-3.5" />
+                      <span className="sr-only">Copy UPI ID</span>
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2 text-sm">
+                  <span className="font-medium">Payment screenshot</span>
+                  <p className="text-muted-foreground text-xs">
+                    After paying, upload a screenshot of the successful
+                    transaction from your UPI app.
+                  </p>
+                  {paymentScreenshotUrl ? (
+                    <div className="space-y-2">
+                      <div className="mx-auto w-full max-w-[220px] overflow-hidden rounded-md border">
+                        <Image
+                          src={paymentScreenshotUrl}
+                          alt="Uploaded payment screenshot"
+                          width={440}
+                          height={440}
+                          className="h-auto w-full object-contain"
+                          unoptimized
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="w-full"
+                        onClick={() => setPaymentScreenshotUrl("")}
+                        disabled={isProcessing}
+                      >
+                        Replace screenshot
+                      </Button>
+                    </div>
+                  ) : (
+                    <UploadDropzone
+                      endpoint="paymentScreenshotUploader"
+                      onUploadBegin={() => setIsUploadingScreenshot(true)}
+                      onClientUploadComplete={(res) => {
+                        setIsUploadingScreenshot(false);
+                        const url = res?.[0]?.serverData?.url;
+                        if (url) {
+                          setPaymentScreenshotUrl(url);
+                          toast.success("Screenshot uploaded.");
+                        } else {
+                          toast.error("Upload failed. Please try again.");
+                        }
+                      }}
+                      onUploadError={(error) => {
+                        setIsUploadingScreenshot(false);
+                        toast.error(
+                          error.message || "Screenshot upload failed.",
+                        );
+                      }}
+                      config={{ mode: "auto" }}
+                      className="ut-button:bg-primary ut-button:text-primary-foreground ut-label:text-foreground border-muted-foreground/30 mt-0"
+                    />
+                  )}
+                </div>
+
+                <div className="bg-primary/5 flex items-start gap-2 rounded-md border px-3 py-2.5">
+                  <ShieldCheck className="text-primary mt-0.5 h-4 w-4 shrink-0" />
+                  <p className="text-muted-foreground text-xs">
+                    We verify every payment before unlocking access — usually
+                    within a few hours. You&apos;ll get an email the moment
+                    it&apos;s approved.
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowQrPaymentDialog(false)}
+                  disabled={isProcessing || isUploadingScreenshot}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleQrPaymentConfirmed}
+                  disabled={
+                    isProcessing ||
+                    isUploadingScreenshot ||
+                    !paymentScreenshotUrl
+                  }
+                >
+                  {isProcessing
+                    ? "Finishing..."
+                    : isUploadingScreenshot
+                      ? "Uploading..."
+                      : "I've paid — submit"}
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
 

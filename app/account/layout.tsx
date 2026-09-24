@@ -3,7 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { RedirectToSignIn, Show } from "@clerk/nextjs";
 import { useSearchParams, useRouter } from "next/navigation";
-import { BookOpen, Gift, Users } from "lucide-react";
+import { BookOpen, Gift, GraduationCap, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -60,6 +60,14 @@ function AccountLayoutContent({ children }: { children: React.ReactNode }) {
                 >
                   <BookOpen className="mr-2 h-4 w-4" />
                   My Enrollments
+                </Button>
+                <Button
+                  variant="ghost"
+                  className="w-full justify-start"
+                  onClick={() => router.push("/lms")}
+                >
+                  <GraduationCap className="mr-2 h-4 w-4" />
+                  My Learning
                 </Button>
                 <Button
                   variant={activeTab === "points" ? "default" : "ghost"}

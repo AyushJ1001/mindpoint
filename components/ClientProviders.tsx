@@ -18,7 +18,13 @@ interface ClientProvidersProps {
 
 export default function ClientProviders({ children }: ClientProvidersProps) {
   const appShell = (
-    <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="light"
+      forcedTheme="light"
+      enableSystem={false}
+      disableTransitionOnChange
+    >
       <RouteBodyClass />
       <StructuredData />
       <ClientNavbar />

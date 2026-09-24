@@ -6,16 +6,16 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Diploma Courses - The Mind Point",
+  title: "Diploma Programs in Psychology - The Mind Point",
   description:
-    "Explore our comprehensive diploma programs in psychology and mental health. Advanced training for professionals seeking in-depth knowledge and practical skills.",
+    "Advanced, applied diploma programs in psychology and mental health. Go beyond the surface with complex case work, personalised mentorship and a qualification that signals depth.",
   keywords:
     "diploma courses, psychology diplomas, mental health education, advanced training, professional development",
   openGraph: {
     images: [openGraphImage],
-    title: "Diploma Courses - The Mind Point",
+    title: "Diploma Programs in Psychology - The Mind Point",
     description:
-      "Explore our comprehensive diploma programs in psychology and mental health.",
+      "Advanced, applied diploma programs with complex case work, mentorship and a qualification that signals depth.",
     type: "website",
   },
 };

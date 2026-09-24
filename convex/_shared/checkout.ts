@@ -3,6 +3,7 @@ import type { Doc, Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
 import { roundCurrency } from "./enrollment";
 import { convexFailure, type ConvexFailure } from "./result";
+import { getCoursePrice } from "../../lib/domain/pricing";
 
 export type CheckoutPricingItem = {
   courseId: Id<"courses">;
@@ -331,6 +332,40 @@ export async function validateCheckoutPricingItemResult(
   }
 
   const couponCode = pricingItem.couponCode?.trim();
+
+  // Without a discount channel (coupon, bundle or Mind Points), the client can
+  // only pay the course's current price. This blocks forged ₹0/underpriced
+  // checkouts on paths that don't go through a server-authoritative attempt.
+  const authoritativeCheckoutPrice = getCoursePrice(args.course);
+  const hasDiscountChannel =
+    Boolean(couponCode) ||
+    Boolean(pricingItem.bundleCampaignId) ||
+    (pricingItem.mindPointsRedeemed ?? 0) > 0;
+  if (!hasDiscountChannel) {
+    if (checkoutPrice !== authoritativeCheckoutPrice) {
+      return checkoutPricingFailure(
+        "CONFLICT",
+        "Checkout price does not match the current course price.",
+        {
+          checkoutPrice,
+          expectedCheckoutPrice: authoritativeCheckoutPrice,
+          courseId: args.course._id,
+        },
+      );
+    }
+    if (amountPaid !== checkoutPrice) {
+      return checkoutPricingFailure(
+        "CONFLICT",
+        "Amount paid does not match the checkout price.",
+        {
+          amountPaid,
+          checkoutPrice,
+          courseId: args.course._id,
+        },
+      );
+    }
+  }
+
   if (!couponCode && amountPaid === 0 && checkoutPrice > 0) {
     return checkoutPricingFailure(
       "VALIDATION_ERROR",

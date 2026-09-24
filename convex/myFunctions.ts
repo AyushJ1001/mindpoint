@@ -42,6 +42,7 @@ import {
   type EnrollmentBatchResolution,
 } from "./_shared/enrollmentSchedule";
 import { calculatePointsEarned } from "./_shared/mindPoints";
+import { activatePublishedLmsCurriculum } from "./_shared/lmsActivation";
 import type { GoogleSheetsActionResult } from "./_shared/enrollmentSheet";
 import {
   convexFailure,
@@ -209,14 +210,18 @@ async function addEnrollmentToGoogleSheets(
     } = enrollmentData;
 
     // Schedule the Google Sheets action
-    await ctx.scheduler.runAfter(0, internal.googleSheets.addEnrollmentToSheet, {
-      enrollmentData: {
-        ...sheetsData,
-        enrollmentDate: new Date().toISOString(),
+    await ctx.scheduler.runAfter(
+      0,
+      internal.googleSheets.addEnrollmentToSheet,
+      {
+        enrollmentData: {
+          ...sheetsData,
+          enrollmentDate: new Date().toISOString(),
+        },
+        spreadsheetId,
+        sheetName,
       },
-      spreadsheetId,
-      sheetName,
-    });
+    );
   } catch (error) {
     console.error("Error scheduling Google Sheets update:", error);
     // Don't throw error to avoid breaking the enrollment process
@@ -318,6 +323,21 @@ function enrollmentMutationFailure(
     ...(details !== undefined ? { details } : {}),
     message,
   });
+}
+
+// Guest checkout mutations are server-to-server only. They must carry the
+// shared checkout secret, so a public client can't mint enrollments directly.
+function assertCheckoutServerSecret(
+  secret: string | undefined,
+): EnrollmentMutationFailure | null {
+  const expected = process.env.CHECKOUT_SERVER_SECRET;
+  if (!expected || secret !== expected) {
+    return enrollmentMutationFailure(
+      "Unauthorized checkout server request.",
+      convexResultErrorCode.FORBIDDEN,
+    );
+  }
+  return null;
 }
 
 function checkoutPricingFromAttempt(
@@ -615,16 +635,20 @@ async function scheduleEnrollmentConfirmationForSummary(
     return;
   }
 
-  await ctx.scheduler.runAfter(0, internal.emailActions.sendEnrollmentConfirmation, {
-    userEmail: args.recipientEmail,
-    userPhone: args.userPhone,
-    courseName: args.enrollment.courseName,
-    enrollmentNumber: args.enrollment.enrollmentNumber,
-    startDate,
-    endDate,
-    startTime,
-    endTime,
-  });
+  await ctx.scheduler.runAfter(
+    0,
+    internal.emailActions.sendEnrollmentConfirmation,
+    {
+      userEmail: args.recipientEmail,
+      userPhone: args.userPhone,
+      courseName: args.enrollment.courseName,
+      enrollmentNumber: args.enrollment.enrollmentNumber,
+      startDate,
+      endDate,
+      startTime,
+      endTime,
+    },
+  );
 }
 
 function getEnrollmentEmailSchedule(
@@ -1019,6 +1043,14 @@ async function createBogoEnrollment(
     registrationSource: userContext.isGuestUser ? "guest_checkout" : "checkout",
   });
 
+  if (!userContext.isGuestUser) {
+    await activatePublishedLmsCurriculum(ctx, {
+      enrollmentId,
+      courseId: freeCourse._id,
+      courseType: freeCourse.type,
+    });
+  }
+
   await addEnrollmentToGoogleSheets(ctx, {
     userId: userContext.userId,
     userName: userContext.userName || userContext.userEmail,
@@ -1183,6 +1215,12 @@ export const handleSuccessfulPayment = internalMutation({
       sessions: course.sessions, // Store number of sessions for therapy courses
       ...buildEnrollmentPricingFields(course, pricingItem),
       registrationSource: "checkout",
+    });
+
+    await activatePublishedLmsCurriculum(ctx, {
+      enrollmentId,
+      courseId: course._id,
+      courseType: course.type,
     });
 
     // Add enrollment to Google Sheets
@@ -1540,7 +1578,13 @@ export const handleCartCheckout = mutation({
     // is client-supplied (any authenticated user can call this mutation directly)
     // and is later rendered into the admin dashboard, so we reject arbitrary URLs
     // to avoid pointing an admin's browser at attacker-controlled hosts.
-    const paymentScreenshotUrl = sanitizeUploadThingUrl(args.paymentScreenshotUrl);
+    const paymentScreenshotUrl = sanitizeUploadThingUrl(
+      args.paymentScreenshotUrl,
+    );
+    // Manual (screenshot) payments need admin verification before access.
+    const requiresPaymentVerification =
+      Boolean(paymentScreenshotUrl) && !paymentReference;
+    let pendingPaymentEmailScheduled = false;
     let checkoutAttempt: Doc<"checkoutAttempts"> | null = null;
     const consumedAdminCouponCodes = new Set<string>();
     const remainingAdminCouponDiscountByCode = new Map<string, number>();
@@ -1810,8 +1854,41 @@ export const handleCartCheckout = mutation({
         razorpayOrderId: args.razorpayOrderId,
         razorpayPaymentId: paymentReference,
         paymentScreenshotUrl,
+        // Manual/screenshot payments stay pending until an admin verifies them
+        // and only then unlock LMS access.
+        paymentVerification: requiresPaymentVerification
+          ? ("pending" as const)
+          : undefined,
         referrerClerkUserId: args.referrerClerkUserId,
       });
+
+      if (
+        requiresPaymentVerification &&
+        !pendingPaymentEmailScheduled &&
+        args.userEmail
+      ) {
+        pendingPaymentEmailScheduled = true;
+        await ctx.scheduler.runAfter(
+          0,
+          internal.emailActions.sendPaymentPendingEmail,
+          {
+            userEmail: args.userEmail,
+            userName: args.studentName || args.userEmail,
+            courseName: courseDisplayName,
+          },
+        );
+      }
+
+      // Manual payments stay pending until an admin approves them, so their
+      // LMS curriculum is activated on approval instead (see
+      // adminEnrollments.approveEnrollmentPayment).
+      if (!requiresPaymentVerification) {
+        await activatePublishedLmsCurriculum(ctx, {
+          enrollmentId,
+          courseId: course._id,
+          courseType: course.type,
+        });
+      }
 
       await addEnrollmentToGoogleSheets(ctx, {
         userId: args.userId,
@@ -2252,9 +2329,15 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
   args: {
     userEmail: v.string(),
     courseIds: v.array(v.id("courses")),
+    checkoutServerSecret: v.optional(v.string()),
   },
 
   handler: async (ctx, args) => {
+    const secretFailure = assertCheckoutServerSecret(args.checkoutServerSecret);
+    if (secretFailure) {
+      return secretFailure;
+    }
+
     if (args.courseIds.length === 0) {
       return enrollmentMutationFailure(
         "Checkout requires at least one course.",
@@ -2528,9 +2611,15 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       ),
     ),
     checkoutPricing: v.optional(checkoutPricingValidator),
+    checkoutServerSecret: v.optional(v.string()),
   },
 
   handler: async (ctx, args) => {
+    const secretFailure = assertCheckoutServerSecret(args.checkoutServerSecret);
+    if (secretFailure) {
+      return secretFailure;
+    }
+
     if (!args.checkoutPricing) {
       console.warn(
         "Guest cart checkout missing checkoutPricing; enrollment pricing will fall back to course prices",
@@ -2946,9 +3035,15 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
   args: {
     userEmail: v.string(),
     courseId: v.id("courses"),
+    checkoutServerSecret: v.optional(v.string()),
   },
 
   handler: async (ctx, args) => {
+    const secretFailure = assertCheckoutServerSecret(args.checkoutServerSecret);
+    if (secretFailure) {
+      return secretFailure;
+    }
+
     // Get the course details before guest writes.
     const course = await ctx.db.get(args.courseId);
     if (!course) {
@@ -3301,9 +3396,15 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
       v.literal("flow"),
       v.literal("elevate"),
     ),
+    checkoutServerSecret: v.optional(v.string()),
   },
 
   handler: async (ctx, args) => {
+    const secretFailure = assertCheckoutServerSecret(args.checkoutServerSecret);
+    if (secretFailure) {
+      return secretFailure;
+    }
+
     // Get the course details before guest writes.
     const course = await ctx.db.get(args.courseId);
     if (!course) {

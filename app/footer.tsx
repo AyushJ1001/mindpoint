@@ -15,9 +15,9 @@ export default function Footer() {
               <Image
                 src="/logo-light.png"
                 alt="The Mind Point"
-                width={44}
-                height={44}
-                className="h-11 w-11"
+                width={60}
+                height={60}
+                className="h-14 w-14"
               />
               <span className="font-display text-lg font-medium tracking-[0.06em]">
                 THE MIND POINT

@@ -8,15 +8,16 @@ import Image from "next/image";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Therapy Programs - The Mind Point",
+  title: "Therapy & Counselling Sessions - The Mind Point",
   description:
-    "Explore our therapy programs and mental health services. Professional therapy sessions and training programs for mental health professionals.",
+    "Licensed therapists who meet you where you are — warm, evidence-based, and scheduled around your life. No diagnosis required. Just a space that is yours.",
   keywords:
     "therapy programs, mental health therapy, counseling services, therapy training, mental health professionals",
   openGraph: {
     images: [openGraphImage],
-    title: "Therapy Programs - The Mind Point",
-    description: "Explore our therapy programs and mental health services.",
+    title: "Therapy & Counselling Sessions - The Mind Point",
+    description:
+      "Licensed, evidence-based therapy scheduled around your life. No diagnosis required.",
     type: "website",
   },
 };

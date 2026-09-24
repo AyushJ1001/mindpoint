@@ -148,6 +148,49 @@ export const EnrollmentSessionType = v.union(
   v.literal("elevate"),
 );
 
+export const LmsCurriculumStatus = v.union(
+  v.literal("draft"),
+  v.literal("published"),
+  v.literal("archived"),
+);
+
+export const LmsActivityType = v.union(
+  v.literal("reading"),
+  v.literal("media"),
+  v.literal("external_resource"),
+  v.literal("quiz"),
+  v.literal("assignment"),
+  v.literal("feedback"),
+);
+
+export const LmsFeedbackMode = v.union(
+  v.literal("identified"),
+  v.literal("anonymous"),
+);
+
+export const LmsReleaseMode = v.union(
+  v.literal("immediate"),
+  v.literal("date"),
+  v.literal("prerequisite"),
+);
+
+export const LmsCompletionMode = v.union(
+  v.literal("view"),
+  v.literal("self_confirm"),
+  v.literal("submit"),
+  v.literal("pass"),
+  v.literal("faculty_approval"),
+);
+
+export const LmsProgressStatus = v.union(
+  v.literal("not_started"),
+  v.literal("in_progress"),
+  v.literal("submitted"),
+  v.literal("awaiting_review"),
+  v.literal("completed"),
+  v.literal("blocked"),
+);
+
 const sharedCourseFields = {
   name: v.string(),
   description: v.optional(v.string()),
@@ -301,6 +344,15 @@ const publicEnrollmentFields = {
   registrationSource: v.optional(EnrollmentRegistrationSource),
   status: v.optional(EnrollmentStatus),
   statusReason: v.optional(v.string()),
+  // Manual payment verification (screenshot/UPI checkouts). Absent = verified.
+  paymentVerification: v.optional(
+    v.union(
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("rejected"),
+    ),
+  ),
+  paymentVerificationNote: v.optional(v.string()),
   cancelledAt: v.optional(v.number()),
   transferredAt: v.optional(v.number()),
   transferredToCourseId: v.optional(v.id("courses")),
@@ -346,6 +398,9 @@ export default defineSchema({
     enrolledUsers: v.array(v.string()),
     lifecycleStatus: v.optional(CourseLifecycleStatus),
     sortOrder: v.number(),
+    // Optional live-class link shown to learners enrolled in this batch.
+    meetingUrl: v.optional(v.string()),
+    meetingNote: v.optional(v.string()),
     legacySourceCourseId: v.optional(v.id("courses")),
     createdByAdminId: v.optional(v.string()),
     updatedByAdminId: v.optional(v.string()),
@@ -444,6 +499,7 @@ export default defineSchema({
     .index("by_razorpayPaymentId", ["razorpayPaymentId"])
     .index("by_status", ["status"])
     .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_paymentVerification", ["paymentVerification"])
     .index("by_courseId_and_status_and_userId", [
       "courseId",
       "status",
@@ -549,6 +605,315 @@ export default defineSchema({
     .index("by_entityType_and_actorAdminId", ["entityType", "actorAdminId"])
     .index("by_actorAdminId", ["actorAdminId"]),
 
+  lmsCurricula: defineTable({
+    courseId: v.id("courses"),
+    version: v.number(),
+    title: v.string(),
+    status: LmsCurriculumStatus,
+    createdByAdminId: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    publishedAt: v.optional(v.number()),
+    manifestHash: v.optional(v.string()),
+  })
+    .index("by_courseId", ["courseId"])
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_courseId_and_version", ["courseId", "version"]),
+
+  lmsModules: defineTable({
+    curriculumId: v.id("lmsCurricula"),
+    title: v.string(),
+    description: v.optional(v.string()),
+    sortOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_curriculumId_and_sortOrder", ["curriculumId", "sortOrder"]),
+
+  lmsActivities: defineTable({
+    curriculumId: v.id("lmsCurricula"),
+    moduleId: v.id("lmsModules"),
+    type: LmsActivityType,
+    title: v.string(),
+    instructions: v.optional(v.string()),
+    content: v.optional(v.string()),
+    externalUrl: v.optional(v.string()),
+    durationMinutes: v.optional(v.number()),
+    required: v.boolean(),
+    sortOrder: v.number(),
+    releaseMode: LmsReleaseMode,
+    releaseAt: v.optional(v.number()),
+    prerequisiteActivityId: v.optional(v.id("lmsActivities")),
+    completionMode: LmsCompletionMode,
+    gradingCriteria: v.optional(v.string()),
+    passingScore: v.optional(v.number()),
+    feedbackMode: v.optional(LmsFeedbackMode),
+    feedbackMinimumGroupSize: v.optional(v.number()),
+    rightsApproved: v.boolean(),
+    accessibleAlternative: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_curriculumId", ["curriculumId"])
+    .index("by_moduleId_and_sortOrder", ["moduleId", "sortOrder"]),
+
+  lmsQuizQuestions: defineTable({
+    activityId: v.id("lmsActivities"),
+    prompt: v.string(),
+    sortOrder: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_activityId_and_sortOrder", ["activityId", "sortOrder"]),
+
+  lmsQuizOptions: defineTable({
+    questionId: v.id("lmsQuizQuestions"),
+    label: v.string(),
+    sortOrder: v.number(),
+    isCorrect: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_questionId_and_sortOrder", ["questionId", "sortOrder"]),
+
+  lmsQuizAttempts: defineTable({
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    attemptNumber: v.number(),
+    score: v.number(),
+    correctAnswerCount: v.number(),
+    questionCount: v.number(),
+    passed: v.boolean(),
+    submittedAt: v.number(),
+  })
+    .index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"])
+    .index("by_activityId_and_passed", ["activityId", "passed"]),
+
+  lmsQuizAnswers: defineTable({
+    attemptId: v.id("lmsQuizAttempts"),
+    questionId: v.id("lmsQuizQuestions"),
+    selectedOptionId: v.id("lmsQuizOptions"),
+    isCorrect: v.boolean(),
+    createdAt: v.number(),
+  }).index("by_attemptId", ["attemptId"]),
+
+  lmsFeedbackResponses: defineTable({
+    activityId: v.id("lmsActivities"),
+    curriculumId: v.id("lmsCurricula"),
+    courseId: v.id("courses"),
+    mode: LmsFeedbackMode,
+    enrollmentId: v.optional(v.id("enrollments")),
+    batchId: v.optional(v.id("courseBatches")),
+    rating: v.number(),
+    comment: v.optional(v.string()),
+    reportingPeriod: v.string(),
+    submittedAt: v.optional(v.number()),
+  })
+    .index("by_activityId", ["activityId"])
+    .index("by_courseId", ["courseId"])
+    .index("by_courseId_and_batchId", ["courseId", "batchId"])
+    .index("by_courseId_and_activityId", ["courseId", "activityId"])
+    .index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"]),
+
+  lmsFeedbackReceipts: defineTable({
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    mode: LmsFeedbackMode,
+    receiptCode: v.string(),
+    submittedAt: v.number(),
+  }).index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"]),
+
+  lmsEnrollmentCurricula: defineTable({
+    enrollmentId: v.id("enrollments"),
+    curriculumId: v.id("lmsCurricula"),
+    status: v.union(
+      v.literal("active"),
+      v.literal("completed"),
+      v.literal("suspended"),
+    ),
+    activatedAt: v.number(),
+    activatedByAdminId: v.string(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_curriculumId", ["curriculumId"])
+    .index("by_enrollmentId_and_status", ["enrollmentId", "status"]),
+
+  lmsActivityProgress: defineTable({
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    status: LmsProgressStatus,
+    evidenceReference: v.optional(v.string()),
+    startedAt: v.optional(v.number()),
+    submittedAt: v.optional(v.number()),
+    completedAt: v.optional(v.number()),
+    updatedAt: v.number(),
+  })
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"])
+    .index("by_activityId_and_status", ["activityId", "status"]),
+
+  lmsSubmissions: defineTable({
+    enrollmentId: v.id("enrollments"),
+    activityId: v.id("lmsActivities"),
+    courseId: v.optional(v.id("courses")),
+    batchId: v.optional(v.id("courseBatches")),
+    attemptNumber: v.number(),
+    responseText: v.string(),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("submitted"),
+      v.literal("in_review"),
+      v.literal("returned"),
+      v.literal("accepted"),
+    ),
+    submittedAt: v.optional(v.number()),
+    reviewedAt: v.optional(v.number()),
+    claimedAt: v.optional(v.number()),
+    claimedByTokenIdentifier: v.optional(v.string()),
+    reviewedByTokenIdentifier: v.optional(v.string()),
+    feedback: v.optional(v.string()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_enrollmentId_and_activityId", ["enrollmentId", "activityId"])
+    .index("by_activityId_and_status", ["activityId", "status"])
+    .index("by_status", ["status"])
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_courseId_and_batchId_and_status", [
+      "courseId",
+      "batchId",
+      "status",
+    ]),
+
+  lmsFacultyAssignments: defineTable({
+    courseId: v.id("courses"),
+    batchId: v.optional(v.id("courseBatches")),
+    facultyTokenIdentifier: v.optional(v.string()),
+    facultyEmail: v.optional(v.string()),
+    facultyName: v.optional(v.string()),
+    canGrade: v.boolean(),
+    canAnswerQuestions: v.boolean(),
+    canApproveCompletion: v.boolean(),
+    assignedByAdminId: v.string(),
+    createdAt: v.number(),
+  })
+    .index("by_courseId", ["courseId"])
+    .index("by_facultyTokenIdentifier", ["facultyTokenIdentifier"])
+    .index("by_facultyEmail", ["facultyEmail"])
+    .index("by_courseId_and_facultyTokenIdentifier", [
+      "courseId",
+      "facultyTokenIdentifier",
+    ])
+    .index("by_courseId_and_facultyEmail", ["courseId", "facultyEmail"]),
+
+  lmsQuestions: defineTable({
+    enrollmentId: v.id("enrollments"),
+    curriculumId: v.id("lmsCurricula"),
+    courseId: v.optional(v.id("courses")),
+    batchId: v.optional(v.id("courseBatches")),
+    activityId: v.optional(v.id("lmsActivities")),
+    authorTokenIdentifier: v.string(),
+    visibility: v.union(
+      v.literal("private"),
+      v.literal("course"),
+      v.literal("batch"),
+    ),
+    body: v.string(),
+    status: v.union(
+      v.literal("open"),
+      v.literal("answered"),
+      v.literal("closed"),
+    ),
+    officialAnswer: v.optional(v.string()),
+    answeredByTokenIdentifier: v.optional(v.string()),
+    moderatedByTokenIdentifier: v.optional(v.string()),
+    moderationReason: v.optional(v.string()),
+    createdAt: v.number(),
+    answeredAt: v.optional(v.number()),
+    moderatedAt: v.optional(v.number()),
+  })
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_curriculumId_and_status", ["curriculumId", "status"])
+    .index("by_status", ["status"])
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_courseId_and_batchId_and_status", [
+      "courseId",
+      "batchId",
+      "status",
+    ]),
+
+  lmsNotifications: defineTable({
+    recipientUserId: v.string(),
+    enrollmentId: v.id("enrollments"),
+    kind: v.union(
+      v.literal("question_answered"),
+      v.literal("submission_accepted"),
+      v.literal("submission_returned"),
+      v.literal("completion_approved"),
+      v.literal("completion_correction"),
+      v.literal("completion_review"),
+    ),
+    title: v.string(),
+    body: v.string(),
+    href: v.string(),
+    readAt: v.optional(v.number()),
+    createdAt: v.number(),
+  })
+    .index("by_recipientUserId_and_createdAt", ["recipientUserId", "createdAt"])
+    .index("by_recipientUserId_and_enrollmentId_and_createdAt", [
+      "recipientUserId",
+      "enrollmentId",
+      "createdAt",
+    ]),
+
+  lmsCompletionRequests: defineTable({
+    enrollmentId: v.id("enrollments"),
+    curriculumId: v.id("lmsCurricula"),
+    courseId: v.id("courses"),
+    batchId: v.optional(v.id("courseBatches")),
+    status: v.union(
+      v.literal("awaiting_name"),
+      v.literal("pending"),
+      v.literal("approved"),
+      v.literal("correction_required"),
+      v.literal("under_review"),
+      v.literal("revoked"),
+    ),
+    requestedAt: v.number(),
+    confirmedRecipientName: v.optional(v.string()),
+    nameConfirmedAt: v.optional(v.number()),
+    correctionReason: v.optional(v.string()),
+    reviewedAt: v.optional(v.number()),
+    reviewedByTokenIdentifier: v.optional(v.string()),
+    certificateId: v.optional(v.id("lmsCertificates")),
+  })
+    .index("by_enrollmentId_and_curriculumId", ["enrollmentId", "curriculumId"])
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_courseId_and_batchId_and_status", [
+      "courseId",
+      "batchId",
+      "status",
+    ]),
+
+  lmsCertificates: defineTable({
+    enrollmentId: v.id("enrollments"),
+    curriculumId: v.id("lmsCurricula"),
+    verificationCode: v.string(),
+    recipientName: v.string(),
+    courseName: v.string(),
+    status: v.union(
+      v.literal("issued"),
+      v.literal("suspended"),
+      v.literal("revoked"),
+    ),
+    issuedAt: v.number(),
+    publicVerificationEnabled: v.optional(v.boolean()),
+    suspendedAt: v.optional(v.number()),
+    suspensionReason: v.optional(v.string()),
+    revokedAt: v.optional(v.number()),
+    revocationReason: v.optional(v.string()),
+    replacesCertificateId: v.optional(v.id("lmsCertificates")),
+  })
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_verificationCode", ["verificationCode"]),
+
   adminManagers: defineTable({
     clerkUserId: v.optional(v.string()),
     adminEmail: v.optional(v.string()),
@@ -567,4 +932,15 @@ export default defineSchema({
     .index("by_adminEmail", ["adminEmail"])
     .index("by_isActive", ["isActive"])
     .index("by_addedAt", ["addedAt"]),
+
+  // Editorial overrides for storefront copy (course category pages and
+  // bespoke landing pages). Absent rows fall back to the code defaults.
+  siteContent: defineTable({
+    key: v.string(),
+    data: v.any(),
+    updatedAt: v.number(),
+    updatedByAdminId: v.string(),
+    updatedByEmail: v.optional(v.string()),
+  }).index("by_key", ["key"]),
+
 });

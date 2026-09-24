@@ -7,15 +7,16 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Supervised Courses - The Mind Point",
+  title: "Clinical Supervision for Therapists - The Mind Point",
   description:
-    "Learn under expert supervision with our supervised courses in psychology and mental health. Get personalized guidance and feedback from professionals.",
+    "Supervision for students and early-career therapists who want honest feedback on real work. Working clinicians, specific feedback, and support that continues after the program.",
   keywords:
     "supervised courses, psychology supervision, mental health training, expert guidance, personalized learning",
   openGraph: {
     images: [openGraphImage],
-    title: "Supervised Courses - The Mind Point",
-    description: "Learn under expert supervision with personalized guidance.",
+    title: "Clinical Supervision for Therapists - The Mind Point",
+    description:
+      "Honest feedback on real clinical work from supervisors who practise today.",
     type: "website",
   },
 };

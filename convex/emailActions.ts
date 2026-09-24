@@ -3,7 +3,7 @@
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { sendEmailWithCopy } from "./_shared/emailDelivery";
+import { sendEmail, sendEmailWithCopy } from "./_shared/emailDelivery";
 import {
   emailActionResultValidator,
   emailActionSuccess,
@@ -43,6 +43,79 @@ function escapeHtml(value: string): string {
     .replace(/"/g, "&quot;");
 }
 
+type AcademicEnrollmentEmail = {
+  courseName: string;
+  enrollmentNumber: string;
+  learningMode: string;
+  userName: string;
+  startDate?: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  programDetail?: string;
+};
+
+function buildAcademicEnrollmentEmail(
+  details: AcademicEnrollmentEmail,
+): string {
+  const learningUrl = `${getSiteUrl()}/lms`;
+  const scheduleRows = [
+    details.programDetail
+      ? ["Program", details.programDetail]
+      : ["Learning format", details.learningMode],
+    details.startDate ? ["Start date", details.startDate] : null,
+    details.endDate ? ["End date", details.endDate] : null,
+    details.startTime && details.endTime
+      ? ["Time", `${details.startTime} – ${details.endTime}`]
+      : null,
+    ["Enrollment number", details.enrollmentNumber],
+  ].filter((row): row is string[] => row !== null);
+
+  const rows = scheduleRows
+    .map(
+      ([label, value]) => `
+        <tr>
+          <td style="padding:12px 0;color:#5f7773;font-size:13px;border-bottom:1px solid #d8e6e1;">${escapeHtml(label)}</td>
+          <td style="padding:12px 0;color:#123f40;font-size:13px;font-weight:600;text-align:right;border-bottom:1px solid #d8e6e1;">${escapeHtml(value)}</td>
+        </tr>`,
+    )
+    .join("");
+
+  return `
+    <div style="margin:0;background:#eef5f1;padding:28px 12px;font-family:Arial,sans-serif;color:#123f40;">
+      <table role="presentation" style="width:100%;max-width:640px;margin:0 auto;border-collapse:collapse;background:#fffaf0;border-radius:24px;overflow:hidden;">
+        <tr>
+          <td style="background:#003f43;padding:28px 34px;">
+            <img src="${getSiteUrl()}/brand/the-mind-point-logo.png" width="150" alt="The Mind Point" style="display:block;width:150px;height:auto;filter:brightness(0) invert(1);" />
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:38px 34px 18px;">
+            <p style="margin:0 0 14px;color:#0c6f73;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">Enrollment confirmed</p>
+            <h1 style="margin:0;color:#003f43;font-family:Georgia,serif;font-size:34px;line-height:1.16;font-weight:600;">Your learning space is ready.</h1>
+            <p style="margin:20px 0 0;color:#58706d;font-size:16px;line-height:1.7;">Hello ${escapeHtml(details.userName)}, your place in <strong style="color:#123f40;">${escapeHtml(details.courseName)}</strong> is confirmed.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:8px 34px 12px;">
+            <table role="presentation" style="width:100%;border-collapse:collapse;">${rows}</table>
+          </td>
+        </tr>
+        <tr>
+          <td style="padding:20px 34px 34px;">
+            <a href="${learningUrl}" style="display:inline-block;background:#0c6f73;color:#fffaf0;text-decoration:none;font-size:15px;font-weight:700;padding:15px 22px;border-radius:12px;">Open My Learning →</a>
+            <p style="margin:22px 0 0;color:#58706d;font-size:13px;line-height:1.65;">Your Course appears in My Learning as soon as its Curriculum is published. Live and cohort materials may be released gradually, so you will always see the current learning stage there.</p>
+          </td>
+        </tr>
+        <tr>
+          <td style="background:#e3efea;padding:22px 34px;color:#58706d;font-size:12px;line-height:1.6;">
+            Learn · Grow · Heal · Belong.<br />Need help? Reply to this email or contact The Mind Point at +91 9770780086.
+          </td>
+        </tr>
+      </table>
+    </div>`;
+}
+
 // Test email action for debugging
 export const sendTestEmail = internalAction({
   args: {
@@ -53,7 +126,7 @@ export const sendTestEmail = internalAction({
     try {
       console.log("Attempting to send test email to:", args.userEmail);
 
-      const result = await sendEmailWithCopy({
+      const result = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Test Email from The Mind Point",
@@ -136,7 +209,7 @@ export const sendSimpleTestEmail = internalAction({
     try {
       console.log("Sending simple test email to:", args.to);
       const html = args.body ?? "hi";
-      const result = await sendEmailWithCopy({
+      const result = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.to,
         subject: "Simple Test Email",
@@ -226,7 +299,7 @@ export const sendMindPointsReminderEmail = internalAction({
     try {
       const accountUrl = `${getSiteUrl()}/account?tab=points`;
 
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Your Mind Points are waiting to be redeemed",
@@ -299,7 +372,7 @@ export const sendTestEmailWithAttachment = internalAction({
         ),
       };
 
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Test Email with Attachment",
@@ -391,10 +464,21 @@ export const sendCertificateEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Certificate Course Enrollment Confirmation",
+        html: buildAcademicEnrollmentEmail({
+          userName: args.userName,
+          courseName: args.courseName,
+          enrollmentNumber: args.enrollmentNumber,
+          learningMode: "Live + self-paced learning",
+          startDate: args.startDate,
+          endDate: args.endDate,
+          startTime: args.startTime,
+          endTime: args.endTime,
+        }),
+        /* Previous template retained temporarily for delivery rollback reference.
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Certificate Course Enrollment Confirmation</h2>
@@ -445,7 +529,7 @@ export const sendCertificateEnrollmentConfirmation = internalAction({
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
-      `,
+      `, */
       });
       if (isEmailActionFailure(emailDelivery)) {
         return emailDelivery;
@@ -489,10 +573,22 @@ export const sendInternshipEnrollmentConfirmation = internalAction({
         : "1-month internship cohort";
 
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Internship Program Enrollment Confirmation",
+        html: buildAcademicEnrollmentEmail({
+          userName: args.userName,
+          courseName: args.courseName,
+          enrollmentNumber: args.enrollmentNumber,
+          learningMode: "Guided cohort",
+          startDate: args.startDate,
+          endDate: args.endDate,
+          startTime: args.startTime,
+          endTime: args.endTime,
+          programDetail: planText,
+        }),
+        /* Previous template retained temporarily for delivery rollback reference.
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Internship Program Enrollment Confirmation</h2>
@@ -547,7 +643,7 @@ export const sendInternshipEnrollmentConfirmation = internalAction({
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
-      `,
+      `, */
       });
       if (isEmailActionFailure(emailDelivery)) {
         return emailDelivery;
@@ -584,10 +680,21 @@ export const sendDiplomaEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Diploma Course Enrollment Confirmation",
+        html: buildAcademicEnrollmentEmail({
+          userName: args.userName,
+          courseName: args.courseName,
+          enrollmentNumber: args.enrollmentNumber,
+          learningMode: "Guided cohort",
+          startDate: args.startDate,
+          endDate: args.endDate,
+          startTime: args.startTime,
+          endTime: args.endTime,
+        }),
+        /* Previous template retained temporarily for delivery rollback reference.
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Diploma Course Enrollment Confirmation</h2>
@@ -638,7 +745,7 @@ export const sendDiplomaEnrollmentConfirmation = internalAction({
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
-      `,
+      `, */
       });
       if (isEmailActionFailure(emailDelivery)) {
         return emailDelivery;
@@ -671,10 +778,17 @@ export const sendPreRecordedEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Pre-Recorded Course Enrollment Confirmation",
+        html: buildAcademicEnrollmentEmail({
+          userName: args.userName,
+          courseName: args.courseName,
+          enrollmentNumber: args.enrollmentNumber,
+          learningMode: "Self-paced learning",
+        }),
+        /* Previous template retained temporarily for delivery rollback reference.
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Pre-Recorded Course Enrollment Confirmation</h2>
@@ -713,7 +827,7 @@ export const sendPreRecordedEnrollmentConfirmation = internalAction({
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
-      `,
+      `, */
       });
       if (isEmailActionFailure(emailDelivery)) {
         return emailDelivery;
@@ -750,10 +864,21 @@ export const sendMasterclassEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Masterclass Enrollment Confirmation",
+        html: buildAcademicEnrollmentEmail({
+          userName: args.userName,
+          courseName: args.courseName,
+          enrollmentNumber: args.enrollmentNumber,
+          learningMode: "Live learning event",
+          startDate: args.startDate,
+          endDate: args.endDate,
+          startTime: args.startTime,
+          endTime: args.endTime,
+        }),
+        /* Previous template retained temporarily for delivery rollback reference.
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #4CAF50;">Masterclass Enrollment Confirmation</h2>
@@ -804,7 +929,7 @@ export const sendMasterclassEnrollmentConfirmation = internalAction({
           <br>
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
-      `,
+      `, */
       });
       if (isEmailActionFailure(emailDelivery)) {
         return emailDelivery;
@@ -841,7 +966,7 @@ export const sendEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Enrollment Confirmation",
@@ -910,163 +1035,6 @@ export const sendEnrollmentConfirmation = internalAction({
   },
 });
 
-export const sendCartCheckoutConfirmation = internalAction({
-  args: {
-    userEmail: v.string(),
-    userName: v.string(),
-    userPhone: v.optional(v.string()),
-    enrollments: v.array(
-      v.object({
-        enrollmentId: v.id("enrollments"),
-        enrollmentNumber: v.string(),
-        courseName: v.string(),
-        courseId: v.id("courses"),
-        courseType: v.optional(v.string()),
-        startDate: v.string(),
-        endDate: v.string(),
-        startTime: v.string(),
-        endTime: v.string(),
-        internshipPlan: v.optional(v.union(v.literal("120"), v.literal("240"))),
-        sessions: v.optional(v.number()),
-        sessionType: v.optional(
-          v.union(v.literal("focus"), v.literal("flow"), v.literal("elevate")),
-        ),
-      }),
-    ),
-  },
-  returns: emailActionResultValidator,
-  handler: async (ctx, args) => {
-    try {
-      // Send email
-      const emailDelivery = await sendEmailWithCopy({
-        from: "The Mind Point <no-reply@themindpoint.org>",
-        to: args.userEmail,
-        subject: "Enrollment Confirmation",
-        html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-            <h2 style="color: #4CAF50;">Enrollment Confirmation</h2>
-            <p>Dear ${escapeHtml(args.userName)},</p>
-            <p>We are happy to confirm that your payments for the following courses have been successfully received:</p>
-
-            <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-              <thead>
-                <tr>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Name</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Course Type</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Start Date</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">End Date</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Time</th>
-                  <th style="text-align: left; padding: 8px; background-color: #f2f2f2; border: 1px solid #ddd;">Enrollment No</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${args.enrollments
-                  .map((e) => {
-                    const courseType = e.courseType
-                      ? e.courseType.charAt(0).toUpperCase() +
-                        e.courseType.slice(1)
-                      : "Course";
-                    const planInfo = e.internshipPlan
-                      ? ` (${e.internshipPlan === "120" ? "2 week" : "4 week"} plan)`
-                      : "";
-                    const sessionInfo =
-                      e.sessions && e.courseType === "therapy"
-                        ? ` (${e.sessions} session${e.sessions > 1 ? "s" : ""})`
-                        : "";
-
-                    // Add therapy type or session type information
-                    let typeInfo = "";
-                    if (e.courseType === "therapy") {
-                      // Extract therapy type from course name (Spark, Express, Connection)
-                      const therapyType = e.courseName.includes("Spark")
-                        ? "Spark"
-                        : e.courseName.includes("Express")
-                          ? "Express"
-                          : e.courseName.includes("Connection")
-                            ? "Connection"
-                            : e.courseName;
-                      typeInfo = ` - ${therapyType}`;
-                    } else if (e.courseType === "supervised" && e.sessionType) {
-                      typeInfo = ` - ${e.sessionType.charAt(0).toUpperCase() + e.sessionType.slice(1)}`;
-                    }
-
-                    // Only show enrollment number for non-therapy and non-supervised courses
-                    const showEnrollmentNumber =
-                      e.courseType !== "therapy" &&
-                      e.courseType !== "supervised";
-
-                    return `
-                  <tr>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${escapeHtml(e.courseName)}${planInfo}${sessionInfo}${typeInfo}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${courseType}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${e.startDate}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${e.endDate}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd;">${e.startTime} - ${e.endTime}</td>
-                    <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: #2E86C1;">${showEnrollmentNumber ? e.enrollmentNumber : "N/A"}</td>
-                  </tr>
-                `;
-                  })
-                  .join("")}
-              </tbody>
-            </table>
-
-            <h3 style="margin-top: 24px;">Please Note</h3>
-            <ul>
-              ${
-                args.enrollments.some((e) => e.courseType === "pre-recorded")
-                  ? `<li>For pre-recorded courses: Course content material and videos will be sent to you in 2-3 business days of the date of purchase.</li>`
-                  : ""
-              }
-              ${
-                args.enrollments.some(
-                  (e) =>
-                    e.courseType !== "pre-recorded" &&
-                    e.courseType !== "therapy" &&
-                    e.courseType !== "supervised",
-                )
-                  ? `<li>For live courses: You will be added to the group a day prior to the course.</li>
-              <li>Kindly check your email & WhatsApp for the group link (a week before the course start date).</li>`
-                  : ""
-              }
-              <li>Please provide your WhatsApp number if not provided on <strong>+91 9770780086</strong>.</li>
-            </ul>
-
-            <p>If you need any help, please reach out to us at <strong>+91 9770780086</strong>.</p>
-            ${
-              args.enrollments.some(
-                (e) =>
-                  e.courseType !== "therapy" && e.courseType !== "supervised",
-              )
-                ? '<p style="margin-top: 20px;">Please save these enrollment numbers for future reference and access to course materials.</p>'
-                : ""
-            }
-            <p>Thank you for learning with us!</p>
-            <br>
-            <p>Best regards,<br>The Mind Point Team</p>
-          </div>
-        `,
-      });
-      if (isEmailActionFailure(emailDelivery)) {
-        return emailDelivery;
-      }
-
-      console.log(
-        `Cart checkout confirmation email sent successfully to ${args.userEmail}`,
-      );
-    } catch (error) {
-      console.error(
-        `Failed to send cart checkout confirmation email to ${args.userEmail}:`,
-        error,
-      );
-      return emailDeliveryFailureFromThrowable(
-        error as Error | object | string,
-      );
-    }
-
-    return emailActionSuccess();
-  },
-});
-
 export const sendTherapyEnrollmentConfirmation = internalAction({
   args: {
     userEmail: v.string(),
@@ -1080,7 +1048,7 @@ export const sendTherapyEnrollmentConfirmation = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Therapy Session Enrollment Confirmation",
@@ -1231,7 +1199,7 @@ export const sendSupervisedTherapyWelcomeEmail = internalAction({
       );
 
       // Send email with attachments
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: `Supervised Therapy Sessions & Training - ${args.sessionType.charAt(0).toUpperCase() + args.sessionType.slice(1)} Session - Payment Confirmation`,
@@ -1388,7 +1356,7 @@ export const sendWorksheetPurchaseConfirmation = internalAction({
         .join("");
 
       // Send email with attachments
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Worksheet Purchase Confirmation",
@@ -1479,7 +1447,7 @@ export const sendAlreadyEnrolledNotification = internalAction({
   handler: async (ctx, args) => {
     try {
       // Send email
-      const emailDelivery = await sendEmailWithCopy({
+      const emailDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Course Enrollment Status - Already Enrolled",
@@ -1550,5 +1518,90 @@ export const sendAlreadyEnrolledNotification = internalAction({
     }
 
     return emailActionSuccess();
+  },
+});
+
+export const sendPaymentPendingEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    courseName: v.string(),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: "We've received your payment",
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #2E7D32;">Thanks, ${escapeHtml(args.userName)}!</h2>
+          <p>We've received your payment for <strong>${escapeHtml(args.courseName)}</strong> and it's now being verified by our team.</p>
+          <p>This usually takes a short while. You'll get another email the moment it's approved, and your course access will unlock automatically.</p>
+          <p>If we need anything else to confirm the payment, we'll reach out to you directly.</p>
+          <p>Thank you for your patience.</p>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+      });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send payment pending email:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});
+
+export const sendPaymentApprovedEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    courseName: v.string(),
+    courseId: v.string(),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const learnUrl = `${getSiteUrl()}/learn/${args.courseId}`;
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: `Your payment is verified — ${args.courseName} is unlocked`,
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #2E7D32;">You're all set, ${escapeHtml(args.userName)}!</h2>
+          <p>Your payment for <strong>${escapeHtml(args.courseName)}</strong> has been verified and your course access is now unlocked.</p>
+          <p style="margin-top: 20px;">
+            <a href="${learnUrl}" style="background-color: #2E7D32; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">Start learning</a>
+          </p>
+          <p>See you inside.</p>
+          <p>Best regards,<br>The Mind Point Team</p>
+        </div>
+      `,
+      });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send payment approved email:", {
+        userEmail: args.userEmail,
+        courseName: args.courseName,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
   },
 });

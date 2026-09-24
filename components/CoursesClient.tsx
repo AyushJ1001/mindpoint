@@ -849,8 +849,16 @@ export default function CoursesClient({ coursesData }: CoursesClientProps) {
   return (
     <div className="min-h-screen">
       {/* All Courses Section */}
-      <section className="section-padding pt-0">
+      <section id="catalog" className="section-padding scroll-mt-24 pt-0">
         <div className="container">
+          <div className="mb-8">
+            <p className="text-primary text-[0.7rem] font-semibold tracking-[0.28em] uppercase">
+              All courses
+            </p>
+            <h2 className="font-display mt-3 text-3xl tracking-tight sm:text-4xl">
+              Every course, in one place.
+            </h2>
+          </div>
           {coursesData && coursesData.length > 0 ? (
             <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
               {(() => {

@@ -2389,3 +2389,43 @@ export const transitionCourseLifecycle = mutation({
     return convexSuccess({ course: updated });
   },
 });
+
+// Set (or clear) the live-class link shown to learners enrolled in a batch.
+export const setBatchMeetingLink = mutation({
+  args: {
+    batchId: v.id("courseBatches"),
+    meetingUrl: v.optional(v.string()),
+    meetingNote: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const batch = await ctx.db.get(args.batchId);
+    if (!batch) {
+      throw new Error("Batch not found");
+    }
+
+    const url = args.meetingUrl?.trim();
+    if (url && !/^https?:\/\//i.test(url)) {
+      throw new Error("Meeting link must start with http:// or https://");
+    }
+
+    await ctx.db.patch(args.batchId, {
+      meetingUrl: url || undefined,
+      meetingNote: args.meetingNote?.trim() || undefined,
+      updatedByAdminId: admin.userId,
+      updatedAt: Date.now(),
+    });
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "course_batch.set_meeting_link",
+      entityType: "course_batch",
+      entityId: String(args.batchId),
+      after: { meetingUrl: url || undefined },
+    });
+
+    return null;
+  },
+});

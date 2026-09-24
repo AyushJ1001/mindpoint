@@ -23,9 +23,17 @@ import type {
 import { Id } from "@/lib/backend/data-model";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import { getEnrolledCount } from "@/lib/course-enrollment";
-import { courseTypeContent } from "@/lib/course-content-data";
+import { resolveCourseTypeContent } from "@/lib/course-type-content";
+import { courseTypeContentKey } from "@/lib/site-content";
+import type { CourseTypeContentOverride } from "@/lib/site-content";
+import { useQuery } from "convex/react";
+import { api } from "@/lib/backend/api";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
+import { ctaVariants } from "@/components/coastal/cta";
+import CourseTypeConversion from "@/components/course/course-type-conversion";
+import Link from "next/link";
+import { ArrowRight, Check, Users } from "lucide-react";
 
 // Type for courses with sessions (therapy)
 type TherapyCourse = CourseLike & {
@@ -811,34 +819,89 @@ export default function CourseTypePage({
   coursesData,
   bogoCourses,
 }: CourseTypePageProps) {
-  const content = courseTypeContent[type];
+  const override = useQuery(api.siteContent.getSiteContent, {
+    key: courseTypeContentKey(type),
+  });
+  const content = resolveCourseTypeContent(
+    type,
+    override as CourseTypeContentOverride | null | undefined,
+  );
+  const courses = coursesData.courses ?? [];
+  const totalLearners = courses.reduce(
+    (sum, course) => sum + getEnrolledCount(course),
+    0,
+  );
+  const proofPoints = content.proof;
+  const showTypeFaq = type !== "therapy" && type !== "supervised";
 
   return (
     <div className="min-h-screen">
       <section className="py-14 sm:py-20">
         <div className="container max-w-4xl">
           <ScrollReveal>
-            <p className={eyebrowVariants()}>{content.tagline}</p>
+            <p className={eyebrowVariants()}>Programs</p>
             <h1 className="font-display mt-4 text-4xl leading-[1.05] tracking-[-0.03em] sm:text-6xl">
               {content.title}
             </h1>
+            <p className="font-display text-foreground/70 mt-4 text-2xl leading-snug italic sm:text-3xl">
+              {content.tagline}
+            </p>
             <p className="text-muted-foreground mt-5 max-w-2xl text-lg">
               {content.description}
             </p>
+
+            <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
+              <a href="#courses" className={ctaVariants({ layout: "flex" })}>
+                Browse {content.title.toLowerCase()}
+                <ArrowRight className="h-4 w-4" />
+              </a>
+              <Link
+                href="/contact"
+                className="calm-link text-sm font-medium"
+              >
+                Talk to an advisor
+              </Link>
+            </div>
+
+            {(totalLearners > 0 || proofPoints.length > 0) && (
+              <div className="border-border mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-dashed pt-6">
+                {totalLearners > 0 && (
+                  <span className="text-foreground/70 inline-flex items-center gap-2 text-sm">
+                    <Users className="text-primary h-4 w-4 shrink-0" />
+                    {totalLearners.toLocaleString("en-IN")} learners enrolled
+                  </span>
+                )}
+                {proofPoints.map((point) => (
+                  <span
+                    key={point}
+                    className="text-foreground/70 inline-flex items-center gap-2 text-sm"
+                  >
+                    <Check className="text-primary h-4 w-4 shrink-0" />
+                    {point}
+                  </span>
+                ))}
+              </div>
+            )}
           </ScrollReveal>
         </div>
       </section>
 
       {/* Courses Section */}
-      <section className="pb-16">
+      <section id="courses" className="scroll-mt-24 pb-16">
         <div className="container">
           <ScrollReveal>
-            {coursesData.courses && coursesData.courses.length > 0 ? (
+            <div className="mb-8">
+              <p className={eyebrowVariants()}>Choose your course</p>
+              <h2 className="font-display mt-3 text-3xl tracking-tight sm:text-4xl">
+                Find the right fit.
+              </h2>
+            </div>
+            {courses.length > 0 ? (
               <div className="grid grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
                 {(() => {
                   // Group courses by name; if multiple with same name, render a grouped card with select
                   const nameToCourses = new Map<string, Array<PublicCourse>>();
-                  for (const course of coursesData.courses) {
+                  for (const course of courses) {
                     const list = nameToCourses.get(course.name) ?? [];
                     list.push(course);
                     nameToCourses.set(course.name, list);
@@ -876,6 +939,12 @@ export default function CourseTypePage({
           </ScrollReveal>
         </div>
       </section>
+
+      <CourseTypeConversion
+        content={content}
+        courses={courses}
+        showFaq={showTypeFaq}
+      />
     </div>
   );
 }

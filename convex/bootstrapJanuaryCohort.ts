@@ -1,54 +1,36 @@
 import { internalMutation } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 
-// Idempotent bootstrap for the January 2027 certificate cohorts.
+// January 2027 cohorts for Inner Child Healing & Therapy, Personality
+// Disorders, and the Counselling Psychology internship.
 //
-// Opens December registrations for the three January certificate courses by
-// ensuring each course exists, carries the January pricing and offer, and has
-// one published January 2027 batch. Existing courses keep their authored
-// content — only the January pricing, offer and batch are written.
+// CBT, REBT and CBMT (and its self-paced introduction) are seeded separately by
+// `bootstrapCbtProgramme`. This file deliberately does NOT touch CBT.
+//
+// Owner-supplied dates and fees (all times IST):
+//   Inner Child Healing & Therapy  28 Jan – 23 Mar 2027, Tue & Thu, 18:30–19:30
+//   Personality Disorders          21 Jan – 16 Mar 2027, Tue & Thu, 20:30–21:30
+//   Counselling Psychology         18 Jan – 17 Feb 2027, Mon/Wed/Fri, 19:30–20:30
+//
+// Certificate fee: ₹2,499 for the live 8 weeks (no early bird).
+// The internship fee is not yet confirmed, so it is created as a DRAFT.
 //
 // Run once against a deployment:
-//   npx convex run bootstrapJanuaryCohort:createJanuaryCohort            # dev
-//   npx convex run bootstrapJanuaryCohort:createJanuaryCohort --prod     # production
+//   npx convex run bootstrapJanuaryCohort:createJanuaryCohort --prod
 //
-// Safe to re-run: a course is matched by name (then code), a batch by course +
-// label, and existing rows are patched rather than duplicated.
+// Idempotent: courses are matched by code (then name), batches by course +
+// label, and existing rows are patched, not duplicated.
 
-// Pricing follows the locked January decision (#133): ₹2,999 with an early
-// bird of ₹1,999 until 15 December, full payment only. Schedule and capacity
-// follow the registration plan (#134): 30 seats, shared Tue/Thu evening slot
-// from mid January 2027.
-//
-// REVIEW BEFORE RUNNING: the Personality Disorders copy is founder-review
-// copy. Confirm it before publishing to production. It is the only course
-// created from scratch; the other two already exist.
-const JANUARY_PRICE = 2999;
-
-const JANUARY_OFFER = {
-  name: "Early bird",
-  discountType: "fixedPrice" as const,
-  discountValue: 1999,
-  startDate: "2026-11-15",
-  endDate: "2026-12-15",
-};
-
-const JANUARY_BATCH = {
-  label: "January 2027 cohort",
-  startDate: "2027-01-12",
-  endDate: "2027-03-09",
-  startTime: "19:30",
-  endTime: "21:00",
-  daysOfWeek: ["Tuesday", "Thursday"],
-  capacity: 30,
-};
+const CERT_PRICE = 2499;
+const COHORT_CAPACITY = 30;
 
 type CourseSeed = {
-  // Distinctive name fragment used to find an existing course before the code.
   match: string;
   code: string;
   name: string;
-  type: "certificate";
+  type: "certificate" | "internship";
+  price: number;
+  lifecycleStatus: "published" | "draft";
   description: string;
   searchText: string;
   imageUrls: string[];
@@ -57,102 +39,30 @@ type CourseSeed = {
   outcomes: string[];
   painPoints: string[];
   whyDifferent: string[];
+  prerequisites: string;
+  batch: {
+    label: string;
+    startDate: string;
+    endDate: string;
+    startTime: string;
+    endTime: string;
+    daysOfWeek: string[];
+    capacity: number;
+  };
 };
 
 const COURSES: CourseSeed[] = [
   {
-    match: "CBMT",
-    code: "CCCBT",
-    name: "CBT, REBT, CBMT",
-    type: "certificate",
-    description:
-      "An eight-week live certificate covering the three core cognitive and behavioural approaches — CBT, REBT and CBMT — and how to use them with real clients, in a small supervised group.",
-    searchText:
-      "CBT REBT CBMT cognitive behavioural therapy rational emotive behaviour therapy mindfulness certificate live cohort January 2027",
-    imageUrls: ["/coastal/shore.jpg"],
-    learningOutcomes: [
-      { icon: "brain", title: "Explain the cognitive model and where it fits" },
-      {
-        icon: "refresh",
-        title: "Challenge and restructure unhelpful thinking",
-      },
-      {
-        icon: "message-circle",
-        title: "Use REBT's disputation with real clients",
-      },
-      { icon: "leaf", title: "Weave mindfulness into behavioural work" },
-      { icon: "shield", title: "Work safely within your scope of practice" },
-    ],
-    modules: [
-      {
-        title: "Foundations of CBT",
-        description:
-          "The cognitive model — thoughts, emotions and behaviour. Where CBT came from, what the evidence supports, and where it is thin.",
-      },
-      {
-        title: "Cognitive restructuring",
-        description:
-          "Identifying and challenging cognitive distortions, and building a shared formulation with a client.",
-      },
-      {
-        title: "Behavioural work",
-        description:
-          "Behavioural activation, exposure and graded tasks, applied carefully and with consent.",
-      },
-      {
-        title: "REBT: rational emotive behaviour therapy",
-        description:
-          "The ABC model, irrational beliefs and disputation. How REBT differs from and complements CBT.",
-      },
-      {
-        title: "CBMT: mindfulness in practice",
-        description:
-          "Bringing mindfulness into cognitive and behavioural work — attention, acceptance and present-moment practice.",
-      },
-      {
-        title: "Working across the three",
-        description:
-          "Choosing an approach for the person in front of you, and combining them without muddle.",
-      },
-      {
-        title: "Supervised practice",
-        description:
-          "Role-played and simulated sessions with feedback, so you build confidence before real clients.",
-      },
-      {
-        title: "Integration and next steps",
-        description:
-          "Pulling it together, a development plan, and the honest limits of the certificate.",
-      },
-    ],
-    outcomes: [
-      "You can explain the cognitive model plainly.",
-      "You can challenge a thought without arguing with the person.",
-      "You can use REBT's disputation and CBMT's mindfulness.",
-      "You can choose an approach for the person in front of you.",
-      "You know your scope — and when to refer on.",
-    ],
-    painPoints: [
-      "CBT, REBT and CBMT are usually taught separately and never joined up.",
-      "Most courses stop at theory and never put you in the room.",
-      "You want skills you can actually use, not just notes.",
-    ],
-    whyDifferent: [
-      "All three approaches in one coherent certificate.",
-      "Live, small cohorts with real practice and feedback.",
-      "Taught by practising clinicians, not marketers.",
-      "A certificate that states completion honestly.",
-    ],
-  },
-  {
     match: "Inner Child Healing",
     code: "CCICH",
-    name: "Inner Child Healing",
+    name: "Inner Child Healing & Therapy",
     type: "certificate",
+    price: CERT_PRICE,
+    lifecycleStatus: "published",
     description:
-      "A six-week live certificate guiding you through inner child healing: how childhood experiences shape adult beliefs and relationships, and practical, trauma-informed ways to nurture, validate and reconnect with the inner child.",
+      "An eight-week live certificate guiding you through inner child healing: how childhood experiences shape adult beliefs and relationships, and practical, trauma-informed ways to nurture, validate and reconnect with the inner child.",
     searchText:
-      "inner child healing trauma informed self compassion certificate live cohort January 2027",
+      "inner child healing therapy trauma informed self compassion certificate live cohort January 2027",
     imageUrls: ["/coastal/calm.jpg"],
     learningOutcomes: [
       {
@@ -220,12 +130,25 @@ const COURSES: CourseSeed[] = [
       "Taught by practising clinicians, not marketers.",
       "A certificate that states completion honestly.",
     ],
+    prerequisites:
+      "Open to psychology students, graduates and practising counsellors. No prior clinical practice required.",
+    batch: {
+      label: "January 2027 cohort",
+      startDate: "2027-01-28",
+      endDate: "2027-03-23",
+      startTime: "18:30",
+      endTime: "19:30",
+      daysOfWeek: ["Tuesday", "Thursday"],
+      capacity: COHORT_CAPACITY,
+    },
   },
   {
     match: "Personality Disorders",
     code: "CCPD",
     name: "Personality Disorders",
     type: "certificate",
+    price: CERT_PRICE,
+    lifecycleStatus: "published",
     description:
       "An eight-week live certificate introducing personality disorders — how they are classified, assessed and understood, and how to work with them ethically and effectively. Covers the clusters, formulation, risk, and CBT, DBT and schema-informed approaches, with a trauma-informed, non-stigmatising stance throughout.",
     searchText:
@@ -310,6 +233,87 @@ const COURSES: CourseSeed[] = [
       "Taught by practising clinicians, not marketers.",
       "A certificate that states completion honestly.",
     ],
+    prerequisites:
+      "Open to psychology students, graduates and practising counsellors. No prior clinical practice required.",
+    batch: {
+      label: "January 2027 cohort",
+      startDate: "2027-01-21",
+      endDate: "2027-03-16",
+      startTime: "20:30",
+      endTime: "21:30",
+      daysOfWeek: ["Tuesday", "Thursday"],
+      capacity: COHORT_CAPACITY,
+    },
+  },
+  {
+    match: "Counselling Psychology",
+    code: "INCPSY",
+    name: "Counselling Psychology",
+    type: "internship",
+    // Fee not confirmed — created as a draft so it is not sold at a guess.
+    price: 0,
+    lifecycleStatus: "draft",
+    description:
+      "A fourteen-class supervised counselling internship, offered by application. Move from learning counselling to practising counselling skills with structured supervision and feedback.",
+    searchText:
+      "counselling psychology internship supervised practice application cohort January 2027",
+    imageUrls: ["/coastal/shore.jpg"],
+    learningOutcomes: [
+      { icon: "heart-handshake", title: "Practise core counselling skills" },
+      { icon: "clipboard", title: "Structure and review a counselling session" },
+      { icon: "users", title: "Use supervision and peer feedback well" },
+      { icon: "shield", title: "Work ethically and within your scope" },
+    ],
+    modules: [
+      {
+        title: "Foundations of counselling practice",
+        description:
+          "Core skills, the therapeutic relationship, and working within your scope.",
+      },
+      {
+        title: "Structured sessions",
+        description:
+          "Opening, focusing, deepening and closing a session, with feedback.",
+      },
+      {
+        title: "Supervised practice",
+        description:
+          "Supervised and peer practice with structured feedback and review.",
+      },
+      {
+        title: "Ethics and referral",
+        description:
+          "Boundaries, consent, risk, supervision and when to refer on.",
+      },
+    ],
+    outcomes: [
+      "You can run a structured counselling session.",
+      "You can use supervision and feedback well.",
+      "You can reflect on your own practice.",
+      "You know your scope — and when to refer on.",
+    ],
+    painPoints: [
+      "It is hard to move from theory to actually practising counselling.",
+      "Supervised practice is scarce and unstructured.",
+      "You want honest feedback, not just attendance.",
+    ],
+    whyDifferent: [
+      "Supervised, cohort-based practice, not self-paced video.",
+      "Small groups with structured feedback.",
+      "Offered by application so supervision stays workable.",
+      "A certificate that states completion honestly.",
+    ],
+    prerequisites:
+      "Offered by application. Prior counselling or psychology study recommended, not required.",
+    batch: {
+      label: "January 2027 cohort",
+      startDate: "2027-01-18",
+      endDate: "2027-02-17",
+      startTime: "19:30",
+      endTime: "20:30",
+      daysOfWeek: ["Monday", "Wednesday", "Friday"],
+      capacity: COHORT_CAPACITY,
+    },
   },
 ];
 
@@ -340,15 +344,15 @@ export const createJanuaryCohort = internalMutation({
       batchId: Id<"courseBatches">;
       courseCreated: boolean;
       batchCreated: boolean;
+      lifecycleStatus: string;
     }[] = [];
 
     for (const seed of COURSES) {
       const existing = findCourse(courses, seed);
-      const januaryCourseFields = {
-        price: JANUARY_PRICE,
-        offer: JANUARY_OFFER,
+      const pricing = {
+        price: seed.price,
         usesBatches: true,
-        lifecycleStatus: "published" as const,
+        lifecycleStatus: seed.lifecycleStatus,
         updatedAt: now,
         updatedByAdminId: actor,
       };
@@ -356,11 +360,13 @@ export const createJanuaryCohort = internalMutation({
       let courseId: Id<"courses">;
       let courseCreated = false;
       if (existing) {
-        // Preserve the authored content; only the January pricing and
-        // offer are written.
         await ctx.db.patch(existing._id, {
-          ...januaryCourseFields,
-          publishedAt: existing.publishedAt ?? now,
+          name: seed.name,
+          ...pricing,
+          publishedAt:
+            seed.lifecycleStatus === "published"
+              ? (existing.publishedAt ?? now)
+              : existing.publishedAt,
         });
         courseId = existing._id;
       } else {
@@ -368,7 +374,7 @@ export const createJanuaryCohort = internalMutation({
           name: seed.name,
           code: seed.code,
           type: seed.type,
-          ...januaryCourseFields,
+          ...pricing,
           description: seed.description,
           content: seed.searchText,
           imageUrls: seed.imageUrls,
@@ -377,11 +383,12 @@ export const createJanuaryCohort = internalMutation({
           outcomes: seed.outcomes,
           painPoints: seed.painPoints,
           whyDifferent: seed.whyDifferent,
-          prerequisites:
-            "Open to psychology students, graduates and practising counsellors. No prior clinical practice required.",
+          prerequisites: seed.prerequisites,
           enrolledUsers: [],
           reviews: [],
-          publishedAt: now,
+          ...(seed.lifecycleStatus === "published"
+            ? { publishedAt: now }
+            : {}),
           createdByAdminId: actor,
         });
         courseCreated = true;
@@ -392,18 +399,18 @@ export const createJanuaryCohort = internalMutation({
         .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
         .collect();
       const existingBatch = batches.find(
-        (batch) => batch.label === JANUARY_BATCH.label,
+        (batch) => batch.label === seed.batch.label,
       );
       const batchFields = {
         courseId,
-        label: JANUARY_BATCH.label,
-        startDate: JANUARY_BATCH.startDate,
-        endDate: JANUARY_BATCH.endDate,
-        startTime: JANUARY_BATCH.startTime,
-        endTime: JANUARY_BATCH.endTime,
-        daysOfWeek: JANUARY_BATCH.daysOfWeek,
-        capacity: JANUARY_BATCH.capacity,
-        lifecycleStatus: "published" as const,
+        label: seed.batch.label,
+        startDate: seed.batch.startDate,
+        endDate: seed.batch.endDate,
+        startTime: seed.batch.startTime,
+        endTime: seed.batch.endTime,
+        daysOfWeek: seed.batch.daysOfWeek,
+        capacity: seed.batch.capacity,
+        lifecycleStatus: seed.lifecycleStatus,
         updatedAt: now,
         updatedByAdminId: actor,
       };
@@ -430,6 +437,7 @@ export const createJanuaryCohort = internalMutation({
         batchId,
         courseCreated,
         batchCreated,
+        lifecycleStatus: seed.lifecycleStatus,
       });
     }
 

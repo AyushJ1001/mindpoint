@@ -6,16 +6,16 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Internship Programs - The Mind Point",
+  title: "Internship Programs in Psychology - The Mind Point",
   description:
-    "Gain practical experience through our supervised internship programs in psychology and mental health. Apply theory to practice with hands-on training.",
+    "Structured psychology internships with real case exposure, clear milestones and a mentor invested in your progress. Turn what you know into what you can do.",
   keywords:
     "internship programs, psychology internships, mental health training, practical experience, supervised learning",
   openGraph: {
     images: [openGraphImage],
-    title: "Internship Programs - The Mind Point",
+    title: "Internship Programs in Psychology - The Mind Point",
     description:
-      "Gain practical experience through our supervised internship programs.",
+      "Real case exposure, clear milestones and a mentor invested in your progress.",
     type: "website",
   },
 };
