@@ -15,13 +15,6 @@ const proxyHandler = isClerkServerConfigured()
       }
 
       if (isProtectedRoute(req)) await auth.protect();
-      if (
-        req.nextUrl.pathname === "/lms" ||
-        (req.nextUrl.pathname.startsWith("/lms/") &&
-          !req.nextUrl.pathname.startsWith("/lms/preview"))
-      ) {
-        await auth.protect();
-      }
       if (isAdminRoute(req) && !isAdminDevBypassEnabled()) {
         await auth.protect();
       }
