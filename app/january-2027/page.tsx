@@ -14,12 +14,11 @@ export const revalidate = 1800;
 export const metadata = {
   title: "January 2027 certificate cohorts - The Mind Point",
   description:
-    "Three live certificate cohorts start in January 2027: CBT, REBT and CBMT; Inner Child Healing; and Personality Disorders. Small groups, early-bird pricing until 15 December.",
+    "Live certificate cohorts start in January 2027: CBT, REBT and CBMT; Inner Child Healing & Therapy; and Personality Disorders. Small groups, taught live.",
   alternates: { canonical: "/january-2027" },
 };
 
-const FULL_PRICE = 2999;
-const EARLY_BIRD_PRICE = 1999;
+const FULL_PRICE = 2499;
 
 const COHORTS = [
   {
@@ -74,9 +73,9 @@ async function getCourses(): Promise<PublicCourse[]> {
 }
 
 function formatStart(value?: string) {
-  if (!value) return "Starts 12 January 2027";
+  if (!value) return "Starts January 2027";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "Starts 12 January 2027";
+  if (Number.isNaN(date.getTime())) return "Starts January 2027";
   return `Starts ${new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "long",
@@ -137,10 +136,10 @@ export default async function JanuaryLandingPage() {
         eyebrow="January 2027"
         title={
           <>
-            Three live cohorts, <em className="italic">one clear start.</em>
+            Live cohorts, <em className="italic">one clear start.</em>
           </>
         }
-        lead="Small, live certificate cohorts for psychology students, graduates and practising counsellors. Registration opens 15 November — early bird ₹1,999 until 15 December."
+        lead="Small, live certificate cohorts for psychology students, graduates and practising counsellors, starting in January 2027."
         image="/coastal/hero.jpg"
         imageAlt="Turquoise water meeting pale sand, seen from above."
         caption="A coastline, seen from above."
@@ -150,14 +149,14 @@ export default async function JanuaryLandingPage() {
         <div className="container">
           <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
             <div>
-              <span className={eyebrowVariants()}>The three cohorts</span>
+              <span className={eyebrowVariants()}>The certificate cohorts</span>
               <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-5xl">
                 Choose your certificate.
               </h2>
             </div>
             <p className="text-muted-foreground max-w-sm">
-              All three start the week of 12 January 2027, Tuesdays and
-              Thursdays, 7:30–9:00 pm IST.
+              Each cohort starts in January 2027, Tuesdays and Thursdays. See
+              each programme for its exact start date and time.
             </p>
           </div>
 
@@ -195,8 +194,7 @@ export default async function JanuaryLandingPage() {
                         ₹{cohort.price.toLocaleString("en-IN")}
                       </div>
                       <div className="text-muted-foreground text-xs">
-                        Early bird ₹{EARLY_BIRD_PRICE.toLocaleString("en-IN")} ·
-                        register by 15 Dec
+                        Live 8 weeks
                       </div>
                     </div>
                     <Link
@@ -241,16 +239,16 @@ export default async function JanuaryLandingPage() {
               Registration
             </b>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-              Opens 15 November at the early-bird price of ₹1,999. From 15
-              December the price is ₹2,999. Registration closes 5 January 2027.
+              Certificate cohorts are ₹2,499 for the live eight weeks. A
+              self-paced introduction is ₹1,299, and you can upgrade to the live
+              cohort later for the ₹1,200 difference.
             </p>
           </div>
           <div className="border-border border-primary border-t-2 pt-5">
             <b className="font-display block text-xl font-medium">Schedule</b>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-              Live online, Tuesdays and Thursdays, 7:30–9:00 pm IST, starting
-              the week of 12 January 2027. Recordings stay available for your
-              access window.
+              Live online, Tuesdays and Thursdays in January 2027, times in
+              IST. Recordings stay available for your access window.
             </p>
           </div>
           <div className="border-border border-primary border-t-2 pt-5">
