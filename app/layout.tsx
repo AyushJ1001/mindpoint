@@ -46,7 +46,8 @@ export const metadata: Metadata = {
   title: "The Mind Point",
   description: "A platform for mental health education and support",
   icons: {
-    icon: "/logo.ico",
+    // /favicon.ico is generated from app/favicon.ico. Declaring /logo.ico here
+    // too gave browsers a second, cache-prone icon to choose from.
     apple: "/apple-icon.png",
   },
   metadataBase: new URL("https://www.themindpoint.org"),
