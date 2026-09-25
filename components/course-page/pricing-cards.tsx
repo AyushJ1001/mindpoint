@@ -11,13 +11,7 @@ function formatRupees(amount: number): string {
   }).format(amount);
 }
 
-function TierCard({
-  tier,
-  href,
-}: {
-  tier: PricingTier;
-  href: string;
-}) {
+function TierCard({ tier, href }: { tier: PricingTier; href: string }) {
   return (
     <article
       className={cn(

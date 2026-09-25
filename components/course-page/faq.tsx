@@ -18,7 +18,7 @@ export function FAQ({ items }: { items: FaqItem[] }) {
               {item.question}
               <span
                 aria-hidden="true"
-                className="text-foreground/40 group-open:rotate-45 mt-1 text-xl transition-transform"
+                className="text-foreground/40 mt-1 text-xl transition-transform group-open:rotate-45"
               >
                 +
               </span>

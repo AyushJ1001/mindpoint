@@ -25,13 +25,17 @@ export function FacultyCard({ member }: { member: FacultyMember }) {
             </p>
           )}
           {member.role ? (
-            <p className="text-muted-foreground mt-0.5 text-sm">{member.role}</p>
+            <p className="text-muted-foreground mt-0.5 text-sm">
+              {member.role}
+            </p>
           ) : null}
         </div>
       </div>
 
       {member.qualification ? (
-        <p className="text-foreground/70 mt-4 text-sm">{member.qualification}</p>
+        <p className="text-foreground/70 mt-4 text-sm">
+          {member.qualification}
+        </p>
       ) : null}
       {member.bio ? (
         <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
@@ -43,7 +47,9 @@ export function FacultyCard({ member }: { member: FacultyMember }) {
 }
 
 export function FacultySection({ faculty }: { faculty: FacultyMember[] }) {
-  const confirmed = faculty.filter((member) => member.name && member.name.trim());
+  const confirmed = faculty.filter(
+    (member) => member.name && member.name.trim(),
+  );
 
   return (
     <Section

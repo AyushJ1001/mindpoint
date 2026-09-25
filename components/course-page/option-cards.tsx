@@ -1,3 +1,4 @@
+import { AddToCartButton } from "@/components/course-page/add-to-cart-button";
 import { Section } from "@/components/course-page/section";
 import { cn } from "@/lib/utils";
 import type {
@@ -17,7 +18,9 @@ function OptionCard({ option }: { option: ProgrammeOption }) {
   const { cta } = option;
   const isEnroll = cta.state === "enroll" && Boolean(cta.href);
   const isWaitlist = cta.state === "waitlist";
-  const hasFacts = Boolean(option.price || option.schedule || option.availability);
+  const hasFacts = Boolean(
+    option.price || option.schedule || option.availability,
+  );
 
   return (
     <article
@@ -82,7 +85,20 @@ function OptionCard({ option }: { option: ProgrammeOption }) {
       ) : null}
 
       <div className="mt-auto pt-8">
-        {isEnroll ? (
+        {isEnroll && option.cart ? (
+          <AddToCartButton
+            target={option.cart}
+            label={
+              option.price
+                ? `Add to cart · ${formatPrice(
+                    option.price.amount,
+                    option.price.currency,
+                  )}`
+                : "Add to cart"
+            }
+            className="bg-primary text-primary-foreground inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-medium hover:opacity-90"
+          />
+        ) : isEnroll ? (
           <a
             href={cta.href}
             className="bg-primary text-primary-foreground inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-medium hover:opacity-90"
@@ -106,7 +122,7 @@ function OptionCard({ option }: { option: ProgrammeOption }) {
             </span>
             <a
               href="/join"
-              className="text-primary hover:underline mt-3 block text-center text-sm"
+              className="text-primary mt-3 block text-center text-sm hover:underline"
             >
               Register your interest →
             </a>
@@ -138,7 +154,8 @@ export function OptionCards({ options }: { options: ProgrammeOptions }) {
       <p className="text-muted-foreground mt-6 text-sm leading-relaxed">
         Price, dates, availability, access period and certificate requirements
         are shown from the current enrolment option and cohort details, and at
-        checkout. If a detail is not yet configured, its label is not shown here.
+        checkout. If a detail is not yet configured, its label is not shown
+        here.
       </p>
     </Section>
   );

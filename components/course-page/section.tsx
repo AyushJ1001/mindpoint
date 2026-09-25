@@ -79,7 +79,12 @@ export function Section({
 }
 
 export function Rule({ className }: { className?: string }) {
-  return <span aria-hidden="true" className={cn("water-rule block w-full", className)} />;
+  return (
+    <span
+      aria-hidden="true"
+      className={cn("water-rule block w-full", className)}
+    />
+  );
 }
 
 /** A calm two-line wave, coloured for the TMP water system. */

@@ -8,6 +8,7 @@ import { FacultySection } from "@/components/course-page/faculty-card";
 import { FinalCTA } from "@/components/course-page/final-cta";
 import { LearningJourney } from "@/components/course-page/learning-journey";
 import { OptionCards } from "@/components/course-page/option-cards";
+import { UpgradePanel } from "@/components/course-page/upgrade-panel";
 import { OutcomeGrid } from "@/components/course-page/outcome-grid";
 import { PartComparison } from "@/components/course-page/part-comparison";
 import { PricingCards } from "@/components/course-page/pricing-cards";
@@ -64,6 +65,7 @@ export function CoursePage({ course }: { course: CourseContent }) {
         ) : null}
         <Wave />
         {course.options ? <OptionCards options={course.options} /> : null}
+        {course.upgrade ? <UpgradePanel upgrade={course.upgrade} /> : null}
         {course.assessment ? (
           <AssessmentSection assessment={course.assessment} />
         ) : null}

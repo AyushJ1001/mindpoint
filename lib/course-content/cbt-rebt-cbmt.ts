@@ -366,6 +366,15 @@ export const cbtRebtCbmt: CourseContent = {
     ],
   },
 
+  upgrade: {
+    eyebrow: "Already started self-paced?",
+    title: "Move into the live cohort without paying twice",
+    body: "If you have bought the self-paced introduction, you can join the live applied course at any time. Your self-paced fee is credited, so you pay only the difference.",
+    ctaLabel: "Upgrade to the live cohort",
+    fromKey: "introductory",
+    toKey: "applied",
+  },
+
   closing: {
     heading:
       "Build a foundation you can explain. Practise decisions you can revise.",

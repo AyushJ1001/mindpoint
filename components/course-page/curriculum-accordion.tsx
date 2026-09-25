@@ -39,7 +39,7 @@ export function CurriculumAccordion({
               </span>
               <span
                 aria-hidden="true"
-                className="text-foreground/40 group-open:rotate-45 mt-1 text-lg transition-transform"
+                className="text-foreground/40 mt-1 text-lg transition-transform group-open:rotate-45"
               >
                 +
               </span>

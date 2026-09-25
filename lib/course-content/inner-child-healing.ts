@@ -348,6 +348,15 @@ export const innerChildHealing: CourseContent = {
     ],
   },
 
+  upgrade: {
+    eyebrow: "Already started self-paced?",
+    title: "Move into the live cohort without paying twice",
+    body: "If you have bought the self-paced introduction, you can join the live applied course at any time. Your self-paced fee is credited, so you pay only the difference.",
+    ctaLabel: "Upgrade to the live cohort",
+    fromKey: "introductory",
+    toKey: "applied",
+  },
+
   closing: {
     heading: "Understand what you carry. Learn a kinder, safer response.",
     body: "The Mind Point brings a grounded introduction and live applied learning into one route. Start at your own pace, then join the live work when you are ready to practise with fictional cases and think carefully about pace, safety and scope.",

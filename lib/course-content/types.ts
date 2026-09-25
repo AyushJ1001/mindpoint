@@ -175,6 +175,27 @@ export interface ProgrammeAssessment {
 
 export type OptionState = "enroll" | "waitlist" | "unavailable";
 
+/** Bound catalogue facts needed to put an option in the cart. */
+export interface ProgrammeCartTarget {
+  _id: string;
+  name: string;
+  description?: string;
+  price: number;
+  originalPrice?: number;
+  imageUrls?: string[];
+  courseType?: string;
+  batch?: {
+    id?: string;
+    label?: string;
+    startDate?: string;
+    endDate?: string;
+    startTime?: string;
+    endTime?: string;
+    daysOfWeek?: string[];
+    capacity?: number;
+  };
+}
+
 export interface ProgrammeOption {
   key: string;
   name: string;
@@ -190,12 +211,36 @@ export interface ProgrammeOption {
   availability?: string;
   /** Optional upgrade path copy, shown on the card. */
   upgradeNote?: string;
+  /** Bound cart payload + checkout link for a one-click add to cart. */
+  cart?: ProgrammeCartTarget & { checkoutHref?: string };
 }
 
 export interface ProgrammeOptions {
   eyebrow?: string;
   title?: string;
   items: ProgrammeOption[];
+}
+
+/**
+ * The self-paced → live upgrade route, rendered directly beneath the option
+ * cards. Operational facts (difference, coupon, target course) are bound from
+ * the catalogue; copy is authored per programme.
+ */
+export interface ProgrammeUpgrade {
+  eyebrow?: string;
+  title: string;
+  body: string;
+  ctaLabel: string;
+  /** Option key the learner starts from. */
+  fromKey: string;
+  /** Option key the learner upgrades to. */
+  toKey: string;
+  /** Bound: price difference in INR. */
+  difference?: number;
+  /** Bound: coupon code that credits the self-paced fee. */
+  couponCode?: string;
+  /** Bound: the live course to add to the cart. */
+  target?: ProgrammeCartTarget;
 }
 
 export interface ProgrammeClosing {
@@ -260,6 +305,7 @@ export interface CourseContent {
   materials?: ProgrammeMaterials;
   assessment?: ProgrammeAssessment;
   options?: ProgrammeOptions;
+  upgrade?: ProgrammeUpgrade;
   closing?: ProgrammeClosing;
 }
 

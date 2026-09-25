@@ -348,6 +348,15 @@ export const personalityDisorders: CourseContent = {
     ],
   },
 
+  upgrade: {
+    eyebrow: "Already started self-paced?",
+    title: "Move into the live cohort without paying twice",
+    body: "If you have bought the self-paced introduction, you can join the live applied course at any time. Your self-paced fee is credited, so you pay only the difference.",
+    ctaLabel: "Upgrade to the live cohort",
+    fromKey: "introductory",
+    toKey: "applied",
+  },
+
   closing: {
     heading: "Understand the patterns. Keep the person in view.",
     body: "The Mind Point brings a careful introduction and live applied learning into one route. Start at your own pace, then join the live work when you are ready to formulate, discuss and think carefully about the person behind the diagnosis.",

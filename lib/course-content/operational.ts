@@ -88,6 +88,85 @@ function priceFor(course: PublicCourse): ProgrammeOption["price"] | undefined {
   return { amount: course.price, currency: "INR" };
 }
 
+function cartTarget(
+  course: PublicCourse,
+  checkoutHref?: string,
+): ProgrammeOption["cart"] {
+  const batch = (course as { nextAvailableBatch?: Batch }).nextAvailableBatch;
+  return {
+    _id: course._id,
+    name: course.name,
+    description: course.description,
+    price: course.price,
+    originalPrice: course.price,
+    imageUrls: course.imageUrls,
+    courseType: course.type,
+    checkoutHref,
+    batch: batch
+      ? {
+          id: batch._id,
+          label: batch.label,
+          startDate: batch.startDate,
+          endDate: batch.endDate,
+          startTime: batch.startTime,
+          endTime: batch.endTime,
+          daysOfWeek: batch.daysOfWeek,
+          capacity: batch.capacity,
+        }
+      : undefined,
+  };
+}
+
+type Batch = {
+  _id?: string;
+  label?: string;
+  startDate?: string;
+  endDate?: string;
+  startTime?: string;
+  endTime?: string;
+  daysOfWeek?: string[];
+  capacity?: number;
+};
+
+/**
+ * Bind the self-paced → live upgrade block: the price difference, the upgrade
+ * coupon that credits the self-paced fee, and the live course to add.
+ */
+function bindUpgrade(
+  course: CourseContent,
+  catalogue: PublicCourse[],
+): CourseContent {
+  const upgrade = course.upgrade;
+  if (!upgrade || upgrade.target || !course.options) return course;
+
+  const from = course.options.items.find(
+    (item) => item.key === upgrade.fromKey,
+  );
+  const to = course.options.items.find((item) => item.key === upgrade.toKey);
+  const fromCourse = from?.catalogueCode
+    ? catalogue.find((item) => item.code === from.catalogueCode)
+    : undefined;
+  const toCourse = to?.catalogueCode
+    ? catalogue.find((item) => item.code === to.catalogueCode)
+    : undefined;
+  if (!to || !toCourse) return course;
+
+  const difference =
+    fromCourse && typeof fromCourse.price === "number"
+      ? Math.max(0, toCourse.price - fromCourse.price)
+      : undefined;
+
+  return {
+    ...course,
+    upgrade: {
+      ...upgrade,
+      difference,
+      couponCode: to.catalogueCode ? `UPGRADE-${to.catalogueCode}` : undefined,
+      target: cartTarget(toCourse),
+    },
+  };
+}
+
 /**
  * Binds real operational facts (price, schedule, checkout link, state) from the
  * programme catalogue onto the brief's option cards. Any fact that is not
@@ -108,6 +187,12 @@ export function attachOperationalData(
       ...option,
       price: priceFor(match),
       schedule: scheduleFor(match),
+      cart: cartTarget(
+        match,
+        `/courses/${match._id}${
+          programmeSlugForCode(match.code) ? "?checkout=1" : ""
+        }`,
+      ),
       cta: {
         ...option.cta,
         // Applied flagship courses redirect to their programme page when
@@ -120,5 +205,9 @@ export function attachOperationalData(
     };
   });
 
-  return { ...course, options: { ...course.options, items } };
+  const withOptions: CourseContent = {
+    ...course,
+    options: { ...course.options, items },
+  };
+  return bindUpgrade(withOptions, catalogue);
 }

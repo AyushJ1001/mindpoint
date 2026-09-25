@@ -110,7 +110,6 @@ export function CourseHero({ course }: { course: CourseContent }) {
             </dl>
           </div>
         ) : null}
-
       </div>
     </section>
   );

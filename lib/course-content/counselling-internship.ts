@@ -328,6 +328,15 @@ export const counsellingInternship: CourseContent = {
     ],
   },
 
+  upgrade: {
+    eyebrow: "Started with the primer?",
+    title: "Move into the supervised internship without paying twice",
+    body: "If you have bought the self-paced primer, you can join the supervised cohort at any time. Your primer fee is credited, so you pay only the difference.",
+    ctaLabel: "Upgrade to the internship",
+    fromKey: "self-paced",
+    toKey: "applied",
+  },
+
   closing: {
     heading: "Understand the field, then practise with supervision.",
     body: "The Mind Point offers a self-paced primer and a supervised cohort. Start where you are, and move into supervised practice when you are ready to present your work, take feedback and revise your approach.",

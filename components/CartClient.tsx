@@ -15,6 +15,7 @@ import {
 } from "@/lib/services/payments";
 import { buildCartReconciliationApplication } from "@/lib/services/cart-reconciliation";
 import { useCart } from "react-use-cart";
+import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Image from "next/image";
 import { useState, useEffect, useCallback } from "react";
@@ -52,7 +53,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { UploadDropzone } from "@/lib/uploadthing";
 import Link from "next/link";
-import { Check, CheckCircle2, Clock, Copy, ShieldCheck, Smartphone, X } from "lucide-react";
+import {
+  Check,
+  CheckCircle2,
+  Clock,
+  Copy,
+  ShieldCheck,
+  Smartphone,
+  X,
+} from "lucide-react";
 import { useNow } from "@/hooks/use-now";
 import { useMemo } from "react";
 import { CheckoutConfirmation } from "@/components/checkout/CheckoutConfirmation";
@@ -247,7 +256,11 @@ const CartContent = () => {
   const [lastReconciliationSignature, setLastReconciliationSignature] =
     useState<string | null>(null);
   const [reconciliationRequestedAt, setReconciliationRequestedAt] = useState(0);
-  const [couponCode, setCouponCode] = useState("");
+  const searchParams = useSearchParams();
+  // Pre-fill an upgrade coupon passed from a programme's upgrade block.
+  const [couponCode, setCouponCode] = useState(
+    searchParams.get("coupon")?.trim().toUpperCase() ?? "",
+  );
   const [appliedCoupon, setAppliedCoupon] =
     useState<AppliedCheckoutCoupon | null>(null);
   const [checkoutConfirmation, setCheckoutConfirmation] =
@@ -1285,15 +1298,15 @@ const CartContent = () => {
                         </p>
                         {itemHasBundle && pricingItem?.bundleCampaignName ? (
                           <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-                            <span className="inline-flex items-center gap-1 rounded bg-primary/15 px-2 py-1 text-[11px] font-semibold text-primary">
+                            <span className="bg-primary/15 text-primary inline-flex items-center gap-1 rounded px-2 py-1 text-[11px] font-semibold">
                               <Layers className="h-3 w-3" />
                               Bundle Applied
                             </span>
-                            <span className="font-medium text-primary">
+                            <span className="text-primary font-medium">
                               {pricingItem.bundleCampaignName}
                             </span>
                             {pricingItem.redemptionDiscountAmount > 0 && (
-                              <span className="font-medium text-primary">
+                              <span className="text-primary font-medium">
                                 (save{" "}
                                 {showRupees(
                                   pricingItem.redemptionDiscountAmount,
@@ -1459,7 +1472,7 @@ const CartContent = () => {
             </CardHeader>
             <CardContent className="space-y-4">
               {appliedBundle ? (
-                <div className="space-y-2 rounded-md border border-primary/30 bg-primary/10 px-3 py-3 text-sm text-primary">
+                <div className="border-primary/30 bg-primary/10 text-primary space-y-2 rounded-md border px-3 py-3 text-sm">
                   <div className="flex items-center gap-2 font-semibold">
                     <Layers className="h-4 w-4" />
                     <span>{appliedBundle.campaignName}</span>
@@ -1472,7 +1485,7 @@ const CartContent = () => {
                     covered for {showRupees(appliedBundle.flatFee)}.
                   </p>
                   {/* List covered courses with per-item savings */}
-                  <div className="space-y-1 border-t border-primary/30 pt-2">
+                  <div className="border-primary/30 space-y-1 border-t pt-2">
                     {appliedBundle.allocations.map((alloc) => {
                       const cartItem = items.find(
                         (i) => String(i.id) === String(alloc.courseId),
@@ -1482,12 +1495,12 @@ const CartContent = () => {
                           key={alloc.courseId}
                           className="flex items-start gap-2 text-xs"
                         >
-                          <Check className="mt-0.5 h-3 w-3 shrink-0 text-primary" />
+                          <Check className="text-primary mt-0.5 h-3 w-3 shrink-0" />
                           <span className="min-w-0 flex-1 truncate">
                             {cartItem?.name ?? "Course"}
                           </span>
                           {alloc.savings > 0 && (
-                            <span className="shrink-0 font-medium text-primary">
+                            <span className="text-primary shrink-0 font-medium">
                               -{showRupees(alloc.savings)}
                             </span>
                           )}
@@ -1495,7 +1508,7 @@ const CartContent = () => {
                       );
                     })}
                   </div>
-                  <p className="text-xs text-primary">
+                  <p className="text-primary text-xs">
                     Existing discounts, BOGO, and coupon reductions do not apply
                     to the covered courses.
                   </p>
@@ -1552,7 +1565,7 @@ const CartContent = () => {
                 <span>{showRupees(listedCartTotal)}</span>
               </div>
               {appliedBundle ? (
-                <div className="flex justify-between text-primary">
+                <div className="text-primary flex justify-between">
                   <span>Bundle savings</span>
                   <span>-{showRupees(appliedBundle.coveredSavings)}</span>
                 </div>
@@ -1830,8 +1843,11 @@ const CartContent = () => {
               </ol>
 
               <div className="bg-muted/50 text-muted-foreground rounded-md border px-4 py-3 text-xs">
-                Reference: <span className="font-medium">{qrPaymentSession?.id ?? "—"}</span>. Keep
-                this handy if you contact us.
+                Reference:{" "}
+                <span className="font-medium">
+                  {qrPaymentSession?.id ?? "—"}
+                </span>
+                . Keep this handy if you contact us.
               </div>
 
               <DialogFooter className="gap-2 sm:gap-0">
@@ -1898,11 +1914,7 @@ const CartContent = () => {
                   </div>
                 )}
 
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full"
-                >
+                <Button asChild variant="outline" className="w-full">
                   <a
                     href={`upi://pay?pa=${encodeURIComponent(PAYMENT_UPI_ID)}&pn=${encodeURIComponent(PAYMENT_PAYEE_NAME)}&am=${(qrPaymentSession?.amount ?? discountedTotal).toFixed(2)}&cu=INR&tn=${encodeURIComponent("The Mind Point course")}`}
                   >

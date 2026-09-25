@@ -20,7 +20,9 @@ function ExerciseCard({ exercise }: { exercise: CaseRoomExercise }) {
   return (
     <div className="water-glass rounded-2xl p-6 sm:p-8">
       <div className="flex items-center justify-between gap-3">
-        <h3 className="font-display text-xl text-[#f1ece0]">{exercise.title}</h3>
+        <h3 className="font-display text-xl text-[#f1ece0]">
+          {exercise.title}
+        </h3>
         {exercise.sample ? (
           <span className="rounded-full border border-[#bcd6dd]/35 px-3 py-1 text-[0.62rem] font-semibold tracking-[0.18em] text-[#8ad6ca] uppercase">
             Illustrative sample
@@ -133,7 +135,6 @@ export function CaseRoomPreview({
             <ContentPlaceholder label="Case Room exercises for this programme have not been supplied yet. Add them in the admin so students can preview one here." />
           )}
         </div>
-
       </div>
     </section>
   );

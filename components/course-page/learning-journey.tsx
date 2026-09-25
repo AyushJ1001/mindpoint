@@ -31,7 +31,9 @@ function Stage({
 }
 
 export function LearningJourney() {
-  const foundations = learningModel.filter((stage) => stage.part === "foundations");
+  const foundations = learningModel.filter(
+    (stage) => stage.part === "foundations",
+  );
   const applied = learningModel.filter((stage) => stage.part === "applied");
 
   return (
@@ -90,7 +92,6 @@ export function LearningJourney() {
               className="object-cover"
             />
           </div>
-
         </figure>
       </div>
     </Section>

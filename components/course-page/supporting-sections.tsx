@@ -53,7 +53,7 @@ export function AudienceSection({ course }: { course: CourseContent }) {
           {course.audience.map((item) => (
             <li
               key={item}
-              className="border-foreground/10 bg-card rounded-xl border p-4 text-sm leading-relaxed text-foreground/85"
+              className="border-foreground/10 bg-card text-foreground/85 rounded-xl border p-4 text-sm leading-relaxed"
             >
               {item}
             </li>
