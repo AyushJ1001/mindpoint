@@ -42,6 +42,7 @@ import type * as bootstrapBatchVisibility from "../bootstrapBatchVisibility.js";
 import type * as bootstrapCbtProgramme from "../bootstrapCbtProgramme.js";
 import type * as bootstrapCbtRebtCbmt from "../bootstrapCbtRebtCbmt.js";
 import type * as bootstrapJanuaryCohort from "../bootstrapJanuaryCohort.js";
+import type * as bootstrapLmsCurricula from "../bootstrapLmsCurricula.js";
 import type * as bootstrapStorefrontPricing from "../bootstrapStorefrontPricing.js";
 import type * as bootstrapUpgradeCoupons from "../bootstrapUpgradeCoupons.js";
 import type * as bundleCampaigns from "../bundleCampaigns.js";
@@ -107,6 +108,7 @@ declare const fullApi: ApiFromModules<{
   bootstrapCbtProgramme: typeof bootstrapCbtProgramme;
   bootstrapCbtRebtCbmt: typeof bootstrapCbtRebtCbmt;
   bootstrapJanuaryCohort: typeof bootstrapJanuaryCohort;
+  bootstrapLmsCurricula: typeof bootstrapLmsCurricula;
   bootstrapStorefrontPricing: typeof bootstrapStorefrontPricing;
   bootstrapUpgradeCoupons: typeof bootstrapUpgradeCoupons;
   bundleCampaigns: typeof bundleCampaigns;
