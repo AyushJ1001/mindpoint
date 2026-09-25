@@ -8,7 +8,7 @@ import { FacultySection } from "@/components/course-page/faculty-card";
 import { FinalCTA } from "@/components/course-page/final-cta";
 import { LearningJourney } from "@/components/course-page/learning-journey";
 import { OptionCards } from "@/components/course-page/option-cards";
-import { UpgradePanel } from "@/components/course-page/upgrade-panel";
+import { UpgradePanelLazy } from "@/components/course-page/upgrade-panel-lazy";
 import { OutcomeGrid } from "@/components/course-page/outcome-grid";
 import { PartComparison } from "@/components/course-page/part-comparison";
 import { PricingCards } from "@/components/course-page/pricing-cards";
@@ -65,7 +65,16 @@ export function CoursePage({ course }: { course: CourseContent }) {
         ) : null}
         <Wave />
         {course.options ? <OptionCards options={course.options} /> : null}
-        {course.upgrade ? <UpgradePanel upgrade={course.upgrade} /> : null}
+        {course.upgrade ? (
+          <UpgradePanelLazy
+            upgrade={course.upgrade}
+            fromCourseId={
+              course.options?.items.find(
+                (item) => item.key === course.upgrade?.fromKey,
+              )?.cart?._id
+            }
+          />
+        ) : null}
         {course.assessment ? (
           <AssessmentSection assessment={course.assessment} />
         ) : null}
