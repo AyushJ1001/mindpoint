@@ -43,6 +43,9 @@ export function UpgradePanel({
       (enrollment) => String(enrollment.courseId) === fromCourseId,
     );
 
+  const settings = useQuery(api.siteSettings.getPublic);
+  if (settings?.registrationsOpen === false) return null;
+
   if (!ownsSelfPaced) return null;
 
   const { target, difference, couponCode } = upgrade;

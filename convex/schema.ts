@@ -346,11 +346,7 @@ const publicEnrollmentFields = {
   statusReason: v.optional(v.string()),
   // Manual payment verification (screenshot/UPI checkouts). Absent = verified.
   paymentVerification: v.optional(
-    v.union(
-      v.literal("pending"),
-      v.literal("approved"),
-      v.literal("rejected"),
-    ),
+    v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
   ),
   paymentVerificationNote: v.optional(v.string()),
   cancelledAt: v.optional(v.number()),
@@ -943,4 +939,13 @@ export default defineSchema({
     updatedByEmail: v.optional(v.string()),
   }).index("by_key", ["key"]),
 
+  // Storefront-wide switches (single row, key "default"). An absent row, or
+  // registrationsOpen: true, means registration is open.
+  siteSettings: defineTable({
+    key: v.string(),
+    registrationsOpen: v.boolean(),
+    note: v.optional(v.string()),
+    updatedAt: v.number(),
+    updatedByAdminId: v.string(),
+  }).index("by_key", ["key"]),
 });

@@ -65,6 +65,7 @@ import type * as mindPoints from "../mindPoints.js";
 import type * as myFunctions from "../myFunctions.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as siteContent from "../siteContent.js";
+import type * as siteSettings from "../siteSettings.js";
 import type * as viewer from "../viewer.js";
 
 import type {
@@ -131,6 +132,7 @@ declare const fullApi: ApiFromModules<{
   myFunctions: typeof myFunctions;
   rateLimit: typeof rateLimit;
   siteContent: typeof siteContent;
+  siteSettings: typeof siteSettings;
   viewer: typeof viewer;
 }>;
 

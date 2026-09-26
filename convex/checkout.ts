@@ -2,6 +2,7 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
+import { registrationIsOpen } from "./siteSettings";
 import {
   buildCheckoutAttemptPayload,
   reconcileCheckoutIntent,
@@ -407,6 +408,14 @@ export const createCheckoutAttemptFromServer = mutation({
     const unauthorized = validateCheckoutServerSecret(args.serverSecret);
     if (unauthorized) {
       return unauthorized;
+    }
+
+    if (!(await registrationIsOpen(ctx))) {
+      return convexFailure({
+        code: convexResultErrorCode.FORBIDDEN,
+        message:
+          "Registration is paused at the moment. Please check back soon.",
+      });
     }
 
     return await createCheckoutAttemptForBuyer(ctx, {

@@ -54,6 +54,7 @@ import {
 } from "./_shared/result";
 import { PublicCourseDocumentValue, PublicEnrollmentFields } from "./schema";
 import { pickPublicCourse } from "./_publicCourse";
+import { registrationIsOpen } from "./siteSettings";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -1555,6 +1556,12 @@ export const handleCartCheckout = mutation({
   },
 
   handler: async (ctx, args) => {
+    if (!(await registrationIsOpen(ctx))) {
+      return enrollmentMutationFailure(
+        "Registration is paused at the moment. Please check back soon.",
+      );
+    }
+
     const lineItems: EnrollmentLineItem[] =
       args.lineItems && args.lineItems.length > 0
         ? args.lineItems

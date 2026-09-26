@@ -1,8 +1,10 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useQuery } from "convex/react";
 import { useCart } from "react-use-cart";
 
+import { api } from "@/lib/backend/api";
 import type { Id } from "@/lib/backend/data-model";
 import type { ProgrammeCartTarget } from "@/lib/course-content/types";
 
@@ -24,6 +26,16 @@ export function AddToCartButton({
 }) {
   const { addItem, removeItem, inCart } = useCart();
   const router = useRouter();
+  const settings = useQuery(api.siteSettings.getPublic);
+
+  // Registration paused: point people at the pre-registration form instead.
+  if (settings?.registrationsOpen === false) {
+    return (
+      <a href="#waitlist" className={className}>
+        Join the waitlist
+      </a>
+    );
+  }
 
   return (
     <button

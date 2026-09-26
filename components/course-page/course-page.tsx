@@ -9,6 +9,7 @@ import { FinalCTA } from "@/components/course-page/final-cta";
 import { LearningJourney } from "@/components/course-page/learning-journey";
 import { OptionCards } from "@/components/course-page/option-cards";
 import { UpgradePanelLazy } from "@/components/course-page/upgrade-panel-lazy";
+import { WaitlistSection } from "@/components/course-page/waitlist-section";
 import { OutcomeGrid } from "@/components/course-page/outcome-grid";
 import { PartComparison } from "@/components/course-page/part-comparison";
 import { PricingCards } from "@/components/course-page/pricing-cards";
@@ -75,6 +76,7 @@ export function CoursePage({ course }: { course: CourseContent }) {
             }
           />
         ) : null}
+        <WaitlistSection courseTitle={course.title} slug={course.slug} />
         {course.assessment ? (
           <AssessmentSection assessment={course.assessment} />
         ) : null}
