@@ -13,6 +13,20 @@ export const CourseType = v.union(
   v.literal("worksheet"),
 );
 
+// Early-bird waitlist scope and delivery. Kept in step with
+// `convex/_shared/waitlist.ts`.
+export const WaitlistCourseTypeValue = v.union(
+  v.literal("certificate"),
+  v.literal("internship"),
+  v.literal("pre-recorded"),
+  v.literal("therapy"),
+);
+
+export const WaitlistDeliveryValue = v.union(
+  v.literal("live"),
+  v.literal("self_paced"),
+);
+
 export const CourseLifecycleStatus = v.union(
   v.literal("draft"),
   v.literal("published"),
@@ -476,6 +490,33 @@ export default defineSchema({
     .index("by_email", ["email"])
     .index("by_source", ["source"])
     .index("by_createdAt", ["createdAt"]),
+
+  // Early-bird pre-registration captured while registration is paused. One row
+  // per Course, Cohort (batch, optional) and Delivery (live or self-paced), so
+  // the owner can contact entrants per offering when registration opens.
+  waitlistEntries: defineTable({
+    fullName: v.string(),
+    email: v.string(),
+    whatsapp: v.string(),
+    courseId: v.optional(v.id("courses")),
+    courseTitle: v.string(),
+    courseType: WaitlistCourseTypeValue,
+    batchId: v.optional(v.id("courseBatches")),
+    cohortLabel: v.optional(v.string()),
+    delivery: WaitlistDeliveryValue,
+    source: v.string(),
+    marketingConsent: v.boolean(),
+    consentPurpose: v.optional(v.string()),
+    consentTextVersion: v.optional(v.string()),
+    consentAt: v.optional(v.number()),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_email", ["email"])
+    .index("by_createdAt", ["createdAt"])
+    .index("by_courseId", ["courseId"])
+    .index("by_courseType", ["courseType"])
+    .index("by_delivery", ["delivery"]),
 
   // User profiles for storing additional user data (e.g., WhatsApp number)
   userProfiles: defineTable({

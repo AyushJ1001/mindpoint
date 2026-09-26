@@ -24,6 +24,7 @@ import type * as _shared_lmsFeedback from "../_shared/lmsFeedback.js";
 import type * as _shared_lmsQuiz from "../_shared/lmsQuiz.js";
 import type * as _shared_mindPoints from "../_shared/mindPoints.js";
 import type * as _shared_result from "../_shared/result.js";
+import type * as _shared_waitlist from "../_shared/waitlist.js";
 import type * as adminAudit from "../adminAudit.js";
 import type * as adminAuth from "../adminAuth.js";
 import type * as adminBundles from "../adminBundles.js";
@@ -38,6 +39,7 @@ import type * as adminOffers from "../adminOffers.js";
 import type * as adminReviews from "../adminReviews.js";
 import type * as adminUsers from "../adminUsers.js";
 import type * as adminUtils from "../adminUtils.js";
+import type * as adminWaitlist from "../adminWaitlist.js";
 import type * as bootstrapBatchVisibility from "../bootstrapBatchVisibility.js";
 import type * as bootstrapCbtProgramme from "../bootstrapCbtProgramme.js";
 import type * as bootstrapCbtRebtCbmt from "../bootstrapCbtRebtCbmt.js";
@@ -91,6 +93,7 @@ declare const fullApi: ApiFromModules<{
   "_shared/lmsQuiz": typeof _shared_lmsQuiz;
   "_shared/mindPoints": typeof _shared_mindPoints;
   "_shared/result": typeof _shared_result;
+  "_shared/waitlist": typeof _shared_waitlist;
   adminAudit: typeof adminAudit;
   adminAuth: typeof adminAuth;
   adminBundles: typeof adminBundles;
@@ -105,6 +108,7 @@ declare const fullApi: ApiFromModules<{
   adminReviews: typeof adminReviews;
   adminUsers: typeof adminUsers;
   adminUtils: typeof adminUtils;
+  adminWaitlist: typeof adminWaitlist;
   bootstrapBatchVisibility: typeof bootstrapBatchVisibility;
   bootstrapCbtProgramme: typeof bootstrapCbtProgramme;
   bootstrapCbtRebtCbmt: typeof bootstrapCbtRebtCbmt;
@@ -134,6 +138,7 @@ declare const fullApi: ApiFromModules<{
   siteContent: typeof siteContent;
   siteSettings: typeof siteSettings;
   viewer: typeof viewer;
+  waitlist: typeof waitlist;
 }>;
 
 /**

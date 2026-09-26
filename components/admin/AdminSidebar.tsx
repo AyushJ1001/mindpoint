@@ -34,6 +34,7 @@ import {
   ShieldCheck,
   MessageSquareQuote,
   Mails,
+  ListChecks,
 } from "lucide-react";
 
 const items = [
@@ -45,6 +46,7 @@ const items = [
   { href: "/admin/coupons", label: "Coupons", icon: BadgePercent },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquareQuote },
   { href: "/admin/leads", label: "Leads", icon: Mails },
+  { href: "/admin/waitlist", label: "Waitlist", icon: ListChecks },
   { href: "/admin/enrollments", label: "Enrollments", icon: GraduationCap },
   {
     href: "/admin/enrollments/approvals",

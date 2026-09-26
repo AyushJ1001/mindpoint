@@ -34,6 +34,12 @@ import FAQSection from "@/components/course/faq-section";
 import CourseFooterNote from "@/components/course/course-footer-note";
 import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
+import { WaitlistSection } from "@/components/course-page/waitlist-section";
+import {
+  isWaitlistCourseType,
+  waitlistDeliveriesForType,
+  type WaitlistCourseType,
+} from "convex/_shared/waitlist";
 import { BogoSelectionModal } from "@/components/bogo-selection-modal";
 import {
   getOfferDetails,
@@ -71,6 +77,7 @@ export default function CourseClient({
   );
   const [mounted, setMounted] = useState(false);
   const usesBatches = Boolean(course.usesBatches);
+  const settings = useQuery(api.siteSettings.getPublic);
 
   useEffect(() => {
     setActiveCourse(course);
@@ -411,6 +418,21 @@ export default function CourseClient({
       .join(" \u00b7 "),
   }));
 
+  const waitlistType: WaitlistCourseType | null = isWaitlistCourseType(
+    displayCourse.type,
+  )
+    ? displayCourse.type
+    : null;
+  const registrationPaused = settings?.registrationsOpen === false;
+  const showWaitlist = registrationPaused && waitlistType !== null;
+  const waitlistBatches = batchOptions
+    .filter((batch) => batch.isSelectable)
+    .map((batch) => ({
+      _id: batch._id,
+      label: batch.label,
+      startDate: batch.startDate,
+    }));
+
   return (
     <div className="relative">
       <CourseAnnouncementBar course={displayCourse} />
@@ -429,34 +451,47 @@ export default function CourseClient({
 
       <CourseModules course={displayCourse} />
 
-      <div id="ways" className="scroll-mt-24">
-        <PricingSection
-          course={course}
-          activeCourse={displayCourse}
-          variants={variants}
-          isOutOfStock={isOutOfStock}
-          seatsLeft={seatsLeft}
-          hasValidOffer={hasValidOffer}
-          offerDetails={offerDetails}
-          shouldShowVariantSelect={shouldShowVariantSelect}
-          normalizedVariants={normalizedVariants}
-          variantLabel={variantLabel}
-          handleVariantSelect={handleVariantSelect}
-          handleIncreaseQuantity={handleIncreaseQuantity}
-          handleDecreaseQuantity={handleDecreaseQuantity}
-          handleBuyNow={handleBuyNow}
-          getCurrentQuantity={getCurrentQuantity}
-          inCart={(id) =>
-            mounted ? inCart(usesBatches ? cartLineId : id) : false
-          }
-          removeItem={removeCurrentCartLine}
-          mounted={mounted}
-          usesBatches={usesBatches}
-          batchOptions={batchOptions}
-          activeBatchId={activeBatch?._id ?? null}
-          onBatchSelect={usesBatches ? handleBatchSelect : undefined}
-        />
-      </div>
+      {showWaitlist && waitlistType ? (
+        <div id="ways" className="scroll-mt-24">
+          <WaitlistSection
+            courseTitle={displayCourse.name}
+            courseType={waitlistType}
+            courseId={course._id}
+            batches={waitlistBatches}
+            deliveries={waitlistDeliveriesForType(waitlistType)}
+            source={`course:${course.code}`}
+          />
+        </div>
+      ) : (
+        <div id="ways" className="scroll-mt-24">
+          <PricingSection
+            course={course}
+            activeCourse={displayCourse}
+            variants={variants}
+            isOutOfStock={isOutOfStock}
+            seatsLeft={seatsLeft}
+            hasValidOffer={hasValidOffer}
+            offerDetails={offerDetails}
+            shouldShowVariantSelect={shouldShowVariantSelect}
+            normalizedVariants={normalizedVariants}
+            variantLabel={variantLabel}
+            handleVariantSelect={handleVariantSelect}
+            handleIncreaseQuantity={handleIncreaseQuantity}
+            handleDecreaseQuantity={handleDecreaseQuantity}
+            handleBuyNow={handleBuyNow}
+            getCurrentQuantity={getCurrentQuantity}
+            inCart={(id) =>
+              mounted ? inCart(usesBatches ? cartLineId : id) : false
+            }
+            removeItem={removeCurrentCartLine}
+            mounted={mounted}
+            usesBatches={usesBatches}
+            batchOptions={batchOptions}
+            activeBatchId={activeBatch?._id ?? null}
+            onBatchSelect={usesBatches ? handleBatchSelect : undefined}
+          />
+        </div>
+      )}
 
       <CoursePhases course={displayCourse} />
 
@@ -472,7 +507,9 @@ export default function CourseClient({
         isOutOfStock={isOutOfStock}
         onReserve={() => {
           if (typeof window !== "undefined") {
-            const el = document.getElementById("pricing");
+            const el = document.getElementById(
+              showWaitlist ? "ways" : "pricing",
+            );
             if (el) {
               el.scrollIntoView({ behavior: "smooth", block: "start" });
               return;
