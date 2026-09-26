@@ -32,6 +32,10 @@ import {
 } from "@/components/course-page/supporting-sections";
 import { ToolkitSection } from "@/components/course-page/toolkit-section";
 import type { CourseContent } from "@/lib/course-content/types";
+import {
+  waitlistDeliveriesForType,
+  type WaitlistCourseType,
+} from "convex/_shared/waitlist";
 
 function Wave() {
   return (
@@ -39,7 +43,35 @@ function Wave() {
   );
 }
 
+/** Only certificate and internship programmes carry an early-bird waitlist. */
+function programmeWaitlistType(
+  course: CourseContent,
+): WaitlistCourseType | null {
+  const category = course.category.toLowerCase();
+  if (category.includes("internship")) return "internship";
+  if (category.includes("certificate")) return "certificate";
+  return null;
+}
+
+function programmeWaitlistBatches(course: CourseContent) {
+  const seen = new Set<string>();
+  const batches: { _id: string; label: string; startDate?: string }[] = [];
+  for (const item of course.options?.items ?? []) {
+    const batch = item.cart?.batch;
+    if (!batch?.id || !batch.label || seen.has(batch.id)) continue;
+    seen.add(batch.id);
+    batches.push({
+      _id: batch.id,
+      label: batch.label,
+      startDate: batch.startDate,
+    });
+  }
+  return batches;
+}
+
 export function CoursePage({ course }: { course: CourseContent }) {
+  const waitlistType = programmeWaitlistType(course);
+
   if (course.layout === "brief") {
     return (
       <div className="relative">
@@ -76,7 +108,15 @@ export function CoursePage({ course }: { course: CourseContent }) {
             }
           />
         ) : null}
-        <WaitlistSection courseTitle={course.title} slug={course.slug} />
+        {waitlistType ? (
+          <WaitlistSection
+            courseTitle={course.title}
+            courseType={waitlistType}
+            batches={programmeWaitlistBatches(course)}
+            deliveries={waitlistDeliveriesForType(waitlistType)}
+            source={`programme:${course.slug}`}
+          />
+        ) : null}
         {course.assessment ? (
           <AssessmentSection assessment={course.assessment} />
         ) : null}

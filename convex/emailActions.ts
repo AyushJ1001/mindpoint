@@ -286,6 +286,110 @@ export const sendLeadConfirmation = internalAction({
   },
 });
 
+// Sent when someone joins the early-bird waitlist while registration is paused.
+// The owner gets the entrant's details so they can follow up; the entrant gets a
+// confirmation that names their offering. No price is quoted — the discount is
+// shared when registration opens.
+export const sendWaitlistJoined = internalAction({
+  args: {
+    fullName: v.string(),
+    email: v.string(),
+    whatsapp: v.string(),
+    courseTitle: v.string(),
+    courseType: v.string(),
+    delivery: v.string(),
+    cohortLabel: v.optional(v.string()),
+    source: v.string(),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args): Promise<EmailActionResult> => {
+    const siteUrl = getSiteUrl();
+    const deliveryLabel =
+      args.delivery === "live" ? "Live cohort" : "Self-paced";
+    const typeLabel = args.courseType
+      .split("-")
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ");
+
+    const rows = [
+      ["Name", args.fullName],
+      ["Email", args.email],
+      ["WhatsApp", args.whatsapp],
+      ["Course", args.courseTitle],
+      ["Type", typeLabel],
+      args.cohortLabel ? ["Cohort", args.cohortLabel] : null,
+      ["Wants", deliveryLabel],
+      ["Joined from", args.source],
+    ].filter((row): row is string[] => row !== null);
+
+    const ownerRows = rows
+      .map(
+        ([label, value]) => `
+          <tr>
+            <td style="padding:10px 0;color:#5f7773;font-size:13px;border-bottom:1px solid #d8e6e1;">${escapeHtml(label)}</td>
+            <td style="padding:10px 0;color:#123f40;font-size:13px;font-weight:600;text-align:right;border-bottom:1px solid #d8e6e1;">${escapeHtml(value)}</td>
+          </tr>`,
+      )
+      .join("");
+
+    try {
+      const ownerDelivery = await sendEmail({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: "contact.themindpoint@gmail.com",
+        replyTo: args.email,
+        subject: `Early-bird waitlist: ${args.courseTitle}`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 24px; color: #123f40;">
+            <p style="margin:0;color:#0c6f73;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">New pre-registration</p>
+            <h2 style="margin:10px 0 4px;color:#003f43;">Someone joined the early-bird waitlist</h2>
+            <p style="margin:0 0 18px;color:#58706d;font-size:14px;">Reply to this email to reach them directly.</p>
+            <table role="presentation" style="width:100%;border-collapse:collapse;">${ownerRows}</table>
+          </div>
+        `,
+      });
+      if (isEmailActionFailure(ownerDelivery)) {
+        return ownerDelivery;
+      }
+
+      const entrantDelivery = await sendEmail({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.email,
+        subject: "You're on the early-bird list — The Mind Point",
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color:#1d4e4a;">You're on the early-bird list</h2>
+            <p>Dear ${escapeHtml(args.fullName)},</p>
+            <p>
+              Thank you for pre-registering for <strong>${escapeHtml(args.courseTitle)}</strong>${args.cohortLabel ? ` (${escapeHtml(args.cohortLabel)})` : ""} —
+              ${escapeHtml(deliveryLabel).toLowerCase()}.
+            </p>
+            <p>The early-bird discount will be shared with you by email and WhatsApp as soon as registration opens.</p>
+            <p style="margin: 24px 0;">
+              <a href="${siteUrl}/courses" style="background:#1d4e4a;color:#fff;padding:12px 18px;text-decoration:none;border-radius:999px;display:inline-block;font-weight:600;">See what is open</a>
+            </p>
+            <p style="color:#58706d;font-size:13px;">If you did not ask to join, you can ignore this email.</p>
+            <p>Warmly,<br>The Mind Point Team</p>
+          </div>
+        `,
+      });
+      if (isEmailActionFailure(entrantDelivery)) {
+        return entrantDelivery;
+      }
+    } catch (error) {
+      console.error("Failed to send waitlist emails:", {
+        email: args.email,
+        source: args.source,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+
+    return emailActionSuccess();
+  },
+});
+
 export const sendMindPointsReminderEmail = internalAction({
   args: {
     userEmail: v.string(),

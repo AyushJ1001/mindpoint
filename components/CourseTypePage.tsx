@@ -32,6 +32,11 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { ctaVariants } from "@/components/coastal/cta";
 import CourseTypeConversion from "@/components/course/course-type-conversion";
+import { WaitlistSection } from "@/components/course-page/waitlist-section";
+import {
+  isWaitlistCourseType,
+  waitlistDeliveriesForType,
+} from "convex/_shared/waitlist";
 import Link from "next/link";
 import { ArrowRight, Check, Users } from "lucide-react";
 
@@ -885,6 +890,15 @@ export default function CourseTypePage({
           </ScrollReveal>
         </div>
       </section>
+
+      {isWaitlistCourseType(type) ? (
+        <WaitlistSection
+          courseTitle={content.title}
+          courseType={type}
+          deliveries={waitlistDeliveriesForType(type)}
+          source={`type:${type}`}
+        />
+      ) : null}
 
       {/* Courses Section */}
       <section id="courses" className="scroll-mt-24 pb-16">
