@@ -18,7 +18,7 @@ const COURSE_TYPES = [
   { value: "", label: "All types" },
   { value: "certificate", label: "Certificate" },
   { value: "internship", label: "Internship" },
-  { value: "pre-recorded", label: "Pre-recorded" },
+  { value: "pre-recorded", label: "Intro (self-paced)" },
   { value: "therapy", label: "Therapy" },
 ] as const;
 

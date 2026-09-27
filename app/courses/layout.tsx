@@ -54,9 +54,9 @@ const courseTypes = [
     icon: GraduationCap,
   },
   {
-    name: "Pre-recorded",
-    href: "/courses/pre-recorded",
-    label: "Pre-recorded",
+    name: "Intro courses",
+    href: "/courses/intro",
+    label: "Intro courses",
     icon: CirclePlay,
   },
   {
@@ -98,7 +98,9 @@ function AppSidebar() {
     <Sidebar collapsible="icon" className="top-16 h-[calc(100svh-4rem)]">
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="tracking-[0.2em] uppercase">Course Types</SidebarGroupLabel>
+          <SidebarGroupLabel className="tracking-[0.2em] uppercase">
+            Course Types
+          </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               {courseTypes.map((item) => {

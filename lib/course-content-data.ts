@@ -72,10 +72,10 @@ export const courseTypeContent: Record<string, CourseTypeInfo> = {
     icon: Telescope,
   },
   "pre-recorded": {
-    title: "Pre-recorded Courses",
-    tagline: "Meaningful learning that fits your life.",
+    title: "Intro courses, self-paced",
+    tagline: "Not sure where to start? Start here.",
     description:
-      "Self-paced video modules you can start tonight and revisit whenever you need. Professionally produced, downloadable, and free of scheduling pressure.",
+      "Self-paced video modules you can start tonight and revisit whenever you need. Professionally produced and free of scheduling pressure.",
     icon: PlaySquare,
   },
   masterclass: {
@@ -273,7 +273,8 @@ export const whoShouldDoByType: Record<string, WhoShouldDoData> = {
   },
   "pre-recorded": {
     title: "Who is this for?",
-    description: "Self-paced courses for learners who need learning to fit life.",
+    description:
+      "Self-paced courses for learners who need learning to fit life.",
     items: [
       {
         icon: "\u{23F0}",
@@ -363,7 +364,8 @@ export const whoShouldDoByType: Record<string, WhoShouldDoData> = {
   },
   worksheet: {
     title: "Who is this for?",
-    description: "Worksheets for practitioners and anyone doing structured work.",
+    description:
+      "Worksheets for practitioners and anyone doing structured work.",
     items: [
       {
         icon: "\u{1F9D1}\u200D\u2695\uFE0F",
@@ -568,7 +570,8 @@ export const whyChooseByType: Record<string, WhyChooseData> = {
       {
         icon: Clock,
         title: "Complete flexibility",
-        description: "Study at midnight or midday. No live schedule to work around.",
+        description:
+          "Study at midnight or midday. No live schedule to work around.",
       },
       {
         icon: Repeat,
@@ -607,8 +610,7 @@ export const whyChooseByType: Record<string, WhyChooseData> = {
       {
         icon: Users,
         title: "Live and interactive",
-        description:
-          "Your specific questions get answered, not glossed over.",
+        description: "Your specific questions get answered, not glossed over.",
       },
       {
         icon: Target,

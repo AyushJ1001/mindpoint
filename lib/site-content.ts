@@ -99,7 +99,7 @@ const COURSE_TYPE_LABELS: Record<CourseTypeSlug, string> = {
   internship: "Internship Programs",
   therapy: "Therapy & Counselling",
   supervised: "Supervised Practice",
-  "pre-recorded": "Pre-recorded Courses",
+  "pre-recorded": "Intro courses, self-paced",
   masterclass: "Masterclasses",
   "resume-studio": "Resume Studio",
   worksheet: "Worksheets & Resources",
@@ -121,7 +121,9 @@ export const SITE_CONTENT_OPTIONS: SiteContentOption[] = [
 ];
 
 export function getSiteContentKind(key: string): SiteContentKind | null {
-  return SITE_CONTENT_OPTIONS.find((option) => option.key === key)?.kind ?? null;
+  return (
+    SITE_CONTENT_OPTIONS.find((option) => option.key === key)?.kind ?? null
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -316,7 +318,8 @@ export function sanitizeCourseTypeOverride(
   }
 
   if (data.faqs !== undefined) result.faqs = faqs(data.faqs, "faqs");
-  if (data.closing !== undefined) result.closing = closing(data.closing, "closing");
+  if (data.closing !== undefined)
+    result.closing = closing(data.closing, "closing");
 
   return result;
 }
@@ -343,12 +346,7 @@ export function sanitizeCbtOffset(data: unknown): CbtLandingOverride {
   assertAllowedKeys(data, allowed, "cbtLanding");
 
   const result: CbtLandingOverride = {};
-  for (const key of [
-    "name",
-    "eyebrow",
-    "tagline",
-    "description",
-  ] as const) {
+  for (const key of ["name", "eyebrow", "tagline", "description"] as const) {
     const parsed = optionalString(data[key], key);
     if (parsed !== undefined) result[key] = parsed;
   }
@@ -369,7 +367,8 @@ export function sanitizeCbtOffset(data: unknown): CbtLandingOverride {
   if (data.whoItsFor !== undefined)
     result.whoItsFor = items(data.whoItsFor, "whoItsFor", { withIcon: false });
   if (data.faqs !== undefined) result.faqs = faqs(data.faqs, "faqs");
-  if (data.closing !== undefined) result.closing = closing(data.closing, "closing");
+  if (data.closing !== undefined)
+    result.closing = closing(data.closing, "closing");
 
   return result;
 }

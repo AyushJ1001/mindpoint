@@ -56,6 +56,16 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      // "Pre-recorded courses" was renamed to "Intro courses, self-paced".
+      {
+        source: "/courses/pre-recorded",
+        destination: "/courses/intro",
+        permanent: true,
+      },
+    ];
+  },
 } satisfies NextConfig;
 
 export default nextConfig;

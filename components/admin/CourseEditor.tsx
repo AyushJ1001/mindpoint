@@ -180,7 +180,7 @@ const courseTypeLabels: Record<CourseType, string> = {
   certificate: "Certificate",
   internship: "Internship",
   diploma: "Diploma",
-  "pre-recorded": "Pre-recorded",
+  "pre-recorded": "Intro (self-paced)",
   masterclass: "Masterclass",
   therapy: "Therapy",
   supervised: "Supervised",
@@ -426,7 +426,9 @@ export function CourseEditor({
   const createCourse = useRevalidatingCourseMutation(
     api.adminCourses.createCourse,
   );
-  const createBatch = useRevalidatingCourseMutation(api.adminCourses.createBatch);
+  const createBatch = useRevalidatingCourseMutation(
+    api.adminCourses.createBatch,
+  );
   const deleteCourse = useRevalidatingCourseMutation(
     api.adminCourses.deleteCourse,
   );
@@ -439,7 +441,9 @@ export function CourseEditor({
   const updateCourse = useRevalidatingCourseMutation(
     api.adminCourses.updateCourse,
   );
-  const updateBatch = useRevalidatingCourseMutation(api.adminCourses.updateBatch);
+  const updateBatch = useRevalidatingCourseMutation(
+    api.adminCourses.updateBatch,
+  );
   const courseBatches = useQuery(
     api.adminCourses.listCourseBatches,
     course?._id && batchBackedTypes.has(state.type)
