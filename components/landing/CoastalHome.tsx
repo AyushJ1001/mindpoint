@@ -11,6 +11,7 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 import { StarRating } from "@/components/course/ratings";
 import { getRelativeTime } from "@/lib/time-utils";
 import { GOOGLE_RATING, GOOGLE_REVIEWS } from "@/lib/googleReviews";
+import { REVIEW_HIGHLIGHTS } from "@/lib/reviewHighlights";
 import type { PublicCourse } from "@/lib/backend";
 
 interface CoastalHomeProps {
@@ -106,6 +107,11 @@ function formatPrice(value?: number) {
   return `₹${value.toLocaleString("en-IN")}`;
 }
 
+/** Approximate review age, matching the relative time shown on Google. */
+function reviewAge(monthsAgo: number) {
+  return getRelativeTime(Date.now() - monthsAgo * 30.44 * 86_400_000);
+}
+
 export default function CoastalHome({
   canAccessAdmin,
   upcomingCourses,
@@ -122,6 +128,9 @@ export default function CoastalHome({
   }));
 
   const cards = programCards.length > 0 ? programCards : FALLBACK_COURSES;
+
+  const featuredReview = GOOGLE_REVIEWS[0];
+  const sideReviews = GOOGLE_REVIEWS.slice(1, 4);
 
   return (
     <>
@@ -150,6 +159,22 @@ export default function CoastalHome({
             >
               Browse all courses
             </Link>
+          </div>
+          <div className="border-border mt-9 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-dashed pt-6">
+            <StarRating rating={GOOGLE_RATING.average} size="sm" />
+            <p className="text-muted-foreground text-sm">
+              <b className="text-foreground font-semibold">
+                {GOOGLE_RATING.average.toFixed(1)}
+              </b>{" "}
+              from {GOOGLE_RATING.count} Google reviews
+            </p>
+            <span
+              aria-hidden="true"
+              className="bg-border hidden h-4 w-px sm:block"
+            />
+            <p className="text-muted-foreground text-sm">
+              Loved by students, career changers and therapists across India
+            </p>
           </div>
           <div className="text-primary mt-10 flex flex-wrap items-center gap-3 text-[0.72rem] tracking-[0.3em] uppercase">
             <span>Learn</span>
@@ -410,25 +435,40 @@ export default function CoastalHome({
               </p>
             </div>
           </div>
-          <div className="grid gap-8 md:grid-cols-3">
-            {GOOGLE_REVIEWS.map((review, i) => (
-              <ScrollReveal
-                key={`${review.author}-${i}`}
-                transitionDelayMs={i * 80}
-              >
-                <figure className="border-primary h-full border-t-2 pt-5">
-                  <blockquote className="font-display text-xl leading-snug italic">
-                    “{review.content}”
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_1fr]">
+            <ScrollReveal>
+              <figure className="water-band-mist flex h-full flex-col justify-between rounded-2xl p-8 sm:p-10">
+                <div>
+                  <StarRating rating={GOOGLE_RATING.average} size="sm" />
+                  <blockquote className="font-display mt-6 text-2xl leading-snug sm:text-3xl">
+                    “{featuredReview.content}”
                   </blockquote>
-                  <figcaption className="text-muted-foreground mt-4 text-[0.68rem] tracking-[0.24em] uppercase">
-                    {review.author} &middot;{" "}
-                    {getRelativeTime(
-                      Date.now() - review.monthsAgo * 30.44 * 86_400_000,
-                    )}
-                  </figcaption>
-                </figure>
-              </ScrollReveal>
-            ))}
+                </div>
+                <figcaption className="text-muted-foreground mt-8 text-[0.68rem] tracking-[0.24em] uppercase">
+                  {featuredReview.author} &middot; Google &middot;{" "}
+                  {reviewAge(featuredReview.monthsAgo)}
+                </figcaption>
+              </figure>
+            </ScrollReveal>
+
+            <div className="grid gap-6 sm:grid-cols-2">
+              {sideReviews.map((review, i) => (
+                <ScrollReveal
+                  key={`${review.author}-${i}`}
+                  transitionDelayMs={i * 80}
+                >
+                  <figure className="border-primary/70 flex h-full flex-col border-l-2 pl-5">
+                    <blockquote className="text-foreground/80 flex-1 text-[0.95rem] leading-relaxed">
+                      “{review.content}”
+                    </blockquote>
+                    <figcaption className="text-muted-foreground mt-4 text-[0.62rem] tracking-[0.24em] uppercase">
+                      {review.author} &middot; Google &middot;{" "}
+                      {reviewAge(review.monthsAgo)}
+                    </figcaption>
+                  </figure>
+                </ScrollReveal>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -469,6 +509,49 @@ export default function CoastalHome({
                 </li>
               ))}
             </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Review band ── */}
+      <section className="bg-secondary py-20 sm:py-24">
+        <div className="container grid items-center gap-12 lg:grid-cols-[0.85fr_1.15fr]">
+          <div>
+            <span className={eyebrowVariants()}>
+              Rated {GOOGLE_RATING.average.toFixed(1)}
+            </span>
+            <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-4xl">
+              {GOOGLE_RATING.count} reviews. One calm way of teaching.
+            </h2>
+            <div className="mt-5 flex items-center gap-3">
+              <StarRating rating={GOOGLE_RATING.average} size="md" />
+              <span className="text-muted-foreground text-sm">on Google</span>
+            </div>
+            <div className="mt-8">
+              <Link
+                href="/programs"
+                className={ctaVariants({ layout: "flex" })}
+              >
+                Find your programme <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+          </div>
+          <div className="grid gap-5 sm:grid-cols-2">
+            {REVIEW_HIGHLIGHTS.slice(0, 4).map((review, i) => (
+              <ScrollReveal
+                key={`${review.author}-${i}`}
+                transitionDelayMs={i * 80}
+              >
+                <figure className="border-border bg-background/70 flex h-full flex-col rounded-2xl border p-6">
+                  <blockquote className="text-foreground/80 flex-1 text-[0.95rem] leading-relaxed">
+                    “{review.quote}”
+                  </blockquote>
+                  <figcaption className="text-muted-foreground mt-4 text-[0.62rem] tracking-[0.24em] uppercase">
+                    {review.author} &middot; {review.source}
+                  </figcaption>
+                </figure>
+              </ScrollReveal>
+            ))}
           </div>
         </div>
       </section>
@@ -525,6 +608,15 @@ export default function CoastalHome({
             Take the next step that feels kind, clear and manageable. We&apos;ll
             meet you there.
           </p>
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <StarRating rating={GOOGLE_RATING.average} size="sm" />
+            <p className="text-muted-foreground text-sm">
+              <b className="text-foreground font-semibold">
+                {GOOGLE_RATING.average.toFixed(1)}
+              </b>{" "}
+              from {GOOGLE_RATING.count} reviews &middot; join them
+            </p>
+          </div>
           <Link href="/courses" className={ctaVariants({ layout: "flex" })}>
             Start your journey <ArrowRight className="h-4 w-4" />
           </Link>
