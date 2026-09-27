@@ -86,9 +86,11 @@ const extractVariantLabel = (course: CourseLike): string | null => {
 const CourseGroupCard = ({
   courses,
   bogoCourses,
+  waitlistPaused = false,
 }: {
   courses: Array<PublicCourse>;
   bogoCourses?: Array<PublicCourse>;
+  waitlistPaused?: boolean;
 }) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
@@ -477,6 +479,21 @@ const CourseGroupCard = ({
             // Use mounted state to prevent hydration mismatch
             const isInCart = mounted ? inCart(selectedCourse._id) : false;
 
+            if (waitlistPaused) {
+              return (
+                <Button
+                  asChild
+                  size="sm"
+                  className="transition-smooth w-full shrink-0 @min-[300px]:w-auto"
+                >
+                  <a href="#waitlist" onClick={(e) => e.stopPropagation()}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Join the waitlist
+                  </a>
+                </Button>
+              );
+            }
+
             return (
               <Button
                 onClick={(e) => {
@@ -517,9 +534,11 @@ const CourseGroupCard = ({
 const CourseCard = ({
   course,
   bogoCourses,
+  waitlistPaused = false,
 }: {
   course: PublicCourse;
   bogoCourses?: Array<PublicCourse>;
+  waitlistPaused?: boolean;
 }) => {
   const { addItem, inCart } = useCart();
   const router = useRouter();
@@ -743,6 +762,21 @@ const CourseCard = ({
             // Use mounted state to prevent hydration mismatch
             const isInCart = mounted ? inCart(course._id) : false;
 
+            if (waitlistPaused) {
+              return (
+                <Button
+                  asChild
+                  size="sm"
+                  className="transition-smooth w-full shrink-0 @min-[300px]:w-auto"
+                >
+                  <a href="#waitlist" onClick={(e) => e.stopPropagation()}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Join the waitlist
+                  </a>
+                </Button>
+              );
+            }
+
             return (
               <Button
                 onClick={(e) => {
@@ -834,6 +868,9 @@ export default function CourseTypePage({
   const courses = coursesData.courses ?? [];
   const proofPoints = content.proof;
   const showTypeFaq = type !== "therapy" && type !== "supervised";
+  const settings = useQuery(api.siteSettings.getPublic);
+  const waitlistPaused =
+    settings?.registrationsOpen === false && isWaitlistCourseType(type);
 
   return (
     <div className="min-h-screen">
@@ -914,12 +951,14 @@ export default function CourseTypePage({
                         key={group[0]._id}
                         courses={group}
                         bogoCourses={bogoCourses}
+                        waitlistPaused={waitlistPaused}
                       />
                     ) : (
                       <CourseCard
                         key={group[0]._id}
                         course={group[0]}
                         bogoCourses={bogoCourses}
+                        waitlistPaused={waitlistPaused}
                       />
                     ),
                   );
