@@ -2429,3 +2429,30 @@ export const setBatchMeetingLink = mutation({
     return null;
   },
 });
+
+/**
+ * Repoint a course's cover images without re-validating publishability.
+ *
+ * `updateCourse` runs the full published-course validation, which a batch
+ * course fails when it has no published batch — even for an images-only edit.
+ * Cover changes cannot affect publishability, so this patches just the images.
+ */
+export const setCourseImages = mutation({
+  args: { courseId: v.id("courses"), imageUrls: v.array(v.string()) },
+  returns: v.object({ ok: v.boolean() }),
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const course = await ctx.db.get(args.courseId);
+    if (!course) {
+      throw new Error("Course not found");
+    }
+
+    await ctx.db.patch(args.courseId, {
+      imageUrls: args.imageUrls,
+      updatedByAdminId: admin.userId,
+      updatedAt: Date.now(),
+    });
+
+    return { ok: true };
+  },
+});
