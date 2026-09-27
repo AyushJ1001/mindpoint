@@ -163,6 +163,12 @@ export default async function CoursePage({ params, searchParams }: Props) {
       redirect(`/programs/${programmeSlug}`);
     }
 
+    // Therapy is presented as a warm, standalone experience, never as a course
+    // catalogue page, so send every therapy detail URL to the therapy page.
+    if (course.type === "therapy") {
+      redirect("/courses/therapy");
+    }
+
     // Prefetch related variants (same name & type) to enable instant switching
     const variants = course.usesBatches
       ? []

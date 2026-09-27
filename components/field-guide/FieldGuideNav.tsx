@@ -48,7 +48,7 @@ const GROUPS: {
       {
         href: "/courses/therapy",
         label: "Therapy & counselling",
-        meta: "in person",
+        meta: "online",
       },
       {
         href: "/courses/supervised",
