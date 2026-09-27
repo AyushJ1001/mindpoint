@@ -38,7 +38,7 @@ import {
   waitlistDeliveriesForType,
 } from "convex/_shared/waitlist";
 import Link from "next/link";
-import { ArrowRight, Check, Users } from "lucide-react";
+import { ArrowRight, Check } from "lucide-react";
 
 // Type for courses with sessions (therapy)
 type TherapyCourse = CourseLike & {
@@ -284,7 +284,7 @@ const CourseGroupCard = ({
               </Badge>
             )}
             {bundleInfo && (
-              <Badge className="max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Badge className="bg-primary/90 max-w-full text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
                 <Layers className="mr-1 h-3 w-3" />
                 <span className="sm:hidden">Bundle</span>
                 <span className="hidden sm:inline">Bundle Deal</span>
@@ -296,7 +296,7 @@ const CourseGroupCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
+                  className="bg-primary max-w-full animate-pulse text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountLabel}
@@ -460,7 +460,7 @@ const CourseGroupCard = ({
               </div>
             )}
             {bundleInfo && (
-              <div className="flex items-center gap-1 text-xs font-medium text-primary">
+              <div className="text-primary flex items-center gap-1 text-xs font-medium">
                 <Layers className="h-3 w-3 shrink-0" />
                 <span className="truncate">{bundleInfo.dealSummary}</span>
               </div>
@@ -680,7 +680,7 @@ const CourseCard = ({
               </Badge>
             )}
             {bundleInfo && (
-              <Badge className="max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Badge className="bg-primary/90 max-w-full text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
                 <Layers className="mr-1 h-3 w-3" />
                 <span className="sm:hidden">Bundle</span>
                 <span className="hidden sm:inline">Bundle Deal</span>
@@ -692,7 +692,7 @@ const CourseCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
+                  className="bg-primary max-w-full animate-pulse text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountLabel}
@@ -791,7 +791,7 @@ const CourseCard = ({
           </div>
         )}
         {bundleInfo && (
-          <div className="mt-1 flex items-center gap-1 text-xs font-medium text-primary">
+          <div className="text-primary mt-1 flex items-center gap-1 text-xs font-medium">
             <Layers className="h-3 w-3 shrink-0" />
             <span className="truncate">{bundleInfo.dealSummary}</span>
           </div>
@@ -832,10 +832,6 @@ export default function CourseTypePage({
     override as CourseTypeContentOverride | null | undefined,
   );
   const courses = coursesData.courses ?? [];
-  const totalLearners = courses.reduce(
-    (sum, course) => sum + getEnrolledCount(course),
-    0,
-  );
   const proofPoints = content.proof;
   const showTypeFaq = type !== "therapy" && type !== "supervised";
 
@@ -860,22 +856,13 @@ export default function CourseTypePage({
                 Browse {content.title.toLowerCase()}
                 <ArrowRight className="h-4 w-4" />
               </a>
-              <Link
-                href="/contact"
-                className="calm-link text-sm font-medium"
-              >
+              <Link href="/contact" className="calm-link text-sm font-medium">
                 Talk to an advisor
               </Link>
             </div>
 
-            {(totalLearners > 0 || proofPoints.length > 0) && (
+            {proofPoints.length > 0 && (
               <div className="border-border mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 border-t border-dashed pt-6">
-                {totalLearners > 0 && (
-                  <span className="text-foreground/70 inline-flex items-center gap-2 text-sm">
-                    <Users className="text-primary h-4 w-4 shrink-0" />
-                    {totalLearners.toLocaleString("en-IN")} learners enrolled
-                  </span>
-                )}
                 {proofPoints.map((point) => (
                   <span
                     key={point}

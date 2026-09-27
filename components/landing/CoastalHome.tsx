@@ -413,9 +413,6 @@ export default function CoastalHome({
                 People who found their way in.
               </h2>
             </div>
-            <p className="text-muted-foreground max-w-sm">
-              Trusted by 10,000+ learners across India.
-            </p>
           </div>
           <div className="grid gap-8 md:grid-cols-3">
             {STORIES.map(([quote, who], i) => (
