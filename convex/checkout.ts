@@ -3,6 +3,7 @@ import { mutation, query } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { registrationIsOpen } from "./siteSettings";
+import { isWaitlistHeldType } from "./_shared/waitlist";
 import {
   buildCheckoutAttemptPayload,
   reconcileCheckoutIntent,
@@ -327,6 +328,20 @@ async function createCheckoutAttemptForBuyer(
     cartIntent: args.cartIntent,
     buyerUserId: args.buyerUserId,
   });
+
+  // The pause holds only the waitlist types; self-paced intro courses still
+  // check out. Block a cart only when it contains a held type.
+  if (
+    !(await registrationIsOpen(ctx)) &&
+    reconciliation.items.some((item) => isWaitlistHeldType(item.courseType))
+  ) {
+    return convexFailure({
+      code: convexResultErrorCode.FORBIDDEN,
+      message:
+        "Registration for this course is paused at the moment. Please check back soon.",
+    });
+  }
+
   if (
     reconciliation.status !== "valid" ||
     reconciliation.totalAmountPaid <= 0
@@ -408,14 +423,6 @@ export const createCheckoutAttemptFromServer = mutation({
     const unauthorized = validateCheckoutServerSecret(args.serverSecret);
     if (unauthorized) {
       return unauthorized;
-    }
-
-    if (!(await registrationIsOpen(ctx))) {
-      return convexFailure({
-        code: convexResultErrorCode.FORBIDDEN,
-        message:
-          "Registration is paused at the moment. Please check back soon.",
-      });
     }
 
     return await createCheckoutAttemptForBuyer(ctx, {

@@ -171,7 +171,8 @@ export default function PricingSection({
   const displayCourse = activeCourse ?? course;
   const isInCart = mounted && inCart(displayCourse._id);
   const quantity = mounted ? getCurrentQuantity(displayCourse._id) : 0;
-  const maxQty = displayCourse.capacity ?? 1;
+  // A course grants one seat/enrolment, so the cart holds one per course.
+  const maxQty = 1;
 
   const inclusions = inclusionsFor(course.type);
   const price = getCoursePrice(displayCourse);

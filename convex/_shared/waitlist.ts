@@ -22,6 +22,25 @@ export function isWaitlistCourseType(
   );
 }
 
+/**
+ * Types whose registration is currently held behind the early-bird waitlist.
+ * Self-paced intro courses (`pre-recorded`) are excluded: they deliver
+ * automatically, so they stay on sale while the others are paused.
+ */
+export const WAITLIST_HELD_TYPES = [
+  "certificate",
+  "internship",
+  "therapy",
+] as const;
+
+export type WaitlistHeldType = (typeof WAITLIST_HELD_TYPES)[number];
+
+export function isWaitlistHeldType(
+  value?: string | null,
+): value is WaitlistHeldType {
+  return !!value && (WAITLIST_HELD_TYPES as readonly string[]).includes(value);
+}
+
 export const WAITLIST_DELIVERIES = ["live", "self_paced"] as const;
 
 export type WaitlistDelivery = (typeof WAITLIST_DELIVERIES)[number];

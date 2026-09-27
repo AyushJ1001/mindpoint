@@ -34,7 +34,7 @@ import { ctaVariants } from "@/components/coastal/cta";
 import CourseTypeConversion from "@/components/course/course-type-conversion";
 import { WaitlistSection } from "@/components/course-page/waitlist-section";
 import {
-  isWaitlistCourseType,
+  isWaitlistHeldType,
   waitlistDeliveriesForType,
 } from "convex/_shared/waitlist";
 import Link from "next/link";
@@ -876,7 +876,7 @@ export default function CourseTypePage({
   const showTypeFaq = type !== "therapy" && type !== "supervised";
   const settings = useQuery(api.siteSettings.getPublic);
   const waitlistPaused =
-    settings?.registrationsOpen === false && isWaitlistCourseType(type);
+    settings?.registrationsOpen === false && isWaitlistHeldType(type);
 
   return (
     <div className="min-h-screen">
@@ -921,7 +921,7 @@ export default function CourseTypePage({
         </div>
       </section>
 
-      {isWaitlistCourseType(type) ? (
+      {isWaitlistHeldType(type) ? (
         <WaitlistSection
           courseTitle={content.title}
           courseType={type}

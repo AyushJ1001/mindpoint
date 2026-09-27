@@ -8,6 +8,7 @@ import {
 } from "@/components/course-page/waitlist-form";
 import { api } from "@/lib/backend/api";
 import {
+  isWaitlistHeldType,
   waitlistDeliveriesForType,
   type WaitlistCourseType,
   type WaitlistDelivery,
@@ -35,6 +36,7 @@ export function WaitlistSection({
   const settings = useQuery(api.siteSettings.getPublic);
 
   if (settings?.registrationsOpen !== false) return null;
+  if (!isWaitlistHeldType(courseType)) return null;
 
   return (
     <section id="waitlist" className="scroll-mt-24 py-16 sm:py-24">
