@@ -197,6 +197,7 @@ export const createReview = mutation({
     userId: v.optional(v.string()),
     rating: v.number(),
     content: v.string(),
+    submittedAt: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
@@ -232,6 +233,10 @@ export const createReview = mutation({
       rating,
       content,
       isEdited: false,
+      ...(typeof args.submittedAt === "number" &&
+      Number.isFinite(args.submittedAt)
+        ? { submittedAt: args.submittedAt }
+        : {}),
     };
 
     const reviewId = await ctx.db.insert("reviews", review);

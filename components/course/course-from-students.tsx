@@ -16,14 +16,20 @@ interface Props {
 
 // Pick the most useful reviews to pull-quote: longest-but-still-readable,
 // highest-rated, deduplicated by author.
-function pickPullQuotes<T extends { content: string; rating: number; userName: string; userId: string }>(
-  reviews: T[],
-  limit = 4,
-): T[] {
+function pickPullQuotes<
+  T extends {
+    content: string;
+    rating: number;
+    userName: string;
+    userId: string;
+  },
+>(reviews: T[], limit = 4): T[] {
   const real = reviews.filter((r) => r.userId !== "placeholder");
   const seenAuthors = new Set<string>();
   return real
-    .filter((r) => r.content.trim().length >= 20 && r.content.trim().length <= 240)
+    .filter(
+      (r) => r.content.trim().length >= 20 && r.content.trim().length <= 240,
+    )
     .sort((a, b) => {
       if (b.rating !== a.rating) return b.rating - a.rating;
       return b.content.length - a.content.length;
@@ -100,9 +106,7 @@ export default function CourseFromStudents({ courseId }: Props) {
         <ScrollReveal>
           <div>
             <p className="calm-section-number">From students</p>
-            <h2 className="calm-section-title mt-5">
-              How it actually lands.
-            </h2>
+            <h2 className="calm-section-title mt-5">How it actually lands.</h2>
           </div>
 
           <div className="mt-14 space-y-14">
@@ -111,23 +115,23 @@ export default function CourseFromStudents({ courseId }: Props) {
                 <blockquote className="calm-pull-quote">
                   &ldquo;{q.content.trim().replace(/^"|"$/g, "")}&rdquo;
                 </blockquote>
-                <figcaption className="mt-5 flex items-center gap-3 text-sm text-foreground/55">
-                  <span className="font-medium text-foreground/75">
+                <figcaption className="text-foreground/55 mt-5 flex items-center gap-3 text-sm">
+                  <span className="text-foreground/75 font-medium">
                     {q.userName}
                   </span>
                   <span
                     aria-hidden="true"
-                    className="h-1 w-1 rounded-full bg-foreground/30"
+                    className="bg-foreground/30 h-1 w-1 rounded-full"
                   />
                   <span className="calm-kbd">
-                    {getRelativeTime(q._creationTime)}
+                    {getRelativeTime(q.submittedAt ?? q._creationTime)}
                   </span>
                 </figcaption>
               </figure>
             ))}
           </div>
 
-          <div className="mt-16 flex flex-wrap items-baseline gap-x-6 gap-y-3 border-t border-foreground/10 pt-8">
+          <div className="border-foreground/10 mt-16 flex flex-wrap items-baseline gap-x-6 gap-y-3 border-t pt-8">
             <p className="calm-kbd text-foreground/55">
               {reviewCount} review{reviewCount === 1 ? "" : "s"}
             </p>
