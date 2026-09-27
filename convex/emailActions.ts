@@ -332,6 +332,11 @@ export const sendWaitlistJoined = internalAction({
       )
       .join("");
 
+    const logoHeader = `
+        <div style="background:#003f43;padding:22px 24px;">
+          <img src="${siteUrl}/brand/the-mind-point-logo.png" width="150" alt="The Mind Point" style="display:block;width:150px;height:auto;filter:brightness(0) invert(1);" />
+        </div>`;
+
     try {
       const ownerDelivery = await sendEmail({
         from: "The Mind Point <no-reply@themindpoint.org>",
@@ -339,11 +344,14 @@ export const sendWaitlistJoined = internalAction({
         replyTo: args.email,
         subject: `Early-bird waitlist: ${args.courseTitle}`,
         html: `
-          <div style="font-family: Arial, sans-serif; padding: 24px; color: #123f40;">
-            <p style="margin:0;color:#0c6f73;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">New pre-registration</p>
-            <h2 style="margin:10px 0 4px;color:#003f43;">Someone joined the early-bird waitlist</h2>
-            <p style="margin:0 0 18px;color:#58706d;font-size:14px;">Reply to this email to reach them directly.</p>
-            <table role="presentation" style="width:100%;border-collapse:collapse;">${ownerRows}</table>
+          <div style="font-family: Arial, sans-serif; color: #123f40; background:#eef5f1;">
+            ${logoHeader}
+            <div style="padding: 24px;">
+              <p style="margin:0;color:#0c6f73;font-size:12px;font-weight:700;letter-spacing:1.4px;text-transform:uppercase;">New pre-registration</p>
+              <h2 style="margin:10px 0 4px;color:#003f43;">Someone joined the early-bird waitlist</h2>
+              <p style="margin:0 0 18px;color:#58706d;font-size:14px;">Reply to this email to reach them directly.</p>
+              <table role="presentation" style="width:100%;border-collapse:collapse;">${ownerRows}</table>
+            </div>
           </div>
         `,
       });
@@ -356,7 +364,9 @@ export const sendWaitlistJoined = internalAction({
         to: args.email,
         subject: "You're on the early-bird list — The Mind Point",
         html: `
-          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <div style="font-family: Arial, sans-serif; color: #333; background:#eef5f1;">
+            ${logoHeader}
+            <div style="padding: 20px;">
             <h2 style="color:#1d4e4a;">You're on the early-bird list</h2>
             <p>Dear ${escapeHtml(args.fullName)},</p>
             <p>
@@ -369,6 +379,7 @@ export const sendWaitlistJoined = internalAction({
             </p>
             <p style="color:#58706d;font-size:13px;">If you did not ask to join, you can ignore this email.</p>
             <p>Warmly,<br>The Mind Point Team</p>
+            </div>
           </div>
         `,
       });
