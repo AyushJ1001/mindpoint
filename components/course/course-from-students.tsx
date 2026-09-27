@@ -6,6 +6,7 @@ import { api } from "@/lib/backend/api";
 import { Id } from "@/lib/backend/data-model";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import ReviewForm from "@/components/course/review-form";
+import { StarRating } from "@/components/course/ratings";
 import { getRelativeTime } from "@/lib/time-utils";
 
 interface Props {
@@ -98,7 +99,12 @@ export default function CourseFromStudents({ courseId }: Props) {
     );
   }
 
-  const reviewCount = reviews.filter((r) => r.userId !== "placeholder").length;
+  const realReviews = reviews.filter((r) => r.userId !== "placeholder");
+  const reviewCount = realReviews.length;
+  const averageRating =
+    reviewCount > 0
+      ? realReviews.reduce((sum, r) => sum + r.rating, 0) / reviewCount
+      : 0;
 
   return (
     <section className="calm-section-tight">
@@ -112,7 +118,8 @@ export default function CourseFromStudents({ courseId }: Props) {
           <div className="mt-14 space-y-14">
             {pullQuotes.map((q) => (
               <figure key={q._id as unknown as string} className="max-w-[54ch]">
-                <blockquote className="calm-pull-quote">
+                <StarRating rating={q.rating} size="sm" />
+                <blockquote className="calm-pull-quote mt-4">
                   &ldquo;{q.content.trim().replace(/^"|"$/g, "")}&rdquo;
                 </blockquote>
                 <figcaption className="text-foreground/55 mt-5 flex items-center gap-3 text-sm">
@@ -131,10 +138,14 @@ export default function CourseFromStudents({ courseId }: Props) {
             ))}
           </div>
 
-          <div className="border-foreground/10 mt-16 flex flex-wrap items-baseline gap-x-6 gap-y-3 border-t pt-8">
-            <p className="calm-kbd text-foreground/55">
-              {reviewCount} review{reviewCount === 1 ? "" : "s"}
-            </p>
+          <div className="border-foreground/10 mt-16 flex flex-wrap items-center gap-x-6 gap-y-3 border-t pt-8">
+            <div className="flex items-center gap-3">
+              <StarRating rating={averageRating} size="sm" />
+              <p className="calm-kbd text-foreground/55">
+                {averageRating.toFixed(1)} &middot; {reviewCount} review
+                {reviewCount === 1 ? "" : "s"}
+              </p>
+            </div>
             <button
               type="button"
               onClick={() => setFormOpen((v) => !v)}

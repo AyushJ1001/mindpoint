@@ -8,6 +8,9 @@ import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { EmailCapture } from "@/components/coastal/EmailCapture";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import { StarRating } from "@/components/course/ratings";
+import { getRelativeTime } from "@/lib/time-utils";
+import { GOOGLE_RATING, GOOGLE_REVIEWS } from "@/lib/googleReviews";
 import type { PublicCourse } from "@/lib/backend";
 
 interface CoastalHomeProps {
@@ -53,21 +56,6 @@ const PILLARS = [
   ],
   ["Heal", "Therapy and tools for your own mind, at your own pace."],
   ["Belong", "A community of people who take mental health seriously, gently."],
-];
-
-const STORIES = [
-  [
-    "I finally understood why my mind keeps overthinking everything. The tools actually work.",
-    "S.K. · Intern",
-  ],
-  [
-    "I came in confused about my career. Now I'm a practising counsellor.",
-    "R.M. · Certificate graduate",
-  ],
-  [
-    "What sets TMP apart is the community. You're never learning alone.",
-    "A.P. · Diploma student",
-  ],
 ];
 
 const FALLBACK_COURSES = [
@@ -413,16 +401,30 @@ export default function CoastalHome({
                 People who found their way in.
               </h2>
             </div>
+            <div className="flex items-center gap-3">
+              <StarRating rating={GOOGLE_RATING.average} size="sm" />
+              <p className="text-muted-foreground text-sm">
+                {GOOGLE_RATING.average.toFixed(1)} on Google
+                <span aria-hidden="true"> &middot; </span>
+                {GOOGLE_RATING.count} reviews
+              </p>
+            </div>
           </div>
           <div className="grid gap-8 md:grid-cols-3">
-            {STORIES.map(([quote, who], i) => (
-              <ScrollReveal key={who} transitionDelayMs={i * 80}>
+            {GOOGLE_REVIEWS.map((review, i) => (
+              <ScrollReveal
+                key={`${review.author}-${i}`}
+                transitionDelayMs={i * 80}
+              >
                 <figure className="border-primary h-full border-t-2 pt-5">
-                  <blockquote className="font-display text-2xl leading-snug italic">
-                    “{quote}”
+                  <blockquote className="font-display text-xl leading-snug italic">
+                    “{review.content}”
                   </blockquote>
                   <figcaption className="text-muted-foreground mt-4 text-[0.68rem] tracking-[0.24em] uppercase">
-                    {who}
+                    {review.author} &middot;{" "}
+                    {getRelativeTime(
+                      Date.now() - review.monthsAgo * 30.44 * 86_400_000,
+                    )}
                   </figcaption>
                 </figure>
               </ScrollReveal>
