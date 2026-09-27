@@ -69,6 +69,7 @@ import type * as rateLimit from "../rateLimit.js";
 import type * as siteContent from "../siteContent.js";
 import type * as siteSettings from "../siteSettings.js";
 import type * as viewer from "../viewer.js";
+import type * as waitlist from "../waitlist.js";
 
 import type {
   ApiFromModules,
