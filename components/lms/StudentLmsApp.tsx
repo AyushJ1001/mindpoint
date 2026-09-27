@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { SignInButton } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { LmsMediaPlayer } from "@/components/lms/LmsMediaPlayer";
 import {
   ArrowUpRight,
   Award,
@@ -1012,20 +1013,7 @@ function ActivityWork({
       )}
       {activity.externalUrl &&
         (activity.type === "media" ? (
-          <div className="lms-live-media">
-            <video
-              controls
-              preload="metadata"
-              src={activity.externalUrl}
-              className="w-full rounded-lg border"
-            >
-              Your browser cannot play this video.{" "}
-              <a href={activity.externalUrl} target="_blank" rel="noreferrer">
-                Open it in a new tab
-              </a>
-              .
-            </video>
-          </div>
+          <LmsMediaPlayer url={activity.externalUrl} title={activity.title} />
         ) : (
           <Button asChild variant="outline" className="lms-live-outline">
             <a href={activity.externalUrl} target="_blank" rel="noreferrer">
