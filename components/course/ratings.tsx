@@ -12,7 +12,9 @@ export function StarRating({
   size?: "sm" | "md" | "lg";
 }) {
   const sizeClasses = { sm: "h-4 w-4", md: "h-6 w-6", lg: "h-8 w-8" } as const;
-  const displayRating = rating;
+  // Snap to the nearest half so a 4.8 average reads as five stars rather than
+  // understating itself as four and a half.
+  const displayRating = Math.round(rating * 2) / 2;
   return (
     <div className="flex items-center gap-0.5">
       {Array.from({ length: 5 }).map((_, i) => {
