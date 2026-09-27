@@ -7,6 +7,7 @@ import { useCart } from "react-use-cart";
 import { api } from "@/lib/backend/api";
 import type { Id } from "@/lib/backend/data-model";
 import type { ProgrammeCartTarget } from "@/lib/course-content/types";
+import { isWaitlistHeldType } from "convex/_shared/waitlist";
 
 /**
  * Adds a programme option (or an upgrade) to the cart in one click, carrying
@@ -29,7 +30,10 @@ export function AddToCartButton({
   const settings = useQuery(api.siteSettings.getPublic);
 
   // Registration paused: point people at the pre-registration form instead.
-  if (settings?.registrationsOpen === false) {
+  if (
+    settings?.registrationsOpen === false &&
+    isWaitlistHeldType(target.courseType)
+  ) {
     return (
       <a href="#waitlist" className={className}>
         Join the waitlist

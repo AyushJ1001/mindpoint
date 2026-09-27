@@ -25,8 +25,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Trash2,
   ShoppingCart,
-  Plus,
-  Minus,
   Sparkles,
   Gift,
   Layers,
@@ -227,14 +225,7 @@ const getCartLineKey = (item: {
     : String(item.id);
 
 const CartContent = () => {
-  const {
-    items,
-    removeItem,
-    updateItem,
-    updateItemQuantity,
-    isEmpty,
-    emptyCart,
-  } = useCart();
+  const { items, removeItem, updateItem, isEmpty, emptyCart } = useCart();
 
   const [isMounted, setIsMounted] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -1379,30 +1370,6 @@ const CartContent = () => {
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </div>
-                    </div>
-                    <div className="mt-3 flex items-center justify-center gap-2 sm:justify-start">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          updateItemQuantity(item.id, (item.quantity || 1) - 1)
-                        }
-                        disabled={(item.quantity || 1) <= 1}
-                      >
-                        <Minus className="h-3 w-3" />
-                      </Button>
-                      <span className="w-8 text-center font-medium">
-                        {item.quantity}
-                      </span>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          updateItemQuantity(item.id, (item.quantity || 1) + 1)
-                        }
-                      >
-                        <Plus className="h-3 w-3" />
-                      </Button>
                     </div>
                   </div>
                 );

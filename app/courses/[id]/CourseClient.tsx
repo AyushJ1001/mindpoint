@@ -36,7 +36,7 @@ import TherapyFAQSection from "@/components/therapy/therapy-faq-section";
 import SupervisedFAQSection from "@/components/therapy/supervised-faq-section";
 import { WaitlistSection } from "@/components/course-page/waitlist-section";
 import {
-  isWaitlistCourseType,
+  isWaitlistHeldType,
   waitlistDeliveriesForType,
   type WaitlistCourseType,
 } from "convex/_shared/waitlist";
@@ -418,10 +418,10 @@ export default function CourseClient({
       .join(" \u00b7 "),
   }));
 
-  const waitlistType: WaitlistCourseType | null = isWaitlistCourseType(
+  const waitlistType: WaitlistCourseType | null = isWaitlistHeldType(
     displayCourse.type,
   )
-    ? displayCourse.type
+    ? (displayCourse.type as WaitlistCourseType)
     : null;
   const registrationPaused = settings?.registrationsOpen === false;
   const showWaitlist = registrationPaused && waitlistType !== null;

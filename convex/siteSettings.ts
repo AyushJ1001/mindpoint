@@ -2,6 +2,7 @@ import { v } from "convex/values";
 
 import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { internalMutation, query } from "./_generated/server";
+import { isWaitlistHeldType } from "./_shared/waitlist";
 
 // Storefront-wide switches. A single row (key "default"); if it is missing,
 // registration is treated as open so nothing changes until it is switched off.
@@ -18,6 +19,18 @@ export async function registrationIsOpen(
     .withIndex("by_key", (q) => q.eq("key", DEFAULT_KEY))
     .first();
   return row?.registrationsOpen ?? true;
+}
+
+/**
+ * Per-type gate. The pause holds only the waitlist types (certificate,
+ * internship, therapy); self-paced intro courses always sell.
+ */
+export async function registrationIsOpenForType(
+  ctx: QueryCtx | MutationCtx,
+  type?: string | null,
+): Promise<boolean> {
+  if (!isWaitlistHeldType(type)) return true;
+  return registrationIsOpen(ctx);
 }
 
 /** Public read for the storefront (paused banner, disabled checkout). */

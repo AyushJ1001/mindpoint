@@ -55,6 +55,7 @@ import {
 import { PublicCourseDocumentValue, PublicEnrollmentFields } from "./schema";
 import { pickPublicCourse } from "./_publicCourse";
 import { registrationIsOpen } from "./siteSettings";
+import { isWaitlistHeldType } from "./_shared/waitlist";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -1556,12 +1557,6 @@ export const handleCartCheckout = mutation({
   },
 
   handler: async (ctx, args) => {
-    if (!(await registrationIsOpen(ctx))) {
-      return enrollmentMutationFailure(
-        "Registration is paused at the moment. Please check back soon.",
-      );
-    }
-
     const lineItems: EnrollmentLineItem[] =
       args.lineItems && args.lineItems.length > 0
         ? args.lineItems
@@ -1571,6 +1566,18 @@ export const handleCartCheckout = mutation({
       return enrollmentMutationFailure(
         "Checkout requires at least one course.",
       );
+    }
+
+    // The pause holds only the waitlist types; intro courses still enrol.
+    if (!(await registrationIsOpen(ctx))) {
+      const lineCourses = await Promise.all(
+        lineItems.map((lineItem) => ctx.db.get(lineItem.courseId)),
+      );
+      if (lineCourses.some((course) => isWaitlistHeldType(course?.type))) {
+        return enrollmentMutationFailure(
+          "Registration for this course is paused at the moment. Please check back soon.",
+        );
+      }
     }
 
     const enrollments: EnrollmentSummary[] = [];
