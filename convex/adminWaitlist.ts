@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 
-import { query } from "./_generated/server";
+import { mutation, query } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 import { WaitlistCourseTypeValue, WaitlistDeliveryValue } from "./schema";
 
@@ -58,5 +58,21 @@ export const listWaitlistEntries = query({
 
     const hasMore = rows.length > limit;
     return { entries: rows.slice(0, limit), hasMore };
+  },
+});
+
+/** Remove a pre-registration (duplicates, tests, withdrawal requests). */
+export const removeWaitlistEntry = mutation({
+  args: { id: v.id("waitlistEntries") },
+  returns: v.object({ removed: v.boolean() }),
+  handler: async (ctx, args) => {
+    await requireAdmin(ctx);
+
+    const row = await ctx.db.get(args.id);
+    if (!row) {
+      return { removed: false };
+    }
+    await ctx.db.delete(args.id);
+    return { removed: true };
   },
 });

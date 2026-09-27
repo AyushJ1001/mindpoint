@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 
 import { api } from "@/lib/backend/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Download, Search } from "lucide-react";
+import { Download, Search, Trash2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +33,8 @@ export default function AdminWaitlistPage() {
   const [search, setSearch] = useState("");
   const [courseType, setCourseType] = useState("");
   const [delivery, setDelivery] = useState("");
+  const [removingId, setRemovingId] = useState<string | null>(null);
+  const removeEntry = useMutation(api.adminWaitlist.removeWaitlistEntry);
 
   const data = useQuery(api.adminWaitlist.listWaitlistEntries, {
     search: search.trim() || undefined,
@@ -175,7 +177,8 @@ export default function AdminWaitlistPage() {
                   <th className="py-3 pr-4 font-medium">Cohort</th>
                   <th className="py-3 pr-4 font-medium">Format</th>
                   <th className="py-3 pr-4 font-medium">Type</th>
-                  <th className="py-3 font-medium">Joined</th>
+                  <th className="py-3 pr-4 font-medium">Joined</th>
+                  <th className="py-3 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -217,8 +220,35 @@ export default function AdminWaitlistPage() {
                     <td className="py-3 pr-4">
                       <Badge variant="secondary">{entry.courseType}</Badge>
                     </td>
-                    <td className="py-3 text-slate-600">
+                    <td className="py-3 pr-4 text-slate-600">
                       {formatTimestamp(entry.createdAt)}
+                    </td>
+                    <td className="py-3">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={removingId === entry._id}
+                        onClick={async () => {
+                          if (
+                            !window.confirm(
+                              `Remove the pre-registration for ${entry.fullName}?`,
+                            )
+                          ) {
+                            return;
+                          }
+                          setRemovingId(entry._id);
+                          try {
+                            await removeEntry({ id: entry._id });
+                          } finally {
+                            setRemovingId(null);
+                          }
+                        }}
+                        className="text-slate-500 hover:text-red-600"
+                        aria-label={`Remove ${entry.fullName}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
                     </td>
                   </tr>
                 ))}
