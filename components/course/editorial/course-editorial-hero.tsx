@@ -33,7 +33,13 @@ export default function CourseEditorialHero({
   const batch =
     batches.find((item) => item._id === activeBatchId) ?? batches[0] ?? null;
   const start = formatDate(batch?.startDate ?? course.startDate);
-  const image = course.imageUrls?.[0] ?? null;
+  const baseImage = course.imageUrls?.[0] ?? null;
+  // Our course covers ship a landscape card image and a portrait hero sibling
+  // (`<code>.jpg` / `<code>-hero.jpg`) so the hero fills its 4:5 frame uncropped.
+  const image =
+    baseImage && baseImage.startsWith("/covers/") && baseImage.endsWith(".jpg")
+      ? baseImage.replace(/\.jpg$/, "-hero.jpg")
+      : baseImage;
   const lead = cleanLines(course.description);
   const isLiveCohort =
     course.usesBatches ||
@@ -92,18 +98,26 @@ export default function CourseEditorialHero({
 
             <ul className="text-muted-foreground mt-8 flex flex-wrap gap-x-6 gap-y-2 text-sm">
               <li className="inline-flex items-center gap-2">
-                <CalendarDays className="text-terracotta h-4 w-4" aria-hidden="true" />
+                <CalendarDays
+                  className="text-terracotta h-4 w-4"
+                  aria-hidden="true"
+                />
                 {start ? `Starts ${start}` : "Self-paced, start anytime"}
               </li>
               {scheduleLine(course) ? (
                 <li className="inline-flex items-center gap-2">
-                  <Clock className="text-terracotta h-4 w-4" aria-hidden="true" />
+                  <Clock
+                    className="text-terracotta h-4 w-4"
+                    aria-hidden="true"
+                  />
                   {scheduleLine(course)}
                 </li>
               ) : null}
               <li className="inline-flex items-center gap-2">
                 <Users className="text-terracotta h-4 w-4" aria-hidden="true" />
-                {isLiveCohort ? "Small, capped cohorts" : "Learn at your own pace"}
+                {isLiveCohort
+                  ? "Small, capped cohorts"
+                  : "Learn at your own pace"}
               </li>
             </ul>
           </ScrollReveal>
