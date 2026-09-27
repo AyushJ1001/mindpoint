@@ -37,9 +37,9 @@ const CATEGORIES = [
     icon: GraduationCap,
   },
   {
-    title: "Pre-recorded Courses",
-    href: "/courses/pre-recorded",
-    desc: "Self-paced modules you can start tonight and revisit anytime.",
+    title: "Intro courses, self-paced",
+    href: "/courses/intro",
+    desc: "Not sure where to start? Begin here, at your own pace.",
     icon: PlaySquare,
   },
   {

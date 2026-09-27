@@ -105,7 +105,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
-      url: `${baseUrl}/courses/pre-recorded`,
+      url: `${baseUrl}/courses/intro`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.8,

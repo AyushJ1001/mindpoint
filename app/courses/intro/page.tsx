@@ -6,16 +6,16 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Pre-recorded Courses - The Mind Point",
+  title: "Intro courses, self-paced - The Mind Point",
   description:
-    "Self-paced, professionally produced courses in psychology and mental health. Start tonight, revisit any module, and keep the downloadable resources for good.",
+    "Not sure where to start? Self-paced, professionally produced intro courses in psychology and mental health. Start tonight, revisit any module, and keep the resources.",
   keywords:
-    "pre-recorded courses, self-paced learning, psychology courses, mental health education, online learning",
+    "intro courses, self-paced learning, psychology courses, mental health education, online learning",
   openGraph: {
     images: [openGraphImage],
-    title: "Pre-recorded Courses - The Mind Point",
+    title: "Intro courses, self-paced - The Mind Point",
     description:
-      "Self-paced, professionally produced courses you can start tonight and revisit anytime.",
+      "Self-paced intro courses you can start tonight and revisit anytime.",
     type: "website",
   },
 };
@@ -39,12 +39,12 @@ async function getCourseData() {
       bogoCourses: bogoCourses || [],
     };
   } catch (error) {
-    console.warn("Failed to fetch pre-recorded courses:", error);
+    console.warn("Failed to fetch intro courses:", error);
     return { courses: { viewer: null, courses: [] }, bogoCourses: [] };
   }
 }
 
-export default async function PreRecordedCoursesPage() {
+export default async function IntroCoursesPage() {
   const { courses, bogoCourses } = await getCourseData();
 
   return (
