@@ -458,6 +458,10 @@ export default defineSchema({
     content: v.string(),
     course: v.id("courses"),
     isEdited: v.optional(v.boolean()),
+    // When the feedback was originally given. Older reviews imported from
+    // past feedback forms carry this so the site shows their true date
+    // instead of the import date. New reviews fall back to `_creationTime`.
+    submittedAt: v.optional(v.number()),
   })
     .index("by_course", ["course"])
     .index("by_course_and_user", ["course", "userId"]),
