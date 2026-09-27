@@ -13,6 +13,7 @@ import { WaitlistSection } from "@/components/course-page/waitlist-section";
 import { OutcomeGrid } from "@/components/course-page/outcome-grid";
 import { PartComparison } from "@/components/course-page/part-comparison";
 import { PricingCards } from "@/components/course-page/pricing-cards";
+import { ProgrammeReviews } from "@/components/course-page/programme-reviews";
 import {
   AssessmentSection,
   AudienceGroupsSection,
@@ -72,6 +73,13 @@ function programmeWaitlistBatches(course: CourseContent) {
 export function CoursePage({ course }: { course: CourseContent }) {
   const waitlistType = programmeWaitlistType(course);
 
+  // Reviews belong to the live applied course this programme enrols into, which
+  // the operational bind exposes as the applied option's cart target.
+  const reviewCourseId =
+    course.options?.items.find((item) => item.key === "applied")?.cart?._id ??
+    course.options?.items.find((item) => item.cart?._id)?.cart?._id ??
+    null;
+
   if (course.layout === "brief") {
     return (
       <div className="relative">
@@ -120,6 +128,7 @@ export function CoursePage({ course }: { course: CourseContent }) {
         {course.assessment ? (
           <AssessmentSection assessment={course.assessment} />
         ) : null}
+        <ProgrammeReviews courseId={reviewCourseId} />
         <FAQ items={course.faq} />
         <Disclaimer course={course} />
         {course.closing ? (
