@@ -613,8 +613,10 @@ export default function CoastalHome({
             <p className="text-muted-foreground text-sm">
               <b className="text-foreground font-semibold">
                 {GOOGLE_RATING.average.toFixed(1)}
-              </b>{" "}
-              from {GOOGLE_RATING.count} reviews &middot; join them
+              </b>
+              <span> from {GOOGLE_RATING.count} reviews</span>
+              <span aria-hidden="true"> &middot; </span>
+              <span>join them</span>
             </p>
           </div>
           <Link href="/courses" className={ctaVariants({ layout: "flex" })}>
