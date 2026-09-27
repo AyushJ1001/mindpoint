@@ -486,7 +486,10 @@ const CourseGroupCard = ({
                   size="sm"
                   className="transition-smooth w-full shrink-0 @min-[300px]:w-auto"
                 >
-                  <a href="#waitlist" onClick={(e) => e.stopPropagation()}>
+                  <a
+                    href={`/courses/${selectedCourse._id}#waitlist`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Plus className="mr-2 h-4 w-4" />
                     Join the waitlist
                   </a>
@@ -769,7 +772,10 @@ const CourseCard = ({
                   size="sm"
                   className="transition-smooth w-full shrink-0 @min-[300px]:w-auto"
                 >
-                  <a href="#waitlist" onClick={(e) => e.stopPropagation()}>
+                  <a
+                    href={`/courses/${course._id}#waitlist`}
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Plus className="mr-2 h-4 w-4" />
                     Join the waitlist
                   </a>
