@@ -18,7 +18,6 @@ const GROUPS: {
     links: [
       { href: "/resources", label: "Free masterclass", meta: "free" },
       { href: "/courses/intro", label: "Intro courses", meta: "₹999" },
-      { href: "/courses/certificate", label: "Certificates", meta: "live" },
     ],
   },
   {
