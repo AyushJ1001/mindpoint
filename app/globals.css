@@ -1760,3 +1760,303 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Certificate — one A4-landscape sheet, printed from the browser.     */
+/* ------------------------------------------------------------------ */
+.certificate-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 1123px;
+  aspect-ratio: 297 / 210;
+  margin: 0 auto;
+  background: linear-gradient(
+    150deg,
+    var(--cert-wash-top, #f2f8f8),
+    var(--cert-wash-bottom, #e7f1ef)
+  );
+  color: var(--cert-ink, #0b3b3c);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  overflow: hidden;
+  box-shadow: 0 34px 80px -46px rgba(11, 59, 60, 0.6);
+}
+
+/* Outer teal rule + inner gold hairline. */
+.certificate-frame {
+  position: absolute;
+  inset: 3.1%;
+  border: 2.5px solid color-mix(in oklab, var(--cert-accent) 60%, transparent);
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+.certificate-frame::after {
+  content: "";
+  position: absolute;
+  inset: 7px;
+  border: 1px solid color-mix(in oklab, var(--cert-gold) 70%, transparent);
+  border-radius: 2px;
+}
+
+.certificate-wash {
+  position: absolute;
+  inset: 0;
+  background-image: url("/brand/certificate-wash.png");
+  background-size: cover;
+  background-position: center;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+.certificate-sprigs {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.certificate-sprig {
+  position: absolute;
+  display: block;
+  width: 16%;
+  height: 54%;
+  opacity: 0.5;
+}
+
+.certificate-sprigs > .certificate-sprig:nth-child(1) {
+  top: 1.5%;
+  left: 1.6%;
+  rotate: -6deg;
+}
+
+.certificate-sprigs > .certificate-sprig:nth-child(2) {
+  bottom: 1.5%;
+  right: 1.6%;
+  rotate: 174deg;
+}
+
+.certificate-inner {
+  position: relative;
+  height: 100%;
+  padding: 5.2% 9% 4.6%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  text-align: center;
+}
+
+/* ── Head ── */
+.certificate-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.certificate-logo {
+  width: clamp(120px, 20%, 200px);
+  height: auto;
+}
+
+.certificate-believe {
+  font-size: clamp(0.46rem, 0.82vw, 0.66rem);
+  letter-spacing: 0.42em;
+  text-indent: 0.42em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--cert-ink) 60%, transparent);
+}
+
+/* ── Body ── */
+.certificate-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.certificate-title {
+  font-family: var(--font-syne), Georgia, serif;
+  font-size: clamp(1.5rem, 3.5vw, 2.9rem);
+  line-height: 1;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--cert-accent);
+}
+
+.certificate-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.7rem;
+  width: 46%;
+}
+
+.certificate-rule span {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    color-mix(in oklab, var(--cert-gold) 85%, transparent),
+    transparent
+  );
+}
+
+.certificate-rule i {
+  width: 7px;
+  height: 7px;
+  rotate: 45deg;
+  background: var(--cert-gold);
+  flex: none;
+}
+
+.certificate-presented,
+.certificate-completing {
+  margin-top: 1.15rem;
+  font-size: clamp(0.62rem, 1vw, 0.86rem);
+  color: color-mix(in oklab, var(--cert-ink) 74%, transparent);
+}
+
+.certificate-name {
+  margin-top: 0.5rem;
+  width: min(66%, 620px);
+  padding: 0 1rem 0.4rem;
+  font-family: var(--font-syne), Georgia, serif;
+  font-size: clamp(1.35rem, 2.9vw, 2.35rem);
+  line-height: 1.1;
+  color: var(--cert-ink);
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--cert-gold) 75%, transparent);
+}
+
+.certificate-course {
+  margin-top: 0.5rem;
+  width: min(58%, 540px);
+  padding: 0 1rem 0.35rem;
+  font-family: var(--font-syne), Georgia, serif;
+  font-size: clamp(0.95rem, 1.7vw, 1.5rem);
+  line-height: 1.2;
+  color: var(--cert-ink);
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--cert-gold) 45%, transparent);
+}
+
+.certificate-mode {
+  margin-top: 0.8rem;
+  font-size: clamp(0.44rem, 0.78vw, 0.6rem);
+  letter-spacing: 0.32em;
+  text-indent: 0.32em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--cert-ink) 52%, transparent);
+}
+
+/* ── Foot ── */
+.certificate-foot {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2.5rem;
+  width: 100%;
+  padding: 0 5%;
+}
+
+.certificate-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.32rem;
+}
+
+.certificate-field-value {
+  font-size: clamp(0.58rem, 0.95vw, 0.78rem);
+  color: var(--cert-ink);
+  white-space: nowrap;
+}
+
+.certificate-field-rule {
+  width: 86%;
+  height: 1px;
+  background: color-mix(in oklab, var(--cert-gold) 55%, transparent);
+}
+
+.certificate-field-label {
+  font-size: clamp(0.42rem, 0.7vw, 0.55rem);
+  letter-spacing: 0.26em;
+  text-indent: 0.26em;
+  text-transform: uppercase;
+  color: color-mix(in oklab, var(--cert-ink) 52%, transparent);
+}
+
+.certificate-seal {
+  position: relative;
+  width: min(120px, 20vw);
+  justify-self: center;
+}
+
+.certificate-seal img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.certificate-motto {
+  margin-top: 1rem;
+  font-family: var(--font-syne), Georgia, serif;
+  font-style: italic;
+  font-size: clamp(0.6rem, 0.95vw, 0.8rem);
+  color: color-mix(in oklab, var(--cert-ink) 70%, transparent);
+}
+
+.certificate-note {
+  margin-top: 0.55rem;
+  font-size: clamp(0.4rem, 0.66vw, 0.52rem);
+  line-height: 1.55;
+  color: color-mix(in oklab, var(--cert-ink) 42%, transparent);
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  html,
+  body {
+    /* A certificate is one page; nothing else prints. */
+    height: 210mm;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .certificate-sheet,
+  .certificate-sheet * {
+    visibility: visible;
+  }
+
+  .certificate-sheet {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    width: 297mm;
+    height: 210mm;
+    max-width: none;
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+.certificate-unavailable {
+  border: 1px dashed color-mix(in oklab, var(--color-border) 80%, transparent);
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-muted-foreground);
+  font-size: 0.9rem;
+}

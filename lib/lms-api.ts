@@ -150,6 +150,7 @@ export type StudentLmsWorkspace = {
       verificationCode: string;
       recipientName: string;
       courseName: string;
+      courseType?: string;
       status: "issued" | "suspended" | "revoked";
       issuedAt: number;
       publicVerificationEnabled: boolean;
@@ -283,6 +284,7 @@ export const studentLmsApi = {
 export type PublicCertificateVerification = {
   verificationCode: string;
   courseName: string;
+  courseType?: string;
   recipientName?: string;
   identityVisible: boolean;
   status: "issued" | "suspended" | "revoked";

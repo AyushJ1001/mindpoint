@@ -19,6 +19,7 @@ import type * as _shared_googleSheetsClient from "../_shared/googleSheetsClient.
 import type * as _shared_introAssignmentBank from "../_shared/introAssignmentBank.js";
 import type * as _shared_introModuleNotes from "../_shared/introModuleNotes.js";
 import type * as _shared_introQuizBank from "../_shared/introQuizBank.js";
+import type * as _shared_introReferences from "../_shared/introReferences.js";
 import type * as _shared_lmsActivation from "../_shared/lmsActivation.js";
 import type * as _shared_lmsAssignmentGrading from "../_shared/lmsAssignmentGrading.js";
 import type * as _shared_lmsCertificate from "../_shared/lmsCertificate.js";
@@ -48,6 +49,7 @@ import type * as bootstrapBatchVisibility from "../bootstrapBatchVisibility.js";
 import type * as bootstrapCbtProgramme from "../bootstrapCbtProgramme.js";
 import type * as bootstrapCbtRebtCbmt from "../bootstrapCbtRebtCbmt.js";
 import type * as bootstrapCourseReviews from "../bootstrapCourseReviews.js";
+import type * as bootstrapEnrollmentNumbers from "../bootstrapEnrollmentNumbers.js";
 import type * as bootstrapIntroCleanup from "../bootstrapIntroCleanup.js";
 import type * as bootstrapIntroRecordings from "../bootstrapIntroRecordings.js";
 import type * as bootstrapJanuaryCohort from "../bootstrapJanuaryCohort.js";
@@ -97,6 +99,7 @@ declare const fullApi: ApiFromModules<{
   "_shared/introAssignmentBank": typeof _shared_introAssignmentBank;
   "_shared/introModuleNotes": typeof _shared_introModuleNotes;
   "_shared/introQuizBank": typeof _shared_introQuizBank;
+  "_shared/introReferences": typeof _shared_introReferences;
   "_shared/lmsActivation": typeof _shared_lmsActivation;
   "_shared/lmsAssignmentGrading": typeof _shared_lmsAssignmentGrading;
   "_shared/lmsCertificate": typeof _shared_lmsCertificate;
@@ -126,6 +129,7 @@ declare const fullApi: ApiFromModules<{
   bootstrapCbtProgramme: typeof bootstrapCbtProgramme;
   bootstrapCbtRebtCbmt: typeof bootstrapCbtRebtCbmt;
   bootstrapCourseReviews: typeof bootstrapCourseReviews;
+  bootstrapEnrollmentNumbers: typeof bootstrapEnrollmentNumbers;
   bootstrapIntroCleanup: typeof bootstrapIntroCleanup;
   bootstrapIntroRecordings: typeof bootstrapIntroRecordings;
   bootstrapJanuaryCohort: typeof bootstrapJanuaryCohort;

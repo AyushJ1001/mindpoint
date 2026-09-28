@@ -1080,6 +1080,7 @@ export const getMyWorkspace = query({
                   verificationCode: certificate.verificationCode,
                   recipientName: certificate.recipientName,
                   courseName: certificate.courseName,
+                  courseType: certificate.courseType,
                   status: certificate.status,
                   issuedAt: certificate.issuedAt,
                   publicVerificationEnabled:
@@ -1239,6 +1240,7 @@ export const verifyCertificate = query({
     return {
       verificationCode: certificate.verificationCode,
       courseName: certificate.courseName,
+      courseType: certificate.courseType,
       recipientName: certificate.publicVerificationEnabled
         ? certificate.recipientName
         : undefined,
