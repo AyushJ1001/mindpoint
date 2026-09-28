@@ -17,6 +17,7 @@ import type * as _shared_enrollmentSchedule from "../_shared/enrollmentSchedule.
 import type * as _shared_enrollmentSheet from "../_shared/enrollmentSheet.js";
 import type * as _shared_googleSheetsClient from "../_shared/googleSheetsClient.js";
 import type * as _shared_introAssignmentBank from "../_shared/introAssignmentBank.js";
+import type * as _shared_introModuleNotes from "../_shared/introModuleNotes.js";
 import type * as _shared_introQuizBank from "../_shared/introQuizBank.js";
 import type * as _shared_lmsActivation from "../_shared/lmsActivation.js";
 import type * as _shared_lmsAssignmentGrading from "../_shared/lmsAssignmentGrading.js";
@@ -52,6 +53,7 @@ import type * as bootstrapIntroRecordings from "../bootstrapIntroRecordings.js";
 import type * as bootstrapJanuaryCohort from "../bootstrapJanuaryCohort.js";
 import type * as bootstrapLmsCurricula from "../bootstrapLmsCurricula.js";
 import type * as bootstrapStorefrontPricing from "../bootstrapStorefrontPricing.js";
+import type * as bootstrapTestCompletion from "../bootstrapTestCompletion.js";
 import type * as bootstrapUpgradeCoupons from "../bootstrapUpgradeCoupons.js";
 import type * as bundleCampaigns from "../bundleCampaigns.js";
 import type * as checkout from "../checkout.js";
@@ -93,6 +95,7 @@ declare const fullApi: ApiFromModules<{
   "_shared/enrollmentSheet": typeof _shared_enrollmentSheet;
   "_shared/googleSheetsClient": typeof _shared_googleSheetsClient;
   "_shared/introAssignmentBank": typeof _shared_introAssignmentBank;
+  "_shared/introModuleNotes": typeof _shared_introModuleNotes;
   "_shared/introQuizBank": typeof _shared_introQuizBank;
   "_shared/lmsActivation": typeof _shared_lmsActivation;
   "_shared/lmsAssignmentGrading": typeof _shared_lmsAssignmentGrading;
@@ -128,6 +131,7 @@ declare const fullApi: ApiFromModules<{
   bootstrapJanuaryCohort: typeof bootstrapJanuaryCohort;
   bootstrapLmsCurricula: typeof bootstrapLmsCurricula;
   bootstrapStorefrontPricing: typeof bootstrapStorefrontPricing;
+  bootstrapTestCompletion: typeof bootstrapTestCompletion;
   bootstrapUpgradeCoupons: typeof bootstrapUpgradeCoupons;
   bundleCampaigns: typeof bundleCampaigns;
   checkout: typeof checkout;

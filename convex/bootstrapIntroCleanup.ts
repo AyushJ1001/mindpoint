@@ -1,6 +1,62 @@
 import { internalMutation } from "./_generated/server";
 import { activatePublishedLmsCurriculum } from "./_shared/lmsActivation";
 
+/**
+ * Backfill: attach the published LMS curriculum to any existing intro
+ * enrollment that has none — for enrollments created before the curricula were
+ * published, or manual ones that skipped activation. Also approves a pending
+ * payment on an intro enrollment, since the ₹999 courses deliver automatically.
+ *
+ *   npx convex run bootstrapIntroCleanup:backfillIntroEnrollments
+ */
+export const backfillIntroEnrollments = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const codes = ["PRCP", "PRCVCP", "PRSP", "PRPFA"];
+    const courses = await ctx.db.query("courses").take(2000);
+    const targetIds = new Set(
+      courses.filter((c) => c.code && codes.includes(c.code)).map((c) => c._id),
+    );
+    if (targetIds.size === 0) return { activated: 0, approved: 0 };
+
+    const enrollments = await ctx.db.query("enrollments").take(2000);
+    let activated = 0;
+    let approved = 0;
+
+    for (const enrollment of enrollments) {
+      if (!targetIds.has(enrollment.courseId)) continue;
+      if (enrollment.status && enrollment.status !== "active") continue;
+
+      const existing = await ctx.db
+        .query("lmsEnrollmentCurricula")
+        .withIndex("by_enrollmentId", (q) =>
+          q.eq("enrollmentId", enrollment._id),
+        )
+        .unique();
+
+      if (!existing) {
+        const assignment = await activatePublishedLmsCurriculum(ctx, {
+          enrollmentId: enrollment._id,
+          courseId: enrollment.courseId,
+          courseType: enrollment.courseType,
+        });
+        if (assignment) activated += 1;
+      }
+
+      if (enrollment.paymentVerification === "pending") {
+        await ctx.db.patch(enrollment._id, {
+          paymentVerification: "approved",
+          paymentVerificationNote: "Auto-approved for an intro course",
+        });
+        approved += 1;
+      }
+    }
+
+    return { activated, approved, at: now };
+  },
+});
+
 // Grant a test enrollment on an intro course so the owner can walk through the
 // real student LMS (video, reading, quiz, completion, certificate).
 //

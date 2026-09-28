@@ -1,6 +1,7 @@
 import { internalMutation } from "./_generated/server";
 import { INTRO_QUIZ_BANK } from "./_shared/introQuizBank";
 import { INTRO_ASSIGNMENT_BANK } from "./_shared/introAssignmentBank";
+import { INTRO_MODULE_NOTES_URLS } from "./_shared/introModuleNotes";
 
 // Attach the four complete intro courses' recordings to the LMS and publish
 // their curricula, so a paid enrollment unlocks a real, playable course.
@@ -644,6 +645,85 @@ export const requireIntroAssignments = internalMutation({
     }
 
     return { updated };
+  },
+});
+
+/**
+ * Point each module's reading activity at its reference notes file, so learners
+ * can actually read the material (previously the activity only carried the
+ * one-line reading focus, with no notes attached).
+ *
+ *   npx convex run bootstrapIntroRecordings:attachModuleNotes
+ */
+export const attachModuleNotes = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const courses = await ctx.db.query("courses").take(2000);
+    const results: { code: string; linked?: number; skipped?: string }[] = [];
+
+    for (const seed of COURSES) {
+      const urls = INTRO_MODULE_NOTES_URLS[seed.code];
+      if (!urls) continue;
+
+      const matches = courses.filter((course) => course.code === seed.code);
+      const course =
+        matches.find((row) => row.lifecycleStatus !== "archived") ?? matches[0];
+      if (!course) continue;
+
+      const curricula = await ctx.db
+        .query("lmsCurricula")
+        .withIndex("by_courseId", (q) => q.eq("courseId", course._id))
+        .take(100);
+      const published = curricula.find((row) => row.status === "published");
+      if (!published) {
+        results.push({ code: seed.code, skipped: "no published curriculum" });
+        continue;
+      }
+
+      const modules = await ctx.db
+        .query("lmsModules")
+        .withIndex("by_curriculumId_and_sortOrder", (q) =>
+          q.eq("curriculumId", published._id),
+        )
+        .take(100);
+      const activities = await ctx.db
+        .query("lmsActivities")
+        .withIndex("by_curriculumId", (q) =>
+          q.eq("curriculumId", published._id),
+        )
+        .take(500);
+
+      const ordered = [...modules].sort((a, b) => a.sortOrder - b.sortOrder);
+      let linked = 0;
+
+      for (let i = 0; i < ordered.length; i += 1) {
+        const module = ordered[i];
+        const url = urls[i];
+        if (!url) continue;
+
+        const reading = activities.find(
+          (activity) =>
+            activity.moduleId === module._id && activity.type === "reading",
+        );
+        if (!reading) continue;
+
+        await ctx.db.patch(reading._id, {
+          externalUrl: url,
+          instructions:
+            "Read the reference notes for this module, then mark the reading complete.",
+          updatedAt: now,
+        });
+        linked += 1;
+      }
+
+      if (linked > 0) {
+        await ctx.db.patch(published._id, { updatedAt: now });
+      }
+      results.push({ code: seed.code, linked });
+    }
+
+    return { results };
   },
 });
 
