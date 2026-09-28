@@ -16,6 +16,7 @@ import type * as _shared_enrollment from "../_shared/enrollment.js";
 import type * as _shared_enrollmentSchedule from "../_shared/enrollmentSchedule.js";
 import type * as _shared_enrollmentSheet from "../_shared/enrollmentSheet.js";
 import type * as _shared_googleSheetsClient from "../_shared/googleSheetsClient.js";
+import type * as _shared_introAssignmentBank from "../_shared/introAssignmentBank.js";
 import type * as _shared_introQuizBank from "../_shared/introQuizBank.js";
 import type * as _shared_lmsActivation from "../_shared/lmsActivation.js";
 import type * as _shared_lmsCertificate from "../_shared/lmsCertificate.js";
@@ -90,6 +91,7 @@ declare const fullApi: ApiFromModules<{
   "_shared/enrollmentSchedule": typeof _shared_enrollmentSchedule;
   "_shared/enrollmentSheet": typeof _shared_enrollmentSheet;
   "_shared/googleSheetsClient": typeof _shared_googleSheetsClient;
+  "_shared/introAssignmentBank": typeof _shared_introAssignmentBank;
   "_shared/introQuizBank": typeof _shared_introQuizBank;
   "_shared/lmsActivation": typeof _shared_lmsActivation;
   "_shared/lmsCertificate": typeof _shared_lmsCertificate;

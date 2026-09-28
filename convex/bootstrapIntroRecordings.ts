@@ -1,5 +1,6 @@
 import { internalMutation } from "./_generated/server";
 import { INTRO_QUIZ_BANK } from "./_shared/introQuizBank";
+import { INTRO_ASSIGNMENT_BANK } from "./_shared/introAssignmentBank";
 
 // Attach the four complete intro courses' recordings to the LMS and publish
 // their curricula, so a paid enrollment unlocks a real, playable course.
@@ -481,6 +482,119 @@ export const resetIncompleteQuizzes = internalMutation({
     }
 
     return { removedQuestions, resetActivities };
+  },
+});
+
+/**
+ * Add one assignment per module from the practice workbook's fictional case, so
+ * learners write and submit their reasoning for Faculty review. Assignment
+ * activities are optional evidence (they do not gate the certificate), but they
+ * link the workbook into the LMS.
+ *
+ *   npx convex run bootstrapIntroRecordings:loadIntroAssignments
+ *
+ * Idempotent: a module that already has an assignment is skipped.
+ */
+export const loadIntroAssignments = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const courses = await ctx.db.query("courses").take(2000);
+    const results: { code: string; assignments?: number; skipped?: string }[] =
+      [];
+
+    for (const seed of COURSES) {
+      const bank = INTRO_ASSIGNMENT_BANK[seed.code];
+      if (!bank) continue;
+
+      const matches = courses.filter((course) => course.code === seed.code);
+      const course =
+        matches.find((row) => row.lifecycleStatus !== "archived") ?? matches[0];
+      if (!course) continue;
+
+      const curricula = await ctx.db
+        .query("lmsCurricula")
+        .withIndex("by_courseId", (q) => q.eq("courseId", course._id))
+        .take(100);
+      const published = curricula.find((row) => row.status === "published");
+      if (!published) {
+        results.push({ code: seed.code, skipped: "no published curriculum" });
+        continue;
+      }
+
+      const modules = await ctx.db
+        .query("lmsModules")
+        .withIndex("by_curriculumId_and_sortOrder", (q) =>
+          q.eq("curriculumId", published._id),
+        )
+        .take(100);
+      const activities = await ctx.db
+        .query("lmsActivities")
+        .withIndex("by_curriculumId", (q) =>
+          q.eq("curriculumId", published._id),
+        )
+        .take(500);
+
+      const orderedModules = [...modules].sort(
+        (a, b) => a.sortOrder - b.sortOrder,
+      );
+      let assignments = 0;
+
+      for (
+        let moduleIndex = 0;
+        moduleIndex < orderedModules.length;
+        moduleIndex += 1
+      ) {
+        const module = orderedModules[moduleIndex];
+        const bankModule = bank[moduleIndex];
+        if (!bankModule) continue;
+        if (
+          activities.some(
+            (activity) =>
+              activity.moduleId === module._id &&
+              activity.type === "assignment",
+          )
+        ) {
+          continue;
+        }
+
+        const taskList = bankModule.tasks
+          .map((task, index) => `${index + 1}. ${task}`)
+          .join("\n");
+
+        await ctx.db.insert("lmsActivities", {
+          curriculumId: published._id,
+          moduleId: module._id,
+          type: "assignment",
+          title: `${module.title} — practice task`,
+          instructions: [
+            bankModule.caseBrief,
+            "",
+            "Complete the following tasks and submit your response:",
+            taskList,
+            "",
+            "Your submission is reviewed by Faculty. Reference the module notes and show your reasoning; where information is missing, say what you would check and why.",
+          ].join("\n"),
+          required: false,
+          sortOrder: 80,
+          releaseMode: "immediate",
+          completionMode: "submit",
+          gradingCriteria:
+            "A complete response separates observation from inference, uses the module's concepts correctly, asks proportionate questions, and states an appropriate limit on the learner's role. Partial credit for a clear plan where information is missing.",
+          rightsApproved: true,
+          createdAt: now,
+          updatedAt: now,
+        });
+        assignments += 1;
+      }
+
+      if (assignments > 0) {
+        await ctx.db.patch(published._id, { updatedAt: now });
+      }
+      results.push({ code: seed.code, assignments });
+    }
+
+    return { results };
   },
 });
 
