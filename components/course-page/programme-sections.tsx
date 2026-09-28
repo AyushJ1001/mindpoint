@@ -1,6 +1,8 @@
 import Image from "next/image";
 
 import { Section } from "@/components/course-page/section";
+import { StarRating } from "@/components/course/ratings";
+import { GOOGLE_RATING } from "@/lib/googleReviews";
 import type {
   AudienceGroup,
   ProgrammeAssessment,
@@ -11,7 +13,13 @@ import type {
   ProgrammeStep,
 } from "@/lib/course-content/types";
 
-export function ProgrammeHeroSection({ hero }: { hero: ProgrammeHero }) {
+export function ProgrammeHeroSection({
+  hero,
+  fromPrice,
+}: {
+  hero: ProgrammeHero;
+  fromPrice?: number;
+}) {
   return (
     <section className="pt-14 pb-10 sm:pt-20 sm:pb-16">
       <div className="container">
@@ -27,7 +35,17 @@ export function ProgrammeHeroSection({ hero }: { hero: ProgrammeHero }) {
         <p className="text-muted-foreground mt-7 max-w-[62ch] text-lg leading-relaxed">
           {hero.description}
         </p>
-        <div className="mt-9 flex flex-wrap items-center gap-3">
+        <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+          {fromPrice !== undefined ? (
+            <div>
+              <span className="text-muted-foreground text-[0.62rem] font-semibold tracking-[0.22em] uppercase">
+                From{" "}
+              </span>
+              <span className="font-display text-foreground text-2xl">
+                ₹{fromPrice.toLocaleString("en-IN")}
+              </span>
+            </div>
+          ) : null}
           <a
             href={hero.primaryCta.href}
             className="bg-primary text-primary-foreground inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-transform hover:-translate-y-0.5"
@@ -43,6 +61,15 @@ export function ProgrammeHeroSection({ hero }: { hero: ProgrammeHero }) {
               {hero.secondaryCta.label}
             </a>
           ) : null}
+        </div>
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <StarRating rating={GOOGLE_RATING.average} size="sm" />
+          <p className="text-muted-foreground text-sm">
+            <b className="text-foreground font-semibold">
+              {GOOGLE_RATING.average.toFixed(1)}
+            </b>{" "}
+            from {GOOGLE_RATING.count} Google reviews
+          </p>
         </div>
         {hero.scopeLine ? (
           <p className="text-foreground/60 mt-7 max-w-[62ch] border-l-2 border-[#bcd6dd] pl-4 text-sm leading-relaxed">

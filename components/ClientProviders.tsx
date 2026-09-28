@@ -7,6 +7,7 @@ import { CartProvider } from "@/components/CartProvider";
 import { ReferralTracker } from "@/components/ReferralTracker";
 import { MindPointsProvider } from "@/contexts/MindPointsContext";
 import ClientNavbar from "@/components/ClientNavbar";
+import AnnouncementBanner from "@/components/AnnouncementBanner";
 import RouteBodyClass from "@/components/RouteBodyClass";
 import StructuredData from "@/components/structured-data";
 import { ThemeProvider } from "@/components/theme-provider";
@@ -27,6 +28,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
     >
       <RouteBodyClass />
       <StructuredData />
+      <AnnouncementBanner />
       <ClientNavbar />
       <WaterMain>{children}</WaterMain>
     </ThemeProvider>

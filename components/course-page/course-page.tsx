@@ -14,6 +14,7 @@ import { OutcomeGrid } from "@/components/course-page/outcome-grid";
 import { PartComparison } from "@/components/course-page/part-comparison";
 import { PricingCards } from "@/components/course-page/pricing-cards";
 import { ProgrammeReviews } from "@/components/course-page/programme-reviews";
+import { StickyCta } from "@/components/course-page/sticky-cta";
 import {
   AssessmentSection,
   AudienceGroupsSection,
@@ -80,10 +81,34 @@ export function CoursePage({ course }: { course: CourseContent }) {
     course.options?.items.find((item) => item.cart?._id)?.cart?._id ??
     null;
 
+  const optionPrices = (course.options?.items ?? [])
+    .map((item) => item.price?.amount)
+    .filter((p): p is number => typeof p === "number" && p > 0);
+  const tierPrices = [
+    course.pricing?.foundation?.price,
+    course.pricing?.complete?.price,
+  ].filter((p): p is number => typeof p === "number" && p > 0);
+  const allPrices = [...optionPrices, ...tierPrices];
+  const fromPrice = allPrices.length > 0 ? Math.min(...allPrices) : undefined;
+  const stickyPrice =
+    fromPrice !== undefined
+      ? `From ₹${fromPrice.toLocaleString("en-IN")}`
+      : undefined;
+  const stickyCta = (
+    <StickyCta
+      href="#options"
+      label={course.cta.primaryLabel || "Choose how you train"}
+      priceLabel={stickyPrice}
+      note={course.campaign ? "January 2027 cohort" : undefined}
+    />
+  );
+
   if (course.layout === "brief") {
     return (
       <div className="relative">
-        {course.hero ? <ProgrammeHeroSection hero={course.hero} /> : null}
+        {course.hero ? (
+          <ProgrammeHeroSection hero={course.hero} fromPrice={fromPrice} />
+        ) : null}
         {course.overview ? (
           <ProgrammeOverviewSection overview={course.overview} />
         ) : null}
@@ -136,6 +161,7 @@ export function CoursePage({ course }: { course: CourseContent }) {
         ) : (
           <FinalCTA cta={course.cta} />
         )}
+        {stickyCta}
       </div>
     );
   }
@@ -161,6 +187,7 @@ export function CoursePage({ course }: { course: CourseContent }) {
       <FAQ items={course.faq} />
       <Disclaimer course={course} />
       <FinalCTA cta={course.cta} />
+      {stickyCta}
     </div>
   );
 }

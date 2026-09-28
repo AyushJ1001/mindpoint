@@ -7,21 +7,22 @@ import { hasAdminAccess } from "@/lib/admin-access";
 import { resolveAuthEmail } from "@/lib/clerk-email";
 import { isClerkServerConfigured } from "@/lib/clerk-env";
 import CoastalHome from "@/components/landing/CoastalHome";
+import { HOME_FAQ } from "@/lib/home-faq";
 
 export const revalidate = 3600; // Revalidate every hour
 
 export const metadata = {
-  title: "The Mind Point - Mental Health Education & Professional Development",
+  title:
+    "The Mind Point — psychology courses for students, career changers & therapists in India",
   description:
-    "Empowering minds through comprehensive mental health education and professional development. Learn with structured programs, live workshops, and science-backed resources.",
+    "Self-paced psychology intro courses from ₹999, live certificate cohorts from January 2027, supervision and therapy. Structured, evidence-based teaching with honest, publicly verifiable certificates. Rated 4.8 from 248 Google reviews.",
   keywords:
     "mental health, psychology, education, therapy, counseling, professional development, online courses",
   openGraph: {
     images: [openGraphImage],
-    title:
-      "The Mind Point - Mental Health Education & Professional Development",
+    title: "The Mind Point — a learning home for psychology",
     description:
-      "Empowering minds through comprehensive mental health education and professional development.",
+      "Self-paced intro courses from ₹999, live certificate cohorts from January 2027, supervision and therapy — with honest, verifiable certificates.",
     type: "website",
   },
   metadataBase: new URL("https://www.themindpoint.org"),
@@ -29,6 +30,25 @@ export const metadata = {
     canonical: "/",
   },
 };
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: HOME_FAQ.map((item) => ({
+    "@type": "Question",
+    name: item.q,
+    acceptedAnswer: { "@type": "Answer", text: item.a },
+  })),
+};
+
+function HomeFaqSchema() {
+  return (
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
+    />
+  );
+}
 
 async function getUpcomingCourses() {
   try {
@@ -80,10 +100,13 @@ export default async function Home() {
 
     if (!userId && !sessionEmail) {
       return (
-        <CoastalHome
-          canAccessAdmin={canAccessAdmin}
-          upcomingCourses={upcomingCourses}
-        />
+        <>
+          <HomeFaqSchema />
+          <CoastalHome
+            canAccessAdmin={canAccessAdmin}
+            upcomingCourses={upcomingCourses}
+          />
+        </>
       );
     }
 
@@ -96,9 +119,12 @@ export default async function Home() {
   }
 
   return (
-    <CoastalHome
-      canAccessAdmin={canAccessAdmin}
-      upcomingCourses={upcomingCourses}
-    />
+    <>
+      <HomeFaqSchema />
+      <CoastalHome
+        canAccessAdmin={canAccessAdmin}
+        upcomingCourses={upcomingCourses}
+      />
+    </>
   );
 }

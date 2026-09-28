@@ -13,26 +13,30 @@ export const metadata = {
 };
 
 const RESOURCES = [
-  [
-    "Understanding overthinking",
-    "A short guide to why the mind loops, and what actually helps.",
-    "Read",
-  ],
-  [
-    "Choosing a therapy path",
-    "What to look for in a programme — and what to be wary of.",
-    "Read",
-  ],
-  [
-    "CBT tool pack",
-    "Printable exercises for anxiety and overthinking.",
-    "Download",
-  ],
-  [
-    "How to verify a certificate",
-    "Check any The Mind Point certificate in seconds.",
-    "Verify",
-  ],
+  {
+    title: "Why can't I stop overthinking?",
+    copy: "Why the mind loops, and what actually helps.",
+    action: "Read",
+    href: "/resources/stop-overthinking",
+  },
+  {
+    title: "How to choose a psychology course",
+    copy: "What to look for — and what to be wary of.",
+    action: "Read",
+    href: "/resources/choosing-a-psychology-course",
+  },
+  {
+    title: "CBT exercises for anxiety",
+    copy: "Three core exercises you can start today.",
+    action: "Read",
+    href: "/resources/cbt-exercises",
+  },
+  {
+    title: "How to verify a certificate",
+    copy: "Check any The Mind Point certificate in seconds.",
+    action: "Verify",
+    href: "/verify",
+  },
 ];
 
 export default function ResourcesPage() {
@@ -70,18 +74,20 @@ export default function ResourcesPage() {
           Start before you commit.
         </h2>
         <div className="border-primary border-t-2">
-          {RESOURCES.map(([title, copy, action]) => (
+          {RESOURCES.map((resource) => (
             <Link
-              key={title}
-              href="/contact"
+              key={resource.title}
+              href={resource.href}
               className="border-border hover:bg-card flex items-center justify-between gap-4 border-b border-dashed py-6 transition-colors"
             >
               <div>
-                <h3 className="font-display text-xl">{title}</h3>
-                <p className="text-muted-foreground mt-1 text-sm">{copy}</p>
+                <h3 className="font-display text-xl">{resource.title}</h3>
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {resource.copy}
+                </p>
               </div>
               <span className="text-primary text-[0.7rem] font-semibold tracking-[0.18em] whitespace-nowrap uppercase">
-                {action}
+                {resource.action}
               </span>
             </Link>
           ))}

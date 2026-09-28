@@ -21,7 +21,15 @@ export type EmailDeliveryConfig = {
   replyTo?: string;
   subject: string;
   to: string | string[];
+  /**
+   * Addresses to BCC. Used only for internal notifications; never for a copy of
+   * a student's email, which would put student data in a shared inbox.
+   */
+  bcc?: string[];
 };
+
+/** Internal operational inbox for owner-facing notifications. */
+export const OWNER_EMAIL = "contact.themindpoint@gmail.com";
 
 export type EmailDeliveryFailure = ConvexFailure<"EMAIL_DELIVERY_FAILED">;
 
@@ -99,17 +107,19 @@ export async function sendEmailWithCopy(
   const mainRecipients = Array.isArray(emailConfig.to)
     ? emailConfig.to
     : [emailConfig.to];
-  const allRecipients = [...mainRecipients, "contact.themindpoint@gmail.com"];
 
   try {
     const result = await resend.emails.send({
       ...emailConfig,
-      to: allRecipients,
+      to: mainRecipients,
+      ...(emailConfig.bcc && emailConfig.bcc.length > 0
+        ? { bcc: emailConfig.bcc }
+        : {}),
     });
 
     if (result.error) {
       return emailDeliveryFailure(result.error.message, {
-        recipientCount: allRecipients.length,
+        recipientCount: mainRecipients.length,
         subject: emailConfig.subject,
       });
     }
@@ -119,7 +129,7 @@ export async function sendEmailWithCopy(
     return emailDeliveryFailure(
       error instanceof Error ? error.message : String(error),
       {
-        recipientCount: allRecipients.length,
+        recipientCount: mainRecipients.length,
         subject: emailConfig.subject,
       },
     );

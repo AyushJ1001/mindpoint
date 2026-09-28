@@ -1515,6 +1515,17 @@
   }
 }
 
+/* One slow drift for the review marquee. The track holds two identical groups
+   with a 2rem gap, so shifting half the track plus half a gap loops seamlessly. */
+@keyframes water-marquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - 1rem));
+  }
+}
+
 .animate-float-slow {
   animation: float-slow 11s ease-in-out infinite;
 }
@@ -1638,6 +1649,28 @@
     border: 1px solid color-mix(in oklab, #bcd6dd 70%, transparent);
   }
 
+  .water-marquee {
+    overflow: hidden;
+  }
+
+  .water-marquee-track {
+    display: flex;
+    width: max-content;
+    gap: 2rem;
+    animation: water-marquee 64s linear infinite;
+  }
+
+  .water-marquee:hover .water-marquee-track {
+    animation-play-state: paused;
+  }
+
+  .water-marquee-group {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 2rem;
+  }
+
   .water-drift {
     animation: float-slow 36s ease-in-out infinite alternate;
   }
@@ -1648,12 +1681,7 @@
 
   /* Night water */
   .dark .water-page {
-    background: linear-gradient(
-      180deg,
-      #0b2422 0%,
-      #0f2a28 42%,
-      #0f2a28 100%
-    );
+    background: linear-gradient(180deg, #0b2422 0%, #0f2a28 42%, #0f2a28 100%);
   }
 
   .dark .water-page::before {
@@ -1715,6 +1743,14 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .water-marquee {
+    overflow-x: auto;
+  }
+
+  .water-marquee-track {
+    animation: none !important;
+  }
+
   *,
   *::before,
   *::after {
