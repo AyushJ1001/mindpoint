@@ -599,6 +599,55 @@ export const loadIntroAssignments = internalMutation({
 });
 
 /**
+ * Mark every intro assignment required, now that assignments auto-grade on
+ * submission. Required assignment evidence means the workbook work genuinely
+ * counts toward completion, without waiting on manual Faculty review.
+ *
+ *   npx convex run bootstrapIntroRecordings:requireIntroAssignments
+ */
+export const requireIntroAssignments = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const courses = await ctx.db.query("courses").take(2000);
+    const updated: { code: string; assignments: number }[] = [];
+
+    for (const seed of COURSES) {
+      const matches = courses.filter((course) => course.code === seed.code);
+      const course =
+        matches.find((row) => row.lifecycleStatus !== "archived") ?? matches[0];
+      if (!course) continue;
+
+      const curricula = await ctx.db
+        .query("lmsCurricula")
+        .withIndex("by_courseId", (q) => q.eq("courseId", course._id))
+        .take(100);
+      const published = curricula.find((row) => row.status === "published");
+      if (!published) continue;
+
+      const activities = await ctx.db
+        .query("lmsActivities")
+        .withIndex("by_curriculumId", (q) =>
+          q.eq("curriculumId", published._id),
+        )
+        .take(500);
+      const assignments = activities.filter(
+        (activity) => activity.type === "assignment",
+      );
+
+      for (const assignment of assignments) {
+        if (assignment.required) continue;
+        await ctx.db.patch(assignment._id, { required: true, updatedAt: now });
+      }
+      await ctx.db.patch(published._id, { updatedAt: now });
+      updated.push({ code: seed.code, assignments: assignments.length });
+    }
+
+    return { updated };
+  },
+});
+
+/**
  * Publish and price the four complete intros at ₹999. Narrow on purpose: it
  * touches only these four courses, so it cannot alter certificate prices or
  * clear a live offer the way the full storefront pricing seed would.

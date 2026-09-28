@@ -17,6 +17,7 @@ import {
 } from "./schema";
 import { maybeCreateCompletionRequest } from "./lmsCompletion";
 import { scoreLmsQuiz } from "./_shared/lmsQuiz";
+import { autoGradeAssignment } from "./_shared/lmsAssignmentGrading";
 import {
   normalizeCertificateName,
   normalizeVerificationCode,
@@ -1750,6 +1751,17 @@ export const submitAssignment = mutation({
         updatedAt: now,
       });
     }
+
+    // Grade immediately. Faculty can still re-review, but the learner is not
+    // left waiting for a decision before they can move on.
+    const grade = autoGradeAssignment(responseText, activity);
+    await ctx.db.patch("lmsSubmissions", submissionId, {
+      status: grade.decision,
+      feedback: grade.feedback,
+      reviewedAt: now,
+      updatedAt: now,
+    });
+
     const progress = await ctx.db
       .query("lmsActivityProgress")
       .withIndex("by_enrollmentId_and_activityId", (q) =>
@@ -1758,12 +1770,22 @@ export const submitAssignment = mutation({
           .eq("activityId", args.activityId),
       )
       .unique();
-    const progressPatch = {
-      status: "awaiting_review" as const,
-      submittedAt: now,
-      updatedAt: now,
-      evidenceReference: submissionId,
-    };
+    const progressPatch =
+      grade.decision === "accepted"
+        ? {
+            status: "completed" as const,
+            submittedAt: now,
+            completedAt: now,
+            updatedAt: now,
+            evidenceReference: submissionId,
+          }
+        : {
+            status: "in_progress" as const,
+            submittedAt: now,
+            completedAt: undefined,
+            updatedAt: now,
+            evidenceReference: submissionId,
+          };
     if (progress)
       await ctx.db.patch("lmsActivityProgress", progress._id, progressPatch);
     else {
@@ -1773,6 +1795,9 @@ export const submitAssignment = mutation({
         startedAt: now,
         ...progressPatch,
       });
+    }
+    if (grade.decision === "accepted") {
+      await maybeCreateCompletionRequest(ctx, args.enrollmentId);
     }
     await ctx.db.insert("adminAuditLogs", {
       actorAdminId: identity.tokenIdentifier,
