@@ -227,6 +227,7 @@ export function Certificate({
       aria-label={`Certificate of completion for ${data.recipientName}`}
     >
       <div className="certificate-frame" aria-hidden="true" />
+      <div className="certificate-wash" aria-hidden="true" />
       <div className="certificate-sprigs" aria-hidden="true">
         <Sprig />
         <Sprig flip />
@@ -274,7 +275,7 @@ export function Certificate({
 
           <div className="certificate-seal">
             <Image
-              src="/brand/the-mind-point-seal.png"
+              src="/brand/the-mind-point-seal-transparent.png"
               alt="The Mind Point seal"
               width={320}
               height={320}
