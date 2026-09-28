@@ -747,6 +747,7 @@ export const approveCompletion = mutation({
         verificationCode: enrollment.enrollmentNumber,
         recipientName: request.confirmedRecipientName,
         courseName: course?.name ?? enrollment.courseName ?? "Course",
+        courseType: course?.type ?? enrollment.courseType,
         status: "issued",
         issuedAt: now,
         publicVerificationEnabled: false,

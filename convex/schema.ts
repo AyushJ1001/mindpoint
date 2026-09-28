@@ -953,6 +953,9 @@ export default defineSchema({
     verificationCode: v.string(),
     recipientName: v.string(),
     courseName: v.string(),
+    // Snapshot of the course type at issuance, so the certificate keeps its
+    // design family even if the course is later reclassified.
+    courseType: v.optional(v.string()),
     status: v.union(
       v.literal("issued"),
       v.literal("suspended"),

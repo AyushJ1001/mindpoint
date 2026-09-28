@@ -5,12 +5,12 @@ import Image from "next/image";
 import type { LmsLearningMode } from "@/lib/lms-api";
 
 /**
- * The issued certificate. One template, themed per learning mode, with the
- * learner's own details merged in. Renders on screen and prints to A4 landscape
- * from the browser ("Print or save PDF").
+ * The issued certificate. One template, themed by course family so a formal
+ * certificate, a self-paced intro and a masterclass read differently while
+ * sharing the same frame. Prints to A4 landscape from the browser.
  *
- * The frame, leaf sprigs and gold hairlines are drawn as SVG so the sheet scales
- * cleanly at any size and prints sharply without a raster backdrop.
+ * The frame, leaf sprigs and gold hairlines are drawn as SVG so the sheet
+ * scales cleanly at any size and prints sharply without a raster backdrop.
  */
 
 export interface CertificateData {
@@ -19,6 +19,8 @@ export interface CertificateData {
   verificationCode: string;
   issuedAt: number;
   learningMode?: LmsLearningMode;
+  /** Course type, which selects the visual family. */
+  courseType?: string;
 }
 
 interface Theme {
@@ -26,44 +28,109 @@ interface Theme {
   ink: string;
   accent: string;
   gold: string;
+  leaf: string;
   washTop: string;
   washBottom: string;
+  /** Formal credentials get the full treatment; lighter families stay calm. */
+  formal: boolean;
 }
 
-const MODE_THEME: Record<LmsLearningMode, Theme> = {
-  self_paced: {
-    label: "Self-paced completion",
+/**
+ * Four families, matching the four designs: formal credentials (deep teal and
+ * gold), self-paced intros (watercolour cream), applied programmes (white
+ * minimal) and therapy/masterclass (warm blush).
+ */
+const FAMILY_THEME: Record<string, Theme> = {
+  formal: {
+    label: "Completion",
     ink: "#0b3b3c",
     accent: "#0c6f73",
     gold: "#b9924f",
+    leaf: "#1d4e4a",
     washTop: "#f2f8f8",
-    washBottom: "#e7f1ef",
+    washBottom: "#e6f0ee",
+    formal: true,
   },
-  hybrid: {
-    label: "Live cohort completion",
-    ink: "#0b3b3c",
-    accent: "#0c6f73",
-    gold: "#b9924f",
-    washTop: "#f4f8f7",
-    washBottom: "#e8f0ec",
-  },
-  cohort: {
-    label: "Cohort completion",
-    ink: "#123a37",
-    accent: "#1d4e4a",
-    gold: "#a9812f",
-    washTop: "#f8f4ea",
-    washBottom: "#efe6d3",
-  },
-  event: {
-    label: "Masterclass attendance",
+  intro: {
+    label: "Self-paced completion",
     ink: "#123a37",
     accent: "#2c6a63",
-    gold: "#b9924f",
-    washTop: "#f1f7f3",
-    washBottom: "#e6efe9",
+    gold: "#c9a86a",
+    leaf: "#7fb3a4",
+    washTop: "#fdfaf2",
+    washBottom: "#f2ece0",
+    formal: false,
+  },
+  applied: {
+    label: "Applied completion",
+    ink: "#1c2b2b",
+    accent: "#3d6b63",
+    gold: "#b9b3a4",
+    leaf: "#c3d6cd",
+    washTop: "#ffffff",
+    washBottom: "#f6f7f5",
+    formal: false,
+  },
+  warm: {
+    label: "Attendance",
+    ink: "#3a2e2c",
+    accent: "#9c6f63",
+    gold: "#c8a17a",
+    leaf: "#d9b8a8",
+    washTop: "#fdf7f2",
+    washBottom: "#f7e9df",
+    formal: false,
   },
 };
+
+const TYPE_TO_FAMILY: Record<string, keyof typeof FAMILY_THEME> = {
+  certificate: "formal",
+  diploma: "formal",
+  internship: "applied",
+  supervised: "applied",
+  "pre-recorded": "intro",
+  masterclass: "intro",
+  therapy: "warm",
+  worksheet: "intro",
+  "resume-studio": "applied",
+};
+
+const MODE_TO_FAMILY: Record<LmsLearningMode, keyof typeof FAMILY_THEME> = {
+  self_paced: "intro",
+  hybrid: "formal",
+  cohort: "formal",
+  event: "warm",
+};
+
+const MODE_LABEL: Record<LmsLearningMode, string> = {
+  self_paced: "Self-paced completion",
+  hybrid: "Live cohort completion",
+  cohort: "Cohort completion",
+  event: "Masterclass attendance",
+};
+
+/**
+ * Types that never carry a completion certificate. A therapy or supervised
+ * session is a service, not a programme of study, so it has no curriculum to
+ * complete. Kept here so the certificate can refuse one rather than imply a
+ * credential that was never earned.
+ */
+export const NON_CERTIFICATE_TYPES = new Set([
+  "therapy",
+  "worksheet",
+  "resume-studio",
+]);
+
+function resolveTheme(data: CertificateData): Theme {
+  const family = data.courseType
+    ? TYPE_TO_FAMILY[data.courseType]
+    : data.learningMode
+      ? MODE_TO_FAMILY[data.learningMode]
+      : "intro";
+  const theme = FAMILY_THEME[family ?? "intro"];
+  const label = data.learningMode ? MODE_LABEL[data.learningMode] : theme.label;
+  return { ...theme, label };
+}
 
 function formatDate(ms: number): string {
   return new Intl.DateTimeFormat("en-IN", {
@@ -130,7 +197,19 @@ export function Certificate({
   data: CertificateData;
   className?: string;
 }) {
-  const theme = MODE_THEME[data.learningMode ?? "self_paced"];
+  const theme = resolveTheme(data);
+
+  // A service with no curriculum cannot have a completion certificate.
+  if (data.courseType && NON_CERTIFICATE_TYPES.has(data.courseType)) {
+    return (
+      <div className="certificate-unavailable">
+        <p>
+          {data.courseName} is a service, not a course of study, so it does not
+          carry a completion certificate.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <figure

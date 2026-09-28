@@ -635,6 +635,7 @@ function AuthenticatedStudentLmsApp() {
                       issuedAt: workspace.completion.certificate.issuedAt,
                       learningMode:
                         workspace.course?.learningMode ?? "self_paced",
+                      courseType: workspace.course?.type,
                     }}
                   />
                   <label className="lms-live-consent">

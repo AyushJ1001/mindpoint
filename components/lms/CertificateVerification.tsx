@@ -77,7 +77,7 @@ export function CertificateVerification({ code }: { code: string }) {
                     courseName: certificate.courseName,
                     verificationCode: certificate.verificationCode,
                     issuedAt: certificate.issuedAt,
-                    learningMode: "self_paced",
+                    courseType: certificate.courseType,
                   }}
                 />
               </div>
