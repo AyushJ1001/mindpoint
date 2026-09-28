@@ -743,8 +743,8 @@ export const approveCompletion = mutation({
       certificateId = await ctx.db.insert("lmsCertificates", {
         enrollmentId: enrollment._id,
         curriculumId: request.curriculumId,
-        verificationCode:
-          `${enrollment.enrollmentNumber}-${now.toString(36)}`.toUpperCase(),
+        // Mirror the enrollment number so the public verify URL is tidy.
+        verificationCode: enrollment.enrollmentNumber,
         recipientName: request.confirmedRecipientName,
         courseName: course?.name ?? enrollment.courseName ?? "Course",
         status: "issued",

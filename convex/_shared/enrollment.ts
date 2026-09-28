@@ -1,3 +1,5 @@
+import type { MutationCtx } from "../_generated/server";
+
 export type InternshipPlan = "120" | "240";
 
 export function extractInternshipPlanFromDuration(
@@ -44,6 +46,25 @@ export function calculateInternshipEndDate(
   return endDate.toISOString().split("T")[0];
 }
 
+/**
+ * Human-readable enrollment number: `TMP-<COURSECODE>-<YYYY>-<NNNN>`, e.g.
+ * `TMP-PRCP-2026-0042`. Short enough to read aloud, shows the course at a
+ * glance, and the sequence makes it easy to find in the admin list.
+ *
+ * The sequence comes from a per-course counter (see `nextEnrollmentSequence`),
+ * so it never depends on the current time and cannot produce a `NaN`.
+ */
+export function formatEnrollmentNumber(
+  courseCode: string,
+  year: number,
+  sequence: number,
+): string {
+  const code = (courseCode || "GEN").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  const seq = Math.max(1, Math.floor(sequence)).toString().padStart(4, "0");
+  return `TMP-${code}-${year}-${seq}`;
+}
+
+/** Legacy format, kept only so old records remain recognisable. */
 export function generateEnrollmentNumber(
   courseCode: string,
   startDate: string,
@@ -59,6 +80,47 @@ export function generateEnrollmentNumber(
     .toUpperCase();
 
   return `EN-${courseCode}-${month}${year}-${timestamp}-${entropy}`;
+}
+
+/**
+ * Allocate the next enrollment number for a course. Uses a per-course, per-year
+ * counter so numbers are sequential and readable. Must run inside a mutation.
+ *
+ * Convex mutations are serializable, so two concurrent allocations cannot read
+ * the same `lastSequence`.
+ */
+export async function allocateEnrollmentNumber(
+  ctx: MutationCtx,
+  courseCode: string,
+  when: number = Date.now(),
+): Promise<string> {
+  const code = (courseCode || "GEN").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  const year = new Date(when).getFullYear();
+
+  const existing = await ctx.db
+    .query("enrollmentCounters")
+    .withIndex("by_courseCode_and_year", (q) =>
+      q.eq("courseCode", code).eq("year", year),
+    )
+    .unique();
+
+  const next = (existing?.lastSequence ?? 0) + 1;
+
+  if (existing) {
+    await ctx.db.patch("enrollmentCounters", existing._id, {
+      lastSequence: next,
+      updatedAt: when,
+    });
+  } else {
+    await ctx.db.insert("enrollmentCounters", {
+      courseCode: code,
+      year,
+      lastSequence: next,
+      updatedAt: when,
+    });
+  }
+
+  return formatEnrollmentNumber(code, year, next);
 }
 
 export function roundCurrency(value: number | undefined): number {

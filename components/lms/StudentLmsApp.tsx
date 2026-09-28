@@ -5,6 +5,7 @@ import Link from "next/link";
 import { SignInButton } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { LmsMediaPlayer } from "@/components/lms/LmsMediaPlayer";
+import { Certificate } from "@/components/lms/Certificate";
 import {
   ArrowUpRight,
   Award,
@@ -624,6 +625,18 @@ function AuthenticatedStudentLmsApp() {
                   >
                     <Printer aria-hidden="true" /> Print or save PDF
                   </Button>
+                  <Certificate
+                    data={{
+                      recipientName:
+                        workspace.completion.certificate.recipientName,
+                      courseName: workspace.completion.certificate.courseName,
+                      verificationCode:
+                        workspace.completion.certificate.verificationCode,
+                      issuedAt: workspace.completion.certificate.issuedAt,
+                      learningMode:
+                        workspace.course?.learningMode ?? "self_paced",
+                    }}
+                  />
                   <label className="lms-live-consent">
                     <input
                       type="checkbox"

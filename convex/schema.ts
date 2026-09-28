@@ -332,6 +332,9 @@ const publicEnrollmentFields = {
   courseId: v.id("courses"),
   courseName: v.optional(v.string()),
   enrollmentNumber: v.string(),
+  // The pre-2026 scheme (EN-code-MMYY-timestamp-uuid), kept so an old reference
+  // can still be traced after renumbering.
+  legacyEnrollmentNumber: v.optional(v.string()),
   isGuestUser: v.optional(v.boolean()),
   sessionType: v.optional(EnrollmentSessionType),
   courseType: v.optional(CourseType),
@@ -390,6 +393,17 @@ export default defineSchema({
   numbers: defineTable({
     value: v.number(),
   }),
+
+  // Per-course sequence for enrollment numbers. One row per course, storing the
+  // last sequence issued for each year: { courseCode, year, lastSequence }.
+  enrollmentCounters: defineTable({
+    courseCode: v.string(),
+    year: v.number(),
+    lastSequence: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_courseCode_and_year", ["courseCode", "year"])
+    .index("by_courseCode", ["courseCode"]),
   courses: defineTable(courseTableFields)
     .index("by_name_and_type", ["name", "type"])
     .index("by_type", ["type"])
