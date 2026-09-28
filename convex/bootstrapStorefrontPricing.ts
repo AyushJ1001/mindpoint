@@ -47,8 +47,13 @@ const COUNSELLING_APPLIED: AppliedSeed = {
   match: "counselling psychology",
 };
 
-// Published standalone library titles that become ₹999 self-paced intros.
-const SELF_PACED_LIBRARY_CODES = ["PRCVCP", "PRFP", "PRCP", "PRSP", "PRDSM5"];
+// Only the self-paced intros with a complete asset set — lesson notes, a
+// practice workbook, references and recordings — are sold at ₹999:
+//   PRCVCP Clinical Vs Counselling · PRCP Criminal Psychology
+//   PRSP   Sports Psychology      · PRPFA Psychological First Aid
+// Everything else in the standalone library is archived by
+// `archiveIncompleteIntros` until its material exists.
+const SELF_PACED_LIBRARY_CODES = ["PRCVCP", "PRCP", "PRSP", "PRPFA"];
 
 type IntroSeed = {
   code: string;

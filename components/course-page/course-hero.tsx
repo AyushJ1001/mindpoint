@@ -1,5 +1,7 @@
 import Image from "next/image";
 
+import { StarRating } from "@/components/course/ratings";
+import { GOOGLE_RATING } from "@/lib/googleReviews";
 import type { CourseContent } from "@/lib/course-content/types";
 
 function formatDate(value?: string): string | undefined {
@@ -38,6 +40,12 @@ export function CourseHero({ course }: { course: CourseContent }) {
     ? "Start your application"
     : "Choose how you train";
 
+  const tierPrices = [
+    course.pricing?.foundation?.price,
+    course.pricing?.complete?.price,
+  ].filter((p): p is number => typeof p === "number" && p > 0);
+  const fromPrice = tierPrices.length > 0 ? Math.min(...tierPrices) : undefined;
+
   return (
     <section className="pt-12 sm:pt-20">
       <div className="mx-auto w-full max-w-6xl px-5 sm:px-6">
@@ -65,7 +73,17 @@ export function CourseHero({ course }: { course: CourseContent }) {
           {course.heroCopy}
         </p>
 
-        <div className="mt-9 flex flex-wrap items-center gap-3">
+        <div className="mt-9 flex flex-wrap items-center gap-x-6 gap-y-4">
+          {fromPrice !== undefined ? (
+            <div>
+              <span className="text-muted-foreground text-[0.62rem] font-semibold tracking-[0.22em] uppercase">
+                From{" "}
+              </span>
+              <span className="font-display text-foreground text-2xl">
+                ₹{fromPrice.toLocaleString("en-IN")}
+              </span>
+            </div>
+          ) : null}
           <a
             href="#options"
             className="bg-primary text-primary-foreground inline-flex items-center gap-2 rounded-full px-6 py-3 text-sm font-medium transition-transform hover:-translate-y-0.5"
@@ -83,6 +101,16 @@ export function CourseHero({ course }: { course: CourseContent }) {
               {course.cta.secondaryLabel}
             </a>
           ) : null}
+        </div>
+
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <StarRating rating={GOOGLE_RATING.average} size="sm" />
+          <p className="text-muted-foreground text-sm">
+            <b className="text-foreground font-semibold">
+              {GOOGLE_RATING.average.toFixed(1)}
+            </b>{" "}
+            from {GOOGLE_RATING.count} Google reviews
+          </p>
         </div>
       </div>
 

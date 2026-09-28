@@ -12,6 +12,7 @@ import ClientProviders from "@/components/ClientProviders";
 import Footer from "./footer";
 import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
+import AnalyticsScripts from "@/components/AnalyticsScripts";
 
 const plusJakarta = Plus_Jakarta_Sans({
   variable: "--font-manrope",
@@ -95,6 +96,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head>
         <Analytics />
+        <AnalyticsScripts />
       </head>
       <body
         className={`${plusJakarta.variable} ${jetbrainsMono.variable} ${fraunces.variable} ${dmSans.variable} ${caveat.variable} flex min-h-screen flex-col antialiased`}

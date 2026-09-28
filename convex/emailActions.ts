@@ -3,7 +3,11 @@
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { internal } from "./_generated/api";
-import { sendEmail, sendEmailWithCopy } from "./_shared/emailDelivery";
+import {
+  OWNER_EMAIL,
+  sendEmail,
+  sendEmailWithCopy,
+} from "./_shared/emailDelivery";
 import {
   emailActionResultValidator,
   emailActionSuccess,
@@ -1653,8 +1657,8 @@ export const sendPaymentPendingEmail = internalAction({
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
           <h2 style="color: #2E7D32;">Thanks, ${escapeHtml(args.userName)}!</h2>
           <p>We've received your payment for <strong>${escapeHtml(args.courseName)}</strong> and it's now being verified by our team.</p>
-          <p>This usually takes a short while. You'll get another email the moment it's approved, and your course access will unlock automatically.</p>
-          <p>If we need anything else to confirm the payment, we'll reach out to you directly.</p>
+          <p>This usually takes a few working hours, and often much less. You'll get another email the moment it's approved, and your course access will unlock automatically — there's nothing more you need to do.</p>
+          <p>If you haven't heard from us within 24 hours, reply to this email or write to <a href="mailto:contact.themindpoint@gmail.com">contact.themindpoint@gmail.com</a> with your enrollment number, and we'll sort it out straight away.</p>
           <p>Thank you for your patience.</p>
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
@@ -1667,6 +1671,71 @@ export const sendPaymentPendingEmail = internalAction({
     } catch (error) {
       console.error("Failed to send payment pending email:", {
         userEmail: args.userEmail,
+        courseName: args.courseName,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});
+
+/**
+ * Owner-facing alert: a student payment is waiting for verification. Sent to
+ * the internal inbox only, never to the student.
+ */
+export const sendPaymentAwaitingApprovalEmail = internalAction({
+  args: {
+    studentName: v.string(),
+    studentEmail: v.string(),
+    courseName: v.string(),
+    amount: v.optional(v.number()),
+    enrollmentNumber: v.optional(v.string()),
+    screenshotUrl: v.optional(v.string()),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const reviewUrl = `${getSiteUrl()}/admin/enrollments/approvals`;
+      const amountLine =
+        typeof args.amount === "number"
+          ? `<p style="margin: 4px 0;"><strong>Amount:</strong> ₹${args.amount.toLocaleString("en-IN")}</p>`
+          : "";
+      const enrollmentLine = args.enrollmentNumber
+        ? `<p style="margin: 4px 0;"><strong>Enrollment:</strong> ${escapeHtml(args.enrollmentNumber)}</p>`
+        : "";
+      const screenshotLine = args.screenshotUrl
+        ? `<p style="margin: 4px 0;"><a href="${args.screenshotUrl}">View the payment screenshot</a></p>`
+        : "";
+
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: OWNER_EMAIL,
+        subject: `Payment to verify — ${args.courseName} (${args.studentName})`,
+        html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+          <h2 style="color: #1d4e4a;">A payment is waiting for your approval</h2>
+          <p style="margin: 4px 0;"><strong>Student:</strong> ${escapeHtml(args.studentName)}</p>
+          <p style="margin: 4px 0;"><strong>Email:</strong> ${escapeHtml(args.studentEmail)}</p>
+          <p style="margin: 4px 0;"><strong>Course:</strong> ${escapeHtml(args.courseName)}</p>
+          ${amountLine}
+          ${enrollmentLine}
+          ${screenshotLine}
+          <p style="margin-top: 20px;">
+            <a href="${reviewUrl}" style="background-color: #1d4e4a; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">Review and approve</a>
+          </p>
+          <p style="color: #666; font-size: 13px;">The student has access held until you approve this payment.</p>
+        </div>
+      `,
+      });
+      if (isEmailActionFailure(emailDelivery)) {
+        return emailDelivery;
+      }
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send payment awaiting-approval email:", {
+        studentEmail: args.studentEmail,
         courseName: args.courseName,
         error: error instanceof Error ? error.message : String(error),
       });

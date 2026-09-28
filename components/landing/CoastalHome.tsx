@@ -3,15 +3,17 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
-import { ArrowRight, Check, Shield } from "lucide-react";
+import { ArrowRight, Check, Pause, Play, Shield } from "lucide-react";
 import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { EmailCapture } from "@/components/coastal/EmailCapture";
 import { ScrollReveal } from "@/components/ScrollReveal";
+import CoastalVideoTestimonials from "@/components/landing/CoastalVideoTestimonials";
 import { StarRating } from "@/components/course/ratings";
 import { getRelativeTime } from "@/lib/time-utils";
 import { GOOGLE_RATING, GOOGLE_REVIEWS } from "@/lib/googleReviews";
 import { REVIEW_HIGHLIGHTS } from "@/lib/reviewHighlights";
+import { HOME_FAQ } from "@/lib/home-faq";
 import type { PublicCourse } from "@/lib/backend";
 
 interface CoastalHomeProps {
@@ -83,24 +85,7 @@ const FALLBACK_COURSES = [
   },
 ];
 
-const FAQ = [
-  {
-    q: "Is this a recognised degree?",
-    a: "No. Our certificates document completion of a training programme — they are not a degree, licence or accreditation. We say so plainly, and we verify every certificate publicly.",
-  },
-  {
-    q: "Do I need a psychology background?",
-    a: "Not always. Some programs assume no prior training; others are built for students and practitioners. Each program page states who it's for.",
-  },
-  {
-    q: "How do the live classes work?",
-    a: "Cohorts are small and run live every week. If you miss one, the recording is available to your cohort for the access window.",
-  },
-  {
-    q: "What if I'm not sure where to start?",
-    a: "Start with one calm conversation. It's a single session with a licensed professional — a low-pressure way to get oriented.",
-  },
-];
+const FAQ = HOME_FAQ;
 
 function formatPrice(value?: number) {
   if (!value || value <= 0) return "Free";
@@ -117,6 +102,7 @@ export default function CoastalHome({
   upcomingCourses,
 }: CoastalHomeProps) {
   const [activePath, setActivePath] = useState<string | null>(null);
+  const [marqueePaused, setMarqueePaused] = useState(false);
   const active = PATHS.find((p) => p.key === activePath);
 
   const programCards = upcomingCourses.slice(0, 3).map((course) => ({
@@ -131,6 +117,8 @@ export default function CoastalHome({
 
   const featuredReview = GOOGLE_REVIEWS[0];
   const sideReviews = GOOGLE_REVIEWS.slice(1, 4);
+  const interstitialReview = GOOGLE_REVIEWS[4];
+  const marqueeReviews = REVIEW_HIGHLIGHTS.slice(4);
 
   return (
     <>
@@ -160,6 +148,17 @@ export default function CoastalHome({
               Browse all courses
             </Link>
           </div>
+          <p className="text-muted-foreground mt-5 text-sm">
+            New here?{" "}
+            <Link href="/masterclass" className="text-primary font-semibold">
+              Watch the free masterclass
+            </Link>{" "}
+            or start with a{" "}
+            <Link href="/courses/intro" className="text-primary font-semibold">
+              ₹999 self-paced intro
+            </Link>
+            .
+          </p>
           <div className="border-border mt-9 flex flex-wrap items-center gap-x-4 gap-y-3 border-t border-dashed pt-6">
             <StarRating rating={GOOGLE_RATING.average} size="sm" />
             <p className="text-muted-foreground text-sm">
@@ -303,6 +302,26 @@ export default function CoastalHome({
               </ScrollReveal>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ── Pull-quote interstitial ── */}
+      <section className="py-16 sm:py-20">
+        <div className="container">
+          <ScrollReveal>
+            <figure className="mx-auto max-w-3xl text-center">
+              <span className={eyebrowVariants({ tone: "muted" })}>
+                In their words
+              </span>
+              <blockquote className="font-display mt-6 text-2xl leading-snug tracking-tight sm:text-4xl">
+                “{interstitialReview.content}”
+              </blockquote>
+              <figcaption className="text-muted-foreground mt-6 text-[0.68rem] tracking-[0.24em] uppercase">
+                {interstitialReview.author} &middot; Google &middot;{" "}
+                {reviewAge(interstitialReview.monthsAgo)}
+              </figcaption>
+            </figure>
+          </ScrollReveal>
         </div>
       </section>
 
@@ -473,6 +492,9 @@ export default function CoastalHome({
         </div>
       </section>
 
+      {/* ── Video reflections ── */}
+      <CoastalVideoTestimonials />
+
       {/* ── Certificates feature ── */}
       <section className="pb-20 sm:pb-28">
         <div className="container grid items-center gap-12 lg:grid-cols-2">
@@ -556,6 +578,55 @@ export default function CoastalHome({
         </div>
       </section>
 
+      {/* ── Review marquee ── */}
+      <section
+        aria-label="What people say about The Mind Point"
+        className="water-band border-border relative overflow-hidden border-y border-dashed py-8"
+      >
+        <div className="water-marquee">
+          <div
+            className="water-marquee-track"
+            style={marqueePaused ? { animationPlayState: "paused" } : undefined}
+          >
+            {[0, 1].map((group) => (
+              <ul
+                key={group}
+                role="list"
+                aria-hidden={group === 1}
+                className="water-marquee-group"
+              >
+                {marqueeReviews.map((review, i) => (
+                  <li
+                    key={`${group}-${review.author}-${i}`}
+                    className="flex items-center gap-4 whitespace-nowrap"
+                  >
+                    <span className="font-display text-lg">
+                      “{review.quote}”
+                    </span>
+                    <span className="text-muted-foreground text-[0.62rem] tracking-[0.24em] uppercase">
+                      {review.author} &middot; {review.source}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ))}
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setMarqueePaused((v) => !v)}
+          aria-label={marqueePaused ? "Play reviews" : "Pause reviews"}
+          aria-pressed={marqueePaused}
+          className="water-glass text-primary absolute top-1/2 right-4 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full transition-colors focus-visible:ring-2 focus-visible:ring-[#2b8585] focus-visible:ring-offset-2 focus-visible:outline-none"
+        >
+          {marqueePaused ? (
+            <Play className="ml-0.5 h-4 w-4" />
+          ) : (
+            <Pause className="h-4 w-4" />
+          )}
+        </button>
+      </section>
+
       {/* ── Masterclass capture ── */}
       <section className="bg-secondary py-20 sm:py-24">
         <div className="container flex max-w-2xl flex-col items-center gap-5 text-center">
@@ -568,6 +639,12 @@ export default function CoastalHome({
             teach.
           </p>
           <EmailCapture source="masterclass" />
+          <Link
+            href="/masterclass"
+            className="text-primary text-sm font-semibold"
+          >
+            Open the full masterclass page →
+          </Link>
         </div>
       </section>
 

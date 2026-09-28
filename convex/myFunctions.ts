@@ -1891,6 +1891,19 @@ export const handleCartCheckout = mutation({
             courseName: courseDisplayName,
           },
         );
+        // Tell the owner a payment is waiting, so nothing sits unapproved.
+        await ctx.scheduler.runAfter(
+          0,
+          internal.emailActions.sendPaymentAwaitingApprovalEmail,
+          {
+            studentName: args.studentName || args.userEmail,
+            studentEmail: args.userEmail,
+            courseName: courseDisplayName,
+            amount: pricingItem?.amountPaid ?? course.price,
+            enrollmentNumber,
+            screenshotUrl: paymentScreenshotUrl ?? undefined,
+          },
+        );
       }
 
       // Manual payments stay pending until an admin approves them, so their

@@ -6,6 +6,7 @@ import { api } from "@/lib/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Gift, Users } from "lucide-react";
+import { ReferralShare } from "@/components/account/referral-share";
 
 export function ReferralsTab() {
   const { user } = useUser();
@@ -31,7 +32,9 @@ export function ReferralsTab() {
     return (
       <div className="space-y-4">
         <div>
-          <h2 className="font-display mb-2 text-3xl tracking-tight">My Referrals</h2>
+          <h2 className="font-display mb-2 text-3xl tracking-tight">
+            My Referrals
+          </h2>
           <p className="text-muted-foreground">
             Track the people who used your referral link and the rewards
             you&apos;ve earned.
@@ -45,6 +48,7 @@ export function ReferralsTab() {
             </p>
           </CardContent>
         </Card>
+        <ReferralShare code={user.id} />
       </div>
     );
   }
@@ -52,7 +56,9 @@ export function ReferralsTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="font-display mb-2 text-3xl tracking-tight">My Referrals</h2>
+        <h2 className="font-display mb-2 text-3xl tracking-tight">
+          My Referrals
+        </h2>
         <p className="text-muted-foreground">
           Track the people who used your referral link and the rewards
           you&apos;ve earned.
@@ -60,6 +66,7 @@ export function ReferralsTab() {
       </div>
 
       {/* Summary Card */}
+      <ReferralShare code={user.id} />
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
