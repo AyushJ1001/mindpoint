@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import { useUser } from "@clerk/nextjs";
 import { useMutation, useQuery } from "convex/react";
 import {
   BookOpen,
@@ -47,6 +48,7 @@ function message(error: unknown) {
 
 export default function AdminLmsPage() {
   const desk = useQuery(adminLmsApi.getReleaseDesk, {});
+  const { user } = useUser();
   const [courseId, setCourseId] = useState<string>("");
   const currentCourseId = courseId || desk?.courses[0]?.courseId || "";
   const courseCurricula = useMemo(
@@ -94,6 +96,8 @@ export default function AdminLmsPage() {
   const [feedbackMinimumGroupSize, setFeedbackMinimumGroupSize] = useState("5");
   const [facultyName, setFacultyName] = useState("");
   const [facultyEmail, setFacultyEmail] = useState("");
+  const [assignEveryCourse, setAssignEveryCourse] = useState(false);
+  const [facultyPrefilled, setFacultyPrefilled] = useState(false);
   const [manifestOpen, setManifestOpen] = useState(false);
   const [manifestConfirmed, setManifestConfirmed] = useState(false);
   const [pending, setPending] = useState<string>();
@@ -237,6 +241,15 @@ export default function AdminLmsPage() {
       setPending(undefined);
     }
   }
+
+  useEffect(() => {
+    if (facultyPrefilled || !user) return;
+    const email = user.primaryEmailAddress?.emailAddress;
+    const name = user.fullName ?? user.firstName ?? undefined;
+    if (email) setFacultyEmail(email);
+    if (name) setFacultyName(name);
+    setFacultyPrefilled(true);
+  }, [user, facultyPrefilled]);
 
   if (desk === undefined)
     return (
@@ -1077,9 +1090,8 @@ export default function AdminLmsPage() {
           <section>
             <h2>Assign Faculty</h2>
             <p>
-              Add the name and email they use to sign in. Their review access
-              activates only after they confirm that account in the Faculty
-              workspace.
+              Prefilled with your admin account. Their review access activates
+              only after they confirm that account in the Faculty workspace.
             </p>
             <div className="admin-lms-faculty-form">
               <label>
@@ -1102,36 +1114,62 @@ export default function AdminLmsPage() {
                 />
               </label>
             </div>
+            <label className="admin-lms-faculty-all">
+              <input
+                type="checkbox"
+                checked={assignEveryCourse}
+                onChange={(event) => setAssignEveryCourse(event.target.checked)}
+              />
+              <span>
+                Assign to every Course ({desk.courses.length}). For your own
+                access this covers all intros and cohorts at once.
+              </span>
+            </label>
             <Button
               className="admin-lms-primary"
               disabled={
-                !currentCourseId ||
                 !facultyName.trim() ||
                 !facultyEmail.trim() ||
+                (!assignEveryCourse && !currentCourseId) ||
                 pending === "faculty"
               }
               onClick={() =>
                 act(
                   "faculty",
                   async () => {
-                    await assignFaculty({
-                      courseId: currentCourseId as Id<"courses">,
-                      facultyName,
-                      facultyEmail,
-                      canGrade: true,
-                      canAnswerQuestions: true,
-                      canApproveCompletion: true,
-                    });
+                    const targets = assignEveryCourse
+                      ? desk.courses
+                      : desk.courses.filter(
+                          (course) => course.courseId === currentCourseId,
+                        );
+                    for (const course of targets) {
+                      await assignFaculty({
+                        courseId: course.courseId,
+                        facultyName: facultyName.trim(),
+                        facultyEmail: facultyEmail.trim(),
+                        canGrade: true,
+                        canAnswerQuestions: true,
+                        canApproveCompletion: true,
+                      });
+                    }
                     setFacultyName("");
                     setFacultyEmail("");
+                    setAssignEveryCourse(false);
                   },
-                  "Faculty access prepared. Ask them to open the Faculty workspace and confirm their signed-in account.",
+                  `Faculty access prepared for ${assignEveryCourse ? `all ${desk.courses.length} Courses` : "this Course"}. Open the Faculty review desk with ${facultyEmail.trim()} to confirm and activate.`,
                 )
               }
             >
               <Users />
-              Prepare Faculty access
+              {assignEveryCourse
+                ? "Assign me to all Courses"
+                : "Prepare Faculty access"}
             </Button>
+            <p className="admin-lms-faculty-next">
+              Next:{" "}
+              <Link href="/lms/faculty">open the Faculty review desk</Link> and
+              confirm your access with the same email.
+            </p>
             {courseFaculty.length > 0 && (
               <div className="admin-lms-faculty-list">
                 {courseFaculty.map((assignment) => (

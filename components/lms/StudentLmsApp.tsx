@@ -711,10 +711,14 @@ function AuthenticatedStudentLmsApp() {
                   </p>
                 </div>
               ) : workspace.completion.status === "pending" ? (
-                <p>
-                  Your confirmed name is with Faculty for final evidence
-                  approval.
-                </p>
+                <div className="lms-live-certificate-hold" role="status">
+                  <strong>Name confirmed</strong>
+                  <p>
+                    The Mind Point is doing a final check on your evidence.
+                    You&apos;ll get an email, and an update here, when your
+                    Certificate is ready to download.
+                  </p>
+                </div>
               ) : workspace.completion.status === "under_review" ? (
                 <div className="lms-live-certificate-hold" role="status">
                   <strong>Completion under review</strong>
