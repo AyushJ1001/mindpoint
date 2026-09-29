@@ -6,6 +6,7 @@ import { SignInButton } from "@clerk/nextjs";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import { LmsMediaPlayer } from "@/components/lms/LmsMediaPlayer";
 import { Certificate } from "@/components/lms/Certificate";
+import { downloadCertificatePng } from "@/lib/certificate-image";
 import {
   ArrowUpRight,
   Award,
@@ -15,6 +16,7 @@ import {
   CheckCircle2,
   CircleHelp,
   Clock3,
+  Download,
   FileText,
   LockKeyhole,
   MessagesSquare,
@@ -618,13 +620,42 @@ function AuthenticatedStudentLmsApp() {
                   <code>
                     {workspace.completion.certificate.verificationCode}
                   </code>
-                  <Button
-                    type="button"
-                    className="lms-live-primary"
-                    onClick={() => window.print()}
-                  >
-                    <Printer aria-hidden="true" /> Print or save PDF
-                  </Button>
+                  <div className="lms-live-certificate-actions">
+                    <Button
+                      type="button"
+                      className="lms-live-primary"
+                      disabled={pendingAction === "certificate-download"}
+                      onClick={() =>
+                        runAction(
+                          "certificate-download",
+                          () => {
+                            const certificate =
+                              workspace.completion?.certificate;
+                            if (!certificate) return Promise.resolve();
+                            return downloadCertificatePng({
+                              recipientName: certificate.recipientName,
+                              courseName: certificate.courseName,
+                              verificationCode: certificate.verificationCode,
+                              issuedAt: certificate.issuedAt,
+                              learningMode:
+                                workspace.course?.learningMode ?? "self_paced",
+                              courseType: workspace.course?.type,
+                            });
+                          },
+                          "Certificate downloaded.",
+                        )
+                      }
+                    >
+                      <Download aria-hidden="true" /> Download
+                    </Button>
+                    <Button
+                      type="button"
+                      className="lms-live-outline"
+                      onClick={() => window.print()}
+                    >
+                      <Printer aria-hidden="true" /> Print or save PDF
+                    </Button>
+                  </div>
                   <Certificate
                     data={{
                       recipientName:
@@ -876,27 +907,6 @@ function AuthenticatedStudentLmsApp() {
           </section>
         </aside>
       </div>
-      {workspace.completion?.certificate && (
-        <section className="lms-certificate-print" aria-hidden="true">
-          <Image
-            src="/brand/the-mind-point-logo.png"
-            alt="The Mind Point"
-            width={340}
-            height={268}
-          />
-          <p>Certificate of completion</p>
-          <h1>{workspace.completion.certificate.recipientName}</h1>
-          <p>has completed</p>
-          <h2>{workspace.completion.certificate.courseName}</h2>
-          <footer>
-            Issued{" "}
-            {new Date(
-              workspace.completion.certificate.issuedAt,
-            ).toLocaleDateString()}{" "}
-            · Verify {workspace.completion.certificate.verificationCode}
-          </footer>
-        </section>
-      )}
     </div>
   );
 }
