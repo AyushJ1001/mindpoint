@@ -1766,88 +1766,12 @@
 /*  learner's details and the seal overlaid. Prints to A4 landscape.    */
 /* ------------------------------------------------------------------ */
 .certificate-sheet {
-  position: relative;
+  display: block;
   width: 100%;
   max-width: 1123px;
-  aspect-ratio: 1491 / 1055;
-  margin: 0 auto;
-  overflow: hidden;
-  background-image: url("/brand/certificate-template.jpg");
-  background-size: 100% 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  box-shadow: 0 34px 80px -46px rgba(11, 59, 60, 0.6);
-  color: #284557;
-  font-family: var(--font-syne), Georgia, serif;
-  /* 1% of the rendered sheet width, published by the Certificate component.
-     Safari renders container-query units incorrectly here, so sizing is driven
-     by the measured width (`--cert-width`) rather than `cqw`. */
-  --cert-unit: calc(var(--cert-width, 1123px) / 100);
-}
-
-.certificate-sheet p {
-  position: absolute;
-  margin: 0;
-  text-align: center;
-  transform: translate(-50%, -100%);
-}
-
-.certificate-name {
-  left: 50%;
-  top: 57.7%;
-  width: 66%;
-  font-size: calc(var(--cert-unit) * 3.2);
-  line-height: 1.18;
-  font-weight: 500;
-  letter-spacing: 0.012em;
-  color: #17333f;
-}
-
-.certificate-course {
-  left: 50%;
-  top: 69.4%;
-  width: 56%;
-  font-size: calc(var(--cert-unit) * 2);
-  line-height: 1.05;
-  color: #17333f;
-}
-
-.certificate-date,
-.certificate-number {
-  top: 77.9%;
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-  font-size: calc(var(--cert-unit) * 1.6);
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.certificate-date {
-  left: 50%;
-}
-
-.certificate-number {
-  left: 76.8%;
-}
-
-.certificate-signature {
-  position: absolute;
-  left: 14.5%;
-  bottom: 21.6%;
-  width: calc(var(--cert-unit) * 13);
   height: auto;
-  transform: translateX(-50%);
-}
-
-.certificate-note {
-  position: absolute;
-  left: 50%;
-  top: 95.5%;
-  width: 84%;
-  transform: translate(-50%, -50%);
-  font-family: var(--font-dm-sans), system-ui, sans-serif;
-  font-size: calc(var(--cert-unit) * 0.72);
-  line-height: 1.3;
-  color: color-mix(in oklab, #284557 52%, transparent);
+  margin: 0 auto;
+  box-shadow: 0 34px 80px -46px rgba(11, 59, 60, 0.6);
 }
 
 @media print {
@@ -1874,7 +1798,6 @@
   }
 
   .certificate-sheet {
-    --cert-unit: 2.97mm;
     position: fixed;
     top: 50%;
     left: 50%;

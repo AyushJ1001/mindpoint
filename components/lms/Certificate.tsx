@@ -1,15 +1,13 @@
 "use client";
 
-import Image from "next/image";
-import { useEffect, useRef } from "react";
-
 import type { LmsLearningMode } from "@/lib/lms-api";
 import { certificateCourseTitle } from "@/lib/certificate-title";
 
 /**
- * The issued certificate. The owner's botanical template is the sheet; the
- * learner's details and the seal are overlaid so they stay real text (and the
- * public verify page can render the same thing). Prints to A4 landscape.
+ * The issued certificate, drawn as an inline SVG. The owner's botanical
+ * template is the sheet; the learner's details and the seal are real SVG nodes
+ * in a fixed viewBox, so the sheet scales to any container in any browser —
+ * no container queries, no measured widths, no script. Prints to A4 landscape.
  */
 
 export interface CertificateData {
@@ -34,12 +32,27 @@ export const NON_CERTIFICATE_TYPES = new Set([
   "resume-studio",
 ]);
 
+// The template's pixel size. All positions are fractions of it, so the viewBox
+// scales the whole sheet together.
+const SHEET_WIDTH = 1491;
+const SHEET_HEIGHT = 1055;
+
+const SERIF = "var(--font-syne), Georgia, serif";
+const SANS = "var(--font-dm-sans), system-ui, sans-serif";
+const INK = "#17333f";
+const META = "#284557";
+
 function formatDate(ms: number): string {
   return new Intl.DateTimeFormat("en-IN", {
     day: "numeric",
     month: "long",
     year: "numeric",
   }).format(new Date(ms));
+}
+
+/** CSS anchored text bottoms at a percentage; convert to an SVG baseline. */
+function baseline(topFraction: number, fontSize: number): number {
+  return SHEET_HEIGHT * topFraction - fontSize * 0.2;
 }
 
 export function Certificate({
@@ -49,28 +62,6 @@ export function Certificate({
   data: CertificateData;
   className?: string;
 }) {
-  const sheetRef = useRef<HTMLElement>(null);
-
-  // Older browsers ignore container-query units (`cqw`), which would fall back
-  // to default text sizes and scramble the sheet. Publish the rendered width as
-  // a CSS variable so the stylesheet can size text as a fraction of it.
-  useEffect(() => {
-    const sheet = sheetRef.current;
-    if (!sheet) return;
-    const update = () => {
-      const width = sheet.clientWidth;
-      if (width > 0) sheet.style.setProperty("--cert-width", `${width}px`);
-    };
-    update();
-    if (typeof ResizeObserver === "undefined") {
-      window.addEventListener("resize", update);
-      return () => window.removeEventListener("resize", update);
-    }
-    const observer = new ResizeObserver(update);
-    observer.observe(sheet);
-    return () => observer.disconnect();
-  }, []);
-
   // A service with no curriculum cannot have a completion certificate.
   if (data.courseType && NON_CERTIFICATE_TYPES.has(data.courseType)) {
     return (
@@ -83,30 +74,91 @@ export function Certificate({
     );
   }
 
+  const title = certificateCourseTitle(data.courseName, data.courseType);
+  const nameSize = SHEET_WIDTH * 0.032;
+  const courseSize = SHEET_WIDTH * 0.02;
+  const metaSize = SHEET_WIDTH * 0.016;
+  const sealWidth = SHEET_WIDTH * 0.13;
+  const sealHeight = sealWidth * (280 / 320);
+  const sealCenterX = SHEET_WIDTH * 0.145;
+  const sealBottom = SHEET_HEIGHT * 0.784;
+
   return (
-    <figure
-      ref={sheetRef}
+    <svg
       className={`certificate-sheet ${className}`}
-      aria-label={`Certificate of completion for ${data.recipientName}`}
+      viewBox={`0 0 ${SHEET_WIDTH} ${SHEET_HEIGHT}`}
+      role="img"
+      aria-label={`Certificate of completion for ${data.recipientName}, ${title}`}
     >
-      <p className="certificate-name">{data.recipientName}</p>
-      <p className="certificate-course">
-        {certificateCourseTitle(data.courseName, data.courseType)}
-      </p>
-      <p className="certificate-date">{formatDate(data.issuedAt)}</p>
-      <p className="certificate-number">{data.verificationCode}</p>
-      <Image
-        className="certificate-signature"
-        src="/brand/the-mind-point-seal-transparent.png"
-        alt="The Mind Point seal"
-        width={320}
-        height={280}
+      <image
+        href="/brand/certificate-template.jpg"
+        x={0}
+        y={0}
+        width={SHEET_WIDTH}
+        height={SHEET_HEIGHT}
       />
-      <p className="certificate-note">
+      <text
+        x={SHEET_WIDTH / 2}
+        y={baseline(0.577, nameSize)}
+        textAnchor="middle"
+        fontSize={nameSize}
+        fontWeight={500}
+        fill={INK}
+        style={{ fontFamily: SERIF, letterSpacing: "0.012em" }}
+      >
+        {data.recipientName}
+      </text>
+      <text
+        x={SHEET_WIDTH / 2}
+        y={baseline(0.694, courseSize)}
+        textAnchor="middle"
+        fontSize={courseSize}
+        fill={INK}
+        style={{ fontFamily: SERIF }}
+      >
+        {title}
+      </text>
+      <text
+        x={SHEET_WIDTH / 2}
+        y={baseline(0.779, metaSize)}
+        textAnchor="middle"
+        fontSize={metaSize}
+        fill={META}
+        style={{ fontFamily: SANS }}
+      >
+        {formatDate(data.issuedAt)}
+      </text>
+      <text
+        x={SHEET_WIDTH * 0.768}
+        y={baseline(0.779, metaSize)}
+        textAnchor="middle"
+        fontSize={metaSize}
+        fill={META}
+        style={{ fontFamily: SANS }}
+      >
+        {data.verificationCode}
+      </text>
+      <image
+        href="/brand/the-mind-point-seal-transparent.png"
+        x={sealCenterX - sealWidth / 2}
+        y={sealBottom - sealHeight}
+        width={sealWidth}
+        height={sealHeight}
+      />
+      <text
+        x={SHEET_WIDTH / 2}
+        y={SHEET_HEIGHT * 0.955}
+        textAnchor="middle"
+        dominantBaseline="middle"
+        fontSize={SHEET_WIDTH * 0.0072}
+        fill={META}
+        fillOpacity={0.52}
+        style={{ fontFamily: SANS }}
+      >
         This certificate records completion of a training programme. It is not a
         degree, licence or accreditation. Verify it any time at
         themindpoint.org/verify
-      </p>
-    </figure>
+      </text>
+    </svg>
   );
 }
