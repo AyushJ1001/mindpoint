@@ -608,7 +608,7 @@ function AuthenticatedStudentLmsApp() {
               id="lms-certificate"
               className="lms-live-certificate-panel"
             >
-              <Award aria-hidden="true" />
+              <Award className="lms-live-certificate-icon" aria-hidden="true" />
               <h2>Course completion</h2>
               {workspace.completion.certificate?.status === "issued" ? (
                 <>
