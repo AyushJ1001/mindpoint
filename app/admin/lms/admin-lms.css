@@ -708,6 +708,31 @@
   gap: 12px;
   margin-top: 16px;
 }
+.admin-lms-faculty-all {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  margin-top: 14px;
+  color: #34504e;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.admin-lms-faculty-all input {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  accent-color: #0c6f73;
+}
+.admin-lms-faculty-next {
+  margin-top: 12px;
+  color: #58706d;
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+.admin-lms-faculty-next a {
+  color: #07575b;
+  font-weight: 700;
+}
 .admin-lms-faculty-list {
   margin-top: 18px;
   border-top: 1px solid rgba(7, 77, 79, 0.15);
