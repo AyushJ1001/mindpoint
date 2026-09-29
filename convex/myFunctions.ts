@@ -26,7 +26,7 @@ import {
 import {
   calculateInternshipEndDate,
   extractInternshipPlanFromDuration,
-  generateEnrollmentNumber,
+  allocateEnrollmentNumber,
   roundCurrency,
 } from "./_shared/enrollment";
 import {
@@ -1006,7 +1006,7 @@ async function createBogoEnrollment(
   const enrollmentNumber =
     freeCourse.type === "therapy" || freeCourse.type === "supervised"
       ? "N/A"
-      : generateEnrollmentNumber(freeCourse.code, startDate);
+      : await allocateEnrollmentNumber(ctx, freeCourse.code);
   const legacyFreeInternshipPlan =
     freeCourse.usesBatches || freeCourse.type !== "internship"
       ? undefined
@@ -1154,10 +1154,7 @@ export const handleSuccessfulPayment = internalMutation({
       console.log("Course start date:", course.startDate);
       console.log("Course type:", course.type);
 
-      enrollmentNumber = generateEnrollmentNumber(
-        course.code,
-        batchResolution.startDate,
-      );
+      enrollmentNumber = await allocateEnrollmentNumber(ctx, course.code);
 
       console.log("Generated enrollment number:", enrollmentNumber);
     }
@@ -1819,10 +1816,7 @@ export const handleCartCheckout = mutation({
       ) {
         enrollmentNumber = "N/A";
       } else {
-        enrollmentNumber = generateEnrollmentNumber(
-          course.code,
-          batchResolution.startDate,
-        );
+        enrollmentNumber = await allocateEnrollmentNumber(ctx, course.code);
       }
 
       const couponConsumptionFailure = await validateCheckoutPricingItemResult(
@@ -2417,10 +2411,7 @@ export const handleGuestUserCartCheckoutByEmail = mutation({
       if (course.type === "therapy" || course.type === "supervised") {
         enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
       } else {
-        enrollmentNumber = generateEnrollmentNumber(
-          course.code,
-          schedule.startDate,
-        );
+        enrollmentNumber = await allocateEnrollmentNumber(ctx, course.code);
       }
 
       // Create enrollment record
@@ -2795,10 +2786,7 @@ export const handleGuestUserCartCheckoutWithData = mutation({
       ) {
         enrollmentNumber = "N/A";
       } else {
-        enrollmentNumber = generateEnrollmentNumber(
-          course.code,
-          batchResolution.startDate,
-        );
+        enrollmentNumber = await allocateEnrollmentNumber(ctx, course.code);
       }
 
       const couponConsumptionFailure = await validateCheckoutPricingItemResult(
@@ -3110,10 +3098,7 @@ export const handleGuestUserSingleEnrollmentByEmail = mutation({
     if (course.type === "therapy" || course.type === "supervised") {
       enrollmentNumber = "N/A"; // No enrollment number for therapy or supervised courses
     } else {
-      enrollmentNumber = generateEnrollmentNumber(
-        course.code,
-        schedule.startDate,
-      );
+      enrollmentNumber = await allocateEnrollmentNumber(ctx, course.code);
     }
 
     // Create enrollment record
@@ -3291,10 +3276,7 @@ export const handleSupervisedTherapyEnrollment = mutation({
         "Type:",
         typeof course.startDate,
       );
-      enrollmentNumber = generateEnrollmentNumber(
-        course.code,
-        schedule.startDate,
-      );
+      enrollmentNumber = await allocateEnrollmentNumber(ctx, course.code);
       console.log("Generated enrollment number:", enrollmentNumber);
     }
 
@@ -3488,10 +3470,7 @@ export const handleGuestUserSupervisedTherapyEnrollment = mutation({
         "Type:",
         typeof course.startDate,
       );
-      enrollmentNumber = generateEnrollmentNumber(
-        course.code,
-        schedule.startDate,
-      );
+      enrollmentNumber = await allocateEnrollmentNumber(ctx, course.code);
       console.log("Generated enrollment number:", enrollmentNumber);
     }
 

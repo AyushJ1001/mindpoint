@@ -2,6 +2,7 @@ import { internalMutation } from "./_generated/server";
 import { INTRO_QUIZ_BANK } from "./_shared/introQuizBank";
 import { INTRO_ASSIGNMENT_BANK } from "./_shared/introAssignmentBank";
 import { INTRO_MODULE_NOTES_URLS } from "./_shared/introModuleNotes";
+import { INTRO_REFERENCES_URLS } from "./_shared/introReferences";
 
 // Attach the four complete intro courses' recordings to the LMS and publish
 // their curricula, so a paid enrollment unlocks a real, playable course.
@@ -712,6 +713,94 @@ export const attachModuleNotes = internalMutation({
           externalUrl: url,
           instructions:
             "Read the reference notes for this module, then mark the reading complete.",
+          updatedAt: now,
+        });
+        linked += 1;
+      }
+
+      if (linked > 0) {
+        await ctx.db.patch(published._id, { updatedAt: now });
+      }
+      results.push({ code: seed.code, linked });
+    }
+
+    return { results };
+  },
+});
+
+/**
+ * Attach the course's books & research reference list as an optional resource
+ * on every module, so learners can find the sources behind the teaching.
+ *
+ *   npx convex run bootstrapIntroRecordings:attachReferences
+ */
+export const attachReferences = internalMutation({
+  args: {},
+  handler: async (ctx) => {
+    const now = Date.now();
+    const courses = await ctx.db.query("courses").take(2000);
+    const results: { code: string; linked?: number; skipped?: string }[] = [];
+
+    for (const seed of COURSES) {
+      const url = INTRO_REFERENCES_URLS[seed.code];
+      if (!url) continue;
+
+      const matches = courses.filter((course) => course.code === seed.code);
+      const course =
+        matches.find((row) => row.lifecycleStatus !== "archived") ?? matches[0];
+      if (!course) continue;
+
+      const curricula = await ctx.db
+        .query("lmsCurricula")
+        .withIndex("by_courseId", (q) => q.eq("courseId", course._id))
+        .take(100);
+      const published = curricula.find((row) => row.status === "published");
+      if (!published) {
+        results.push({ code: seed.code, skipped: "no published curriculum" });
+        continue;
+      }
+
+      const modules = await ctx.db
+        .query("lmsModules")
+        .withIndex("by_curriculumId_and_sortOrder", (q) =>
+          q.eq("curriculumId", published._id),
+        )
+        .take(100);
+      const activities = await ctx.db
+        .query("lmsActivities")
+        .withIndex("by_curriculumId", (q) =>
+          q.eq("curriculumId", published._id),
+        )
+        .take(500);
+
+      const ordered = [...modules].sort((a, b) => a.sortOrder - b.sortOrder);
+      let linked = 0;
+
+      for (const module of ordered) {
+        const exists = activities.some(
+          (activity) =>
+            activity.moduleId === module._id &&
+            activity.type === "external_resource" &&
+            activity.externalUrl === url,
+        );
+        if (exists) continue;
+
+        await ctx.db.insert("lmsActivities", {
+          curriculumId: published._id,
+          moduleId: module._id,
+          type: "external_resource",
+          title: "Books & research for this module",
+          instructions:
+            "Optional further reading. Each entry carries a code, citation and a note on which modules it supports.",
+          externalUrl: url,
+          required: false,
+          sortOrder: 85,
+          releaseMode: "immediate",
+          completionMode: "self_confirm",
+          rightsApproved: true,
+          accessibleAlternative:
+            "The reference list is a text page with citations and reading notes.",
+          createdAt: now,
           updatedAt: now,
         });
         linked += 1;

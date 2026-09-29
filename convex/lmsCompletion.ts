@@ -11,7 +11,10 @@ export async function maybeCreateCompletionRequest(
     .query("lmsEnrollmentCurricula")
     .withIndex("by_enrollmentId", (q) => q.eq("enrollmentId", enrollmentId))
     .unique();
-  if (!assignment || assignment.status !== "active") return null;
+  // A suspended assignment grants no access. A `completed` one has already
+  // reached the certificate stage, so it is still valid to (re)raise a request
+  // for — e.g. after a revocation or a correction.
+  if (!assignment || assignment.status === "suspended") return null;
   const activities = await ctx.db
     .query("lmsActivities")
     .withIndex("by_curriculumId", (q) =>

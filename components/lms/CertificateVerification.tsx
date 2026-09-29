@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Certificate } from "@/components/lms/Certificate";
 import { publicCertificateApi } from "@/lib/lms-api";
 
 const configured = Boolean(process.env.NEXT_PUBLIC_CONVEX_URL);
@@ -65,6 +66,22 @@ export function CertificateVerification({ code }: { code: string }) {
                 <dd>{certificate.verificationCode}</dd>
               </div>
             </dl>
+            {certificate.status === "issued" ? (
+              <div className="certificate-verify-sheet">
+                <Certificate
+                  data={{
+                    recipientName:
+                      certificate.identityVisible && certificate.recipientName
+                        ? certificate.recipientName
+                        : "The Mind Point learner",
+                    courseName: certificate.courseName,
+                    verificationCode: certificate.verificationCode,
+                    issuedAt: certificate.issuedAt,
+                    courseType: certificate.courseType,
+                  }}
+                />
+              </div>
+            ) : null}
           </div>
         ) : (
           <div className="certificate-verify-state">

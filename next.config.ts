@@ -27,7 +27,7 @@ const nextConfig = {
   reactStrictMode: true,
   // Allow the temporary localhost.run preview host to hydrate in development.
   // Production does not use this allowlist.
-  allowedDevOrigins: ["*.lhr.life"],
+  allowedDevOrigins: ["*.lhr.life", "*.tail7e1b52.ts.net"],
   images: {
     remotePatterns: [
       {

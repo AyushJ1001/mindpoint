@@ -1760,3 +1760,134 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ------------------------------------------------------------------ */
+/*  Certificate — the owner's botanical template as the sheet, with the */
+/*  learner's details and the seal overlaid. Prints to A4 landscape.    */
+/* ------------------------------------------------------------------ */
+.certificate-sheet {
+  position: relative;
+  width: 100%;
+  max-width: 1123px;
+  aspect-ratio: 1491 / 1055;
+  margin: 0 auto;
+  overflow: hidden;
+  container-type: inline-size;
+  background-image: url("/brand/certificate-template.jpg");
+  background-size: 100% 100%;
+  background-position: center;
+  background-repeat: no-repeat;
+  box-shadow: 0 34px 80px -46px rgba(11, 59, 60, 0.6);
+  color: #284557;
+  font-family: var(--font-syne), Georgia, serif;
+}
+
+.certificate-sheet p {
+  position: absolute;
+  margin: 0;
+  text-align: center;
+  transform: translate(-50%, -100%);
+}
+
+.certificate-name {
+  left: 50%;
+  top: 57.7%;
+  width: 66%;
+  font-size: 3.2cqw;
+  line-height: 1.18;
+  font-weight: 500;
+  letter-spacing: 0.012em;
+  color: #17333f;
+}
+
+.certificate-course {
+  left: 50%;
+  top: 69.4%;
+  width: 56%;
+  font-size: 2.8cqw;
+  line-height: 1.05;
+  color: #17333f;
+}
+
+.certificate-date,
+.certificate-number {
+  top: 77.9%;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 1.6cqw;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.certificate-date {
+  left: 50%;
+}
+
+.certificate-number {
+  left: 76.8%;
+}
+
+.certificate-signature {
+  position: absolute;
+  left: 14.5%;
+  bottom: 21.6%;
+  width: 13cqw;
+  height: auto;
+  transform: translateX(-50%);
+}
+
+.certificate-note {
+  position: absolute;
+  left: 50%;
+  top: 95.5%;
+  width: 84%;
+  transform: translate(-50%, -50%);
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
+  font-size: 0.72cqw;
+  line-height: 1.3;
+  color: color-mix(in oklab, #284557 52%, transparent);
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  html,
+  body {
+    /* A certificate is one page; nothing else prints. */
+    height: 210mm;
+    overflow: hidden;
+    background: #ffffff;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .certificate-sheet,
+  .certificate-sheet * {
+    visibility: visible;
+  }
+
+  .certificate-sheet {
+    position: fixed;
+    inset: 0;
+    margin: 0;
+    width: 297mm;
+    height: 210mm;
+    max-width: none;
+    box-shadow: none;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+.certificate-unavailable {
+  border: 1px dashed color-mix(in oklab, var(--color-border) 80%, transparent);
+  border-radius: 14px;
+  padding: 2rem;
+  text-align: center;
+  color: var(--color-muted-foreground);
+  font-size: 0.9rem;
+}
