@@ -124,14 +124,14 @@ export async function renderCertificatePng(
     "above",
   );
 
-  const courseSize = width * 0.023;
+  const courseSize = width * 0.02;
   ctx.font = `400 ${courseSize}px ${syne}`;
   drawCenteredLines(
     ctx,
     wrapLines(
       ctx,
       certificateCourseTitle(data.courseName, data.courseType),
-      width * 0.76,
+      width * 0.56,
     ),
     width * 0.5,
     height * 0.694,
