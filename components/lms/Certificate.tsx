@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useRef } from "react";
 
 import type { LmsLearningMode } from "@/lib/lms-api";
 
@@ -47,6 +48,28 @@ export function Certificate({
   data: CertificateData;
   className?: string;
 }) {
+  const sheetRef = useRef<HTMLElement>(null);
+
+  // Older browsers ignore container-query units (`cqw`), which would fall back
+  // to default text sizes and scramble the sheet. Publish the rendered width as
+  // a CSS variable so the stylesheet can size text as a fraction of it.
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const update = () => {
+      const width = sheet.clientWidth;
+      if (width > 0) sheet.style.setProperty("--cert-width", `${width}px`);
+    };
+    update();
+    if (typeof ResizeObserver === "undefined") {
+      window.addEventListener("resize", update);
+      return () => window.removeEventListener("resize", update);
+    }
+    const observer = new ResizeObserver(update);
+    observer.observe(sheet);
+    return () => observer.disconnect();
+  }, []);
+
   // A service with no curriculum cannot have a completion certificate.
   if (data.courseType && NON_CERTIFICATE_TYPES.has(data.courseType)) {
     return (
@@ -61,6 +84,7 @@ export function Certificate({
 
   return (
     <figure
+      ref={sheetRef}
       className={`certificate-sheet ${className}`}
       aria-label={`Certificate of completion for ${data.recipientName}`}
     >
