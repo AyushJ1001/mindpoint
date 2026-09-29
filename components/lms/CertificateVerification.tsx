@@ -2,9 +2,16 @@
 
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 import { useQuery } from "convex/react";
-import { AlertTriangle, CheckCircle2, ShieldCheck } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Download,
+  ShieldCheck,
+} from "lucide-react";
 import { Certificate } from "@/components/lms/Certificate";
+import { downloadCertificatePng } from "@/lib/certificate-image";
 import { publicCertificateApi } from "@/lib/lms-api";
 
 const configured = Boolean(process.env.NEXT_PUBLIC_CONVEX_URL);
@@ -15,6 +22,7 @@ export function CertificateVerification({ code }: { code: string }) {
     configured ? { verificationCode: code } : "skip",
   );
   const loading = configured && certificate === undefined;
+  const [downloadError, setDownloadError] = useState<string>();
 
   return (
     <main className="certificate-verify-page">
@@ -67,20 +75,53 @@ export function CertificateVerification({ code }: { code: string }) {
               </div>
             </dl>
             {certificate.status === "issued" ? (
-              <div className="certificate-verify-sheet">
-                <Certificate
-                  data={{
-                    recipientName:
-                      certificate.identityVisible && certificate.recipientName
-                        ? certificate.recipientName
-                        : "The Mind Point learner",
-                    courseName: certificate.courseName,
-                    verificationCode: certificate.verificationCode,
-                    issuedAt: certificate.issuedAt,
-                    courseType: certificate.courseType,
+              <>
+                <div className="certificate-verify-sheet">
+                  <Certificate
+                    data={{
+                      recipientName:
+                        certificate.identityVisible && certificate.recipientName
+                          ? certificate.recipientName
+                          : "The Mind Point learner",
+                      courseName: certificate.courseName,
+                      verificationCode: certificate.verificationCode,
+                      issuedAt: certificate.issuedAt,
+                      courseType: certificate.courseType,
+                    }}
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="certificate-verify-download"
+                  onClick={async () => {
+                    setDownloadError(undefined);
+                    try {
+                      await downloadCertificatePng({
+                        recipientName:
+                          certificate.identityVisible &&
+                          certificate.recipientName
+                            ? certificate.recipientName
+                            : "The Mind Point learner",
+                        courseName: certificate.courseName,
+                        verificationCode: certificate.verificationCode,
+                        issuedAt: certificate.issuedAt,
+                        courseType: certificate.courseType,
+                      });
+                    } catch {
+                      setDownloadError(
+                        "Could not prepare the download. Please try again.",
+                      );
+                    }
                   }}
-                />
-              </div>
+                >
+                  <Download aria-hidden="true" /> Download certificate
+                </button>
+                {downloadError ? (
+                  <p className="certificate-verify-error" role="alert">
+                    {downloadError}
+                  </p>
+                ) : null}
+              </>
             ) : null}
           </div>
         ) : (

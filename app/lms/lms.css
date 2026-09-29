@@ -795,6 +795,16 @@ body:has(.lms-preview-page) > footer {
   font-size: 0.7rem;
   overflow-wrap: anywhere;
 }
+.lms-live-certificate-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+.lms-live-certificate-actions .lms-live-primary,
+.lms-live-certificate-actions .lms-live-outline {
+  width: 100%;
+  margin-top: 0;
+}
 .lms-live-certificate-panel form label {
   margin-top: 18px;
 }
@@ -971,53 +981,6 @@ body:has(.lms-preview-page) > footer {
 .lms-live-question-empty {
   padding: 14px 0;
 }
-.lms-certificate-print {
-  display: none;
-}
-
-@media print {
-  body > * {
-    visibility: hidden;
-  }
-  .lms-certificate-print,
-  .lms-certificate-print * {
-    visibility: visible;
-  }
-  .lms-certificate-print {
-    position: fixed;
-    inset: 0;
-    display: grid;
-    place-content: center;
-    padding: 12mm;
-    border: 12px double #07575b;
-    color: #123536;
-    background: #fffdf8;
-    text-align: center;
-  }
-  .lms-certificate-print img {
-    width: 190px;
-    margin: 0 auto 20px;
-  }
-  .lms-certificate-print p {
-    margin: 10px 0;
-    color: #466566;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-  }
-  .lms-certificate-print h1 {
-    font-size: 36pt;
-  }
-  .lms-certificate-print h2 {
-    font-size: 24pt;
-  }
-  .lms-certificate-print footer {
-    margin-top: 36px;
-    color: #466566;
-    font-family: monospace;
-    font-size: 9pt;
-  }
-}
-
 .lms-live-gateway,
 .lms-live-empty,
 .lms-live-state {
