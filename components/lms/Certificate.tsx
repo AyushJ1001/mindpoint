@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useEffect, useRef } from "react";
 
 import type { LmsLearningMode } from "@/lib/lms-api";
+import { certificateCourseTitle } from "@/lib/certificate-title";
 
 /**
  * The issued certificate. The owner's botanical template is the sheet; the
@@ -89,7 +90,9 @@ export function Certificate({
       aria-label={`Certificate of completion for ${data.recipientName}`}
     >
       <p className="certificate-name">{data.recipientName}</p>
-      <p className="certificate-course">{data.courseName}</p>
+      <p className="certificate-course">
+        {certificateCourseTitle(data.courseName, data.courseType)}
+      </p>
       <p className="certificate-date">{formatDate(data.issuedAt)}</p>
       <p className="certificate-number">{data.verificationCode}</p>
       <Image

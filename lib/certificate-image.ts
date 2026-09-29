@@ -1,6 +1,7 @@
 "use client";
 
 import type { CertificateData } from "@/components/lms/Certificate";
+import { certificateCourseTitle } from "@/lib/certificate-title";
 
 /**
  * Rasterises the issued certificate to a PNG for download.
@@ -123,11 +124,15 @@ export async function renderCertificatePng(
     "above",
   );
 
-  const courseSize = width * 0.028;
+  const courseSize = width * 0.023;
   ctx.font = `400 ${courseSize}px ${syne}`;
   drawCenteredLines(
     ctx,
-    wrapLines(ctx, data.courseName, width * 0.56),
+    wrapLines(
+      ctx,
+      certificateCourseTitle(data.courseName, data.courseType),
+      width * 0.76,
+    ),
     width * 0.5,
     height * 0.694,
     courseSize * 1.05,
