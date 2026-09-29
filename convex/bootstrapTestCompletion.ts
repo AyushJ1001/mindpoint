@@ -63,6 +63,7 @@ export const issueTestCertificate = internalMutation({
         verificationCode: enrollment.enrollmentNumber,
         recipientName,
         courseName: course.name,
+        courseType: course.type,
         status: "issued",
         issuedAt: now,
         publicVerificationEnabled: false,
@@ -72,6 +73,8 @@ export const issueTestCertificate = internalMutation({
       await ctx.db.patch("lmsCertificates", certificateId, {
         verificationCode: enrollment.enrollmentNumber,
         recipientName,
+        courseName: course.name,
+        courseType: course.type,
         status: "issued",
         issuedAt: now,
       });
