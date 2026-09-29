@@ -1772,7 +1772,6 @@
   aspect-ratio: 1491 / 1055;
   margin: 0 auto;
   overflow: hidden;
-  container-type: inline-size;
   background-image: url("/brand/certificate-template.jpg");
   background-size: 100% 100%;
   background-position: center;
@@ -1780,7 +1779,9 @@
   box-shadow: 0 34px 80px -46px rgba(11, 59, 60, 0.6);
   color: #284557;
   font-family: var(--font-syne), Georgia, serif;
-  /* 1% of the rendered sheet width; `cqw` overrides it where supported. */
+  /* 1% of the rendered sheet width, published by the Certificate component.
+     Safari renders container-query units incorrectly here, so sizing is driven
+     by the measured width (`--cert-width`) rather than `cqw`. */
   --cert-unit: calc(var(--cert-width, 1123px) / 100);
 }
 
@@ -1796,7 +1797,6 @@
   top: 57.7%;
   width: 66%;
   font-size: calc(var(--cert-unit) * 3.2);
-  font-size: 3.2cqw;
   line-height: 1.18;
   font-weight: 500;
   letter-spacing: 0.012em;
@@ -1808,7 +1808,6 @@
   top: 69.4%;
   width: 56%;
   font-size: calc(var(--cert-unit) * 2);
-  font-size: 2cqw;
   line-height: 1.05;
   color: #17333f;
 }
@@ -1818,7 +1817,6 @@
   top: 77.9%;
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: calc(var(--cert-unit) * 1.6);
-  font-size: 1.6cqw;
   line-height: 1;
   white-space: nowrap;
 }
@@ -1836,7 +1834,6 @@
   left: 14.5%;
   bottom: 21.6%;
   width: calc(var(--cert-unit) * 13);
-  width: 13cqw;
   height: auto;
   transform: translateX(-50%);
 }
@@ -1849,7 +1846,6 @@
   transform: translate(-50%, -50%);
   font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-size: calc(var(--cert-unit) * 0.72);
-  font-size: 0.72cqw;
   line-height: 1.3;
   color: color-mix(in oklab, #284557 52%, transparent);
 }
