@@ -1806,9 +1806,9 @@
 .certificate-course {
   left: 50%;
   top: 69.4%;
-  width: 56%;
-  font-size: calc(var(--cert-unit) * 2.8);
-  font-size: 2.8cqw;
+  width: 76%;
+  font-size: calc(var(--cert-unit) * 2.3);
+  font-size: 2.3cqw;
   line-height: 1.05;
   color: #17333f;
 }
