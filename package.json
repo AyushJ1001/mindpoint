@@ -21,6 +21,7 @@
     "test:effect-boundary": "NODE_OPTIONS='--conditions react-server' tsx --test test-effect-boundary.ts",
     "test:convex-result": "tsx --test test-convex-result.ts",
     "test:checkout-reconciliation": "tsx test-checkout-reconciliation.js",
+    "test:checkout-payment-guard": "tsx --test test-checkout-payment-guard.ts",
     "test:lms-stage-zero": "node test-lms-stage-zero.js",
     "test:lms-quiz": "tsx --test test-lms-quiz.ts",
     "test:lms-feedback": "tsx --test test-lms-feedback.ts",
