@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PROTOTYPE — course detail, three variants</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400;1,9..144,500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../coastal-lagoon/styles.css" />
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+<!-- PROTOTYPE. Content is the real CCCBT course from the production database.
+     The week-by-week outline is illustrative: CCCBT has no modules in production. -->
+
+<header id="nav" class="solid">
+  <div class="wrap">
+    <nav>
+      <a class="brand" href="#"><img src="../../public/logo.png" alt="The Mind Point" /><b>THE MIND POINT</b></a>
+      <div class="menu">
+        <a href="#">About</a>
+        <a href="#">Programs</a>
+        <a href="#">Resources</a>
+        <a href="#">Community</a>
+      </div>
+      <a class="btn" href="#">Join us</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+<!-- ================= A — outline-led ================= -->
+<div data-variant="A">
+  <section class="cd-hero" style="padding-bottom:2rem">
+    <div class="bg"></div><div class="wash"></div>
+    <div class="wrap in">
+      <p class="crumbs"><a href="#">Programs</a> · Certificate · Live cohort</p>
+      <h1 class="cd-title" style="max-width:22ch">CBT, REBT and CBMT</h1>
+      <p class="cd-lead" style="font-size:1.12rem">
+        Understand how thoughts, emotions and behaviours connect — and learn to
+        challenge the thinking patterns that keep people stuck.
+      </p>
+      <div style="display:flex;gap:1.4rem;align-items:center;flex-wrap:wrap;margin-top:2rem">
+        <span class="fee">₹3,499</span>
+        <a class="btn" href="#">Reserve a seat <span class="arw">→</span></a>
+        <span class="micro">19 Jan – 11 Mar 2027 · 30 seats</span>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="head">
+        <h2>Six weeks of method, then two weeks of practice.</h2>
+        <p>Each week takes one idea and makes you use it, not just read it.</p>
+      </div>
+      <div class="a-outline">
+        <div class="a-week"><span class="no">01</span><div><h3>Foundations of CBT, REBT and CBMT</h3><p>The relationship between thoughts, emotions and behaviours, and where each method came from.</p></div></div>
+        <div class="a-week"><span class="no">02</span><div><h3>Cognitive distortions and irrational beliefs</h3><p>How to spot them in a real transcript, and the techniques that restructure them.</p></div></div>
+        <div class="a-week"><span class="no">03</span><div><h3>Behavioural techniques</h3><p>Behavioural activation, exposure strategies, and building positive action patterns.</p></div></div>
+        <div class="a-week"><span class="no">04</span><div><h3>Mindfulness and emotional regulation</h3><p>Acceptance-based approaches for stress, anxiety and triggers.</p></div></div>
+        <div class="a-week"><span class="no">05</span><div><h3>Structuring a session</h3><p>Rapport, agenda-setting and measurable treatment goals.</p></div></div>
+        <div class="a-week"><span class="no">06</span><div><h3>Therapeutic application</h3><p>Case studies and practical use across real-life situations and mental-health concerns.</p></div></div>
+        <div class="a-week practical"><span class="no">07–08</span><div><h3>Practical training <span class="tag">Supervised</span></h3><p>Role-played practice with feedback, and the honest limits of a completion certificate.</p></div></div>
+      </div>
+    </div>
+  </section>
+
+  <section style="background:var(--cream)">
+    <div class="wrap a-two">
+      <div>
+        <p class="eyebrow">Why this one</p>
+        <ul class="checks">
+          <li>You practise techniques during sessions, not just listen to lectures</li>
+          <li>Small cohorts mean your educators know your name</li>
+          <li>Curriculum designed by working professionals, not academics</li>
+        </ul>
+      </div>
+      <div>
+        <p class="eyebrow">What you leave with</p>
+        <ul class="checks">
+          <li>Apply psychology concepts to real-life situations</li>
+          <li>Build practical skills through hands-on exercises</li>
+          <li>A completion certificate that says what it is</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+</div>
+
+<!-- ================= B — cohort-led, sticky rail ================= -->
+<div data-variant="B">
+  <section class="cd-hero">
+    <div class="bg"></div><div class="wash"></div>
+    <div class="wrap in">
+      <p class="crumbs"><a href="#">Programs</a> · Certificate · Live cohort</p>
+      <h1 class="cd-title" style="max-width:16ch">CBT, REBT and CBMT</h1>
+      <p class="cd-lead" style="font-size:1.08rem;margin-top:1.2rem">
+        Eight weeks, live, in a cohort of thirty. Six weeks of method and two
+        weeks of supervised practice.
+      </p>
+    </div>
+  </section>
+
+  <section style="padding-top:0">
+    <div class="wrap b-grid">
+      <div>
+        <h2 style="font-size:clamp(1.8rem,3.4vw,2.6rem)">What the eight weeks look like</h2>
+        <p style="color:var(--muted);max-width:56ch">The first six weeks each open one area of the method. The last two are practice, with feedback on your own work.</p>
+        <div class="b-track">
+          <div class="b-bar"><b>1</b>Foundations</div>
+          <div class="b-bar"><b>2</b>Distortions</div>
+          <div class="b-bar"><b>3</b>Behaviour</div>
+          <div class="b-bar"><b>4</b>Regulation</div>
+          <div class="b-bar"><b>5</b>Session craft</div>
+          <div class="b-bar"><b>6</b>Application</div>
+          <div class="b-bar practical"><b>7</b>Practice</div>
+          <div class="b-bar practical"><b>8</b>Feedback</div>
+        </div>
+
+        <div class="b-split">
+          <div><p class="eyebrow">Format</p><p style="color:var(--muted);margin:.4rem 0 0">Live on Zoom, Tuesdays and Thursdays, 19:30–21:00. Recordings stay available for twelve months.</p></div>
+          <div><p class="eyebrow">Who it is for</p><p style="color:var(--muted);margin:.4rem 0 0">Psychology students, graduates and practising counsellors. No prior clinical practice required.</p></div>
+          <div><p class="eyebrow">What it is not</p><p style="color:var(--muted);margin:.4rem 0 0">Not a degree, a licence, or supervised clinical training. It is a completion certificate.</p></div>
+        </div>
+      </div>
+
+      <aside class="b-rail">
+        <h3>January 2027 cohort</h3>
+        <span class="fee">₹3,499</span>
+        <ul class="facts" style="margin-bottom:1.3rem">
+          <li><b>Starts</b><span>19 January 2027</span></li>
+          <li><b>Ends</b><span>11 March 2027</span></li>
+          <li><b>Runs</b><span>Tuesdays &amp; Thursdays</span></li>
+          <li><b>Seats</b><span>30, small cohort</span></li>
+          <li><b>Length</b><span>8 weeks (6 + 2)</span></li>
+        </ul>
+        <a class="btn" href="#">Reserve a seat <span class="arw">→</span></a>
+        <p class="fine">Payment by UPI. Your seat is confirmed once the payment is verified.</p>
+      </aside>
+    </div>
+  </section>
+
+  <section class="b-weeks">
+    <div class="wrap">
+      <p class="eyebrow">Still deciding?</p>
+      <h2 style="font-size:clamp(1.8rem,3.4vw,2.6rem);max-width:26ch;margin-top:.6rem">Talk to the person who teaches it.</h2>
+      <p style="color:var(--muted);max-width:52ch">If you are unsure whether this is the right course for where you are, ask before you pay.</p>
+      <a class="btn ghost" href="#" style="margin-top:1.6rem">Ask a question</a>
+    </div>
+  </section>
+</div>
+
+<!-- ================= C — evidence-led, banded ================= -->
+<div data-variant="C">
+  <section class="cd-hero" style="min-height:auto">
+    <div class="bg"></div><div class="wash"></div>
+    <div class="wrap in" style="text-align:center">
+      <p class="crumbs">Certificate · Live cohort · January 2027</p>
+      <h1 class="cd-title" style="max-width:24ch;margin:1rem auto 0">Learn the method, then use it on yourself.</h1>
+      <p class="cd-lead" style="margin:1.4rem auto 0">
+        CBT, REBT and CBMT — eight weeks, thirty people, and two weeks where you
+        practise with feedback instead of watching.
+      </p>
+      <a class="btn" href="#" style="margin-top:2rem">Reserve a seat <span class="arw">→</span></a>
+      <p class="micro" style="margin-top:1rem">19 Jan – 11 Mar 2027 · ₹3,499 · 30 seats</p>
+    </div>
+  </section>
+
+  <section class="c-band">
+    <div class="bg"></div><div class="wash"></div>
+    <div class="in wrap">
+      <h2>Most courses explain the model. This one makes you work it.</h2>
+      <p>You will read real cases, argue about them, get them wrong, and try again — in a small cohort where that is expected rather than embarrassing.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <p class="eyebrow">What you will be able to do</p>
+      <ol class="c-num" style="margin-top:1.6rem;max-width:60ch">
+        <li><span class="no">i</span><span>Explain the relationship between thoughts, emotions and behaviours, and where CBT, REBT and CBMT differ.</span></li>
+        <li><span class="no">ii</span><span>Spot cognitive distortions and irrational beliefs, and challenge them without arguing with the person.</span></li>
+        <li><span class="no">iii</span><span>Use behavioural activation and exposure strategies, and know when not to.</span></li>
+        <li><span class="no">iv</span><span>Regulate your own reactions before you try to help someone regulate theirs.</span></li>
+        <li><span class="no">v</span><span>Structure a session: rapport, agenda, and measurable goals.</span></li>
+        <li><span class="no">vi</span><span>Apply it to real situations, and say plainly where your competence ends.</span></li>
+      </ol>
+    </div>
+  </section>
+
+  <section style="background:var(--cream)">
+    <div class="wrap c-split">
+      <div>
+        <p class="eyebrow">Who it is for</p>
+        <ul class="checks" style="margin-top:1rem">
+          <li>Psychology students and graduates who want the practical half, not just the theory</li>
+          <li>Counsellors who want a structured method they can actually run</li>
+          <li>People who have tried self-study and need to be taught by someone</li>
+        </ul>
+      </div>
+      <div>
+        <p class="eyebrow">Who it is not for</p>
+        <ul class="checks" style="margin-top:1rem">
+          <li>Anyone looking for a licence, a degree, or supervised clinical practice</li>
+          <li>Anyone who wants to watch lectures and never speak</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="c-quote">
+    <div class="wrap">
+      <blockquote>The difference was being made to try it, badly, in front of people who were also trying it badly.</blockquote>
+      <p class="micro">Learner, 2026 cohort</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="c-compare">
+        <div>
+          <h3>What the certificate says</h3>
+          <ul>
+            <li>Completion of an eight-week training course</li>
+            <li>Six weeks of method, two weeks of supervised practice</li>
+            <li>Verifiable on request</li>
+          </ul>
+        </div>
+        <div>
+          <h3>What it does not say</h3>
+          <ul>
+            <li>Not a degree or a licence to practise</li>
+            <li>Not accreditation or professional recognition</li>
+            <li>Not a substitute for clinical supervision</li>
+          </ul>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:3rem">
+        <span class="fee">₹3,499</span>
+        <p class="micro" style="margin:.6rem 0 1.4rem">19 January – 11 March 2027 · 30 seats</p>
+        <a class="btn" href="#">Reserve a seat <span class="arw">→</span></a>
+      </div>
+    </div>
+  </section>
+</div>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="foot">
+      <div class="brand">
+        <img src="../../public/logo.png" alt="" style="width:48px;margin-bottom:.7rem" />
+        <b>THE MIND POINT</b>
+        <p style="color:rgba(248,246,240,.65);max-width:30ch;margin-top:.7rem">Practical tools. Compassionate guidance. A more mindful tomorrow.</p>
+      </div>
+      <div><h4>Explore</h4><ul><li><a href="#">Programs</a></li><li><a href="#">About</a></li><li><a href="#">Resources</a></li><li><a href="#">Verify a certificate</a></li></ul></div>
+      <div><h4>Company</h4><ul><li><a href="#">Community</a></li><li><a href="#">Careers</a></li><li><a href="#">Contact</a></li></ul></div>
+      <div class="crisis"><b>In crisis?</b> Please reach out to a local helpline or emergency service right away. This platform is education and support — not emergency care.</div>
+    </div>
+    <div class="copy"><span>© 2026 The Mind Point. All rights reserved.</span><span><a href="#">Terms</a> · <a href="#">Privacy</a> · <a href="#">Refunds</a></span></div>
+  </div>
+</footer>
+
+<div id="switcher">
+  <button id="prev" aria-label="Previous variant">←</button>
+  <b id="label">A</b><span id="name">Outline-led</span>
+  <button id="next" aria-label="Next variant">→</button>
+</div>
+
+<script>
+  const VARIANTS = [
+    { key: "A", name: "Outline-led",      asks: "Does the course sell itself on its week-by-week shape?" },
+    { key: "B", name: "Cohort-led",        asks: "Does leading with dates, seats and a sticky rail convert better?" },
+    { key: "C", name: "Evidence-led",      asks: "Does leading with the promise and the honesty convert better?" },
+  ];
+  const params = new URLSearchParams(location.search);
+  let i = Math.max(0, VARIANTS.findIndex((v) => v.key === (params.get("variant") || "A").toUpperCase()));
+
+  function render(replace) {
+    const v = VARIANTS[i];
+    document.querySelectorAll("[data-variant]").forEach((el) => {
+      el.classList.toggle("on", el.dataset.variant === v.key);
+    });
+    document.getElementById("label").textContent = v.key;
+    document.getElementById("name").textContent = v.name;
+    const url = new URL(location.href);
+    url.searchParams.set("variant", v.key);
+    history.replaceState(null, "", url);
+    if (!replace) window.scrollTo({ top: 0 });
+  }
+
+  function go(step) { i = (i + step + VARIANTS.length) % VARIANTS.length; render(false); }
+  document.getElementById("prev").onclick = () => go(-1);
+  document.getElementById("next").onclick = () => go(1);
+  addEventListener("keydown", (e) => {
+    const t = document.activeElement;
+    if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+    if (e.key === "ArrowLeft") go(-1);
+    if (e.key === "ArrowRight") go(1);
+  });
+  render(true);
+</script>
+
+</body>
+</html>
