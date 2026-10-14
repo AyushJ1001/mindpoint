@@ -177,19 +177,17 @@ function Outcomes({ outcomes }: { outcomes: string[] }) {
   );
 }
 
-function TypeFaq({
-  faqs,
-}: {
-  faqs: { question: string; answer: string }[];
-}) {
+function TypeFaq({ faqs }: { faqs: { question: string; answer: string }[] }) {
   if (faqs.length === 0) return null;
 
   return (
-    <section className="calm-section-tight">
-      <div className="calm-container">
+    <section className="py-10 sm:py-14 lg:py-16">
+      <div className="mx-auto w-full max-w-3xl px-5 sm:px-6">
         <ScrollReveal>
-          <p className="calm-section-number">Questions</p>
-          <h2 className="calm-section-title mt-5">
+          <p className="water-eyebrow text-[0.7rem] font-semibold tracking-[0.32em] uppercase">
+            Questions
+          </p>
+          <h2 className="font-display mt-5 max-w-[24ch] text-3xl leading-[1.1] tracking-[-0.02em] sm:text-4xl">
             In case you&apos;re wondering.
           </h2>
           <div className="mt-10">
@@ -227,7 +225,7 @@ function ClosingCta({
               </a>
               <Link
                 href={closing.secondaryHref}
-                className="calm-link text-sm font-medium"
+                className="text-foreground decoration-foreground/35 hover:text-primary hover:decoration-primary text-sm font-medium underline decoration-1 underline-offset-4 transition-colors"
               >
                 {closing.secondaryLabel}
               </Link>
