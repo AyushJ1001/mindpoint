@@ -67,3 +67,70 @@ export const normalizeEnrollmentStatus = internalMutation({
     return { done: true, scanned, patched };
   },
 });
+
+// One-off normalisation: certificate Courses now run for eight weeks, so their
+// `duration` string is set to one canonical value. `duration` is rendered
+// verbatim as a chip on the course page and in the cart (`course-hero.tsx`,
+// `course-journey.tsx`, `bogo-selection-modal.tsx`), so the stored string is
+// the copy.
+//
+// Defaults to a DRY RUN and reports every change it would make, so the blast
+// radius is visible before anything is written. Run it for real with:
+//   npx convex run migrations:normalizeCertificateCourseDuration '{"dryRun":false}'
+// It self-reschedules in batches to stay within mutation transaction limits.
+
+const CERTIFICATE_DURATION = "8 weeks";
+const COURSE_BATCH_SIZE = 200;
+
+export const normalizeCertificateCourseDuration = internalMutation({
+  args: {
+    duration: v.optional(v.string()),
+    dryRun: v.optional(v.boolean()),
+    cursor: v.optional(v.union(v.string(), v.null())),
+    scanned: v.optional(v.number()),
+    changes: v.optional(
+      v.array(
+        v.object({
+          code: v.string(),
+          from: v.union(v.string(), v.null()),
+        }),
+      ),
+    ),
+  },
+  handler: async (ctx, args) => {
+    const duration = args.duration ?? CERTIFICATE_DURATION;
+    const dryRun = args.dryRun ?? true;
+
+    const page = await ctx.db.query("courses").paginate({
+      numItems: COURSE_BATCH_SIZE,
+      cursor: args.cursor ?? null,
+    });
+
+    const changes = [...(args.changes ?? [])];
+    for (const row of page.page) {
+      if (row.type !== "certificate") continue;
+      if (row.duration === duration) continue;
+
+      changes.push({ code: row.code, from: row.duration ?? null });
+      if (!dryRun) {
+        await ctx.db.patch(row._id, { duration });
+      }
+    }
+
+    const scanned = (args.scanned ?? 0) + page.page.length;
+
+    if (!page.isDone) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.migrations.normalizeCertificateCourseDuration,
+        { duration, dryRun, cursor: page.continueCursor, scanned, changes },
+      );
+      return { done: false, dryRun, scanned, changes };
+    }
+
+    console.log(
+      `normalizeCertificateCourseDuration ${dryRun ? "(dry run) " : ""}complete: scanned ${scanned}, ${changes.length} certificate course(s) set to "${duration}"`,
+    );
+    return { done: true, dryRun, scanned, changes };
+  },
+});
