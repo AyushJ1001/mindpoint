@@ -45,9 +45,9 @@ Confirm that mapping before it is treated as copy.
 
 ## Also noticed while building this
 
-- **CCCBT's `duration` reads "4 Weeks Training + 2 Weeks Application"** — six
-  weeks, not the 6+2 the January run is meant to be. Either the field is stale
-  or the courses are not all eight weeks.
+- **CCCBT's `duration` read "4 Weeks Training + 2 Weeks Application"** — six
+  weeks, not eight. **Resolved 14 October 2026:** every certificate course now
+  reads "8 weeks" (`convex/migrations.ts`, PR #233).
 - **The price shown is ₹3,499**, which is what production holds, not the settled
   ₹2,999. See [Reconcile the January cohort price and
   offer](https://github.com/AyushJ1001/mindpoint/issues/227).
