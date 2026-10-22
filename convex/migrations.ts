@@ -67,3 +67,41 @@ export const normalizeEnrollmentStatus = internalMutation({
     return { done: true, scanned, patched };
   },
 });
+
+// Housekeeping: archive every offer campaign that is still live, so the
+// storefront stops carrying stale promotions. Reversible from the admin Offers
+// desk; this only flips `isArchived`.
+//
+//   npx convex run migrations:archiveOfferCampaigns '{"dryRun":true}'
+//   npx convex run migrations:archiveOfferCampaigns '{"dryRun":false}'
+
+export const archiveOfferCampaigns = internalMutation({
+  args: { dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    const dryRun = args.dryRun ?? true;
+
+    const campaigns = await ctx.db.query("offerCampaigns").collect();
+    const live = campaigns.filter((campaign) => !campaign.isArchived);
+
+    if (!dryRun) {
+      const now = Date.now();
+      for (const campaign of live) {
+        await ctx.db.patch(campaign._id, {
+          isArchived: true,
+          updatedAt: now,
+          updatedByAdminId: "migration:archive-offers",
+        });
+      }
+    }
+
+    console.log(
+      `archiveOfferCampaigns ${dryRun ? "(dry run) " : ""}complete: ${live.length} live campaign(s)${dryRun ? " would be archived" : " archived"}`,
+    );
+
+    return {
+      dryRun,
+      archived: dryRun ? 0 : live.length,
+      candidates: live.map((campaign) => campaign.name),
+    };
+  },
+});
