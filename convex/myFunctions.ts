@@ -23,6 +23,7 @@ import {
   type CheckoutPricingItem,
   type EnrollmentLineItem,
 } from "./_shared/checkout";
+import { resolveCheckoutPaymentRequirement } from "./_shared/checkoutPayment";
 import {
   calculateInternshipEndDate,
   extractInternshipPlanFromDuration,
@@ -1592,9 +1593,10 @@ export const handleCartCheckout = mutation({
     const paymentScreenshotUrl = sanitizeUploadThingUrl(
       args.paymentScreenshotUrl,
     );
-    // Manual (screenshot) payments need admin verification before access.
-    const requiresPaymentVerification =
-      Boolean(paymentScreenshotUrl) && !paymentReference;
+    // Whether the cart needs admin payment verification before LMS access is
+    // decided once the validated per-line amounts are known, below. A payment
+    // reference is not treated as proof on its own, because nothing verifies it
+    // against the provider server-side.
     let pendingPaymentEmailScheduled = false;
     let checkoutAttempt: Doc<"checkoutAttempts"> | null = null;
     const consumedAdminCouponCodes = new Set<string>();
@@ -1779,6 +1781,27 @@ export const handleCartCheckout = mutation({
         return pricingFailure;
       }
     }
+
+    // A checkout may only create an enrollment without payment evidence when the
+    // validated amount due is zero. Anything else needs a screenshot (which
+    // always waits for admin verification) or a reference — and even a reference
+    // still waits, since it is never verified against the provider.
+    const paymentRequirement = resolveCheckoutPaymentRequirement({
+      amountsDue: preparedLineItems.map(
+        ({ course, pricingItem }) =>
+          buildEnrollmentPricingFields(course, pricingItem).amountPaid,
+      ),
+      hasPaymentReference: Boolean(paymentReference),
+      hasPaymentScreenshot: Boolean(paymentScreenshotUrl),
+    });
+
+    if (paymentRequirement === "missing_payment") {
+      return enrollmentMutationFailure(
+        "A payment reference or a payment screenshot is required for this checkout.",
+      );
+    }
+
+    const requiresPaymentVerification = paymentRequirement === "verify";
 
     if (args.checkoutAttemptId && checkoutAttempt) {
       await ctx.db.patch(args.checkoutAttemptId, {
