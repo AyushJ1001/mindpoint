@@ -10,6 +10,7 @@
 
 import type * as _publicCourse from "../_publicCourse.js";
 import type * as _shared_checkout from "../_shared/checkout.js";
+import type * as _shared_checkoutPayment from "../_shared/checkoutPayment.js";
 import type * as _shared_emailActionResult from "../_shared/emailActionResult.js";
 import type * as _shared_emailDelivery from "../_shared/emailDelivery.js";
 import type * as _shared_enrollment from "../_shared/enrollment.js";
@@ -90,6 +91,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   _publicCourse: typeof _publicCourse;
   "_shared/checkout": typeof _shared_checkout;
+  "_shared/checkoutPayment": typeof _shared_checkoutPayment;
   "_shared/emailActionResult": typeof _shared_emailActionResult;
   "_shared/emailDelivery": typeof _shared_emailDelivery;
   "_shared/enrollment": typeof _shared_enrollment;
