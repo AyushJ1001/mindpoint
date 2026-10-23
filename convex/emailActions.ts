@@ -1652,14 +1652,14 @@ export const sendPaymentPendingEmail = internalAction({
       const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
-        subject: "We've received your payment",
+        subject: "Payment received — we're verifying it",
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2 style="color: #2E7D32;">Thanks, ${escapeHtml(args.userName)}!</h2>
-          <p>We've received your payment for <strong>${escapeHtml(args.courseName)}</strong> and it's now being verified by our team.</p>
-          <p>This usually takes a few working hours, and often much less. You'll get another email the moment it's approved, and your course access will unlock automatically — there's nothing more you need to do.</p>
-          <p>If you haven't heard from us within 24 hours, reply to this email or write to <a href="mailto:contact.themindpoint@gmail.com">contact.themindpoint@gmail.com</a> with your enrollment number, and we'll sort it out straight away.</p>
-          <p>Thank you for your patience.</p>
+          <h2 style="color: #132e2b;">Payment received, ${escapeHtml(args.userName)}</h2>
+          <p>We've got your payment for <strong>${escapeHtml(args.courseName)}</strong>. It's now with us for verification.</p>
+          <p><strong>Your enrollment is not confirmed yet.</strong> Once we've verified the payment, you'll get a separate email headed <em>Enrollment confirmed</em> with your enrollment number and access to your course.</p>
+          <p>That usually takes a few working hours, and often much less. There's nothing more you need to do in the meantime.</p>
+          <p>If you haven't heard from us within 24 hours, reply to this email or write to <a href="mailto:contact.themindpoint@gmail.com">contact.themindpoint@gmail.com</a> and we'll sort it out straight away.</p>
           <p>Best regards,<br>The Mind Point Team</p>
         </div>
       `,
@@ -1752,21 +1752,28 @@ export const sendPaymentApprovedEmail = internalAction({
     userName: v.string(),
     courseName: v.string(),
     courseId: v.string(),
+    enrollmentNumber: v.optional(v.string()),
   },
   returns: emailActionResultValidator,
   handler: async (ctx, args) => {
     try {
-      const learnUrl = `${getSiteUrl()}/learn/${args.courseId}`;
+      const learnUrl = `${getSiteUrl()}/lms`;
       const emailDelivery = await sendEmailWithCopy({
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
-        subject: `Your payment is verified — ${args.courseName} is unlocked`,
+        subject: `Enrollment confirmed — ${args.courseName}`,
         html: `
         <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-          <h2 style="color: #2E7D32;">You're all set, ${escapeHtml(args.userName)}!</h2>
-          <p>Your payment for <strong>${escapeHtml(args.courseName)}</strong> has been verified and your course access is now unlocked.</p>
+          <h2 style="color: #2E7D32;">Your enrollment is confirmed, ${escapeHtml(args.userName)}</h2>
+          <p>We've verified your payment for <strong>${escapeHtml(args.courseName)}</strong>. Your place is confirmed and your course access is open.</p>
+          ${
+            args.enrollmentNumber
+              ? `<p>Your enrollment number is <strong>${escapeHtml(args.enrollmentNumber)}</strong>. Keep it handy if you need to contact us.</p>`
+              : ""
+          }
+          <p>Open your workspace to see the course map and the activities released so far. Live and cohort courses release material week by week.</p>
           <p style="margin-top: 20px;">
-            <a href="${learnUrl}" style="background-color: #2E7D32; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">Start learning</a>
+            <a href="${learnUrl}" style="background-color: #2E7D32; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">Open your course</a>
           </p>
           <p>See you inside.</p>
           <p>Best regards,<br>The Mind Point Team</p>
