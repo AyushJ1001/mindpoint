@@ -6,24 +6,42 @@ a published batch → publish, which cannot be done in a single admin call).
 
 ## What it opens
 
-Three certificate cohorts, each with the shared January schedule and pricing:
+The seed defines three certificate entries. Its third entry names a
+**Counselling Psychology** course (`INCPSY`) that does not exist in production;
+the seed matched the existing `INCLP` internship by name instead. What the seed
+actually touches today:
 
-| Course                | Code    | State                                       |
-| --------------------- | ------- | ------------------------------------------- |
-| CBT, REBT, CBMT       | `CCCBT` | exists — content preserved                  |
-| Inner Child Healing   | `CCICH` | exists — content preserved                  |
-| Personality Disorders | `CCPD`  | **new** — created from the copy in the seed |
+| Seed entry            | Code      | Matches in production                          |
+| --------------------- | --------- | ---------------------------------------------- |
+| Inner Child Healing   | `CCICH`   | exists — content preserved                     |
+| Personality Disorders | `CCPD`    | exists — content preserved                     |
+| Counselling Psychology| `INCPSY`  | absent — matched `INCLP` (internship) instead  |
 
-Shared cohort: **12 January – 9 March 2027**, Tuesdays & Thursdays
-19:30–21:00, **capacity 30**.
+It writes only the January batch (and, for an entry it creates, the course
+record). Authored descriptions, modules and outcomes are left untouched.
 
-Pricing follows the locked January decision ([#133](https://github.com/AyushJ1001/mindpoint/issues/133)):
-full price **₹2,999**, early bird **₹1,999** until **15 December 2026**. The
-schedule and capacity follow [#134](https://github.com/AyushJ1001/mindpoint/issues/134).
+**The live January cohorts are not all from this seed.** Confirmed against
+production on 14 October 2026, the launch set is `CCCBT`, `CCPD` and `CCICH`,
+with per-course published cohorts rather than one shared schedule:
 
-For the two existing courses, the seed writes **only** the January price,
-offer, batch and published status — their authored description, modules and
-outcomes are left untouched.
+| Course | Code | Published cohort |
+| --- | --- | --- |
+| CBT, REBT and CBMT | `CCCBT` | 19 Jan – 11 Mar 2027, Tue/Thu, 30 seats |
+| Personality Disorders | `CCPD` | 21 Jan – 16 Mar 2027, Tue/Thu, 30 seats |
+| Inner Child Healing & Therapy | `CCICH` | 28 Jan – 23 Mar 2027, Tue/Thu, 30 seats |
+
+The seed's stray contribution is a **draft** capacity-30 cohort on `INCLP`
+(18 Jan – 17 Feb, Mon/Wed/Fri), which is not part of the launch.
+
+**The seed does not create a curriculum.** `docs/launch-courses.md` covers what
+still has to be authored in `/admin/lms` per course.
+
+Pricing was intended to follow the locked January decision
+([#133](https://github.com/AyushJ1001/mindpoint/issues/133)): full price
+**₹2,999**, early bird **₹1,999** until **15 December 2026**. Production does not
+hold that — the courses carry ₹3,499 and a blanket "Flat 50% OFF" campaign is
+live. See [Reconcile the January cohort price and
+offer](https://github.com/AyushJ1001/mindpoint/issues/227).
 
 ## Run it
 
