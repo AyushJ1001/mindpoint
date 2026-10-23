@@ -67,3 +67,46 @@ export const normalizeEnrollmentStatus = internalMutation({
     return { done: true, scanned, patched };
   },
 });
+
+// The self-paced "Introduction to …" courses were stored with `type:
+// "certificate"`, so they appeared in the certificate listing beside the live
+// cohorts. They are self-paced, so they belong with the intro courses
+// (`type: "pre-recorded"`). This reclassifies them and nothing else.
+//
+//   npx convex run migrations:reclassifySelfPacedCertificateCourses '{"dryRun":true}'
+//   npx convex run migrations:reclassifySelfPacedCertificateCourses '{"dryRun":false}'
+
+const SELF_PACED_CERTIFICATE_CODES = ["PRCBTI", "PRICHI", "PRPDI"] as const;
+
+export const reclassifySelfPacedCertificateCourses = internalMutation({
+  args: { dryRun: v.optional(v.boolean()) },
+  handler: async (ctx, args) => {
+    const dryRun = args.dryRun ?? true;
+    const courses = await ctx.db.query("courses").collect();
+
+    const targets = courses.filter(
+      (course) =>
+        (SELF_PACED_CERTIFICATE_CODES as readonly string[]).includes(
+          course.code,
+        ) && course.type === "certificate",
+    );
+
+    if (!dryRun) {
+      for (const course of targets) {
+        await ctx.db.patch(course._id, { type: "pre-recorded" });
+      }
+    }
+
+    const changes = targets.map((course) => ({
+      code: course.code,
+      from: course.type,
+      to: "pre-recorded" as const,
+    }));
+
+    console.log(
+      `reclassifySelfPacedCertificateCourses ${dryRun ? "(dry run) " : ""}complete: ${changes.length} course(s)`,
+    );
+
+    return { dryRun, changed: dryRun ? 0 : changes.length, changes };
+  },
+});

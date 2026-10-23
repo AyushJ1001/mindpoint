@@ -1789,6 +1789,7 @@ export const approveEnrollmentPayment = mutation({
           userName: enrollment.userName ?? enrollment.userEmail,
           courseName: enrollment.courseName ?? "your course",
           courseId: String(enrollment.courseId),
+          enrollmentNumber: enrollment.enrollmentNumber,
         },
       );
     }
