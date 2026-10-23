@@ -2,8 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useQuery } from "convex/react";
-import { api } from "@/lib/backend/api";
+import { PendingApprovalsBadge } from "@/components/admin/PendingApprovalsBadge";
 import { AdminTimeZoneProvider } from "@/components/admin/AdminTimeZoneProvider";
 import { AdminTimeZoneSelect } from "@/components/admin/AdminTimeZoneSelect";
 import {
@@ -62,10 +61,6 @@ const items = [
 
 export function AdminSidebar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const pendingApprovals = useQuery(
-    api.adminEnrollments.countPendingPaymentVerifications,
-    {},
-  );
 
   return (
     <AdminTimeZoneProvider>
@@ -89,13 +84,9 @@ export function AdminSidebar({ children }: { children: React.ReactNode }) {
                             <Link href={item.href}>
                               <Icon className="h-4 w-4" />
                               <span>{item.label}</span>
-                              {item.href ===
-                                "/admin/enrollments/approvals" &&
-                                (pendingApprovals ?? 0) > 0 && (
-                                  <span className="bg-destructive text-destructive-foreground ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-[0.65rem] font-semibold">
-                                    {pendingApprovals}
-                                  </span>
-                                )}
+                              {item.href === "/admin/enrollments/approvals" && (
+                                <PendingApprovalsBadge />
+                              )}
                             </Link>
                           </SidebarMenuButton>
                         </SidebarMenuItem>
