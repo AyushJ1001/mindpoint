@@ -1,11 +1,5 @@
 import type { Metadata } from "next";
-import {
-  Plus_Jakarta_Sans,
-  JetBrains_Mono,
-  Fraunces,
-  DM_Sans,
-  Caveat,
-} from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import "react-phone-number-input/style.css";
 import ClientProviders from "@/components/ClientProviders";
@@ -14,33 +8,45 @@ import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import AnalyticsScripts from "@/components/AnalyticsScripts";
 
-const plusJakarta = Plus_Jakarta_Sans({
+// Self-hosted variable fonts. These used to be fetched through
+// `next/font/google` at build time, which made every CI and Vercel build depend
+// on Google's CSS response; when that response arrived in an unexpected shape
+// the build died with "next/font/google queries have exactly one entry". The
+// files in ./fonts are the latin subsets, and the families, weights and CSS
+// variables are unchanged.
+const plusJakarta = localFont({
+  src: "./fonts/plus-jakarta-sans-latin.woff2",
   variable: "--font-manrope",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "200 800",
+  display: "swap",
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const jetbrainsMono = localFont({
+  src: "./fonts/jetbrains-mono-latin.woff2",
   variable: "--font-jetbrains-mono",
-  subsets: ["latin"],
+  weight: "100 800",
+  display: "swap",
 });
 
-const fraunces = Fraunces({
+const fraunces = localFont({
+  src: "./fonts/fraunces-latin.woff2",
   variable: "--font-syne",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
+  weight: "100 900",
+  display: "swap",
 });
 
-const dmSans = DM_Sans({
+const dmSans = localFont({
+  src: "./fonts/dm-sans-latin.woff2",
   variable: "--font-dm-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
+  weight: "100 1000",
+  display: "swap",
 });
 
-const caveat = Caveat({
+const caveat = localFont({
+  src: "./fonts/caveat-latin.woff2",
   variable: "--font-caveat",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: "400 700",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
