@@ -1086,6 +1086,20 @@ export const cancelEnrollment = mutation({
       );
     }
 
+    if (updated.userEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendEnrollmentCancelledEmail,
+        {
+          userEmail: updated.userEmail,
+          userName: updated.userName ?? updated.userEmail,
+          courseName: updated.courseName ?? "your course",
+          enrollmentNumber: updated.enrollmentNumber,
+          reason: args.reason,
+        },
+      );
+    }
+
     return convexSuccess({ enrollment: updated });
   },
 });
@@ -1481,6 +1495,20 @@ export const changeEnrollmentBatch = mutation({
       );
     }
 
+    if (updatedEnrollment.userEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendBatchChangedEmail,
+        {
+          userEmail: updatedEnrollment.userEmail,
+          userName: updatedEnrollment.userName ?? updatedEnrollment.userEmail,
+          courseName: course.name,
+          fromBatch: enrollment.batchLabel,
+          toBatch: targetBatch.label,
+        },
+      );
+    }
+
     return convexSuccess({ enrollment: updatedEnrollment });
   },
 });
@@ -1696,6 +1724,20 @@ export const transferEnrollment = mutation({
       );
     }
 
+    if (createdTarget.userEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendEnrollmentTransferredEmail,
+        {
+          userEmail: createdTarget.userEmail,
+          userName: createdTarget.userName ?? createdTarget.userEmail,
+          fromCourseName: sourceEnrollment.courseName ?? "your previous course",
+          toCourseName: targetCourse.name,
+          enrollmentNumber: createdTarget.enrollmentNumber,
+        },
+      );
+    }
+
     return convexSuccess({
       sourceEnrollment: updatedSource,
       newEnrollment: createdTarget,
@@ -1837,6 +1879,32 @@ export const rejectEnrollmentPayment = mutation({
       before: { paymentVerification: enrollment.paymentVerification ?? null },
       after: { paymentVerification: "rejected" },
     });
+
+    if (enrollment.userEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendPaymentRejectedEmail,
+        {
+          userEmail: enrollment.userEmail,
+          userName: enrollment.userName ?? enrollment.userEmail,
+          courseName: enrollment.courseName ?? "your course",
+          enrollmentNumber: enrollment.enrollmentNumber,
+          reason: note,
+        },
+      );
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendPaymentRejectedOwnerEmail,
+        {
+          studentName: enrollment.userName ?? enrollment.userEmail,
+          studentEmail: enrollment.userEmail,
+          courseName: enrollment.courseName ?? "your course",
+          amount: enrollment.amountPaid,
+          enrollmentNumber: enrollment.enrollmentNumber,
+          reason: note,
+        },
+      );
+    }
 
     return null;
   },

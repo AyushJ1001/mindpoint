@@ -1796,3 +1796,287 @@ export const sendPaymentApprovedEmail = internalAction({
     }
   },
 });
+
+// ---------------------------------------------------------------------------
+// Enrollment lifecycle notices.
+//
+// Every admin-initiated change to an enrollment used to be silent: cancelling,
+// rejecting a payment, transferring and moving a batch produced only an audit
+// log. The student heard nothing, and the owner had no email record of the
+// action they had just taken.
+// ---------------------------------------------------------------------------
+
+function noticeHtml(heading: string, body: string): string {
+  return `<div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+    <h2 style="color: #1d4e4a;">${heading}</h2>
+    ${body}
+    <p style="margin-top: 24px; color: #666; font-size: 13px;">The Mind Point</p>
+  </div>`;
+}
+
+function factsHtml(facts: Array<[string, string | undefined]>): string {
+  return facts
+    .filter(([, value]) => Boolean(value))
+    .map(
+      ([label, value]) =>
+        `<p style="margin: 4px 0;"><strong>${escapeHtml(label)}:</strong> ${escapeHtml(String(value))}</p>`,
+    )
+    .join("");
+}
+
+export const sendPaymentRejectedEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    courseName: v.string(),
+    enrollmentNumber: v.optional(v.string()),
+    reason: v.optional(v.string()),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: `Payment could not be verified — ${args.courseName}`,
+        html: noticeHtml(
+          "We couldn't verify your payment",
+          `<p>Hello ${escapeHtml(args.userName)},</p>
+           <p>We weren't able to verify the payment for <strong>${escapeHtml(args.courseName)}</strong>, so the enrollment has been cancelled.</p>
+           ${factsHtml([
+             ["Course", args.courseName],
+             ["Enrollment", args.enrollmentNumber],
+             ["Reason", args.reason],
+           ])}
+           <p>If you did send the payment, reply to this email with the transaction reference and we'll sort it out and restore your place.</p>`,
+        ),
+      });
+      if (isEmailActionFailure(emailDelivery)) return emailDelivery;
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send payment rejected email:", {
+        userEmail: args.userEmail,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});
+
+export const sendPaymentRejectedOwnerEmail = internalAction({
+  args: {
+    studentName: v.string(),
+    studentEmail: v.string(),
+    courseName: v.string(),
+    amount: v.optional(v.number()),
+    enrollmentNumber: v.optional(v.string()),
+    reason: v.optional(v.string()),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: OWNER_EMAIL,
+        subject: `Payment rejected — ${args.courseName} (${args.studentName})`,
+        html: noticeHtml(
+          "You rejected a payment",
+          `${factsHtml([
+            ["Student", args.studentName],
+            ["Email", args.studentEmail],
+            ["Course", args.courseName],
+            [
+              "Amount",
+              typeof args.amount === "number"
+                ? `₹${args.amount.toLocaleString("en-IN")}`
+                : undefined,
+            ],
+            ["Enrollment", args.enrollmentNumber],
+            ["Reason", args.reason],
+          ])}
+           <p>The enrollment is cancelled and the student has been emailed.</p>`,
+        ),
+      });
+      if (isEmailActionFailure(emailDelivery)) return emailDelivery;
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send payment rejected owner email:", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});
+
+export const sendEnrollmentCancelledEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    courseName: v.string(),
+    enrollmentNumber: v.optional(v.string()),
+    reason: v.optional(v.string()),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: `Enrollment cancelled — ${args.courseName}`,
+        html: noticeHtml(
+          "Your enrollment has been cancelled",
+          `<p>Hello ${escapeHtml(args.userName)},</p>
+           <p>Your enrollment in <strong>${escapeHtml(args.courseName)}</strong> has been cancelled.</p>
+           ${factsHtml([
+             ["Course", args.courseName],
+             ["Enrollment", args.enrollmentNumber],
+             ["Reason", args.reason],
+           ])}
+           <p>If this is unexpected, reply to this email and we'll look into it.</p>`,
+        ),
+      });
+      if (isEmailActionFailure(emailDelivery)) return emailDelivery;
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send enrollment cancelled email:", {
+        userEmail: args.userEmail,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});
+
+export const sendEnrollmentTransferredEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    fromCourseName: v.string(),
+    toCourseName: v.string(),
+    enrollmentNumber: v.optional(v.string()),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: `Enrollment transferred — ${args.toCourseName}`,
+        html: noticeHtml(
+          "Your enrollment has been transferred",
+          `<p>Hello ${escapeHtml(args.userName)},</p>
+           <p>You have been moved from <strong>${escapeHtml(args.fromCourseName)}</strong> to <strong>${escapeHtml(args.toCourseName)}</strong>.</p>
+           ${factsHtml([
+             ["New course", args.toCourseName],
+             ["Enrollment", args.enrollmentNumber],
+           ])}
+           <p>Your access to the new course is in your workspace.</p>`,
+        ),
+      });
+      if (isEmailActionFailure(emailDelivery)) return emailDelivery;
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send enrollment transferred email:", {
+        userEmail: args.userEmail,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});
+
+export const sendBatchChangedEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    courseName: v.string(),
+    fromBatch: v.optional(v.string()),
+    toBatch: v.optional(v.string()),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: `Your batch changed — ${args.courseName}`,
+        html: noticeHtml(
+          "Your batch has changed",
+          `<p>Hello ${escapeHtml(args.userName)},</p>
+           <p>You have been moved to a different batch for <strong>${escapeHtml(args.courseName)}</strong>.</p>
+           ${factsHtml([
+             ["Course", args.courseName],
+             ["New batch", args.toBatch],
+           ])}
+           <p>The new dates are shown on the course page and in your account.</p>`,
+        ),
+      });
+      if (isEmailActionFailure(emailDelivery)) return emailDelivery;
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send batch changed email:", {
+        userEmail: args.userEmail,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});
+
+/**
+ * Generic notice for an in-app LMS notification that also needs to reach the
+ * student by email. The LMS previously created only an in-app notification for
+ * submissions, answers, completions and certificates, so a student who was not
+ * looking at `/lms` never learned that something had happened.
+ */
+export const sendLmsNoticeEmail = internalAction({
+  args: {
+    userEmail: v.string(),
+    userName: v.string(),
+    title: v.string(),
+    body: v.string(),
+    href: v.optional(v.string()),
+  },
+  returns: emailActionResultValidator,
+  handler: async (ctx, args) => {
+    try {
+      const link = args.href ? `${getSiteUrl()}${args.href}` : undefined;
+      const emailDelivery = await sendEmailWithCopy({
+        from: "The Mind Point <no-reply@themindpoint.org>",
+        to: args.userEmail,
+        subject: args.title,
+        html: noticeHtml(
+          escapeHtml(args.title),
+          `<p>Hello ${escapeHtml(args.userName)},</p>
+           <p>${escapeHtml(args.body)}</p>
+           ${
+             link
+               ? `<p style="margin-top: 20px;"><a href="${link}" style="background-color: #1d4e4a; color: #fff; padding: 12px 20px; text-decoration: none; border-radius: 6px; display: inline-block;">Open your course</a></p>`
+               : ""
+           }`,
+        ),
+      });
+      if (isEmailActionFailure(emailDelivery)) return emailDelivery;
+      return emailActionSuccess();
+    } catch (error) {
+      console.error("Failed to send LMS notice email:", {
+        userEmail: args.userEmail,
+        title: args.title,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return emailDeliveryFailureFromThrowable(
+        error as Error | object | string,
+      );
+    }
+  },
+});

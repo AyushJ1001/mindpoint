@@ -6,6 +6,7 @@ import {
   type QueryCtx,
 } from "./_generated/server";
 import type { Doc } from "./_generated/dataModel";
+import { internal } from "./_generated/api";
 import { maybeCreateCompletionRequest } from "./lmsCompletion";
 import { summarizeLmsFeedback } from "./_shared/lmsFeedback";
 
@@ -573,6 +574,26 @@ export const reviewSubmission = mutation({
       href: `/lms?enrollment=${enrollment._id}&activity=${submission.activityId}#lms-active-work`,
       createdAt: now,
     });
+    if (enrollment.userEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendLmsNoticeEmail,
+        {
+          userEmail: enrollment.userEmail,
+          userName: enrollment.userName ?? enrollment.userEmail,
+          title:
+            args.decision === "accepted"
+              ? "Submission accepted"
+              : "Submission returned for revision",
+          body:
+            feedback ||
+            (args.decision === "accepted"
+              ? "Faculty accepted your learning evidence."
+              : "Open the activity to review Faculty feedback."),
+          href: `/lms?enrollment=${enrollment._id}&activity=${submission.activityId}#lms-active-work`,
+        },
+      );
+    }
     return { status: args.decision };
   },
 });
@@ -620,6 +641,19 @@ export const answerQuestion = mutation({
       href: "/lms#lms-questions",
       createdAt: now,
     });
+    if (enrollment.userEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendLmsNoticeEmail,
+        {
+          userEmail: enrollment.userEmail,
+          userName: enrollment.userName ?? enrollment.userEmail,
+          title: "Faculty answered your Question",
+          body: answer,
+          href: "/lms#lms-questions",
+        },
+      );
+    }
     return { status: "answered" as const };
   },
 });
@@ -795,6 +829,19 @@ export const approveCompletion = mutation({
       href: "/lms#lms-certificate",
       createdAt: now,
     });
+    if (enrollment.userEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendLmsNoticeEmail,
+        {
+          userEmail: enrollment.userEmail,
+          userName: enrollment.userName ?? enrollment.userEmail,
+          title: "Your Certificate is ready",
+          body: "Faculty approved your Completion after revalidating the required evidence.",
+          href: "/lms#lms-certificate",
+        },
+      );
+    }
     return { status: "approved" as const, certificateId };
   },
 });
@@ -869,6 +916,24 @@ export const updateCompletionReview = mutation({
       href: "/lms#lms-certificate",
       createdAt: now,
     });
+    if (enrollment.userEmail) {
+      await ctx.scheduler.runAfter(
+        0,
+        internal.emailActions.sendLmsNoticeEmail,
+        {
+          userEmail: enrollment.userEmail,
+          userName: enrollment.userName ?? enrollment.userEmail,
+          title:
+            args.status === "correction_required"
+              ? "Certificate correction needed"
+              : args.status === "revoked"
+                ? "Certificate revoked"
+                : "Completion placed under review",
+          body: reason,
+          href: "/lms#lms-certificate",
+        },
+      );
+    }
     return { status: args.status };
   },
 });
