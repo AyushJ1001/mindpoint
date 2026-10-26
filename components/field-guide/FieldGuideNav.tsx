@@ -16,7 +16,7 @@ const GROUPS: {
   {
     label: "Begin",
     links: [
-      { href: "/resources", label: "Free masterclass", meta: "free" },
+      { href: "/masterclass", label: "Free masterclass", meta: "soon" },
       { href: "/courses/intro", label: "Intro courses", meta: "₹999" },
     ],
   },
@@ -44,7 +44,7 @@ const GROUPS: {
   {
     label: "Certify & train",
     links: [
-      { href: "/courses/internship", label: "Internships", meta: "monthly" },
+      { href: "/courses/internship", label: "Internships", meta: "Jan 2027" },
       {
         href: "/courses/therapy",
         label: "Therapy & counselling",
@@ -296,7 +296,7 @@ export default function FieldGuideNav() {
                     January 2027 cohorts
                   </b>
                   <span className="text-primary-foreground/80 text-sm">
-                    Three live certificates · early bird ₹1,999 until 15 Dec
+                    Registration open · three live certificates, ₹3,499 each
                   </span>
                 </span>
                 <ArrowRight className="h-5 w-5 shrink-0" aria-hidden="true" />

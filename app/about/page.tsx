@@ -28,7 +28,7 @@ const TEACH = [
   ],
   [
     "Practice, not just theory",
-    "Live cohorts and supervision put the skills in your hands, not just your notes.",
+    "Live classes and practical training put the skills in your hands, not just your notes.",
   ],
   [
     "Honest certificates",
@@ -80,9 +80,11 @@ export default function AboutPage() {
             but vague. We wanted both rigour and humanity in one place.
           </p>
           <p className="text-muted-foreground mt-4 text-lg leading-8">
-            Today we run live cohorts, self-paced courses and therapy for
-            psychology students, career changers and practising therapists
-            across India.
+            Today we run live certificate courses, an internship, self-paced
+            intro courses and therapy for psychology students, career changers
+            and practising therapists across India. Every member of our teaching
+            faculty holds a Master&apos;s in psychology and a specialisation
+            diploma or certificate.
           </p>
         </div>
       </section>
@@ -92,7 +94,7 @@ export default function AboutPage() {
       <section className="container py-20 sm:py-24">
         <span className={eyebrowVariants()}>How we teach</span>
         <h2 className="font-display mt-4 mb-10 text-3xl tracking-tight sm:text-5xl">
-          Four things we refuse to compromise on.
+          Six things we refuse to compromise on.
         </h2>
         <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {TEACH.map(([title, copy]) => (

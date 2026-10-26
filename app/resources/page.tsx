@@ -4,11 +4,15 @@ import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import Link from "next/link";
 import Image from "next/image";
+import { MASTERCLASS_RELEASED } from "@/lib/free-content";
+
+const MASTERCLASS_LINE = MASTERCLASS_RELEASED
+  ? "Guides, tools and one full free masterclass — no card required."
+  : "Free guides and tools, plus a free masterclass on the way — no card required.";
 
 export const metadata = {
   title: "Resources - The Mind Point",
-  description:
-    "Guides, downloads and a free recorded masterclass — no card required.",
+  description: MASTERCLASS_LINE,
   alternates: { canonical: "/resources" },
 };
 
@@ -49,7 +53,7 @@ export default function ResourcesPage() {
             Free tools to start <em className="italic">before you commit.</em>
           </>
         }
-        lead="Guides, downloads and one full recorded masterclass — no card required."
+        lead={MASTERCLASS_LINE}
         image="/coastal/wave.jpg"
         imageAlt="A wave breaking near the shore, spray catching the light."
         caption="A wave breaking near the shore."
@@ -59,12 +63,26 @@ export default function ResourcesPage() {
         <div className="border-border bg-secondary max-w-2xl rounded border border-dashed p-8">
           <span className={eyebrowVariants()}>Free masterclass</span>
           <h2 className="font-display mt-3 text-2xl sm:text-3xl">
-            Watch one full session, free.
+            {MASTERCLASS_RELEASED
+              ? "Watch one full session, free."
+              : "One full session, free. Coming soon."}
           </h2>
           <p className="text-muted-foreground mt-2">
-            No card, no pressure — just a real taste of how we teach.
+            {MASTERCLASS_RELEASED ? (
+              <>
+                No card, no pressure.{" "}
+                <Link href="/masterclass" className="text-primary underline">
+                  Watch it here
+                </Link>
+                .
+              </>
+            ) : (
+              "The masterclass isn’t released yet. Leave your email and we’ll tell you when it is."
+            )}
           </p>
-          <EmailCapture source="resources" />
+          {MASTERCLASS_RELEASED ? null : (
+            <EmailCapture source="resources" label="Notify me" />
+          )}
         </div>
       </section>
 

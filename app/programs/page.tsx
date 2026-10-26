@@ -8,15 +8,15 @@ import { getCampaignCourses, januaryCampaign } from "@/lib/course-content";
 export const metadata = {
   title: "Programs - The Mind Point",
   description:
-    "Live cohorts, self-paced courses, therapy and supervision — each priced and paced for real life.",
+    "Live certificate courses and an internship starting January 2027, ₹999 self-paced intro courses, therapy and supervision.",
   alternates: { canonical: "/programs" },
 };
 
 const INCLUDED = [
-  "Live weekly classes, recorded for your cohort",
+  "Live online classes on Tuesdays and Thursdays",
+  "Eight weeks: six of structured learning, then two of practical training",
   "Assignments and feedback at milestones",
-  "Private Q&A with faculty",
-  "Stream-only recordings for your access window",
+  "Faculty with a Master’s in psychology and a specialisation diploma or certificate",
   "Certificate with public verification",
   "Honest completion wording — not a degree or licence",
   "Small cohort, capped for real discussion",
@@ -33,7 +33,7 @@ export default function ProgramsPage() {
             Find the programme for <em className="italic">your next step.</em>
           </>
         }
-        lead="Live cohorts, self-paced courses, therapy and supervision — each priced and paced for real life."
+        lead="Live certificate courses and an internship starting January 2027, ₹999 self-paced intro courses, therapy and supervision."
         image="/coastal/calm.jpg"
         imageAlt="Sunrise over a calm sea, with gentle surf reaching wet sand."
         caption="A calm sea at first light."
@@ -83,8 +83,8 @@ export default function ProgramsPage() {
               January 2027 cohorts are open
             </b>
             <span className="text-sm opacity-80">
-              Three live certificate cohorts. Early bird ₹1,999 until 15
-              December.
+              Registration is open. Three live certificate courses at ₹3,499
+              each, plus the Counselling Psychology Internship.
             </span>
           </span>
           <span className="text-xs font-semibold tracking-[0.16em] uppercase">
@@ -93,13 +93,15 @@ export default function ProgramsPage() {
         </Link>
       </section>
 
-      <section className="container pb-20 sm:pb-28">
+      <section className="container pt-10 pb-20 sm:pb-28">
         <ProgramTabs />
       </section>
 
       <section className="bg-secondary py-20 sm:py-24">
         <div className="container">
-          <span className={eyebrowVariants()}>Included in every cohort</span>
+          <span className={eyebrowVariants()}>
+            Included in every certificate course
+          </span>
           <h2 className="font-display mt-4 mb-10 text-3xl tracking-tight sm:text-5xl">
             What you can count on.
           </h2>

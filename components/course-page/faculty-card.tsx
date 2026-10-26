@@ -1,4 +1,3 @@
-import { ContentPlaceholder } from "@/components/course-page/placeholder";
 import { Section } from "@/components/course-page/section";
 import type { FacultyMember } from "@/lib/course-content/types";
 
@@ -46,6 +45,10 @@ export function FacultyCard({ member }: { member: FacultyMember }) {
   );
 }
 
+/** Shared, owner-approved description of every faculty member's credentials. */
+const FACULTY_CREDENTIALS =
+  "Every member of our teaching faculty holds a Master’s in psychology and a specialisation diploma or certificate.";
+
 export function FacultySection({ faculty }: { faculty: FacultyMember[] }) {
   const confirmed = faculty.filter(
     (member) => member.name && member.name.trim(),
@@ -55,8 +58,8 @@ export function FacultySection({ faculty }: { faculty: FacultyMember[] }) {
     <Section
       id="faculty"
       eyebrow="Who teaches it"
-      title="Practising psychologists, named."
-      lead="You learn from people who do this work, not only people who describe it."
+      title="Qualified psychology faculty."
+      lead={FACULTY_CREDENTIALS}
     >
       {confirmed.length > 0 ? (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -64,9 +67,7 @@ export function FacultySection({ faculty }: { faculty: FacultyMember[] }) {
             <FacultyCard key={member.name} member={member} />
           ))}
         </div>
-      ) : (
-        <ContentPlaceholder label="Named faculty for this programme have not been confirmed yet. Add names, roles and qualifications in the admin." />
-      )}
+      ) : null}
     </Section>
   );
 }

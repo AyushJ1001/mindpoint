@@ -9,8 +9,17 @@ import { ANALYTICS_EVENTS, trackEvent } from "@/lib/analytics";
 /**
  * Lead capture for a free resource. Email is required; a WhatsApp number is
  * encouraged because it out-opens email in India. Honeypot included.
+ *
+ * `released` is false while the masterclass recording does not exist yet: the
+ * form then promises a release notice, not the session itself.
  */
-export function LeadCaptureForm({ source }: { source: string }) {
+export function LeadCaptureForm({
+  source,
+  released,
+}: {
+  source: string;
+  released: boolean;
+}) {
   const submitLead = useMutation(api.leads.submitLead);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -28,11 +37,12 @@ export function LeadCaptureForm({ source }: { source: string }) {
     return (
       <div className="border-primary/25 bg-primary/[0.04] mx-auto max-w-xl rounded-2xl border p-6 text-left sm:p-8">
         <p className="font-display text-foreground text-2xl">
-          It&rsquo;s on its way.
+          {released ? "Thank you." : "You’re on the list."}
         </p>
         <p className="text-muted-foreground mt-3 text-sm leading-relaxed">
-          We&rsquo;ve sent the masterclass to {email}. Keep an eye on your inbox
-          — and we&rsquo;ll nudge you on WhatsApp too.
+          {released
+            ? `The masterclass is on this page; watch it whenever suits you. We’ve emailed ${email} a short confirmation.`
+            : `We’ll email ${email} when the masterclass is released.`}
         </p>
       </div>
     );
@@ -107,7 +117,7 @@ export function LeadCaptureForm({ source }: { source: string }) {
           disabled={sending}
           className="bg-primary text-primary-foreground rounded-full px-6 py-3.5 text-xs font-medium tracking-[0.16em] uppercase disabled:opacity-60"
         >
-          {sending ? "Sending…" : "Send me the masterclass"}
+          {sending ? "Sending…" : released ? "Sign up" : "Notify me"}
         </button>
       </div>
 
@@ -120,8 +130,7 @@ export function LeadCaptureForm({ source }: { source: string }) {
           className="accent-primary mt-0.5"
         />
         <span>
-          Yes, send me the masterclass and course updates. No spam, unsubscribe
-          any time.
+          Yes, also email me course updates. No spam, unsubscribe any time.
         </span>
       </label>
 

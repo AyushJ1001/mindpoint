@@ -357,6 +357,6 @@ export const cbtRebtCbmt: CourseContent = {
       "Educational certificate course. Real clinical practice requires the appropriate qualifications, consent and supervision.",
   },
 
-  campaign: false,
+  campaign: true,
   order: 1,
 };
