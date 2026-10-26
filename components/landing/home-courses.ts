@@ -56,6 +56,8 @@ function formatStartDate(value?: string) {
 function toHomeCourse(
   entry: { code: string; name: string; outcomes: number[] },
   courses: PublicCourse[],
+  /** Only show live details when the next batch starts with this prefix. */
+  batchStartPrefix?: string,
 ): HomeCourse {
   const course = courses.find((c) => c.code === entry.code);
   const slug = programmeSlugForCode(entry.code);
@@ -69,9 +71,15 @@ function toHomeCourse(
       ? `/courses/${course._id}`
       : "/january-2027";
 
-  if (!course) return { code: entry.code, name: entry.name, href, outcomes };
+  const batch = course?.nextAvailableBatch;
+  // A card in the January section must not paint a later cohort's dates.
+  if (
+    !course ||
+    (batchStartPrefix && !batch?.startDate.startsWith(batchStartPrefix))
+  ) {
+    return { code: entry.code, name: entry.name, href, outcomes };
+  }
 
-  const batch = course.nextAvailableBatch;
   const start = formatTime(batch?.startTime);
   const end = formatTime(batch?.endTime);
 
@@ -101,7 +109,7 @@ function januaryStartSummary(courses: PublicCourse[]) {
   const days: number[] = [];
   for (const { code } of JANUARY_CODES) {
     const course = courses.find((c) => c.code === code);
-    const value = course?.nextAvailableBatch?.startDate ?? course?.startDate;
+    const value = course?.nextAvailableBatch?.startDate;
     const match = value?.match(/^2027-01-(\d{2})/);
     if (!match) return undefined;
     days.push(Number(match[1]));
@@ -116,7 +124,9 @@ function januaryStartSummary(courses: PublicCourse[]) {
 
 export function buildHomeCourses(courses: PublicCourse[]) {
   return {
-    january: JANUARY_CODES.map((entry) => toHomeCourse(entry, courses)),
+    january: JANUARY_CODES.map((entry) =>
+      toHomeCourse(entry, courses, "2027-01"),
+    ),
     internship: toHomeCourse(INTERNSHIP, courses),
     startSummary: januaryStartSummary(courses),
   };
