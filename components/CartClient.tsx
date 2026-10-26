@@ -1089,8 +1089,11 @@ const CartContent = () => {
         },
       );
 
+      // Either outcome settles this QR attempt: success is tracked as a
+      // purchase and a failure as payment_failed, so closing the dialog
+      // afterwards must not also count as a dismissal.
+      qrAwaitingPaymentRef.current = false;
       if (enrollmentCompleted) {
-        qrAwaitingPaymentRef.current = false;
         emptyCart();
         setQrPaymentCompleted(true);
         setPaymentScreenshotUrl("");
