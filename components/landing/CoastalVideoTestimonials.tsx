@@ -1,8 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { ArrowRight, Play } from "lucide-react";
+import { Play } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -10,7 +9,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
-import { ctaVariants } from "@/components/coastal/cta";
 import { ScrollReveal } from "@/components/ScrollReveal";
 import {
   VIDEO_TESTIMONIALS,
@@ -18,7 +16,8 @@ import {
 } from "@/lib/videoTestimonials";
 
 // The five recordings are real student reflections, already used on the course
-// pages. No names are attached, so every card is labelled plainly.
+// pages. No names are attached, so every card is labelled plainly as a student
+// video testimonial.
 export default function CoastalVideoTestimonials() {
   const [selected, setSelected] = useState<VideoTestimonial | null>(null);
   const [open, setOpen] = useState(false);
@@ -33,17 +32,23 @@ export default function CoastalVideoTestimonials() {
   };
 
   return (
-    <section className="water-band-mist py-20 sm:py-28">
+    <section
+      aria-labelledby="video-testimonials-heading"
+      className="water-band-mist py-20 sm:py-24"
+    >
       <div className="container">
         <div className="mb-12 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <span className={eyebrowVariants()}>Hear it from them</span>
-            <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-5xl">
-              The teaching, in their own voices.
+            <span className={eyebrowVariants()}>In their own voices</span>
+            <h2
+              id="video-testimonials-heading"
+              className="font-display mt-4 text-3xl tracking-tight sm:text-4xl"
+            >
+              Student video testimonials
             </h2>
           </div>
           <p className="text-muted-foreground max-w-sm">
-            Short, unedited reflections from students who finished a cohort.
+            Short video reflections recorded by students of The Mind Point.
           </p>
         </div>
 
@@ -61,7 +66,7 @@ export default function CoastalVideoTestimonials() {
                     setOpen(true);
                   }}
                   className="water-glass group relative block aspect-[4/5] w-full overflow-hidden rounded-2xl transition-transform hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-[#2b8585] focus-visible:ring-offset-2 focus-visible:outline-none"
-                  aria-label={`Play student reflection ${i + 1}`}
+                  aria-label={`Play student video testimonial ${i + 1}`}
                 >
                   <video
                     src={testimonial.videoUrl}
@@ -77,28 +82,22 @@ export default function CoastalVideoTestimonials() {
                     </span>
                   </span>
                   <span className="absolute inset-x-0 bottom-0 p-4 text-left text-[0.62rem] font-semibold tracking-[0.24em] text-white/90 uppercase">
-                    Student story
+                    Student video testimonial
                   </span>
                 </button>
               </ScrollReveal>
             </li>
           ))}
         </ul>
-
-        <div className="mt-10">
-          <Link href="/programs" className={ctaVariants({ layout: "flex" })}>
-            Find your programme <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
       </div>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-h-[90vh] max-w-sm overflow-hidden p-0">
           <DialogTitle className="sr-only">
-            Student video reflection
+            Student video testimonial
           </DialogTitle>
           <DialogDescription className="sr-only">
-            A recorded reflection from a Mind Point student.
+            A recorded reflection from a student of The Mind Point.
           </DialogDescription>
           {selected && (
             <div className="relative aspect-[9/16] max-h-[85vh] w-full bg-black">

@@ -17,7 +17,7 @@ export const HOME_FAQ: HomeFaqItem[] = [
   },
   {
     q: "How do the live classes work?",
-    a: "Cohorts are small and run live every week. If you miss one, the recording is available to your cohort for the access window.",
+    a: "Each certificate course runs live online on Tuesdays and Thursdays for eight weeks: six weeks of structured learning, then two weeks of practical training. Cohorts are capped at 30 learners.",
   },
   {
     q: "What if I'm not sure where to start?",
