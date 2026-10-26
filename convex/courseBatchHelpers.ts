@@ -40,7 +40,7 @@ export function isMergedCourse(
 }
 
 /** Published, not merged away, and not withdrawn from sale. */
-export function isPublishedCourse(course: {
+export function isPubliclyAvailableCourse(course: {
   lifecycleStatus?: "draft" | "published" | "archived";
   mergedIntoCourseId?: Id<"courses">;
   salesEnabled?: boolean;

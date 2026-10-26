@@ -3,6 +3,13 @@ import { cn } from "@/lib/utils";
 export const LEARNING_WEEKS = 6;
 export const PRACTICAL_WEEKS = 2;
 
+/** Catalogue codes of the courses that run in the six-plus-two format. */
+const SIX_PLUS_TWO_CODES = new Set(["CCCBT", "CCICH", "CCPD"]);
+
+export function hasEightWeekJourney(code?: string) {
+  return !!code && SIX_PLUS_TWO_CODES.has(code);
+}
+
 /**
  * The January 2027 course shape: six weeks of structured learning, then two
  * weeks of practical training. One strip per week, so the split reads at a

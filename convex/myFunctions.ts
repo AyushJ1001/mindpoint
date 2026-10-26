@@ -57,6 +57,7 @@ import { PublicCourseDocumentValue, PublicEnrollmentFields } from "./schema";
 import { pickPublicCourse } from "./_publicCourse";
 import { registrationIsOpen } from "./siteSettings";
 import { isWaitlistHeldType } from "./_shared/waitlist";
+import { isPubliclyAvailableCourse } from "./courseBatchHelpers";
 
 // Write your Convex functions in any file inside this directory (`convex`).
 // See https://docs.convex.dev/functions for more.
@@ -1715,6 +1716,16 @@ export const handleCartCheckout = mutation({
         return enrollmentMutationFailure(
           `Course with ID ${lineItem.courseId} not found`,
           convexResultErrorCode.NOT_FOUND,
+          { courseId: lineItem.courseId },
+        );
+      }
+      // A checkout attempt was already reconciled against the catalogue when
+      // it was created; without one, refuse anything not publicly on sale
+      // (draft, archived, merged or withdrawn from sale).
+      if (!args.checkoutAttemptId && !isPubliclyAvailableCourse(course)) {
+        return enrollmentMutationFailure(
+          `${course.name} is not available for enrollment.`,
+          convexResultErrorCode.CONFLICT,
           { courseId: lineItem.courseId },
         );
       }

@@ -59,6 +59,10 @@ import {
   SelectValue,
 } from "./ui/select";
 import { CourseImageCarousel } from "@/components/course-image-carousel";
+import {
+  EightWeekJourney,
+  hasEightWeekJourney,
+} from "@/components/course-page/eight-week-journey";
 
 // Prefer explicit fields: `sessions` (number) or fallback to `duration` (string)
 const extractVariantLabel = (course: CourseLike): string | null => {
@@ -745,6 +749,9 @@ const CourseCard = ({
             </CardTitle>
           </div>
         </div>
+        {hasEightWeekJourney(course.code) ? (
+          <EightWeekJourney compact className="mt-3" />
+        ) : null}
       </CardHeader>
       <CardContent className="pt-0 pb-6">
         <div className="flex flex-col gap-3 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">

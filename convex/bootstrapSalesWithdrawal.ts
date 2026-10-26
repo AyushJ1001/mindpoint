@@ -67,7 +67,7 @@ export const applyJanuaryCatalogue = internalMutation({
       const batches = await ctx.db
         .query("courseBatches")
         .withIndex("by_courseId", (q) => q.eq("courseId", course._id))
-        .collect();
+        .take(200);
       for (const batch of batches) {
         if (batch.label === target.label && batch.lifecycleStatus === "draft") {
           await ctx.db.patch(batch._id, {

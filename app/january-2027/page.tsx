@@ -8,6 +8,7 @@ import { EmailCapture } from "@/components/coastal/EmailCapture";
 import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
+import { formatTime } from "@/lib/course-content/operational";
 import { Check } from "lucide-react";
 
 export const revalidate = 1800;
@@ -72,14 +73,6 @@ async function getCourses(): Promise<PublicCourse[]> {
     console.warn("Failed to fetch courses for the January page:", error);
     return [];
   }
-}
-
-function formatTime(value?: string) {
-  const match = value?.match(/^(\d{1,2}):(\d{2})/);
-  if (!match) return undefined;
-  const hours = Number(match[1]);
-  const suffix = hours >= 12 ? "pm" : "am";
-  return `${hours % 12 === 0 ? 12 : hours % 12}:${match[2]} ${suffix}`;
 }
 
 function formatSchedule(batch?: PublicCourse["nextAvailableBatch"]) {
@@ -150,7 +143,15 @@ export default async function JanuaryLandingPage() {
           "@type": "Offer",
           price: cohort.price,
           priceCurrency: "INR",
-          availability: "https://schema.org/InStock",
+          // Only claim availability the cohort schedule backs up.
+          ...(cohort.seatsLeft === undefined
+            ? {}
+            : {
+                availability:
+                  cohort.seatsLeft > 0
+                    ? "https://schema.org/InStock"
+                    : "https://schema.org/SoldOut",
+              }),
           url: "https://www.themindpoint.org/january-2027",
         },
       },

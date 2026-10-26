@@ -11,7 +11,7 @@ import {
   getDefaultPublicCourseBatch,
   getPublicCourseBatch,
   isMergedCourse,
-  isPublishedCourse,
+  isPubliclyAvailableCourse,
   sortPublicCourseBatches,
   type PublicCourseBatch,
 } from "./courseBatchHelpers";
@@ -96,7 +96,9 @@ async function loadPublishedBatchesByCourse(
 
   const rows = await ctx.db
     .query("courseBatches")
-    .withIndex("by_lifecycleStatus", (q) => q.eq("lifecycleStatus", "published"))
+    .withIndex("by_lifecycleStatus", (q) =>
+      q.eq("lifecycleStatus", "published"),
+    )
     .collect();
 
   for (const row of rows) {
@@ -188,7 +190,7 @@ async function listPublishedCourses(
   ]);
 
   const merged = [...publishedViaIndex, ...publishedLegacy]
-    .filter((course) => isPublishedCourse(course))
+    .filter((course) => isPubliclyAvailableCourse(course))
     .filter((course) => !isMergedCourse(course));
   const filteredByType = type
     ? merged.filter((course) => course.type === type)
@@ -238,7 +240,7 @@ export const getCourseById = query({
   returns: v.union(PublicCourseDocumentValue, v.null()),
   handler: async (ctx, args) => {
     const course = await ctx.db.get(args.id);
-    if (!course || !isPublishedCourse(course)) return null;
+    if (!course || !isPubliclyAvailableCourse(course)) return null;
     if (isMergedCourse(course)) return null;
     return await toPublicCourse(ctx, course);
   },
@@ -288,7 +290,7 @@ export const getCoursePageData = query({
       redirectToBatchId = requested.mergedIntoBatchId ?? null;
     }
 
-    if (!isPublishedCourse(canonical)) {
+    if (!isPubliclyAvailableCourse(canonical)) {
       return {
         redirectToCourseId,
         redirectToBatchId,
@@ -344,7 +346,7 @@ export const getRelatedVariants = query({
       .withIndex("by_name_and_type", (q) => q.eq("name", name).eq("type", type))
       .collect();
     const publishedVariants = variants
-      .filter((course) => isPublishedCourse(course))
+      .filter((course) => isPubliclyAvailableCourse(course))
       .filter((course) => !isMergedCourse(course));
 
     publishedVariants.sort(
@@ -542,7 +544,7 @@ export const getBogoCoursesByType = query({
 
     const visible = [...publishedCourses, ...legacyPublishedCourses]
       .filter((course) => course.bogo?.enabled === true)
-      .filter((course) => isPublishedCourse(course));
+      .filter((course) => isPubliclyAvailableCourse(course));
 
     return await toPublicCourses(ctx, visible);
   },
@@ -575,7 +577,7 @@ export const getBogoCoursesByTypes = query({
 
       const visible = [...publishedCourses, ...legacyPublishedCourses]
         .filter((course) => course.bogo?.enabled === true)
-        .filter((course) => isPublishedCourse(course));
+        .filter((course) => isPubliclyAvailableCourse(course));
       visibleByType[courseType] = visible;
       allVisible.push(...visible);
     }
