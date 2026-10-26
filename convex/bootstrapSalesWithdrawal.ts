@@ -26,15 +26,24 @@ export const applyJanuaryCatalogue = internalMutation({
   args: {},
   handler: async (ctx) => {
     const now = Date.now();
-    // Codes repeat across archived copies; only the live row counts.
-    const courses = await ctx.db
-      .query("courses")
-      .withIndex("by_lifecycleStatus", (q) =>
-        q.eq("lifecycleStatus", "published"),
-      )
-      .take(2000);
+    // Codes repeat across archived copies; only the live row counts. Rows
+    // without a lifecycle status are legacy published courses.
+    const [publishedRows, legacyRows] = await Promise.all([
+      ctx.db
+        .query("courses")
+        .withIndex("by_lifecycleStatus", (q) =>
+          q.eq("lifecycleStatus", "published"),
+        )
+        .take(2000),
+      ctx.db
+        .query("courses")
+        .withIndex("by_lifecycleStatus", (q) =>
+          q.eq("lifecycleStatus", undefined),
+        )
+        .take(2000),
+    ]);
     const byCode = new Map(
-      courses
+      [...legacyRows, ...publishedRows]
         .filter((course) => !course.mergedIntoCourseId)
         .map((course) => [course.code, course]),
     );
