@@ -1,8 +1,11 @@
 "use client";
 
 import { useState } from "react";
+import { MASTERCLASS_RELEASED } from "@/lib/free-content";
 import Image from "next/image";
 import Link from "next/link";
+
+import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
 
 const TABS = [
   { key: "live", label: "Live cohorts" },
@@ -12,65 +15,72 @@ const TABS = [
 
 const LIVE = [
   {
-    name: "CBT, REBT, CBMT",
-    type: "Certificate · 8 weeks · Live",
-    when: "Starts Tue 12 Jan 2027 · Tue & Thu · 7:30 pm",
-    price: "₹2,999",
+    name: "CBT, REBT and CBMT",
+    href: "/programs/cbt-rebt-cbmt",
+    type: "Certificate · 8 weeks · Live online",
+    when: "Starts Tue 19 Jan 2027 · Tue & Thu",
     image: "/coastal/shore.jpg",
-    badge: "Upcoming",
-  },
-  {
-    name: "Inner Child Healing",
-    type: "Certificate · 6 weeks · Live",
-    when: "Starts Tue 12 Jan 2027 · Tue & Thu · 7:30 pm",
-    price: "₹2,999",
-    image: "/coastal/calm.jpg",
-    badge: "Upcoming",
   },
   {
     name: "Personality Disorders",
-    type: "Certificate · 8 weeks · Live",
-    when: "Starts Tue 12 Jan 2027 · Tue & Thu · 7:30 pm",
-    price: "₹2,999",
+    href: "/programs/personality-disorders",
+    type: "Certificate · 8 weeks · Live online",
+    when: "Starts Thu 21 Jan 2027 · Tue & Thu",
     image: "/coastal/hero.jpg",
-    badge: "New",
+  },
+  {
+    name: "Inner Child Healing & Therapy",
+    href: "/programs/inner-child-healing",
+    type: "Certificate · 8 weeks · Live online",
+    when: "Starts Thu 28 Jan 2027 · Tue & Thu",
+    image: "/coastal/calm.jpg",
   },
 ];
 
+const LIVE_PRICE = "₹3,499";
+
 const ROWS = {
   self: [
-    [
-      "Recorded introduction",
-      "A short, self-paced taste of how we teach — credits toward a cohort.",
-      "₹999",
-    ],
-    [
-      "Free recorded masterclass",
-      "One full session, free. No card required.",
-      "Free",
-    ],
-    [
-      "Worksheet & tool pack",
-      "Downloadable exercises you can use today.",
-      "Free",
-    ],
+    {
+      title: "Self-paced intro courses",
+      copy: "Psychological First Aid, Criminal Psychology, Sports Psychology, and Clinical vs Counselling Psychology. Study at your own pace.",
+      price: "₹999 each",
+      href: "/courses/intro",
+    },
+    {
+      title: "Free masterclass",
+      copy: MASTERCLASS_RELEASED
+        ? "One full session, free. Watch it before you choose a course."
+        : "One full session, free. Not released yet; leave your email to hear when it is.",
+      price: MASTERCLASS_RELEASED ? "Free" : "Coming soon",
+      href: "/masterclass",
+    },
+    {
+      title: "Free guides",
+      copy: "Short reads and exercises you can use today.",
+      price: "Free",
+      href: "/resources",
+    },
   ],
   therapy: [
-    [
-      "One calm conversation",
-      "A single session with a licensed professional. No commitment.",
-      "₹600",
-    ],
-    [
-      "Ongoing counselling",
-      "A steadier rhythm of support, booked session by session.",
-      "Enquire",
-    ],
-    [
-      "Supervision for practitioners",
-      "Structured supervision and peer community for practising therapists.",
-      "Enquire",
-    ],
+    {
+      title: "One calm conversation",
+      copy: "A single session with a licensed professional. No commitment.",
+      price: "₹600",
+      href: "/courses/therapy",
+    },
+    {
+      title: "Ongoing counselling",
+      copy: "A steadier rhythm of support, booked session by session.",
+      price: "Enquire",
+      href: "/contact",
+    },
+    {
+      title: "Supervision for practitioners",
+      copy: "Structured supervision and peer community for practising therapists.",
+      price: "Enquire",
+      href: "/contact",
+    },
   ],
 } as const;
 
@@ -125,7 +135,7 @@ export function ProgramTabs() {
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                   <span className="bg-background/90 text-primary absolute top-4 left-4 rounded-full px-3 py-1 text-[0.6rem] font-semibold tracking-[0.2em] uppercase">
-                    {c.badge}
+                    Registration open
                   </span>
                 </div>
                 <div className="flex flex-1 flex-col gap-2 p-6">
@@ -134,13 +144,14 @@ export function ProgramTabs() {
                   </h3>
                   <p className="text-muted-foreground text-sm">{c.type}</p>
                   <p className="text-muted-foreground text-sm">{c.when}</p>
+                  <EightWeekJourney compact className="mt-3 mb-4" />
                   <div className="border-border mt-auto flex items-center justify-between border-t border-dashed pt-4">
-                    <span className="font-display text-lg">{c.price}</span>
+                    <span className="font-display text-lg">{LIVE_PRICE}</span>
                     <Link
-                      href="/contact"
+                      href={c.href}
                       className="text-primary text-[0.7rem] font-semibold tracking-[0.2em] uppercase"
                     >
-                      Enroll →
+                      Enrol →
                     </Link>
                   </div>
                 </div>
@@ -149,10 +160,10 @@ export function ProgramTabs() {
           </div>
         ) : (
           <div className="border-primary border-t-2">
-            {ROWS[tab].map(([title, copy, price]) => (
+            {ROWS[tab].map(({ title, copy, price, href }) => (
               <Link
                 key={title}
-                href="/contact"
+                href={href}
                 className="border-border hover:bg-card flex items-center justify-between gap-4 border-b border-dashed py-6 transition-colors"
               >
                 <div>

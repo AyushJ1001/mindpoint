@@ -5,12 +5,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowRight, X } from "lucide-react";
 
-const STORAGE_KEY = "tmp-announcement-dismissed-v1";
+const STORAGE_KEY = "tmp-announcement-dismissed-v2";
 
 /**
  * Slim, dismissible site-wide announcement. Copy lives here so it is a
- * one-line change when the message moves on. Honest by default: it announces
- * the new look and points at the January cohort, without a price claim.
+ * one-line change when the message moves on. Honest by default: it points at
+ * the January 2027 courses without a price claim. Bump STORAGE_KEY when the
+ * message changes so people who dismissed the old one see the new one.
  */
 export default function AnnouncementBanner() {
   const pathname = usePathname();
@@ -40,17 +41,17 @@ export default function AnnouncementBanner() {
     <div className="water-band border-border relative border-b border-dashed">
       <div className="container flex flex-wrap items-center justify-center gap-x-3 gap-y-1 py-2.5 pr-8 text-center text-[0.78rem]">
         <span className="text-primary text-[0.62rem] font-semibold tracking-[0.24em] uppercase">
-          New look
+          January 2027
         </span>
         <span className="text-foreground/80">
-          The Mind Point has a fresh face — January 2027 cohorts are taking
-          shape.
+          Registration is open for three live certificate courses and the
+          Counselling Psychology Internship.
         </span>
         <Link
           href="/january-2027"
           className="text-primary inline-flex items-center gap-1 font-semibold"
         >
-          See what&apos;s planned <ArrowRight className="h-3.5 w-3.5" />
+          See dates <ArrowRight className="h-3.5 w-3.5" />
         </Link>
       </div>
       <button

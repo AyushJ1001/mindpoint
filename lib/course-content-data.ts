@@ -54,7 +54,7 @@ export const courseTypeContent: Record<string, CourseTypeInfo> = {
     title: "Internship Programs",
     tagline: "Stop studying it. Start doing it.",
     description:
-      "Structured internships with real case exposure, clear milestones, and a mentor who is genuinely invested. This is where what you know becomes what you can actually do.",
+      "Structured internships with simulated practice, clear milestones and faculty feedback. This is where what you know becomes what you can actually do.",
     icon: BriefcaseBusiness,
   },
   therapy: {
@@ -75,7 +75,7 @@ export const courseTypeContent: Record<string, CourseTypeInfo> = {
     title: "Intro courses, self-paced",
     tagline: "Not sure where to start? Start here.",
     description:
-      "Self-paced video modules you can start tonight and revisit whenever you need. Professionally produced and free of scheduling pressure.",
+      "Self-paced video modules you can start when it suits you and revisit whenever you need. Professionally produced and free of scheduling pressure.",
     icon: PlaySquare,
   },
   masterclass: {
@@ -479,9 +479,9 @@ export const whyChooseByType: Record<string, WhyChooseData> = {
     items: [
       {
         icon: Eye,
-        title: "Real case exposure",
+        title: "Practice with feedback",
         description:
-          "Work with actual scenarios under structured guidance — not hypothetical worksheets.",
+          "Work through fictional and role-played cases under structured guidance, with faculty feedback.",
       },
       {
         icon: Shield,
@@ -689,7 +689,7 @@ export const whyChooseByType: Record<string, WhyChooseData> = {
 export const courseTypeProof: Record<string, string[]> = {
   certificate: [
     "Expert-led, practice-first curriculum",
-    "Small cohorts with named educators",
+    "Live classes with qualified psychology faculty",
     "Verifiable certificate on completion",
   ],
   diploma: [
@@ -698,7 +698,7 @@ export const courseTypeProof: Record<string, string[]> = {
     "A cohort of committed peers",
   ],
   internship: [
-    "Real case exposure, not observation",
+    "Simulated case practice, not just observation",
     "A mentor invested in your progress",
     "Clear milestones and feedback loops",
   ],
@@ -797,7 +797,7 @@ export const courseTypeFaqs: Record<string, CourseTypeFaq[]> = {
     {
       question: "How are the hours structured?",
       answer:
-        "You'll get clear tasks, real case exposure, and milestone check-ins. Your mentor reviews your work and gives feedback, so the hours translate into skill.",
+        "You'll get clear tasks, simulated case practice and milestone check-ins. Faculty review your work and give feedback, so the hours translate into skill.",
     },
     {
       question: "Will I get documentation of completion?",
@@ -979,7 +979,7 @@ export const courseTypeClosing: Record<string, CourseTypeClosing> = {
   },
   internship: {
     headline: "Turn theory into practice.",
-    body: "Find an internship that gives you real cases and real feedback.",
+    body: "Find an internship that gives you structured practice and real feedback.",
     primaryLabel: "Browse internships",
     primaryHref: COURSES_ANCHOR,
     secondaryLabel: "Talk to an advisor",
@@ -1002,7 +1002,7 @@ export const courseTypeClosing: Record<string, CourseTypeClosing> = {
     secondaryHref: ADVISOR_HREF,
   },
   "pre-recorded": {
-    headline: "Start tonight. Go at your pace.",
+    headline: "Start when it suits you. Go at your pace.",
     body: "Browse self-paced courses and learn on your own schedule.",
     primaryLabel: "Browse self-paced courses",
     primaryHref: COURSES_ANCHOR,
@@ -1081,7 +1081,7 @@ export const defaultPainPoints: Record<string, string[]> = {
     "You want to stand out in a crowded, competitive field",
   ],
   internship: [
-    "You've studied the theory but never sat with a real case",
+    "You've studied the theory but never practised the skills",
     "You want supervised experience before practising independently",
     "You need practical hours to complete your training",
     "You learn best by doing, not by reading",
@@ -1181,7 +1181,7 @@ export const defaultWhyDifferent: Record<string, string[]> = {
   certificate: [
     "You practise techniques in-session, not just listen to lectures",
     "Small cohorts mean your educators know your name",
-    "Lifetime access to community and doubt-clearing support",
+    "Live classes on Tuesdays and Thursdays, with time for your questions",
     "Curriculum designed by working professionals, not career academics",
   ],
   therapy: [
@@ -1203,7 +1203,7 @@ export const defaultWhyDifferent: Record<string, string[]> = {
     "A peer network of committed professionals who share your drive",
   ],
   internship: [
-    "Structured exposure to real cases, not just observation",
+    "Structured practice with fictional cases, not just observation",
     "Your mentor catches you when you stumble — that's the point",
     "Clear milestones so you can see your own progress",
     "A safe place where mistakes are part of the work",

@@ -15,60 +15,77 @@ import {
   Telescope,
   FileText,
   BookOpen,
+  type LucideIcon,
 } from "lucide-react";
+import type { PublicCourse } from "@/lib/backend";
 
-const CATEGORIES = [
+const CATEGORIES: {
+  title: string;
+  href: string;
+  type: PublicCourse["type"];
+  desc: string;
+  icon: LucideIcon;
+}[] = [
   {
     title: "Certificate Courses",
     href: "/courses/certificate",
+    type: "certificate",
     desc: "Structured, practice-first learning with a credential you can actually use.",
     icon: Award,
   },
   {
     title: "Internship Programs",
     href: "/courses/internship",
-    desc: "Real cases, clear milestones, and a mentor in your corner.",
+    type: "internship",
+    desc: "Simulated practice, clear milestones and faculty feedback.",
     icon: BriefcaseBusiness,
   },
   {
     title: "Diploma Programs",
     href: "/courses/diploma",
+    type: "diploma",
     desc: "The deeper commitment, for when you're ready to go all in.",
     icon: GraduationCap,
   },
   {
     title: "Intro courses, self-paced",
     href: "/courses/intro",
+    type: "pre-recorded",
     desc: "Not sure where to start? Begin here, at your own pace.",
     icon: PlaySquare,
   },
   {
     title: "Masterclasses",
     href: "/courses/masterclass",
+    type: "masterclass",
     desc: "One topic, taught with depth by someone who lives it.",
     icon: Sparkles,
   },
   {
     title: "Therapy Sessions",
     href: "/courses/therapy",
+    type: "therapy",
     desc: "A safe, professional space to be heard and supported.",
     icon: HeartPulse,
   },
   {
     title: "Supervised Programs",
     href: "/courses/supervised",
+    type: "supervised",
     desc: "Honest feedback on real clinical work, from a working clinician.",
     icon: Telescope,
   },
   {
     title: "Resume Studio",
     href: "/courses/resume-studio",
+    type: "resume-studio",
     desc: "A psychology-specific CV that finally tells your story clearly.",
     icon: FileText,
   },
   {
     title: "Worksheets & Resources",
     href: "/courses/worksheet",
+    type: "worksheet",
     desc: "Evidence-based tools you can download and use in the next session.",
     icon: BookOpen,
   },
@@ -78,10 +95,27 @@ const TRUST_POINTS = [
   "Expert-led and practice-first",
   "Small, attentive cohorts",
   "Certificates with honest wording",
-  "Support that continues after the course",
+  "Faculty with a Master’s in psychology",
 ];
 
-export default function CoursesHero() {
+/**
+ * `liveTypes` limits the category grid to course types with something on sale,
+ * so it never links to an empty listing. Therapy has its own page and always
+ * shows. An empty set (catalogue unavailable) shows every category.
+ */
+export default function CoursesHero({
+  liveTypes,
+}: {
+  liveTypes: ReadonlySet<PublicCourse["type"]>;
+}) {
+  const categories =
+    liveTypes.size === 0
+      ? CATEGORIES
+      : CATEGORIES.filter(
+          (category) =>
+            category.type === "therapy" || liveTypes.has(category.type),
+        );
+
   return (
     <>
       <section className="py-14 sm:py-20">
@@ -93,9 +127,9 @@ export default function CoursesHero() {
               <em className="italic">Find the one that fits.</em>
             </h1>
             <p className="text-muted-foreground mt-5 max-w-xl text-lg">
-              Live cohorts, self-paced modules, therapy, supervision and career
-              tools — each priced and paced for real life. Start where you are;
-              we&apos;ll meet you there.
+              Live certificate courses, an internship, ₹999 self-paced intro
+              courses, therapy and worksheets. Start where you are; we&apos;ll
+              meet you there.
             </p>
             <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">
               <a href="#catalog" className={ctaVariants({ layout: "flex" })}>
@@ -132,7 +166,7 @@ export default function CoursesHero() {
 
       <section className="container pb-20 sm:pb-28">
         <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {CATEGORIES.map((category) => (
+          {categories.map((category) => (
             <ScrollReveal key={category.href}>
               <Link
                 href={category.href}
@@ -154,7 +188,7 @@ export default function CoursesHero() {
       </section>
       <section className="container pb-20 sm:pb-28">
         <Link
-          href="/courses/cbt-rebt-cbmt"
+          href="/programs/cbt-rebt-cbmt"
           className="group border-border hover:border-primary bg-card flex flex-col gap-5 rounded-2xl border border-dashed p-7 transition-all duration-300 hover:-translate-y-1 sm:flex-row sm:items-center sm:justify-between sm:p-8"
         >
           <div className="max-w-2xl">
@@ -165,8 +199,9 @@ export default function CoursesHero() {
               CBT, REBT &amp; CBMT
             </h2>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-              An eight-week live certificate covering all three approaches — and
-              how to use them with real clients, in a small supervised group.
+              An eight-week live certificate covering all three approaches: six
+              weeks of structured learning, then two weeks of practical training
+              with fictional cases. Starts 19 January 2027.
             </p>
           </div>
           <span className="text-primary inline-flex items-center gap-2 text-xs font-semibold tracking-[0.16em] uppercase">

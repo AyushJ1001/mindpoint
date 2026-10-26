@@ -1,7 +1,22 @@
 import { MetadataRoute } from "next";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/lib/backend/api";
+import type { PublicCourse } from "@/lib/backend";
 import { guideSlugs } from "@/lib/guides";
+import { courseSlugs, programmeSlugForCode } from "@/lib/course-content";
+
+// Catalogue category pages (path → course type), listed only while at least
+// one course of that type is on sale so empty listings stay out of search.
+const CATEGORY_PAGES: [string, PublicCourse["type"]][] = [
+  ["certificate", "certificate"],
+  ["diploma", "diploma"],
+  ["internship", "internship"],
+  ["masterclass", "masterclass"],
+  ["intro", "pre-recorded"],
+  ["resume-studio", "resume-studio"],
+  ["supervised", "supervised"],
+  ["worksheet", "worksheet"],
+];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://www.themindpoint.org";
@@ -92,55 +107,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "monthly" as const,
       priority: 0.3,
     },
-    // Course category pages
     {
-      url: `${baseUrl}/courses/certificate`,
+      url: `${baseUrl}/courses/therapy`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
       priority: 0.8,
     },
-    {
-      url: `${baseUrl}/courses/diploma`,
+    ...courseSlugs().map((slug) => ({
+      url: `${baseUrl}/programs/${slug}`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/courses/internship`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/courses/masterclass`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/courses/intro`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/courses/resume-studio`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/courses/supervised`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    },
-    {
-      url: `${baseUrl}/courses/cbt-rebt-cbmt`,
-      lastModified: new Date(),
-      changeFrequency: "weekly" as const,
-      priority: 0.8,
-    },
+      priority: 0.9,
+    })),
     ...guideSlugs().map((slug) => ({
       url: `${baseUrl}/resources/${slug}`,
       lastModified: new Date(),
@@ -164,15 +142,31 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Fetch all courses for dynamic sitemap entries
     const courses = await convex.query(api.courses.listCourses, {});
 
-    const coursePages =
-      courses?.map((course) => ({
+    const liveTypes = new Set(courses.map((course) => course.type));
+    const categoryPages = CATEGORY_PAGES.filter(([, type]) =>
+      liveTypes.has(type),
+    ).map(([page]) => ({
+      url: `${baseUrl}/courses/${page}`,
+      lastModified: new Date(),
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    }));
+
+    // Programme and therapy detail URLs redirect elsewhere, so list only the
+    // course pages that render themselves.
+    const coursePages = courses
+      .filter(
+        (course) =>
+          course.type !== "therapy" && !programmeSlugForCode(course.code),
+      )
+      .map((course) => ({
         url: `${baseUrl}/courses/${course._id}`,
         lastModified: new Date(course._creationTime),
         changeFrequency: "weekly" as const,
         priority: 0.7,
-      })) || [];
+      }));
 
-    return [...staticPages, ...coursePages];
+    return [...staticPages, ...categoryPages, ...coursePages];
   } catch (error) {
     console.warn("Failed to fetch courses for sitemap:", error);
     // Return static pages only if there's an error fetching courses

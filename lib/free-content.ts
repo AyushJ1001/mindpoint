@@ -1,35 +1,44 @@
-// The free masterclass is the top of the funnel: a real recorded session,
-// given away for an email (and optionally a WhatsApp number), with no card and
-// no pressure. Set NEXT_PUBLIC_MASTERCLASS_VIDEO_URL to a Drive or direct video
-// URL to show the player; the page still works as a lead capture without it.
+// The free masterclass is the top of the funnel: a single session, given away
+// for an email (and optionally a WhatsApp number), with no card and no
+// pressure. The recording does not exist yet, so until
+// NEXT_PUBLIC_MASTERCLASS_VIDEO_URL is set the page is a "notify me when it's
+// released" sign-up. Setting the URL shows the player and switches the copy.
 
 export const MASTERCLASS_VIDEO_URL =
   process.env.NEXT_PUBLIC_MASTERCLASS_VIDEO_URL ?? "";
 
+export const MASTERCLASS_RELEASED = Boolean(MASTERCLASS_VIDEO_URL);
+
 export const MASTERCLASS = {
   eyebrow: "Free masterclass",
-  title: "See how The Mind Point teaches — free.",
-  supporting: "One recorded session. No card, no pressure.",
-  description:
-    "A single recorded class that shows how we actually work: structured teaching, real examples and a clear sense of what the full programme feels like. Watch it, then decide if the pace and the approach suit you.",
+  title: MASTERCLASS_RELEASED
+    ? "See how The Mind Point teaches — free."
+    : "A free masterclass is on the way.",
+  supporting: MASTERCLASS_RELEASED
+    ? "One recorded session. No card, no pressure."
+    : "Leave your email and we'll tell you when it's out.",
+  description: MASTERCLASS_RELEASED
+    ? "A single recorded class that shows how we actually work: structured teaching, real examples and a clear sense of what a full programme feels like. Watch it, then decide if the pace and the approach suit you."
+    : "We're preparing a single free class that shows how we actually work: structured teaching, real examples and a clear sense of what a full programme feels like. It isn't released yet. Leave your email and we'll send you a note the day it is.",
   takeaways: [
     "How a typical session is structured, start to finish",
     "The core idea behind our cognitive behavioural teaching",
-    "What changes when you learn in a live, small cohort",
-    "How the certificate and self-paced routes fit together",
+    "What changes when you learn live with faculty",
   ],
   faq: [
     {
       q: "Is the masterclass really free?",
-      a: "Yes. You give us an email, we send you the session. No card, no hidden step.",
+      a: MASTERCLASS_RELEASED
+        ? "Yes. You give us an email and you can watch it. No card, no hidden step."
+        : "Yes. It isn't released yet; leave your email and we'll tell you when it is. No card, no hidden step.",
     },
     {
       q: "Do I need a psychology background?",
-      a: "No. The masterclass assumes no prior study, and the intro courses are built as entry points for people who are new to the subject.",
+      a: "No. The masterclass assumes no prior study, and the ₹999 intro courses are built as entry points for people who are new to the subject.",
     },
     {
-      q: "What happens after I watch it?",
-      a: "You will get one follow-up email with the next steps — the ₹999 self-paced intros and the live January 2027 cohorts. You can unsubscribe any time.",
+      q: "What else is open right now?",
+      a: "Registration is open for three live certificate courses starting in January 2027 (₹3,499 each, eight weeks: six of structured learning, two of practical training) and the Counselling Psychology Internship (₹2,499, from 18 January 2027). Four ₹999 self-paced intro courses are also available. You can unsubscribe from our emails any time.",
     },
     {
       q: "Is this a degree or a licence?",

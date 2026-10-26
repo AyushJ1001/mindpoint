@@ -23,7 +23,7 @@ function StructuredDataContent() {
         name: "The Mind Point",
         alternateName: "TMP",
         description:
-          "Psychology education for adults in India: self-paced intro courses, live certificate cohorts, supervision and therapy. Structured, evidence-based teaching with honest certificates.",
+          "Psychology education for adults in India: self-paced intro courses, live certificate courses, an internship and therapy. Structured, evidence-based teaching with honest certificates.",
         url: SITE,
         logo: `${SITE}/logo.png`,
         sameAs: [
@@ -55,11 +55,8 @@ function StructuredDataContent() {
           itemListElement: [
             "Intro courses (self-paced)",
             "Certificate Courses",
-            "Diploma Programs",
             "Therapy Sessions",
-            "Supervised Sessions",
             "Internship Programs",
-            "Masterclasses",
             "Worksheets",
           ].map((name) => ({
             "@type": "Offer",

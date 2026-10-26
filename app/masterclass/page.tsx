@@ -6,19 +6,28 @@ import { LeadCaptureForm } from "@/components/coastal/LeadCaptureForm";
 import { LmsMediaPlayer } from "@/components/lms/LmsMediaPlayer";
 import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
-import { MASTERCLASS, MASTERCLASS_VIDEO_URL } from "@/lib/free-content";
+import {
+  MASTERCLASS,
+  MASTERCLASS_RELEASED,
+  MASTERCLASS_VIDEO_URL,
+} from "@/lib/free-content";
 import { openGraphImage } from "@/lib/seo";
 
+const metaTitle = MASTERCLASS_RELEASED
+  ? "Free masterclass — see how The Mind Point teaches"
+  : "Free masterclass, coming soon — The Mind Point";
+const metaDescription = MASTERCLASS_RELEASED
+  ? "Watch a free recorded masterclass from The Mind Point. Structured, practical psychology teaching for students, career changers and practising therapists in India. No card, no pressure."
+  : "The Mind Point is preparing a free masterclass on how we teach psychology. Leave your email and we'll tell you when it's released. No card, no pressure.";
+
 export const metadata: Metadata = {
-  title: "Free masterclass — see how The Mind Point teaches",
-  description:
-    "Watch a free recorded masterclass from The Mind Point. Structured, practical psychology teaching for students, career changers and practising therapists in India. No card, no pressure.",
+  title: metaTitle,
+  description: metaDescription,
   alternates: { canonical: "/masterclass" },
   openGraph: {
     images: [openGraphImage],
-    title: "Free masterclass — see how The Mind Point teaches",
-    description:
-      "A free recorded session that shows how we teach, before you commit to a programme.",
+    title: metaTitle,
+    description: metaDescription,
     type: "website",
     url: "https://www.themindpoint.org/masterclass",
   },
@@ -66,11 +75,14 @@ export default function MasterclassPage() {
                 title="The Mind Point free masterclass"
               />
             ) : (
-              <div className="border-border bg-secondary flex aspect-video w-full items-center justify-center rounded-2xl border border-dashed p-8 text-center">
-                <p className="text-muted-foreground max-w-sm text-sm">
-                  The masterclass player appears here once the recording is
-                  connected. Leave your details and we&rsquo;ll send it to you
-                  directly in the meantime.
+              <div className="border-border bg-secondary flex aspect-video w-full flex-col items-center justify-center rounded-2xl border border-dashed p-8 text-center">
+                <p className="font-display text-foreground text-2xl">
+                  Coming soon
+                </p>
+                <p className="text-muted-foreground mt-3 max-w-sm text-sm leading-relaxed">
+                  The masterclass hasn&rsquo;t been released yet. Leave your
+                  email and we&rsquo;ll let you know the day it&rsquo;s ready to
+                  watch.
                 </p>
               </div>
             )}
@@ -88,14 +100,20 @@ export default function MasterclassPage() {
 
           <div className="water-band-mist rounded-2xl p-6 sm:p-8">
             <h2 className="font-display text-2xl tracking-tight">
-              Get the masterclass
+              {MASTERCLASS_RELEASED
+                ? "Stay in touch"
+                : "Tell me when it’s released"}
             </h2>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-              Enter your email and we&rsquo;ll send the session. Add a WhatsApp
-              number if you&rsquo;d like the nudge there instead.
+              {MASTERCLASS_RELEASED
+                ? "Leave your email for a short confirmation and, if you opt in, course updates."
+                : "Enter your email and we’ll email you when it’s released."}
             </p>
             <div className="mt-6">
-              <LeadCaptureForm source="masterclass-page" />
+              <LeadCaptureForm
+                source="masterclass-page"
+                released={MASTERCLASS_RELEASED}
+              />
             </div>
           </div>
         </div>
@@ -104,11 +122,12 @@ export default function MasterclassPage() {
       <section className="water-band-mist border-border border-y border-dashed py-16 sm:py-20">
         <div className="container flex flex-col items-center gap-5 text-center">
           <h2 className="font-display max-w-2xl text-3xl tracking-tight sm:text-4xl">
-            Liked it? The rest is a small, structured next step.
+            Ready to start now? Registration is open.
           </h2>
           <p className="text-muted-foreground max-w-xl">
-            Start with a ₹999 self-paced intro to find your footing, then join a
-            live January 2027 cohort when you&rsquo;re ready.
+            Start with a ₹999 self-paced intro to find your footing, or join a
+            live certificate course in January 2027: eight weeks, live on
+            Tuesdays and Thursdays.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link href="/courses" className={ctaVariants({ layout: "flex" })}>

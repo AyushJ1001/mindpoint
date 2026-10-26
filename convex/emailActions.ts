@@ -259,7 +259,7 @@ export const sendLeadConfirmation = internalAction({
             <p>${greeting}</p>
             <p>We have your details. You can start right away:</p>
             <ul>
-              <li><a href="${siteUrl}/resources">Free resources and the recorded masterclass</a></li>
+              <li><a href="${siteUrl}/resources">Free guides and resources</a></li>
               <li><a href="${siteUrl}/programs">Programs, cohorts and therapy</a></li>
             </ul>
             <p>If you asked a question, a person will reply within 48–72 hours on working days.</p>

@@ -8,14 +8,14 @@ export const revalidate = 1800; // 30 min ISR
 export const metadata = {
   title: "Intro courses, self-paced - The Mind Point",
   description:
-    "Not sure where to start? Self-paced, professionally produced intro courses in psychology and mental health. Start tonight, revisit any module, and keep the resources.",
+    "Not sure where to start? Self-paced, professionally produced intro courses in psychology and mental health. Four courses at ₹999 each: Psychological First Aid, Criminal Psychology, Sports Psychology, and Clinical vs Counselling Psychology.",
   keywords:
     "intro courses, self-paced learning, psychology courses, mental health education, online learning",
   openGraph: {
     images: [openGraphImage],
     title: "Intro courses, self-paced - The Mind Point",
     description:
-      "Self-paced intro courses you can start tonight and revisit anytime.",
+      "Self-paced intro courses at ₹999 each, to start when it suits you and revisit any time.",
     type: "website",
   },
 };
