@@ -181,6 +181,8 @@ export type OptionState = "enroll" | "waitlist" | "unavailable";
 export interface ProgrammeCartTarget {
   _id: string;
   name: string;
+  /** Catalogue course code, carried to the cart for analytics. */
+  code?: string;
   description?: string;
   price: number;
   originalPrice?: number;

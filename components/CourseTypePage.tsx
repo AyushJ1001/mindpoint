@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useCart } from "react-use-cart";
+import { track } from "@/lib/analytics";
 
 import { Button } from "../components/ui/button";
 import {
@@ -189,6 +190,7 @@ const CourseGroupCard = ({
       offer: selectedCourse.offer,
       bogo: selectedCourse.bogo,
       courseType: selectedCourse.type,
+      courseCode: selectedCourse.code,
       selectedFreeCourse: {
         id: selection.courseId,
         courseId: selection.courseId,
@@ -210,6 +212,11 @@ const CourseGroupCard = ({
   };
 
   const handleAddToCart = () => {
+    track("enroll_click", {
+      course_code: selectedCourse.code,
+      price: getCoursePrice(selectedCourse),
+    });
+
     if (selectedCourse.usesBatches) {
       router.push(`/courses/${selectedCourse._id}`);
       return;
@@ -259,10 +266,15 @@ const CourseGroupCard = ({
       offer: selectedCourse.offer,
       bogo: selectedCourse.bogo,
       courseType: selectedCourse.type,
+      courseCode: selectedCourse.code,
     });
   };
 
   const handleCardClick = () => {
+    track("course_card_click", {
+      course_code: selectedCourse.code,
+      source: "course_type",
+    });
     router.push(`/courses/${selectedCourse._id}`);
   };
 
@@ -608,6 +620,7 @@ const CourseCard = ({
       offer: course.offer,
       bogo: course.bogo,
       courseType: course.type,
+      courseCode: course.code,
       selectedFreeCourse: {
         id: selection.courseId,
         courseId: selection.courseId,
@@ -629,6 +642,11 @@ const CourseCard = ({
   };
 
   const handleAddToCart = () => {
+    track("enroll_click", {
+      course_code: course.code,
+      price: getCoursePrice(course),
+    });
+
     if (course.usesBatches) {
       router.push(`/courses/${course._id}`);
       return;
@@ -675,10 +693,15 @@ const CourseCard = ({
       offer: course.offer,
       bogo: course.bogo,
       courseType: course.type,
+      courseCode: course.code,
     });
   };
 
   const handleCardClick = () => {
+    track("course_card_click", {
+      course_code: course.code,
+      source: "course_type",
+    });
     router.push(`/courses/${course._id}`);
   };
 

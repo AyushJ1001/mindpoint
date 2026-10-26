@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useCart } from "react-use-cart";
+import { track } from "@/lib/analytics";
 import { useRouter } from "next/navigation";
 import { BookOpen } from "lucide-react";
 import type { PublicCourse } from "@/lib/backend";
@@ -181,6 +182,11 @@ const CourseGroupCard = ({
   const bundleInfo = useBundleEligibility(selectedCourse._id);
 
   const handleAddToCart = () => {
+    track("enroll_click", {
+      course_code: selectedCourse.code,
+      price: getCoursePrice(selectedCourse),
+    });
+
     if (selectedCourse.usesBatches) {
       router.push(`/courses/${selectedCourse._id}`);
       return;
@@ -226,6 +232,7 @@ const CourseGroupCard = ({
       offer: selectedCourse.offer,
       bogo: selectedCourse.bogo,
       courseType: selectedCourse.type,
+      courseCode: selectedCourse.code,
     });
   };
 
@@ -261,6 +268,7 @@ const CourseGroupCard = ({
       offer: selectedCourse.offer,
       bogo: selectedCourse.bogo,
       courseType: selectedCourse.type,
+      courseCode: selectedCourse.code,
       selectedFreeCourse: {
         id: selection.courseId,
         courseId: selection.courseId,
@@ -282,6 +290,10 @@ const CourseGroupCard = ({
   };
 
   const handleCardClick = () => {
+    track("course_card_click", {
+      course_code: selectedCourse.code,
+      source: "catalogue",
+    });
     router.push(`/courses/${selectedCourse._id}`);
   };
 
@@ -568,6 +580,11 @@ const CourseCard = ({
   const offerDetails = getOfferDetails(course);
 
   const handleAddToCart = () => {
+    track("enroll_click", {
+      course_code: course.code,
+      price: getCoursePrice(course),
+    });
+
     if (course.usesBatches) {
       router.push(`/courses/${course._id}`);
       return;
@@ -611,6 +628,7 @@ const CourseCard = ({
       offer: course.offer,
       bogo: course.bogo,
       courseType: course.type,
+      courseCode: course.code,
     });
   };
 
@@ -645,6 +663,7 @@ const CourseCard = ({
       offer: course.offer,
       bogo: course.bogo,
       courseType: course.type,
+      courseCode: course.code,
       selectedFreeCourse: {
         id: selection.courseId,
         courseId: selection.courseId,
@@ -666,6 +685,10 @@ const CourseCard = ({
   };
 
   const handleCardClick = () => {
+    track("course_card_click", {
+      course_code: course.code,
+      source: "catalogue",
+    });
     router.push(`/courses/${course._id}`);
   };
 

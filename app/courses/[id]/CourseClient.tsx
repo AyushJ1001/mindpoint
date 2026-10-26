@@ -8,6 +8,8 @@ import { api } from "@/lib/backend/api";
 import type { PublicCourse, PublicCourseBatch } from "@/lib/backend";
 import { Id } from "@/lib/backend/data-model";
 import { buildCartItemId } from "@/lib/domain/cart";
+import { track } from "@/lib/analytics";
+import { TrackProgrammeView } from "@/components/analytics/TrackProgrammeView";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -172,6 +174,7 @@ export default function CourseClient({
       offer: displayCourse.offer,
       bogo: displayCourse.bogo,
       courseType: displayCourse.type,
+      courseCode: displayCourse.code,
       selectedFreeCourse: {
         id: selection.courseId,
         courseId: selection.courseId,
@@ -201,6 +204,7 @@ export default function CourseClient({
   };
 
   const handleBuyNow = (c: PublicCourse) => {
+    track("enroll_click", { course_code: c.code, price: getCoursePrice(c) });
     if (items.length > 0) {
       setShowBuyNowDialog(true);
     } else {
@@ -240,6 +244,7 @@ export default function CourseClient({
         offer: displayCourse.offer,
         bogo: displayCourse.bogo,
         courseType: displayCourse.type,
+        courseCode: displayCourse.code,
       });
     } else {
       updateItemQuantity(cartLineId, 1);
@@ -255,6 +260,9 @@ export default function CourseClient({
     const currentQuantity = getCurrentQuantity(c._id);
     const maxQuantity = (activeBatch?.capacity ?? c.capacity) || 1;
     const priceToUse = getCoursePrice(c);
+    if (currentQuantity === 0) {
+      track("enroll_click", { course_code: c.code, price: priceToUse });
+    }
 
     if (
       offerDetails?.hasBogo &&
@@ -291,6 +299,7 @@ export default function CourseClient({
         offer: c.offer,
         bogo: c.bogo,
         courseType: c.type,
+        courseCode: c.code,
       });
     } else if (currentQuantity < maxQuantity) {
       updateItemQuantity(cartLineId, currentQuantity + 1);
@@ -435,6 +444,7 @@ export default function CourseClient({
 
   return (
     <div className="relative">
+      <TrackProgrammeView courseCode={course.code} />
       <CourseAnnouncementBar course={displayCourse} />
 
       <CourseEditorialHero

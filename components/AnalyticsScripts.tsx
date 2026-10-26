@@ -2,6 +2,8 @@
 
 import Script from "next/script";
 
+import { ContactClickTracker } from "@/components/analytics/ContactClickTracker";
+
 // Free, effective tracking. Each is loaded only when its id is configured, so
 // nothing changes until the owner sets the env var.
 //
@@ -20,6 +22,10 @@ const CLARITY_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID;
 export default function AnalyticsScripts() {
   return (
     <>
+      {/* Conversion events go through lib/analytics.ts; contact links are
+          tracked by one delegated listener. */}
+      {GA_ID || PIXEL_ID || CLARITY_ID ? <ContactClickTracker /> : null}
+
       {GA_ID ? (
         <>
           <Script

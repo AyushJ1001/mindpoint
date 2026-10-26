@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
 import { useCart } from "react-use-cart";
 
+import { track } from "@/lib/analytics";
 import { api } from "@/lib/backend/api";
 import type { Id } from "@/lib/backend/data-model";
 import type { ProgrammeCartTarget } from "@/lib/course-content/types";
@@ -46,6 +47,12 @@ export function AddToCartButton({
       type="button"
       className={className}
       onClick={() => {
+        if (target.code) {
+          track("enroll_click", {
+            course_code: target.code,
+            price: target.price,
+          });
+        }
         if (inCart(target._id)) removeItem(target._id);
         addItem({
           id: target._id,
@@ -60,6 +67,7 @@ export function AddToCartButton({
           capacity: target.batch?.capacity ?? 30,
           quantity: 1,
           courseType: target.courseType,
+          courseCode: target.code,
           batchId: target.batch?.id as Id<"courseBatches"> | undefined,
           batchLabel: target.batch?.label,
           batchStartDate: target.batch?.startDate,

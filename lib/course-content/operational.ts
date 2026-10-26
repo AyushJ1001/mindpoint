@@ -96,6 +96,7 @@ function cartTarget(
   return {
     _id: course._id,
     name: course.name,
+    code: course.code,
     description: course.description,
     price: course.price,
     originalPrice: course.price,
