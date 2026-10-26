@@ -43,6 +43,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  EightWeekJourney,
+  hasEightWeekJourney,
+} from "@/components/course-page/eight-week-journey";
 
 const CourseImageCarousel = ({ imageUrls }: { imageUrls: string[] }) => {
   if (!imageUrls || imageUrls.length === 0) {
@@ -303,7 +307,7 @@ const CourseGroupCard = ({
               </Badge>
             )}
             {bundleInfo && (
-              <Badge className="max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Badge className="bg-primary/90 max-w-full text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
                 <Layers className="mr-1 h-3 w-3" />
                 <span className="sm:hidden">Bundle</span>
                 <span className="hidden sm:inline">Bundle Deal</span>
@@ -315,7 +319,7 @@ const CourseGroupCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
+                  className="bg-primary max-w-full animate-pulse text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountLabel}
@@ -478,7 +482,7 @@ const CourseGroupCard = ({
               </div>
             )}
             {bundleInfo && (
-              <div className="flex items-center gap-1 text-xs font-medium text-primary">
+              <div className="text-primary flex items-center gap-1 text-xs font-medium">
                 <Layers className="h-3 w-3 shrink-0" />
                 <span className="truncate">{bundleInfo.dealSummary}</span>
               </div>
@@ -687,7 +691,7 @@ const CourseCard = ({
               </Badge>
             )}
             {bundleInfo && (
-              <Badge className="max-w-full bg-primary/90 text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
+              <Badge className="bg-primary/90 max-w-full text-[11px] font-semibold whitespace-nowrap text-white shadow-lg">
                 <Layers className="mr-1 h-3 w-3" />
                 <span className="sm:hidden">Bundle</span>
                 <span className="hidden sm:inline">Bundle Deal</span>
@@ -699,7 +703,7 @@ const CourseCard = ({
               {offerDetails?.hasDiscount && (
                 <Badge
                   variant="destructive"
-                  className="max-w-full animate-pulse bg-primary text-[11px] whitespace-nowrap text-white shadow-lg"
+                  className="bg-primary max-w-full animate-pulse text-[11px] whitespace-nowrap text-white shadow-lg"
                 >
                   <span className="sm:hidden">
                     {offerDetails.discountLabel}
@@ -730,6 +734,9 @@ const CourseCard = ({
             </CardTitle>
           </div>
         </div>
+        {hasEightWeekJourney(course.code) ? (
+          <EightWeekJourney compact className="mt-3" />
+        ) : null}
       </CardHeader>
       <CardContent className="pt-0 pb-4">
         <div className="flex flex-col gap-3 @min-[300px]:flex-row @min-[300px]:items-start @min-[300px]:justify-between">
@@ -768,7 +775,7 @@ const CourseCard = ({
               </div>
             )}
             {bundleInfo && (
-              <div className="flex items-center gap-1 text-xs font-medium text-primary">
+              <div className="text-primary flex items-center gap-1 text-xs font-medium">
                 <Layers className="h-3 w-3 shrink-0" />
                 <span className="truncate">{bundleInfo.dealSummary}</span>
               </div>

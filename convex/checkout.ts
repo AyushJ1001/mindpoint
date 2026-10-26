@@ -52,6 +52,7 @@ function courseToReconciliationCourse(
     mergedIntoCourseId: course.mergedIntoCourseId
       ? String(course.mergedIntoCourseId)
       : undefined,
+    salesEnabled: course.salesEnabled,
     price: course.price,
     offer: course.offer,
     bogo: course.bogo,

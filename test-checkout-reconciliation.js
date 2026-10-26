@@ -51,6 +51,25 @@ async function main() {
     "PRICE_CHANGED",
   ]);
 
+  const withdrawnResult = reconcileCheckoutIntent({
+    now,
+    items: [
+      {
+        cartItemId: "course-a",
+        courseId: "course-a",
+        clientListedPrice: 3600,
+        clientCheckoutPrice: 3600,
+      },
+    ],
+    courses: [{ ...baseCourse, salesEnabled: false }],
+    batches: [],
+    bundleCampaigns: [],
+  });
+
+  assert.equal(withdrawnResult.status, "blocked");
+  assert.equal(withdrawnResult.items.length, 0);
+  assert.equal(withdrawnResult.removedItems[0].reason, "COURSE_UNAVAILABLE");
+
   const fullBatchResult = reconcileCheckoutIntent({
     now,
     items: [

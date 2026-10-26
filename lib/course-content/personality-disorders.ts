@@ -15,7 +15,7 @@ export const personalityDisorders: CourseContent = {
   tagline:
     "Move beyond labels. Understand patterns, formulation and the person behind the diagnosis.",
   description:
-    "A two-stage certificate course: a self-paced introduction, then live applied classes working through fictional cases without stigma.",
+    "An eight-week live certificate course: six weeks of structured learning, then two weeks of practical training working through fictional cases without stigma.",
   heroCopy:
     "Move beyond labels. Understand patterns, formulation and the person behind the diagnosis.",
   learningOutcomes: [
@@ -31,14 +31,14 @@ export const personalityDisorders: CourseContent = {
   prerequisites: [],
   partOne: {
     title: "Part I — Foundations",
-    subtitle: "Introductory self-paced course",
+    subtitle: "Weeks 1–6 · Structured learning",
     formats: [],
     modules: [],
     assessment: undefined,
   },
   partTwo: {
     title: "Part II — Applied",
-    subtitle: "Applied live course",
+    subtitle: "Weeks 7–8 · Practical training",
     formats: [],
     sessions: [],
     assessment: undefined,
@@ -56,13 +56,13 @@ export const personalityDisorders: CourseContent = {
   certificateComplete: undefined,
   pricing: {
     foundation: {
-      name: "Introductory self-paced course",
-      description: "Self-paced introduction.",
+      name: "Structured learning",
+      description: "Live classes, weeks 1–6.",
       includes: [],
     },
     complete: {
-      name: "Applied live course",
-      description: "Live applied classes.",
+      name: "Practical training",
+      description: "Guided practice, weeks 7–8.",
       includes: [],
       primary: true,
     },
@@ -71,7 +71,7 @@ export const personalityDisorders: CourseContent = {
     {
       question: "Do I need a psychology background?",
       answer:
-        "No prior psychology study is required for the introductory self-paced stage. It begins with what a personality trait is and how the categories developed before using any diagnostic language.",
+        "No prior psychology study is required. The first weeks begin with what a personality trait is and how the categories developed before using any diagnostic language.",
     },
     {
       question: "Will this course teach me to diagnose people?",
@@ -84,14 +84,14 @@ export const personalityDisorders: CourseContent = {
         "The opposite is intended. Stigma, language and the harm that diagnostic labels can do are treated as central topics, not footnotes. The emphasis throughout is on the person, their history and their context.",
     },
     {
-      question: "Is the applied stage recorded?",
+      question: "Are the live classes recorded?",
       answer:
-        "The applied stage is taught live. Replay access is only offered if the specific cohort includes recordings and The Mind Point has approved that benefit.",
+        "Classes are taught live. Replay access is only offered if the specific cohort includes recordings and The Mind Point has approved that benefit.",
     },
     {
       question: "How technical does the content get?",
       answer:
-        "The introduction is written in plain language and defines each term before using it. The applied stage is more demanding and is built around formulation and case discussion.",
+        "The early weeks are in plain language and define each term before using it. The later weeks are more demanding and are built around formulation and case discussion.",
     },
     {
       question: "How do I know the price, dates and certificate requirements?",
@@ -103,8 +103,8 @@ export const personalityDisorders: CourseContent = {
     "Educational certificate course. Real clinical practice requires the appropriate qualifications, consent and supervision. This course does not confer an independent clinical qualification, and the certificate does not authorise psychotherapy practice.",
   cta: {
     heading: "Understand the patterns. Keep the person in view.",
-    body: "Start with a self-paced introduction that treats stigma and formulation as essentials, then join live applied classes when you are ready to work through fictional cases with faculty guidance.",
-    primaryLabel: "Explore course options",
+    body: "Eight weeks of live learning: six weeks on the categories, stigma and formulation, then two weeks working through fictional cases with faculty guidance.",
+    primaryLabel: "See dates and fees",
     secondaryLabel: "Talk to us on WhatsApp",
     secondaryHref:
       "https://wa.me/919137008686?text=Hi%2C%20I%20have%20a%20question%20about%20the%20Personality%20Disorders%20course.",
@@ -117,8 +117,8 @@ export const personalityDisorders: CourseContent = {
     supporting:
       "Move beyond labels. Understand patterns, formulation and the person behind the diagnosis.",
     description:
-      "Begin with a self-paced introduction that explains how the categories developed, what the clusters describe and why these labels carry so much stigma. Then join live applied classes where you work through fictional cases, practise formulation and learn how a careful practitioner keeps the person, not the diagnosis, at the centre.",
-    primaryCta: { label: "Explore course options", href: "#options" },
+      "Over eight weeks of live classes, learn how the categories developed, what the clusters describe and why these labels carry so much stigma. The first six weeks build that understanding and the basics of formulation. The final two weeks are practical training: fictional cases where you practise keeping the person, not the diagnosis, at the centre.",
+    primaryCta: { label: "See dates and fees", href: "#options" },
     secondaryCta: { label: "See what you will learn", href: "#outcomes" },
     scopeLine:
       "Educational training with fictional cases. This course does not confer an independent clinical qualification.",
@@ -126,16 +126,18 @@ export const personalityDisorders: CourseContent = {
 
   overview: {
     eyebrow: "The course in one view",
+    title: "Eight weeks: six of learning, two of practice",
+    eightWeekJourney: true,
     stages: [
       {
-        label: "Stage 1 — Introductory self-paced course",
-        title: "Recorded lessons with reading notes and reflection",
-        body: "Recorded lessons with substantial reading notes and reflection questions. Learn what a personality trait is, how the DSM and ICD organise these patterns, what each cluster describes, and why diagnostic language can harm. Work at your own pace before you are asked to reason about a case.",
+        label: "Weeks 1–6 — Structured learning",
+        title: "Live classes on the categories, stigma and formulation",
+        body: "Learn what a personality trait is, how the DSM and ICD organise these patterns, what each cluster describes and why diagnostic language can harm. Then move into assessment, formulation, the main therapeutic approaches and working across the clusters, with reading notes alongside each class.",
       },
       {
-        label: "Stage 2 — Applied live course",
-        title: "Facilitated sessions built around formulation and cases",
-        body: "Facilitated sessions built around formulation, discussion of fictional cases, therapeutic stance and the limits of your role. Study how different approaches ask different questions about the same difficulty, and how context, consent, boundaries and risk affect a plan. Applied teaching happens live; this stage is not presented as a pre-recorded lecture package.",
+        label: "Weeks 7–8 — Practical training",
+        title: "Formulation and case practice",
+        body: "Two weeks of practical training built around distress and risk, stigma and power, boundaries and supervision, and review. Work through fictional cases with faculty feedback, and see how context, consent and the limits of your role affect a plan.",
       },
     ],
     progression:
@@ -146,16 +148,16 @@ export const personalityDisorders: CourseContent = {
     title: "How the learning works",
     steps: [
       {
-        title: "Read and watch at your pace.",
-        body: "The introductory course gives every learner a shared, non-stigmatising vocabulary before asking them to reason about complex presentations. The reading notes explain the meaning, purpose, examples and limits of each idea.",
+        title: "Learn live, then consolidate with the notes.",
+        body: "The early weeks give every learner a shared, non-stigmatising vocabulary before asking them to reason about complex presentations. The reading notes explain the meaning, purpose, examples and limits of each idea.",
       },
       {
         title: "Try the reasoning with fictional cases.",
         body: "Learners practise separating what is observed from what is inferred, noticing when a label is doing too much work, and asking what a formulation would need to explain.",
       },
       {
-        title: "Work through decisions live.",
-        body: "In the applied classes, faculty demonstrate a formulation process, invite learners to practise it, introduce new information and debrief why a plan may need to change. Learning is evaluated through reasoning and responsible limits, not recall of labels.",
+        title: "Practise decisions in the final two weeks.",
+        body: "In the practical weeks, faculty demonstrate a formulation process, invite learners to practise it, introduce new information and debrief why a plan may need to change. Learning is evaluated through reasoning and responsible limits, not recall of labels.",
       },
     ],
   },
@@ -163,7 +165,7 @@ export const personalityDisorders: CourseContent = {
   audienceGroups: [
     {
       title: "New to psychology?",
-      body: "Begin with clear definitions and ordinary examples. You do not need a psychology degree to follow the introductory lessons, and you can pause and return to a concept before moving on.",
+      body: "Begin with clear definitions and ordinary examples. You do not need a psychology degree to follow the early weeks, and the reading notes let you return to a concept before moving on.",
     },
     {
       title: "Studying psychology?",
@@ -181,17 +183,17 @@ export const personalityDisorders: CourseContent = {
 
   curriculum: {
     eyebrow: "Curriculum",
-    title: "What you will cover",
+    title: "What you will cover, week by week",
     stages: [
       {
-        key: "introductory",
-        label: "Introductory self-paced",
-        shortLabel: "Introductory",
-        kind: "self-paced",
+        key: "learning",
+        label: "Weeks 1–6 · Structured learning",
+        shortLabel: "Weeks 1–6",
+        kind: "live",
         blurb:
-          "Recorded lessons with substantial reading notes and reflection questions. Learn how the categories developed, what the clusters describe, and why stigma and formulation matter from the start.",
+          "Six weeks of live classes. Learn how the categories developed, what the clusters describe and why stigma matters, then move into assessment, formulation and the main therapeutic approaches.",
         formatNote:
-          "Recorded lessons, a separate student reading manual, fictional examples, reflection prompts and worked reasoning, studied at your own pace.",
+          "Live faculty-led classes, student reading notes, fictional examples, reflection prompts and worked reasoning.",
         items: [
           {
             title: "What personality disorders are — and are not",
@@ -223,20 +225,8 @@ export const personalityDisorders: CourseContent = {
           },
           {
             title: "Bringing the foundations together",
-            body: "Use a fictional case to separate observation, inference and stigma, and prepare for the applied live stage.",
+            body: "Use a fictional case to separate observation, inference and stigma, and prepare for the formulation and case work that follows.",
           },
-        ],
-      },
-      {
-        key: "applied",
-        label: "Applied live",
-        shortLabel: "Applied live",
-        kind: "live",
-        blurb:
-          "Facilitated sessions built around formulation, case discussion, therapeutic stance and the limits of your role. Applied teaching happens live.",
-        formatNote:
-          "Live faculty-led teaching, demonstrations, discussion of fictional cases, structured practice, feedback and a separate applied student reading manual.",
-        items: [
           {
             title: "Assessment, consent and a workable goal",
             body: "Learn what to ask before forming an opinion, and how to clarify a person's own goal, context and preferences.",
@@ -250,12 +240,24 @@ export const personalityDisorders: CourseContent = {
             body: "Practise the stance and questions that help across the clusters, without reducing a person to a textbook description.",
           },
           {
-            title: "Emotion, self-harm and crisis",
-            body: "Discuss how to think about distress and risk, and when a situation needs a different level of care.",
-          },
-          {
             title: "Evidence-informed approaches",
             body: "Compare the purpose and limits of the main therapeutic approaches, rather than treating any one as a complete answer.",
+          },
+        ],
+      },
+      {
+        key: "practical",
+        label: "Weeks 7–8 · Practical training",
+        shortLabel: "Weeks 7–8",
+        kind: "practical",
+        blurb:
+          "Two weeks of practical training. Work on distress and risk, stigma and power, boundaries and supervision, and review, using fictional cases with faculty feedback.",
+        formatNote:
+          "Faculty-guided practice with fictional cases, structured exercises, feedback and review.",
+        items: [
+          {
+            title: "Emotion, self-harm and crisis",
+            body: "Discuss how to think about distress and risk, and when a situation needs a different level of care.",
           },
           {
             title: "Stigma, power and the therapeutic relationship",
@@ -276,19 +278,15 @@ export const personalityDisorders: CourseContent = {
 
   materials: {
     eyebrow: "Included learning materials",
-    title: "What is supplied for each stage",
+    title: "What is included",
     items: [
       {
-        label: "Introductory student reading notes",
-        note: "Supplied separately from the teaching script.",
+        label: "Live classes across all eight weeks",
+        note: "According to the published cohort schedule.",
       },
       {
-        label: "Introductory recorded lessons",
-        note: "Shown with their real release and access state once published in the LMS.",
-      },
-      {
-        label: "Applied student reading notes",
-        note: "Supplied separately from the live faculty guide.",
+        label: "Student reading notes",
+        note: "Supplied separately from the faculty teaching guide.",
       },
       {
         label:
@@ -296,71 +294,45 @@ export const personalityDisorders: CourseContent = {
         note: "Within the course materials.",
       },
       {
-        label: "Live applied teaching",
-        note: "According to the actual cohort schedule and enrolment option.",
+        label: "Practical training in weeks 7 and 8",
+        note: "Guided exercises with faculty feedback.",
       },
     ],
-    note: "The faculty recording script and live faculty guide are internal teaching documents, not downloadable student benefits.",
+    note: "The faculty teaching guide is an internal document, not a downloadable student benefit.",
   },
 
   assessment: {
     eyebrow: "Assessment and completion",
     title: "How you are assessed",
-    body: "The introductory stage includes knowledge checks and fictional case reflections so learners can confirm they understand the language and its limits. Applied learning uses case formulation, discussion and practice of a reasoned, non-stigmatising stance.",
+    body: "The learning weeks include knowledge checks and fictional case reflections so learners can confirm they understand the language and its limits. The practical weeks use case formulation, discussion and practice of a reasoned, non-stigmatising stance, reviewed with faculty.",
   },
 
   options: {
-    eyebrow: "Course options",
-    title: "Choose your route",
+    eyebrow: "Enrol",
+    title: "January 2027 live cohort",
     items: [
       {
-        key: "introductory",
-        name: "Option A — Introductory self-paced course",
-        bestFor:
-          "First-time learners, people entering from another field and anyone who wants a careful, non-stigmatising foundation or refresher.",
-        includes: [
-          "Recorded introductory lessons",
-          "Introductory student notes",
-          "Subject to the actual LMS release state",
-        ],
-        outcome:
-          "Explain how the categories developed, describe the clusters plainly, recognise stigma and understand why formulation matters.",
-        cta: { label: "Choose self-paced introduction", state: "enroll" },
-        catalogueCode: "PRPDI",
-        upgradeNote:
-          "Upgrade to the live cohort later for the ₹2,000 difference.",
-      },
-      {
         key: "applied",
-        name: "Option B — Applied live course",
+        name: "Eight-week live certificate course",
         bestFor:
-          "Learners who have completed the introduction or already know the core vocabulary and want guided practice.",
+          "Students, graduates and practitioners who want a careful, non-stigmatising understanding of personality disorders and guided practice in formulation.",
         includes: [
-          "Live applied sessions",
-          "Applied student notes",
-          "Subject to the actual cohort schedule",
+          "Six weeks of structured live learning",
+          "Two weeks of guided practical training",
+          "Student reading notes",
         ],
         outcome:
-          "Practise formulation, therapeutic stance, adaptation and review with faculty guidance.",
-        cta: { label: "Explore live applied course", state: "enroll" },
+          "Describe the clusters plainly, recognise stigma, and practise formulation, therapeutic stance and review with faculty guidance.",
+        cta: { label: "Enrol in the January cohort", state: "enroll" },
         catalogueCode: "CCPD",
       },
     ],
   },
 
-  upgrade: {
-    eyebrow: "Already started self-paced?",
-    title: "Move into the live cohort without paying twice",
-    body: "If you have bought the self-paced introduction, you can join the live applied course at any time. Your self-paced fee is credited, so you pay only the difference.",
-    ctaLabel: "Upgrade to the live cohort",
-    fromKey: "introductory",
-    toKey: "applied",
-  },
-
   closing: {
     heading: "Understand the patterns. Keep the person in view.",
-    body: "The Mind Point brings a careful introduction and live applied learning into one route. Start at your own pace, then join the live work when you are ready to formulate, discuss and think carefully about the person behind the diagnosis.",
-    ctaLabel: "Explore course options",
+    body: "Six weeks to learn what the categories do and do not tell you. Two weeks to practise building an understanding that belongs to the person, with faculty feedback.",
+    ctaLabel: "See dates and fees",
     ctaHref: "#options",
     scopeLine:
       "Educational certificate course. Real clinical practice requires the appropriate qualifications, consent and supervision.",

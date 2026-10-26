@@ -1,5 +1,6 @@
 import Image from "next/image";
 
+import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
 import { Section } from "@/components/course-page/section";
 import { StarRating } from "@/components/course/ratings";
 import { GOOGLE_RATING } from "@/lib/googleReviews";
@@ -105,6 +106,9 @@ export function ProgrammeOverviewSection({
       title={overview.title ?? "The course in one view"}
       tone="mist"
     >
+      {overview.eightWeekJourney ? (
+        <EightWeekJourney className="mb-10 max-w-3xl" />
+      ) : null}
       <div className="grid gap-6 lg:grid-cols-2">
         {overview.stages.map((stage) => (
           <article

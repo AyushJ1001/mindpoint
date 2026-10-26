@@ -7,6 +7,8 @@ import { PageHero } from "@/components/coastal/PageHero";
 import { EmailCapture } from "@/components/coastal/EmailCapture";
 import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
+import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
+import { formatTime } from "@/lib/course-content/operational";
 import { Check } from "lucide-react";
 
 export const revalidate = 1800;
@@ -14,7 +16,7 @@ export const revalidate = 1800;
 export const metadata = {
   title: "January 2027 certificate cohorts - The Mind Point",
   description:
-    "Live certificate cohorts start in January 2027: CBT, REBT and CBMT; Inner Child Healing & Therapy; and Personality Disorders. Small groups, taught live.",
+    "Live certificate cohorts start in January 2027: CBT, REBT and CBMT; Inner Child Healing & Therapy; and Personality Disorders. Eight weeks each: six weeks of learning, then two weeks of practical training.",
   alternates: { canonical: "/january-2027" },
 };
 
@@ -26,7 +28,7 @@ const COHORTS = [
     match: "CBMT",
     name: "CBT, REBT, CBMT",
     blurb:
-      "The three core cognitive and behavioural approaches in one certificate — and how to use them with real clients.",
+      "The three core cognitive and behavioural approaches in one certificate, and how to reason with them through fictional cases.",
     image: "/coastal/shore.jpg",
     duration: "8 weeks",
   },
@@ -51,7 +53,8 @@ const COHORTS = [
 ];
 
 const INCLUDED = [
-  "Live weekly classes, recorded for your cohort",
+  "Six weeks of learning, then two weeks of practical training",
+  "Live online classes on Tuesdays and Thursdays",
   "Small cohort, capped at 30 for real discussion",
   "Practice and feedback, not just theory",
   "Certificate with public verification",
@@ -70,6 +73,15 @@ async function getCourses(): Promise<PublicCourse[]> {
     console.warn("Failed to fetch courses for the January page:", error);
     return [];
   }
+}
+
+function formatSchedule(batch?: PublicCourse["nextAvailableBatch"]) {
+  if (!batch) return undefined;
+  const days = batch.daysOfWeek.map((day) => day.slice(0, 3)).join(" & ");
+  const start = formatTime(batch.startTime);
+  const end = formatTime(batch.endTime);
+  const time = start && end ? `${start}–${end} IST` : undefined;
+  return [days, time].filter(Boolean).join(" · ") || undefined;
 }
 
 function formatStart(value?: string) {
@@ -97,6 +109,14 @@ export default async function JanuaryLandingPage() {
       href: course ? `/courses/${course._id}` : "/courses/certificate",
       price: course?.price ?? FULL_PRICE,
       startDate: course?.nextAvailableBatch?.startDate,
+      schedule: formatSchedule(course?.nextAvailableBatch),
+      seatsLeft: course?.nextAvailableBatch
+        ? Math.max(
+            0,
+            course.nextAvailableBatch.capacity -
+              course.nextAvailableBatch.enrolledCount,
+          )
+        : undefined,
     };
   });
 
@@ -123,7 +143,15 @@ export default async function JanuaryLandingPage() {
           "@type": "Offer",
           price: cohort.price,
           priceCurrency: "INR",
-          availability: "https://schema.org/PreOrder",
+          // Only claim availability the cohort schedule backs up.
+          ...(cohort.seatsLeft === undefined
+            ? {}
+            : {
+                availability:
+                  cohort.seatsLeft > 0
+                    ? "https://schema.org/InStock"
+                    : "https://schema.org/SoldOut",
+              }),
           url: "https://www.themindpoint.org/january-2027",
         },
       },
@@ -155,8 +183,9 @@ export default async function JanuaryLandingPage() {
               </h2>
             </div>
             <p className="text-muted-foreground max-w-sm">
-              Each cohort starts in January 2027, Tuesdays and Thursdays. See
-              each programme for its exact start date and time.
+              Each course runs for eight weeks, live on Tuesdays and Thursdays.
+              Dates, times and seats below come straight from the cohort
+              schedule.
             </p>
           </div>
 
@@ -185,16 +214,24 @@ export default async function JanuaryLandingPage() {
                   <p className="text-muted-foreground text-sm leading-relaxed">
                     {cohort.blurb}
                   </p>
-                  <p className="text-muted-foreground text-sm">
-                    {formatStart(cohort.startDate)}
-                  </p>
+                  <div className="text-sm">
+                    <p className="text-foreground font-medium">
+                      {formatStart(cohort.startDate)}
+                    </p>
+                    {cohort.schedule ? (
+                      <p className="text-muted-foreground">{cohort.schedule}</p>
+                    ) : null}
+                  </div>
+                  <EightWeekJourney compact className="mt-1" />
                   <div className="border-border mt-auto flex items-end justify-between border-t border-dashed pt-4">
                     <div>
                       <div className="font-display text-xl">
                         ₹{cohort.price.toLocaleString("en-IN")}
                       </div>
                       <div className="text-muted-foreground text-xs">
-                        Live 8 weeks
+                        {cohort.seatsLeft !== undefined
+                          ? `${cohort.seatsLeft} seats left`
+                          : "Live, 8 weeks"}
                       </div>
                     </div>
                     <Link
@@ -207,6 +244,38 @@ export default async function JanuaryLandingPage() {
                 </div>
               </article>
             ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="pb-16 sm:pb-20">
+        <div className="container max-w-4xl">
+          <span className={eyebrowVariants()}>How the eight weeks work</span>
+          <h2 className="font-display mt-4 text-3xl tracking-tight sm:text-4xl">
+            Six weeks of learning. Two weeks of practice.
+          </h2>
+          <EightWeekJourney className="mt-8" />
+          <div className="mt-8 grid gap-8 sm:grid-cols-2">
+            <div>
+              <b className="font-display block text-lg font-medium">
+                Weeks 1–6: structured learning
+              </b>
+              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                Live classes build the concepts, models and vocabulary step by
+                step, with reading notes and fictional examples alongside each
+                class.
+              </p>
+            </div>
+            <div>
+              <b className="font-display block text-lg font-medium">
+                Weeks 7–8: practical training
+              </b>
+              <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
+                Guided exercises on fictional cases, with faculty feedback on
+                your reasoning. You practise applying what the first six weeks
+                taught.
+              </p>
+            </div>
           </div>
         </div>
       </section>
@@ -239,16 +308,15 @@ export default async function JanuaryLandingPage() {
               Registration
             </b>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-              Certificate cohorts are ₹3,499 for the live eight weeks. A
-              self-paced introduction is ₹1,499, and you can upgrade to the live
-              cohort later for the ₹2,000 difference.
+              Each certificate course is ₹{FULL_PRICE.toLocaleString("en-IN")}{" "}
+              for the full eight weeks, paid securely online at checkout.
             </p>
           </div>
           <div className="border-border border-primary border-t-2 pt-5">
             <b className="font-display block text-xl font-medium">Schedule</b>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-              Live online, Tuesdays and Thursdays in January 2027, times in IST.
-              Recordings stay available for your access window.
+              Live online on Tuesdays and Thursdays, starting in January 2027.
+              Each course card above shows its exact start date and time in IST.
             </p>
           </div>
           <div className="border-border border-primary border-t-2 pt-5">
@@ -267,11 +335,11 @@ export default async function JanuaryLandingPage() {
         <div className="container flex max-w-2xl flex-col items-center gap-5 text-center">
           <span className={eyebrowVariants()}>Not ready to choose?</span>
           <h2 className="font-display text-3xl tracking-tight sm:text-5xl">
-            Get the free masterclass first.
+            Hear about the free masterclass first.
           </h2>
           <p className="text-muted-foreground max-w-lg">
-            One recorded session, no card — a taste of how we teach before you
-            commit to a cohort.
+            We are recording a free session that shows how we teach. Leave your
+            email and we will send it when it is released.
           </p>
           <EmailCapture source="january-2027" />
         </div>
@@ -280,7 +348,7 @@ export default async function JanuaryLandingPage() {
       <section className="py-16">
         <div className="container flex flex-col items-center gap-6 text-center">
           <h2 className="font-display max-w-2xl text-3xl leading-tight tracking-tight sm:text-4xl">
-            Registration opens 15 November.
+            Registration is open for January 2027.
           </h2>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link href="/courses/certificate" className={ctaVariants()}>

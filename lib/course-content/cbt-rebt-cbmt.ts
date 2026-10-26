@@ -17,7 +17,7 @@ export const cbtRebtCbmt: CourseContent = {
   tagline:
     "Understand the models. Practise the reasoning. Learn where each approach fits.",
   description:
-    "A two-stage certificate course: a self-paced introduction, then live applied classes working through fictional cases.",
+    "An eight-week live certificate course: six weeks of structured learning, then two weeks of practical training with fictional cases.",
   heroCopy:
     "Understand the models. Practise the reasoning. Learn where each approach fits.",
   learningOutcomes: [
@@ -34,14 +34,14 @@ export const cbtRebtCbmt: CourseContent = {
   prerequisites: [],
   partOne: {
     title: "Part I — Foundations",
-    subtitle: "Introductory self-paced course",
+    subtitle: "Weeks 1–6 · Structured learning",
     formats: [],
     modules: [],
     assessment: undefined,
   },
   partTwo: {
     title: "Part II — Applied",
-    subtitle: "Applied live course",
+    subtitle: "Weeks 7–8 · Practical training",
     formats: [],
     sessions: [],
     assessment: undefined,
@@ -59,13 +59,13 @@ export const cbtRebtCbmt: CourseContent = {
   certificateComplete: undefined,
   pricing: {
     foundation: {
-      name: "Introductory self-paced course",
-      description: "Self-paced introduction.",
+      name: "Structured learning",
+      description: "Live classes, weeks 1–6.",
       includes: [],
     },
     complete: {
-      name: "Applied live course",
-      description: "Live applied classes.",
+      name: "Practical training",
+      description: "Guided practice, weeks 7–8.",
       includes: [],
       primary: true,
     },
@@ -74,18 +74,18 @@ export const cbtRebtCbmt: CourseContent = {
     {
       question: "Do I need a psychology background?",
       answer:
-        "No prior psychology study is required for the introductory self-paced stage. The lessons begin with ordinary situations and define the technical terms before using them in cases.",
+        "No prior psychology study is required. The first weeks begin with ordinary situations and define the technical terms before using them in cases.",
     },
     {
       question:
-        "I already study or work in psychology. Should I start with the introduction?",
+        "I already study or work in psychology. Will this be too basic?",
       answer:
-        "The introduction is useful as a shared foundation and refresher. If you are comfortable with automatic thoughts, behavioural cycles, the REBT ABCDE map and self-instruction, the applied stage is designed to give you more demanding case reasoning. Follow any actual enrolment prerequisite displayed for the live cohort.",
+        "The first weeks set out a shared vocabulary, which doubles as a refresher. The course then moves into formulation, technique choice and two weeks of practical training that ask for careful reasoning rather than recall of terms.",
     },
     {
-      question: "Is the applied stage recorded?",
+      question: "Are the live classes recorded?",
       answer:
-        "The applied stage is taught live. Replay access is only offered if the specific cohort includes recordings and The Mind Point has approved that benefit.",
+        "Classes are taught live. Replay access is only offered if the specific cohort includes recordings and The Mind Point has approved that benefit.",
     },
     {
       question: "What is CBMT in this course?",
@@ -101,13 +101,12 @@ export const cbtRebtCbmt: CourseContent = {
       question:
         "What if I am from another field and simply want to explore psychology?",
       answer:
-        "You are welcome in the introductory stage. It is designed to build understanding without expecting clinical knowledge or personal disclosure. You can decide whether the applied live classes fit your goals after you have seen the foundations.",
+        "You are welcome. The course builds understanding without expecting clinical knowledge or personal disclosure, and the early weeks define every term before using it.",
     },
     {
-      question:
-        "Are the reading notes separate from the videos and live classes?",
+      question: "Are there reading notes as well as the live classes?",
       answer:
-        "Yes. The student reading notes are substantive standalone materials for each stage. The introductory teaching script and applied faculty guide are separate internal teaching documents.",
+        "Yes. Student reading notes accompany the classes as substantive standalone material. The faculty teaching guide is a separate internal document.",
     },
     {
       question: "How do I know the price, dates and certificate requirements?",
@@ -121,8 +120,8 @@ export const cbtRebtCbmt: CourseContent = {
   cta: {
     heading:
       "Build a foundation you can explain. Practise decisions you can revise.",
-    body: "The Mind Point brings the foundational models and applied learning into one clear route. Start at your own pace, then join the live work when you are ready to analyse cases, test assumptions and think carefully about the person and the setting behind every technique.",
-    primaryLabel: "Explore course options",
+    body: "Eight weeks of live learning: six weeks building the models and the reasoning behind them, then two weeks practising case formulation, technique choice and review with faculty guidance.",
+    primaryLabel: "See dates and fees",
     secondaryLabel: "Talk to us on WhatsApp",
     secondaryHref:
       "https://wa.me/919137008686?text=Hi%2C%20I%20have%20a%20question%20about%20the%20CBT%2C%20REBT%20and%20CBMT%20course.",
@@ -135,8 +134,8 @@ export const cbtRebtCbmt: CourseContent = {
     supporting:
       "Understand the models. Practise the reasoning. Learn where each approach fits.",
     description:
-      "Start with a self-paced introduction that makes psychology understandable even if it is new to you. Then move into live applied classes where you can work through fictional cases, try structured exercises and learn how a thoughtful practitioner decides what to ask before choosing a technique. The two stages are designed to connect, while giving experienced learners enough depth to examine familiar ideas more carefully.",
-    primaryCta: { label: "Explore course options", href: "#options" },
+      "Over eight weeks of live classes, learn the vocabulary, history and central ideas of CBT, REBT and The Mind Point's CBMT strand, then use them on fictional cases. The first six weeks build the models and the reasoning behind them. The final two weeks are practical training: formulation, technique choice, role play and review with faculty feedback.",
+    primaryCta: { label: "See dates and fees", href: "#options" },
     secondaryCta: { label: "See what you will learn", href: "#outcomes" },
     scopeLine:
       "Educational training with fictional cases. This course does not confer an independent clinical qualification.",
@@ -144,16 +143,19 @@ export const cbtRebtCbmt: CourseContent = {
 
   overview: {
     eyebrow: "The course in one view",
+    title: "Eight weeks: six of learning, two of practice",
+    eightWeekJourney: true,
     stages: [
       {
-        label: "Stage 1 — Introductory self-paced course",
-        title: "Eight recorded lessons with reading notes and reflection",
-        body: "Eight recorded lessons with substantial reading notes and reflection questions. Learn the vocabulary, history and central ideas of cognitive behavioural therapy, rational emotive behaviour therapy and The Mind Point's cognitive behaviour modification teaching strand (CBMT). Work through examples at your own pace before you are expected to apply a model.",
+        label: "Weeks 1–6 — Structured learning",
+        title:
+          "Live classes that build the models and the reasoning behind them",
+        body: "Learn the vocabulary, history and central ideas of cognitive behavioural therapy, rational emotive behaviour therapy and The Mind Point's cognitive behaviour modification teaching strand (CBMT). Then move into assessment, formulation, cognitive inquiry and behavioural methods, with reading notes and fictional examples alongside each class.",
       },
       {
-        label: "Stage 2 — Applied live course",
-        title: "Eight facilitated sessions built around cases and practice",
-        body: "Eight facilitated sessions built around case formulation, technique choice, role play, feedback and revision. Study how CBT, REBT and CBMT can ask different questions about one situation, and how context, consent, professional boundaries and new information affect a plan. Applied teaching happens live; this stage is not presented as a pre-recorded lecture package.",
+        label: "Weeks 7–8 — Practical training",
+        title: "Guided practice with fictional cases",
+        body: "Two weeks of practical training built around REBT disputation, CBMT self-instruction, session structure and outcome review. Work through fictional cases with role play and faculty feedback, and see how context, consent and professional boundaries change a plan.",
       },
     ],
     progression:
@@ -164,16 +166,16 @@ export const cbtRebtCbmt: CourseContent = {
     title: "How the learning works",
     steps: [
       {
-        title: "Read and watch at your pace.",
-        body: "The introductory course gives every learner a shared vocabulary before asking them to make complex decisions. The reading notes go beyond a quick slide deck: they explain the meaning, purpose, examples, practical uses and limits of each topic.",
+        title: "Learn live, then consolidate with the notes.",
+        body: "The early weeks give every learner a shared vocabulary before asking them to make complex decisions. The reading notes go beyond a quick slide deck: they explain the meaning, purpose, examples, practical uses and limits of each topic.",
       },
       {
         title: "Try the reasoning with fictional cases.",
         body: "An unanswered email, presentation feedback, family expectations or a difficult workplace conversation can produce more than one plausible explanation. Learners practise asking what information is missing and what new fact would change an initial view.",
       },
       {
-        title: "Work through decisions live.",
-        body: "In the applied classes, faculty demonstrate a thought process, invite learners to practise it, introduce new details and debrief why a plan may need to change. Learning is evaluated through reasoning and responsible limits, not only recall of technique names.",
+        title: "Practise decisions in the final two weeks.",
+        body: "In the practical weeks, faculty demonstrate a thought process, invite learners to practise it, introduce new details and debrief why a plan may need to change. Learning is evaluated through reasoning and responsible limits, not only recall of technique names.",
       },
     ],
   },
@@ -181,7 +183,7 @@ export const cbtRebtCbmt: CourseContent = {
   audienceGroups: [
     {
       title: "New to psychology?",
-      body: "Begin with ordinary situations, clear definitions and step-by-step examples. You do not need a psychology degree to understand the introductory lessons. You can pause, reread and return to a concept before moving on.",
+      body: "Begin with ordinary situations, clear definitions and step-by-step examples. You do not need a psychology degree to follow the early weeks, and the reading notes let you return to a concept before moving on.",
     },
     {
       title: "Studying psychology?",
@@ -199,17 +201,17 @@ export const cbtRebtCbmt: CourseContent = {
 
   curriculum: {
     eyebrow: "Curriculum",
-    title: "What you will cover",
+    title: "What you will cover, week by week",
     stages: [
       {
-        key: "introductory",
-        label: "Introductory self-paced",
-        shortLabel: "Introductory",
-        kind: "self-paced",
+        key: "learning",
+        label: "Weeks 1–6 · Structured learning",
+        shortLabel: "Weeks 1–6",
+        kind: "live",
         blurb:
-          "Eight recorded lessons with substantial reading notes and reflection questions. Learn the vocabulary, history and central ideas, and work through examples at your own pace before you are expected to apply a model.",
+          "Six weeks of live classes. Learn the vocabulary, history and central ideas, then move into assessment, formulation, cognitive inquiry and behavioural methods.",
         formatNote:
-          "Recorded lessons, a separate student reading manual, fictional examples, reflection prompts and worked reasoning. Learners can move through the foundational teaching at their own pace.",
+          "Live faculty-led classes, student reading notes, fictional examples, reflection prompts and worked reasoning.",
         items: [
           {
             title: "A shared language for studying psychology",
@@ -241,20 +243,8 @@ export const cbtRebtCbmt: CourseContent = {
           },
           {
             title: "Bringing the foundations together",
-            body: "Apply the three lenses to one fictional workplace situation. Separate what is known from what is inferred, ask about the environment, and prepare for the more demanding decisions in the live applied stage.",
+            body: "Apply the three lenses to one fictional workplace situation. Separate what is known from what is inferred, ask about the environment, and prepare for the formulation and method choices that follow.",
           },
-        ],
-      },
-      {
-        key: "applied",
-        label: "Applied live",
-        shortLabel: "Applied live",
-        kind: "live",
-        blurb:
-          "Eight facilitated sessions built around case formulation, technique choice, role play, feedback and revision. Applied teaching happens live and is not presented as a pre-recorded lecture package.",
-        formatNote:
-          "Live faculty-led teaching, demonstrations, discussion of fictional cases, structured role play, feedback and a separate applied student reading manual. The faculty guide supports live teaching and is not a student recording script.",
-        items: [
           {
             title: "Assessment, consent and a workable goal",
             body: "Learn what to ask before choosing a worksheet or method. Practise clarifying a person's own goal, a recent example, urgent practical concerns, strengths, preferences and whether a proposed exercise is feasible and welcome.",
@@ -271,6 +261,18 @@ export const cbtRebtCbmt: CourseContent = {
             title: "Behavioural activation, exposure and skills practice",
             body: "Compare three methods that serve different purposes: rebuilding access to valued activity, learning around a safe feared cue, and rehearsing a missing action. Explain why a real barrier or unsafe setting changes the plan.",
           },
+        ],
+      },
+      {
+        key: "practical",
+        label: "Weeks 7–8 · Practical training",
+        shortLabel: "Weeks 7–8",
+        kind: "practical",
+        blurb:
+          "Two weeks of practical training. Apply REBT disputation and CBMT self-instruction, run a structured session and review outcomes, working on fictional cases with faculty feedback.",
+        formatNote:
+          "Faculty-guided practice with fictional cases, structured exercises, feedback and review.",
+        items: [
           {
             title: "REBT disputation and emotional change",
             body: "Explore logical, evidence-based and practical questions about rigid demands. Role-play a respectful conversation that protects the person's values and cultural context while questioning a global verdict about worth.",
@@ -294,19 +296,15 @@ export const cbtRebtCbmt: CourseContent = {
 
   materials: {
     eyebrow: "Included learning materials",
-    title: "What is supplied for each stage",
+    title: "What is included",
     items: [
       {
-        label: "Introductory student reading notes",
-        note: "Supplied separately from the teaching script.",
+        label: "Live classes across all eight weeks",
+        note: "According to the published cohort schedule.",
       },
       {
-        label: "Introductory recorded lessons",
-        note: "Shown with their real release and access state once published in the LMS.",
-      },
-      {
-        label: "Applied student reading notes",
-        note: "Supplied separately from the live faculty guide.",
+        label: "Student reading notes",
+        note: "Supplied separately from the faculty teaching guide.",
       },
       {
         label:
@@ -314,72 +312,46 @@ export const cbtRebtCbmt: CourseContent = {
         note: "Within the course materials.",
       },
       {
-        label: "Live applied teaching",
-        note: "According to the actual cohort schedule and enrolment option.",
+        label: "Practical training in weeks 7 and 8",
+        note: "Guided exercises with faculty feedback.",
       },
     ],
-    note: "The faculty recording script and live faculty guide are internal teaching documents, not downloadable student benefits.",
+    note: "The faculty teaching guide is an internal document, not a downloadable student benefit.",
   },
 
   assessment: {
     eyebrow: "Assessment and completion",
     title: "How you are assessed",
-    body: "The introductory stage includes knowledge checks and fictional case reflections so learners can confirm they understand the language of the models. Applied learning uses case analysis, discussion and practice of a reasoned decision.",
+    body: "The learning weeks include knowledge checks and fictional case reflections so learners can confirm they understand the language of the models. The practical weeks use case analysis, role play and a reasoned decision reviewed with faculty.",
   },
 
   options: {
-    eyebrow: "Course options",
-    title: "Choose your route",
+    eyebrow: "Enrol",
+    title: "January 2027 live cohort",
     items: [
       {
-        key: "introductory",
-        name: "Option A — Introductory self-paced course",
-        bestFor:
-          "First-time learners, people entering from another field and anyone who wants a careful foundation or refresher.",
-        includes: [
-          "Eight introductory lessons",
-          "Introductory student notes",
-          "Subject to the actual LMS release state",
-        ],
-        outcome:
-          "Explain core concepts, distinguish the three approaches and analyse a fictional case without jumping to diagnosis or a technique.",
-        cta: { label: "Choose self-paced introduction", state: "enroll" },
-        catalogueCode: "PRCBTI",
-        upgradeNote:
-          "Upgrade to the live cohort later for the ₹2,000 difference.",
-      },
-      {
         key: "applied",
-        name: "Option B — Applied live course",
+        name: "Eight-week live certificate course",
         bestFor:
-          "Learners who have completed the introduction or already know the core vocabulary and want guided practice.",
+          "Students, graduates and practitioners who want a careful foundation in CBT, REBT and CBMT and guided practice applying it.",
         includes: [
-          "Eight live applied sessions",
-          "Applied student notes",
-          "Subject to the actual cohort schedule",
+          "Six weeks of structured live learning",
+          "Two weeks of guided practical training",
+          "Student reading notes",
         ],
         outcome:
-          "Practise formulation, method selection, role play, adaptation and review with faculty guidance.",
-        cta: { label: "Explore live applied course", state: "enroll" },
+          "Explain the three approaches, build and revise a formulation, and practise method selection, role play, adaptation and review with faculty guidance.",
+        cta: { label: "Enrol in the January cohort", state: "enroll" },
         catalogueCode: "CCCBT",
       },
     ],
   },
 
-  upgrade: {
-    eyebrow: "Already started self-paced?",
-    title: "Move into the live cohort without paying twice",
-    body: "If you have bought the self-paced introduction, you can join the live applied course at any time. Your self-paced fee is credited, so you pay only the difference.",
-    ctaLabel: "Upgrade to the live cohort",
-    fromKey: "introductory",
-    toKey: "applied",
-  },
-
   closing: {
     heading:
       "Build a foundation you can explain. Practise decisions you can revise.",
-    body: "The Mind Point brings the foundational models and applied learning into one clear route. Start at your own pace, then join the live work when you are ready to analyse cases, test assumptions and think carefully about the person and the setting behind every technique.",
-    ctaLabel: "Explore course options",
+    body: "Six weeks to understand the models and how they differ. Two weeks to practise using them carefully on fictional cases, with faculty feedback on your reasoning.",
+    ctaLabel: "See dates and fees",
     ctaHref: "#options",
     scopeLine:
       "Educational certificate course. Real clinical practice requires the appropriate qualifications, consent and supervision.",

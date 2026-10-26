@@ -2390,6 +2390,49 @@ export const transitionCourseLifecycle = mutation({
   },
 });
 
+// Take a published course off sale (or put it back) without archiving it.
+// Withdrawn courses leave the public catalogue and checkout; enrollments, LMS
+// access and content are untouched.
+export const setCourseSalesEnabled = mutation({
+  args: {
+    courseId: v.id("courses"),
+    salesEnabled: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    const admin = await requireAdmin(ctx);
+    const existing = await ctx.db.get(args.courseId);
+    if (!existing) {
+      return adminCourseFailure(
+        "Course not found",
+        convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
+    const before = existing.salesEnabled !== false;
+    if (before === args.salesEnabled) {
+      return convexSuccess({ salesEnabled: before });
+    }
+
+    await ctx.db.patch(args.courseId, {
+      salesEnabled: args.salesEnabled ? undefined : false,
+      updatedByAdminId: admin.userId,
+      updatedAt: Date.now(),
+    });
+
+    await createAdminAuditLog(ctx, {
+      actorAdminId: admin.userId,
+      actorEmail: admin.email,
+      action: "course.set_sales_enabled",
+      entityType: "course",
+      entityId: String(args.courseId),
+      before: { salesEnabled: before },
+      after: { salesEnabled: args.salesEnabled },
+    });
+
+    return convexSuccess({ salesEnabled: args.salesEnabled });
+  },
+});
+
 // Set (or clear) the live-class link shown to learners enrolled in a batch.
 export const setBatchMeetingLink = mutation({
   args: {

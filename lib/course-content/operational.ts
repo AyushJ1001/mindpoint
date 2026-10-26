@@ -44,7 +44,7 @@ function formatDate(value?: string): string | undefined {
   }).format(date);
 }
 
-function formatTime(value?: string): string | undefined {
+export function formatTime(value?: string): string | undefined {
   if (!value) return undefined;
   const match = value.match(/^(\d{1,2}):(\d{2})/);
   if (!match) return value;

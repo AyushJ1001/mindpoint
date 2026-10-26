@@ -39,12 +39,15 @@ export function isMergedCourse(
   return !!course.mergedIntoCourseId;
 }
 
-export function isPublishedCourse(course: {
+/** Published, not merged away, and not withdrawn from sale. */
+export function isPubliclyAvailableCourse(course: {
   lifecycleStatus?: "draft" | "published" | "archived";
   mergedIntoCourseId?: Id<"courses">;
+  salesEnabled?: boolean;
 }) {
   return (
     !isMergedCourse(course) &&
+    course.salesEnabled !== false &&
     normalizeCourseLifecycleStatus(course.lifecycleStatus) === "published"
   );
 }
