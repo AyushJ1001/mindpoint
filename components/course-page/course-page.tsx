@@ -9,6 +9,7 @@ import { FinalCTA } from "@/components/course-page/final-cta";
 import { LearningJourney } from "@/components/course-page/learning-journey";
 import { OptionCards } from "@/components/course-page/option-cards";
 import { UpgradePanelLazy } from "@/components/course-page/upgrade-panel-lazy";
+import { IntroUpgradeNotice } from "@/components/course-page/intro-upgrade-notice";
 import { WaitlistSection } from "@/components/course-page/waitlist-section";
 import { OutcomeGrid } from "@/components/course-page/outcome-grid";
 import { PartComparison } from "@/components/course-page/part-comparison";
@@ -141,6 +142,13 @@ export function CoursePage({ course }: { course: CourseContent }) {
         ) : null}
         <Wave />
         {course.options ? <OptionCards options={course.options} /> : null}
+        {course.category.toLowerCase().includes("certificate") ? (
+          <IntroUpgradeNotice
+            target={
+              course.options?.items.find((item) => item.key === "applied")?.cart
+            }
+          />
+        ) : null}
         {course.upgrade ? (
           <UpgradePanelLazy
             upgrade={course.upgrade}

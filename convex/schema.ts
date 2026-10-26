@@ -146,9 +146,16 @@ export const AdminCouponValue = v.object({
   discount: AdminCouponDiscountValue,
   appliesTo: AdminCouponSelectorValue,
   requires: AdminCouponRequirementValue,
+  // "owned": the required course must already belong to the buyer (an active,
+  // paid enrollment) rather than sit in the same cart. Absent means "cart".
+  requirementSatisfiedBy: v.optional(
+    v.union(v.literal("cart"), v.literal("owned")),
+  ),
   startDate: v.optional(v.string()),
   endDate: v.optional(v.string()),
   redemptionLimit: v.optional(v.number()),
+  // Maximum uses per buyer, counted from their live enrollments.
+  perUserLimit: v.optional(v.number()),
   totalRedemptions: v.number(),
   createdAt: v.number(),
   updatedAt: v.number(),

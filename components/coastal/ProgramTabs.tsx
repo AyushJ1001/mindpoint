@@ -43,7 +43,7 @@ const ROWS = {
   self: [
     {
       title: "Self-paced intro courses",
-      copy: "Psychological First Aid, Criminal Psychology, Sports Psychology, and Clinical vs Counselling Psychology. Study at your own pace.",
+      copy: "Psychological First Aid, Criminal Psychology, Sports Psychology, and Clinical vs Counselling Psychology. Study at your own pace; the fee is credited if you upgrade to any certificate course.",
       price: "₹999 each",
       href: "/courses/intro",
     },

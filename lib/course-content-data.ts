@@ -585,10 +585,10 @@ export const whyChooseByType: Record<string, WhyChooseData> = {
           "Clear audio, thoughtful visuals, and pacing designed for retention.",
       },
       {
-        icon: Download,
-        title: "Resources you keep",
+        icon: Sparkles,
+        title: "Credited when you upgrade",
         description:
-          "Downloadable materials you'll still be using long after the course.",
+          "Move on to any live certificate course later and the intro fee is credited once at checkout.",
       },
     ],
   },

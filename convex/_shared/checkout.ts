@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
-import type { MutationCtx } from "../_generated/server";
+import type { MutationCtx, QueryCtx } from "../_generated/server";
 import { roundCurrency } from "./enrollment";
 import { convexFailure, type ConvexFailure } from "./result";
 import { getCoursePrice } from "../../lib/domain/pricing";
@@ -36,6 +36,56 @@ export type CheckoutPricingFailure = ConvexFailure<
   | "INVALID_POINTS_REQUIREMENT"
   | "VALIDATION_ERROR"
 >;
+
+/**
+ * What a buyer already holds, for coupons that require an owned course or
+ * limit uses per buyer. Owned = an active enrollment whose payment is not
+ * pending or rejected. Redemptions count live enrollments carrying the code.
+ */
+export type BuyerCouponContext = {
+  ownedCourseIds: Set<string>;
+  redemptionsByCode: Map<string, number>;
+};
+
+const BUYER_ENROLLMENT_SCAN_LIMIT = 500;
+
+export async function loadBuyerCouponContext(
+  ctx: QueryCtx | MutationCtx,
+  userId: string,
+): Promise<BuyerCouponContext> {
+  const enrollments = await ctx.db
+    .query("enrollments")
+    .withIndex("by_userId", (q) => q.eq("userId", userId))
+    .take(BUYER_ENROLLMENT_SCAN_LIMIT);
+  const ownedCourseIds = new Set<string>();
+  const redemptionsByCode = new Map<string, number>();
+  for (const enrollment of enrollments) {
+    const live =
+      (enrollment.status ?? "active") === "active" &&
+      enrollment.paymentVerification !== "rejected";
+    if (!live) continue;
+    if (
+      enrollment.paymentVerification === undefined ||
+      enrollment.paymentVerification === "approved"
+    ) {
+      ownedCourseIds.add(String(enrollment.courseId));
+    }
+    if (enrollment.couponCode) {
+      const code = enrollment.couponCode.trim().toUpperCase();
+      redemptionsByCode.set(code, (redemptionsByCode.get(code) ?? 0) + 1);
+    }
+  }
+  return { ownedCourseIds, redemptionsByCode };
+}
+
+export function adminCouponNeedsBuyerContext(
+  coupon: Pick<Doc<"adminCoupons">, "requirementSatisfiedBy" | "perUserLimit">,
+) {
+  return (
+    coupon.requirementSatisfiedBy === "owned" ||
+    (coupon.perUserLimit !== undefined && coupon.perUserLimit > 0)
+  );
+}
 
 type ValidateCheckoutPricingItemOptions = {
   cartCourses?: Array<Pick<Doc<"courses">, "_id" | "type">>;
@@ -213,10 +263,20 @@ function initialAdminCouponDiscountBudget(
 function adminCouponRequirementsSatisfied(
   coupon: Doc<"adminCoupons">,
   cartCourses: Array<Pick<Doc<"courses">, "_id" | "type">> | undefined,
+  ownedCourseIds?: Set<string>,
 ) {
   const requires = coupon.requires;
   if (requires.type === "none") {
     return true;
+  }
+
+  if (coupon.requirementSatisfiedBy === "owned") {
+    return (
+      requires.type === "courses" &&
+      requires.courseIds.some((courseId) =>
+        ownedCourseIds?.has(String(courseId)),
+      )
+    );
   }
 
   if (!cartCourses || cartCourses.length === 0) {
@@ -456,7 +516,34 @@ export async function validateCheckoutPricingItemResult(
       );
     }
 
-    if (!adminCouponRequirementsSatisfied(adminCoupon, options.cartCourses)) {
+    const buyerContext = adminCouponNeedsBuyerContext(adminCoupon)
+      ? await loadBuyerCouponContext(ctx, args.userId)
+      : undefined;
+
+    if (
+      !adminCouponAlreadyConsumed &&
+      adminCoupon.perUserLimit !== undefined &&
+      adminCoupon.perUserLimit > 0 &&
+      (buyerContext?.redemptionsByCode.get(normalizedAdminCouponCode) ?? 0) >=
+        adminCoupon.perUserLimit
+    ) {
+      return checkoutPricingFailure(
+        "INVALID_COUPON_CODE",
+        "You have already used this coupon.",
+        {
+          couponCode,
+          courseId: args.course._id,
+        },
+      );
+    }
+
+    if (
+      !adminCouponRequirementsSatisfied(
+        adminCoupon,
+        options.cartCourses,
+        buyerContext?.ownedCourseIds,
+      )
+    ) {
       return checkoutPricingFailure(
         "INVALID_COUPON_CODE",
         "This coupon is not valid for the current cart.",

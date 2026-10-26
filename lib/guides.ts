@@ -95,13 +95,13 @@ export const GUIDES: Guide[] = [
       },
       {
         q: "Do I need a psychology background to learn CBT skills?",
-        a: "No. The foundations of CBT are teachable to anyone, which is exactly what our self-paced intro course is for.",
+        a: "No. The foundations of CBT are teachable to anyone. Our live CBT, REBT and CBMT certificate course starts from ordinary situations and defines every term before using it.",
       },
     ],
     cta: {
-      label: "Start with the CBT, REBT & CBMT intro",
-      href: "/courses/intro",
-      note: "A ₹999 self-paced introduction to the ideas in this guide.",
+      label: "See the CBT, REBT & CBMT course",
+      href: "/programs/cbt-rebt-cbmt",
+      note: "Eight live weeks from 19 January 2027: six of learning, two of practical training.",
     },
   },
   {
@@ -245,13 +245,13 @@ export const GUIDES: Guide[] = [
       },
       {
         q: "Where can I learn CBT properly?",
-        a: "Our self-paced intro course covers the history and core skills of CBT, REBT and CBMT, and the live applied cohort takes it into practice.",
+        a: "Our live certificate course covers the history and core skills of CBT, REBT and CBMT over six weeks, then puts them into practice in two weeks of practical training.",
       },
     ],
     cta: {
       label: "Learn the foundations properly",
-      href: "/courses/intro",
-      note: "The ₹999 self-paced intro to CBT, REBT and CBMT.",
+      href: "/programs/cbt-rebt-cbmt",
+      note: "The live CBT, REBT and CBMT certificate course, ₹3,499.",
     },
   },
 ];
