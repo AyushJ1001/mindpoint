@@ -18,7 +18,7 @@ import { useCart } from "react-use-cart";
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
 import Image from "next/image";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,6 +36,7 @@ import { showRupees, getOfferDetails, type OfferDetails } from "@/lib/utils";
 import { useUser, useClerk } from "@clerk/nextjs";
 import { handlePaymentSuccess } from "@/app/actions/payment";
 import { toast } from "sonner";
+import { cartItemCodes, track } from "@/lib/analytics";
 import { WhatsAppModal } from "@/components/whatsapp-modal";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
@@ -233,6 +234,9 @@ const CartContent = () => {
   const [showClearCartDialog, setShowClearCartDialog] = useState(false);
   const [showQrPaymentDialog, setShowQrPaymentDialog] = useState(false);
   const [qrPaymentCompleted, setQrPaymentCompleted] = useState(false);
+  // True while the pay-by-QR dialog is open and the order is not yet
+  // submitted, so closing it by any route counts as a dismissal.
+  const qrAwaitingPaymentRef = useRef(false);
   const [qrImageAvailable, setQrImageAvailable] = useState(true);
   const [qrPaymentSession, setQrPaymentSession] =
     useState<PaymentSession | null>(null);
@@ -926,6 +930,7 @@ const CartContent = () => {
       );
 
       if (!result.success) {
+        track("payment_failed", { reason: "enrollment_failed" });
         toast.error(
           discountedTotal <= 0
             ? "Checkout failed. Please try again."
@@ -936,6 +941,13 @@ const CartContent = () => {
         );
         return false;
       }
+
+      track("purchase", {
+        value: (paymentContext.checkoutPricingOverride ?? checkoutPricing)
+          .totalAmountPaid,
+        currency: "INR",
+        item_codes: cartItemCodes(items),
+      });
 
       if (appliedCoupon) {
         setAppliedCoupon(null);
@@ -988,6 +1000,11 @@ const CartContent = () => {
       if (isEmpty || !user?.id) return;
 
       setIsProcessing(true);
+      track("checkout_start", {
+        value: discountedTotal,
+        currency: "INR",
+        item_codes: cartItemCodes(items),
+      });
 
       if (discountedTotal <= 0) {
         const enrollmentCompleted =
@@ -1019,6 +1036,7 @@ const CartContent = () => {
           return;
         }
 
+        track("payment_failed", { reason: "order_failed" });
         toast.error("Failed to prepare payment. Please try again.", {
           description: paymentOrder.error,
         });
@@ -1031,11 +1049,13 @@ const CartContent = () => {
       setPaymentScreenshotUrl("");
       setIsUploadingScreenshot(false);
       setPendingQrWhatsAppNumber(whatsappNumber);
+      qrAwaitingPaymentRef.current = true;
       setShowQrPaymentDialog(true);
       setIsProcessing(false);
     },
     [
       isEmpty,
+      items,
       user?.id,
       user?.primaryEmailAddress?.emailAddress,
       discountedTotal,
@@ -1070,6 +1090,7 @@ const CartContent = () => {
       );
 
       if (enrollmentCompleted) {
+        qrAwaitingPaymentRef.current = false;
         emptyCart();
         setQrPaymentCompleted(true);
         setPaymentScreenshotUrl("");
@@ -1086,6 +1107,13 @@ const CartContent = () => {
     qrPaymentSession,
     paymentScreenshotUrl,
   ]);
+
+  useEffect(() => {
+    if (!showQrPaymentDialog && qrAwaitingPaymentRef.current) {
+      qrAwaitingPaymentRef.current = false;
+      track("payment_failed", { reason: "dismissed" });
+    }
+  }, [showQrPaymentDialog]);
 
   // Check for WhatsApp number after sign-in and proceed with checkout
   const proceedWithCheckoutAfterAuth = useCallback(() => {

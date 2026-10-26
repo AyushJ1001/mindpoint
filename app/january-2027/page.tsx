@@ -10,6 +10,7 @@ import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
 import { formatTime } from "@/lib/course-content/operational";
 import { Check } from "lucide-react";
+import { TrackedLink } from "@/components/analytics/TrackedLink";
 
 export const revalidate = 1800;
 
@@ -234,12 +235,17 @@ export default async function JanuaryLandingPage() {
                           : "Live, 8 weeks"}
                       </div>
                     </div>
-                    <Link
+                    <TrackedLink
                       href={cohort.href}
+                      event="course_card_click"
+                      eventParams={{
+                        course_code: cohort.code,
+                        source: "january_2027",
+                      }}
                       className="text-primary text-[0.7rem] font-semibold tracking-[0.18em] uppercase"
                     >
                       Enroll →
-                    </Link>
+                    </TrackedLink>
                   </div>
                 </div>
               </article>
