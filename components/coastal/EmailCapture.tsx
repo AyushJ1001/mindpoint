@@ -3,16 +3,24 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@/lib/backend/api";
+import { MASTERCLASS_RELEASED } from "@/lib/free-content";
 
 interface EmailCaptureProps {
   source: string;
   label?: string;
+  /** Shown once the email is saved. */
+  successMessage?: string;
   className?: string;
 }
 
 export function EmailCapture({
   source,
-  label = "Send it to me",
+  // Most captures are for the masterclass; until it is released they are a
+  // notify-me sign-up, so the defaults must not promise a delivery.
+  label = MASTERCLASS_RELEASED ? "Send it to me" : "Notify me",
+  successMessage = MASTERCLASS_RELEASED
+    ? "Thank you — check your inbox."
+    : "Thank you — we'll email you when it's released.",
   className = "mt-2 flex w-full max-w-lg flex-col gap-3",
 }: EmailCaptureProps) {
   const submitLead = useMutation(api.leads.submitLead);
@@ -94,7 +102,7 @@ export function EmailCapture({
       )}
       {status === "sent" && (
         <p role="status" className="text-primary text-left text-[0.72rem]">
-          Thank you — check your inbox.
+          {successMessage}
         </p>
       )}
     </form>

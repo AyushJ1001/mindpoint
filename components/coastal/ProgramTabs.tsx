@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { MASTERCLASS_RELEASED } from "@/lib/free-content";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -48,8 +49,10 @@ const ROWS = {
     },
     {
       title: "Free masterclass",
-      copy: "One full session, free. Not released yet; leave your email to hear when it is.",
-      price: "Coming soon",
+      copy: MASTERCLASS_RELEASED
+        ? "One full session, free. Watch it before you choose a course."
+        : "One full session, free. Not released yet; leave your email to hear when it is.",
+      price: MASTERCLASS_RELEASED ? "Free" : "Coming soon",
       href: "/masterclass",
     },
     {

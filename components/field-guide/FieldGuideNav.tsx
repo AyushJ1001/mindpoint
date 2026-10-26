@@ -8,6 +8,7 @@ import { useCart } from "react-use-cart";
 import { Show, SignInButton, UserButton } from "@clerk/nextjs";
 import { ArrowRight } from "lucide-react";
 import { ModeToggle } from "@/components/theme-toggle";
+import { MASTERCLASS_RELEASED } from "@/lib/free-content";
 
 const GROUPS: {
   label: string;
@@ -16,7 +17,11 @@ const GROUPS: {
   {
     label: "Begin",
     links: [
-      { href: "/masterclass", label: "Free masterclass", meta: "soon" },
+      {
+        href: "/masterclass",
+        label: "Free masterclass",
+        meta: MASTERCLASS_RELEASED ? "free" : "soon",
+      },
       { href: "/courses/intro", label: "Intro courses", meta: "₹999" },
     ],
   },
