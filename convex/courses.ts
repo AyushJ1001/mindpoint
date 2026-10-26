@@ -216,6 +216,20 @@ export const listCourses = query({
   },
 });
 
+/** Course types with at least one course on sale, for hiding empty categories. */
+export const listLiveCourseTypes = query({
+  args: {},
+  returns: v.array(CourseType),
+  handler: async (ctx) => {
+    const courses = await listPublishedCourses(ctx, 1000);
+    const types = new Set<NonNullable<Doc<"courses">["type"]>>();
+    for (const course of courses) {
+      if (course.type) types.add(course.type);
+    }
+    return [...types];
+  },
+});
+
 export const listCoursesByType = query({
   args: {
     type: CourseType,
