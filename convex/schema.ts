@@ -265,6 +265,10 @@ const courseTableFields = {
   mergedIntoCourseId: v.optional(v.id("courses")),
   mergedIntoBatchId: v.optional(v.id("courseBatches")),
   lifecycleStatus: v.optional(CourseLifecycleStatus),
+  // `false` withdraws a published course from sale: hidden from the public
+  // catalogue and blocked at checkout, while its content, enrollments and LMS
+  // access stay intact. Absent means on sale.
+  salesEnabled: v.optional(v.boolean()),
   createdByAdminId: v.optional(v.string()),
   updatedByAdminId: v.optional(v.string()),
   updatedAt: v.optional(v.number()),

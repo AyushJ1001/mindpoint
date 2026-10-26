@@ -542,7 +542,7 @@ export const getBogoCoursesByType = query({
 
     const visible = [...publishedCourses, ...legacyPublishedCourses]
       .filter((course) => course.bogo?.enabled === true)
-      .filter((course) => !isMergedCourse(course));
+      .filter((course) => isPublishedCourse(course));
 
     return await toPublicCourses(ctx, visible);
   },
@@ -575,7 +575,7 @@ export const getBogoCoursesByTypes = query({
 
       const visible = [...publishedCourses, ...legacyPublishedCourses]
         .filter((course) => course.bogo?.enabled === true)
-        .filter((course) => !isMergedCourse(course));
+        .filter((course) => isPublishedCourse(course));
       visibleByType[courseType] = visible;
       allVisible.push(...visible);
     }

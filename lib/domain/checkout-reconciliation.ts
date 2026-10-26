@@ -64,6 +64,7 @@ export type ReconciliationCourse = {
   type?: string;
   lifecycleStatus?: "draft" | "published" | "archived";
   mergedIntoCourseId?: string;
+  salesEnabled?: boolean;
   price: number;
   offer?: CourseOffer;
   bogo?: CourseBogo;
@@ -305,7 +306,10 @@ function getCourseRemovalReason(
   if (getLifecycleStatus(course.lifecycleStatus) === "archived") {
     return "COURSE_ARCHIVED";
   }
-  if (getLifecycleStatus(course.lifecycleStatus) !== "published") {
+  if (
+    getLifecycleStatus(course.lifecycleStatus) !== "published" ||
+    course.salesEnabled === false
+  ) {
     return "COURSE_UNAVAILABLE";
   }
   if (isPastEndDate(course.endDate, now)) {

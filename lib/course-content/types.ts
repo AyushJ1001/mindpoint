@@ -119,6 +119,8 @@ export interface ProgrammeOverview {
   title?: string;
   stages: OverviewStage[];
   progression: string;
+  /** Show the six-weeks-learning, two-weeks-practical strip. */
+  eightWeekJourney?: boolean;
 }
 
 export interface ProgrammeStep {
@@ -141,7 +143,7 @@ export interface CurriculumStage {
   label: string;
   /** Short label kept visible on narrow screens. */
   shortLabel: string;
-  kind: "self-paced" | "live";
+  kind: "self-paced" | "live" | "practical";
   blurb: string;
   /** Rendered only when the LMS/cohort config supplies it. */
   formatNote?: string;

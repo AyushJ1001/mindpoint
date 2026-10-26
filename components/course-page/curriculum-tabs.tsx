@@ -55,7 +55,11 @@ export function CurriculumTabs({
       <div className="mt-8">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-primary rounded-full border border-[#bcd6dd]/70 px-3 py-1 text-[0.62rem] font-semibold tracking-[0.18em] uppercase">
-            {stage.kind === "live" ? "Live" : "Self-paced"}
+            {stage.kind === "live"
+              ? "Live"
+              : stage.kind === "practical"
+                ? "Practical"
+                : "Self-paced"}
           </span>
           <span className="text-foreground/60 text-sm">{stage.label}</span>
         </div>

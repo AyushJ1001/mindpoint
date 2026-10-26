@@ -15,7 +15,7 @@ export const innerChildHealing: CourseContent = {
   tagline:
     "Understand what we carry. Explore where it began. Learn healthier ways of responding today.",
   description:
-    "A two-stage certificate course: a self-paced introduction, then live applied classes working gently and responsibly with childhood patterns.",
+    "An eight-week live certificate course: six weeks of structured learning, then two weeks of practical training working gently and responsibly with childhood patterns.",
   heroCopy:
     "Understand what we carry. Explore where it began. Learn healthier ways of responding today.",
   learningOutcomes: [
@@ -31,14 +31,14 @@ export const innerChildHealing: CourseContent = {
   prerequisites: [],
   partOne: {
     title: "Part I — Foundations",
-    subtitle: "Introductory self-paced course",
+    subtitle: "Weeks 1–6 · Structured learning",
     formats: [],
     modules: [],
     assessment: undefined,
   },
   partTwo: {
     title: "Part II — Applied",
-    subtitle: "Applied live course",
+    subtitle: "Weeks 7–8 · Practical training",
     formats: [],
     sessions: [],
     assessment: undefined,
@@ -56,13 +56,13 @@ export const innerChildHealing: CourseContent = {
   certificateComplete: undefined,
   pricing: {
     foundation: {
-      name: "Introductory self-paced course",
-      description: "Self-paced introduction.",
+      name: "Structured learning",
+      description: "Live classes, weeks 1–6.",
       includes: [],
     },
     complete: {
-      name: "Applied live course",
-      description: "Live applied classes.",
+      name: "Practical training",
+      description: "Guided practice, weeks 7–8.",
       includes: [],
       primary: true,
     },
@@ -71,7 +71,7 @@ export const innerChildHealing: CourseContent = {
     {
       question: "Do I need a psychology background?",
       answer:
-        "No prior psychology study is required for the introductory self-paced stage. It begins with ordinary experience and defines each idea before using it.",
+        "No prior psychology study is required. The first weeks begin with ordinary experience and define each idea before using it.",
     },
     {
       question: "Is this personal therapy?",
@@ -84,9 +84,9 @@ export const innerChildHealing: CourseContent = {
         "No. Personal reflection is optional. The teaching uses fictional cases and structured prompts so that nobody is expected to share private history in a group.",
     },
     {
-      question: "Is the applied stage recorded?",
+      question: "Are the live classes recorded?",
       answer:
-        "The applied stage is taught live. Replay access is only offered if the specific cohort includes recordings and The Mind Point has approved that benefit.",
+        "Classes are taught live. Replay access is only offered if the specific cohort includes recordings and The Mind Point has approved that benefit.",
     },
     {
       question: "Does this make me a therapist?",
@@ -103,8 +103,8 @@ export const innerChildHealing: CourseContent = {
     "Educational certificate course. This programme is not personal therapy and does not confer an independent clinical qualification. Real clinical practice requires the appropriate qualifications, consent and supervision.",
   cta: {
     heading: "Understand what you carry. Learn a kinder, safer response.",
-    body: "Start with a self-paced introduction that stays grounded and trauma-informed, then join live applied classes when you are ready to practise with fictional cases and faculty guidance.",
-    primaryLabel: "Explore course options",
+    body: "Eight weeks of live learning: six weeks on how childhood experience shapes adult patterns, then two weeks practising a grounded, trauma-informed response with fictional cases and faculty guidance.",
+    primaryLabel: "See dates and fees",
     secondaryLabel: "Talk to us on WhatsApp",
     secondaryHref:
       "https://wa.me/919137008686?text=Hi%2C%20I%20have%20a%20question%20about%20the%20Inner%20Child%20Healing%20and%20Therapy%20course.",
@@ -117,8 +117,8 @@ export const innerChildHealing: CourseContent = {
     supporting:
       "Understand what we carry. Explore where it began. Learn healthier ways of responding today.",
     description:
-      "Begin with a self-paced introduction that explains how childhood experience can shape adult patterns, what self-compassion actually involves, and why pace and safety matter. Then join live applied classes where you work through fictional cases and learn how a grounded, trauma-informed practitioner handles themes like grief, anger and forgiveness.",
-    primaryCta: { label: "Explore course options", href: "#options" },
+      "Over eight weeks of live classes, learn how childhood experience can shape adult patterns, what self-compassion involves, and why pace and safety matter. The first six weeks build that understanding. The final two weeks are practical training: fictional cases where you practise how a grounded, trauma-informed practitioner handles grief, anger and forgiveness.",
+    primaryCta: { label: "See dates and fees", href: "#options" },
     secondaryCta: { label: "See what you will learn", href: "#outcomes" },
     scopeLine:
       "Educational training with fictional cases. This course is not personal therapy and does not confer an independent clinical qualification.",
@@ -126,16 +126,18 @@ export const innerChildHealing: CourseContent = {
 
   overview: {
     eyebrow: "The course in one view",
+    title: "Eight weeks: six of learning, two of practice",
+    eightWeekJourney: true,
     stages: [
       {
-        label: "Stage 1 — Introductory self-paced course",
-        title: "Recorded lessons with reading notes and reflection",
-        body: "Recorded lessons with substantial reading notes and optional reflection questions. Learn what inner child work means, how early experience shapes adult life, what attachment patterns describe, and how to stay trauma-informed. Work at your own pace before you are asked to apply anything.",
+        label: "Weeks 1–6 — Structured learning",
+        title: "Live classes on patterns, attachment and self-compassion",
+        body: "Learn what inner child work means, how early experience shapes adult life, what attachment patterns describe and how to stay trauma-informed. Then move into assessment, holding a history with care and working with relational patterns, with reading notes and optional reflection alongside each class.",
       },
       {
-        label: "Stage 2 — Applied live course",
-        title: "Facilitated sessions built around cases and careful practice",
-        body: "Facilitated sessions built around fictional cases, therapeutic stance, careful practice and review. Study how a practitioner holds grief, anger and forgiveness without forcing a timeline, and how context, consent and boundaries shape the work. Applied teaching happens live; this stage is not presented as a pre-recorded lecture package.",
+        label: "Weeks 7–8 — Practical training",
+        title: "Careful practice with fictional cases",
+        body: "Two weeks of practical training built around expressive work, grief and anger, trauma-informed boundaries and review. Work through fictional cases with faculty feedback, and see how context, consent and scope shape the work. No personal disclosure is required.",
       },
     ],
     progression:
@@ -146,16 +148,16 @@ export const innerChildHealing: CourseContent = {
     title: "How the learning works",
     steps: [
       {
-        title: "Read and watch at your pace.",
-        body: "The introductory course builds a shared, trauma-informed vocabulary. The reading notes explain the meaning, purpose, examples and limits of each idea, and no personal disclosure is required.",
+        title: "Learn live, then consolidate with the notes.",
+        body: "The early weeks build a shared, trauma-informed vocabulary. The reading notes explain the meaning, purpose, examples and limits of each idea, and no personal disclosure is required.",
       },
       {
         title: "Try the reasoning with fictional cases.",
         body: "Learners practise recognising patterns in a fictional history, separating what is known from what is inferred, and choosing a response that fits the person's pace.",
       },
       {
-        title: "Work through decisions live.",
-        body: "In the applied classes, faculty demonstrate a stance, invite learners to practise it, introduce new information and debrief why a plan may need to change. Learning is evaluated through reasoning and responsible limits, not recall of exercises.",
+        title: "Practise decisions in the final two weeks.",
+        body: "In the practical weeks, faculty demonstrate a stance, invite learners to practise it, introduce new information and debrief why a plan may need to change. Learning is evaluated through reasoning and responsible limits, not recall of exercises.",
       },
     ],
   },
@@ -163,7 +165,7 @@ export const innerChildHealing: CourseContent = {
   audienceGroups: [
     {
       title: "New to psychology?",
-      body: "Begin with ordinary experience and clear definitions. You do not need a psychology degree to follow the introductory lessons, and you can pause and return to a concept before moving on.",
+      body: "Begin with ordinary experience and clear definitions. You do not need a psychology degree to follow the early weeks, and the reading notes let you return to a concept before moving on.",
     },
     {
       title: "Studying psychology?",
@@ -181,17 +183,17 @@ export const innerChildHealing: CourseContent = {
 
   curriculum: {
     eyebrow: "Curriculum",
-    title: "What you will cover",
+    title: "What you will cover, week by week",
     stages: [
       {
-        key: "introductory",
-        label: "Introductory self-paced",
-        shortLabel: "Introductory",
-        kind: "self-paced",
+        key: "learning",
+        label: "Weeks 1–6 · Structured learning",
+        shortLabel: "Weeks 1–6",
+        kind: "live",
         blurb:
-          "Recorded lessons with substantial reading notes and optional reflection questions. Learn the ideas and the cautions, at your own pace, before you apply anything.",
+          "Six weeks of live classes. Learn the ideas and the cautions, then move into assessment, holding a history with care and working with relational patterns.",
         formatNote:
-          "Recorded lessons, a separate student reading manual, fictional examples, optional reflection prompts and worked reasoning.",
+          "Live faculty-led classes, student reading notes, fictional examples, reflection prompts and worked reasoning.",
         items: [
           {
             title: "What we mean by the inner child",
@@ -223,20 +225,8 @@ export const innerChildHealing: CourseContent = {
           },
           {
             title: "Bringing the foundations together",
-            body: "Reflect on a fictional case and prepare for the applied live stage, staying within your scope.",
+            body: "Reflect on a fictional case and prepare for the formulation and case work that follows, staying within your scope.",
           },
-        ],
-      },
-      {
-        key: "applied",
-        label: "Applied live",
-        shortLabel: "Applied live",
-        kind: "live",
-        blurb:
-          "Facilitated sessions built around fictional cases, therapeutic stance and careful practice. Applied teaching happens live.",
-        formatNote:
-          "Live faculty-led teaching, demonstrations, discussion of fictional cases, structured practice, feedback and a separate applied student reading manual.",
-        items: [
           {
             title: "Assessment, consent and a workable goal",
             body: "Learn what to ask before choosing a practice, and how to clarify a person's own goal, context and readiness.",
@@ -253,6 +243,18 @@ export const innerChildHealing: CourseContent = {
             title: "Self-compassion as a practised skill",
             body: "Guide simple, safe self-compassion practices and recognise when a practice is landing badly.",
           },
+        ],
+      },
+      {
+        key: "practical",
+        label: "Weeks 7–8 · Practical training",
+        shortLabel: "Weeks 7–8",
+        kind: "practical",
+        blurb:
+          "Two weeks of practical training. Practise expressive work, grief and anger, trauma-informed boundaries and review, working on fictional cases with faculty feedback.",
+        formatNote:
+          "Faculty-guided practice with fictional cases, structured exercises, feedback and review.",
+        items: [
           {
             title: "Expressive and creative work, done responsibly",
             body: "Discuss when visualisation or expressive methods help, when they do not, and how to offer a choice.",
@@ -276,19 +278,15 @@ export const innerChildHealing: CourseContent = {
 
   materials: {
     eyebrow: "Included learning materials",
-    title: "What is supplied for each stage",
+    title: "What is included",
     items: [
       {
-        label: "Introductory student reading notes",
-        note: "Supplied separately from the teaching script.",
+        label: "Live classes across all eight weeks",
+        note: "According to the published cohort schedule.",
       },
       {
-        label: "Introductory recorded lessons",
-        note: "Shown with their real release and access state once published in the LMS.",
-      },
-      {
-        label: "Applied student reading notes",
-        note: "Supplied separately from the live faculty guide.",
+        label: "Student reading notes",
+        note: "Supplied separately from the faculty teaching guide.",
       },
       {
         label:
@@ -296,71 +294,45 @@ export const innerChildHealing: CourseContent = {
         note: "Within the course materials.",
       },
       {
-        label: "Live applied teaching",
-        note: "According to the actual cohort schedule and enrolment option.",
+        label: "Practical training in weeks 7 and 8",
+        note: "Guided exercises with faculty feedback.",
       },
     ],
-    note: "The faculty recording script and live faculty guide are internal teaching documents, not downloadable student benefits.",
+    note: "The faculty teaching guide is an internal document, not a downloadable student benefit.",
   },
 
   assessment: {
     eyebrow: "Assessment and completion",
     title: "How you are assessed",
-    body: "The introductory stage includes knowledge checks and optional reflections on fictional cases so learners can confirm they understand the ideas and the cautions. Applied learning uses case discussion and practice of a grounded, trauma-informed stance.",
+    body: "The learning weeks include knowledge checks and optional reflections on fictional cases so learners can confirm they understand the ideas and the cautions. The practical weeks use case discussion and practice of a grounded, trauma-informed stance, reviewed with faculty.",
   },
 
   options: {
-    eyebrow: "Course options",
-    title: "Choose your route",
+    eyebrow: "Enrol",
+    title: "January 2027 live cohort",
     items: [
       {
-        key: "introductory",
-        name: "Option A — Introductory self-paced course",
-        bestFor:
-          "First-time learners, people entering from another field and anyone who wants a careful, trauma-informed foundation or refresher.",
-        includes: [
-          "Recorded introductory lessons",
-          "Introductory student notes",
-          "Subject to the actual LMS release state",
-        ],
-        outcome:
-          "Explain inner child work plainly, recognise early patterns in adult life, understand self-compassion and know why pace matters.",
-        cta: { label: "Choose self-paced introduction", state: "enroll" },
-        catalogueCode: "PRICHI",
-        upgradeNote:
-          "Upgrade to the live cohort later for the ₹2,000 difference.",
-      },
-      {
         key: "applied",
-        name: "Option B — Applied live course",
+        name: "Eight-week live certificate course",
         bestFor:
-          "Learners who have completed the introduction or already know the core vocabulary and want guided practice.",
+          "Students, graduates and practitioners who want a careful, trauma-informed understanding of childhood patterns and guided practice responding to them.",
         includes: [
-          "Live applied sessions",
-          "Applied student notes",
-          "Subject to the actual cohort schedule",
+          "Six weeks of structured live learning",
+          "Two weeks of guided practical training",
+          "Student reading notes",
         ],
         outcome:
-          "Practise holding a history with care, guiding safe practices and reviewing the work with faculty guidance.",
-        cta: { label: "Explore live applied course", state: "enroll" },
+          "Explain inner child work plainly, recognise early patterns in adult life, and practise holding a history with care and guiding safe practices with faculty feedback.",
+        cta: { label: "Enrol in the January cohort", state: "enroll" },
         catalogueCode: "CCICH",
       },
     ],
   },
 
-  upgrade: {
-    eyebrow: "Already started self-paced?",
-    title: "Move into the live cohort without paying twice",
-    body: "If you have bought the self-paced introduction, you can join the live applied course at any time. Your self-paced fee is credited, so you pay only the difference.",
-    ctaLabel: "Upgrade to the live cohort",
-    fromKey: "introductory",
-    toKey: "applied",
-  },
-
   closing: {
     heading: "Understand what you carry. Learn a kinder, safer response.",
-    body: "The Mind Point brings a grounded introduction and live applied learning into one route. Start at your own pace, then join the live work when you are ready to practise with fictional cases and think carefully about pace, safety and scope.",
-    ctaLabel: "Explore course options",
+    body: "Six weeks to understand the patterns with care. Two weeks to practise responding to them at a safe pace, within your scope, with faculty feedback.",
+    ctaLabel: "See dates and fees",
     ctaHref: "#options",
     scopeLine:
       "Educational certificate course. Real clinical practice requires the appropriate qualifications, consent and supervision.",

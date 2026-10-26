@@ -444,6 +444,10 @@ export function CourseEditor({
   const updateBatch = useRevalidatingCourseMutation(
     api.adminCourses.updateBatch,
   );
+  const setCourseSalesEnabled = useRevalidatingCourseMutation(
+    api.adminCourses.setCourseSalesEnabled,
+  );
+  const [isTogglingSales, setIsTogglingSales] = useState(false);
   const courseBatches = useQuery(
     api.adminCourses.listCourseBatches,
     course?._id && batchBackedTypes.has(state.type)
@@ -1388,6 +1392,42 @@ export function CourseEditor({
             <option value="published">Published</option>
             <option value="archived">Archived</option>
           </select>
+          {course && (
+            <label className="flex items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={course.salesEnabled !== false}
+                disabled={isTogglingSales}
+                onChange={async (e) => {
+                  const salesEnabled = e.target.checked;
+                  setIsTogglingSales(true);
+                  try {
+                    assertConvexSuccess(
+                      await setCourseSalesEnabled({
+                        courseId: course._id,
+                        salesEnabled,
+                      }),
+                      "Could not change sale status",
+                    );
+                    toast.success(
+                      salesEnabled
+                        ? "Course is on sale"
+                        : "Course withdrawn from sale",
+                    );
+                  } catch (error) {
+                    toast.error(
+                      error instanceof Error
+                        ? error.message
+                        : "Could not change sale status",
+                    );
+                  } finally {
+                    setIsTogglingSales(false);
+                  }
+                }}
+              />
+              On sale (unticked hides it from the site and checkout)
+            </label>
+          )}
         </div>
       </div>
 

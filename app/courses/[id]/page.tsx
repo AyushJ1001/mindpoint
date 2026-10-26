@@ -5,20 +5,28 @@ import CourseClient from "./CourseClient";
 import { ConvexHttpClient } from "convex/browser";
 import { Id } from "@/lib/backend/data-model";
 import Script from "next/script";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { programmeSlugForCode } from "@/lib/course-content";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 const convex = convexUrl ? new ConvexHttpClient(convexUrl) : null;
 
-/** Next.js signals `redirect()` by throwing; never swallow it in a catch. */
-function isRedirectError(error: unknown): boolean {
+/**
+ * Next.js signals `redirect()` and `notFound()` by throwing; never swallow
+ * them in a catch.
+ */
+function isNavigationError(error: unknown): boolean {
+  if (
+    typeof error !== "object" ||
+    error === null ||
+    typeof (error as { digest?: unknown }).digest !== "string"
+  ) {
+    return false;
+  }
+  const { digest } = error as { digest: string };
   return (
-    typeof error === "object" &&
-    error !== null &&
-    "digest" in error &&
-    typeof (error as { digest?: unknown }).digest === "string" &&
-    (error as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    digest.startsWith("NEXT_REDIRECT") ||
+    digest.startsWith("NEXT_HTTP_ERROR_FALLBACK")
   );
 }
 
@@ -51,6 +59,7 @@ export async function generateMetadata({
       return {
         title: "Course Not Found - The Mind Point",
         description: "The requested course could not be found.",
+        robots: { index: false, follow: false },
       };
     }
 
@@ -141,19 +150,10 @@ export default async function CoursePage({ params, searchParams }: Props) {
       redirect(`/courses/${pageData.redirectToCourseId}${query}`);
     }
 
+    // Archived, draft and withdrawn-from-sale courses answer with a real 404,
+    // so search engines drop old URLs instead of indexing an empty page.
     if (!course) {
-      return (
-        <div className="flex min-h-screen items-center justify-center">
-          <div className="text-center">
-            <h1 className="font-display mb-4 text-3xl tracking-tight">
-              Course Not Found
-            </h1>
-            <p className="text-muted-foreground">
-              The requested course could not be found.
-            </p>
-          </div>
-        </div>
-      );
+      notFound();
     }
 
     // Flagship programmes have a richer `/programs/<slug>` page. Send browsing
@@ -247,7 +247,7 @@ export default async function CoursePage({ params, searchParams }: Props) {
       </>
     );
   } catch (error) {
-    if (isRedirectError(error)) throw error;
+    if (isNavigationError(error)) throw error;
     console.error("Error loading course:", error);
     return (
       <div className="flex min-h-screen items-center justify-center">
