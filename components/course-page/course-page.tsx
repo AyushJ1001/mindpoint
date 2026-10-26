@@ -15,6 +15,7 @@ import { PartComparison } from "@/components/course-page/part-comparison";
 import { PricingCards } from "@/components/course-page/pricing-cards";
 import { ProgrammeReviews } from "@/components/course-page/programme-reviews";
 import { StickyCta } from "@/components/course-page/sticky-cta";
+import { TrackProgrammeView } from "@/components/analytics/TrackProgrammeView";
 import {
   AssessmentSection,
   AudienceGroupsSection,
@@ -81,6 +82,14 @@ export function CoursePage({ course }: { course: CourseContent }) {
     course.options?.items.find((item) => item.cart?._id)?.cart?._id ??
     null;
 
+  // Analytics identifies the programme by the catalogue course it enrols into,
+  // falling back to its public slug when none is bound.
+  const analyticsCourseCode =
+    course.options?.items.find((item) => item.key === "applied")
+      ?.catalogueCode ??
+    course.options?.items.find((item) => item.catalogueCode)?.catalogueCode ??
+    course.slug;
+
   const optionPrices = (course.options?.items ?? [])
     .map((item) => item.price?.amount)
     .filter((p): p is number => typeof p === "number" && p > 0);
@@ -106,6 +115,7 @@ export function CoursePage({ course }: { course: CourseContent }) {
   if (course.layout === "brief") {
     return (
       <div className="relative">
+        <TrackProgrammeView courseCode={analyticsCourseCode} />
         {course.hero ? (
           <ProgrammeHeroSection hero={course.hero} fromPrice={fromPrice} />
         ) : null}
@@ -168,6 +178,7 @@ export function CoursePage({ course }: { course: CourseContent }) {
 
   return (
     <div className="relative">
+      <TrackProgrammeView courseCode={analyticsCourseCode} />
       <CourseHero course={course} />
       <ShortProposition course={course} />
       <OutcomeGrid course={course} />

@@ -1,3 +1,4 @@
+import { TrackedLink } from "@/components/analytics/TrackedLink";
 import { AddToCartButton } from "@/components/course-page/add-to-cart-button";
 import { Section } from "@/components/course-page/section";
 import { cn } from "@/lib/utils";
@@ -98,6 +99,18 @@ function OptionCard({ option }: { option: ProgrammeOption }) {
             }
             className="bg-primary text-primary-foreground inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-medium hover:opacity-90"
           />
+        ) : isEnroll && cta.href && option.catalogueCode ? (
+          <TrackedLink
+            href={cta.href}
+            event="enroll_click"
+            eventParams={{
+              course_code: option.catalogueCode,
+              price: option.price?.amount,
+            }}
+            className="bg-primary text-primary-foreground inline-flex w-full items-center justify-center rounded-full px-6 py-3 text-sm font-medium hover:opacity-90"
+          >
+            {cta.label}
+          </TrackedLink>
         ) : isEnroll ? (
           <a
             href={cta.href}
