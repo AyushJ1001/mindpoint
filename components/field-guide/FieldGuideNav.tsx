@@ -43,7 +43,6 @@ const GROUPS: {
         label: "Personality Disorders",
         meta: "new",
       },
-      { href: "/courses/diploma", label: "Diplomas", meta: "deep" },
     ],
   },
   {
@@ -54,11 +53,6 @@ const GROUPS: {
         href: "/courses/therapy",
         label: "Therapy & counselling",
         meta: "online",
-      },
-      {
-        href: "/courses/supervised",
-        label: "Supervised practice",
-        meta: "for practitioners",
       },
       { href: "/account", label: "Your learning", meta: "profile" },
     ],

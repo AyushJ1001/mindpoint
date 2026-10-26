@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useQuery } from "convex/react";
 import {
   Award,
   Briefcase,
@@ -27,6 +28,7 @@ import {
   SidebarRail,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { api } from "@/lib/backend/api";
 
 const courseTypes = [
   {
@@ -38,54 +40,63 @@ const courseTypes = [
   {
     name: "Certificate",
     href: "/courses/certificate",
+    type: "certificate",
     label: "Certificate",
     icon: Award,
   },
   {
     name: "Internship",
     href: "/courses/internship",
+    type: "internship",
     label: "Internship",
     icon: Briefcase,
   },
   {
     name: "Diploma",
     href: "/courses/diploma",
+    type: "diploma",
     label: "Diploma",
     icon: GraduationCap,
   },
   {
     name: "Intro courses",
     href: "/courses/intro",
+    type: "pre-recorded",
     label: "Intro courses",
     icon: CirclePlay,
   },
   {
     name: "Masterclass",
     href: "/courses/masterclass",
+    type: "masterclass",
     label: "Masterclass",
     icon: Mic2,
   },
   {
     name: "Worksheets",
     href: "/courses/worksheet",
+    type: "worksheet",
     label: "Worksheets",
     icon: FileText,
   },
   {
     name: "Therapy",
     href: "/courses/therapy",
+    type: "therapy",
     label: "Therapy",
     icon: HeartHandshake,
   },
   {
     name: "Supervised",
     href: "/courses/supervised",
+    type: "supervised",
     label: "Supervised",
     icon: UserCheck,
   },
   {
     name: "Resume Studio",
     href: "/courses/resume-studio",
+    type: "resume-studio",
     label: "Resume Studio",
     icon: FileUser,
   },
@@ -93,6 +104,16 @@ const courseTypes = [
 
 function AppSidebar() {
   const pathname = usePathname();
+  const liveTypes = useQuery(api.courses.listLiveCourseTypes, {});
+  // Therapy always renders its own page; other categories show only with
+  // something on sale. Until the query loads, list everything.
+  const visible = courseTypes.filter(
+    (item) =>
+      !("type" in item) ||
+      item.type === "therapy" ||
+      liveTypes === undefined ||
+      liveTypes.includes(item.type),
+  );
 
   return (
     <Sidebar collapsible="icon" className="top-16 h-[calc(100svh-4rem)]">
@@ -103,7 +124,7 @@ function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {courseTypes.map((item) => {
+              {visible.map((item) => {
                 const Icon = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>
