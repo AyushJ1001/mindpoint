@@ -125,9 +125,9 @@ export default function MasterclassPage() {
             Ready to start now? Registration is open.
           </h2>
           <p className="text-muted-foreground max-w-xl">
-            Start with a ₹999 self-paced intro to find your footing, or join a
-            live certificate course in January 2027: eight weeks, live on
-            Tuesdays and Thursdays.
+            Start with a ₹999 self-paced intro to find your footing (its fee is
+            credited if you upgrade), or join a live certificate course in
+            January 2027: eight weeks, live on Tuesdays and Thursdays.
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3">
             <Link href="/courses" className={ctaVariants({ layout: "flex" })}>

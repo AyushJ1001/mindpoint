@@ -48,6 +48,8 @@ export type ReconciliationAdminCoupon = {
   discount: AdminCouponDiscount;
   appliesTo: AdminCouponSelector;
   requires: AdminCouponRequirement;
+  requirementSatisfiedBy?: "cart" | "owned";
+  perUserLimit?: number;
   startDate?: string;
   endDate?: string;
   redemptionLimit?: number;
@@ -224,12 +226,37 @@ export function findAdminCouponByCode(
   );
 }
 
+/** What the buyer already holds; absent for guests. */
+export type AdminCouponBuyer = {
+  ownedCourseIds: string[];
+  redemptionsByCode: Record<string, number>;
+};
+
+function buyerSatisfiesRequirement(
+  coupon: ReconciliationAdminCoupon,
+  items: AdminCouponLineItem[],
+  buyer: AdminCouponBuyer | undefined,
+) {
+  if (coupon.requirementSatisfiedBy !== "owned") {
+    return cartSatisfiesRequirement(items, coupon.requires);
+  }
+  if (coupon.requires.type === "none") {
+    return true;
+  }
+  const owned = new Set(buyer?.ownedCourseIds.map(String) ?? []);
+  return (
+    coupon.requires.type === "courses" &&
+    coupon.requires.courseIds.some((courseId) => owned.has(String(courseId)))
+  );
+}
+
 export function applyAdminCouponToItems(input: {
   coupon: ReconciliationAdminCoupon;
   items: AdminCouponLineItem[];
   now: number;
+  buyer?: AdminCouponBuyer;
 }): AdminCouponApplicationResult {
-  const { coupon, items, now } = input;
+  const { coupon, items, now, buyer } = input;
 
   if (
     !coupon.enabled ||
@@ -243,7 +270,16 @@ export function applyAdminCouponToItems(input: {
     return { applied: false, reason: "COUPON_EXPIRED" };
   }
 
-  if (!cartSatisfiesRequirement(items, coupon.requires)) {
+  if (
+    coupon.perUserLimit !== undefined &&
+    roundCurrency(coupon.perUserLimit) > 0 &&
+    (buyer?.redemptionsByCode[normalizeAdminCouponCode(coupon.code)] ?? 0) >=
+      roundCurrency(coupon.perUserLimit)
+  ) {
+    return { applied: false, reason: "COUPON_NOT_APPLICABLE" };
+  }
+
+  if (!buyerSatisfiesRequirement(coupon, items, buyer)) {
     return { applied: false, reason: "COUPON_NOT_APPLICABLE" };
   }
 

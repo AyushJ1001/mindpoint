@@ -137,7 +137,8 @@ export function HomeJanuaryCourses({ courses }: { courses: HomeCourses }) {
             >
               Self-paced introductions
             </Link>{" "}
-            are ₹999 each.
+            are ₹999 each, credited in full if you upgrade to any certificate
+            course.
           </p>
         </div>
       </div>

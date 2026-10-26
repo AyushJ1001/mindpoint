@@ -4,6 +4,7 @@ import type { Id } from "@/lib/backend/data-model";
 import { buildCartItemId } from "@/lib/domain/cart";
 import {
   applyAdminCouponToItems,
+  type AdminCouponBuyer,
   type ReconciliationAdminCoupon,
 } from "@/lib/domain/admin-coupons";
 import { REFERRAL_COOKIE_KEY } from "@/lib/domain/referrals";
@@ -85,6 +86,7 @@ type AppliedCheckoutCoupon =
   | {
       source: "admin";
       coupon: ReconciliationAdminCoupon;
+      buyer?: AdminCouponBuyer;
     };
 
 type CheckoutConfirmationState = {
@@ -518,6 +520,7 @@ const CartContent = () => {
           couponCode: item.couponCode,
         })),
         now,
+        buyer: appliedCoupon.buyer,
       });
 
       if (!application.applied) {
@@ -1618,6 +1621,11 @@ const CartContent = () => {
                             discount: adminCouponValidation.coupon.discount,
                             appliesTo: adminCouponValidation.coupon.appliesTo,
                             requires: adminCouponValidation.coupon.requires,
+                            requirementSatisfiedBy:
+                              adminCouponValidation.coupon
+                                .requirementSatisfiedBy,
+                            perUserLimit:
+                              adminCouponValidation.coupon.perUserLimit,
                             startDate: adminCouponValidation.coupon.startDate,
                             endDate: adminCouponValidation.coupon.endDate,
                           };
@@ -1634,16 +1642,21 @@ const CartContent = () => {
                                 item.redemptionDiscountAmount,
                             })),
                             now,
+                            buyer: adminCouponValidation.buyer,
                           });
                           if (!application.applied) {
                             toast.error(
-                              "This coupon does not apply to the current cart.",
+                              adminCoupon.requirementSatisfiedBy === "owned" &&
+                                !adminCouponValidation.buyer
+                                ? "Sign in to use this coupon."
+                                : "This coupon does not apply to the current cart.",
                             );
                             return;
                           }
                           setAppliedCoupon({
                             source: "admin",
                             coupon: adminCoupon,
+                            buyer: adminCouponValidation.buyer,
                           });
                           setCouponCode(adminCoupon.code);
                           toast.success("Coupon applied successfully!");

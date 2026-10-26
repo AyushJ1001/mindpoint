@@ -1,6 +1,7 @@
 import { calculateActiveOfferPrice } from "./pricing";
 import {
   applyAdminCouponToItems,
+  type AdminCouponBuyer,
   findAdminCouponByCode,
   normalizeAdminCouponCode,
   type ReconciliationAdminCoupon,
@@ -363,6 +364,7 @@ export function reconcileCheckoutIntent(input: {
   batches: ReconciliationBatch[];
   bundleCampaigns: ReconciliationBundleCampaign[];
   adminCoupons?: ReconciliationAdminCoupon[];
+  buyer?: AdminCouponBuyer;
   now?: number | Date;
 }): CheckoutReconciliationResult {
   const now =
@@ -611,6 +613,7 @@ export function reconcileCheckoutIntent(input: {
         couponCode: item.couponCode,
       })),
       now,
+      buyer: input.buyer,
     });
 
     const cartItemIdsWithRequestedCode = new Set(

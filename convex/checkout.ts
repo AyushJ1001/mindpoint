@@ -5,6 +5,10 @@ import type { MutationCtx, QueryCtx } from "./_generated/server";
 import { registrationIsOpen } from "./siteSettings";
 import { isWaitlistHeldType } from "./_shared/waitlist";
 import {
+  adminCouponNeedsBuyerContext,
+  loadBuyerCouponContext,
+} from "./_shared/checkout";
+import {
   buildCheckoutAttemptPayload,
   reconcileCheckoutIntent,
   type ReconciliationBatch,
@@ -129,6 +133,8 @@ function adminCouponToReconciliationCoupon(
             ),
           }
         : coupon.requires,
+    requirementSatisfiedBy: coupon.requirementSatisfiedBy,
+    perUserLimit: coupon.perUserLimit,
     startDate: coupon.startDate,
     endDate: coupon.endDate,
     redemptionLimit: coupon.redemptionLimit,
@@ -266,14 +272,26 @@ async function collectCheckoutContext(
     };
   });
 
+  const liveAdminCoupons = adminCoupons.filter(
+    (coupon): coupon is Doc<"adminCoupons"> => coupon !== null,
+  );
+  const buyerContext =
+    buyerUserId && liveAdminCoupons.some(adminCouponNeedsBuyerContext)
+      ? await loadBuyerCouponContext(ctx, buyerUserId)
+      : undefined;
+
   return {
     cartItems: enrichedCartItems,
+    buyer: buyerContext
+      ? {
+          ownedCourseIds: Array.from(buyerContext.ownedCourseIds),
+          redemptionsByCode: Object.fromEntries(buyerContext.redemptionsByCode),
+        }
+      : undefined,
     courses: courses.map(courseToReconciliationCourse),
     batches: Array.from(batchesById.values()).map(batchToReconciliationBatch),
     bundleCampaigns: bundleCampaigns.map(campaignToReconciliationCampaign),
-    adminCoupons: adminCoupons
-      .filter((coupon): coupon is Doc<"adminCoupons"> => coupon !== null)
-      .map(adminCouponToReconciliationCoupon),
+    adminCoupons: liveAdminCoupons.map(adminCouponToReconciliationCoupon),
   };
 }
 
@@ -297,6 +315,7 @@ async function runReconciliation(
     batches: context.batches,
     bundleCampaigns: context.bundleCampaigns,
     adminCoupons: context.adminCoupons,
+    buyer: context.buyer,
   });
 }
 

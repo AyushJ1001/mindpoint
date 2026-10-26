@@ -68,6 +68,7 @@ import type * as emailActions from "../emailActions.js";
 import type * as emailActionsWithRateLimit from "../emailActionsWithRateLimit.js";
 import type * as googleSheets from "../googleSheets.js";
 import type * as image from "../image.js";
+import type * as introUpgrades from "../introUpgrades.js";
 import type * as leads from "../leads.js";
 import type * as lms from "../lms.js";
 import type * as lmsAdmin from "../lmsAdmin.js";
@@ -150,6 +151,7 @@ declare const fullApi: ApiFromModules<{
   emailActionsWithRateLimit: typeof emailActionsWithRateLimit;
   googleSheets: typeof googleSheets;
   image: typeof image;
+  introUpgrades: typeof introUpgrades;
   leads: typeof leads;
   lms: typeof lms;
   lmsAdmin: typeof lmsAdmin;

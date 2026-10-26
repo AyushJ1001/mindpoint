@@ -18,8 +18,10 @@ export default function RefundPolicy() {
     <div className="container max-w-3xl py-16">
       {/* Refund Policy Section */}
       <section className="mb-12">
-        <h1 className="font-display mb-8 text-4xl tracking-tight text-foreground">Refund Policy</h1>
-        <p className="mb-6 leading-relaxed text-foreground/80">
+        <h1 className="font-display text-foreground mb-8 text-4xl tracking-tight">
+          Refund Policy
+        </h1>
+        <p className="text-foreground/80 mb-6 leading-relaxed">
           This Refund and Payment Policy (&quot;Policy&quot;) applies to all
           payments made for Services provided by The Mind Point, including
           courses, internships, diplomas, workshops, therapy sessions,
@@ -29,11 +31,11 @@ export default function RefundPolicy() {
           and we do not store your payment details.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-foreground">
+        <h2 className="text-foreground mb-4 text-2xl font-semibold">
           1. General Refund Rules
         </h2>
         <div className="mb-6 border-l-4 border-[#e6a53c] bg-[#e6a53c]/10 p-4">
-          <p className="mb-4 leading-relaxed text-foreground/80">
+          <p className="text-foreground/80 mb-4 leading-relaxed">
             All sales and enrollments are final. No refunds, partial refunds,
             cancellations, or credits will be issued for any Services once
             payment is confirmed and enrollment is processed, except in the
@@ -41,20 +43,20 @@ export default function RefundPolicy() {
             payments for courses, sessions, materials, or any additional fees
             (e.g., for LORs or document remakes).
           </p>
-          <p className="leading-relaxed text-foreground/80">
+          <p className="text-foreground/80 leading-relaxed">
             We encourage you to review all Service details, including
             descriptions, schedules, and prerequisites, before making a payment.
           </p>
         </div>
 
-        <h2 className="mb-4 text-2xl font-semibold text-foreground">
+        <h2 className="text-foreground mb-4 text-2xl font-semibold">
           2. Eligible Refund Circumstances
         </h2>
-        <p className="mb-4 leading-relaxed text-foreground/80">
+        <p className="text-foreground/80 mb-4 leading-relaxed">
           Refunds may be considered only in the following extreme cases, at the
           sole discretion of The Mind Point:
         </p>
-        <ul className="mb-6 ml-4 list-inside list-disc text-foreground/80">
+        <ul className="text-foreground/80 mb-6 ml-4 list-inside list-disc">
           <li>
             <strong>Duplicate Payment:</strong> If a technical error results in
             a duplicate charge for the same Service, a full refund for the
@@ -78,10 +80,10 @@ export default function RefundPolicy() {
         </ul>
 
         <div className="mb-6 border-l-4 border-[#b4442a] bg-[#b4442a]/10 p-4">
-          <p className="mb-2 font-semibold text-foreground">
+          <p className="text-foreground mb-2 font-semibold">
             No refunds will be provided for:
           </p>
-          <ul className="ml-4 list-inside list-disc text-foreground/80">
+          <ul className="text-foreground/80 ml-4 list-inside list-disc">
             <li>Missed sessions, non-attendance, or partial participation.</li>
             <li>
               Dissatisfaction with content, faculty, timings, or outcomes.
@@ -94,10 +96,10 @@ export default function RefundPolicy() {
           </ul>
         </div>
 
-        <h2 className="mb-4 text-2xl font-semibold text-foreground">
+        <h2 className="text-foreground mb-4 text-2xl font-semibold">
           3. Refund Process
         </h2>
-        <p className="mb-6 leading-relaxed text-foreground/80">
+        <p className="text-foreground/80 mb-6 leading-relaxed">
           To request a refund, contact us at contact@themindpoint.org with your
           order details, payment proof, and supporting documentation (if
           applicable). Requests must be submitted within 7 days of payment or
@@ -107,33 +109,34 @@ export default function RefundPolicy() {
           banking charges.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-foreground">
+        <h2 className="text-foreground mb-4 text-2xl font-semibold">
           4. Payment Terms
         </h2>
-        <p className="mb-6 leading-relaxed text-foreground/80">
-          Payments must be made in full at the time of enrollment. We accept
-          major credit/debit cards, UPI, net banking, and other methods via our
-          payment gateway. All prices are in Indian Rupees (INR) and inclusive
-          of applicable taxes unless stated otherwise. Late payments or failed
-          transactions may result in enrollment cancellation without refund.
+        <p className="text-foreground/80 mb-6 leading-relaxed">
+          Payments must be made in full at the time of enrollment. We currently
+          accept UPI payments to the QR code shown at checkout; your enrollment
+          is confirmed by email once our team verifies the payment. All prices
+          are in Indian Rupees (INR) and inclusive of applicable taxes unless
+          stated otherwise. Late payments or failed transactions may result in
+          enrollment cancellation without refund.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-foreground">
+        <h2 className="text-foreground mb-4 text-2xl font-semibold">
           5. Amendments
         </h2>
-        <p className="mb-6 leading-relaxed text-foreground/80">
+        <p className="text-foreground/80 mb-6 leading-relaxed">
           The Mind Point reserves the right to update this Policy at any time.
           Continued use of Services after changes constitutes acceptance. Review
           this Policy periodically.
         </p>
 
-        <h2 className="mb-4 text-2xl font-semibold text-foreground">
+        <h2 className="text-foreground mb-4 text-2xl font-semibold">
           Contact Information
         </h2>
-        <p className="mb-6 leading-relaxed text-foreground/80">
+        <p className="text-foreground/80 mb-6 leading-relaxed">
           For questions, contact:
         </p>
-        <div className="mb-6 ml-4 text-foreground/80">
+        <div className="text-foreground/80 mb-6 ml-4">
           <p>
             <strong>The Mind Point</strong>
           </p>

@@ -3,6 +3,10 @@ import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { requireAdmin } from "./adminAuth";
+import {
+  adminCouponNeedsBuyerContext,
+  loadBuyerCouponContext,
+} from "./_shared/checkout";
 import { createAdminAuditLog } from "./adminAudit";
 import {
   AdminCouponDiscountValue,
@@ -481,7 +485,32 @@ export const validateCouponCode = query({
       });
     }
 
+    // Ownership and per-learner coupons depend on the signed-in buyer; share
+    // only what this coupon needs. Checkout re-checks it server-side.
+    const identity = adminCouponNeedsBuyerContext(coupon)
+      ? await ctx.auth.getUserIdentity()
+      : null;
+    const buyerContext = identity
+      ? await loadBuyerCouponContext(ctx, identity.subject)
+      : undefined;
+    const requiredCourseIds =
+      coupon.requires.type === "courses"
+        ? coupon.requires.courseIds.map(String)
+        : [];
+
     return convexSuccess({
+      buyer: buyerContext
+        ? {
+            ownedCourseIds: requiredCourseIds.filter((courseId) =>
+              buyerContext.ownedCourseIds.has(courseId),
+            ),
+            redemptionsByCode: {
+              [coupon.code.toUpperCase()]:
+                buyerContext.redemptionsByCode.get(coupon.code.toUpperCase()) ??
+                0,
+            },
+          }
+        : undefined,
       coupon: {
         _id: String(coupon._id),
         code: coupon.code,
@@ -507,6 +536,8 @@ export const validateCouponCode = query({
                 ),
               }
             : coupon.requires,
+        requirementSatisfiedBy: coupon.requirementSatisfiedBy,
+        perUserLimit: coupon.perUserLimit,
         startDate: coupon.startDate,
         endDate: coupon.endDate,
       },

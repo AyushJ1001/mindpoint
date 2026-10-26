@@ -273,6 +273,61 @@ async function main() {
   assert.equal(adminCourseCouponResult.items[0].amountPaid, 2700);
   assert.equal(adminCourseCouponResult.items[1].amountPaid, 2000);
 
+  const introUpgradeCoupon = {
+    _id: "coupon-intro-upgrade",
+    code: "INTRO-UPGRADE",
+    name: "Intro upgrade",
+    enabled: true,
+    isArchived: false,
+    discount: { type: "flat", value: 999 },
+    appliesTo: { type: "courseTypes", courseTypes: ["certificate"] },
+    requires: { type: "courses", courseIds: ["intro-999"] },
+    requirementSatisfiedBy: "owned",
+    perUserLimit: 1,
+  };
+  const upgradeCart = {
+    now,
+    items: [
+      {
+        cartItemId: "course-a",
+        courseId: "course-a",
+        clientListedPrice: 3600,
+        clientCheckoutPrice: 2601,
+        couponCode: "INTRO-UPGRADE",
+      },
+    ],
+    courses: [baseCourse],
+    batches: [],
+    bundleCampaigns: [],
+    adminCoupons: [introUpgradeCoupon],
+  };
+
+  const ownerUpgrade = reconcileCheckoutIntent({
+    ...upgradeCart,
+    buyer: { ownedCourseIds: ["intro-999"], redemptionsByCode: {} },
+  });
+  assert.equal(ownerUpgrade.totalAmountPaid, 2601);
+  assert.equal(ownerUpgrade.items[0].couponCode, "INTRO-UPGRADE");
+
+  const nonOwnerUpgrade = reconcileCheckoutIntent({
+    ...upgradeCart,
+    buyer: { ownedCourseIds: [], redemptionsByCode: {} },
+  });
+  assert.equal(nonOwnerUpgrade.totalAmountPaid, 3600);
+  assert.equal(nonOwnerUpgrade.items[0].couponCode, undefined);
+
+  const guestUpgrade = reconcileCheckoutIntent(upgradeCart);
+  assert.equal(guestUpgrade.totalAmountPaid, 3600);
+
+  const repeatUpgrade = reconcileCheckoutIntent({
+    ...upgradeCart,
+    buyer: {
+      ownedCourseIds: ["intro-999"],
+      redemptionsByCode: { "INTRO-UPGRADE": 1 },
+    },
+  });
+  assert.equal(repeatUpgrade.totalAmountPaid, 3600);
+
   const adminRequirementCouponResult = reconcileCheckoutIntent({
     now,
     items: [

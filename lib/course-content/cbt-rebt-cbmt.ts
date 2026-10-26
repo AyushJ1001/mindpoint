@@ -109,6 +109,11 @@ export const cbtRebtCbmt: CourseContent = {
         "Yes. Student reading notes accompany the classes as substantive standalone material. The faculty teaching guide is a separate internal document.",
     },
     {
+      question: "I bought a self-paced intro course. Can I upgrade?",
+      answer:
+        "Yes. The fee you paid for a self-paced intro course is credited once against any certificate course, not only the one on the same topic. Sign in before checkout and the credit is applied for you.",
+    },
+    {
       question: "How do I know the price, dates and certificate requirements?",
       answer:
         "These are shown from the current enrolment option and cohort details on the page and at checkout. This course description is not a substitute for those live details.",
