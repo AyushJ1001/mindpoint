@@ -992,6 +992,60 @@ export default defineSchema({
       "status",
     ]),
 
+  // Course materials and recordings for certificate courses and internships.
+  // Published rows are readable only by an enrolled learner of that course.
+  lmsMaterials: defineTable({
+    courseId: v.id("courses"),
+    batchId: v.optional(v.id("courseBatches")),
+    week: v.optional(v.number()),
+    title: v.string(),
+    fileName: v.string(),
+    mimeType: v.optional(v.string()),
+    storageId: v.id("_storage"),
+    published: v.boolean(),
+    uploadedBy: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_courseId", ["courseId"])
+    .index("by_courseId_and_published", ["courseId", "published"]),
+
+  lmsRecordings: defineTable({
+    courseId: v.id("courses"),
+    batchId: v.optional(v.id("courseBatches")),
+    week: v.optional(v.number()),
+    sessionLabel: v.string(),
+    driveUrl: v.string(),
+    published: v.boolean(),
+    uploadedBy: v.string(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_courseId", ["courseId"])
+    .index("by_courseId_and_published", ["courseId", "published"]),
+
+  // Faculty-uploaded, per-student certificate files. A replacement keeps the
+  // old row as "replaced" so there is an audit trail.
+  lmsCertificateFiles: defineTable({
+    enrollmentId: v.id("enrollments"),
+    courseId: v.id("courses"),
+    userId: v.string(),
+    storageId: v.id("_storage"),
+    fileName: v.string(),
+    status: v.union(
+      v.literal("published"),
+      v.literal("replaced"),
+      v.literal("revoked"),
+    ),
+    uploadedBy: v.string(),
+    uploadedAt: v.number(),
+    replacedAt: v.optional(v.number()),
+    replacedByFileId: v.optional(v.id("lmsCertificateFiles")),
+  })
+    .index("by_enrollmentId", ["enrollmentId"])
+    .index("by_courseId_and_status", ["courseId", "status"])
+    .index("by_userId_and_status", ["userId", "status"]),
+
   lmsCertificates: defineTable({
     enrollmentId: v.id("enrollments"),
     curriculumId: v.id("lmsCurricula"),
