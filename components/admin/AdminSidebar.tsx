@@ -42,6 +42,7 @@ const items = [
   { href: "/admin/content", label: "Content", icon: FileText },
   { href: "/admin/lms", label: "LMS Release", icon: Waves },
   { href: "/admin/offers", label: "Offer Manager", icon: TicketPercent },
+  { href: "/admin/faculty", label: "Faculty", icon: Users },
   { href: "/admin/coupons", label: "Coupons", icon: BadgePercent },
   { href: "/admin/reviews", label: "Reviews", icon: MessageSquareQuote },
   { href: "/admin/leads", label: "Leads", icon: Mails },

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ConvexHttpClient } from "convex/browser";
 
 import { CoursePage } from "@/components/course-page/course-page";
+import { FacultyProfiles } from "@/components/course/FacultyProfiles";
 import { api } from "@/lib/backend/api";
 import type { PublicCourse } from "@/lib/backend";
 import { courseSlugs, getCourseBySlug } from "@/lib/course-content";
@@ -57,5 +58,11 @@ export default async function ProgrammePage({ params }: Props) {
   const catalogue = base.layout === "brief" ? await getCatalogue() : [];
   const course = attachOperationalData(base, catalogue);
 
-  return <CoursePage course={course} />;
+  return (
+    <>
+      <CoursePage course={course} />
+      {/* Renders nothing until verified profiles are published. */}
+      <FacultyProfiles />
+    </>
+  );
 }
