@@ -21,6 +21,7 @@ export interface OfferDetails {
   /** Seasonal treatment for a scheduled campaign; absent for hand-made offers. */
   occasion?: OfferOccasion;
   headline?: string;
+  lead?: string;
   bogoLabel?: string;
   timeLeft: {
     days: number;
@@ -332,6 +333,7 @@ export function getOfferDetails(course: {
     hasBogo,
     occasion: course.offer?.occasion,
     headline: course.offer?.headline,
+    lead: course.offer?.lead,
     bogoLabel,
     timeLeft,
   };

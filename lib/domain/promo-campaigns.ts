@@ -58,6 +58,12 @@ export type CampaignCourse = {
     discountValue?: number;
     startDate?: string;
     endDate?: string;
+    occasion?: OfferOccasion;
+    headline?: string;
+    lead?: string;
+    bannerImageUrl?: string;
+    standardPrice?: number;
+    offerPrice?: number;
   };
 };
 
@@ -228,13 +234,21 @@ export function offerMatches(
 ): boolean {
   const current = course.offer;
   if (!current) return false;
+  // Every field the page renders has to match, otherwise an edit to the
+  // headline, occasion or supporting line would never reach the course.
   return (
     current.campaignId === offer.campaignId &&
     current.name === offer.name &&
     (current.discountType ?? "percentage") === offer.discountType &&
     (current.discountValue ?? current.discount ?? 0) === offer.discountValue &&
     current.startDate === offer.startDate &&
-    current.endDate === offer.endDate
+    current.endDate === offer.endDate &&
+    current.occasion === offer.occasion &&
+    current.headline === offer.headline &&
+    current.lead === offer.lead &&
+    current.bannerImageUrl === offer.bannerImageUrl &&
+    current.standardPrice === offer.standardPrice &&
+    current.offerPrice === offer.offerPrice
   );
 }
 

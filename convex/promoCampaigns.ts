@@ -69,6 +69,12 @@ function toCourse(course: Doc<"courses">) {
           discountValue: course.offer.discountValue,
           startDate: course.offer.startDate,
           endDate: course.offer.endDate,
+          occasion: course.offer.occasion,
+          headline: course.offer.headline,
+          lead: course.offer.lead,
+          bannerImageUrl: course.offer.bannerImageUrl,
+          standardPrice: course.offer.standardPrice,
+          offerPrice: course.offer.offerPrice,
         }
       : undefined,
   };
@@ -196,6 +202,7 @@ const draftValidator = {
   startDate: v.optional(v.string()),
   endDate: v.optional(v.string()),
   eligibleCourseIds: v.optional(v.array(v.id("courses"))),
+  enabled: v.optional(v.boolean()),
 };
 
 function draftRule(args: {
@@ -208,18 +215,22 @@ function draftRule(args: {
   startDate?: string;
   endDate?: string;
   eligibleCourseIds?: string[];
+  enabled?: boolean;
+  createdAt?: number;
 }): CampaignRule {
   return {
     _id: args.campaignId ?? "preview",
     name: args.name,
     occasion: args.occasion ?? "general",
-    enabled: true,
+    enabled: args.enabled ?? true,
     priority: args.priority ?? 0,
     startDate: args.startDate,
     endDate: args.endDate,
     eligibleCourseIds: args.eligibleCourseIds ?? [],
     isArchived: false,
-    createdAt: 0,
+    // A brand-new draft is the newest campaign; an edit keeps its age, so the
+    // preview's tie-breaking matches what would really happen.
+    createdAt: args.createdAt ?? Date.now(),
     offer: {
       discountType: args.discountType ?? "percentage",
       discountValue: args.discountValue ?? 0,
@@ -240,6 +251,10 @@ export const previewCampaign = query({
     const courses = await ctx.db.query("courses").take(2000);
     const campaigns = await ctx.db.query("offerCampaigns").take(200);
 
+    const existingCampaign = args.campaignId
+      ? await ctx.db.get(args.campaignId)
+      : null;
+
     const draft = draftRule({
       campaignId: args.campaignId ? String(args.campaignId) : undefined,
       name: args.name,
@@ -250,6 +265,8 @@ export const previewCampaign = query({
       startDate: args.startDate,
       endDate: args.endDate,
       eligibleCourseIds: (args.eligibleCourseIds ?? []).map(String),
+      enabled: args.enabled,
+      createdAt: existingCampaign?.createdAt,
     });
 
     const others = campaigns

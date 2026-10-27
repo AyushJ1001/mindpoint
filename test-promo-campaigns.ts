@@ -226,3 +226,32 @@ test("an offer that already matches is not rewritten", () => {
   assert.equal(plan.clear.length, 0);
   assert.equal(offerMatches(course({ offer }), offer), true);
 });
+
+test("editing only the headline or supporting line still rewrites the offer", () => {
+  const base = campaign({
+    _id: "live",
+    occasion: "diwali",
+    headline: "Plan early.",
+    lead: "Save on the January cohort.",
+    eligibleCourseIds: ["course-1"],
+    offer: { discountType: "flatOff", discountValue: 500 },
+  });
+  const winner = pickCampaignForCourse(course({ _id: "course-1" }), [base], NOW);
+  assert.ok(winner);
+  const applied = buildOfferFromCampaign(
+    course({ _id: "course-1" }),
+    winner.campaign,
+    winner.discount,
+  );
+
+  const edited = { ...base, headline: "Plan early. Start strong." };
+  const plan = planReconciliation(
+    [course({ _id: "course-1", offer: { ...applied } })],
+    [edited],
+    NOW,
+  );
+
+  assert.equal(plan.apply.length, 1);
+  assert.equal(plan.apply[0].offer.headline, "Plan early. Start strong.");
+  assert.equal(plan.apply[0].offer.offerPrice, 4000);
+});

@@ -206,6 +206,7 @@ export default function AdminOffersPage() {
             0,
             MAX_COURSES_PER_APPLY,
           ) as Id<"courses">[],
+          enabled: scheduleEnabled,
         }
       : "skip",
   );
@@ -273,6 +274,9 @@ export default function AdminOffersPage() {
 
   const loadCampaignIntoBuilder = (campaign: CampaignRecord) => {
     setActiveCampaignId(String(campaign._id));
+    // The checklist is what Update sends back, so it must show the campaign's
+    // own eligibility rather than whatever was selected before.
+    setSelectedCourseIds((campaign.eligibleCourseIds ?? []).map(String));
     setCampaignName(campaign.name);
     setCampaignDescription(campaign.description || "");
     setOfferName(campaign.offer?.name || "");
@@ -440,10 +444,10 @@ export default function AdminOffersPage() {
           lead: lead.trim() || undefined,
           startDate: offerStartDate || undefined,
           endDate: offerEndDate || undefined,
-          eligibleCourseIds:
-            selectedCourseIds.length > 0
-              ? (selectedCourseIds as Id<"courses">[])
-              : undefined,
+          // Always send the list, even when empty: leaving it out means "keep
+          // the previous selection", which makes eligibility impossible to
+          // clear from the builder.
+          eligibleCourseIds: selectedCourseIds as Id<"courses">[],
         }),
         "Failed to save campaign",
       );

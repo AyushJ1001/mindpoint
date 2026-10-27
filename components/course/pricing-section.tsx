@@ -227,6 +227,11 @@ export default function PricingSection({
                         {offerDetails.headline}
                       </span>
                     ) : null}
+                    {offerDetails.lead ? (
+                      <span className="text-muted-foreground text-xs">
+                        {offerDetails.lead}
+                      </span>
+                    ) : null}
                   </span>
                 )}
               </div>
