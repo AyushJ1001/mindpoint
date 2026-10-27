@@ -40,7 +40,7 @@ export default function ConsentBanner() {
 
   return (
     <div
-      role="dialog"
+      role="region"
       aria-label="Analytics preference"
       aria-live="polite"
       className="border-border bg-background/95 fixed inset-x-4 bottom-4 z-50 rounded border p-4 shadow-[0_24px_60px_-30px_rgba(19,46,43,0.55)] backdrop-blur sm:left-auto sm:max-w-md"

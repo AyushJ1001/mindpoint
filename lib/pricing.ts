@@ -19,7 +19,8 @@ export const INTRO_COURSE_FEE = 999;
  */
 export function availabilityLabel(remaining?: number, capacity?: number): string {
   if (typeof remaining !== "number" || !Number.isFinite(remaining)) {
-    return "Registrations open";
+    // No published batch: do not promise a place we cannot give.
+    return "Live cohort, eight weeks";
   }
   if (remaining <= 0) {
     return "Registrations closed";
