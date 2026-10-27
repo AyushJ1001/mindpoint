@@ -213,7 +213,7 @@ export function CoursePage({ course }: { course: CourseContent }) {
           />
         ) : null}
         <FacultySection faculty={course.faculty} />
-        <PracticalExperienceSection />
+        {course.applicationBased ? null : <PracticalExperienceSection />}
         {course.lifetimeRecordings ? <RecordingsSection /> : null}
         {course.materials ? (
           <LearningMaterialsSection materials={course.materials} />

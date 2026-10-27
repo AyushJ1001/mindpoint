@@ -93,7 +93,7 @@ export const innerChildHealing: CourseContent = {
     {
       question: "Are the live classes recorded?",
       answer:
-        "Classes are taught live. Replay access is only offered if the specific cohort includes recordings and The Mind Point has approved that benefit.",
+        "Classes are taught live, and enrolments from 27 October 2026 keep access to the recordings for as long as The Mind Point's platform operates. If the platform ever closes, we give 90 days' notice with a download window. Earlier enrolments keep the access that applied when they joined.",
     },
     {
       question: "Does this make me a therapist?",
