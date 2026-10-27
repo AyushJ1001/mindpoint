@@ -57,10 +57,10 @@ const COHORTS = [
 const INCLUDED = [
   "Six weeks of learning, then two weeks of practical training",
   "Live online classes on Tuesdays and Thursdays",
-  "Small cohort, capped at 30 for real discussion",
+  "Small live cohort, so discussion stays real",
   "Practice and feedback, not just theory",
   "Certificate with public verification",
-  "Honest completion wording — not a degree or licence",
+  "A completion certificate you can verify online",
   "Support within 48–72 hours on working days",
 ];
 
