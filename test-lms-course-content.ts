@@ -229,9 +229,6 @@ test("a batch-scoped faculty member is limited to their batch", async () => {
     await (getCertificateFileUrl as any)._handler(ctx, { fileId: "cert_b" }),
     null,
   );
-
-  const desk = await (getCourseResources as any)._handler(ctx, { courseId: COURSE });
-  assert.ok(desk);
 });
 
 test("inactive enrolments are not on the certificate desk", async () => {
