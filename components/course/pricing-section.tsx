@@ -209,13 +209,21 @@ export default function PricingSection({
                 occasion={offerDetails.occasion}
                 headline={offerDetails.headline}
                 lead={offerDetails.lead}
+                bannerImageUrl={offerDetails.bannerImageUrl}
                 standardPrice={offerDetails.originalPrice}
                 offerPrice={offerDetails.offerPrice}
                 endsOn={
                   offerDetails.endsAt
                     ? new Date(offerDetails.endsAt).toLocaleDateString(
                         "en-IN",
-                        { day: "numeric", month: "long" },
+                        {
+                          day: "numeric",
+                          month: "long",
+                          // Campaign dates are business dates in IST; format
+                          // them there so a viewer abroad does not see the
+                          // previous day.
+                          timeZone: "Asia/Kolkata",
+                        },
                       )
                     : undefined
                 }
