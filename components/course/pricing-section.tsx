@@ -19,6 +19,7 @@ import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import { availabilityLabel } from "@/lib/pricing";
 import { OfferBadge } from "@/components/course/offer-badge";
+import { CampaignBanner } from "@/components/course/CampaignBanner";
 import ChoosePlan from "@/components/therapy/choose-plan";
 import ChooseSupervisedPlan from "@/components/therapy/choose-supervised-plan";
 import type { PublicCourse, PublicCourseBatch } from "@/lib/backend";
@@ -201,6 +202,26 @@ export default function PricingSection({
                 : "A steady next step."}
             </h2>
           </div>
+
+          {offerDetails?.hasDiscount && offerDetails.occasion ? (
+            <div className="mt-10">
+              <CampaignBanner
+                occasion={offerDetails.occasion}
+                headline={offerDetails.headline}
+                lead={offerDetails.lead}
+                standardPrice={offerDetails.originalPrice}
+                offerPrice={offerDetails.offerPrice}
+                endsOn={
+                  offerDetails.endsAt
+                    ? new Date(offerDetails.endsAt).toLocaleDateString(
+                        "en-IN",
+                        { day: "numeric", month: "long" },
+                      )
+                    : undefined
+                }
+              />
+            </div>
+          ) : null}
 
           <div className="calm-pricing-stage mt-12">
             <div className="calm-card p-7 sm:p-10">

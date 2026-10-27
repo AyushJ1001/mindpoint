@@ -22,6 +22,7 @@ export interface OfferDetails {
   occasion?: OfferOccasion;
   headline?: string;
   lead?: string;
+  endsAt?: string;
   bogoLabel?: string;
   timeLeft: {
     days: number;
@@ -334,6 +335,7 @@ export function getOfferDetails(course: {
     occasion: course.offer?.occasion,
     headline: course.offer?.headline,
     lead: course.offer?.lead,
+    endsAt: course.offer?.endDate,
     bogoLabel,
     timeLeft,
   };
