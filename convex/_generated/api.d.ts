@@ -10,6 +10,7 @@
 
 import type * as _publicCourse from "../_publicCourse.js";
 import type * as _shared_checkout from "../_shared/checkout.js";
+import type * as _shared_checkoutPayment from "../_shared/checkoutPayment.js";
 import type * as _shared_emailActionResult from "../_shared/emailActionResult.js";
 import type * as _shared_emailDelivery from "../_shared/emailDelivery.js";
 import type * as _shared_enrollment from "../_shared/enrollment.js";
@@ -53,6 +54,7 @@ import type * as bootstrapEnrollmentNumbers from "../bootstrapEnrollmentNumbers.
 import type * as bootstrapIntroCleanup from "../bootstrapIntroCleanup.js";
 import type * as bootstrapIntroRecordings from "../bootstrapIntroRecordings.js";
 import type * as bootstrapJanuaryCohort from "../bootstrapJanuaryCohort.js";
+import type * as bootstrapJanuaryFee from "../bootstrapJanuaryFee.js";
 import type * as bootstrapLmsCurricula from "../bootstrapLmsCurricula.js";
 import type * as bootstrapPtsdDraft from "../bootstrapPtsdDraft.js";
 import type * as bootstrapSalesWithdrawal from "../bootstrapSalesWithdrawal.js";
@@ -78,6 +80,7 @@ import type * as loyaltySearch from "../loyaltySearch.js";
 import type * as migrations from "../migrations.js";
 import type * as mindPoints from "../mindPoints.js";
 import type * as myFunctions from "../myFunctions.js";
+import type * as promoCampaigns from "../promoCampaigns.js";
 import type * as rateLimit from "../rateLimit.js";
 import type * as siteContent from "../siteContent.js";
 import type * as siteSettings from "../siteSettings.js";
@@ -93,6 +96,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   _publicCourse: typeof _publicCourse;
   "_shared/checkout": typeof _shared_checkout;
+  "_shared/checkoutPayment": typeof _shared_checkoutPayment;
   "_shared/emailActionResult": typeof _shared_emailActionResult;
   "_shared/emailDelivery": typeof _shared_emailDelivery;
   "_shared/enrollment": typeof _shared_enrollment;
@@ -136,6 +140,7 @@ declare const fullApi: ApiFromModules<{
   bootstrapIntroCleanup: typeof bootstrapIntroCleanup;
   bootstrapIntroRecordings: typeof bootstrapIntroRecordings;
   bootstrapJanuaryCohort: typeof bootstrapJanuaryCohort;
+  bootstrapJanuaryFee: typeof bootstrapJanuaryFee;
   bootstrapLmsCurricula: typeof bootstrapLmsCurricula;
   bootstrapPtsdDraft: typeof bootstrapPtsdDraft;
   bootstrapSalesWithdrawal: typeof bootstrapSalesWithdrawal;
@@ -161,6 +166,7 @@ declare const fullApi: ApiFromModules<{
   migrations: typeof migrations;
   mindPoints: typeof mindPoints;
   myFunctions: typeof myFunctions;
+  promoCampaigns: typeof promoCampaigns;
   rateLimit: typeof rateLimit;
   siteContent: typeof siteContent;
   siteSettings: typeof siteSettings;

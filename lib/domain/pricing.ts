@@ -18,6 +18,9 @@ export interface OfferDetails {
   savingsAmount: number;
   hasDiscount: boolean;
   hasBogo: boolean;
+  /** Seasonal treatment for a scheduled campaign; absent for hand-made offers. */
+  occasion?: OfferOccasion;
+  headline?: string;
   bogoLabel?: string;
   timeLeft: {
     days: number;
@@ -28,6 +31,21 @@ export interface OfferDetails {
 
 export type OfferDiscountType = "percentage" | "fixedPrice" | "flatOff";
 
+export type OfferOccasion =
+  | "early-bird"
+  | "diwali"
+  | "christmas"
+  | "new-year"
+  | "general";
+
+export const OCCASION_LABEL: Record<OfferOccasion, string> = {
+  "early-bird": "Early Bird",
+  diwali: "Diwali Offer",
+  christmas: "Christmas Offer",
+  "new-year": "New Year Offer",
+  general: "Special Price",
+};
+
 export type CourseOffer = {
   name: string;
   discount?: number;
@@ -35,6 +53,13 @@ export type CourseOffer = {
   discountValue?: number;
   startDate?: string;
   endDate?: string;
+  campaignId?: string;
+  occasion?: OfferOccasion;
+  headline?: string;
+  lead?: string;
+  bannerImageUrl?: string;
+  standardPrice?: number;
+  offerPrice?: number;
 } | null;
 
 export type CourseBogo = {
@@ -275,11 +300,23 @@ export function getOfferDetails(course: {
   );
 
   const bogoLabel = course.bogo?.label || "BOGO";
+  // A scheduled campaign exposes its occasion, not its internal name; a general
+  // campaign deliberately shows no name at all.
+  const seasonLabel = course.offer?.occasion
+    ? OCCASION_LABEL[course.offer.occasion]
+    : undefined;
+  const campaignLabel =
+    seasonLabel && course.offer?.occasion !== "general"
+      ? seasonLabel
+      : course.offer?.occasion === "general"
+        ? OCCASION_LABEL.general
+        : course.offer?.name?.trim() || "Limited-time Offer";
+
   const offerName =
     hasDiscount && hasBogo
-      ? `${course.offer?.name ?? "Limited-time Offer"} + ${bogoLabel}`
+      ? `${campaignLabel} + ${bogoLabel}`
       : hasDiscount
-        ? (course.offer?.name ?? "Limited-time Offer")
+        ? campaignLabel
         : `${bogoLabel} Offer`;
 
   return {
@@ -293,6 +330,8 @@ export function getOfferDetails(course: {
     savingsAmount,
     hasDiscount,
     hasBogo,
+    occasion: course.offer?.occasion,
+    headline: course.offer?.headline,
     bogoLabel,
     timeLeft,
   };

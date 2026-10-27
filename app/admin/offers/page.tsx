@@ -74,6 +74,16 @@ type CampaignRecord = {
   updatedByAdminId: string;
   lastAppliedAt?: number;
   lastAppliedCourseIds?: Id<"courses">[];
+  occasion?: "early-bird" | "diwali" | "christmas" | "new-year" | "general";
+  enabled?: boolean;
+  priority?: number;
+  headline?: string;
+  lead?: string;
+  bannerImageUrl?: string;
+  startDate?: string;
+  endDate?: string;
+  eligibleCourseIds?: Id<"courses">[];
+  appliedCourseIds?: Id<"courses">[];
 };
 
 type CampaignMutationSuccess = {
@@ -132,6 +142,14 @@ export default function AdminOffersPage() {
   const [clearMode, setClearMode] = useState<"discount" | "bogo" | "all">(
     "all",
   );
+  const [occasion, setOccasion] = useState<
+    "early-bird" | "diwali" | "christmas" | "new-year" | "general"
+  >("general");
+  const [scheduleEnabled, setScheduleEnabled] = useState(true);
+  const [priority, setPriority] = useState("0");
+  const [headline, setHeadline] = useState("");
+  const [lead, setLead] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [campaignActionId, setCampaignActionId] = useState<string | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -169,6 +187,28 @@ export default function AdminOffersPage() {
     api.adminOffers.applyCampaignToCourses,
   );
   const saveCampaign = useMutation(api.adminOffers.saveCampaign);
+  const schedulePreview = useQuery(
+    api.promoCampaigns.previewCampaign,
+    previewOpen && !localUnauthenticatedPreview
+      ? {
+          campaignId: activeCampaignId
+            ? (activeCampaignId as Id<"offerCampaigns">)
+            : undefined,
+          name: campaignName.trim() || "Untitled campaign",
+          occasion,
+          priority: Number(priority) || 0,
+          discountType: offerDiscountType,
+          discountValue:
+            offerDiscount.trim() === "" ? 0 : Number(offerDiscount) || 0,
+          startDate: offerStartDate || undefined,
+          endDate: offerEndDate || undefined,
+          eligibleCourseIds: selectedCourseIds.slice(
+            0,
+            MAX_COURSES_PER_APPLY,
+          ) as Id<"courses">[],
+        }
+      : "skip",
+  );
   const setCampaignArchived = useMutation(api.adminOffers.setCampaignArchived);
 
   const rows = useMemo(
@@ -223,6 +263,12 @@ export default function AdminOffersPage() {
     setBogoLabel("");
     setBogoStartDate("");
     setBogoEndDate("");
+    setOccasion("general");
+    setScheduleEnabled(true);
+    setPriority("0");
+    setHeadline("");
+    setLead("");
+    setPreviewOpen(false);
   };
 
   const loadCampaignIntoBuilder = (campaign: CampaignRecord) => {
@@ -234,8 +280,15 @@ export default function AdminOffersPage() {
     setOfferDiscount(
       campaign.offer ? String(getOfferDiscountValue(campaign.offer)) : "",
     );
-    setOfferStartDate(campaign.offer?.startDate || "");
-    setOfferEndDate(campaign.offer?.endDate || "");
+    setOfferStartDate(
+      campaign.startDate || campaign.offer?.startDate || "",
+    );
+    setOfferEndDate(campaign.endDate || campaign.offer?.endDate || "");
+    setOccasion(campaign.occasion ?? "general");
+    setScheduleEnabled(campaign.enabled ?? true);
+    setPriority(String(campaign.priority ?? 0));
+    setHeadline(campaign.headline || "");
+    setLead(campaign.lead || "");
     setBogoEnabled(campaign.bogo?.enabled ?? false);
     setBogoLabel(campaign.bogo?.label || "");
     setBogoStartDate(campaign.bogo?.startDate || "");
@@ -380,6 +433,17 @@ export default function AdminOffersPage() {
           description: campaignDescription.trim() || undefined,
           offer: offer ?? null,
           bogo: bogo ?? null,
+          occasion,
+          enabled: scheduleEnabled,
+          priority: Number(priority) || 0,
+          headline: headline.trim() || undefined,
+          lead: lead.trim() || undefined,
+          startDate: offerStartDate || undefined,
+          endDate: offerEndDate || undefined,
+          eligibleCourseIds:
+            selectedCourseIds.length > 0
+              ? (selectedCourseIds as Id<"courses">[])
+              : undefined,
         }),
         "Failed to save campaign",
       );
@@ -779,6 +843,164 @@ export default function AdminOffersPage() {
                       onChange={(e) => setCampaignDescription(e.target.value)}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">
+                        Scheduled campaign
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        Runs automatically inside its dates and clears the offer
+                        when it ends. Only offers scheduled here are cleared;
+                        hand-applied offers stay.
+                      </p>
+                    </div>
+                    <label className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={scheduleEnabled}
+                        onCheckedChange={(checked) =>
+                          setScheduleEnabled(checked === true)
+                        }
+                      />
+                      Enabled
+                    </label>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label>Occasion</Label>
+                      <select
+                        className="h-10 w-full rounded-md border bg-white px-3 text-sm"
+                        value={occasion}
+                        onChange={(e) =>
+                          setOccasion(
+                            e.target.value as
+                              | "early-bird"
+                              | "diwali"
+                              | "christmas"
+                              | "new-year"
+                              | "general",
+                          )
+                        }
+                      >
+                        <option value="early-bird">Early Bird</option>
+                        <option value="diwali">Diwali</option>
+                        <option value="christmas">Christmas</option>
+                        <option value="new-year">New Year</option>
+                        <option value="general">
+                          General (shows &ldquo;Special Price&rdquo;, no name)
+                        </option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Priority</Label>
+                      <Input
+                        inputMode="numeric"
+                        value={priority}
+                        onChange={(e) => setPriority(e.target.value)}
+                      />
+                      <p className="text-xs text-slate-500">
+                        Higher wins when two campaigns cover one course; then the
+                        bigger saving.
+                      </p>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Window</Label>
+                      <p className="text-xs text-slate-500">
+                        Uses the offer dates below. Leave them empty for an offer
+                        that runs until it is disabled.
+                      </p>
+                      <p className="text-sm font-medium text-slate-900">
+                        {offerWindowPreview}
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label>Headline (optional)</Label>
+                      <Input
+                        placeholder="Plan early. Start strong."
+                        value={headline}
+                        onChange={(e) => setHeadline(e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Supporting line (optional)</Label>
+                      <Input
+                        placeholder="Shown beside the price on the course page"
+                        value={lead}
+                        onChange={(e) => setLead(e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Button
+                      variant="outline"
+                      disabled={selectedCount === 0}
+                      onClick={() => setPreviewOpen((open) => !open)}
+                    >
+                      {previewOpen ? "Hide preview" : "Preview scheduled prices"}
+                    </Button>
+                    <span className="text-xs text-slate-500">
+                      Preview reads the same logic the scheduler uses. Nothing is
+                      saved or published.
+                    </span>
+                  </div>
+
+                  {previewOpen ? (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      {schedulePreview === undefined ? (
+                        <p className="text-sm text-slate-500">Calculating…</p>
+                      ) : (
+                        <>
+                          <p className="text-sm text-slate-700">
+                            {schedulePreview.appliedCount} course
+                            {schedulePreview.appliedCount === 1 ? "" : "s"} would
+                            show this offer
+                            {schedulePreview.overriddenCount > 0
+                              ? ` · ${schedulePreview.overriddenCount} overridden by a higher-priority campaign`
+                              : ""}
+                            .
+                          </p>
+                          <div className="mt-3 max-h-64 overflow-y-auto">
+                            <table className="w-full text-left text-xs">
+                              <thead className="text-slate-500">
+                                <tr>
+                                  <th className="py-1 pr-3">Course</th>
+                                  <th className="py-1 pr-3">Standard</th>
+                                  <th className="py-1 pr-3">Offer</th>
+                                  <th className="py-1">Label</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {schedulePreview.rows.map((row) => (
+                                  <tr key={String(row.courseId)}>
+                                    <td className="py-1 pr-3">{row.courseName}</td>
+                                    <td className="py-1 pr-3">
+                                      {showRupees(row.standardPrice)}
+                                    </td>
+                                    <td className="py-1 pr-3">
+                                      {showRupees(row.offerPrice)}
+                                    </td>
+                                    <td className="py-1">
+                                      {row.occasionLabel ?? "—"}
+                                      {row.overriddenByOtherCampaign
+                                        ? " (overridden)"
+                                        : ""}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  ) : null}
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-2">

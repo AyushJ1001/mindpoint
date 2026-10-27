@@ -18,6 +18,7 @@ import { formatCourseTimeRange } from "@/lib/course-schedule";
 import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 import { calculatePointsEarned } from "@/lib/mind-points";
 import { availabilityLabel } from "@/lib/pricing";
+import { OfferBadge } from "@/components/course/offer-badge";
 import ChoosePlan from "@/components/therapy/choose-plan";
 import ChooseSupervisedPlan from "@/components/therapy/choose-supervised-plan";
 import type { PublicCourse, PublicCourseBatch } from "@/lib/backend";
@@ -211,11 +212,21 @@ export default function PricingSection({
                   </span>
                 )}
                 {hasValidOffer && offerDetails && (
-                  <span className="calm-kbd text-primary/90">
-                    {offerDetails.offerName}
-                    {offerDetails.hasDiscount
-                      ? ` \u00b7 ${offerDetails.discountLabel}`
-                      : ""}
+                  <span className="flex flex-wrap items-center gap-2">
+                    <OfferBadge
+                      occasion={offerDetails.occasion}
+                      label={offerDetails.offerName}
+                    />
+                    {offerDetails.hasDiscount ? (
+                      <span className="calm-kbd text-foreground/60">
+                        {offerDetails.discountLabel}
+                      </span>
+                    ) : null}
+                    {offerDetails.headline ? (
+                      <span className="text-foreground/70 text-sm">
+                        {offerDetails.headline}
+                      </span>
+                    ) : null}
                   </span>
                 )}
               </div>

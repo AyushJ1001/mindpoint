@@ -14,4 +14,15 @@ crons.interval(
   {},
 );
 
+// Reconcile scheduled offer campaigns onto courses every five minutes. This is
+// what makes a campaign start and expire without a deploy: the run writes the
+// offer while the window is open and clears it afterwards, so the standard fee
+// comes back on its own.
+crons.interval(
+  "reconcile offer campaigns",
+  { minutes: 5 },
+  internal.promoCampaigns.reconcileCampaigns,
+  {},
+);
+
 export default crons;
