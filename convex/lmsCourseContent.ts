@@ -52,19 +52,44 @@ async function isAdmin(ctx: QueryCtx | MutationCtx): Promise<boolean> {
   }
 }
 
-async function isFacultyForCourse(
+/**
+ * What a faculty member may touch on a course.
+ *
+ * `null` means the whole course (an assignment with no batch, or an admin).
+ * Otherwise these are the batch ids they are assigned to, and they only see and
+ * write rows for those batches — a batch-scoped tutor does not get the rest of
+ * the cohort.
+ */
+async function facultyBatchScope(
   ctx: QueryCtx | MutationCtx,
   courseId: Id<"courses">,
   email?: string,
-): Promise<boolean> {
-  if (!email) return false;
+): Promise<{ scoped: false } | { scoped: true; batchIds: string[] } | null> {
+  if (!email) return null;
   const assignments = await ctx.db
     .query("lmsFacultyAssignments")
     .withIndex("by_courseId", (q) => q.eq("courseId", courseId))
     .take(200);
-  return assignments.some(
+  const mine = assignments.filter(
     (assignment) => normalizeEmail(assignment.facultyEmail) === email,
   );
+  if (mine.length === 0) return null;
+  if (mine.some((assignment) => !assignment.batchId)) return { scoped: false };
+  return {
+    scoped: true,
+    batchIds: mine
+      .map((assignment) => assignment.batchId)
+      .filter((id): id is NonNullable<typeof id> => Boolean(id))
+      .map(String),
+  };
+}
+
+function inScope(
+  scope: { scoped: false } | { scoped: true; batchIds: string[] },
+  row: { batchId?: Id<"courseBatches"> | null },
+): boolean {
+  if (!scope.scoped) return true;
+  return Boolean(row.batchId) && scope.batchIds.includes(String(row.batchId));
 }
 
 async function getEnrollmentForCourse(
@@ -87,7 +112,7 @@ async function assertCanManage(
 ): Promise<{ userId: string; role: "admin" | "faculty" }> {
   const { userId, email } = await loadIdentity(ctx);
   if (!userId) throw new Error("Unauthenticated");
-  if (await isFacultyForCourse(ctx, courseId, email)) {
+  if (await facultyBatchScope(ctx, courseId, email)) {
     return { userId, role: "faculty" };
   }
   await requireAdmin(ctx);
@@ -128,10 +153,9 @@ export const getCourseResources = query({
 
     const { userId, email } = await loadIdentity(ctx);
     const admin = userId ? await isAdmin(ctx) : false;
-    const faculty =
-      userId && email
-        ? await isFacultyForCourse(ctx, args.courseId, email)
-        : false;
+    const facultyScope =
+      userId && email ? await facultyBatchScope(ctx, args.courseId, email) : null;
+    const faculty = Boolean(facultyScope);
     const enrollment = userId
       ? await getEnrollmentForCourse(ctx, args.courseId, userId)
       : null;
@@ -151,6 +175,10 @@ export const getCourseResources = query({
 
     const visibleMaterials = materials
       .filter((material) => canManage || material.published)
+      .filter(
+        (material) =>
+          admin || !facultyScope || inScope(facultyScope, material),
+      )
       .sort((a, b) => (a.week ?? 99) - (b.week ?? 99) || a.createdAt - b.createdAt)
       .map((material) => ({
         _id: material._id,
@@ -163,6 +191,10 @@ export const getCourseResources = query({
 
     const visibleRecordings = recordings
       .filter((recording) => canManage || recording.published)
+      .filter(
+        (recording) =>
+          admin || !facultyScope || inScope(facultyScope, recording),
+      )
       .sort((a, b) => (a.week ?? 99) - (b.week ?? 99) || a.createdAt - b.createdAt)
       .map((recording) => ({
         _id: recording._id,
@@ -215,7 +247,8 @@ export const getMaterialUrl = query({
     if (!userId) return null;
 
     const admin = await isAdmin(ctx);
-    const faculty = await isFacultyForCourse(ctx, material.courseId, email);
+    const scope = await facultyBatchScope(ctx, material.courseId, email);
+    const faculty = Boolean(scope) && inScope(scope!, material);
     const enrolled = await getEnrollmentForCourse(ctx, material.courseId, userId);
     if (!admin && !faculty && !enrolled) return null;
     if (!material.published && !admin && !faculty) return null;
@@ -234,7 +267,15 @@ export const getCertificateFileUrl = query({
 
     const admin = await isAdmin(ctx);
     const own = file.userId === userId;
-    const faculty = await isFacultyForCourse(ctx, file.courseId, email);
+    const scope = await facultyBatchScope(ctx, file.courseId, email);
+    let faculty = false;
+    if (scope && !scope.scoped) {
+      faculty = true;
+    } else if (scope && scope.scoped) {
+      const enrollment = await ctx.db.get(file.enrollmentId);
+      faculty = Boolean(enrollment?.batchId) &&
+        scope.batchIds.includes(String(enrollment?.batchId));
+    }
     if (!own && !admin && !faculty) return null;
 
     return await ctx.storage.getUrl(file.storageId);
@@ -272,6 +313,11 @@ export const saveMaterial = mutation({
   },
   handler: async (ctx, args) => {
     const actor = await assertCanManage(ctx, args.courseId);
+    const { email } = await loadIdentity(ctx);
+    const scope = await facultyBatchScope(ctx, args.courseId, email);
+    if (scope && scope.scoped && !inScope(scope, { batchId: args.batchId })) {
+      throw new Error("You can only add material for your own batch");
+    }
     const now = Date.now();
     const id = await ctx.db.insert("lmsMaterials", {
       courseId: args.courseId,
@@ -315,6 +361,11 @@ export const saveRecording = mutation({
   },
   handler: async (ctx, args) => {
     const actor = await assertCanManage(ctx, args.courseId);
+    const { email } = await loadIdentity(ctx);
+    const scope = await facultyBatchScope(ctx, args.courseId, email);
+    if (scope && scope.scoped && !inScope(scope, { batchId: args.batchId })) {
+      throw new Error("You can only add recordings for your own batch");
+    }
     const label = args.sessionLabel.trim();
     if (!label) throw new Error("A session label is required");
     if (label.length > MAX_SESSION) throw new Error("That label is too long");
@@ -400,13 +451,19 @@ export const listCertificatesForCourse = query({
     const { userId, email } = await loadIdentity(ctx);
     if (!userId) return [];
     const admin = await isAdmin(ctx);
-    const faculty = await isFacultyForCourse(ctx, args.courseId, email);
-    if (!admin && !faculty) throw new Error("Not allowed");
+    const scope = await facultyBatchScope(ctx, args.courseId, email);
+    if (!admin && !scope) throw new Error("Not allowed");
 
-    const enrollments = await ctx.db
+    const allEnrollments = await ctx.db
       .query("enrollments")
       .withIndex("by_courseId", (q) => q.eq("courseId", args.courseId))
       .take(500);
+    const enrollments = allEnrollments
+      .filter(isActiveEnrollment)
+      .filter(
+        (enrollment) =>
+          admin || !scope || !scope.scoped || inScope(scope, enrollment),
+      );
 
     const files = await ctx.db
       .query("lmsCertificateFiles")
@@ -419,6 +476,7 @@ export const listCertificatesForCourse = query({
 
     return enrollments.map((enrollment) => ({
       enrollmentId: enrollment._id,
+      batchId: enrollment.batchId ?? null,
       userId: enrollment.userId,
       userName: enrollment.userName ?? null,
       enrollmentNumber: enrollment.enrollmentNumber,

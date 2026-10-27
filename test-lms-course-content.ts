@@ -2,7 +2,13 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 
-import { getCertificateFileUrl, getCourseResources, getMaterialUrl, normalizeDriveUrl } from "./convex/lmsCourseContent";
+import {
+  getCertificateFileUrl,
+  getCourseResources,
+  getMaterialUrl,
+  listCertificatesForCourse,
+  normalizeDriveUrl,
+} from "./convex/lmsCourseContent";
 
 type Row = Record<string, any> & { _id: string };
 
@@ -200,4 +206,41 @@ test("only Google Drive https links are accepted as recordings", () => {
   assert.throws(() => normalizeDriveUrl("http://drive.google.com/file/d/abc/view"));
   assert.throws(() => normalizeDriveUrl("https://example.com/recording.mp4"));
   assert.throws(() => normalizeDriveUrl("not a url"));
+});
+
+test("a batch-scoped faculty member is limited to their batch", async () => {
+  const tables = baseTables();
+  tables.enrollments[0].batchId = "batch_a";
+  tables.enrollments[1].batchId = "batch_b";
+  tables.lmsFacultyAssignments = [
+    { _id: "fa_2", courseId: COURSE, facultyEmail: "tutor@example.com", batchId: "batch_a" },
+  ];
+  tables.lmsMaterials[0].batchId = "batch_a";
+  tables.lmsMaterials[1].batchId = "batch_b";
+  tables.lmsCertificateFiles[1].batchId = "batch_b";
+
+  const ctx = makeCtx(tables, { subject: "user_tutor", email: "tutor@example.com" });
+  const result = await (getCourseResources as any)._handler(ctx, { courseId: COURSE });
+  assert.equal(result.role, "faculty");
+  assert.deepEqual(result.materials.map((m: any) => m._id), ["mat_pub"]);
+
+  // Batch B's certificate is not theirs to open.
+  assert.equal(
+    await (getCertificateFileUrl as any)._handler(ctx, { fileId: "cert_b" }),
+    null,
+  );
+
+  const desk = await (getCourseResources as any)._handler(ctx, { courseId: COURSE });
+  assert.ok(desk);
+});
+
+test("inactive enrolments are not on the certificate desk", async () => {
+  const tables = baseTables();
+  tables.enrollments[1].status = "cancelled";
+  tables.lmsFacultyAssignments = [
+    { _id: "fa_3", courseId: COURSE, facultyEmail: "teacher@example.com" },
+  ];
+  const ctx = makeCtx(tables, { subject: "user_teacher", email: "teacher@example.com" });
+  const rows = await (listCertificatesForCourse as any)._handler(ctx, { courseId: COURSE });
+  assert.deepEqual(rows.map((row: any) => row.enrollmentId), ["enr_a"]);
 });

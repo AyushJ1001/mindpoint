@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
+import { useConvex, useMutation, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
 import type { Id } from "@/lib/backend/data-model";
 import { Button } from "@/components/ui/button";
@@ -158,27 +158,32 @@ function Materials({
 }
 
 function MaterialDownload({ materialId }: { materialId: Id<"lmsMaterials"> }) {
-  const [requested, setRequested] = useState(false);
-  const url = useQuery(
-    api.lmsCourseContent.getMaterialUrl,
-    requested ? { materialId } : "skip",
-  );
+  const convex = useConvex();
+  const [busy, setBusy] = useState(false);
+
+  // One click: ask the server for a signed URL and open it. The server refuses
+  // if the viewer is not entitled, so nothing is minted for the wrong person.
+  const open = async () => {
+    setBusy(true);
+    try {
+      const url = await convex.query(api.lmsCourseContent.getMaterialUrl, {
+        materialId,
+      });
+      if (!url) {
+        toast.error("This file is not available on your account");
+        return;
+      }
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Could not open that file");
+    } finally {
+      setBusy(false);
+    }
+  };
 
   return (
-    <Button
-      size="sm"
-      variant="outline"
-      onClick={() => setRequested(true)}
-      disabled={requested && url === undefined}
-    >
-      <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-      {url ? (
-        <a href={url} target="_blank" rel="noreferrer">
-          Download
-        </a>
-      ) : (
-        "Download"
-      )}
+    <Button size="sm" variant="outline" onClick={open} disabled={busy}>
+      <Download className="mr-2 h-4 w-4" aria-hidden="true" /> Download
     </Button>
   );
 }
@@ -510,21 +515,30 @@ function CertificateDownload({
   fileId: Id<"lmsCertificateFiles">;
   fileName: string;
 }) {
-  const [requested, setRequested] = useState(false);
-  const url = useQuery(
-    api.lmsCourseContent.getCertificateFileUrl,
-    requested ? { fileId } : "skip",
-  );
+  const convex = useConvex();
+  const [busy, setBusy] = useState(false);
+
+  const open = async () => {
+    setBusy(true);
+    try {
+      const url = await convex.query(api.lmsCourseContent.getCertificateFileUrl, {
+        fileId,
+      });
+      if (!url) {
+        toast.error("That certificate is not available to you");
+        return;
+      }
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch {
+      toast.error("Could not open that certificate");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
-    <Button size="sm" variant="outline" onClick={() => setRequested(true)}>
-      <Download className="mr-2 h-4 w-4" aria-hidden="true" />
-      {url ? (
-        <a href={url} target="_blank" rel="noreferrer">
-          {fileName}
-        </a>
-      ) : (
-        fileName
-      )}
+    <Button size="sm" variant="outline" onClick={open} disabled={busy}>
+      <Download className="mr-2 h-4 w-4" aria-hidden="true" /> {fileName}
     </Button>
   );
 }
@@ -565,10 +579,18 @@ function CertificateDesk({ courseId }: { courseId: Id<"courses"> }) {
                       : "No certificate yet"}
                   </p>
                 </div>
-                <CertificateUpload
-                  enrollmentId={row.enrollmentId}
-                  hasFile={Boolean(row.certificate)}
-                />
+                <div className="flex items-center gap-2">
+                  {row.certificate ? (
+                    <CertificateDownload
+                      fileId={row.certificate.fileId}
+                      fileName="Open"
+                    />
+                  ) : null}
+                  <CertificateUpload
+                    enrollmentId={row.enrollmentId}
+                    hasFile={Boolean(row.certificate)}
+                  />
+                </div>
               </li>
             ))}
           </ul>
