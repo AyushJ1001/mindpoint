@@ -6,7 +6,8 @@ import { api } from "@/lib/backend/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, BookOpen, Waves } from "lucide-react";
+import { Calendar, Clock, BookOpen, Ticket, Waves } from "lucide-react";
+import { hasLifetimeRecordings } from "@/lib/recording-entitlement";
 import Link from "next/link";
 
 const lmsCourseTypes = new Set([
@@ -23,6 +24,11 @@ export function EnrollmentsTab() {
   const enrollments = useQuery(
     api.myFunctions.getUserEnrollments,
     isAuthenticated ? { limit: 200 } : "skip",
+  );
+  // Server-authoritative: returns a credit only when checkout would honour it.
+  const introCredit = useQuery(
+    api.introUpgrades.getMyIntroUpgradeCredit,
+    isAuthenticated ? {} : "skip",
   );
 
   if (!user) {
@@ -49,6 +55,19 @@ export function EnrollmentsTab() {
   return (
     <div className="space-y-4">
       <h2 className="font-display text-3xl tracking-tight">My Enrollments</h2>
+      {introCredit ? (
+        <Card className="border-primary/30">
+          <CardContent className="flex flex-wrap items-center gap-4 py-5">
+            <Ticket className="text-primary h-5 w-5" aria-hidden="true" />
+            <p className="text-sm leading-relaxed">
+              You have a{" "}
+              <strong>₹{introCredit.credit.toLocaleString("en-IN")} credit</strong>{" "}
+              from {introCredit.introName}. It comes off any certificate course
+              at checkout, once, and is applied automatically when you enrol.
+            </p>
+          </CardContent>
+        </Card>
+      ) : null}
       <div className="grid gap-4">
         {enrollments.map((enrollment) => {
           const course = enrollment.course;
@@ -107,6 +126,11 @@ export function EnrollmentsTab() {
                   {enrollment.isBogoFree && (
                     <Badge variant="default" className="bg-emerald-500">
                       BOGO Free Course
+                    </Badge>
+                  )}
+                  {hasLifetimeRecordings(enrollment) && (
+                    <Badge variant="outline">
+                      Lifetime recordings included
                     </Badge>
                   )}
                   {lmsCourseTypes.has(enrollment.courseType ?? "") && (
