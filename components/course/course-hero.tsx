@@ -11,6 +11,7 @@ import { CourseImageCarousel } from "@/components/course-image-carousel";
 import { defaultEmotionalHooks } from "@/lib/course-content-data";
 import { formatCourseTimeRange } from "@/lib/course-schedule";
 import { getEnrolledCount } from "@/lib/course-enrollment";
+import { availabilityLabel } from "@/lib/pricing";
 import { getCoursePrice, getOfferDetails } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -260,7 +261,11 @@ export default function CourseHero({
     });
   }
 
-  if (seatsLeft > 0 && seatsLeft <= 8 && !isPreRecorded && !isWorksheet) {
+  if (
+    !isPreRecorded &&
+    !isWorksheet &&
+    availabilityLabel(seatsLeft, course.capacity) === "Limited availability"
+  ) {
     metaChips.push({
       icon: <Users />,
       label: "Limited availability",
