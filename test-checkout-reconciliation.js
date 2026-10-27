@@ -328,6 +328,75 @@ async function main() {
   });
   assert.equal(repeatUpgrade.totalAmountPaid, 3600);
 
+  // Approved policy: the seasonal offer applies first, then the ₹999 credit.
+  const offerThenCredit = reconcileCheckoutIntent({
+    now,
+    items: [
+      {
+        cartItemId: "course-a",
+        courseId: "course-a",
+        clientListedPrice: 4500,
+        clientCheckoutPrice: 3051,
+        couponCode: "INTRO-UPGRADE",
+      },
+    ],
+    courses: [
+      {
+        ...baseCourse,
+        price: 4500,
+        offer: {
+          name: "Early Bird",
+          discountType: "percentage",
+          discountValue: 10,
+          startDate: "2026-05-01T00:00:00Z",
+          endDate: "2026-05-31T00:00:00Z",
+          occasion: "early-bird",
+          standardPrice: 4500,
+          offerPrice: 4050,
+        },
+      },
+    ],
+    batches: [],
+    bundleCampaigns: [],
+    adminCoupons: [introUpgradeCoupon],
+    buyer: { ownedCourseIds: ["intro-999"], redemptionsByCode: {} },
+  });
+  assert.equal(offerThenCredit.totalAmountPaid, 3051);
+  assert.equal(offerThenCredit.items[0].couponCode, "INTRO-UPGRADE");
+
+  // The credit cannot take the payable amount below zero.
+  const creditLargerThanPrice = reconcileCheckoutIntent({
+    now,
+    items: [
+      {
+        cartItemId: "course-a",
+        courseId: "course-a",
+        clientListedPrice: 800,
+        clientCheckoutPrice: 0,
+        couponCode: "INTRO-UPGRADE",
+      },
+    ],
+    courses: [
+      {
+        ...baseCourse,
+        price: 800,
+        offer: {
+          name: "New Year",
+          discountType: "percentage",
+          discountValue: 10,
+          startDate: "2026-05-01T00:00:00Z",
+          endDate: "2026-05-31T00:00:00Z",
+        },
+      },
+    ],
+    batches: [],
+    bundleCampaigns: [],
+    adminCoupons: [introUpgradeCoupon],
+    buyer: { ownedCourseIds: ["intro-999"], redemptionsByCode: {} },
+  });
+  assert.equal(creditLargerThanPrice.totalAmountPaid, 0);
+  assert.ok(creditLargerThanPrice.totalAmountPaid >= 0);
+
   const adminRequirementCouponResult = reconcileCheckoutIntent({
     now,
     items: [

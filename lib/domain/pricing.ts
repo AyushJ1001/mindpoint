@@ -22,6 +22,8 @@ export interface OfferDetails {
   occasion?: OfferOccasion;
   headline?: string;
   lead?: string;
+  endsAt?: string;
+  bannerImageUrl?: string;
   bogoLabel?: string;
   timeLeft: {
     days: number;
@@ -334,6 +336,8 @@ export function getOfferDetails(course: {
     occasion: course.offer?.occasion,
     headline: course.offer?.headline,
     lead: course.offer?.lead,
+    endsAt: course.offer?.endDate,
+    bannerImageUrl: course.offer?.bannerImageUrl,
     bogoLabel,
     timeLeft,
   };
