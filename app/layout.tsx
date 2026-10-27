@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
 import "react-phone-number-input/style.css";
@@ -53,11 +53,8 @@ const caveat = localFont({
 export const metadata: Metadata = {
   title: "The Mind Point",
   description: "A platform for mental health education and support",
-  icons: {
-    // /favicon.ico is generated from app/favicon.ico. Declaring /logo.ico here
-    // too gave browsers a second, cache-prone icon to choose from.
-    apple: "/apple-icon.png",
-  },
+  // Icons come from the file conventions in this folder (favicon.ico, icon.png,
+  // apple-icon.png), all cut from public/brand/the-mind-point-mark.png.
   metadataBase: new URL("https://www.themindpoint.org"),
   alternates: {
     canonical: "/",
@@ -92,6 +89,13 @@ export const metadata: Metadata = {
       "max-snippet": -1,
     },
   },
+};
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#173F3A" },
+    { media: "(prefers-color-scheme: dark)", color: "#0B2422" },
+  ],
 };
 
 export default function RootLayout({

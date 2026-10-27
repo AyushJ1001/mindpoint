@@ -76,7 +76,7 @@ export function HomeJanuaryCourses({ courses }: { courses: HomeCourses }) {
     <section
       id="january-2027"
       aria-labelledby="january-heading"
-      className="scroll-mt-24 py-20 sm:py-24"
+      className="bg-section-mist py-section-sm sm:py-section scroll-mt-24"
     >
       <div className="container">
         <div className="mb-10 flex flex-wrap items-end justify-between gap-6">
@@ -84,7 +84,7 @@ export function HomeJanuaryCourses({ courses }: { courses: HomeCourses }) {
             <span className={eyebrowVariants()}>Registration open</span>
             <h2
               id="january-heading"
-              className="font-display mt-4 text-3xl tracking-tight sm:text-5xl"
+              className="font-display text-brand-heading mt-4 text-3xl tracking-tight sm:text-5xl"
             >
               January 2027 certificate courses
             </h2>

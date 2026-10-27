@@ -122,6 +122,20 @@ function januaryStartSummary(courses: PublicCourse[]) {
   return `${list} January 2027`;
 }
 
+/**
+ * The self-paced introduction fee, read from the pre-recorded courses on sale.
+ * Undefined unless they all share one price, so the page never quotes a number
+ * the catalogue does not agree on.
+ */
+function introPrice(courses: PublicCourse[]) {
+  const prices = new Set(
+    courses
+      .filter((c) => c.type === "pre-recorded" && c.price && c.price > 0)
+      .map((c) => c.price),
+  );
+  return prices.size === 1 ? [...prices][0] : undefined;
+}
+
 export function buildHomeCourses(courses: PublicCourse[]) {
   return {
     january: JANUARY_CODES.map((entry) =>
@@ -129,6 +143,7 @@ export function buildHomeCourses(courses: PublicCourse[]) {
     ),
     internship: toHomeCourse(INTERNSHIP, courses),
     startSummary: januaryStartSummary(courses),
+    introPrice: introPrice(courses),
   };
 }
 

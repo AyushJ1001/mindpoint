@@ -81,6 +81,28 @@
   --color-sage: #b9cda9;
   --color-ink: #132e2b;
   --color-ivory: #f8f6f0;
+
+  /* Mind Point brand tokens (from the approved logo mark) */
+  --color-brand-teal: var(--brand-teal);
+  --color-brand-sage: var(--brand-sage);
+  --color-brand-mist: var(--brand-mist);
+  --color-brand-ivory: var(--brand-ivory);
+  --color-brand-gold: var(--brand-gold);
+  --color-section-ivory: var(--section-ivory);
+  --color-section-mist: var(--section-mist);
+  --color-section-deep: var(--section-deep);
+  --color-brand-heading: var(--brand-heading);
+  --color-brand-body: var(--brand-body);
+  --color-brand-button: var(--brand-button);
+  --color-brand-button-foreground: var(--brand-button-foreground);
+
+  --spacing-section: var(--space-section);
+  --spacing-section-sm: var(--space-section-sm);
+  --radius-brand: var(--radius-brand-base);
+  --radius-brand-lg: var(--radius-brand-lg-base);
+  --shadow-brand-sm: var(--shadow-brand-sm-base);
+  --shadow-brand: var(--shadow-brand-base);
+  --shadow-brand-lg: var(--shadow-brand-lg-base);
 }
 
 :root {
@@ -116,6 +138,33 @@
   --sidebar-accent-foreground: #132e2b;
   --sidebar-border: #ddd4c5;
   --sidebar-ring: #1d4e4a;
+
+  /* Brand palette */
+  --brand-teal: #173f3a; /* headings, nav, primary buttons */
+  --brand-sage: #527e73; /* secondary text on light, icons, rules */
+  --brand-mist: #dce9e3; /* soft section backgrounds */
+  --brand-ivory: #f7f5ee; /* content sections */
+  --brand-gold: #d7b88a; /* restrained accent */
+
+  /* Role tokens: these flip in dark mode, the raw palette above does not */
+  --brand-heading: var(--brand-teal);
+  --brand-body: #3f5b55;
+  --brand-button: var(--brand-teal);
+  --brand-button-foreground: var(--brand-ivory);
+
+  /* Section backgrounds */
+  --section-ivory: var(--brand-ivory);
+  --section-mist: var(--brand-mist);
+  --section-deep: var(--brand-teal);
+
+  /* Spacing, radius, shadow */
+  --space-section: 5rem;
+  --space-section-sm: 3.5rem;
+  --radius-brand-base: 0.5rem;
+  --radius-brand-lg-base: 0.875rem;
+  --shadow-brand-sm-base: 0 1px 2px rgb(23 63 58 / 0.06);
+  --shadow-brand-base: 0 10px 30px -18px rgb(23 63 58 / 0.28);
+  --shadow-brand-lg-base: 0 24px 60px -30px rgb(23 63 58 / 0.4);
 }
 
 .dark {
@@ -150,6 +199,14 @@
   --sidebar-accent-foreground: #f1ece0;
   --sidebar-border: #2a4d49;
   --sidebar-ring: #8ad6ca;
+
+  --section-ivory: #123430;
+  --section-mist: #17403b;
+  --section-deep: #0b2422;
+  --brand-heading: #f1ece0;
+  --brand-body: #c6d6d1;
+  --brand-button: #8ad6ca;
+  --brand-button-foreground: #0b2422;
 }
 
 @layer base {
@@ -1739,6 +1796,28 @@
   .water-on-deep .water-glass {
     background: color-mix(in oklab, #f1ece0 10%, transparent);
     border-color: color-mix(in oklab, #bcd6dd 28%, transparent);
+  }
+}
+
+/* Homepage hero: the water photograph is the section background. It only
+   drifts on wide screens that have not asked for reduced motion; everywhere
+   else it is a still image. */
+.hero-water-image {
+  object-position: 62% 44%;
+}
+
+@keyframes hero-water-pan {
+  from {
+    transform: scale(1.06) translate3d(-1.2%, 0, 0);
+  }
+  to {
+    transform: scale(1.06) translate3d(1.2%, -1%, 0);
+  }
+}
+
+@media (min-width: 1024px) and (prefers-reduced-motion: no-preference) {
+  .hero-water-image {
+    animation: hero-water-pan 48s ease-in-out infinite alternate;
   }
 }
 
