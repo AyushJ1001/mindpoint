@@ -19,6 +19,12 @@ export const counsellingInternship: CourseContent = {
     "A supervised, cohort-based counselling internship, with a self-paced primer for those who want to understand the field first.",
   heroCopy:
     "Start with a self-paced primer on the difference between clinical and counselling psychology, then join a supervised cohort to practise counselling skills.",
+  whyItMatters:
+    "Counselling is a practised skill, not a set of definitions. Understanding the difference between clinical and counselling psychology — and what counselling can and cannot help with — matters before you sit with a person. This programme pairs that understanding with supervised practice.",
+  image: {
+    src: "/coastal/wave.jpg",
+    alt: "A wave breaking near the shore, spray catching the light.",
+  },
   learningOutcomes: [
     "Explain the difference between clinical and counselling psychology, and where counselling fits.",
     "Describe what counselling can and cannot help with, and why scope and referral matter.",

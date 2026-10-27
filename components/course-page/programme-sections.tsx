@@ -6,6 +6,7 @@ import { StarRating } from "@/components/course/ratings";
 import { GOOGLE_RATING } from "@/lib/googleReviews";
 import type {
   AudienceGroup,
+  CourseImage,
   ProgrammeAssessment,
   ProgrammeClosing,
   ProgrammeHero,
@@ -14,12 +15,27 @@ import type {
   ProgrammeStep,
 } from "@/lib/course-content/types";
 
+function HeroFact({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-[8rem] flex-1">
+      <dt className="text-[0.62rem] font-semibold tracking-[0.22em] text-[#1d4e4a]/70 uppercase">
+        {label}
+      </dt>
+      <dd className="text-foreground mt-1.5 text-sm">{value}</dd>
+    </div>
+  );
+}
+
 export function ProgrammeHeroSection({
   hero,
   fromPrice,
+  image,
+  facts,
 }: {
   hero: ProgrammeHero;
   fromPrice?: number;
+  image?: CourseImage;
+  facts?: { label: string; value: string }[];
 }) {
   return (
     <section className="pt-14 pb-10 sm:pt-20 sm:pb-16">
@@ -63,6 +79,15 @@ export function ProgrammeHeroSection({
             </a>
           ) : null}
         </div>
+
+        {facts && facts.length > 0 ? (
+          <dl className="water-glass mt-9 flex flex-wrap gap-x-10 gap-y-4 rounded-2xl px-6 py-5">
+            {facts.map((fact) => (
+              <HeroFact key={fact.label} {...fact} />
+            ))}
+          </dl>
+        ) : null}
+
         <div className="mt-6 flex flex-wrap items-center gap-3">
           <StarRating rating={GOOGLE_RATING.average} size="sm" />
           <p className="text-muted-foreground text-sm">
@@ -81,8 +106,8 @@ export function ProgrammeHeroSection({
 
       <div className="relative mt-12 h-[280px] w-full overflow-hidden sm:mt-16 sm:h-[420px]">
         <Image
-          src="/coastal/wave.jpg"
-          alt="A wave breaking near the shore, spray catching the light."
+          src={image?.src ?? "/coastal/wave.jpg"}
+          alt={image?.alt ?? ""}
           fill
           priority
           sizes="100vw"
@@ -96,18 +121,29 @@ export function ProgrammeHeroSection({
 
 export function ProgrammeOverviewSection({
   overview,
+  cohort,
 }: {
   overview: ProgrammeOverview;
+  /** Formatted cohort dates for the eight-week strip. */
+  cohort?: string;
 }) {
   return (
     <Section
       id="overview"
       eyebrow={overview.eyebrow}
       title={overview.title ?? "The course in one view"}
+      lead={overview.supporting}
       tone="mist"
     >
       {overview.eightWeekJourney ? (
-        <EightWeekJourney className="mb-10 max-w-3xl" />
+        <div className="mb-10 max-w-3xl">
+          <EightWeekJourney />
+          {cohort ? (
+            <p className="text-muted-foreground mt-4 text-sm leading-relaxed">
+              {cohort}
+            </p>
+          ) : null}
+        </div>
       ) : null}
       <div className="grid gap-6 lg:grid-cols-2">
         {overview.stages.map((stage) => (

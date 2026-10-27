@@ -117,6 +117,8 @@ export interface OverviewStage {
 export interface ProgrammeOverview {
   eyebrow?: string;
   title?: string;
+  /** Supporting paragraph beneath the "six weeks … two weeks" headline. */
+  supporting?: string;
   stages: OverviewStage[];
   progression: string;
   /** Show the six-weeks-learning, two-weeks-practical strip. */
@@ -255,6 +257,20 @@ export interface ProgrammeClosing {
   scopeLine?: string;
 }
 
+/** Course-specific coastal imagery, mapped per programme. */
+export interface CourseImage {
+  src: string;
+  alt: string;
+}
+
+/** Honest certificate wording for certificate programmes. */
+export interface ProgrammeCertificate {
+  eyebrow?: string;
+  title?: string;
+  body: string;
+  items?: string[];
+}
+
 export interface CourseContent {
   slug: string;
   title: string;
@@ -301,6 +317,14 @@ export interface CourseContent {
    * "default" renders the simpler layout. Defaults to "default".
    */
   layout?: "default" | "brief";
+  /** Why this subject matters, in one grounded paragraph. */
+  whyItMatters?: string;
+  /** Course-specific public/coastal imagery. */
+  image?: CourseImage;
+  /** True when this programme's new enrolments receive lifetime recordings. */
+  lifetimeRecordings?: boolean;
+  /** Honest certificate wording (certificate programmes only). */
+  certificate?: ProgrammeCertificate;
   hero?: ProgrammeHero;
   overview?: ProgrammeOverview;
   howItWorks?: { eyebrow?: string; title?: string; steps: ProgrammeStep[] };

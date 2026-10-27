@@ -20,6 +20,13 @@ export const cbtRebtCbmt: CourseContent = {
     "An eight-week live certificate course: six weeks of structured learning, then two weeks of practical training with fictional cases.",
   heroCopy:
     "Understand the models. Practise the reasoning. Learn where each approach fits.",
+  whyItMatters:
+    "Three approaches — CBT, REBT and CBMT — each describe how thoughts, feelings and actions shape one another. Taught in isolation, each leaves gaps. Joined together, they give you a clearer way to read a situation, name what you are seeing, and decide what to do next — for a reason rather than from a label alone.",
+  image: {
+    src: "/coastal/shore.jpg",
+    alt: "A quiet shoreline at sunrise, seen from the water's edge.",
+  },
+  lifetimeRecordings: true,
   learningOutcomes: [
     "Describe a situation, thought or image, feeling, bodily response, action and consequence without treating them as interchangeable.",
     "Explain how a behaviour can bring relief immediately and still keep a difficulty going over time.",
@@ -49,7 +56,7 @@ export const cbtRebtCbmt: CourseContent = {
   caseRoom: [],
   toolkit: [],
   faculty: [],
-  duration: undefined,
+  duration: "8 weeks",
   weeklyCommitment: undefined,
   selfPacedStart: undefined,
   liveStart: undefined,
@@ -148,7 +155,9 @@ export const cbtRebtCbmt: CourseContent = {
 
   overview: {
     eyebrow: "The course in one view",
-    title: "Eight weeks: six of learning, two of practice",
+    title: "Six Weeks to Build Your Understanding. Two Weeks to Bring It to Life.",
+    supporting:
+      "Six weeks of live classes build the models and the reasoning behind them. Two weeks of practical training put that reasoning to work on fictional cases, with faculty feedback.",
     eightWeekJourney: true,
     stages: [
       {
@@ -328,6 +337,17 @@ export const cbtRebtCbmt: CourseContent = {
     eyebrow: "Assessment and completion",
     title: "How you are assessed",
     body: "The learning weeks include knowledge checks and fictional case reflections so learners can confirm they understand the language of the models. The practical weeks use case analysis, role play and a reasoned decision reviewed with faculty.",
+  },
+
+  certificate: {
+    eyebrow: "Certificate",
+    title: "A certificate you earn, not collect.",
+    body: "On successful completion you receive a certificate of completion that states the course title and that it is an educational certificate. The wording is honest: it is not a degree, a licence or a clinical qualification, and it does not authorise psychotherapy practice.",
+    items: [
+      "Awarded on assessed completion.",
+      "States the course title and its educational nature.",
+      "Does not claim to be a degree, licence or clinical qualification.",
+    ],
   },
 
   options: {
