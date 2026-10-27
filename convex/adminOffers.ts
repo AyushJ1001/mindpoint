@@ -4,7 +4,8 @@ import type { Id } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { requireAdmin } from "./adminAuth";
 import { createAdminAuditLog } from "./adminAudit";
-import { CourseBogoValue, CourseOfferValue } from "./schema";
+import { CourseBogoValue, CourseOfferValue, OfferOccasion } from "./schema";
+import { reconcileCampaignsNow } from "./promoCampaigns";
 import {
   convexFailure,
   convexResultErrorCode,
@@ -238,6 +239,15 @@ export const saveCampaign = mutation({
     description: v.optional(v.string()),
     offer: v.optional(v.union(v.null(), CourseOfferValue)),
     bogo: v.optional(v.union(v.null(), CourseBogoValue)),
+    occasion: v.optional(OfferOccasion),
+    enabled: v.optional(v.boolean()),
+    priority: v.optional(v.number()),
+    headline: v.optional(v.string()),
+    lead: v.optional(v.string()),
+    bannerImageUrl: v.optional(v.string()),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
+    eligibleCourseIds: v.optional(v.array(v.id("courses"))),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
@@ -277,6 +287,15 @@ export const saveCampaign = mutation({
         description: args.description?.trim() || undefined,
         offer,
         bogo,
+        occasion: args.occasion,
+        enabled: args.enabled ?? existing.enabled ?? true,
+        priority: args.priority ?? existing.priority ?? 0,
+        headline: args.headline?.trim() || undefined,
+        lead: args.lead?.trim() || undefined,
+        bannerImageUrl: args.bannerImageUrl?.trim() || undefined,
+        startDate: args.startDate || undefined,
+        endDate: args.endDate || undefined,
+        eligibleCourseIds: args.eligibleCourseIds ?? existing.eligibleCourseIds,
         updatedAt: now,
         updatedByAdminId: admin.userId,
       });
@@ -299,6 +318,10 @@ export const saveCampaign = mutation({
         after: updated,
       });
 
+      // Apply or withdraw immediately; the cron is the safety net, not the
+      // only path.
+      await reconcileCampaignsNow(ctx);
+
       return convexSuccess({ campaign: updated });
     }
 
@@ -307,6 +330,15 @@ export const saveCampaign = mutation({
       description: args.description?.trim() || undefined,
       offer,
       bogo,
+      occasion: args.occasion,
+      enabled: args.enabled ?? true,
+      priority: args.priority ?? 0,
+      headline: args.headline?.trim() || undefined,
+      lead: args.lead?.trim() || undefined,
+      bannerImageUrl: args.bannerImageUrl?.trim() || undefined,
+      startDate: args.startDate || undefined,
+      endDate: args.endDate || undefined,
+      eligibleCourseIds: args.eligibleCourseIds,
       isArchived: false,
       createdAt: now,
       updatedAt: now,
@@ -329,6 +361,8 @@ export const saveCampaign = mutation({
       entityId: String(campaignId),
       after: created,
     });
+
+    await reconcileCampaignsNow(ctx);
 
     return convexSuccess({ campaign: created });
   },
@@ -374,6 +408,9 @@ export const setCampaignArchived = mutation({
       before: existing,
       after: updated,
     });
+
+    // Archiving withdraws its offers on the next line, not five minutes later.
+    await reconcileCampaignsNow(ctx);
 
     return convexSuccess({ campaign: updated });
   },

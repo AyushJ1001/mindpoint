@@ -60,6 +60,14 @@ export const OfferDiscountType = v.union(
   v.literal("flatOff"),
 );
 
+export const OfferOccasion = v.union(
+  v.literal("early-bird"),
+  v.literal("diwali"),
+  v.literal("christmas"),
+  v.literal("new-year"),
+  v.literal("general"),
+);
+
 export const CourseOfferValue = v.object({
   name: v.string(),
   discount: v.optional(v.number()),
@@ -67,6 +75,17 @@ export const CourseOfferValue = v.object({
   discountValue: v.optional(v.number()),
   startDate: v.optional(v.string()),
   endDate: v.optional(v.string()),
+  // Set when a scheduled campaign wrote this offer, so the reconciler only ever
+  // clears offers it created and never touches a hand-applied one.
+  campaignId: v.optional(v.string()),
+  occasion: v.optional(OfferOccasion),
+  headline: v.optional(v.string()),
+  lead: v.optional(v.string()),
+  bannerImageUrl: v.optional(v.string()),
+  // The genuine price before the offer, kept so a card can strike through the
+  // real standard fee rather than an inflated one.
+  standardPrice: v.optional(v.number()),
+  offerPrice: v.optional(v.number()),
 });
 
 export const CourseBogoValue = v.object({
@@ -458,6 +477,21 @@ export default defineSchema({
     updatedByAdminId: v.string(),
     lastAppliedAt: v.optional(v.number()),
     lastAppliedCourseIds: v.optional(v.array(v.id("courses"))),
+    // Scheduled campaign fields. `enabled` defaults to true when absent so the
+    // campaigns created before scheduling existed keep behaving as applied-on-
+    // demand presets rather than silently switching on.
+    occasion: v.optional(OfferOccasion),
+    enabled: v.optional(v.boolean()),
+    priority: v.optional(v.number()),
+    headline: v.optional(v.string()),
+    lead: v.optional(v.string()),
+    bannerImageUrl: v.optional(v.string()),
+    startDate: v.optional(v.string()),
+    endDate: v.optional(v.string()),
+    eligibleCourseIds: v.optional(v.array(v.id("courses"))),
+    // What the reconciler last wrote, so it can clear only its own offers.
+    appliedCourseIds: v.optional(v.array(v.id("courses"))),
+    lastReconciledAt: v.optional(v.number()),
   })
     .index("by_updatedAt", ["updatedAt"])
     .index("by_isArchived_updatedAt", ["isArchived", "updatedAt"]),
