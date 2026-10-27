@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
+import { availabilityLabel } from "@/lib/pricing";
 import type {
   HomeCourse,
   HomeCourses,
@@ -50,11 +51,7 @@ function CourseColumn({ course }: { course: HomeCourse }) {
             </div>
             {live.seatsLeft !== undefined ? (
               <div className="text-muted-foreground text-xs">
-                {live.seatsLeft === 0
-                  ? "Fully booked"
-                  : live.capacity
-                    ? `${live.seatsLeft} of ${live.capacity} seats left`
-                    : `${live.seatsLeft} seats left`}
+                {availabilityLabel(live.seatsLeft, live.capacity)}
               </div>
             ) : null}
           </div>
