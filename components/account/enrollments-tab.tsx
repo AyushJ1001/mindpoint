@@ -133,6 +133,17 @@ export function EnrollmentsTab() {
                       Lifetime recordings included
                     </Badge>
                   )}
+                  {enrollment.courseType === "certificate" ||
+                  enrollment.courseType === "internship" ? (
+                    <div className="pt-3">
+                      <Link
+                        href={`/lms/course/${course._id}`}
+                        className="text-primary text-sm font-medium underline-offset-4 hover:underline"
+                      >
+                        Notes, recordings and certificate →
+                      </Link>
+                    </div>
+                  ) : null}
                   {lmsCourseTypes.has(enrollment.courseType ?? "") && (
                     <div className="pt-3">
                       <Button

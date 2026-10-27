@@ -75,6 +75,7 @@ import type * as leads from "../leads.js";
 import type * as lms from "../lms.js";
 import type * as lmsAdmin from "../lmsAdmin.js";
 import type * as lmsCompletion from "../lmsCompletion.js";
+import type * as lmsCourseContent from "../lmsCourseContent.js";
 import type * as lmsFaculty from "../lmsFaculty.js";
 import type * as loyaltySearch from "../loyaltySearch.js";
 import type * as migrations from "../migrations.js";
@@ -161,6 +162,7 @@ declare const fullApi: ApiFromModules<{
   lms: typeof lms;
   lmsAdmin: typeof lmsAdmin;
   lmsCompletion: typeof lmsCompletion;
+  lmsCourseContent: typeof lmsCourseContent;
   lmsFaculty: typeof lmsFaculty;
   loyaltySearch: typeof loyaltySearch;
   migrations: typeof migrations;
