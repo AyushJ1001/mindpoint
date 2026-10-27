@@ -77,7 +77,7 @@ const OFFERINGS = [
   {
     icon: History,
     title: "Lifetime recording access",
-    copy: "Eligible new enrolments keep access to the class recordings.",
+    copy: "Certificate courses and the internship enrolled from 27 October 2026 keep their class recordings for as long as the platform runs.",
   },
 ];
 
