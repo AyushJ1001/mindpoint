@@ -128,7 +128,15 @@ export const saveProfile = mutation({
     if (args.profileId) {
       const existing = await ctx.db.get(args.profileId);
       if (!existing) return { error: "Profile not found" as const };
-      await ctx.db.patch(args.profileId, fields);
+
+      // Convex deletes a field when it is patched with `undefined`, so a save
+      // that did not pick a new photograph must leave the old one alone.
+      const patch = { ...fields };
+      if (args.photoStorageId === undefined) {
+        delete patch.photoStorageId;
+      }
+
+      await ctx.db.patch(args.profileId, patch);
       await createAdminAuditLog(ctx, {
         actorAdminId: admin.userId,
         actorEmail: admin.email,
@@ -136,7 +144,7 @@ export const saveProfile = mutation({
         entityType: "facultyProfile",
         entityId: String(args.profileId),
         before: existing,
-        after: { ...existing, ...fields },
+        after: { ...existing, ...patch },
       });
       return { profileId: args.profileId };
     }
