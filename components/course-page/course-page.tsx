@@ -1,4 +1,5 @@
 import { CaseRoomPreview } from "@/components/course-page/case-room-preview";
+import { CertificateInfo } from "@/components/course-page/certificate-info";
 import { CertificatePreview } from "@/components/course-page/certificate-preview";
 import { CohortTimeline } from "@/components/course-page/cohort-timeline";
 import { CourseHero } from "@/components/course-page/course-hero";
@@ -8,13 +9,15 @@ import { FacultySection } from "@/components/course-page/faculty-card";
 import { FinalCTA } from "@/components/course-page/final-cta";
 import { LearningJourney } from "@/components/course-page/learning-journey";
 import { OptionCards } from "@/components/course-page/option-cards";
+import { PracticalExperienceSection } from "@/components/course-page/practical-experience";
 import { UpgradePanelLazy } from "@/components/course-page/upgrade-panel-lazy";
-import { IntroUpgradeNotice } from "@/components/course-page/intro-upgrade-notice";
+import { IntroUpgradeNoticeLazy } from "@/components/course-page/intro-upgrade-notice-lazy";
 import { WaitlistSection } from "@/components/course-page/waitlist-section";
 import { OutcomeGrid } from "@/components/course-page/outcome-grid";
 import { PartComparison } from "@/components/course-page/part-comparison";
 import { PricingCards } from "@/components/course-page/pricing-cards";
 import { ProgrammeReviews } from "@/components/course-page/programme-reviews";
+import { RecordingsSection } from "@/components/course-page/recordings";
 import { StickyCta } from "@/components/course-page/sticky-cta";
 import { TrackProgrammeView } from "@/components/analytics/TrackProgrammeView";
 import {
@@ -33,9 +36,11 @@ import {
   ShortProposition,
   Testimonials,
   WeeklyCommitment,
+  WhyItMatters,
 } from "@/components/course-page/supporting-sections";
 import { ToolkitSection } from "@/components/course-page/toolkit-section";
 import type { CourseContent } from "@/lib/course-content/types";
+import { formatTime } from "@/lib/course-content/operational";
 import {
   waitlistDeliveriesForType,
   type WaitlistCourseType,
@@ -71,6 +76,66 @@ function programmeWaitlistBatches(course: CourseContent) {
     });
   }
   return batches;
+}
+
+function formatDate(value?: string): string | undefined {
+  if (!value) return undefined;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return undefined;
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+/** The first option with a bound cohort, if any. */
+function batchFor(course: CourseContent) {
+  for (const item of course.options?.items ?? []) {
+    if (item.cart?.batch) return item.cart.batch;
+  }
+  return undefined;
+}
+
+/** Hero facts bound from the catalogue: start date, live schedule, duration. */
+function heroFacts(course: CourseContent) {
+  const batch = batchFor(course);
+  const facts: { label: string; value: string }[] = [];
+  const start = formatDate(batch?.startDate);
+  if (start) facts.push({ label: "Starts", value: start });
+
+  const days = batch?.daysOfWeek?.length
+    ? batch.daysOfWeek.join(" & ")
+    : undefined;
+  const time =
+    batch?.startTime && batch?.endTime
+      ? `${formatTime(batch.startTime)}–${formatTime(batch.endTime)} IST`
+      : undefined;
+  const schedule = [days, time].filter(Boolean).join(" · ");
+  if (schedule) facts.push({ label: "Live schedule", value: schedule });
+
+  if (course.duration) facts.push({ label: "Duration", value: course.duration });
+  return facts;
+}
+
+/** Full cohort line for the eight-week journey strip. */
+function cohortLine(course: CourseContent): string | undefined {
+  const batch = batchFor(course);
+  if (!batch) return undefined;
+  const start = formatDate(batch.startDate);
+  const end = formatDate(batch.endDate);
+  const days = batch.daysOfWeek?.join(" & ");
+  const time =
+    batch.startTime && batch.endTime
+      ? `${formatTime(batch.startTime)}–${formatTime(batch.endTime)} IST`
+      : undefined;
+  return [
+    start && end && start !== end ? `${start} to ${end}` : start,
+    days,
+    time,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 }
 
 export function CoursePage({ course }: { course: CourseContent }) {
@@ -114,20 +179,30 @@ export function CoursePage({ course }: { course: CourseContent }) {
   );
 
   if (course.layout === "brief") {
+    const facts = heroFacts(course);
+    const cohort = cohortLine(course);
     return (
       <div className="relative">
         <TrackProgrammeView courseCode={analyticsCourseCode} />
         {course.hero ? (
-          <ProgrammeHeroSection hero={course.hero} fromPrice={fromPrice} />
+          <ProgrammeHeroSection
+            hero={course.hero}
+            fromPrice={fromPrice}
+            image={course.image}
+            facts={facts}
+          />
         ) : null}
-        {course.overview ? (
-          <ProgrammeOverviewSection overview={course.overview} />
+        {course.whyItMatters ? (
+          <WhyItMatters text={course.whyItMatters} />
         ) : null}
         {course.audienceGroups ? (
           <AudienceGroupsSection groups={course.audienceGroups} />
         ) : null}
         <OutcomeGrid course={course} />
         <Wave />
+        {course.overview ? (
+          <ProgrammeOverviewSection overview={course.overview} cohort={cohort} />
+        ) : null}
         {course.curriculum ? (
           <CurriculumTabs curriculum={course.curriculum} />
         ) : null}
@@ -137,13 +212,25 @@ export function CoursePage({ course }: { course: CourseContent }) {
             steps={course.howItWorks.steps}
           />
         ) : null}
+        <FacultySection faculty={course.faculty} />
+        <PracticalExperienceSection />
+        {course.lifetimeRecordings ? <RecordingsSection /> : null}
         {course.materials ? (
           <LearningMaterialsSection materials={course.materials} />
+        ) : null}
+        {course.certificate ? (
+          <CertificateInfo
+            certificate={course.certificate}
+            shortTitle={course.shortTitle}
+          />
+        ) : null}
+        {course.assessment ? (
+          <AssessmentSection assessment={course.assessment} />
         ) : null}
         <Wave />
         {course.options ? <OptionCards options={course.options} /> : null}
         {course.category.toLowerCase().includes("certificate") ? (
-          <IntroUpgradeNotice
+          <IntroUpgradeNoticeLazy
             target={
               course.options?.items.find((item) => item.key === "applied")?.cart
             }
@@ -167,9 +254,6 @@ export function CoursePage({ course }: { course: CourseContent }) {
             deliveries={waitlistDeliveriesForType(waitlistType)}
             source={`programme:${course.slug}`}
           />
-        ) : null}
-        {course.assessment ? (
-          <AssessmentSection assessment={course.assessment} />
         ) : null}
         <ProgrammeReviews courseId={reviewCourseId} />
         <FAQ items={course.faq} />

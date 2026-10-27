@@ -49,6 +49,9 @@ export function FacultyCard({ member }: { member: FacultyMember }) {
 const FACULTY_CREDENTIALS =
   "Every member of our teaching faculty holds a Master’s in psychology and a specialisation diploma or certificate.";
 
+const FACULTY_ON_REQUEST =
+  "We do not publish individual names here. The names and full credentials of the faculty teaching your cohort are shared with you on request.";
+
 export function FacultySection({ faculty }: { faculty: FacultyMember[] }) {
   const confirmed = faculty.filter(
     (member) => member.name && member.name.trim(),
@@ -60,9 +63,13 @@ export function FacultySection({ faculty }: { faculty: FacultyMember[] }) {
       eyebrow="Who teaches it"
       title="Qualified psychology faculty."
       lead={FACULTY_CREDENTIALS}
+      width="narrow"
     >
+      <p className="text-foreground/80 mt-2 max-w-[58ch] text-base leading-relaxed">
+        {FACULTY_ON_REQUEST}
+      </p>
       {confirmed.length > 0 ? (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {confirmed.map((member) => (
             <FacultyCard key={member.name} member={member} />
           ))}

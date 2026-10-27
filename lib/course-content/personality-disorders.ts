@@ -18,6 +18,13 @@ export const personalityDisorders: CourseContent = {
     "An eight-week live certificate course: six weeks of structured learning, then two weeks of practical training working through fictional cases without stigma.",
   heroCopy:
     "Move beyond labels. Understand patterns, formulation and the person behind the diagnosis.",
+  whyItMatters:
+    "Personality disorder labels are widely used and widely misunderstood. Learning how the categories developed, what they describe, and why they carry so much stigma matters because the person is always more than the diagnosis. This course keeps the person — not the label — at the centre.",
+  image: {
+    src: "/coastal/hero.jpg",
+    alt: "Turquoise water meeting pale sand, seen from above.",
+  },
+  lifetimeRecordings: true,
   learningOutcomes: [
     "Describe the recognised personality disorder categories and where they came from.",
     "Explain the difference between a lasting trait and a disorder, and why the distinction is debated.",
@@ -46,7 +53,7 @@ export const personalityDisorders: CourseContent = {
   caseRoom: [],
   toolkit: [],
   faculty: [],
-  duration: undefined,
+  duration: "8 weeks",
   weeklyCommitment: undefined,
   selfPacedStart: undefined,
   liveStart: undefined,
@@ -131,7 +138,9 @@ export const personalityDisorders: CourseContent = {
 
   overview: {
     eyebrow: "The course in one view",
-    title: "Eight weeks: six of learning, two of practice",
+    title: "Six Weeks to Build Your Understanding. Two Weeks to Bring It to Life.",
+    supporting:
+      "Six weeks of live classes build your understanding of the categories, stigma and formulation. Two weeks of practical training put that understanding to work on fictional cases, with faculty feedback.",
     eightWeekJourney: true,
     stages: [
       {
@@ -310,6 +319,17 @@ export const personalityDisorders: CourseContent = {
     eyebrow: "Assessment and completion",
     title: "How you are assessed",
     body: "The learning weeks include knowledge checks and fictional case reflections so learners can confirm they understand the language and its limits. The practical weeks use case formulation, discussion and practice of a reasoned, non-stigmatising stance, reviewed with faculty.",
+  },
+
+  certificate: {
+    eyebrow: "Certificate",
+    title: "A certificate you earn, not collect.",
+    body: "On successful completion you receive a certificate of completion that states the course title and that it is an educational certificate. The wording is honest: it is not a degree, a licence or a clinical qualification, and it does not authorise psychotherapy practice.",
+    items: [
+      "Awarded on assessed completion.",
+      "States the course title and its educational nature.",
+      "Does not claim to be a degree, licence or clinical qualification.",
+    ],
   },
 
   options: {

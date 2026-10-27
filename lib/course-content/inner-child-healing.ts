@@ -18,6 +18,13 @@ export const innerChildHealing: CourseContent = {
     "An eight-week live certificate course: six weeks of structured learning, then two weeks of practical training working gently and responsibly with childhood patterns.",
   heroCopy:
     "Understand what we carry. Explore where it began. Learn healthier ways of responding today.",
+  whyItMatters:
+    "What we carry from childhood shapes how we respond today, often without our noticing. Understanding those patterns — and learning how to work with them gently and at a safe pace — matters for anyone who wants to respond rather than react.",
+  image: {
+    src: "/coastal/calm.jpg",
+    alt: "Sunrise over a calm sea, with gentle surf reaching wet sand.",
+  },
+  lifetimeRecordings: true,
   learningOutcomes: [
     "Explain what inner child work means, where the idea came from and what it is useful for.",
     "Describe how early relationships and experiences can shape adult beliefs, expectations and responses.",
@@ -46,7 +53,7 @@ export const innerChildHealing: CourseContent = {
   caseRoom: [],
   toolkit: [],
   faculty: [],
-  duration: undefined,
+  duration: "8 weeks",
   weeklyCommitment: undefined,
   selfPacedStart: undefined,
   liveStart: undefined,
@@ -131,7 +138,9 @@ export const innerChildHealing: CourseContent = {
 
   overview: {
     eyebrow: "The course in one view",
-    title: "Eight weeks: six of learning, two of practice",
+    title: "Six Weeks to Build Your Understanding. Two Weeks to Bring It to Life.",
+    supporting:
+      "Six weeks of live classes build your understanding of early patterns, attachment and self-compassion. Two weeks of practical training put that understanding to work on fictional cases, with faculty feedback.",
     eightWeekJourney: true,
     stages: [
       {
@@ -310,6 +319,17 @@ export const innerChildHealing: CourseContent = {
     eyebrow: "Assessment and completion",
     title: "How you are assessed",
     body: "The learning weeks include knowledge checks and optional reflections on fictional cases so learners can confirm they understand the ideas and the cautions. The practical weeks use case discussion and practice of a grounded, trauma-informed stance, reviewed with faculty.",
+  },
+
+  certificate: {
+    eyebrow: "Certificate",
+    title: "A certificate you earn, not collect.",
+    body: "On successful completion you receive a certificate of completion that states the course title and that it is an educational certificate. The wording is honest: it is not a degree, a licence or a clinical qualification, and it does not authorise psychotherapy practice.",
+    items: [
+      "Awarded on assessed completion.",
+      "States the course title and its educational nature.",
+      "Does not claim to be a degree, licence or clinical qualification.",
+    ],
   },
 
   options: {

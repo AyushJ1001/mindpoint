@@ -2,6 +2,21 @@ import { ContentPlaceholder } from "@/components/course-page/placeholder";
 import { Section } from "@/components/course-page/section";
 import type { CourseContent } from "@/lib/course-content/types";
 
+export function WhyItMatters({ text }: { text: string }) {
+  return (
+    <Section
+      id="why"
+      eyebrow="Why it matters"
+      title="Why this subject matters."
+      width="narrow"
+    >
+      <p className="calm-lead text-foreground/85 text-xl leading-[1.6] sm:text-2xl">
+        {text}
+      </p>
+    </Section>
+  );
+}
+
 export function ShortProposition({ course }: { course: CourseContent }) {
   return (
     <Section id="proposition" width="narrow" className="pt-4 sm:pt-6">
