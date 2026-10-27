@@ -68,6 +68,7 @@ import type * as courses from "../courses.js";
 import type * as crons from "../crons.js";
 import type * as emailActions from "../emailActions.js";
 import type * as emailActionsWithRateLimit from "../emailActionsWithRateLimit.js";
+import type * as facultyProfiles from "../facultyProfiles.js";
 import type * as googleSheets from "../googleSheets.js";
 import type * as image from "../image.js";
 import type * as introUpgrades from "../introUpgrades.js";
@@ -155,6 +156,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   emailActions: typeof emailActions;
   emailActionsWithRateLimit: typeof emailActionsWithRateLimit;
+  facultyProfiles: typeof facultyProfiles;
   googleSheets: typeof googleSheets;
   image: typeof image;
   introUpgrades: typeof introUpgrades;

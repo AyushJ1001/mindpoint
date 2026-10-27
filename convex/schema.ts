@@ -903,6 +903,27 @@ export default defineSchema({
     ])
     .index("by_courseId_and_facultyEmail", ["courseId", "facultyEmail"]),
 
+  // Faculty profiles. Nothing here is public until an admin sets `published`,
+  // and the default is unpublished: the owner supplies verified details.
+  facultyProfiles: defineTable({
+    name: v.string(),
+    role: v.optional(v.string()),
+    qualifications: v.array(v.string()),
+    experience: v.optional(v.string()),
+    registrationBody: v.optional(v.string()),
+    registrationNumber: v.optional(v.string()),
+    bio: v.optional(v.string()),
+    photoStorageId: v.optional(v.id("_storage")),
+    courseIds: v.optional(v.array(v.id("courses"))),
+    published: v.boolean(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    createdByAdminId: v.string(),
+    updatedByAdminId: v.string(),
+  })
+    .index("by_published", ["published"])
+    .index("by_updatedAt", ["updatedAt"]),
+
   lmsQuestions: defineTable({
     enrollmentId: v.id("enrollments"),
     curriculumId: v.id("lmsCurricula"),
