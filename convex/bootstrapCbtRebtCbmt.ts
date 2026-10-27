@@ -24,7 +24,7 @@ import { cbtRebtCbmt } from "../lib/cbt-rebt-cbmt-content";
 
 const COURSE_CODE = "CCBT3";
 const COURSE_NAME = "CBT, REBT & CBMT";
-const COURSE_PRICE = 3499; // TODO confirm
+const COURSE_PRICE = 4500;
 const USES_BATCHES = false;
 
 // Only used when USES_BATCHES is true.

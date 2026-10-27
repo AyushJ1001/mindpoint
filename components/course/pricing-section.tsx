@@ -17,6 +17,7 @@ import { formatDateCommon, formatINR } from "@/components/course/course-hero";
 import { formatCourseTimeRange } from "@/lib/course-schedule";
 import { getCoursePrice, type OfferDetails } from "@/lib/utils";
 import { calculatePointsEarned } from "@/lib/mind-points";
+import { availabilityLabel } from "@/lib/pricing";
 import ChoosePlan from "@/components/therapy/choose-plan";
 import ChooseSupervisedPlan from "@/components/therapy/choose-supervised-plan";
 import type { PublicCourse, PublicCourseBatch } from "@/lib/backend";
@@ -219,10 +220,10 @@ export default function PricingSection({
                 )}
               </div>
 
-              {seatsLeft > 0 && seatsLeft <= 5 && (
+              {availabilityLabel(seatsLeft, activeCourse.capacity) ===
+                "Limited availability" && (
                 <p className="text-foreground/55 mt-3 text-sm">
-                  Only {seatsLeft} seat{seatsLeft === 1 ? "" : "s"} left in this
-                  intake.
+                  Limited availability in this intake.
                 </p>
               )}
 
@@ -343,11 +344,12 @@ export default function PricingSection({
                                 </span>
                               ) : null}
                               {batch.isSelectable &&
-                              seatsRemaining > 0 &&
-                              seatsRemaining <= 8 ? (
+                              availabilityLabel(
+                                seatsRemaining,
+                                batch.capacity,
+                              ) === "Limited availability" ? (
                                 <span className="calm-batch-sub text-primary/70 mt-0.5 block">
-                                  {seatsRemaining} seat
-                                  {seatsRemaining === 1 ? "" : "s"} left
+                                  Limited availability
                                 </span>
                               ) : null}
                             </span>

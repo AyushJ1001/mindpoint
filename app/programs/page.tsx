@@ -83,7 +83,7 @@ export default function ProgramsPage() {
               January 2027 cohorts are open
             </b>
             <span className="text-sm opacity-80">
-              Registration is open. Three live certificate courses at ₹3,499
+              Registration is open. Three live certificate courses at ₹4,500
               each, plus the Counselling Psychology Internship.
             </span>
           </span>

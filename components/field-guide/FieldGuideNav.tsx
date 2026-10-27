@@ -295,7 +295,7 @@ export default function FieldGuideNav() {
                     January 2027 cohorts
                   </b>
                   <span className="text-primary-foreground/80 text-sm">
-                    Registration open · three live certificates, ₹3,499 each
+                    Registration open · three live certificates, ₹4,500 each
                   </span>
                 </span>
                 <ArrowRight className="h-5 w-5 shrink-0" aria-hidden="true" />

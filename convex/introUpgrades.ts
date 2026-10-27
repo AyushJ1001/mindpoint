@@ -21,16 +21,19 @@ export const INTRO_UPGRADES: {
     name: "Upgrade: ₹999 intro to any certificate course",
     introCodes: ["PRPFA", "PRCP", "PRSP", "PRCVCP"],
   },
-  {
-    code: "UPGRADE-INTRO-1499",
-    name: "Upgrade: ₹1,499 intro to any certificate course",
-    introCodes: ["PRCBTI", "PRICHI", "PRPDI"],
-  },
 ];
 
 // Per-course upgrade coupons these replace. They required the intro in the
-// same cart, so an owner could never use them.
-const RETIRED_CODES = ["UPGRADE-CCCBT", "UPGRADE-CCPD", "UPGRADE-CCICH"];
+// same cart, so an owner could never use them. The ₹1,499 introductions were
+// withdrawn on 27 October 2026, so their upgrade coupon is retired with them;
+// the internship coupon is retired too, since the credit is the ₹999 one.
+const RETIRED_CODES = [
+  "UPGRADE-CCCBT",
+  "UPGRADE-CCPD",
+  "UPGRADE-CCICH",
+  "UPGRADE-INTRO-1499",
+  "UPGRADE-INCLP",
+];
 
 function pickLiveRow(courses: Doc<"courses">[], code: string) {
   const matches = courses.filter(
@@ -93,22 +96,6 @@ export const applyIntroUpgradeCoupons = internalMutation({
         await ctx.db.insert("adminCoupons", fields);
         results.push({ code: seed.code, action: "created", credit });
       }
-    }
-
-    // The internship primer upgrade keeps its course, but must check
-    // ownership rather than the cart, once per learner.
-    const internship = await ctx.db
-      .query("adminCoupons")
-      .withIndex("by_code", (q) => q.eq("code", "UPGRADE-INCLP"))
-      .first();
-    if (internship) {
-      await ctx.db.patch(internship._id, {
-        requirementSatisfiedBy: "owned",
-        perUserLimit: 1,
-        updatedAt: now,
-        updatedByAdminId: ACTOR,
-      });
-      results.push({ code: internship.code, action: "now ownership-based" });
     }
 
     for (const code of RETIRED_CODES) {

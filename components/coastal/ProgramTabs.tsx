@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
+import { JANUARY_CERTIFICATE_FEE } from "@/lib/pricing";
 
 const TABS = [
   { key: "live", label: "Live cohorts" },
@@ -37,7 +38,7 @@ const LIVE = [
   },
 ];
 
-const LIVE_PRICE = "₹3,499";
+const LIVE_PRICE = `₹${JANUARY_CERTIFICATE_FEE.toLocaleString("en-IN")}`;
 
 const ROWS = {
   self: [

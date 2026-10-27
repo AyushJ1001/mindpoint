@@ -38,7 +38,7 @@ export const MASTERCLASS = {
     },
     {
       q: "What else is open right now?",
-      a: "Registration is open for three live certificate courses starting in January 2027 (₹3,499 each, eight weeks: six of structured learning, two of practical training) and the Counselling Psychology Internship (₹2,499, from 18 January 2027). Four ₹999 self-paced intro courses are also available. You can unsubscribe from our emails any time.",
+      a: "Registration is open for three live certificate courses starting in January 2027 (₹4,500 each, eight weeks: six of structured learning, two of practical training) and the Counselling Psychology Internship (₹2,499, from 18 January 2027). Four ₹999 self-paced intro courses are also available, and their fee is credited toward a certificate course. You can unsubscribe from our emails any time.",
     },
     {
       q: "Is this a degree or a licence?",
