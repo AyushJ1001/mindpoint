@@ -67,7 +67,13 @@ export function FacultySection({ faculty }: { faculty: FacultyMember[] }) {
     (member) => member.name && member.name.trim(),
   );
 
-  if (profiles && profiles.length > 0) {
+  // Still loading: render nothing rather than the shared fallback, so the page
+  // never claims "we do not publish names" while published profiles exist.
+  if (profiles === undefined) {
+    return null;
+  }
+
+  if (profiles.length > 0) {
     return (
       <Section
         id="faculty"
