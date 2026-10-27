@@ -60,7 +60,7 @@ const INCLUDED = [
   "Small live cohort, so discussion stays real",
   "Practice and feedback, not just theory",
   "Certificate with public verification",
-  "A completion certificate you can verify online",
+  "Study notes and reading for every week",
   "Support within 48–72 hours on working days",
 ];
 
