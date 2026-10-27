@@ -93,7 +93,7 @@ export const counsellingInternship: CourseContent = {
     {
       question: "Is the internship recorded?",
       answer:
-        "The internship is taught live. Replay access is only offered if the specific cohort includes recordings and The Mind Point has approved that benefit.",
+        "Yes. Internship enrolments from 27 October 2026 keep access to the session recordings for as long as The Mind Point's platform operates, and we will give 90 days' notice with a download window if it ever closes. Earlier enrolments keep the access that applied when they joined.",
     },
     {
       question: "Does this qualify me to practise?",
@@ -354,4 +354,8 @@ export const counsellingInternship: CourseContent = {
 
   campaign: true,
   order: 4,
+  /** Supervised cohort with its own practice model, not the certificate 6+2. */
+  applicationBased: true,
+  /** Enrolments from 27 October 2026 keep their recordings. */
+  lifetimeRecordings: true,
 };

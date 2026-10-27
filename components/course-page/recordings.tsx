@@ -11,7 +11,7 @@ export function RecordingsSection() {
       id="recordings"
       eyebrow="Lifetime access"
       title="Learn Live. Revisit Anytime."
-      lead="New January 2027 enrolments receive lifetime access to the recordings of the live classes, so you can revisit any session at your own pace."
+      lead="Enrolments from 27 October 2026 receive lifetime access to the recordings of the live classes, so you can revisit any session at your own pace."
       width="narrow"
     >
       <p className="text-foreground/85 max-w-[62ch] text-[1.02rem] leading-relaxed">
