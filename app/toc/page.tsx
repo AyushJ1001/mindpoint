@@ -101,11 +101,15 @@ export default function TOC() {
             express written permission from The Mind Point.
           </li>
           <li>
-            Recording access for courses, internships, and pre-recorded Services
-            is provided for a limited period of 3 months from the date of
-            enrollment or access grant. After this period, access will be
-            revoked without exception. No extensions, renewals, or reactivations
-            will be granted under any circumstances.
+            Recording access depends on what you joined. Certificate courses
+            and the Counselling Psychology internship enrolled on or after 27
+            October 2026 keep their class recordings for as long as The Mind
+            Point&rsquo;s platform operates; if the platform ever closes, we
+            will give 90 days&rsquo; notice so you can download what you need.
+            Enrolments before that date keep the three-month access that applied
+            when they joined. Pre-recorded introduction courses, workshops and
+            other on-demand material remain available for 3 months from the date
+            of enrollment or access grant.
           </li>
         </ul>
         <p className="mb-6 leading-relaxed text-foreground/80">
@@ -220,12 +224,15 @@ export default function TOC() {
           Recording Access
         </h3>
         <p className="mb-6 leading-relaxed text-foreground/80">
-          Access to recordings for all courses, internships, diplomas,
-          workshops, and pre-recorded Services is strictly limited to 3 months
-          from the date of enrollment or initial access grant. This access is
-          non-transferable, non-extendable, and will be automatically revoked
-          after the 3-month period without notice or exception. No requests for
-          extensions, even for medical or personal reasons, will be considered.
+          Certificate courses and the Counselling Psychology internship enrolled
+          on or after 27 October 2026 include lifetime access to their class
+          recordings: they stay available for as long as The Mind Point&rsquo;s
+          platform operates. If the platform ever closes, we will give 90
+          days&rsquo; notice and a download window. Enrolments before 27 October
+          2026 keep the three-month access that applied when they joined.
+          Pre-recorded introduction courses, workshops and other on-demand
+          material remain available for 3 months from enrollment or first
+          access. Recording access is personal and non-transferable.
         </p>
 
         <h3 className="mb-3 text-xl font-semibold text-foreground">

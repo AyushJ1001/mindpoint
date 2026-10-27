@@ -1,11 +1,20 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, Check, Shield } from "lucide-react";
-import { ctaVariants } from "@/components/coastal/cta";
+import {
+  ArrowRight,
+  BookOpen,
+  CalendarDays,
+  Check,
+  ClipboardCheck,
+  History,
+  Layers,
+  Video,
+} from "lucide-react";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { EmailCapture } from "@/components/coastal/EmailCapture";
 import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
 import CoastalVideoTestimonials from "@/components/landing/CoastalVideoTestimonials";
+import { HomeHero } from "@/components/landing/HomeHero";
 import { HomeJanuaryCourses } from "@/components/landing/HomeJanuaryCourses";
 import { HomeInstitutions } from "@/components/landing/HomeInstitutions";
 import { HomeReviews } from "@/components/landing/HomeReviews";
@@ -39,26 +48,51 @@ const AUDIENCE = [
   },
 ];
 
+const OFFERINGS = [
+  {
+    icon: CalendarDays,
+    title: "Eight-week certificate courses",
+    copy: "Each course runs for eight weeks and ends with a certificate of completion.",
+  },
+  {
+    icon: Layers,
+    title: "Six weeks of learning, two of practice",
+    copy: "Six weeks of structured learning, then two weeks of practical application.",
+  },
+  {
+    icon: Video,
+    title: "Live online teaching",
+    copy: "Classes run live on Tuesdays and Thursdays in the evening, IST, so you can join from anywhere in India.",
+  },
+  {
+    icon: BookOpen,
+    title: "Detailed study notes",
+    copy: "Notes accompany the classes, so you can revise the models and vocabulary at your own pace.",
+  },
+  {
+    icon: ClipboardCheck,
+    title: "Faculty-curated practicals",
+    copy: "The practical weeks are designed by faculty and worked through on fictional cases, with feedback.",
+  },
+  {
+    icon: History,
+    title: "Lifetime recording access",
+    copy: "Certificate courses and the internship enrolled from 27 October 2026 keep their class recordings for as long as the platform runs.",
+  },
+];
+
 const TEACHING = [
   {
     title: "Case-based discussion",
     copy: "Concepts are worked through fictional cases in class, so you see how an idea applies to a person.",
   },
   {
-    title: "Detailed study notes",
-    copy: "Notes accompany the classes, so you can revise the models and vocabulary at your own pace.",
-  },
-  {
     title: "Guided practical exercises",
     copy: "In weeks seven and eight you apply what you learned to fictional cases, with faculty feedback.",
   },
   {
-    title: "Live online classes",
-    copy: "Classes run live on Tuesdays and Thursdays in the evening, IST, so you can join from anywhere in India.",
-  },
-  {
-    title: "Affordable fees",
-    copy: "One fee covers the full eight weeks, paid once at checkout.",
+    title: "Live, not pre-recorded",
+    copy: "You can ask questions in the moment and hear how other learners reason through the same case.",
   },
   {
     title: "A certificate you can verify",
@@ -81,162 +115,155 @@ const ENROL_STEPS = [
   },
 ];
 
+const brandButton =
+  "bg-brand-button text-brand-button-foreground inline-flex items-center justify-center gap-2 rounded-brand px-6 py-3.5 text-sm font-semibold transition-opacity hover:opacity-90";
+
+function formatPrice(value: number) {
+  return `₹${value.toLocaleString("en-IN")}`;
+}
+
 export default function CoastalHome({
   canAccessAdmin,
   courses,
 }: CoastalHomeProps) {
   return (
     <>
-      {/* ── Hero ── */}
-      <section className="pt-14 sm:pt-20">
-        <div className="container">
-          <span className="water-eyebrow text-[0.7rem] font-semibold tracking-[0.32em] uppercase">
-            The Mind Point · Psychology education
-          </span>
-          <h1 className="font-display text-foreground mt-5 max-w-4xl text-4xl leading-[1.06] tracking-[-0.03em] sm:text-6xl">
-            Study psychology. Understand it deeply. Learn to apply it.
-          </h1>
-          <p className="text-muted-foreground mt-6 max-w-2xl text-lg sm:text-xl">
-            Go beyond textbook definitions with structured psychology courses
-            that combine clear teaching, meaningful examples and guided
-            practical training.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-4">
-            <Link
-              href="/january-2027"
-              className={ctaVariants({ layout: "flex" })}
-            >
-              Explore January 2027 Courses <ArrowRight className="h-4 w-4" />
-            </Link>
-            <Link
-              href="#how-we-teach"
-              className="border-primary/30 text-primary hover:bg-primary/5 inline-flex items-center gap-2 rounded-full border px-7 py-3.5 text-xs font-medium tracking-[0.16em] uppercase transition-colors"
-            >
-              How We Teach
-            </Link>
-          </div>
-          <div className="border-border text-muted-foreground mt-9 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-dashed pt-6 text-sm">
-            <p>
-              <b className="text-foreground font-semibold">
-                Registration is open
-              </b>{" "}
-              for courses starting {courses.startSummary ?? "in January 2027"}.
-            </p>
-            <span
-              aria-hidden="true"
-              className="bg-border hidden h-4 w-px sm:block"
-            />
-            <p>
-              Free masterclass in preparation.{" "}
-              <Link
-                href="/masterclass"
-                className="text-primary font-semibold underline-offset-4 hover:underline"
-              >
-                Get notified
-              </Link>
-            </p>
-          </div>
-          {canAccessAdmin && (
-            <Link
-              href="/admin"
-              className="text-muted-foreground hover:text-foreground mt-6 inline-flex items-center gap-2 text-sm"
-            >
-              <Shield className="h-4 w-4" /> Admin
-            </Link>
-          )}
-        </div>
+      <HomeHero
+        canAccessAdmin={canAccessAdmin}
+        startSummary={courses.startSummary}
+      />
 
-        <div className="relative mt-12 h-[220px] w-full overflow-hidden sm:mt-14 sm:h-[380px]">
-          <Image
-            src="/coastal/hero.jpg"
-            alt="Turquoise water meeting pale sand, seen from above."
-            fill
-            priority
-            sizes="100vw"
-            className="object-cover"
-          />
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#eaf3f4] to-transparent" />
+      {/* ── What The Mind Point offers ── */}
+      <section
+        id="what-we-offer"
+        aria-labelledby="offer-heading"
+        className="bg-section-ivory py-section-sm sm:py-section scroll-mt-24"
+      >
+        <div className="container">
+          <div className="max-w-3xl">
+            <h2
+              id="offer-heading"
+              className="font-display text-brand-heading text-3xl leading-tight tracking-tight sm:text-5xl"
+            >
+              What The Mind Point offers
+            </h2>
+            <p className="text-brand-body mt-5 text-lg leading-8">
+              The Mind Point is an Indian psychology-education company. We run
+              live online certificate courses, a counselling psychology
+              internship and self-paced introductory courses.
+            </p>
+          </div>
+          <ul className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+            {OFFERINGS.map(({ icon: Icon, title, copy }) => (
+              <li key={title} className="flex gap-4">
+                <span
+                  aria-hidden="true"
+                  className="bg-section-mist text-brand-sage rounded-brand flex h-11 w-11 shrink-0 items-center justify-center"
+                >
+                  <Icon className="h-5 w-5" />
+                </span>
+                <div>
+                  <h3 className="font-display text-brand-heading text-xl leading-snug font-medium">
+                    {title}
+                  </h3>
+                  <p className="text-brand-body mt-1.5 text-sm leading-relaxed">
+                    {copy}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <p className="border-brand-gold bg-section-mist text-brand-heading rounded-brand mt-12 max-w-3xl border-l-4 px-5 py-4 text-base leading-7">
+            <b className="font-semibold">
+              {courses.introPrice
+                ? `${formatPrice(courses.introPrice)} introduction credit.`
+                : "Introduction credit."}
+            </b>{" "}
+            Start with a self-paced introduction; its fee is credited once
+            against any certificate course if you upgrade.{" "}
+            <Link
+              href="/courses/intro"
+              className="font-semibold underline underline-offset-4"
+            >
+              See the introductions
+            </Link>
+          </p>
         </div>
       </section>
 
       {/* ── January 2027 courses ── */}
       <HomeJanuaryCourses courses={courses} />
 
-      {/* ── What The Mind Point is, and who it's for ── */}
+      {/* ── Who the courses are for ── */}
       <section
-        aria-labelledby="about-heading"
-        className="bg-secondary py-20 sm:py-24"
+        aria-labelledby="audience-heading"
+        className="bg-section-ivory py-section-sm sm:py-section"
       >
         <div className="container grid gap-12 lg:grid-cols-[0.9fr_1.1fr]">
           <div>
-            <span className={eyebrowVariants()}>About The Mind Point</span>
             <h2
-              id="about-heading"
-              className="font-display mt-4 text-3xl leading-tight tracking-tight sm:text-5xl"
+              id="audience-heading"
+              className="font-display text-brand-heading text-3xl leading-tight tracking-tight sm:text-5xl"
             >
-              Psychology education, taught live and in depth.
+              Who the courses are for
             </h2>
-            <p className="text-muted-foreground mt-6 text-lg leading-8">
-              The Mind Point is an Indian psychology-education company. We run
-              live online certificate courses, a counselling psychology
-              internship and self-paced introductory courses.
+            <p className="text-brand-body mt-6 text-lg leading-8">
+              Some courses assume no prior training; others are built for
+              students and practitioners. Each programme page says who it is
+              for.
             </p>
-            <p className="text-foreground border-primary mt-6 border-l-2 pl-4 font-medium">
+            <p className="text-brand-heading border-brand-gold mt-6 border-l-2 pl-4 font-medium">
               {FACULTY_LINE}
             </p>
           </div>
-          <div>
-            <h3 className="font-display text-2xl">Who the courses are for</h3>
-            <ul className="mt-6 grid gap-6 sm:grid-cols-2">
-              {AUDIENCE.map((item) => (
-                <li
-                  key={item.title}
-                  className="border-border border-t border-dashed pt-4"
-                >
-                  <b className="font-display block text-xl font-medium">
-                    {item.title}
-                  </b>
-                  <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
-                    {item.copy}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
+          <ul className="grid gap-5 sm:grid-cols-2">
+            {AUDIENCE.map((item) => (
+              <li
+                key={item.title}
+                className="bg-card rounded-brand-lg shadow-brand-sm p-6"
+              >
+                <b className="font-display text-brand-heading block text-xl font-medium">
+                  {item.title}
+                </b>
+                <p className="text-brand-body mt-2 text-sm leading-relaxed">
+                  {item.copy}
+                </p>
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
       {/* ── How we teach ── */}
       <section
-        id="how-we-teach"
+        id="approach"
         aria-labelledby="how-heading"
-        className="scroll-mt-24 py-20 sm:py-28"
+        className="bg-section-mist py-section-sm sm:py-section scroll-mt-24"
       >
         <div className="container">
           <div className="max-w-3xl">
-            <span className={eyebrowVariants()}>How we teach</span>
             <h2
               id="how-heading"
-              className="font-display mt-4 text-3xl tracking-tight sm:text-5xl"
+              className="font-display text-brand-heading text-3xl tracking-tight sm:text-5xl"
             >
-              Six weeks of live learning, then two weeks of practice.
+              Why the learning experience is different
             </h2>
-            <p className="text-muted-foreground mt-4 text-lg">
+            <p className="text-brand-body mt-4 text-lg">
               Every January course follows the same eight-week shape. The first
               six weeks build the concepts and models step by step; the last two
               put them to work on guided exercises.
             </p>
           </div>
           <EightWeekJourney className="mt-10 max-w-4xl" />
-          <ul className="mt-14 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-3">
+          <ul className="mt-14 grid gap-x-10 gap-y-8 sm:grid-cols-2">
             {TEACHING.map((item) => (
               <li key={item.title} className="flex gap-3">
-                <Check className="text-primary mt-1.5 h-4 w-4 shrink-0" />
+                <Check className="text-brand-sage mt-1.5 h-4 w-4 shrink-0" />
                 <div>
-                  <b className="font-display block text-lg font-medium">
+                  <b className="font-display text-brand-heading block text-lg font-medium">
                     {item.title}
                   </b>
-                  <p className="text-muted-foreground mt-1 text-sm leading-relaxed">
+                  <p className="text-brand-body mt-1 text-sm leading-relaxed">
                     {item.copy}
                   </p>
                 </div>
@@ -246,34 +273,42 @@ export default function CoastalHome({
         </div>
       </section>
 
-      {/* ── What students learn ── */}
+      {/* ── Practical value ── */}
       <section
+        id="practical-value"
         aria-labelledby="learn-heading"
-        className="border-border border-t border-dashed py-20 sm:py-24"
+        className="bg-section-ivory py-section-sm sm:py-section scroll-mt-24"
       >
         <div className="container">
           <div className="mb-12 max-w-3xl">
-            <span className={eyebrowVariants()}>What you will learn</span>
             <h2
               id="learn-heading"
-              className="font-display mt-4 text-3xl tracking-tight sm:text-5xl"
+              className="font-display text-brand-heading text-3xl tracking-tight sm:text-5xl"
             >
-              A closer look at each course.
+              The practical value, course by course
             </h2>
+            <p className="text-brand-body mt-4 text-lg">
+              What you should be able to do by the end of each course.
+            </p>
           </div>
-          <div className="grid gap-10 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             {courses.january.map((course) => (
-              <div key={course.code} className="border-primary border-t-2 pt-5">
-                <h3 className="font-display text-xl">{course.name}</h3>
+              <div
+                key={course.code}
+                className="bg-card rounded-brand-lg border-brand-gold shadow-brand-sm border-t-2 p-6"
+              >
+                <h3 className="font-display text-brand-heading text-xl">
+                  {course.name}
+                </h3>
                 <ul className="mt-4 space-y-3">
                   {course.outcomes.map((outcome) => (
                     <li
                       key={outcome}
-                      className="text-muted-foreground flex gap-3 text-sm leading-relaxed"
+                      className="text-brand-body flex gap-3 text-sm leading-relaxed"
                     >
-                      <span
+                      <Check
                         aria-hidden="true"
-                        className="bg-amber mt-2 h-1.5 w-1.5 shrink-0 rounded-full"
+                        className="text-brand-sage mt-0.5 h-4 w-4 shrink-0"
                       />
                       <span>{outcome}</span>
                     </li>
@@ -281,7 +316,7 @@ export default function CoastalHome({
                 </ul>
                 <Link
                   href={course.href}
-                  className="text-primary mt-5 inline-flex items-center gap-1.5 text-sm font-semibold underline-offset-4 hover:underline"
+                  className="text-brand-heading mt-5 inline-flex items-center gap-1.5 text-sm font-semibold underline-offset-4 hover:underline"
                 >
                   Full syllabus <ArrowRight className="h-4 w-4" />
                 </Link>
@@ -291,37 +326,37 @@ export default function CoastalHome({
         </div>
       </section>
 
-      {/* ── How to enroll ── */}
+      {/* ── How to enrol ── */}
       <section
+        id="how-to-enrol"
         aria-labelledby="enrol-heading"
-        className="bg-secondary py-20 sm:py-24"
+        className="bg-section-mist py-section-sm sm:py-section scroll-mt-24"
       >
         <div className="container grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
-            <span className={eyebrowVariants()}>How to enroll</span>
             <h2
               id="enrol-heading"
-              className="font-display mt-4 text-3xl tracking-tight sm:text-5xl"
+              className="font-display text-brand-heading text-3xl tracking-tight sm:text-5xl"
             >
-              Three steps to your first class.
+              How to enrol
             </h2>
-            <Link
-              href="/january-2027"
-              className={`${ctaVariants({ layout: "flex" })} mt-8`}
-            >
-              Explore January 2027 Courses <ArrowRight className="h-4 w-4" />
+            <p className="text-brand-body mt-4 text-lg">
+              Three steps to your first class.
+            </p>
+            <Link href="/january-2027" className={`${brandButton} mt-8`}>
+              Explore January Courses <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <ol className="border-border border-t border-dashed">
+          <ol className="border-brand-sage/30 border-t">
             {ENROL_STEPS.map((step) => (
               <li
                 key={step.title}
-                className="border-border grid gap-1 border-b border-dashed py-6 sm:grid-cols-[14rem_1fr] sm:gap-6"
+                className="border-brand-sage/30 grid gap-1 border-b py-6 sm:grid-cols-[14rem_1fr] sm:gap-6"
               >
-                <b className="font-display text-xl font-medium">{step.title}</b>
-                <p className="text-muted-foreground leading-relaxed">
-                  {step.copy}
-                </p>
+                <b className="font-display text-brand-heading text-xl font-medium">
+                  {step.title}
+                </b>
+                <p className="text-brand-body leading-relaxed">{step.copy}</p>
               </li>
             ))}
           </ol>
@@ -378,7 +413,7 @@ export default function CoastalHome({
             <div className="font-display text-5xl leading-none">₹600</div>
             <Link
               href="/contact"
-              className="bg-background text-primary mt-6 inline-flex items-center gap-2 rounded-full px-6 py-3 text-xs font-medium tracking-[0.16em] uppercase"
+              className="bg-background text-primary rounded-brand mt-6 inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold"
             >
               Book your first session <ArrowRight className="h-4 w-4" />
             </Link>
@@ -402,7 +437,7 @@ export default function CoastalHome({
       </section>
 
       {/* ── FAQ ── */}
-      <section className="bg-secondary py-20 sm:py-24">
+      <section className="bg-section-mist py-section-sm sm:py-section">
         <div className="container grid gap-12 lg:grid-cols-[0.8fr_1.2fr]">
           <div>
             <span className={eyebrowVariants()}>Questions</span>
@@ -435,11 +470,8 @@ export default function CoastalHome({
             Three live certificate courses, eight weeks each, starting{" "}
             {courses.startSummary ?? "in January 2027"}.
           </p>
-          <Link
-            href="/january-2027"
-            className={ctaVariants({ layout: "flex" })}
-          >
-            Explore January 2027 Courses <ArrowRight className="h-4 w-4" />
+          <Link href="/january-2027" className={brandButton}>
+            Explore January Courses <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </section>
