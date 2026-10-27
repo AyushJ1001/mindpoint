@@ -11,6 +11,7 @@ import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
 import { formatTime } from "@/lib/course-content/operational";
 import { Check } from "lucide-react";
 import { TrackedLink } from "@/components/analytics/TrackedLink";
+import { JANUARY_CERTIFICATE_FEE, availabilityLabel } from "@/lib/pricing";
 
 export const revalidate = 1800;
 
@@ -21,7 +22,7 @@ export const metadata = {
   alternates: { canonical: "/january-2027" },
 };
 
-const FULL_PRICE = 3499;
+const FULL_PRICE = JANUARY_CERTIFICATE_FEE;
 
 const COHORTS = [
   {
@@ -118,6 +119,7 @@ export default async function JanuaryLandingPage() {
               course.nextAvailableBatch.enrolledCount,
           )
         : undefined,
+      capacity: course?.nextAvailableBatch?.capacity,
     };
   });
 
@@ -185,8 +187,7 @@ export default async function JanuaryLandingPage() {
             </div>
             <p className="text-muted-foreground max-w-sm">
               Each course runs for eight weeks, live on Tuesdays and Thursdays.
-              Dates, times and seats below come straight from the cohort
-              schedule.
+              Dates and times below come straight from the cohort schedule.
             </p>
           </div>
 
@@ -230,9 +231,7 @@ export default async function JanuaryLandingPage() {
                         ₹{cohort.price.toLocaleString("en-IN")}
                       </div>
                       <div className="text-muted-foreground text-xs">
-                        {cohort.seatsLeft !== undefined
-                          ? `${cohort.seatsLeft} seats left`
-                          : "Live, 8 weeks"}
+                        {availabilityLabel(cohort.seatsLeft, cohort.capacity)}
                       </div>
                     </div>
                     <TrackedLink

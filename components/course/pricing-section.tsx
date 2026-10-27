@@ -221,8 +221,7 @@ export default function PricingSection({
 
               {seatsLeft > 0 && seatsLeft <= 5 && (
                 <p className="text-foreground/55 mt-3 text-sm">
-                  Only {seatsLeft} seat{seatsLeft === 1 ? "" : "s"} left in this
-                  intake.
+                  Limited availability in this intake.
                 </p>
               )}
 
@@ -346,8 +345,7 @@ export default function PricingSection({
                               seatsRemaining > 0 &&
                               seatsRemaining <= 8 ? (
                                 <span className="calm-batch-sub text-primary/70 mt-0.5 block">
-                                  {seatsRemaining} seat
-                                  {seatsRemaining === 1 ? "" : "s"} left
+                                  Limited availability
                                 </span>
                               ) : null}
                             </span>

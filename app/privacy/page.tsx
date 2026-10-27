@@ -98,11 +98,15 @@ export default function PrivacyPolicy() {
           3. Cookies and Tracking Technologies
         </h2>
         <p className="mb-6 leading-relaxed text-foreground/80">
-          We use cookies to enhance functionality, remember preferences, and
-          analyze traffic. By using the Website, you consent to cookies. You can
-          manage cookie settings via your browser, but this may limit features.
-          Third-party tools (e.g., Google Analytics) may collect anonymized
-          data.
+          The Website sets only the cookies it needs to keep you signed in,
+          remember your cart and protect forms. Google Analytics and Microsoft
+          Clarity load only if you choose &ldquo;Allow analytics&rdquo; in the
+          banner shown on your first visit; choosing &ldquo;Only essential&rdquo;
+          leaves them off. You can change your mind at any time by clearing this
+          site&rsquo;s data in your browser, which brings the banner back. We do
+          not send course content, written answers, therapy details or payment
+          credentials to these tools, and the Meta Pixel stays disabled until we
+          tell you it is being used.
         </p>
 
         <h2 className="mb-4 text-2xl font-semibold text-foreground">

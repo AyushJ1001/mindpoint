@@ -251,7 +251,7 @@ export const GUIDES: Guide[] = [
     cta: {
       label: "Learn the foundations properly",
       href: "/programs/cbt-rebt-cbmt",
-      note: "The live CBT, REBT and CBMT certificate course, ₹3,499.",
+      note: "The live CBT, REBT and CBMT certificate course, ₹4,500.",
     },
   },
 ];

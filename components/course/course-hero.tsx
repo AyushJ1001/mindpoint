@@ -263,7 +263,7 @@ export default function CourseHero({
   if (seatsLeft > 0 && seatsLeft <= 8 && !isPreRecorded && !isWorksheet) {
     metaChips.push({
       icon: <Users />,
-      label: `${seatsLeft} seat${seatsLeft === 1 ? "" : "s"} left`,
+      label: "Limited availability",
     });
   }
 
