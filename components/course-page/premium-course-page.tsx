@@ -89,8 +89,11 @@ export function PremiumCoursePage({
   const time = [formatTime(batch?.startTime), formatTime(batch?.endTime)]
     .filter(Boolean)
     .join("–");
+  // Carry the cohort in the enrolment link. Until cohort selection is fixed on
+  // the page itself, this is what makes Add to cart available on arrival.
+  const batchParam = batch?._id ? `&batch=${batch._id}` : "";
   const checkoutHref = catalogue
-    ? `/courses/${catalogue._id}?checkout=1`
+    ? `/courses/${catalogue._id}?checkout=1${batchParam}`
     : "/programs";
 
   return (
