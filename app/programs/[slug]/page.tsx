@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ConvexHttpClient } from "convex/browser";
 
 import { CoursePage } from "@/components/course-page/course-page";
+import { PremiumCoursePage } from "@/components/course-page/premium-course-page";
 import { api } from "@/lib/backend/api";
 import type { PublicCourse } from "@/lib/backend";
 import { courseSlugs, getCourseBySlug } from "@/lib/course-content";
@@ -56,6 +57,13 @@ export default async function ProgrammePage({ params }: Props) {
 
   const catalogue = base.layout === "brief" ? await getCatalogue() : [];
   const course = attachOperationalData(base, catalogue);
+
+  // The refined template is being rolled out one programme at a time; the
+  // other programme pages keep the current template until it is approved.
+  if (base.slug === "cbt-rebt-cbmt") {
+    const catalogueRow = catalogue.find((row) => row.code === "CCCBT");
+    return <PremiumCoursePage course={course} catalogue={catalogueRow} />;
+  }
 
   return <CoursePage course={course} />;
 }
