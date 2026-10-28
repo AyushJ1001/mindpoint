@@ -15,6 +15,7 @@ import CoastalVideoTestimonials from "@/components/landing/CoastalVideoTestimoni
 import { HomeHero } from "@/components/landing/HomeHero";
 import { HomeJanuaryCourses } from "@/components/landing/HomeJanuaryCourses";
 import { HomeInstitutions } from "@/components/landing/HomeInstitutions";
+import { HomeSignature } from "@/components/landing/HomeSignature";
 import { HomeReviews } from "@/components/landing/HomeReviews";
 import type { HomeCourses } from "@/components/landing/home-courses";
 import { HOME_FAQ } from "@/lib/home-faq";
@@ -191,6 +192,8 @@ export default function CoastalHome({
 
       {/* ── January 2027 courses ── */}
       <HomeJanuaryCourses courses={courses} />
+
+      <HomeSignature />
 
       {/* ── Who the courses are for ── */}
       <section

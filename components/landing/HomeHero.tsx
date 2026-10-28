@@ -22,8 +22,12 @@ export function HomeHero({ canAccessAdmin, startSummary }: HomeHeroProps) {
       aria-labelledby="hero-heading"
       className="bg-section-deep relative isolate overflow-hidden text-white"
     >
+      <div
+        aria-hidden="true"
+        className="hero-water-fallback absolute inset-0 -z-30"
+      />
       <Image
-        src="/coastal/hero.jpg"
+        src="/coastal/wave.jpg"
         alt=""
         fill
         priority
