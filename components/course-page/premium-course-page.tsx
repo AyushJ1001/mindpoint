@@ -217,7 +217,7 @@ export function PremiumCoursePage({
         <ol className="relative mt-10 grid grid-cols-4 gap-4 sm:grid-cols-8">
           <span
             aria-hidden="true"
-            className="via-brand-gold/50 absolute top-2 right-0 left-0 hidden h-px bg-gradient-to-r from-transparent to-transparent sm:block"
+            className="via-brand-gold/50 absolute top-[3px] right-0 left-0 hidden h-px bg-gradient-to-r from-transparent to-transparent sm:block"
           />
           {["1", "2", "3", "4", "5", "6", "7", "8"].map((week, index) => (
             <li key={week} className="relative pt-6">
