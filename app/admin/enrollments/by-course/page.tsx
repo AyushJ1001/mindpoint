@@ -17,6 +17,9 @@ function monthLabel(startDate?: string) {
   return new Intl.DateTimeFormat("en-IN", {
     month: "long",
     year: "numeric",
+    // Batch dates are calendar dates in India; format them there so a viewer
+    // in a negative-offset timezone does not see the previous month.
+    timeZone: "Asia/Kolkata",
   }).format(date);
 }
 
@@ -129,6 +132,21 @@ function CourseGroup({
       byBatch.set(key, list);
     }
 
+    // While the batch query is still in flight, group by what each enrolment
+    // already stores, so students never disappear from the page.
+    if (batches === undefined) {
+      return Array.from(byBatch.entries()).map(([id, students]) => ({
+        id,
+        label:
+          monthLabel(students[0]?.batchStartDate) === "No batch"
+            ? (students[0]?.batchLabel ?? "No batch assigned")
+            : monthLabel(students[0]?.batchStartDate),
+        startDate: students[0]?.batchStartDate ?? "",
+        endDate: "",
+        students,
+      }));
+    }
+
     const ordered = (batches ?? [])
       .map((batch) => ({
         id: String(batch._id),
@@ -166,7 +184,6 @@ function CourseGroup({
           <details
             key={group.id}
             className="border-border rounded border px-4 py-3"
-            open={group.students.length > 0 && groups.length <= 2}
           >
             <summary className="flex cursor-pointer flex-wrap items-center justify-between gap-2">
               <span className="font-medium">
