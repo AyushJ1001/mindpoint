@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FacultyProfiles } from "@/components/course/FacultyProfiles";
+import { Reveal } from "@/components/motion/Reveal";
 import { getCoursePrice, getOfferDetails } from "@/lib/domain/pricing";
 import type { CourseContent } from "@/lib/course-content/types";
 import type { PublicCourse } from "@/lib/backend";
