@@ -7,6 +7,7 @@ import { useQuery } from "convex/react";
 
 import { api } from "@/lib/backend/api";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
+import { StudentDrawer } from "@/components/admin/StudentDrawer";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -47,6 +48,7 @@ export default function BatchDetailPage() {
   const courseId = params.courseId as Id<"courses">;
   const batchId = params.batchId as Id<"courseBatches">;
   const [search, setSearch] = useState("");
+  const [openStudent, setOpenStudent] = useState<string | null>(null);
 
   const courses = useQuery(api.adminCourses.listCourses, { limit: 500 });
   const batches = useQuery(api.adminCourses.listCourseBatches, { courseId });
@@ -197,7 +199,15 @@ export default function BatchDetailPage() {
                 <tbody>
                   {rows.map((row) => (
                     <tr key={row._id} className="border-border border-t">
-                      <td className="py-2 pr-3">{row.userName ?? "—"}</td>
+                      <td className="py-2 pr-3">
+                        <button
+                          type="button"
+                          className="text-primary underline-offset-4 hover:underline"
+                          onClick={() => setOpenStudent(String(row._id))}
+                        >
+                          {row.userName ?? "—"}
+                        </button>
+                      </td>
                       <td className="py-2 pr-3">{row.userEmail ?? "—"}</td>
                       <td className="py-2 pr-3">
                         {new Date(row._creationTime).toLocaleDateString("en-IN")}
@@ -225,6 +235,14 @@ export default function BatchDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {openStudent ? (
+        <StudentDrawer
+          enrollmentId={openStudent as Id<"enrollments">}
+          certificateName={certificateByEnrollment.get(openStudent)}
+          onClose={() => setOpenStudent(null)}
+        />
+      ) : null}
 
       <p className="text-muted-foreground text-xs">
         Amounts and statuses are read from the enrollment records. A missing
