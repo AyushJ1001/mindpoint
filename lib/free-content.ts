@@ -16,10 +16,10 @@ export const MASTERCLASS = {
     : "A free masterclass is on the way.",
   supporting: MASTERCLASS_RELEASED
     ? "One recorded session. No card, no pressure."
-    : "Leave your email and we'll tell you when it's out.",
+    : "The session, faculty and registration details are being finalised.",
   description: MASTERCLASS_RELEASED
     ? "A single recorded class that shows how we actually work: structured teaching, real examples and a clear sense of what a full programme feels like. Watch it, then decide if the pace and the approach suit you."
-    : "We're preparing a single free class that shows how we actually work: structured teaching, real examples and a clear sense of what a full programme feels like. It isn't released yet. Leave your email and we'll send you a note the day it is.",
+    : "We're preparing a single free class that shows how we actually work: structured teaching, real examples and a clear sense of what a full programme feels like. It isn't scheduled yet; this page will open for registration once the session and faculty are confirmed.",
   takeaways: [
     "How a typical session is structured, start to finish",
     "The core idea behind our cognitive behavioural teaching",
@@ -30,7 +30,7 @@ export const MASTERCLASS = {
       q: "Is the masterclass really free?",
       a: MASTERCLASS_RELEASED
         ? "Yes. You give us an email and you can watch it. No card, no hidden step."
-        : "Yes. It isn't released yet; leave your email and we'll tell you when it is. No card, no hidden step.",
+        : "Yes. It isn't scheduled yet. This page will open for registration once the session is confirmed; no card and no hidden step.",
     },
     {
       q: "Do I need a psychology background?",

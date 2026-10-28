@@ -17,7 +17,7 @@ const metaTitle = MASTERCLASS_RELEASED
   : "Free masterclass, coming soon — The Mind Point";
 const metaDescription = MASTERCLASS_RELEASED
   ? "Watch a free recorded masterclass from The Mind Point. Structured, practical psychology teaching for students, career changers and practising therapists in India. No card, no pressure."
-  : "The Mind Point is preparing a free masterclass on how we teach psychology. Leave your email and we'll tell you when it's released. No card, no pressure.";
+  : "The Mind Point is preparing a free masterclass on how we teach psychology. The session, faculty and registration details are being finalised.";
 
 export const metadata: Metadata = {
   title: metaTitle,
@@ -79,9 +79,9 @@ export default function MasterclassPage() {
                   Coming soon
                 </p>
                 <p className="text-muted-foreground mt-3 max-w-sm text-sm leading-relaxed">
-                  The masterclass hasn&rsquo;t been released yet. Leave your
-                  email and we&rsquo;ll let you know the day it&rsquo;s ready to
-                  watch.
+                  The masterclass hasn&rsquo;t been scheduled yet. This page
+                  will open for registration once the session and faculty are
+                  confirmed.
                 </p>
               </div>
             )}
