@@ -138,13 +138,17 @@ export default function CoastalHome({
             </p>
           </div>
           <div className="mt-12 grid items-start gap-10 lg:grid-cols-[0.78fr_1.22fr]">
-            <div className="relative aspect-[4/5] overflow-hidden rounded-2xl">
+            <div className="bg-section-deep relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-2xl">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 opacity-25 [background-image:repeating-radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.22)_0_1px,transparent_1px_40px)]"
+              />
               <Image
-                src="/coastal/calm.jpg"
+                src="/brand/the-mind-point-mark.png"
                 alt=""
-                fill
-                sizes="(min-width: 1024px) 34vw, 100vw"
-                className="object-cover"
+                width={220}
+                height={220}
+                className="relative h-40 w-40 opacity-90"
               />
             </div>
             <ul className="grid gap-0">
