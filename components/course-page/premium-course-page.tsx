@@ -214,16 +214,20 @@ export function PremiumCoursePage({
           exercises, case discussion and feedback, so the ideas stop being
           abstract.
         </p>
-        <ol className="relative mt-10 grid grid-cols-4 gap-4 sm:grid-cols-8">
+        <ol className="relative mt-10 grid grid-cols-1 gap-4 pl-5 sm:grid-cols-8 sm:pl-0">
           <span
             aria-hidden="true"
             className="via-brand-gold/50 absolute top-[3px] right-0 left-0 hidden h-px bg-gradient-to-r from-transparent to-transparent sm:block"
           />
+          <span
+            aria-hidden="true"
+            className="via-brand-gold/45 absolute top-1 bottom-1 left-[3px] w-px bg-gradient-to-b from-transparent to-transparent sm:hidden"
+          />
           {["1", "2", "3", "4", "5", "6", "7", "8"].map((week, index) => (
-            <li key={week} className="relative pt-6">
+            <li key={week} className="relative pt-0 sm:pt-6">
               <span
                 aria-hidden="true"
-                className={`absolute top-0 left-0 h-2 w-2 rounded-full ${
+                className={`absolute top-1 -left-5 h-2 w-2 rounded-full sm:top-0 sm:left-0 ${
                   index < 6 ? "bg-brand-teal" : "bg-brand-gold"
                 }`}
               />
