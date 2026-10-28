@@ -98,7 +98,7 @@ export function CampaignBanner({
         />
       )}
 
-      <div className="flex flex-wrap items-end justify-between gap-6 px-6 py-8 sm:px-9">
+      <div className="mx-auto flex w-full max-w-3xl flex-wrap items-end justify-between gap-x-10 gap-y-5 px-6 py-8 sm:px-9">
         <div className="max-w-md">
           <span
             className="text-[0.68rem] font-semibold tracking-[0.16em] uppercase"

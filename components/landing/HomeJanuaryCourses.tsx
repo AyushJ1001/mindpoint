@@ -26,10 +26,12 @@ function CourseColumn({ course }: { course: HomeCourse }) {
   const { live } = course;
   return (
     <>
-      <h3 className="font-display text-2xl leading-snug">{course.name}</h3>
+      <h3 className="font-display line-clamp-2 min-h-[3.5rem] text-2xl leading-snug">
+        {course.name}
+      </h3>
 
       {DESCRIPTIONS[course.code] ? (
-        <p className="text-muted-foreground text-sm leading-relaxed">
+        <p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
           {DESCRIPTIONS[course.code]}
         </p>
       ) : null}
