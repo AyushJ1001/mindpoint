@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 
@@ -199,6 +200,15 @@ function CourseGroup({
                 {group.students.length === 1 ? "" : "s"}
               </Badge>
             </summary>
+
+            {group.id !== "none" ? (
+              <Link
+                href={`/admin/enrollments/by-course/${courseId}/${group.id}`}
+                className="text-primary mt-2 inline-block text-sm underline underline-offset-4"
+              >
+                Open batch
+              </Link>
+            ) : null}
 
             {group.students.length === 0 ? (
               <p className="text-muted-foreground mt-3 text-sm">
