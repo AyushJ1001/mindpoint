@@ -28,9 +28,12 @@ function paymentLabel(enrollment: {
   status?: string;
   paymentVerification?: string;
 }) {
-  if (enrollment.status === "cancelled") return "Cancelled";
-  if (enrollment.paymentVerification === "pending") return "Pending verification";
+  // Verification state is a fact about the payment; it outranks a later status
+  // change, so a rejected screenshot still reads "Rejected" rather than hiding
+  // behind "Cancelled".
   if (enrollment.paymentVerification === "rejected") return "Rejected";
+  if (enrollment.paymentVerification === "pending") return "Pending verification";
+  if (enrollment.status === "cancelled") return "Cancelled";
   return "Paid";
 }
 
@@ -59,10 +62,17 @@ export default function BatchDetailPage() {
   const course = (courses ?? []).find((row) => String(row._id) === String(courseId));
   const batch = (batches ?? []).find((row) => String(row._id) === String(batchId));
 
+  const batchRows = useMemo(
+    () =>
+      (enrollments ?? []).filter(
+        (row) => String(row.batchId ?? "") === String(batchId),
+      ),
+    [enrollments, batchId],
+  );
+
   const rows = useMemo(() => {
     const needle = search.trim().toLowerCase();
-    return (enrollments ?? [])
-      .filter((row) => String(row.batchId ?? "") === String(batchId))
+    return batchRows
       .filter((row) =>
         !needle
           ? true
@@ -74,7 +84,7 @@ export default function BatchDetailPage() {
 
   const counts = useMemo(() => {
     const base = { paid: 0, pending: 0, cancelled: 0, other: 0 };
-    for (const row of rows) {
+    for (const row of batchRows) {
       const label = paymentLabel(row);
       if (label === "Paid") base.paid += 1;
       else if (label === "Cancelled") base.cancelled += 1;
@@ -82,7 +92,7 @@ export default function BatchDetailPage() {
       else base.other += 1;
     }
     return base;
-  }, [rows]);
+  }, [batchRows]);
 
   const certificateByEnrollment = useMemo(() => {
     const map = new Map<string, string>();
@@ -92,7 +102,12 @@ export default function BatchDetailPage() {
     return map;
   }, [certificates]);
 
-  if (courses === undefined || batches === undefined || enrollments === undefined) {
+  if (
+    courses === undefined ||
+    batches === undefined ||
+    enrollments === undefined ||
+    certificates === undefined
+  ) {
     return <p className="text-muted-foreground text-sm">Loading batch…</p>;
   }
 
@@ -126,7 +141,7 @@ export default function BatchDetailPage() {
 
       <div className="grid gap-3 sm:grid-cols-5">
         {[
-          ["Enrolled", rows.length],
+          ["Enrolled", batchRows.length],
           ["Paid", counts.paid],
           ["Pending", counts.pending],
           ["Cancelled", counts.cancelled],
@@ -160,7 +175,9 @@ export default function BatchDetailPage() {
 
           {rows.length === 0 ? (
             <p className="text-muted-foreground text-sm">
-              No students in this batch yet.
+              {batchRows.length === 0
+                ? "No students in this batch yet."
+                : "No students match that search."}
             </p>
           ) : (
             <div className="overflow-x-auto">
