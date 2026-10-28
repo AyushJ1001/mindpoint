@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { TrackProgrammeView } from "@/components/analytics/TrackProgrammeView";
 import { FacultyProfiles } from "@/components/course/FacultyProfiles";
 import { getCoursePrice, getOfferDetails } from "@/lib/domain/pricing";
 import type { CourseContent } from "@/lib/course-content/types";
@@ -90,8 +91,21 @@ export function PremiumCoursePage({
     ? `/courses/${catalogue._id}?checkout=1`
     : "/programs";
 
+  // Only claim registration is open when the published batch can take someone.
+  const registrationsOpen =
+    !catalogue || !batch
+      ? false
+      : batch.availabilityStatus === "upcoming_open";
+  const registrationLabel = registrationsOpen
+    ? "Registrations open"
+    : batch?.availabilityStatus === "upcoming_full"
+      ? "This cohort is full"
+      : "Registration details on request";
+
   return (
     <>
+      <TrackProgrammeView courseCode="CCCBT" />
+
       {/* Hero */}
       <section className="bg-section-deep relative isolate overflow-hidden text-white">
         <Image
@@ -163,13 +177,22 @@ export function PremiumCoursePage({
           </dl>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link
-              href={checkoutHref}
-              className="bg-brand-ivory text-brand-teal rounded-brand inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold"
-            >
-              Enrol for January 2027
-            </Link>
-            <span className="text-sm text-white/80">Registrations open</span>
+            {registrationsOpen ? (
+              <Link
+                href={checkoutHref}
+                className="bg-brand-ivory text-brand-teal rounded-brand inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold"
+              >
+                Enrol for January 2027
+              </Link>
+            ) : (
+              <Link
+                href="/contact"
+                className="bg-brand-ivory text-brand-teal rounded-brand inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold"
+              >
+                Ask about the next cohort
+              </Link>
+            )}
+            <span className="text-sm text-white/80">{registrationLabel}</span>
           </div>
         </div>
       </section>
@@ -362,10 +385,12 @@ export function PremiumCoursePage({
             {startDate ? ` Starts ${startDate}.` : ""}
           </p>
           <Link
-            href={checkoutHref}
+            href={registrationsOpen ? checkoutHref : "/contact"}
             className="bg-primary text-primary-foreground rounded-brand mt-2 inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold"
           >
-            Enrol now · ₹{payable.toLocaleString("en-IN")}
+            {registrationsOpen
+              ? `Enrol now · ₹${payable.toLocaleString("en-IN")}`
+              : "Ask about the next cohort"}
           </Link>
         </div>
       </section>
