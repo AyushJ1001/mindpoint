@@ -85,9 +85,25 @@ export default function CourseClient({
     setActiveCourse(course);
   }, [course]);
 
+  // One place decides the cohort. An explicit ?batch= wins; otherwise the next
+  // open cohort is chosen once, and a student's manual choice is preserved.
+  // The previous reset effect ran on every prop identity change and cleared the
+  // selection back to null, which is why the page showed no usable CTA.
   useEffect(() => {
-    setSelectedBatchId(selectedBatch?._id ?? null);
-  }, [selectedBatch?._id, course._id]);
+    const explicit = selectedBatch?._id ? String(selectedBatch._id) : null;
+    if (explicit) {
+      setSelectedBatchId(explicit);
+      return;
+    }
+    setSelectedBatchId((current) => {
+      if (current) return current;
+      const fallback =
+        batches.find((batch) => batch.availabilityStatus === "upcoming_open") ??
+        batches.find((batch) => batch.lifecycleStatus === "published") ??
+        null;
+      return fallback ? String(fallback._id) : null;
+    });
+  }, [selectedBatch?._id, course._id, batches]);
 
   useEffect(() => {
     setMounted(true);
@@ -415,8 +431,10 @@ export default function CourseClient({
 
   const handleBatchSelect = (value: string) => {
     if (!usesBatches) return;
+    // State only. Navigating here re-rendered the server page, which cleared the
+    // selection and put the CTA back to "Choose a cohort" — the loop that made
+    // enrolment feel like page-hopping.
     setSelectedBatchId(value);
-    router.replace(`/courses/${course._id}?batch=${value}`, { scroll: false });
   };
 
   const batchOptions = batches.map((batch) => ({

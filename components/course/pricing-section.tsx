@@ -371,7 +371,9 @@ export default function PricingSection({
                             data-disabled={disabled ? "true" : "false"}
                             onClick={() =>
                               !disabled && onBatchSelect?.(batch._id)
-                            }
+                            });
+                              if (!disabled) onBatchSelect?.(batch._id);
+                            }}
                             className="calm-batch-chip"
                           >
                             <span className="min-w-0">
