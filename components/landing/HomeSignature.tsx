@@ -103,7 +103,11 @@ export function HomeSignature() {
               },
             ].map((item, index) => (
               <Reveal as="li" key={item.title} delay={index * 90}>
-                <div className="border-brand-gold/30 h-full border-t pt-4">
+                <div className="border-brand-gold/40 relative h-full border-t pt-4">
+                  <span
+                    aria-hidden="true"
+                    className="bg-brand-gold absolute -top-px left-0 h-px w-10"
+                  />
                   <span className="text-brand-sage text-[0.66rem] font-semibold tracking-[0.16em] uppercase">
                     {item.step}
                   </span>
