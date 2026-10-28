@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>The Mind Point — homepage direction</title>
+<style>
+  :root{
+    --deep:#173F3A; --teal:#1D4E4A; --sage:#527E73; --mist:#DCE9E3;
+    --ivory:#F7F5EE; --gold:#D7B88A; --ink:#1b2a27; --body:#435b55;
+    --serif:"Fraunces",Georgia,"Times New Roman",serif;
+    --sans:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
+    --ease:cubic-bezier(.22,.61,.36,1);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--ivory);color:var(--ink);font-family:var(--sans);line-height:1.6;-webkit-font-smoothing:antialiased}
+  h1,h2,h3{font-family:var(--serif);font-weight:500;letter-spacing:-.02em;margin:0;color:var(--deep)}
+  p{margin:0}
+  a{color:inherit;text-decoration:none}
+  .wrap{width:min(1120px,92vw);margin-inline:auto}
+  .eyebrow{font-size:.68rem;letter-spacing:.2em;text-transform:uppercase;color:var(--sage);font-weight:600}
+
+  /* view switch (prototype only) */
+  .switch{position:fixed;right:16px;bottom:16px;z-index:60;display:flex;gap:6px;background:#fff;border:1px solid #d9d4c7;padding:6px;border-radius:999px;box-shadow:0 12px 40px -22px rgba(23,63,58,.6)}
+  .switch button{border:0;background:transparent;font:inherit;font-size:.72rem;padding:6px 12px;border-radius:999px;cursor:pointer;color:var(--body)}
+  .switch button[aria-pressed="true"]{background:var(--deep);color:#fff}
+  body[data-view="mobile"] .frame{width:390px;margin:0 auto;border-inline:1px solid #e6e1d4;background:var(--ivory)}
+
+  /* nav */
+  nav{position:sticky;top:0;z-index:40;backdrop-filter:blur(10px);background:color-mix(in oklab,var(--ivory) 86%,transparent);border-bottom:1px solid rgba(23,63,58,.08)}
+  .nav-in{display:flex;align-items:center;justify-content:space-between;padding:14px 0}
+  .mark{display:flex;align-items:center;gap:10px;font-family:var(--serif);font-size:1.15rem;color:var(--deep)}
+  .mark svg{width:26px;height:26px}
+  .links{display:flex;gap:26px;font-size:.82rem;color:var(--body)}
+  .links a{position:relative;padding-bottom:3px}
+  .links a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--gold);transform:scaleX(0);transform-origin:left;transition:transform .22s var(--ease)}
+  .links a:hover::after,.links a:focus-visible::after{transform:scaleX(1)}
+  .nav-cta{border:1px solid rgba(23,63,58,.18);padding:9px 16px;border-radius:4px;font-size:.78rem;color:var(--deep);transition:background .2s var(--ease),border-color .2s var(--ease)}
+  .nav-cta:hover{background:var(--deep);color:#fff;border-color:var(--deep)}
+
+  /* hero */
+  .hero{position:relative;isolate;overflow:hidden;color:#fff;background:var(--deep)}
+  .hero water-fig{position:absolute;inset:0}
+  .hero .water{position:absolute;inset:-10% -5%;background:
+      radial-gradient(60% 80% at 20% 20%, #2b6f66 0%, transparent 60%),
+      radial-gradient(50% 70% at 80% 30%, #1f5c56 0%, transparent 55%),
+      linear-gradient(160deg,#12322e 0%,#1a4a45 55%,#215c55 100%);
+      transform:translateY(var(--parallax,0px)) scale(1.06);will-change:transform}
+  .hero .ripple{position:absolute;inset:0;opacity:.22;background-image:
+      repeating-radial-gradient(circle at 70% 120%, rgba(255,255,255,.12) 0 1px, transparent 1px 26px);
+      mask-image:linear-gradient(180deg,transparent 40%,#000 70%)}
+  .hero-in{position:relative;padding:clamp(64px,10vw,120px) 0 clamp(56px,8vw,96px)}
+  .hero .eyebrow{color:var(--gold)}
+  .hero h1{margin-top:18px;font-size:clamp(2.4rem,6vw,4.4rem);line-height:1.04;color:#fff;max-width:20ch}
+  .hero p{margin-top:20px;max-width:52ch;color:rgba(255,255,255,.86);font-size:clamp(1rem,1.6vw,1.18rem)}
+  .cta-row{display:flex;flex-wrap:wrap;gap:12px;margin-top:32px}
+  .btn{display:inline-flex;align-items:center;gap:10px;padding:14px 22px;border-radius:4px;font-size:.86rem;font-weight:600;border:1px solid transparent;transition:background .22s var(--ease),color .22s var(--ease),border-color .22s var(--ease),transform .22s var(--ease)}
+  .btn.solid{background:var(--ivory);color:var(--deep)}
+  .btn.solid:hover{background:#fff;transform:translateY(-1px)}
+  .btn.ghost{border-color:rgba(255,255,255,.5);color:#fff}
+  .btn.ghost:hover{background:rgba(255,255,255,.1)}
+  .hero-meta{display:flex;flex-wrap:wrap;gap:28px;margin-top:44px;padding-top:20px;border-top:1px solid rgba(255,255,255,.22);font-size:.82rem;color:rgba(255,255,255,.82)}
+  .hero-meta b{color:#fff;font-weight:600}
+
+  /* sections */
+  section{padding:clamp(56px,8vw,96px) 0}
+  .split{display:grid;gap:clamp(28px,5vw,64px);grid-template-columns:1.05fr .95fr;align-items:start}
+  .lede{color:var(--body);font-size:clamp(1rem,1.5vw,1.12rem);line-height:1.75}
+  h2.section{font-size:clamp(1.9rem,3.4vw,2.9rem);line-height:1.12;max-width:24ch}
+  .rules{display:grid;gap:0;margin-top:28px}
+  .rule{display:grid;grid-template-columns:132px 1fr;gap:20px;padding:18px 0;border-top:1px solid rgba(23,63,58,.12);color:var(--body);font-size:.95rem}
+  .rule b{color:var(--deep);font-weight:600}
+
+  /* course cards */
+  .cards{display:grid;gap:22px;grid-template-columns:repeat(3,1fr);margin-top:36px}
+  .card{position:relative;background:#fff;border:1px solid rgba(23,63,58,.1);border-radius:6px;overflow:hidden;display:flex;flex-direction:column;transition:transform .28s var(--ease),box-shadow .28s var(--ease),border-color .28s var(--ease)}
+  .card::after{content:"";position:absolute;inset:0 auto auto 0;height:2px;width:100%;background:linear-gradient(90deg,var(--gold),transparent);opacity:0;transition:opacity .28s var(--ease)}
+  .card:hover{transform:translateY(-6px);box-shadow:0 30px 60px -38px rgba(23,63,58,.55);border-color:rgba(215,184,138,.5)}
+  .card:hover::after{opacity:1}
+  .card figure{margin:0;aspect-ratio:16/10;overflow:hidden;background:var(--mist)}
+  .card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .8s var(--ease)}
+  .card:hover img{transform:scale(1.05)}
+  .card .body{padding:20px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .card h3{font-size:1.2rem}
+  .card .meta{font-size:.78rem;color:var(--body)}
+  .card .price{margin-top:auto;display:flex;align-items:baseline;gap:8px;padding-top:10px;border-top:1px dashed rgba(23,63,58,.18)}
+  .card .price b{font-family:var(--serif);font-size:1.2rem;color:var(--deep)}
+  .card .enrol{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--sage);transition:color .2s var(--ease),letter-spacing .2s var(--ease)}
+  .card:hover .enrol{color:var(--deep);letter-spacing:.18em}
+
+  /* journey */
+  .journey{position:relative;margin-top:36px;display:grid;grid-template-columns:repeat(8,1fr);gap:0}
+  .journey::before{content:"";position:absolute;left:0;right:0;top:22px;height:1px;background:rgba(23,63,58,.15)}
+  .journey .fill{position:absolute;left:0;top:22px;height:1px;background:linear-gradient(90deg,var(--teal),var(--gold));width:0;transition:width 1.2s var(--ease)}
+  .journey.in .fill{width:100%}
+  .week{position:relative;padding-top:44px;text-align:center;font-size:.72rem;color:var(--body)}
+  .week::before{content:"";position:absolute;top:16px;left:50%;transform:translateX(-50%);width:13px;height:13px;border-radius:50%;background:var(--teal);outline:6px solid var(--ivory)}
+  .week.practical::before{background:var(--gold)}
+  .week b{display:block;color:var(--deep);font-size:.74rem;letter-spacing:.06em}
+
+  /* lifetime */
+  .lifetime{position:relative;isolate;overflow:hidden;background:linear-gradient(150deg,#12322e,#1a4a45);color:#fff}
+  .lifetime .rings{position:absolute;inset:0;opacity:.18;background-image:repeating-radial-gradient(circle at 80% 60%, rgba(255,255,255,.16) 0 1px, transparent 1px 34px)}
+  .lifetime .in{position:relative;display:grid;grid-template-columns:1.1fr .9fr;gap:40px;align-items:center}
+  .lifetime h2{color:#fff;font-size:clamp(2rem,4vw,3.2rem)}
+  .lifetime p{color:rgba(255,255,255,.82);margin-top:16px;max-width:46ch}
+  .infinity{justify-self:center;width:220px;height:110px;opacity:.9}
+  .infinity path{fill:none;stroke:var(--gold);stroke-width:1.2;stroke-dasharray:520;stroke-dashoffset:520;transition:stroke-dashoffset 2.2s var(--ease)}
+  .in-view .infinity path{stroke-dashoffset:0}
+
+  /* 999 pathway */
+  .pathway{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:36px}
+  .step{position:relative;padding:24px 22px 24px 0}
+  .step:not(:last-child)::after{content:"";position:absolute;right:14px;top:34px;width:24px;height:1px;background:var(--gold)}
+  .step span{font-size:.7rem;letter-spacing:.18em;text-transform:uppercase;color:var(--sage)}
+  .step h3{margin-top:8px;font-size:1.15rem}
+  .step p{margin-top:6px;color:var(--body);font-size:.9rem}
+
+  /* editorial */
+  .editorial{display:grid;grid-template-columns:.9fr 1.1fr;gap:0;align-items:stretch;border:1px solid rgba(23,63,58,.1);border-radius:6px;overflow:hidden;background:#fff}
+  .editorial figure{margin:0;min-height:320px;background:var(--mist)}
+  .editorial img{width:100%;height:100%;object-fit:cover;display:block}
+  .editorial .txt{padding:clamp(24px,4vw,44px)}
+
+  /* quiet list */
+  .institutions{display:grid;grid-template-columns:repeat(5,1fr);gap:0 28px;border-top:1px solid rgba(215,184,138,.35);margin-top:32px}
+  .institutions li{list-style:none;padding:16px 0;border-bottom:1px solid rgba(215,184,138,.22);font-size:.86rem;color:var(--deep)}
+  .institutions small{display:block;color:var(--body);font-size:.72rem}
+
+  /* final cta */
+  .final{background:var(--secondary,#EFEADE);text-align:center}
+  .final .btn{margin-top:24px}
+
+  /* motion */
+  .reveal{opacity:0;transform:translateY(18px);transition:opacity .6s var(--ease),transform .6s var(--ease)}
+  .reveal.in{opacity:1;transform:none}
+  .stagger>*{opacity:0;transform:translateY(16px);transition:opacity .55s var(--ease),transform .55s var(--ease)}
+  .stagger.in>*{opacity:1;transform:none}
+  .stagger.in>*:nth-child(2){transition-delay:.09s}
+  .stagger.in>*:nth-child(3){transition-delay:.18s}
+  .stagger.in>*:nth-child(4){transition-delay:.27s}
+
+  @media (max-width:900px){
+    .split,.lifetime .in,.editorial{grid-template-columns:1fr}
+    .cards{grid-template-columns:1fr}
+    .journey{grid-template-columns:repeat(4,1fr);row-gap:26px}
+    .journey::before,.journey .fill{display:none}
+    .pathway{grid-template-columns:1fr}
+    .step:not(:last-child)::after{display:none}
+    .institutions{grid-template-columns:repeat(2,1fr)}
+    .links{display:none}
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none!important;transition:none!important}
+    .reveal,.stagger>*{opacity:1;transform:none}
+    .journey .fill{width:100%}
+    .infinity path{stroke-dashoffset:0}
+    .hero .water{transform:none}
+  }
+</style>
+</head>
+<body data-view="desktop">
+<div class="frame">
+<nav>
+  <div class="wrap nav-in">
+    <span class="mark">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 29C9 25 5 19 6 11c6 0 10 3 11 8 0-7 4-11 9-12 1 9-3 17-10 22Z" fill="#1D4E4A"/><path d="M16 29c0-6 2-10 5-13" stroke="#D7B88A" stroke-width="1"/></svg>
+      The Mind Point
+    </span>
+    <div class="links">
+      <a href="#courses">Courses</a><a href="#journey">The eight weeks</a><a href="#recordings">Recordings</a><a href="#intro">Introductions</a><a href="#about">About</a>
+    </div>
+    <a class="nav-cta" href="#courses">January 2027</a>
+  </div>
+</nav>
+
+<header class="hero" id="top">
+  <div class="water" aria-hidden="true"></div>
+  <div class="ripple" aria-hidden="true"></div>
+  <div class="wrap hero-in">
+    <span class="eyebrow">January 2027 · registrations open</span>
+    <h1>Study Psychology. Understand It Deeply. Learn to Apply It.</h1>
+    <p>Discover thoughtfully designed psychology courses that bring together meaningful theoretical learning, guided practical experiences and the freedom to revisit what you've learned.</p>
+    <div class="cta-row">
+      <a class="btn solid" href="#courses">Explore Certificate Courses →</a>
+      <a class="btn ghost" href="#about">Discover The Mind Point</a>
+    </div>
+    <div class="hero-meta">
+      <span><b>Three live certificates</b> starting 19, 21 and 28 January</span>
+      <span><b>Eight weeks</b>, six learning and two in practice</span>
+      <span><b>₹4,500</b> standard fee</span>
+    </div>
+  </div>
+</header>
+
+<section id="courses">
+  <div class="wrap">
+    <div class="split">
+      <div class="reveal">
+        <span class="eyebrow">Certificate courses</span>
+        <h2 class="section" style="margin-top:12px">Three subjects, one considered way of learning.</h2>
+      </div>
+      <p class="lede reveal">Live teaching on Tuesday and Thursday evenings, reading notes written for each week, and a practical fortnight guided by faculty. Choose the subject you want to understand.</p>
+    </div>
+    <div class="cards stagger" id="courseCards">
+      <article class="card">
+        <figure><img src="https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=900&q=60" alt="" loading="lazy" /></figure>
+        <div class="body">
+          <h3>CBT, REBT and CBMT</h3>
+          <p class="meta">Starts 19 January 2027 · Tue &amp; Thu</p>
+          <p class="meta">The three core cognitive and behavioural approaches, and how to reason with them in practice.</p>
+          <div class="price"><b>₹4,500</b><span class="enrol">Enrol →</span></div>
+        </div>
+      </article>
+      <article class="card">
+        <figure><img src="https://images.unsplash.com/photo-1517672651691-24622a91b550?auto=format&fit=crop&w=900&q=60" alt="" loading="lazy" /></figure>
+        <div class="body">
+          <h3>Personality Disorders</h3>
+          <p class="meta">Starts 21 January 2027 · Tue &amp; Thu</p>
+          <p class="meta">How personality disorders are classified and understood, without reducing a person to a label.</p>
+          <div class="price"><b>₹4,500</b><span class="enrol">Enrol →</span></div>
+        </div>
+      </article>
+      <article class="card">
+        <figure><img src="https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&w=900&q=60" alt="" loading="lazy" /></figure>
+        <div class="body">
+          <h3>Inner Child Healing &amp; Therapy</h3>
+          <p class="meta">Starts 28 January 2027 · Tue &amp; Thu</p>
+          <p class="meta">How childhood experience shapes adult patterns, and trauma-informed ways to work with them.</p>
+          <div class="price"><b>₹4,500</b><span class="enrol">Enrol →</span></div>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="journey" style="background:var(--mist)">
+  <div class="wrap">
+    <span class="eyebrow">The eight weeks</span>
+    <h2 class="section" style="margin-top:12px">Six Weeks to Build Your Understanding. Two Weeks to Bring It to Life.</h2>
+    <div class="journey reveal" id="journeyLine" aria-label="Eight-week structure">
+      <div class="fill" aria-hidden="true"></div>
+      <div class="week"><b>Week 1</b>Foundations</div>
+      <div class="week"><b>Week 2</b>Ideas</div>
+      <div class="week"><b>Week 3</b>Assessment</div>
+      <div class="week"><b>Week 4</b>Formulation</div>
+      <div class="week"><b>Week 5</b>Methods</div>
+      <div class="week"><b>Week 6</b>Integration</div>
+      <div class="week practical"><b>Week 7</b>Practice</div>
+      <div class="week practical"><b>Week 8</b>Application</div>
+    </div>
+    <p class="lede reveal" style="margin-top:26px;max-width:64ch">The first six weeks build the vocabulary, models and reasoning. The final two are practical: faculty-curated exercises, case discussion and feedback, so the ideas stop being abstract. Activities vary by course and batch.</p>
+  </div>
+</section>
+
+<section class="lifetime in-view" id="recordings">
+  <div class="rings" aria-hidden="true"></div>
+  <div class="wrap in">
+    <div class="reveal">
+      <span class="eyebrow" style="color:var(--gold)">For eligible new registrations</span>
+      <h2 style="margin-top:12px">Learn Live. Revisit for a Lifetime.</h2>
+      <p>Attend interactive live sessions and return to your recordings whenever you want to revisit a concept, refresh your understanding or continue at your own pace.</p>
+      <p style="font-size:.82rem;opacity:.72">Lifetime means for as long as The Mind Point's platform operates, with 90 days' notice and a download window if it ever closes.</p>
+    </div>
+    <svg class="infinity" viewBox="0 0 240 120" aria-hidden="true"><path d="M120 60c-14-26-32-34-48-26-20 10-20 42 0 52 16 8 34 0 48-26 14-26 32-34 48-26 20 10 20 42 0 52-16 8-34 0-48-26Z"/></svg>
+  </div>
+</section>
+
+<section id="intro">
+  <div class="wrap">
+    <div class="split">
+      <div class="reveal">
+        <span class="eyebrow">Introduction courses</span>
+        <h2 class="section" style="margin-top:12px">Start with ₹999. Take the next step when you're ready.</h2>
+      </div>
+      <p class="lede reveal">Begin with an introduction course and explore the foundations of a subject that interests you. Your eligible ₹999 fee is credited once toward a certificate course.</p>
+    </div>
+    <div class="pathway reveal">
+      <div class="step"><span>Step one</span><h3>Begin with ₹999</h3><p>Self-paced, yours to keep, no schedule to keep up with.</p></div>
+      <div class="step"><span>Step two</span><h3>Explore the foundations</h3><p>Eight recorded lessons and reading notes that make the vocabulary stick.</p></div>
+      <div class="step"><span>Step three</span><h3>Continue to a certificate</h3><p>Join a live cohort and apply the credit against the ₹4,500 fee.</p></div>
+    </div>
+  </div>
+</section>
+
+<section style="background:var(--coastal,#EFEADE)">
+  <div class="wrap">
+    <div class="editorial reveal">
+      <figure><img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?auto=format&fit=crop&w=1200&q=60" alt="" loading="lazy" /></figure>
+      <div class="txt">
+        <span class="eyebrow">Our approach</span>
+        <h2 class="section" style="margin-top:12px">Understanding first. Then the practice.</h2>
+        <p class="lede" style="margin-top:14px">We start with why an idea holds up and where it stops being useful, so the vocabulary means something once you use it. Classes are live, groups are small, and questions are part of the session.</p>
+        <div class="rules">
+          <div class="rule"><b>Live teaching</b><span>Conversational sessions on Tuesday and Thursday evenings.</span></div>
+          <div class="rule"><b>Reading notes</b><span>Written for the course, not a slide deck.</span></div>
+          <div class="rule"><b>Practical fortnight</b><span>Case discussion and feedback in weeks seven and eight.</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <span class="eyebrow">Learning community</span>
+    <h2 class="section" style="margin-top:12px">Psychology Learning Across India</h2>
+    <p class="lede reveal" style="margin-top:14px;max-width:62ch">From established universities to regional colleges, psychology education brings together learners from diverse academic environments. The Mind Point welcomes curious minds from across disciplines and institutions.</p>
+    <ul class="institutions stagger">
+      <li>Tata Institute of Social Sciences<small>Mumbai</small></li>
+      <li>Savitribai Phule Pune University<small>Pune</small></li>
+      <li>Symbiosis College of Arts and Commerce<small>Pune</small></li>
+      <li>Christ (Deemed to be University)<small>Bengaluru</small></li>
+      <li>University of Delhi<small>Delhi</small></li>
+      <li>University of Mumbai<small>Mumbai</small></li>
+      <li>Fergusson College<small>Pune</small></li>
+      <li>University of Hyderabad<small>Hyderabad</small></li>
+      <li>Banaras Hindu University<small>Varanasi</small></li>
+      <li>University of Madras<small>Chennai</small></li>
+    </ul>
+    <p style="font-size:.72rem;color:var(--body);margin-top:14px">Listed for context about psychology education in India. No affiliation, endorsement or partnership is implied.</p>
+  </div>
+</section>
+
+<section class="final">
+  <div class="wrap">
+    <h2 class="section" style="margin-inline:auto;max-width:22ch">Join the January 2027 cohort.</h2>
+    <p class="lede" style="margin:14px auto 0;max-width:46ch">Eight weeks, live online, with two weeks of practical training.</p>
+    <a class="btn solid" style="background:var(--deep);color:#fff" href="#courses">Explore Certificate Courses →</a>
+  </div>
+</section>
+
+<footer style="padding:28px 0;border-top:1px solid rgba(23,63,58,.1);font-size:.78rem;color:var(--body)">
+  <div class="wrap" style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap">
+    <span>The Mind Point · psychology education since 2020</span>
+    <span>Prototype for review · prices and dates from the live catalogue</span>
+  </div>
+</footer>
+</div>
+
+<div class="switch" role="group" aria-label="Preview width">
+  <button id="btnDesktop" aria-pressed="true">Desktop</button>
+  <button id="btnMobile" aria-pressed="false">Mobile</button>
+</div>
+
+<script>
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (!reduce) {
+    const io = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('in');
+          io.unobserve(entry.target);
+        }
+      }
+    }, { threshold: 0.18, rootMargin: '0px 0px -8% 0px' });
+    document.querySelectorAll('.reveal, .stagger, .journey, .lifetime').forEach((el) => io.observe(el));
+
+    // gentle hero parallax, rAF-throttled, desktop only
+    const water = document.querySelector('.hero .water');
+    let ticking = false;
+    addEventListener('scroll', () => {
+      if (ticking || innerWidth < 900) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        const y = Math.min(scrollY * 0.08, 60);
+        water.style.setProperty('--parallax', y + 'px');
+        ticking = false;
+      });
+    }, { passive: true });
+  } else {
+    document.querySelectorAll('.reveal, .stagger, .journey, .lifetime').forEach((el) => el.classList.add('in'));
+  }
+
+  const frame = document.querySelector('.frame');
+  const bD = document.getElementById('btnDesktop');
+  const bM = document.getElementById('btnMobile');
+  function setView(view) {
+    document.body.dataset.view = view;
+    bD.setAttribute('aria-pressed', String(view === 'desktop'));
+    bM.setAttribute('aria-pressed', String(view === 'mobile'));
+  }
+  bD.addEventListener('click', () => setView('desktop'));
+  bM.addEventListener('click', () => setView('mobile'));
+</script>
+</body>
+</html>
