@@ -9,6 +9,15 @@ import type {
   HomeCourses,
 } from "@/components/landing/home-courses";
 
+const DESCRIPTIONS: Record<string, string> = {
+  CCCBT:
+    "Explore cognitive and behavioural approaches, from foundational concepts to practical applications.",
+  CCPD:
+    "Understand personality patterns, diagnostic frameworks and approaches to case formulation.",
+  CCICH:
+    "Explore early experiences, emotional patterns and reflective approaches to inner child work.",
+};
+
 function formatPrice(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
 }
@@ -18,6 +27,12 @@ function CourseColumn({ course }: { course: HomeCourse }) {
   return (
     <>
       <h3 className="font-display text-2xl leading-snug">{course.name}</h3>
+
+      {DESCRIPTIONS[course.code] ? (
+        <p className="text-muted-foreground text-sm leading-relaxed">
+          {DESCRIPTIONS[course.code]}
+        </p>
+      ) : null}
 
       {live?.startDate ? (
         <dl className="grid gap-1 text-sm">

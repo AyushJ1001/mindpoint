@@ -46,7 +46,7 @@ export function HomeSignature() {
           <Reveal delay={120} className="justify-self-center">
             <svg
               viewBox="0 0 240 120"
-              className="h-28 w-56 text-brand-gold"
+              className="text-brand-gold/40 h-[22rem] w-[30rem] max-w-full"
               aria-hidden="true"
             >
               <path
@@ -84,7 +84,12 @@ export function HomeSignature() {
             </p>
           </Reveal>
 
-          <ol className="mt-10 grid gap-6 sm:grid-cols-3">
+          <div className="relative mt-10">
+            <span
+              aria-hidden="true"
+              className="via-brand-gold/50 absolute top-0 right-0 left-0 hidden h-px bg-gradient-to-r from-transparent to-transparent sm:block"
+            />
+            <ol className="grid gap-6 sm:grid-cols-3">
             {[
               {
                 step: "Step one",
@@ -120,7 +125,8 @@ export function HomeSignature() {
                 </div>
               </Reveal>
             ))}
-          </ol>
+            </ol>
+          </div>
 
           <Reveal delay={120}>
             <Link
