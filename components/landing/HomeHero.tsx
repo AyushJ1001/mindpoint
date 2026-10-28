@@ -71,15 +71,7 @@ export function HomeHero({ canAccessAdmin, startSummary }: HomeHeroProps) {
             <b className="font-semibold text-white">Registration is open</b> for
             courses starting {startSummary ?? "in January 2027"}.
           </p>
-          <p>
-            Free masterclass in preparation.{" "}
-            <Link
-              href="/masterclass"
-              className="hover:text-brand-gold font-semibold text-white underline underline-offset-4"
-            >
-              Get notified
-            </Link>
-          </p>
+
         </div>
 
         {canAccessAdmin && (
