@@ -58,11 +58,23 @@ export default async function ProgrammePage({ params }: Props) {
   const catalogue = base.layout === "brief" ? await getCatalogue() : [];
   const course = attachOperationalData(base, catalogue);
 
-  // The refined template is being rolled out one programme at a time; the
-  // other programme pages keep the current template until it is approved.
-  if (base.slug === "cbt-rebt-cbmt") {
-    const catalogueRow = catalogue.find((row) => row.code === "CCCBT");
-    return <PremiumCoursePage course={course} catalogue={catalogueRow} />;
+  // The three January certificates share the refined template; their content
+  // stays course-specific.
+  const REFINED: Record<string, string> = {
+    "cbt-rebt-cbmt": "CCCBT",
+    "personality-disorders": "CCPD",
+    "inner-child-healing": "CCICH",
+  };
+  const refinedCode = REFINED[base.slug];
+  if (refinedCode) {
+    const catalogueRow = catalogue.find((row) => row.code === refinedCode);
+    return (
+      <PremiumCoursePage
+        course={course}
+        catalogue={catalogueRow}
+        courseCode={refinedCode}
+      />
+    );
   }
 
   return <CoursePage course={course} />;
