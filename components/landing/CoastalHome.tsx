@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowRight,
   BookOpen,
@@ -367,59 +366,6 @@ export default function CoastalHome({
       <HomeReviews />
       <CoastalVideoTestimonials />
       <HomeInstitutions />
-
-      {/* ── First step band ── */}
-      <section className="text-primary-foreground relative overflow-hidden">
-        <Image
-          src="/coastal/wave.jpg"
-          alt=""
-          fill
-          sizes="100vw"
-          className="object-cover"
-        />
-        <div
-          className="absolute inset-0 bg-[linear-gradient(120deg,rgba(10,40,38,0.92),rgba(29,78,74,0.74)_55%,rgba(44,106,99,0.6))]"
-          aria-hidden="true"
-        />
-        <div className="relative z-10 container grid items-center gap-10 py-20 lg:grid-cols-[1.1fr_0.9fr]">
-          <div>
-            <span className={eyebrowVariants({ tone: "sea" })}>
-              A smaller first step
-            </span>
-            <h2 className="font-display mt-4 max-w-xl text-3xl tracking-tight sm:text-5xl">
-              Not sure? Start with one calm conversation.
-            </h2>
-            <p className="text-primary-foreground/80 mt-4 max-w-lg">
-              No pressure to commit to the whole path. Just a supportive first
-              moment with someone who listens.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-2">
-              {["~20 minutes", "Licensed professional", "Flexible timing"].map(
-                (t) => (
-                  <span
-                    key={t}
-                    className="border-primary-foreground/30 bg-primary-foreground/10 rounded-full border px-4 py-1.5 text-sm"
-                  >
-                    {t}
-                  </span>
-                ),
-              )}
-            </div>
-          </div>
-          <div className="lg:text-right">
-            <div className={eyebrowVariants({ size: "micro", tone: "light" })}>
-              From
-            </div>
-            <div className="font-display text-5xl leading-none">₹600</div>
-            <Link
-              href="/contact"
-              className="bg-background text-primary rounded-brand mt-6 inline-flex items-center gap-2 px-6 py-3 text-sm font-semibold"
-            >
-              Book your first session <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
 
       {/* ── Masterclass notify ── */}
       <section className="py-20 sm:py-24">
