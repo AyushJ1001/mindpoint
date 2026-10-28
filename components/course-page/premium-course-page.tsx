@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { FacultyProfiles } from "@/components/course/FacultyProfiles";
+import { TrackProgrammeView } from "@/components/analytics/TrackProgrammeView";
 import { Reveal } from "@/components/motion/Reveal";
 import { getCoursePrice, getOfferDetails } from "@/lib/domain/pricing";
 import type { CourseContent } from "@/lib/course-content/types";
@@ -74,9 +75,11 @@ const Section = ({
 export function PremiumCoursePage({
   course,
   catalogue,
+  courseCode,
 }: {
   course: CourseContent;
   catalogue?: PublicCourse;
+  courseCode: string;
 }) {
   const standardPrice = catalogue?.price ?? 4500;
   const offer = catalogue ? getOfferDetails(catalogue) : null;
@@ -92,6 +95,8 @@ export function PremiumCoursePage({
 
   return (
     <>
+      <TrackProgrammeView courseCode={courseCode} />
+
       {/* Hero */}
       <section className="bg-section-deep relative isolate overflow-hidden text-white">
         <div
