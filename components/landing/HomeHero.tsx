@@ -47,21 +47,22 @@ export function HomeHero({ canAccessAdmin, startSummary }: HomeHeroProps) {
           Study Psychology. Understand It Deeply. Learn to Apply It.
         </h1>
         <p className="mt-6 max-w-xl text-lg leading-8 text-white/90 sm:text-xl">
-          Discover structured psychology education designed to connect essential
-          knowledge with meaningful practical learning.
+          Discover thoughtfully designed psychology courses that bring together
+          meaningful theoretical learning, guided practical experiences and the
+          freedom to revisit what you&rsquo;ve learned.
         </p>
         <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
           <Link
-            href="/january-2027"
+            href="/programs"
             className={`${heroButton} bg-brand-ivory text-brand-teal hover:bg-white`}
           >
-            Explore January Courses <ArrowRight className="h-4 w-4" />
+            Explore Certificate Courses <ArrowRight className="h-4 w-4" />
           </Link>
           <Link
-            href="#approach"
+            href="/about"
             className={`${heroButton} border border-white/70 text-white hover:bg-white/10`}
           >
-            Discover Our Learning Approach
+            Discover The Mind Point
           </Link>
         </div>
 
