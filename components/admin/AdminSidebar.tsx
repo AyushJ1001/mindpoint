@@ -48,6 +48,7 @@ const items = [
   { href: "/admin/leads", label: "Leads", icon: Mails },
   { href: "/admin/waitlist", label: "Waitlist", icon: ListChecks },
   { href: "/admin/enrollments", label: "Enrollments", icon: GraduationCap },
+  { href: "/admin/enrollments/by-course", label: "By course", icon: GraduationCap },
   {
     href: "/admin/enrollments/approvals",
     label: "Payment Approvals",
