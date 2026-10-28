@@ -22,19 +22,27 @@ export function HomeHero({ canAccessAdmin, startSummary }: HomeHeroProps) {
       aria-labelledby="hero-heading"
       className="bg-section-deep relative isolate overflow-hidden text-white"
     >
+      <div
+        aria-hidden="true"
+        className="hero-water-fallback absolute inset-0 -z-30"
+      />
       <Image
-        src="/coastal/hero.jpg"
+        src="/coastal/wave.jpg"
         alt=""
         fill
         priority
         sizes="100vw"
-        className="hero-water-image -z-20 object-cover"
+        className="hero-water-image -z-20 object-cover object-[center_58%]"
       />
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(23,63,58,0.88),rgba(23,63,58,0.84))] lg:bg-[linear-gradient(90deg,rgba(23,63,58,0.92)_0%,rgba(23,63,58,0.86)_60%,rgba(23,63,58,0.5)_100%)]"
+        className="absolute inset-0 -z-10 bg-[linear-gradient(180deg,rgba(18,50,46,0.82),rgba(18,50,46,0.68))] lg:bg-[linear-gradient(95deg,rgba(18,50,46,0.88)_0%,rgba(18,50,46,0.72)_52%,rgba(18,50,46,0.34)_100%)]"
       />
 
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 bottom-0 -z-10 h-24 bg-[linear-gradient(180deg,transparent,rgba(247,245,238,0.16))]"
+      />
       <div className="container py-20 sm:py-28 lg:py-36">
         <span
           aria-hidden="true"

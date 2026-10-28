@@ -2,11 +2,21 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
+import { Reveal } from "@/components/motion/Reveal";
 import { availabilityLabel } from "@/lib/pricing";
 import type {
   HomeCourse,
   HomeCourses,
 } from "@/components/landing/home-courses";
+
+const DESCRIPTIONS: Record<string, string> = {
+  CCCBT:
+    "Explore cognitive and behavioural approaches, from foundational concepts to practical applications.",
+  CCPD:
+    "Understand personality patterns, diagnostic frameworks and approaches to case formulation.",
+  CCICH:
+    "Explore early experiences, emotional patterns and reflective approaches to inner child work.",
+};
 
 function formatPrice(value: number) {
   return `₹${value.toLocaleString("en-IN")}`;
@@ -15,8 +25,16 @@ function formatPrice(value: number) {
 function CourseColumn({ course }: { course: HomeCourse }) {
   const { live } = course;
   return (
-    <article className="border-border flex flex-col gap-4 border-t border-dashed p-6 first:border-t-0 sm:p-8 md:border-t-0 md:border-l md:first:border-l-0">
-      <h3 className="font-display text-2xl leading-snug">{course.name}</h3>
+    <>
+      <h3 className="font-display line-clamp-2 min-h-[3.5rem] text-2xl leading-snug">
+        {course.name}
+      </h3>
+
+      {DESCRIPTIONS[course.code] ? (
+        <p className="text-muted-foreground line-clamp-3 text-sm leading-relaxed">
+          {DESCRIPTIONS[course.code]}
+        </p>
+      ) : null}
 
       {live?.startDate ? (
         <dl className="grid gap-1 text-sm">
@@ -66,7 +84,7 @@ function CourseColumn({ course }: { course: HomeCourse }) {
           View course <ArrowRight className="h-4 w-4" />
         </Link>
       </div>
-    </article>
+    </>
   );
 }
 
@@ -103,8 +121,15 @@ export function HomeJanuaryCourses({ courses }: { courses: HomeCourses }) {
         </div>
 
         <div className="border-border bg-card grid overflow-hidden rounded-3xl border shadow-[0_20px_55px_rgba(0,62,65,0.08)] md:grid-cols-3">
-          {courses.january.map((course) => (
-            <CourseColumn key={course.code} course={course} />
+          {courses.january.map((course, index) => (
+            <Reveal
+              as="article"
+              key={course.code}
+              delay={index * 90}
+              className="border-border flex flex-col gap-4 border-t border-dashed p-6 first:border-t-0 sm:p-8 md:border-t-0 md:border-l md:first:border-l-0"
+            >
+              <CourseColumn course={course} />
+            </Reveal>
           ))}
         </div>
 

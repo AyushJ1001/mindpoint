@@ -1899,3 +1899,43 @@
   color: var(--color-muted-foreground);
   font-size: 0.9rem;
 }
+
+/* ── Scroll reveal ──────────────────────────────────────────────────
+   One motion for the whole site: 18px rise, 600ms, gentle easing. Content is
+   visible without JavaScript; `reveal-in` only removes the offset. */
+.reveal {
+  opacity: 1;
+  transform: none;
+}
+
+/* Hidden only when scripting actually runs: with JavaScript off, or in a
+   browser that cannot evaluate the media feature, the content is simply
+   visible rather than waiting for a class that will never arrive. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
+  .reveal:not(.reveal-in) {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  .reveal {
+    transition:
+      opacity 600ms cubic-bezier(0.22, 0.61, 0.36, 1),
+      transform 600ms cubic-bezier(0.22, 0.61, 0.36, 1);
+    will-change: opacity, transform;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    transition: none;
+    transform: none;
+  }
+}
+
+/* Hero water fallback: the gradient stands in if the photograph is slow or
+   missing, so the headline is never on a white void. */
+.hero-water-fallback {
+  background:
+    radial-gradient(70% 90% at 18% 18%, #2b6f66 0%, transparent 60%),
+    radial-gradient(60% 80% at 82% 28%, #1f5c56 0%, transparent 55%),
+    linear-gradient(160deg, #12322e 0%, #1a4a45 55%, #215c55 100%);
+}

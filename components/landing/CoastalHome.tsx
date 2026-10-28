@@ -1,12 +1,11 @@
+import Image from "next/image";
 import Link from "next/link";
 import {
   ArrowRight,
   BookOpen,
-  CalendarDays,
   Check,
   ClipboardCheck,
   History,
-  Layers,
   Video,
 } from "lucide-react";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
@@ -15,6 +14,7 @@ import CoastalVideoTestimonials from "@/components/landing/CoastalVideoTestimoni
 import { HomeHero } from "@/components/landing/HomeHero";
 import { HomeJanuaryCourses } from "@/components/landing/HomeJanuaryCourses";
 import { HomeInstitutions } from "@/components/landing/HomeInstitutions";
+import { HomeSignature } from "@/components/landing/HomeSignature";
 import { HomeReviews } from "@/components/landing/HomeReviews";
 import type { HomeCourses } from "@/components/landing/home-courses";
 import { HOME_FAQ } from "@/lib/home-faq";
@@ -48,34 +48,24 @@ const AUDIENCE = [
 
 const OFFERINGS = [
   {
-    icon: CalendarDays,
-    title: "Eight-week certificate courses",
-    copy: "Each course runs for eight weeks and ends with a certificate of completion.",
-  },
-  {
-    icon: Layers,
-    title: "Six weeks of learning, two of practice",
-    copy: "Six weeks of structured learning, then two weeks of practical application.",
-  },
-  {
     icon: Video,
-    title: "Live online teaching",
-    copy: "Classes run live on Tuesdays and Thursdays in the evening, IST, so you can join from anywhere in India.",
-  },
-  {
-    icon: BookOpen,
-    title: "Detailed study notes",
-    copy: "Notes accompany the classes, so you can revise the models and vocabulary at your own pace.",
+    title: "Live, structured teaching",
+    copy: "Eight weeks of live classes, six of them building the vocabulary and reasoning, with questions answered in the room.",
   },
   {
     icon: ClipboardCheck,
     title: "Faculty-curated practicals",
-    copy: "The practical weeks are designed by faculty and worked through on fictional cases, with feedback.",
+    copy: "A practical fortnight of case discussion, guided exercises and feedback on your reasoning, designed by faculty.",
   },
   {
     icon: History,
-    title: "Lifetime recording access",
-    copy: "Certificate courses and the internship enrolled from 27 October 2026 keep their class recordings for as long as the platform runs.",
+    title: "Recordings for new registrations",
+    copy: "Eligible enrolments from 27 October 2026 can revisit every session for as long as the platform runs.",
+  },
+  {
+    icon: BookOpen,
+    title: "Notes and a certificate",
+    copy: "Reading notes written for each week, and a completion certificate you can verify online.",
   },
 ];
 
@@ -116,10 +106,6 @@ const ENROL_STEPS = [
 const brandButton =
   "bg-brand-button text-brand-button-foreground inline-flex items-center justify-center gap-2 rounded-brand px-6 py-3.5 text-sm font-semibold transition-opacity hover:opacity-90";
 
-function formatPrice(value: number) {
-  return `₹${value.toLocaleString("en-IN")}`;
-}
-
 export default function CoastalHome({
   canAccessAdmin,
   courses,
@@ -151,9 +137,26 @@ export default function CoastalHome({
               internship and self-paced introductory courses.
             </p>
           </div>
-          <ul className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-12 grid items-start gap-10 lg:grid-cols-[0.78fr_1.22fr]">
+            <div className="bg-section-deep relative flex aspect-[4/5] items-center justify-center overflow-hidden rounded-2xl">
+              <div
+                aria-hidden="true"
+                className="absolute inset-0 opacity-25 [background-image:repeating-radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.22)_0_1px,transparent_1px_40px)]"
+              />
+              <Image
+                src="/brand/the-mind-point-mark.png"
+                alt=""
+                width={220}
+                height={220}
+                className="relative h-40 w-40 opacity-90"
+              />
+            </div>
+            <ul className="grid gap-0">
             {OFFERINGS.map(({ icon: Icon, title, copy }) => (
-              <li key={title} className="flex gap-4">
+              <li
+                key={title}
+                className="border-brand-gold/25 flex gap-4 border-t py-4 first:border-t-0 first:pt-0"
+              >
                 <span
                   aria-hidden="true"
                   className="bg-section-mist text-brand-sage rounded-brand flex h-11 w-11 shrink-0 items-center justify-center"
@@ -170,27 +173,15 @@ export default function CoastalHome({
                 </div>
               </li>
             ))}
-          </ul>
-          <p className="border-brand-gold bg-section-mist text-brand-heading rounded-brand mt-12 max-w-3xl border-l-4 px-5 py-4 text-base leading-7">
-            <b className="font-semibold">
-              {courses.introPrice
-                ? `${formatPrice(courses.introPrice)} introduction credit.`
-                : "Introduction credit."}
-            </b>{" "}
-            Start with a self-paced introduction; its fee is credited once
-            against any certificate course if you upgrade.{" "}
-            <Link
-              href="/courses/intro"
-              className="font-semibold underline underline-offset-4"
-            >
-              See the introductions
-            </Link>
-          </p>
+            </ul>
+          </div>
         </div>
       </section>
 
       {/* ── January 2027 courses ── */}
       <HomeJanuaryCourses courses={courses} />
+
+      <HomeSignature />
 
       {/* ── Who the courses are for ── */}
       <section

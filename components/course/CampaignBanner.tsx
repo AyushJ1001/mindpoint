@@ -1,5 +1,7 @@
 import type { OfferOccasion } from "@/lib/domain/pricing";
-import { formatINR } from "@/components/course/course-hero";
+function formatINR(value: number) {
+  return `₹${Math.round(value).toLocaleString("en-IN")}`;
+}
 
 /**
  * Seasonal banner for a scheduled campaign.
@@ -72,7 +74,11 @@ export function CampaignBanner({
       aria-label={theme.label}
       data-occasion={occasion}
       className="relative isolate overflow-hidden rounded-2xl border"
-      style={{ borderColor: `${theme.accent}33`, background: theme.wash }}
+      style={{
+        borderColor: `${theme.accent}44`,
+        background: theme.wash,
+        boxShadow: `inset 4px 0 0 ${theme.accent}`,
+      }}
     >
       {bannerImageUrl ? (
         // Admin-supplied artwork; the wash stays underneath for contrast.
@@ -92,7 +98,7 @@ export function CampaignBanner({
         />
       )}
 
-      <div className="flex flex-wrap items-end justify-between gap-6 px-6 py-7 sm:px-8">
+      <div className="mx-auto flex w-full max-w-3xl flex-wrap items-end justify-between gap-x-10 gap-y-5 px-6 py-8 sm:px-9">
         <div className="max-w-md">
           <span
             className="text-[0.68rem] font-semibold tracking-[0.16em] uppercase"
