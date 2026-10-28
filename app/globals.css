@@ -1908,7 +1908,10 @@
   transform: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
+/* Hidden only when scripting actually runs: with JavaScript off, or in a
+   browser that cannot evaluate the media feature, the content is simply
+   visible rather than waiting for a class that will never arrive. */
+@media (scripting: enabled) and (prefers-reduced-motion: no-preference) {
   .reveal:not(.reveal-in) {
     opacity: 0;
     transform: translateY(18px);
