@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 import { FacultyProfiles } from "@/components/course/FacultyProfiles";
@@ -59,7 +58,7 @@ const Section = ({
       <h2 className="font-display text-brand-heading mt-3 text-3xl leading-tight tracking-tight sm:text-4xl">
         {title}
       </h2>
-      <div className="mt-8">{children}</div>
+      <Reveal className="mt-8">{children}</Reveal>
     </div>
   </section>
 );
@@ -94,14 +93,27 @@ export function PremiumCoursePage({
     <>
       {/* Hero */}
       <section className="bg-section-deep relative isolate overflow-hidden text-white">
-        <Image
-          src="/coastal/shore.jpg"
-          alt=""
-          fill
-          priority
-          sizes="100vw"
-          className="-z-20 object-cover"
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 -z-20 bg-[radial-gradient(120%_100%_at_85%_0%,#2b6f66_0%,#1a4a45_45%,#12322e_100%)]"
         />
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 800 500"
+          className="absolute -right-24 -bottom-24 -z-10 h-[420px] w-[680px] opacity-[0.22]"
+        >
+          {[0, 1, 2, 3, 4, 5].map((ring) => (
+            <circle
+              key={ring}
+              cx="520"
+              cy="300"
+              r={60 + ring * 52}
+              fill="none"
+              stroke="#D7B88A"
+              strokeWidth="0.8"
+            />
+          ))}
+        </svg>
         <div
           aria-hidden="true"
           className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgba(23,63,58,0.93)_0%,rgba(23,63,58,0.85)_55%,rgba(29,78,74,0.55)_100%)]"
@@ -201,22 +213,27 @@ export function PremiumCoursePage({
           exercises, case discussion and feedback, so the ideas stop being
           abstract.
         </p>
-        <ol className="mt-8 grid gap-4 sm:grid-cols-4">
-          {["Weeks 1–2", "Weeks 3–4", "Weeks 5–6", "Weeks 7–8"].map(
-            (label, index) => (
-              <li
-                key={label}
-                className="border-brand-gold/25 rounded-brand border bg-white/60 p-4"
-              >
-                <span className="text-brand-sage text-xs font-semibold tracking-[0.14em] uppercase">
-                  {label}
-                </span>
-                <p className="font-display text-brand-heading mt-1 text-lg">
-                  {index < 3 ? "Structured learning" : "Practical application"}
-                </p>
-              </li>
-            ),
-          )}
+        <ol className="relative mt-10 grid grid-cols-4 gap-4 sm:grid-cols-8">
+          <span
+            aria-hidden="true"
+            className="via-brand-gold/50 absolute top-2 right-0 left-0 hidden h-px bg-gradient-to-r from-transparent to-transparent sm:block"
+          />
+          {["1", "2", "3", "4", "5", "6", "7", "8"].map((week, index) => (
+            <li key={week} className="relative pt-6">
+              <span
+                aria-hidden="true"
+                className={`absolute top-0 left-0 h-2 w-2 rounded-full ${
+                  index < 6 ? "bg-brand-teal" : "bg-brand-gold"
+                }`}
+              />
+              <span className="text-brand-sage text-[0.66rem] font-semibold tracking-[0.14em] uppercase">
+                Week {week}
+              </span>
+              <p className="font-display text-brand-heading mt-1 text-sm leading-snug sm:text-base">
+                {index < 6 ? "Structured learning" : "Practical application"}
+              </p>
+            </li>
+          ))}
         </ol>
       </Section>
 
