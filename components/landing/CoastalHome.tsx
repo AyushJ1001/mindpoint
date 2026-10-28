@@ -10,7 +10,6 @@ import {
   Video,
 } from "lucide-react";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
-import { EmailCapture } from "@/components/coastal/EmailCapture";
 import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
 import CoastalVideoTestimonials from "@/components/landing/CoastalVideoTestimonials";
 import { HomeHero } from "@/components/landing/HomeHero";
@@ -366,21 +365,6 @@ export default function CoastalHome({
       <HomeReviews />
       <CoastalVideoTestimonials />
       <HomeInstitutions />
-
-      {/* ── Masterclass notify ── */}
-      <section className="py-20 sm:py-24">
-        <div className="container flex max-w-2xl flex-col items-center gap-5 text-center">
-          <span className={eyebrowVariants()}>Free masterclass</span>
-          <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
-            Hear about the free masterclass first.
-          </h2>
-          <p className="text-muted-foreground max-w-lg">
-            We are recording a free session that shows how we teach. Leave your
-            email and we will send it when it is released.
-          </p>
-          <EmailCapture source="masterclass" />
-        </div>
-      </section>
 
       {/* ── FAQ ── */}
       <section className="bg-section-mist py-section-sm sm:py-section">

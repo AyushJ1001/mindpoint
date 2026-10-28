@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 
-import { LeadCaptureForm } from "@/components/coastal/LeadCaptureForm";
 import { LmsMediaPlayer } from "@/components/lms/LmsMediaPlayer";
 import { ctaVariants } from "@/components/coastal/cta";
 import { eyebrowVariants } from "@/components/coastal/eyebrow";
@@ -18,7 +17,7 @@ const metaTitle = MASTERCLASS_RELEASED
   : "Free masterclass, coming soon — The Mind Point";
 const metaDescription = MASTERCLASS_RELEASED
   ? "Watch a free recorded masterclass from The Mind Point. Structured, practical psychology teaching for students, career changers and practising therapists in India. No card, no pressure."
-  : "The Mind Point is preparing a free masterclass on how we teach psychology. Leave your email and we'll tell you when it's released. No card, no pressure.";
+  : "The Mind Point is preparing a free masterclass on how we teach psychology. The session, faculty and registration details are being finalised.";
 
 export const metadata: Metadata = {
   title: metaTitle,
@@ -80,9 +79,9 @@ export default function MasterclassPage() {
                   Coming soon
                 </p>
                 <p className="text-muted-foreground mt-3 max-w-sm text-sm leading-relaxed">
-                  The masterclass hasn&rsquo;t been released yet. Leave your
-                  email and we&rsquo;ll let you know the day it&rsquo;s ready to
-                  watch.
+                  The masterclass hasn&rsquo;t been scheduled yet. This page
+                  will open for registration once the session and faculty are
+                  confirmed.
                 </p>
               </div>
             )}
@@ -100,21 +99,19 @@ export default function MasterclassPage() {
 
           <div className="water-band-mist rounded-2xl p-6 sm:p-8">
             <h2 className="font-display text-2xl tracking-tight">
-              {MASTERCLASS_RELEASED
-                ? "Stay in touch"
-                : "Tell me when it’s released"}
+              Schedule to be announced
             </h2>
             <p className="text-muted-foreground mt-2 text-sm leading-relaxed">
-              {MASTERCLASS_RELEASED
-                ? "Leave your email for a short confirmation and, if you opt in, course updates."
-                : "Enter your email and we’ll email you when it’s released."}
+              We are finalising the session, the faculty and the registration
+              process. This page will open for registration once those are set,
+              and existing notification sign-ups stay on file.
             </p>
-            <div className="mt-6">
-              <LeadCaptureForm
-                source="masterclass-page"
-                released={MASTERCLASS_RELEASED}
-              />
-            </div>
+            <Link
+              href="/january-2027"
+              className="text-primary mt-4 inline-block text-sm font-semibold underline underline-offset-4"
+            >
+              See the January 2027 certificate cohorts
+            </Link>
           </div>
         </div>
       </section>
