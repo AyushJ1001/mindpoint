@@ -380,9 +380,13 @@ export function PremiumCoursePage({
       </Section>
 
       {/* Faculty */}
-      <div className="bg-section-ivory">
-        <FacultyProfiles courseId={catalogue?._id} />
-      </div>
+      {/* Only a published course has an id to filter by; showing the whole
+          faculty list on a draft would imply people it does not have. */}
+      {catalogue ? (
+        <div className="bg-section-ivory">
+          <FacultyProfiles courseId={catalogue._id} />
+        </div>
+      ) : null}
 
       {/* FAQs */}
       <Section eyebrow="Questions" title="Answers before you enrol">
@@ -407,17 +411,19 @@ export function PremiumCoursePage({
       <section className="bg-secondary py-16 sm:py-20">
         <div className="container flex max-w-3xl flex-col items-start gap-4 sm:items-center sm:text-center">
           <h2 className="font-display text-3xl tracking-tight sm:text-4xl">
-            Join the January 2027 cohort.
+            {course.cta.heading}
           </h2>
           <p className="text-muted-foreground max-w-xl">
-            Eight weeks, live online, with two weeks of practical training.
-            {startDate ? ` Starts ${startDate}.` : ""}
+            {course.cta.body ??
+              `Eight weeks, live online, with two weeks of practical training.${startDate ? ` Starts ${startDate}.` : ""}`}
           </p>
           <Link
-            href={checkoutHref}
+            href={registrationsOpen ? checkoutHref : "/contact"}
             className="bg-primary text-primary-foreground rounded-brand mt-2 inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold"
           >
-            Enrol now · ₹{payable.toLocaleString("en-IN")}
+            {registrationsOpen
+              ? `Enrol now · ₹${payable.toLocaleString("en-IN")}`
+              : course.cta.primaryLabel}
           </Link>
         </div>
       </section>
