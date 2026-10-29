@@ -241,3 +241,29 @@ test("inactive enrolments are not on the certificate desk", async () => {
   const rows = await (listCertificatesForCourse as any)._handler(ctx, { courseId: COURSE });
   assert.deepEqual(rows.map((row: any) => row.enrollmentId), ["enr_a"]);
 });
+
+test("a transferred enrollment cannot open course resources", async () => {
+  const tables = baseTables();
+  tables.enrollments[0].status = "transferred";
+  const ctx = makeCtx(tables, { subject: "user_a" });
+  const result = await (getCourseResources as any)._handler(ctx, { courseId: COURSE });
+  assert.equal(result, null);
+});
+
+test("a cancelled enrollment cannot open course resources", async () => {
+  const tables = baseTables();
+  tables.enrollments[0].status = "cancelled";
+  const ctx = makeCtx(tables, { subject: "user_a" });
+  const result = await (getCourseResources as any)._handler(ctx, { courseId: COURSE });
+  assert.equal(result, null);
+});
+
+test("an active enrollment still opens resources after a grandfathered past cohort", async () => {
+  const tables = baseTables();
+  tables.enrollments[0]._creationTime = Date.parse("2026-02-10");
+  tables.lmsMaterials[0].published = true;
+  const ctx = makeCtx(tables, { subject: "user_a" });
+  const result = await (getCourseResources as any)._handler(ctx, { courseId: COURSE });
+  assert.ok(result);
+  assert.deepEqual(result.materials.map((m: any) => m._id), ["mat_pub"]);
+});

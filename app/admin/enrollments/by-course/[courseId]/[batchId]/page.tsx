@@ -142,6 +142,14 @@ export default function BatchDetailPage() {
         description={`${batch.startDate} to ${batch.endDate} · ${batch.daysOfWeek?.join(" & ") ?? "schedule to be set"} ${batch.startTime}–${batch.endTime} IST`}
       />
 
+      {!batch.startDate ? (
+        <p className="rounded border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          This cohort has no recorded start date, so it cannot be classified as
+          current or previous. Add the start date to resolve it; students keep
+          access in the meantime.
+        </p>
+      ) : null}
+
       <div className="grid gap-3 sm:grid-cols-5">
         {[
           ["Enrolled", batchRows.length],
