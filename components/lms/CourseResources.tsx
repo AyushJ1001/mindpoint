@@ -118,7 +118,8 @@ function Materials({
       <CardContent className="space-y-4">
         {materials.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No notes have been published yet.
+            Your learning materials will appear here as they are released
+            throughout the course.
           </p>
         ) : (
           <ul className="divide-border divide-y">
@@ -354,7 +355,8 @@ function Recordings({
       <CardContent className="space-y-4">
         {recordings.length === 0 ? (
           <p className="text-muted-foreground text-sm">
-            No recordings have been published yet.
+            Recordings will appear here as they are released throughout the
+            course.
           </p>
         ) : (
           <ul className="divide-border divide-y">

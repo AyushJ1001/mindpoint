@@ -30,8 +30,9 @@ function normalizeEmail(value?: string | null): string | undefined {
   return email ? email : undefined;
 }
 
+// Only an active enrollment opens materials. Cancelled and transferred rows
+// keep their history but no longer grant access, matching the LMS policy.
 function isActiveEnrollment(enrollment: Doc<"enrollments">): boolean {
-  if (enrollment.status === "cancelled") return false;
   return (enrollment.status ?? "active") === "active";
 }
 

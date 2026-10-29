@@ -915,12 +915,18 @@ function AuthenticatedStudentLmsApp() {
   );
 }
 
+type EnrollmentOption = {
+  enrollmentId: string;
+  courseName: string;
+  section?: "current" | "previous";
+};
+
 function EnrollmentSelect({
   enrollments,
   value,
   onChange,
 }: {
-  enrollments: Array<{ enrollmentId: string; courseName: string }>;
+  enrollments: EnrollmentOption[];
   value?: string;
   onChange: (value: string) => void;
 }) {
@@ -928,6 +934,13 @@ function EnrollmentSelect({
     return (
       <span className="lms-live-enrollment">{enrollments[0].courseName}</span>
     );
+
+  // Grouping comes from the server (listMyLmsEnrollments), so the client never
+  // re-derives dates. Previous Learning only appears when there is something
+  // in it, and every enrollment stays selectable.
+  const current = enrollments.filter((item) => item.section !== "previous");
+  const previous = enrollments.filter((item) => item.section === "previous");
+
   return (
     <label className="lms-live-select">
       <span>Course</span>
@@ -935,11 +948,24 @@ function EnrollmentSelect({
         value={value ?? ""}
         onChange={(event) => onChange(event.target.value)}
       >
-        {enrollments.map((item) => (
-          <option key={item.enrollmentId} value={item.enrollmentId}>
-            {item.courseName}
-          </option>
-        ))}
+        {current.length > 0 ? (
+          <optgroup label="My Current Learning">
+            {current.map((item) => (
+              <option key={item.enrollmentId} value={item.enrollmentId}>
+                {item.courseName}
+              </option>
+            ))}
+          </optgroup>
+        ) : null}
+        {previous.length > 0 ? (
+          <optgroup label="My Previous Learning">
+            {previous.map((item) => (
+              <option key={item.enrollmentId} value={item.enrollmentId}>
+                {item.courseName}
+              </option>
+            ))}
+          </optgroup>
+        ) : null}
       </select>
     </label>
   );
