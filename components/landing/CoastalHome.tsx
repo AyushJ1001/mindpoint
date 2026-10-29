@@ -12,8 +12,8 @@ import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
 import CoastalVideoTestimonials from "@/components/landing/CoastalVideoTestimonials";
 import { HomeHero } from "@/components/landing/HomeHero";
-import { HomeJanuaryCourses } from "@/components/landing/HomeJanuaryCourses";
 import { HomeInstitutions } from "@/components/landing/HomeInstitutions";
+import { HomeAdmissions } from "@/components/landing/HomeAdmissions";
 import { HomeSignature } from "@/components/landing/HomeSignature";
 import { HomeReviews } from "@/components/landing/HomeReviews";
 import type { HomeCourses } from "@/components/landing/home-courses";
@@ -179,7 +179,7 @@ export default function CoastalHome({
       </section>
 
       {/* ── January 2027 courses ── */}
-      <HomeJanuaryCourses courses={courses} />
+      <HomeAdmissions courses={courses} />
 
       <HomeSignature />
 
