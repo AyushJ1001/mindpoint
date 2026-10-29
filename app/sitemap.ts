@@ -113,10 +113,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly" as const,
       priority: 0.8,
     },
-    // PTSD is a draft: its page 404s, so it must not be advertised.
-    ...courseSlugs()
-      .filter((slug) => slug !== "ptsd-complex-trauma")
-      .map((slug) => ({
+    ...courseSlugs().map((slug) => ({
       url: `${baseUrl}/programs/${slug}`,
       lastModified: new Date(),
       changeFrequency: "weekly" as const,
