@@ -64,10 +64,14 @@ export default async function ProgrammePage({ params }: Props) {
     "cbt-rebt-cbmt": "CCCBT",
     "personality-disorders": "CCPD",
     "inner-child-healing": "CCICH",
+    "ptsd-complex-trauma": "CCPTSD",
   };
   const refinedCode = REFINED[base.slug];
   if (refinedCode) {
     const catalogueRow = catalogue.find((row) => row.code === refinedCode);
+    // A course that is not on sale has no catalogue row; its page must not be
+    // publicly reachable while it is still a draft.
+    if (!catalogueRow) notFound();
     return (
       <PremiumCoursePage
         course={course}
