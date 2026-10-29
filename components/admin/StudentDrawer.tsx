@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { hasLifetimeRecordings } from "@/lib/recording-entitlement";
+import { assertConvexSuccess } from "@/lib/convex-error";
 import type { Id } from "@/lib/backend/data-model";
 
 /**
@@ -328,12 +329,18 @@ function TransferSection({
                   setBusy(true);
                   setMessage(null);
                   try {
-                    await changeBatch({
-                      enrollmentId: detail._id,
-                      batchId: chosen._id,
-                      reason: reason.trim(),
-                      expectedBatchId: detail.batchId ?? null,
-                    });
+                    // The mutation returns a tagged failure (full batch, stale
+                    // batch, empty reason) rather than throwing, so the result
+                    // has to be checked or a refusal would look like success.
+                    assertConvexSuccess(
+                      await changeBatch({
+                        enrollmentId: detail._id,
+                        batchId: chosen._id,
+                        reason: reason.trim(),
+                        expectedBatchId: detail.batchId ?? null,
+                      }),
+                      "Transfer failed",
+                    );
                     setMessage("Batch updated.");
                     setOpen(false);
                     setReviewing(false);
