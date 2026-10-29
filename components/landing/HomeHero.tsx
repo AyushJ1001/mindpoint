@@ -86,9 +86,9 @@ export function HomeHero({ canAccessAdmin, startSummary }: HomeHeroProps) {
           <p>
             <b className="font-semibold text-white">Registrations open</b> for
             the three January certificates
-            {startSummary ? ` (${startSummary})` : ""} and the internship ·{" "}
+            {startSummary ? ` (${startSummary})` : ""}, the internship, and{" "}
             <b className="font-semibold text-white">PTSD &amp; Complex Trauma</b>{" "}
-            coming soon.
+            from 2 February 2027.
           </p>
 
         </div>
