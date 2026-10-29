@@ -15,14 +15,14 @@ import { ScrollReveal } from "@/components/ScrollReveal";
 export const revalidate = 1800; // Revalidate every 30 minutes
 
 export const metadata: Metadata = {
-  title: "All Courses - The Mind Point",
+  title: "All Courses | The Mind Point",
   description:
     "Explore live certificate courses, internships, self-paced intro courses, therapy, supervision and worksheets in psychology and mental health. Practice-first and built to fit real life.",
   keywords:
     "mental health courses, psychology courses, certificate programs, diploma courses, therapy sessions, counseling courses, professional development, online learning",
   openGraph: {
     images: [openGraphImage],
-    title: "All Courses - The Mind Point",
+    title: "All Courses | The Mind Point",
     description:
       "Live certificate courses, internships, self-paced intro courses and therapy — practice-first and built to fit real life.",
     type: "website",
@@ -30,7 +30,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "All Courses - The Mind Point",
+    title: "All Courses | The Mind Point",
     description:
       "Live certificate courses, internships, self-paced intro courses and therapy — practice-first and built to fit real life.",
   },

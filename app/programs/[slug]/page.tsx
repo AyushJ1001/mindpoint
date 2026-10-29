@@ -22,14 +22,14 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const course = getCourseBySlug(slug);
-  if (!course) return { title: "Programme not found - The Mind Point" };
+  if (!course) return { title: "Programme not found | The Mind Point" };
 
   return {
-    title: `${course.title} - The Mind Point`,
+    title: `${course.title} | The Mind Point`,
     description: course.tagline,
     alternates: { canonical: `/programs/${course.slug}` },
     openGraph: {
-      title: `${course.title} - The Mind Point`,
+      title: `${course.title} | The Mind Point`,
       description: course.tagline,
       type: "website",
       url: `https://www.themindpoint.org/programs/${course.slug}`,
@@ -37,16 +37,17 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   };
 }
 
-async function getCatalogue(): Promise<PublicCourse[]> {
+async function getCatalogue(): Promise<PublicCourse[] | null> {
   const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
-  if (!convexUrl) return [];
+  if (!convexUrl) return null;
   try {
     const convex = new ConvexHttpClient(convexUrl);
     const courses = await convex.query(api.courses.listCourses, {});
     return courses ?? [];
   } catch (error) {
     console.warn("Failed to fetch the programmes catalogue:", error);
-    return [];
+    // null means "we could not check", not "nothing is on sale".
+    return null;
   }
 }
 
@@ -56,7 +57,9 @@ export default async function ProgrammePage({ params }: Props) {
   if (!base) notFound();
 
   const catalogue = base.layout === "brief" ? await getCatalogue() : [];
-  const course = attachOperationalData(base, catalogue);
+  const catalogueChecked = catalogue !== null;
+  const catalogueRows = catalogue ?? [];
+  const course = attachOperationalData(base, catalogueRows);
 
   // The three January certificates share the refined template; their content
   // stays course-specific.
@@ -68,10 +71,10 @@ export default async function ProgrammePage({ params }: Props) {
   };
   const refinedCode = REFINED[base.slug];
   if (refinedCode) {
-    const catalogueRow = catalogue.find((row) => row.code === refinedCode);
-    // A course that is not on sale has no catalogue row; its page must not be
-    // publicly reachable while it is still a draft.
-    if (!catalogueRow) notFound();
+    const catalogueRow = catalogueRows.find((row) => row.code === refinedCode);
+    // Only hide the page when we actually checked and the course is not on
+    // sale; a catalogue outage must not 404 live programmes.
+    if (catalogueChecked && !catalogueRow) notFound();
     return (
       <PremiumCoursePage
         course={course}

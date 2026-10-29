@@ -30,6 +30,7 @@ const PROGRAMME_BY_CODE: Record<string, string> = {
   CCICH: "inner-child-healing",
   CCPD: "personality-disorders",
   INCLP: "counselling-internship",
+  CCPTSD: "ptsd-complex-trauma",
 };
 
 export function programmeSlugForCode(code?: string | null): string | undefined {

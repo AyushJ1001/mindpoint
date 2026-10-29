@@ -16,7 +16,7 @@ import { JANUARY_CERTIFICATE_FEE, availabilityLabel } from "@/lib/pricing";
 export const revalidate = 1800;
 
 export const metadata = {
-  title: "January 2027 certificate cohorts - The Mind Point",
+  title: "January 2027 certificate cohorts | The Mind Point",
   description:
     "Live certificate cohorts start in January 2027: CBT, REBT and CBMT; Inner Child Healing & Therapy; and Personality Disorders. Eight weeks each: six weeks of learning, then two weeks of practical training.",
   alternates: { canonical: "/january-2027" },

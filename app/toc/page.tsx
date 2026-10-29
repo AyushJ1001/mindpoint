@@ -1,13 +1,13 @@
 import { openGraphImage } from "@/lib/seo";
 export const metadata = {
-  title: "Terms & Conditions - The Mind Point",
+  title: "Terms & Conditions | The Mind Point",
   description:
     "Read The Mind Point's terms and conditions for our mental health education platform, courses, therapy sessions, and related services.",
   keywords:
     "terms and conditions, legal, mental health education, courses, The Mind Point",
   openGraph: {
     images: [openGraphImage],
-    title: "Terms & Conditions - The Mind Point",
+    title: "Terms & Conditions | The Mind Point",
     description: "Read our terms and conditions for using our services.",
     type: "website",
   },

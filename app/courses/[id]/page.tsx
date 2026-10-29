@@ -42,7 +42,7 @@ export async function generateMetadata({
   try {
     if (!convex) {
       return {
-        title: "Course - The Mind Point",
+        title: "Course | The Mind Point",
         description:
           "Learn about our mental health courses and professional development programs.",
       };
@@ -57,7 +57,7 @@ export async function generateMetadata({
 
     if (!course) {
       return {
-        title: "Course Not Found - The Mind Point",
+        title: "Course Not Found | The Mind Point",
         description: "The requested course could not be found.",
         robots: { index: false, follow: false },
       };
@@ -69,7 +69,7 @@ export async function generateMetadata({
       : `Learn about ${course.name} at The Mind Point. Professional mental health education and training.`;
 
     return {
-      title: `${course.name} - The Mind Point`,
+      title: `${course.name} | The Mind Point`,
       description,
       keywords: [
         course.name,
@@ -82,7 +82,7 @@ export async function generateMetadata({
         "The Mind Point",
       ].join(", "),
       openGraph: {
-        title: `${course.name} - The Mind Point`,
+        title: `${course.name} | The Mind Point`,
         description,
         type: "website",
         url: `https://www.themindpoint.org/courses/${id}`,
@@ -100,7 +100,7 @@ export async function generateMetadata({
       },
       twitter: {
         card: "summary_large_image",
-        title: `${course.name} - The Mind Point`,
+        title: `${course.name} | The Mind Point`,
         description,
         images:
           course.imageUrls && course.imageUrls.length > 0
@@ -111,7 +111,7 @@ export async function generateMetadata({
   } catch (error) {
     console.error("Error generating metadata:", error);
     return {
-      title: "Course - The Mind Point",
+      title: "Course | The Mind Point",
       description:
         "Learn about our mental health courses and professional development programs.",
     };

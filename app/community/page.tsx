@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Community - The Mind Point",
+  title: "Community | The Mind Point",
   description:
     "A small, moderated community of people who take mental health seriously, gently.",
   alternates: { canonical: "/community" },

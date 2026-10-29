@@ -7,14 +7,14 @@ import Image from "next/image";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Online Therapy & Counselling - The Mind Point",
+  title: "Online Therapy & Counselling | The Mind Point",
   description:
     "One-to-one online therapy with licensed professionals — confidential, unhurried, and shaped around you. No diagnosis required. Just a space that is yours.",
   keywords:
     "online therapy india, online counselling, therapy for teens, couples therapy, women's mental health, premarital counselling",
   openGraph: {
     images: [openGraphImage],
-    title: "Online Therapy & Counselling - The Mind Point",
+    title: "Online Therapy & Counselling | The Mind Point",
     description:
       "Confidential, online therapy scheduled around your life. No diagnosis required.",
     type: "website",

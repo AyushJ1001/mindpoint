@@ -6,14 +6,14 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Psychology Worksheets & Resources - The Mind Point",
+  title: "Psychology Worksheets & Resources | The Mind Point",
   description:
     "Evidence-based, professionally designed worksheets for therapists and clients. Download, print and put them to work in the very next session.",
   keywords:
     "worksheets, psychology worksheets, mental health resources, downloadable PDFs, learning materials",
   openGraph: {
     images: [openGraphImage],
-    title: "Psychology Worksheets & Resources - The Mind Point",
+    title: "Psychology Worksheets & Resources | The Mind Point",
     description:
       "Evidence-based worksheets you can download and use in the very next session.",
     type: "website",

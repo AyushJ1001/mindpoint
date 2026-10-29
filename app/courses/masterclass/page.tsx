@@ -6,14 +6,14 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Masterclasses in Psychology - The Mind Point",
+  title: "Masterclasses in Psychology | The Mind Point",
   description:
     "Live, focused masterclasses led by practising experts in psychology and mental health. One topic, real depth, and answers to the questions you actually have.",
   keywords:
     "masterclass programs, psychology masterclasses, expert-led training, intensive learning, mental health education",
   openGraph: {
     images: [openGraphImage],
-    title: "Masterclasses in Psychology - The Mind Point",
+    title: "Masterclasses in Psychology | The Mind Point",
     description:
       "Live, focused masterclasses led by practising experts. One topic, real depth, real answers.",
     type: "website",

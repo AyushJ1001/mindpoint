@@ -6,7 +6,7 @@ import Link from "next/link";
 import { getCampaignCourses, januaryCampaign } from "@/lib/course-content";
 
 export const metadata = {
-  title: "Programs - The Mind Point",
+  title: "Programs | The Mind Point",
   description:
     "Live certificate courses and an internship starting January 2027, ₹999 self-paced intro courses, therapy and supervision.",
   alternates: { canonical: "/programs" },
