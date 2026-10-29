@@ -46,6 +46,7 @@ import type * as adminReviews from "../adminReviews.js";
 import type * as adminUsers from "../adminUsers.js";
 import type * as adminUtils from "../adminUtils.js";
 import type * as adminWaitlist from "../adminWaitlist.js";
+import type * as auditLmsVisibility from "../auditLmsVisibility.js";
 import type * as bootstrapBatchVisibility from "../bootstrapBatchVisibility.js";
 import type * as bootstrapCbtProgramme from "../bootstrapCbtProgramme.js";
 import type * as bootstrapCbtRebtCbmt from "../bootstrapCbtRebtCbmt.js";
@@ -136,6 +137,7 @@ declare const fullApi: ApiFromModules<{
   adminUsers: typeof adminUsers;
   adminUtils: typeof adminUtils;
   adminWaitlist: typeof adminWaitlist;
+  auditLmsVisibility: typeof auditLmsVisibility;
   bootstrapBatchVisibility: typeof bootstrapBatchVisibility;
   bootstrapCbtProgramme: typeof bootstrapCbtProgramme;
   bootstrapCbtRebtCbmt: typeof bootstrapCbtRebtCbmt;
