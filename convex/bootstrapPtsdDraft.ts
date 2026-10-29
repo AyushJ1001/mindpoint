@@ -1,97 +1,73 @@
 import { internalMutation } from "./_generated/server";
 
-// Creates the PTSD & Complex Trauma certificate as an unpublished draft.
-// Idempotent and safe to re-run: it does nothing if any course row already
-// uses the code.
+// PTSD certificate course, created as an unpublished draft.
 //
-// The draft has no batches, dates or price, so it cannot appear on the site
-// (`isPubliclyAvailableCourse` needs a published course) and cannot be
-// published as it stands: admin publishing of a batch course is blocked until
-// it has at least one published batch, and certificates also need learning
-// outcomes. An admin sets those, and the price, before publishing.
+// The start date and time are supplied by the owner (2 February 2027,
+// 5:30–6:30 pm IST). Session days/frequency and faculty are NOT supplied, so no
+// cohort is created here: a batch needs a weekly pattern we do not have, and
+// inventing one would put wrong dates in front of students.
 //
 //   npx convex run bootstrapPtsdDraft:createPtsdDraft --prod
 
 const ACTOR = "bootstrap:ptsd-draft";
-
 const CODE = "CCPTSD";
 
-const MODULES: { title: string; description: string }[] = [
-  {
-    title: "Foundations of Psychological Trauma",
-    description:
-      "What psychological trauma is, how the concept has developed, and the range of events and experiences it can follow.",
-  },
-  {
-    title: "PTSD: Symptoms, Diagnostic Frameworks and Clinical Presentation",
-    description:
-      "The symptom clusters of PTSD as described in DSM-5-TR and ICD-11, and how presentations vary between people.",
-  },
-  {
-    title: "Complex PTSD and Developmental Trauma",
-    description:
-      "How Complex PTSD is defined in ICD-11, and how prolonged or early-life trauma can affect development and relationships.",
-  },
-  {
-    title: "Trauma, the Nervous System and Somatic Manifestations",
-    description:
-      "Current models of the stress response and how trauma can show up in the body, sleep, arousal and attention.",
-  },
-  {
-    title: "Trauma-Informed Assessment and Case Formulation",
-    description:
-      "Principles of safe, trauma-informed assessment, commonly used measures, and building a structured case formulation.",
-  },
-  {
-    title: "Evidence-Based Therapeutic Approaches",
-    description:
-      "An overview of the approaches recommended in current clinical guidelines, what each involves, and the limits of scope for practitioners in training.",
-  },
-  {
-    title: "Practical Training: Case Analysis and Formulation",
-    description:
-      "Guided analysis of fictional case material, applying the assessment and formulation frameworks from earlier modules.",
-  },
-  {
-    title: "Practical Training: Simulations, Ethical Decisions and Integration",
-    description:
-      "Role-play simulations, ethical decision-making exercises and a review that brings the course together.",
-  },
-];
+const MODULES = [
+  ["Foundations of Psychological Trauma", "What trauma is, how it differs from stress, and the vocabulary used in trauma-informed practice."],
+  ["PTSD: Symptoms, Diagnostic Frameworks and Clinical Presentation", "The diagnostic criteria, how presentation varies, and what the frameworks can and cannot tell you."],
+  ["Complex PTSD and Developmental Trauma", "How prolonged or early relational trauma differs from single-incident trauma, and why the distinction changes the work."],
+  ["Trauma, the Nervous System and Somatic Manifestations", "How threat responses show up in the body, and what that means for pacing and safety."],
+  ["Trauma-Informed Assessment and Case Formulation", "Taking a history carefully, recognising risk, and building a formulation rather than a label."],
+  ["Evidence-Based Therapeutic Approaches", "The main therapeutic approaches, what the evidence supports, and where scope ends."],
+  ["Practical Training: Case Analysis and Formulation", "Faculty-curated work on fictional cases, with feedback on your reasoning."],
+  ["Practical Training: Simulations, Ethics and Integration", "Simulated practice, ethical decision-making and pulling the eight weeks together."],
+] as const;
 
 export const createPtsdDraft = internalMutation({
   args: {},
   handler: async (ctx) => {
-    // Codes repeat across archived and merged copies, so check every row,
-    // not just live ones, before claiming the code.
+    const now = Date.now();
     const courses = await ctx.db.query("courses").take(2000);
     const existing = courses.find((course) => course.code === CODE);
+
+    const fields = {
+      name: "Certificate Course in Post-Traumatic Stress Disorder (PTSD) & Complex Trauma",
+      code: CODE,
+      type: "certificate" as const,
+      price: 4500,
+      lifecycleStatus: "draft" as const,
+      salesEnabled: false,
+      usesBatches: true,
+      description:
+        "An eight-week certificate course in trauma: how PTSD and complex trauma are understood, assessed and formulated, with two weeks of faculty-curated practical application.",
+      content:
+        "PTSD complex trauma certificate course six weeks learning two weeks practical trauma-informed assessment formulation evidence-based approaches",
+      modules: MODULES.map(([title, description]) => ({ title, description })),
+      learningOutcomes: [
+        { icon: "book-open", title: "Describe trauma and its psychological effects" },
+        { icon: "clipboard", title: "Use the diagnostic frameworks carefully" },
+        { icon: "layers", title: "Distinguish PTSD from complex trauma" },
+        { icon: "activity", title: "Recognise somatic and nervous-system responses" },
+        { icon: "search", title: "Build a trauma-informed formulation" },
+        { icon: "shield", title: "Work within scope and refer appropriately" },
+      ],
+      prerequisites: "None. No prior clinical training is required.",
+      enrolledUsers: [], reviews: [],
+      updatedAt: now,
+      updatedByAdminId: ACTOR,
+    };
+
     if (existing) {
-      return { created: false, courseId: existing._id };
+      await ctx.db.patch(existing._id, fields);
+      return { action: "updated", courseId: String(existing._id), code: CODE };
     }
 
-    const now = Date.now();
     const courseId = await ctx.db.insert("courses", {
-      name: "PTSD & Complex Trauma: Assessment, Formulation and Trauma-Informed Care",
-      code: CODE,
-      type: "certificate",
-      lifecycleStatus: "draft",
-      usesBatches: true,
-      // `price` is required by the schema, so 0 stands in for "not set". The
-      // fee has not been decided; an admin must set it before publishing.
-      price: 0,
-      description:
-        "Draft certificate on post-traumatic stress disorder and complex trauma: assessment, case formulation and trauma-informed care. The curriculum is pending review by qualified subject-matter faculty and is not yet open for enrolment.",
-      content: "",
-      duration: "8 weeks (6 weeks learning + 2 weeks practical training)",
-      modules: MODULES,
-      enrolledUsers: [],
-      reviews: [],
+      ...fields,
+      createdAtAdminId: undefined,
       createdByAdminId: ACTOR,
-      updatedByAdminId: ACTOR,
-      updatedAt: now,
-    });
-
-    return { created: true, courseId };
+    } as never);
+    await ctx.db.patch(courseId, { createdByAdminId: ACTOR });
+    return { action: "created", courseId: String(courseId), code: CODE };
   },
 });
