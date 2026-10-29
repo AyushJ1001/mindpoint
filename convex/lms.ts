@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { classifyEnrollment } from "../lib/domain/lms-visibility";
 import {
   internalMutation,
   mutation,
@@ -717,6 +718,13 @@ export const listMyLmsEnrollments = query({
           ? await ctx.db.get("lmsCurricula", assignment.curriculumId)
           : null;
 
+        const section = classifyEnrollment({
+          startDate:
+            enrollment.batchStartDate ?? course?.startDate ?? undefined,
+          courseType: course?.type ?? enrollment.courseType,
+          status: enrollment.status,
+        });
+
         return {
           enrollmentId: enrollment._id,
           enrollmentNumber: enrollment.enrollmentNumber,
@@ -724,6 +732,10 @@ export const listMyLmsEnrollments = query({
           courseName: course?.name ?? enrollment.courseName ?? "Your Course",
           courseCode: course?.code,
           courseType: course?.type ?? enrollment.courseType,
+          // Current versus previous. Grandfather-first: every enrollment is
+          // returned, the section only decides where it is shown.
+          section: section.section,
+          missingStartDate: section.missingDate,
           learningMode:
             getLmsLearningMode(course?.type ?? enrollment.courseType) ??
             "self_paced",
