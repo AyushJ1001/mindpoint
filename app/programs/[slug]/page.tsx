@@ -64,6 +64,7 @@ export default async function ProgrammePage({ params }: Props) {
     "cbt-rebt-cbmt": "CCCBT",
     "personality-disorders": "CCPD",
     "inner-child-healing": "CCICH",
+    "ptsd-complex-trauma": "CCPTSD",
   };
   const refinedCode = REFINED[base.slug];
   if (refinedCode) {

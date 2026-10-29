@@ -85,7 +85,7 @@ export function PremiumCoursePage({
   const offer = catalogue ? getOfferDetails(catalogue) : null;
   const payable = catalogue ? getCoursePrice(catalogue) : standardPrice;
   const batch = catalogue?.nextAvailableBatch;
-  const startDate = formatDate(batch?.startDate);
+  const startDate = formatDate(batch?.startDate ?? course.liveStart);
   const time = [formatTime(batch?.startTime), formatTime(batch?.endTime)]
     .filter(Boolean)
     .join("–");
