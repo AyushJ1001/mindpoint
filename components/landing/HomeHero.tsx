@@ -76,8 +76,19 @@ export function HomeHero({ canAccessAdmin, startSummary }: HomeHeroProps) {
 
         <div className="mt-12 flex max-w-2xl flex-wrap items-center gap-x-5 gap-y-2 border-t border-white/25 pt-6 text-sm text-white/90">
           <p>
-            <b className="font-semibold text-white">Registration is open</b> for
-            courses starting {startSummary ?? "in January 2027"}.
+            <b className="font-semibold text-white">
+              January–February 2027 admissions
+            </b>{" "}
+            · Explore our upcoming certificate courses and Counselling
+            Psychology Internship, with new batches beginning January and
+            February 2027.
+          </p>
+          <p>
+            <b className="font-semibold text-white">Registrations open</b> for
+            the three January certificates
+            {startSummary ? ` (${startSummary})` : ""} and the internship ·{" "}
+            <b className="font-semibold text-white">PTSD &amp; Complex Trauma</b>{" "}
+            coming soon.
           </p>
 
         </div>
