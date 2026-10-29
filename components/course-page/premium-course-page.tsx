@@ -96,6 +96,15 @@ export function PremiumCoursePage({
     ? `/courses/${catalogue._id}?checkout=1${batchParam}`
     : "/programs";
 
+  // A draft course has no catalogue row and no purchasable cohort, so the page
+  // says so rather than offering a button that leads nowhere.
+  const registrationsOpen = Boolean(
+    catalogue && batch && batch.availabilityStatus === "upcoming_open",
+  );
+  const monthLabel = startDate
+    ? startDate.split(" ").slice(1).join(" ")
+    : "the next cohort";
+
   return (
     <>
       <TrackProgrammeView courseCode={courseCode} />
@@ -129,7 +138,7 @@ export function PremiumCoursePage({
         />
         <div className="container max-w-5xl py-16 sm:py-24">
           <span className="text-brand-gold text-[0.68rem] font-semibold tracking-[0.2em] uppercase">
-            Live certificate · January 2027
+            {course.hero?.eyebrow ?? "Live certificate"}
           </span>
           <h1 className="font-display mt-4 max-w-3xl text-4xl leading-[1.1] tracking-[-0.02em] sm:text-5xl">
             {course.title}
@@ -184,13 +193,24 @@ export function PremiumCoursePage({
           </dl>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link
-              href={checkoutHref}
-              className="bg-brand-ivory text-brand-teal rounded-brand inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold"
-            >
-              Enrol for January 2027
-            </Link>
-            <span className="text-sm text-white/80">Registrations open</span>
+            {registrationsOpen ? (
+              <Link
+                href={checkoutHref}
+                className="bg-brand-ivory text-brand-teal rounded-brand inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold"
+              >
+                Enrol for {monthLabel}
+              </Link>
+            ) : (
+              <Link
+                href="/contact"
+                className="bg-brand-ivory text-brand-teal rounded-brand inline-flex items-center gap-2 px-6 py-3.5 text-sm font-semibold"
+              >
+                {course.cta.primaryLabel}
+              </Link>
+            )}
+            <span className="text-sm text-white/80">
+              {registrationsOpen ? "Registrations open" : "Registrations open soon"}
+            </span>
           </div>
         </div>
       </section>
