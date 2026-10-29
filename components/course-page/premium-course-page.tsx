@@ -101,6 +101,12 @@ export function PremiumCoursePage({
   const registrationsOpen = Boolean(
     catalogue && batch && batch.availabilityStatus === "upcoming_open",
   );
+  const closedLabel =
+    batch?.availabilityStatus === "upcoming_full"
+      ? "This cohort is full"
+      : batch?.availabilityStatus === "past"
+        ? "This cohort has finished"
+        : "Registrations open soon";
   const monthLabel = startDate
     ? startDate.split(" ").slice(1).join(" ")
     : "the next cohort";
@@ -209,7 +215,7 @@ export function PremiumCoursePage({
               </Link>
             )}
             <span className="text-sm text-white/80">
-              {registrationsOpen ? "Registrations open" : "Registrations open soon"}
+              {registrationsOpen ? "Registrations open" : closedLabel}
             </span>
           </div>
         </div>
