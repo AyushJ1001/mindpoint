@@ -13,7 +13,9 @@
 export const COURSE_CUTOFF = "2027-01-01";
 export const EVENT_CUTOFF = "2026-11-01";
 
-const EVENT_TYPES = new Set(["masterclass", "worksheet"]);
+// Live workshops are stored as masterclass. Worksheets are downloadable
+// products, not events, so they take the course cutoff.
+const EVENT_TYPES = new Set(["masterclass"]);
 
 export type VisibilityEnrollment = {
   startDate?: string | null;
@@ -46,9 +48,13 @@ export function classifyEnrollment(enrollment: VisibilityEnrollment): {
   return { section: start >= cutoff ? "current" : "previous", missingDate: false };
 }
 
-/** Cancelled enrollments stay visible in history but grant no material access. */
+/**
+ * Only an active enrollment grants material access. Cancelled and transferred
+ * enrollments stay in history but no longer open a course — matching how the
+ * existing LMS treats them.
+ */
 export function enrollmentGrantsAccess(enrollment: VisibilityEnrollment): boolean {
-  return (enrollment.status ?? "active") !== "cancelled";
+  return (enrollment.status ?? "active") === "active";
 }
 
 export function groupEnrollments<T extends VisibilityEnrollment>(

@@ -39,7 +39,15 @@ test("a July 2026 certificate is previous, not hidden", () => {
 
 test("an October 2026 workshop predates the event cutoff", () => {
   assert.equal(
-    classifyEnrollment({ startDate: "2026-10-06", courseType: "worksheet" })
+    classifyEnrollment({ startDate: "2026-10-06", courseType: "masterclass" })
+      .section,
+    "previous",
+  );
+});
+
+test("a worksheet is not treated as a live event", () => {
+  assert.equal(
+    classifyEnrollment({ startDate: "2026-12-01", courseType: "worksheet" })
       .section,
     "previous",
   );
@@ -63,9 +71,9 @@ test("nothing is dropped: every enrollment lands in a section", () => {
   assert.equal(grouped.missingDates.length, 1);
 });
 
-test("a cancelled enrollment grants no material access", () => {
+test("a transferred enrollment grants no material access", () => {
   assert.equal(
-    enrollmentGrantsAccess({ status: "cancelled", startDate: "2027-01-19" }),
+    enrollmentGrantsAccess({ status: "transferred", startDate: "2027-01-19" }),
     false,
   );
   assert.equal(
