@@ -125,6 +125,7 @@ export default function BatchDetailPage() {
   }
 
   return (
+    <>
     <div className="space-y-6">
       <nav className="text-muted-foreground flex flex-wrap items-center gap-2 text-sm">
         <Link href="/admin/enrollments/by-course" className="hover:underline">
@@ -236,6 +237,8 @@ export default function BatchDetailPage() {
         </CardContent>
       </Card>
 
+    </div>
+
       {openStudent ? (
         <StudentDrawer
           enrollmentId={openStudent as Id<"enrollments">}
@@ -249,6 +252,6 @@ export default function BatchDetailPage() {
         certificate means none has been uploaded for that enrollment, not that
         one was refused.
       </p>
-    </div>
+    </>
   );
 }

@@ -119,31 +119,37 @@ export function StudentDrawer({
                 History
               </h3>
               <ul className="mt-2 space-y-2">
-                <li>
-                  {new Date(detail._creationTime).toLocaleDateString("en-IN")} ·
-                  enrolled on {detail.course?.name ?? "this course"}
-                </li>
-                {detail.transferredAt ? (
-                  <li>
-                    {new Date(detail.transferredAt).toLocaleDateString("en-IN")} ·
-                    transferred from {detail.batchLabel ?? "a previous batch"}
-                  </li>
-                ) : null}
-                {detail.cancelledAt ? (
-                  <li>
-                    {new Date(detail.cancelledAt).toLocaleDateString("en-IN")} ·
-                    cancelled
-                    {detail.statusReason ? ` — ${detail.statusReason}` : ""}
-                  </li>
-                ) : null}
-                {detail.lastConfirmationSentAt ? (
-                  <li>
-                    {new Date(detail.lastConfirmationSentAt).toLocaleDateString(
-                      "en-IN",
-                    )}{" "}
-                    · confirmation email sent
-                  </li>
-                ) : null}
+                {[
+                  {
+                    at: detail._creationTime,
+                    text: `enrolled on ${detail.course?.name ?? "this course"}`,
+                  },
+                  detail.transferredAt
+                    ? {
+                        at: detail.transferredAt,
+                        text: "a batch or course transfer was recorded on this enrollment (the destination is not stored on this row)",
+                      }
+                    : null,
+                  detail.cancelledAt
+                    ? {
+                        at: detail.cancelledAt,
+                        text: `cancelled${detail.statusReason ? ` — ${detail.statusReason}` : ""}`,
+                      }
+                    : null,
+                  detail.lastConfirmationSentAt
+                    ? {
+                        at: detail.lastConfirmationSentAt,
+                        text: "confirmation email sent",
+                      }
+                    : null,
+                ]
+                  .filter((event): event is { at: number; text: string } => Boolean(event))
+                  .sort((a, b) => a.at - b.at)
+                  .map((event) => (
+                    <li key={`${event.at}-${event.text}`}>
+                      {new Date(event.at).toLocaleDateString("en-IN")} · {event.text}
+                    </li>
+                  ))}
               </ul>
               <p className="text-muted-foreground mt-2 text-xs">
                 Only recorded events are listed. Older changes that were never
