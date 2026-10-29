@@ -84,7 +84,7 @@ export function HomeAdmissions({ courses }: { courses: HomeCourses }) {
               </span>
             </div>
             <p className="text-brand-body text-sm">
-              Starts 2 February 2027 · 5:30–6:30 pm IST
+              Starts 2 February 2027 · 7:30–8:30 pm IST
             </p>
             <div className="mt-auto flex items-end justify-between gap-4 pt-2">
               <div>
@@ -92,7 +92,7 @@ export function HomeAdmissions({ courses }: { courses: HomeCourses }) {
                   ₹4,500
                 </div>
                 <div className="text-brand-body text-xs">
-                  Eight weeks · registrations open soon
+                  Eight weeks · Tue &amp; Thu · registrations open soon
                 </div>
               </div>
             </div>
