@@ -22,14 +22,14 @@ export function generateStaticParams() {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const course = getCourseBySlug(slug);
-  if (!course) return { title: "Programme not found - The Mind Point" };
+  if (!course) return { title: "Programme not found | The Mind Point" };
 
   return {
-    title: `${course.title} - The Mind Point`,
+    title: `${course.title} | The Mind Point`,
     description: course.tagline,
     alternates: { canonical: `/programs/${course.slug}` },
     openGraph: {
-      title: `${course.title} - The Mind Point`,
+      title: `${course.title} | The Mind Point`,
       description: course.tagline,
       type: "website",
       url: `https://www.themindpoint.org/programs/${course.slug}`,

@@ -6,14 +6,14 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Resume Studio for Psychology Careers - The Mind Point",
+  title: "Resume Studio for Psychology Careers | The Mind Point",
   description:
     "A psychology-specific, ATS-friendly CV built around your real experience — with personal feedback and career positioning, not a fill-in-the-blank template.",
   keywords:
     "resume studio, career development, professional resume, mental health careers, job preparation",
   openGraph: {
     images: [openGraphImage],
-    title: "Resume Studio for Psychology Careers - The Mind Point",
+    title: "Resume Studio for Psychology Careers | The Mind Point",
     description:
       "A psychology-specific, ATS-friendly CV with personal feedback and career positioning.",
     type: "website",

@@ -11,7 +11,7 @@ const MASTERCLASS_LINE = MASTERCLASS_RELEASED
   : "Free guides and tools, plus a free masterclass on the way — no card required.";
 
 export const metadata = {
-  title: "Resources - The Mind Point",
+  title: "Resources | The Mind Point",
   description: MASTERCLASS_LINE,
   alternates: { canonical: "/resources" },
 };

@@ -4,13 +4,13 @@ import { preloadQuery, preloadedQueryResult } from "convex/nextjs";
 import { api } from "@/lib/backend/api";
 
 export const metadata = {
-  title: "Server - The Mind Point",
+  title: "Server | The Mind Point",
   description:
     "Server-side rendering demonstration page for The Mind Point platform.",
   keywords: "server, SSR, Convex, Next.js, mental health education",
   openGraph: {
     images: [openGraphImage],
-    title: "Server - The Mind Point",
+    title: "Server | The Mind Point",
     description: "Server-side rendering demonstration page.",
     type: "website",
   },

@@ -7,14 +7,14 @@ import { api } from "@/lib/backend/api";
 export const revalidate = 1800; // 30 min ISR
 
 export const metadata = {
-  title: "Clinical Supervision for Therapists - The Mind Point",
+  title: "Clinical Supervision for Therapists | The Mind Point",
   description:
     "Supervision for students and early-career therapists who want honest feedback on real work. Working clinicians, specific feedback, and support that continues after the program.",
   keywords:
     "supervised courses, psychology supervision, mental health training, expert guidance, personalized learning",
   openGraph: {
     images: [openGraphImage],
-    title: "Clinical Supervision for Therapists - The Mind Point",
+    title: "Clinical Supervision for Therapists | The Mind Point",
     description:
       "Honest feedback on real clinical work from supervisors who practise today.",
     type: "website",

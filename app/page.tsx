@@ -19,13 +19,13 @@ const description =
   "Live online psychology certificate courses starting January 2027: CBT, REBT and CBMT; Personality Disorders; and Inner Child Healing & Therapy. Eight weeks each, six weeks of structured learning then two weeks of practical training, ₹4,500 per course. Self-paced introductions from ₹999.";
 
 export const metadata = {
-  title: "The Mind Point — live psychology certificate courses, January 2027",
+  title: "The Mind Point | Psychology Education",
   description,
   keywords:
     "psychology courses India, CBT course, REBT, personality disorders course, inner child healing, counselling psychology, online psychology certificate",
   openGraph: {
     images: [openGraphImage],
-    title: "The Mind Point — January 2027 psychology certificate courses",
+    title: "The Mind Point | Psychology Education",
     description:
       "Three live online certificate courses start in January 2027: six weeks of structured learning, then two weeks of practical training. ₹4,500 each.",
     type: "website",

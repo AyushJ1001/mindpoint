@@ -4,7 +4,7 @@ import { eyebrowVariants } from "@/components/coastal/eyebrow";
 import Link from "next/link";
 
 export const metadata = {
-  title: "Join us - The Mind Point",
+  title: "Join us | The Mind Point",
   description:
     "Enrol in a cohort, book a therapy session, or ask about supervision. We reply like people, because we are.",
   alternates: { canonical: "/join" },

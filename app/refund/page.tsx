@@ -1,13 +1,13 @@
 import { openGraphImage } from "@/lib/seo";
 export const metadata = {
-  title: "Refund Policy - The Mind Point",
+  title: "Refund Policy | The Mind Point",
   description:
     "Read The Mind Point's refund and payment policy for courses, therapy sessions, and other mental health education services.",
   keywords:
     "refund policy, payment policy, cancellation, mental health education, The Mind Point",
   openGraph: {
     images: [openGraphImage],
-    title: "Refund Policy - The Mind Point",
+    title: "Refund Policy | The Mind Point",
     description: "Learn about our refund and payment terms.",
     type: "website",
   },

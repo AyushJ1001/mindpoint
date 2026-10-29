@@ -2,14 +2,14 @@ import { openGraphImage } from "@/lib/seo";
 import CartClient from "@/components/CartClient";
 
 export const metadata = {
-  title: "Shopping Cart - The Mind Point",
+  title: "Shopping Cart | The Mind Point",
   description:
     "Review and checkout your selected mental health education courses from The Mind Point.",
   keywords:
     "shopping cart, checkout, mental health courses, payment, enrollment",
   openGraph: {
     images: [openGraphImage],
-    title: "Shopping Cart - The Mind Point",
+    title: "Shopping Cart | The Mind Point",
     description: "Review and checkout your selected courses.",
     type: "website",
   },
