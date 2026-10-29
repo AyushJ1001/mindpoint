@@ -1,9 +1,12 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 
 import { api } from "@/lib/backend/api";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { hasLifetimeRecordings } from "@/lib/recording-entitlement";
 import type { Id } from "@/lib/backend/data-model";
 
@@ -181,18 +184,187 @@ export function StudentDrawer({
               )}
             </section>
 
-            <section className="border-border border-t pt-4">
-              <h3 className="text-muted-foreground text-xs tracking-[0.14em] uppercase">
-                Actions
-              </h3>
-              <p className="text-muted-foreground mt-2">
-                Moving a student between batches and uploading certificates are
-                the next phases; nothing here changes records yet.
-              </p>
-            </section>
+            <TransferSection detail={detail} />
           </div>
         )}
       </aside>
     </div>
+  );
+}
+
+function TransferSection({
+  detail,
+}: {
+  detail: {
+    _id: Id<"enrollments">;
+    courseId: Id<"courses">;
+    batchId?: Id<"courseBatches">;
+    batchLabel?: string;
+    status: string;
+    userName?: string;
+  };
+}) {
+  const batches = useQuery(api.adminCourses.listCourseBatches, {
+    courseId: detail.courseId,
+  });
+  const changeBatch = useMutation(api.adminEnrollments.changeEnrollmentBatch);
+  const [open, setOpen] = useState(false);
+  const [target, setTarget] = useState("");
+  const [reason, setReason] = useState("");
+  const [reviewing, setReviewing] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  if (detail.status !== "active") {
+    return (
+      <section className="border-border border-t pt-4">
+        <h3 className="text-muted-foreground text-xs tracking-[0.14em] uppercase">
+          Actions
+        </h3>
+        <p className="text-muted-foreground mt-2">
+          This enrollment is {detail.status}; batches cannot be changed.
+        </p>
+      </section>
+    );
+  }
+
+  const destinations = (batches ?? [])
+    .filter(
+      (batch) =>
+        String(batch._id) !== String(detail.batchId ?? "") &&
+        (batch.lifecycleStatus ?? "published") === "published",
+    )
+    .sort((a, b) => (a.startDate < b.startDate ? -1 : 1));
+
+  const chosen = destinations.find((batch) => String(batch._id) === target);
+
+  return (
+    <section className="border-border border-t pt-4">
+      <h3 className="text-muted-foreground text-xs tracking-[0.14em] uppercase">
+        Actions
+      </h3>
+      {!open ? (
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-3"
+          onClick={() => setOpen(true)}
+        >
+          Move to another batch
+        </Button>
+      ) : (
+        <div className="mt-3 space-y-3 text-sm">
+          <p>
+            Current batch: <b>{detail.batchLabel ?? "none assigned"}</b>
+          </p>
+          <label className="block">
+            <span className="text-muted-foreground text-xs uppercase">
+              Destination batch
+            </span>
+            <select
+              className="mt-1 h-10 w-full rounded-md border bg-white px-3"
+              value={target}
+              onChange={(event) => {
+                setTarget(event.target.value);
+                setReviewing(false);
+                setMessage(null);
+              }}
+            >
+              <option value="">Choose a batch…</option>
+              {destinations.map((batch) => (
+                <option key={batch._id} value={String(batch._id)}>
+                  {batch.label} · starts {batch.startDate} · {batch.startTime}–
+                  {batch.endTime}
+                </option>
+              ))}
+            </select>
+          </label>
+
+          <label className="block">
+            <span className="text-muted-foreground text-xs uppercase">
+              Reason (required)
+            </span>
+            <Input
+              className="mt-1"
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Student requested the later cohort"
+            />
+          </label>
+
+          {reviewing && chosen ? (
+            <div className="border-border rounded border p-3">
+              <p>
+                Move <b>{detail.userName ?? "this student"}</b> from{" "}
+                <b>{detail.batchLabel ?? "no batch"}</b> to{" "}
+                <b>{chosen.label}</b>.
+              </p>
+              <p className="text-muted-foreground mt-1">
+                Reason: {reason}. The original enrollment, payment and
+                certificates stay as they are.
+              </p>
+            </div>
+          ) : null}
+
+          {message ? (
+            <p className="text-rose-700 text-sm">{message}</p>
+          ) : null}
+
+          <div className="flex gap-2">
+            {!reviewing ? (
+              <Button
+                size="sm"
+                disabled={!chosen || !reason.trim()}
+                onClick={() => setReviewing(true)}
+              >
+                Review transfer
+              </Button>
+            ) : (
+              <Button
+                size="sm"
+                disabled={busy}
+                onClick={async () => {
+                  if (!chosen) return;
+                  setBusy(true);
+                  setMessage(null);
+                  try {
+                    await changeBatch({
+                      enrollmentId: detail._id,
+                      batchId: chosen._id,
+                      reason: reason.trim(),
+                      expectedBatchId: detail.batchId ?? null,
+                    });
+                    setMessage("Batch updated.");
+                    setOpen(false);
+                    setReviewing(false);
+                    setReason("");
+                    setTarget("");
+                  } catch (error) {
+                    setMessage(
+                      error instanceof Error ? error.message : "Transfer failed",
+                    );
+                  } finally {
+                    setBusy(false);
+                  }
+                }}
+              >
+                {busy ? "Moving…" : "Confirm transfer"}
+              </Button>
+            )}
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                setOpen(false);
+                setReviewing(false);
+                setMessage(null);
+              }}
+            >
+              Cancel
+            </Button>
+          </div>
+        </div>
+      )}
+    </section>
   );
 }

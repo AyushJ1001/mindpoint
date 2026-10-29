@@ -1376,6 +1376,9 @@ export const changeEnrollmentBatch = mutation({
     batchId: v.id("courseBatches"),
     enrollmentId: v.id("enrollments"),
     reason: v.string(),
+    // The batch the administrator reviewed. Optional so existing callers keep
+    // working, but the transfer dialog always sends it.
+    expectedBatchId: v.optional(v.union(v.id("courseBatches"), v.null())),
   },
   handler: async (ctx, args) => {
     const admin = await requireAdmin(ctx);
@@ -1384,6 +1387,20 @@ export const changeEnrollmentBatch = mutation({
       return adminEnrollmentFailure(
         "Enrollment not found",
         convexResultErrorCode.NOT_FOUND,
+      );
+    }
+
+    if (!args.reason.trim()) {
+      return adminEnrollmentFailure("A reason is required for a transfer.");
+    }
+
+    if (
+      args.expectedBatchId !== undefined &&
+      String(args.expectedBatchId ?? "") !== String(enrollment.batchId ?? "")
+    ) {
+      return adminEnrollmentFailure(
+        "This student's batch has changed since you opened this form. Please review the current assignment before trying again.",
+        convexResultErrorCode.CONFLICT,
       );
     }
 
