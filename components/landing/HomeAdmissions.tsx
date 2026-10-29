@@ -79,8 +79,8 @@ export function HomeAdmissions({ courses }: { courses: HomeCourses }) {
               <h3 className="font-display text-brand-heading text-xl leading-snug">
                 PTSD &amp; Complex Trauma
               </h3>
-              <span className="text-brand-sage border-brand-gold/40 rounded border px-2 py-0.5 text-[0.62rem] font-semibold tracking-[0.12em] uppercase">
-                Coming soon
+              <span className="text-brand-teal border-brand-gold/40 rounded border px-2 py-0.5 text-[0.62rem] font-semibold tracking-[0.12em] uppercase">
+                Registrations open
               </span>
             </div>
             <p className="text-brand-body text-sm">
@@ -92,9 +92,15 @@ export function HomeAdmissions({ courses }: { courses: HomeCourses }) {
                   ₹4,500
                 </div>
                 <div className="text-brand-body text-xs">
-                  Eight weeks · Tue &amp; Thu · registrations open soon
+                  Eight weeks · Tue &amp; Thu
                 </div>
               </div>
+              <Link
+                href="/programs/ptsd-complex-trauma"
+                className="text-brand-teal text-sm font-semibold underline-offset-4 hover:underline"
+              >
+                View course →
+              </Link>
             </div>
           </article>
         </div>

@@ -6,7 +6,7 @@ import { CoursePage } from "@/components/course-page/course-page";
 import { PremiumCoursePage } from "@/components/course-page/premium-course-page";
 import { api } from "@/lib/backend/api";
 import type { PublicCourse } from "@/lib/backend";
-import { courseSlugs, getCourseBySlug } from "@/lib/course-content";
+import { getCourseBySlug } from "@/lib/course-content";
 import { attachOperationalData } from "@/lib/course-content/operational";
 
 type Props = { params: Promise<{ slug: string }> };
@@ -15,9 +15,12 @@ type Props = { params: Promise<{ slug: string }> };
 // least every 10 minutes so backend edits appear without a redeploy.
 export const revalidate = 600;
 
-export function generateStaticParams() {
-  return courseSlugs().map((slug) => ({ slug }));
-}
+/**
+ * Programme pages are rendered on demand. Pre-generating every slug meant a
+ * draft course was baked into a cached 404 at build time and stayed 404 after
+ * publication until the next deploy. Rendering on demand with the revalidate
+ * window below lets a course appear as soon as it is on sale.
+ */
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
