@@ -929,7 +929,10 @@ export default function CourseTypePage({
                 Browse {content.title.toLowerCase()}
                 <ArrowRight className="h-4 w-4" />
               </a>
-              <Link href="/contact" className="calm-link text-sm font-medium">
+              <Link
+                href="/contact"
+                className="text-foreground decoration-foreground/35 hover:text-primary hover:decoration-primary text-sm font-medium underline decoration-1 underline-offset-4 transition-colors"
+              >
                 Talk to an advisor
               </Link>
             </div>
