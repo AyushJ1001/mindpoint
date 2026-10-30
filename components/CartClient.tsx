@@ -962,15 +962,16 @@ const CartContent = () => {
         email: user.primaryEmailAddress?.emailAddress || "your email address",
         enrollments: result.enrollments ?? [],
         // A screenshot means the payment is evidence awaiting verification, not
-        // a completed payment.
-        // Prefer the server's verdict on the enrollment summaries; fall back to
-        // the screenshot flag only when the summary omits it.
+        // a completed payment. Prefer the server's verdict on the enrollment
+        // summaries; fall back to the screenshot this call was made with — the
+        // argument, not component state, so a stale closure cannot report a
+        // verified payment as pending or the reverse.
         paymentPending:
           (result.enrollments ?? []).some(
             (item) =>
               (item as { paymentVerification?: string }).paymentVerification ===
               "pending",
-          ) || Boolean(paymentScreenshotUrl.trim()),
+          ) || Boolean(paymentContext.paymentScreenshotUrl?.trim()),
       });
 
       const pointsEarned = totalPointsEarned;
