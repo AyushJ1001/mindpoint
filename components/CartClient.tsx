@@ -963,7 +963,14 @@ const CartContent = () => {
         enrollments: result.enrollments ?? [],
         // A screenshot means the payment is evidence awaiting verification, not
         // a completed payment.
-        paymentPending: Boolean(paymentScreenshotUrl.trim()),
+        // Prefer the server's verdict on the enrollment summaries; fall back to
+        // the screenshot flag only when the summary omits it.
+        paymentPending:
+          (result.enrollments ?? []).some(
+            (item) =>
+              (item as { paymentVerification?: string }).paymentVerification ===
+              "pending",
+          ) || Boolean(paymentScreenshotUrl.trim()),
       });
 
       const pointsEarned = totalPointsEarned;
