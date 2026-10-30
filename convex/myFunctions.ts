@@ -294,6 +294,11 @@ interface EnrollmentSummary
   sessionType?: "focus" | "flow" | "elevate";
   isBogoFree?: boolean;
   bogoOfferName?: string;
+  /**
+   * What the server recorded for this enrollment's payment. The confirmation
+   * screen must read this rather than infer the state from the request.
+   */
+  paymentVerification?: "pending" | "approved" | "rejected";
 }
 
 type EnrollmentMutationFailure = ConvexFailure<
@@ -1995,6 +2000,9 @@ export const handleCartCheckout = mutation({
         sessions: course.sessions,
         sessionType: args.sessionType,
         isBogoFree: false,
+        paymentVerification: requiresPaymentVerification
+          ? ("pending" as const)
+          : undefined,
       };
 
       if (course.type === "supervised") {
