@@ -662,9 +662,11 @@ export function CourseEditor({
   const scheduleEndPreview = showCourseSchedule
     ? formatDateTime(state.endDate, state.endTime)
     : null;
+  // The preview shows the day the admin sees in the field; the stored value is a
+  // timestamp, which the date formatter cannot parse.
   const offerWindowPreview = formatDateWindow(
-    state.offerStartDate,
-    state.offerEndDate,
+    toDateInputValue(state.offerStartDate),
+    toDateInputValue(state.offerEndDate),
     formatDate,
   );
   const offerValuePlaceholder =
@@ -708,8 +710,8 @@ export function CourseEditor({
     });
   };
   const bogoWindowPreview = formatDateWindow(
-    state.bogoStartDate,
-    state.bogoEndDate,
+    toDateInputValue(state.bogoStartDate),
+    toDateInputValue(state.bogoEndDate),
     formatDate,
   );
   const saveStateLabel = !course
