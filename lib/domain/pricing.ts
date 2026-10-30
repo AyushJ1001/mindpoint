@@ -213,7 +213,9 @@ export function formatOfferAdjustment(
     return `${showRupees(savings)} off`;
   }
 
-  return `${Math.round(discountValue)}% off`;
+  // "Flat" keeps a percentage campaign distinct from a coupon-style percentage,
+  // and matches how the Diwali Fest offer is described.
+  return `Flat ${Math.round(discountValue)}% off`;
 }
 
 export function calculateOfferTimeLeft(endDate?: string | null): {

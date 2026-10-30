@@ -88,7 +88,7 @@ function OfferBand({ courses }: { courses: PublicCourse[] }) {
             <p className="text-foreground mt-2 text-lg font-medium">
               {offer.hasDiscount && (
                 <>
-                  Save {offer.discountLabel} — now{" "}
+                  {offer.discountLabel} — now{" "}
                   <span className="text-primary">
                     {showRupees(offer.offerPrice)}
                   </span>{" "}
@@ -177,11 +177,7 @@ function Outcomes({ outcomes }: { outcomes: string[] }) {
   );
 }
 
-function TypeFaq({
-  faqs,
-}: {
-  faqs: { question: string; answer: string }[];
-}) {
+function TypeFaq({ faqs }: { faqs: { question: string; answer: string }[] }) {
   if (faqs.length === 0) return null;
 
   return (
