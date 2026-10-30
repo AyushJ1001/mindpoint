@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { Analytics } from "@vercel/analytics/next";
 import AnalyticsScripts from "@/components/AnalyticsScripts";
 import ConsentBanner from "@/components/ConsentBanner";
+import { DiwaliMarquee } from "@/components/landing/DiwaliMarquee";
 
 // Self-hosted variable fonts. These used to be fetched through
 // `next/font/google` at build time, which made every CI and Vercel build depend
@@ -117,7 +118,10 @@ export default function RootLayout({
           Skip to main content
         </a>
 
-        <ClientProviders>{children}</ClientProviders>
+        <ClientProviders>
+          <DiwaliMarquee />
+          {children}
+        </ClientProviders>
 
         <Footer />
         <Toaster />

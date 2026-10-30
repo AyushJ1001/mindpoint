@@ -1939,3 +1939,19 @@
     radial-gradient(60% 80% at 82% 28%, #1f5c56 0%, transparent 55%),
     linear-gradient(160deg, #12322e 0%, #1a4a45 55%, #215c55 100%);
 }
+
+/* Diwali announcement strip: one slow pass, paused entirely for reduced motion. */
+.diwali-marquee-track {
+  animation: diwali-marquee 38s linear infinite;
+}
+@keyframes diwali-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .diwali-marquee-track { animation: none; }
+  /* No scroll, no clipping: let the offer text wrap and stay readable. */
+  .diwali-marquee { overflow: visible; }
+  .diwali-marquee-track { display: block; white-space: normal; }
+  .diwali-marquee-track > span:last-child { display: none; }
+}
