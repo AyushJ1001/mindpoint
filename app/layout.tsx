@@ -118,8 +118,10 @@ export default function RootLayout({
           Skip to main content
         </a>
 
-        <DiwaliMarquee />
-        <ClientProviders>{children}</ClientProviders>
+        <ClientProviders>
+          <DiwaliMarquee />
+          {children}
+        </ClientProviders>
 
         <Footer />
         <Toaster />
