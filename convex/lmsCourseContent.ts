@@ -30,10 +30,14 @@ function normalizeEmail(value?: string | null): string | undefined {
   return email ? email : undefined;
 }
 
-// Only an active enrollment opens materials. Cancelled and transferred rows
-// keep their history but no longer grant access, matching the LMS policy.
+// Only an active, verified enrollment opens materials. Cancelled and
+// transferred rows keep their history but no longer grant access, and a
+// screenshot payment an admin has not verified is not access either.
 function isActiveEnrollment(enrollment: Doc<"enrollments">): boolean {
-  return (enrollment.status ?? "active") === "active";
+  if ((enrollment.status ?? "active") !== "active") {
+    return false;
+  }
+  return enrollment.paymentVerification !== "pending";
 }
 
 async function loadIdentity(ctx: QueryCtx | MutationCtx) {
