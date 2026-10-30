@@ -250,6 +250,7 @@ export const sendLeadConfirmation = internalAction({
       const greeting = args.name ? `Dear ${escapeHtml(args.name)},` : "Hello,";
 
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.email,
         subject: "Thanks from The Mind Point — your next step",
@@ -1650,6 +1651,7 @@ export const sendPaymentPendingEmail = internalAction({
   handler: async (ctx, args) => {
     try {
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: "Payment received — we're verifying it",
@@ -1685,6 +1687,11 @@ export const sendPaymentPendingEmail = internalAction({
  * Owner-facing alert: a student payment is waiting for verification. Sent to
  * the internal inbox only, never to the student.
  */
+// Every student email also reaches the team inbox, so staff see registrations
+// and payment events without relying on the student to forward anything.
+const ADMIN_NOTIFICATION_EMAIL =
+  process.env.ADMIN_NOTIFICATION_EMAIL ?? "contact.themindpoint@gmail.com";
+
 export const sendPaymentAwaitingApprovalEmail = internalAction({
   args: {
     studentName: v.string(),
@@ -1710,6 +1717,7 @@ export const sendPaymentAwaitingApprovalEmail = internalAction({
         : "";
 
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: OWNER_EMAIL,
         subject: `Payment to verify — ${args.courseName} (${args.studentName})`,
@@ -1759,6 +1767,7 @@ export const sendPaymentApprovedEmail = internalAction({
     try {
       const learnUrl = `${getSiteUrl()}/lms`;
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: `Enrollment confirmed — ${args.courseName}`,
@@ -1836,6 +1845,7 @@ export const sendPaymentRejectedEmail = internalAction({
   handler: async (ctx, args) => {
     try {
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: `Payment could not be verified — ${args.courseName}`,
@@ -1878,6 +1888,7 @@ export const sendPaymentRejectedOwnerEmail = internalAction({
   handler: async (ctx, args) => {
     try {
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: OWNER_EMAIL,
         subject: `Payment rejected — ${args.courseName} (${args.studentName})`,
@@ -1924,6 +1935,7 @@ export const sendEnrollmentCancelledEmail = internalAction({
   handler: async (ctx, args) => {
     try {
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: `Enrollment cancelled — ${args.courseName}`,
@@ -1965,6 +1977,7 @@ export const sendEnrollmentTransferredEmail = internalAction({
   handler: async (ctx, args) => {
     try {
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: `Enrollment transferred — ${args.toCourseName}`,
@@ -2005,6 +2018,7 @@ export const sendBatchChangedEmail = internalAction({
   handler: async (ctx, args) => {
     try {
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: `Your batch changed — ${args.courseName}`,
@@ -2052,6 +2066,7 @@ export const sendLmsNoticeEmail = internalAction({
     try {
       const link = args.href ? `${getSiteUrl()}${args.href}` : undefined;
       const emailDelivery = await sendEmailWithCopy({
+        bcc: [ADMIN_NOTIFICATION_EMAIL],
         from: "The Mind Point <no-reply@themindpoint.org>",
         to: args.userEmail,
         subject: args.title,
