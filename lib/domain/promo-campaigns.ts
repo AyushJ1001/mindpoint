@@ -84,7 +84,7 @@ export type ResolvedCampaignOffer = {
 
 export const OCCASION_LABEL: Record<OfferOccasion, string> = {
   "early-bird": "Early Bird",
-  diwali: "Diwali Offer",
+  diwali: "Diwali Fest 2026",
   christmas: "Christmas Offer",
   "new-year": "New Year Offer",
   general: "Special Price",

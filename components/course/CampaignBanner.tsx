@@ -24,7 +24,7 @@ const THEME: Record<
     ink: "#2C4A3F",
   },
   diwali: {
-    label: "Diwali Offer",
+    label: "Diwali Fest 2026",
     wash: "linear-gradient(120deg, #FBF1DE 0%, #F4E3C6 55%, #EAD6B4 100%)",
     accent: "#A9701F",
     ink: "#5B3A12",
