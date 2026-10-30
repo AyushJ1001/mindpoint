@@ -51,6 +51,7 @@ import type * as bootstrapBatchVisibility from "../bootstrapBatchVisibility.js";
 import type * as bootstrapCbtProgramme from "../bootstrapCbtProgramme.js";
 import type * as bootstrapCbtRebtCbmt from "../bootstrapCbtRebtCbmt.js";
 import type * as bootstrapCourseReviews from "../bootstrapCourseReviews.js";
+import type * as bootstrapDiwali2026 from "../bootstrapDiwali2026.js";
 import type * as bootstrapEnrollmentNumbers from "../bootstrapEnrollmentNumbers.js";
 import type * as bootstrapIntroCleanup from "../bootstrapIntroCleanup.js";
 import type * as bootstrapIntroRecordings from "../bootstrapIntroRecordings.js";
@@ -142,6 +143,7 @@ declare const fullApi: ApiFromModules<{
   bootstrapCbtProgramme: typeof bootstrapCbtProgramme;
   bootstrapCbtRebtCbmt: typeof bootstrapCbtRebtCbmt;
   bootstrapCourseReviews: typeof bootstrapCourseReviews;
+  bootstrapDiwali2026: typeof bootstrapDiwali2026;
   bootstrapEnrollmentNumbers: typeof bootstrapEnrollmentNumbers;
   bootstrapIntroCleanup: typeof bootstrapIntroCleanup;
   bootstrapIntroRecordings: typeof bootstrapIntroRecordings;

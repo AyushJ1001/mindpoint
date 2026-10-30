@@ -13,6 +13,7 @@ import { EightWeekJourney } from "@/components/course-page/eight-week-journey";
 import CoastalVideoTestimonials from "@/components/landing/CoastalVideoTestimonials";
 import { HomeHero } from "@/components/landing/HomeHero";
 import { HomeInstitutions } from "@/components/landing/HomeInstitutions";
+import { DiwaliBanner } from "@/components/landing/DiwaliBanner";
 import { HomeAdmissions } from "@/components/landing/HomeAdmissions";
 import { HomeSignature } from "@/components/landing/HomeSignature";
 import { HomeReviews } from "@/components/landing/HomeReviews";
@@ -112,6 +113,8 @@ export default function CoastalHome({
 }: CoastalHomeProps) {
   return (
     <>
+      <DiwaliBanner />
+
       <HomeHero
         canAccessAdmin={canAccessAdmin}
         startSummary={courses.startSummary}
