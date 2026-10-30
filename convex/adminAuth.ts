@@ -12,6 +12,14 @@ export type AdminIdentity = {
 
 type AuthCtx = QueryCtx | MutationCtx;
 
+/**
+ * Query contexts expose no write methods, so the opportunistic Clerk-id binding
+ * in `requireAdmin` only runs from a mutation. Nothing depends on it happening.
+ */
+function canWrite(ctx: AuthCtx): ctx is MutationCtx {
+  return typeof (ctx.db as { patch?: unknown }).patch === "function";
+}
+
 export async function requireAdmin(ctx: AuthCtx): Promise<AdminIdentity> {
   if (isAdminDevBypassEnabled()) {
     return getAdminDevBypassIdentity();
@@ -37,6 +45,20 @@ export async function requireAdmin(ctx: AuthCtx): Promise<AdminIdentity> {
       .withIndex("by_adminEmail", (q) => q.eq("adminEmail", userEmail))
       .first();
     isDbAdmin = !!emailAdmin?.isActive;
+
+    // No admin row holds a Clerk id yet, so the email match is the only way in.
+    // Bind the id the first time a matching account signs in and writes, so the
+    // fallback can be retired later without locking anybody out. A failed
+    // binding must never block sign-in.
+    if (isDbAdmin && emailAdmin && !emailAdmin.clerkUserId && canWrite(ctx)) {
+      try {
+        await ctx.db.patch("adminManagers", emailAdmin._id, {
+          clerkUserId: userId,
+        });
+      } catch {
+        // Best effort: the email fallback still authorises this request.
+      }
+    }
   }
 
   if (!isDbAdmin) {
