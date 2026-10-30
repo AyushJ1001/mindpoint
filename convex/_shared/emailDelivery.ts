@@ -108,13 +108,18 @@ export async function sendEmailWithCopy(
     ? emailConfig.to
     : [emailConfig.to];
 
+  // Owner-facing emails already go to the team inbox; BCCing it again would
+  // deliver the same message twice.
+  const primary = new Set(mainRecipients.map((address) => address.toLowerCase()));
+  const bcc = (emailConfig.bcc ?? []).filter(
+    (address) => !primary.has(address.toLowerCase()),
+  );
+
   try {
     const result = await resend.emails.send({
       ...emailConfig,
       to: mainRecipients,
-      ...(emailConfig.bcc && emailConfig.bcc.length > 0
-        ? { bcc: emailConfig.bcc }
-        : {}),
+      ...(bcc.length > 0 ? { bcc } : {}),
     });
 
     if (result.error) {
