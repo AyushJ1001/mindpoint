@@ -59,6 +59,7 @@ import type * as bootstrapJanuaryCohort from "../bootstrapJanuaryCohort.js";
 import type * as bootstrapJanuaryFee from "../bootstrapJanuaryFee.js";
 import type * as bootstrapLmsCurricula from "../bootstrapLmsCurricula.js";
 import type * as bootstrapPtsdCohort from "../bootstrapPtsdCohort.js";
+import type * as bootstrapPtsdCover from "../bootstrapPtsdCover.js";
 import type * as bootstrapPtsdDraft from "../bootstrapPtsdDraft.js";
 import type * as bootstrapPtsdPublish from "../bootstrapPtsdPublish.js";
 import type * as bootstrapSalesWithdrawal from "../bootstrapSalesWithdrawal.js";
@@ -151,6 +152,7 @@ declare const fullApi: ApiFromModules<{
   bootstrapJanuaryFee: typeof bootstrapJanuaryFee;
   bootstrapLmsCurricula: typeof bootstrapLmsCurricula;
   bootstrapPtsdCohort: typeof bootstrapPtsdCohort;
+  bootstrapPtsdCover: typeof bootstrapPtsdCover;
   bootstrapPtsdDraft: typeof bootstrapPtsdDraft;
   bootstrapPtsdPublish: typeof bootstrapPtsdPublish;
   bootstrapSalesWithdrawal: typeof bootstrapSalesWithdrawal;
