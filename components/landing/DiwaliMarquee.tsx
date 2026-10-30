@@ -7,8 +7,21 @@ import { useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
 import { isDiscountActive } from "@/lib/domain/pricing";
 
-const LINE =
-  "Diwali special · Flat ₹1,000 off all five programs · Extra ₹500 off with code EARLYBIRD500 · First 10 eligible students only · Offer ends 15 November 2026";
+const COPY =
+  "Diwali special · Flat ₹1,000 off all five programs · Extra ₹500 off with code EARLYBIRD500 · First 10 eligible students only";
+
+/** The deadline printed here is the campaign's own, never a second copy. */
+function formatEndDate(value?: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return new Intl.DateTimeFormat("en-IN", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Asia/Kolkata",
+  }).format(date);
+}
 
 /**
  * Slim scrolling strip above the navigation, shown only while the Diwali
@@ -31,11 +44,14 @@ export function DiwaliMarquee() {
 function ActiveMarquee() {
   const courses = useQuery(api.courses.listCourses, {});
 
-  const active = (courses ?? []).some(
+  const live = (courses ?? []).find(
     (course) =>
       course.offer?.occasion === "diwali" && isDiscountActive(course.offer),
   );
-  if (!active) return null;
+  if (!live) return null;
+
+  const endsOn = formatEndDate(live.offer?.endDate);
+  const line = endsOn ? `${COPY} · Offer ends ${endsOn}` : COPY;
 
   return (
     <Link
@@ -44,9 +60,9 @@ function ActiveMarquee() {
       aria-label="Diwali offer details"
     >
       <span className="diwali-marquee-track inline-flex whitespace-nowrap">
-        <span className="px-6">{LINE}</span>
+        <span className="px-6">{line}</span>
         <span className="px-6" aria-hidden="true">
-          {LINE}
+          {line}
         </span>
       </span>
     </Link>
