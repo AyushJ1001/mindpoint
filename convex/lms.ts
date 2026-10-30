@@ -696,7 +696,11 @@ export const listMyLmsEnrollments = query({
         ]),
       ).values(),
     ).filter(
-      (enrollment) => !enrollment.status || enrollment.status === "active",
+      (enrollment) =>
+        (!enrollment.status || enrollment.status === "active") &&
+        // Belt and braces: an unverified screenshot payment never opens the LMS,
+        // even if its status was set incorrectly somewhere else.
+        enrollment.paymentVerification !== "pending",
     );
 
     const academicEnrollments = enrollments.filter((enrollment) =>

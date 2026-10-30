@@ -91,6 +91,7 @@ type AppliedCheckoutCoupon =
 
 type CheckoutConfirmationState = {
   email: string;
+  paymentPending: boolean;
   enrollments: Array<{
     courseName: string;
     courseType?: string;
@@ -960,6 +961,9 @@ const CartContent = () => {
       setCheckoutConfirmation({
         email: user.primaryEmailAddress?.emailAddress || "your email address",
         enrollments: result.enrollments ?? [],
+        // A screenshot means the payment is evidence awaiting verification, not
+        // a completed payment.
+        paymentPending: Boolean(paymentScreenshotUrl.trim()),
       });
 
       const pointsEarned = totalPointsEarned;
