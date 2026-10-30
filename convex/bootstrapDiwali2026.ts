@@ -1,4 +1,5 @@
 import { internalMutation } from "./_generated/server";
+import { reconcileCampaignsNow } from "./promoCampaigns";
 
 // Diwali 2026: flat ₹1,000 off the five active programs, ending 15 Nov 2026
 // 23:59 IST. The reconciler writes the offer onto each course, so the site, cart
@@ -49,6 +50,9 @@ export const activate = internalMutation({
           createdAt: now,
           createdByAdminId: ACTOR,
         });
+
+    // Apply immediately rather than waiting for the five-minute cron.
+    await reconcileCampaignsNow(ctx);
 
     return {
       campaignId: String(campaignId),

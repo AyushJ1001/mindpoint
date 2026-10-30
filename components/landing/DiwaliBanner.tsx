@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 
 import { api } from "@/lib/backend/api";
+import { isDiscountActive } from "@/lib/domain/pricing";
 
 /**
  * Diwali banner, driven entirely by the offer engine.
@@ -16,8 +17,13 @@ export function DiwaliBanner() {
   const courses = useQuery(api.courses.listCourses, {});
   if (!courses) return null;
 
+  // The window is checked here too: a stale course.offer left behind by a
+  // missed reconciliation must not keep promoting an expired discount.
   const discounted = courses.filter(
-    (course) => course.offer?.occasion === "diwali" && course.offer.offerPrice,
+    (course) =>
+      course.offer?.occasion === "diwali" &&
+      Boolean(course.offer.offerPrice) &&
+      isDiscountActive(course.offer),
   );
   if (discounted.length === 0) return null;
 
