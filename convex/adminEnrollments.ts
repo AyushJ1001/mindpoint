@@ -1813,6 +1813,8 @@ export const approveEnrollmentPayment = mutation({
     await ctx.db.patch(args.enrollmentId, {
       paymentVerification: "approved",
       paymentVerificationNote: args.note?.trim() || undefined,
+      // Verification is what activates the enrollment.
+      status: "active" as const,
     });
 
     // Unlock the LMS now that the payment is verified.

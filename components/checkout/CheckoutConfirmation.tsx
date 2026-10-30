@@ -21,9 +21,11 @@ const lmsCourseTypes = new Set([
 export function CheckoutConfirmation({
   email,
   enrollments,
+  paymentPending = false,
 }: {
   email: string;
   enrollments: ConfirmedEnrollment[];
+  paymentPending?: boolean;
 }) {
   const hasLearningWorkspace = enrollments.some((item) =>
     lmsCourseTypes.has(item.courseType ?? ""),
@@ -45,19 +47,21 @@ export function CheckoutConfirmation({
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#dcecea] text-[#07575b]">
               <Check className="h-5 w-5" aria-hidden="true" />
             </span>
-            Enrollment confirmed
+            {paymentPending ? "Payment awaiting verification" : "Enrollment confirmed"}
           </div>
         </header>
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_19rem]">
           <div className="px-6 py-9 sm:px-10 sm:py-12">
             <h1 className="font-display max-w-2xl text-4xl leading-tight font-semibold tracking-[-0.03em] text-[#003f43] sm:text-5xl">
-              Your learning space is ready to welcome you.
+              {paymentPending
+                ? "Your registration has been received."
+                : "Your learning space is ready to welcome you."}
             </h1>
             <p className="mt-5 max-w-2xl text-base leading-7 text-[#58706d]">
-              Your Enrollment is safely recorded. Start with My Learning, where
-              each Course will open as its Curriculum and activities are
-              released.
+              {paymentPending
+                ? "Your payment is awaiting verification. Your enrollment will be confirmed once our team verifies your payment, and we will email you either way."
+                : "Your Enrollment is safely recorded. Start with My Learning, where each Course will open as its Curriculum and activities are released."}
             </p>
 
             <div className="mt-8 border-y border-[rgba(7,77,79,0.15)]">
@@ -98,7 +102,9 @@ export function CheckoutConfirmation({
                   }
                 >
                   {hasLearningWorkspace
-                    ? "Go to My Learning"
+                    ? paymentPending
+                      ? "View your registration"
+                      : "Go to My Learning"
                     : "View my Enrollment"}
                   <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
                 </Link>
@@ -116,10 +122,12 @@ export function CheckoutConfirmation({
           <aside className="bg-[#e7f0eb] px-6 py-8 sm:px-10 lg:px-7 lg:py-12">
             <Mail className="h-5 w-5 text-[#0c6f73]" aria-hidden="true" />
             <h2 className="font-display mt-5 text-2xl font-semibold text-[#003f43]">
-              Confirmation sent
+              {paymentPending ? "Registration received" : "Confirmation sent"}
             </h2>
             <p className="mt-3 text-sm leading-6 break-words text-[#58706d]">
-              We sent the Course details and your next step to {email}.
+              {paymentPending
+                ? `We have your registration for ${email}. There is nothing else you need to do; we will write when the payment is verified.`
+                : `We sent the Course details and your next step to ${email}.`}
             </p>
             <p className="mt-7 border-t border-[rgba(7,77,79,0.15)] pt-6 text-xs leading-5 text-[#58706d]">
               Live and cohort Courses may release materials gradually. Your
