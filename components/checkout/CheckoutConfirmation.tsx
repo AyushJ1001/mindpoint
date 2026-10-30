@@ -98,7 +98,11 @@ export function CheckoutConfirmation({
               >
                 <Link
                   href={
-                    hasLearningWorkspace ? "/lms" : "/account?tab=enrollments"
+                    paymentPending
+                      ? "/account?tab=enrollments"
+                      : hasLearningWorkspace
+                        ? "/lms"
+                        : "/account?tab=enrollments"
                   }
                 >
                   {hasLearningWorkspace
