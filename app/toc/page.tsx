@@ -147,10 +147,12 @@ export default function TOC() {
           Registration Confirmation
         </h3>
         <p className="mb-6 leading-relaxed text-foreground/80">
-          Once you register for any Service, your enrollment is confirmed and
-          final. By registering, you confirm that you have reviewed and accepted
-          all details, including timings, dates, faculty, and content, and waive
-          any right to dispute them later.
+          Registering submits your registration. Your enrollment is confirmed
+          only after we have verified your payment; until then it remains
+          pending verification and we will write to you either way. By
+          registering, you confirm that you have reviewed the details recorded
+          for your course and batch, including timings, dates, faculty and
+          content.
         </p>
 
         <h3 className="mb-3 text-xl font-semibold text-foreground">

@@ -79,6 +79,61 @@ export default function CommunityPage() {
         </div>
       </section>
 
+      <section
+        aria-labelledby="community-links-heading"
+        className="container pb-20"
+      >
+        <span className={eyebrowVariants()}>Join us</span>
+        <h2
+          id="community-links-heading"
+          className="font-display mt-4 max-w-2xl text-3xl tracking-tight sm:text-4xl"
+        >
+          Where the conversation continues.
+        </h2>
+        <div className="mt-8 grid gap-6 sm:grid-cols-2">
+          <a
+            href="https://chat.whatsapp.com/FLyMm3KharJALfuovgiuHe"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="border-brand-gold/40 bg-card rounded-brand group border p-6"
+          >
+            <b className="font-display text-brand-heading block text-xl">
+              Join Our WhatsApp Community
+            </b>
+            <span className="text-brand-body mt-2 block text-sm leading-relaxed">
+              Connect with The Mind Point community for course announcements,
+              learning opportunities, workshops and important updates.
+            </span>
+            <span className="text-brand-teal mt-4 inline-block text-sm font-semibold underline-offset-4 group-hover:underline">
+              Open WhatsApp →
+            </span>
+          </a>
+          <a
+            href="https://www.instagram.com/channel/AbZNVUaQ3yMrfJGm/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="border-brand-gold/40 bg-card rounded-brand group border p-6"
+          >
+            <b className="font-display text-brand-heading block text-xl">
+              Join Our Instagram Community
+            </b>
+            <span className="text-brand-body mt-2 block text-sm leading-relaxed">
+              Stay connected through announcements, psychology insights,
+              upcoming programs and community updates.
+            </span>
+            <span className="text-brand-teal mt-4 inline-block text-sm font-semibold underline-offset-4 group-hover:underline">
+              Open Instagram channel →
+            </span>
+          </a>
+        </div>
+        <p className="text-brand-body/70 mt-6 max-w-2xl text-xs leading-relaxed">
+          Joining either community is optional and is not required to access a
+          course you have purchased. Communities are hosted by WhatsApp and
+          Instagram, and your profile visibility there is governed by those
+          platforms.
+        </p>
+      </section>
+
       <hr className="border-border container border-0 border-t border-dashed" />
 
       <section className="container py-20 sm:py-24">
