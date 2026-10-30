@@ -1,7 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { useQuery } from "convex/react";
+import { ConvexHttpClient } from "convex/browser";
 
 import { api } from "@/lib/backend/api";
 import { isDiscountActive } from "@/lib/domain/pricing";
@@ -9,14 +7,26 @@ import { isDiscountActive } from "@/lib/domain/pricing";
 const LINE =
   "Diwali special · Flat ₹1,000 off all five programs · Extra ₹500 off with code EARLYBIRD500 · First 10 eligible students only · Offer ends 15 November 2026";
 
+async function diwaliIsLive(): Promise<boolean> {
+  const url = process.env.NEXT_PUBLIC_CONVEX_URL;
+  if (!url) return false;
+  try {
+    const courses = await new ConvexHttpClient(url).query(
+      api.courses.listCourses,
+      {},
+    );
+    return (courses ?? []).some(
+      (course) =>
+        course.offer?.occasion === "diwali" && isDiscountActive(course.offer),
+    );
+  } catch {
+    return false;
+  }
+}
+
 /** Slim scrolling strip above the navigation, shown only while Diwali runs. */
-export function DiwaliMarquee() {
-  const courses = useQuery(api.courses.listCourses, {});
-  const active = (courses ?? []).some(
-    (course) =>
-      course.offer?.occasion === "diwali" && isDiscountActive(course.offer),
-  );
-  if (!active) return null;
+export async function DiwaliMarquee() {
+  if (!(await diwaliIsLive())) return null;
 
   return (
     <Link
