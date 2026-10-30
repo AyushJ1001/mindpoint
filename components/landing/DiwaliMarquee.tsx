@@ -8,7 +8,7 @@ import { api } from "@/lib/backend/api";
 import { isDiscountActive } from "@/lib/domain/pricing";
 
 const COPY =
-  "Diwali special · Flat ₹1,000 off all five programs · Extra ₹500 off with code EARLYBIRD500 · First 10 eligible students only";
+  "Diwali Fest 2026 · Flat 50% off all five programs · Extra ₹500 off with code EARLYBIRD500 · First 10 eligible students only";
 
 /** The deadline printed here is the campaign's own, never a second copy. */
 function formatEndDate(value?: string): string | null {

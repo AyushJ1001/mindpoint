@@ -31,6 +31,12 @@ export function DiwaliBanner() {
   const sample = discounted[0].offer!;
   const saving =
     (sample.standardPrice ?? discounted[0].price) - (sample.offerPrice ?? 0);
+  // A percentage campaign gives a different rupee saving on each programme, so
+  // quote the percentage rather than the largest saving.
+  const discountLabel =
+    sample.discountType === "percentage" && sample.discountValue
+      ? `Flat ${sample.discountValue}% off`
+      : `Flat ₹${saving.toLocaleString("en-IN")} off`;
   const endsOn = sample.endDate
     ? new Intl.DateTimeFormat("en-IN", {
         day: "numeric",
@@ -47,15 +53,15 @@ export function DiwaliBanner() {
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 opacity-40 [background-image:radial-gradient(circle_at_12%_20%,#D7B88A33_0_1px,transparent_1px_22px),radial-gradient(circle_at_88%_75%,#C77B3033_0_1px,transparent_1px_26px)]"
+        className="absolute inset-0 -z-10 [background-image:radial-gradient(circle_at_12%_20%,#D7B88A33_0_1px,transparent_1px_22px),radial-gradient(circle_at_88%_75%,#C77B3033_0_1px,transparent_1px_26px)] opacity-40"
       />
       <div className="container grid gap-6 py-7 sm:grid-cols-[1.35fr_0.65fr] sm:items-center sm:py-9">
         <div>
-          <p className="text-[0.62rem] font-semibold tracking-[0.28em] uppercase text-[#A9701F]">
+          <p className="text-[0.62rem] font-semibold tracking-[0.28em] text-[#A9701F] uppercase">
             The Mind Point presents
           </p>
           <p className="font-display mt-1 text-[1.6rem] leading-none tracking-[0.02em] text-[#173F3A] sm:text-3xl">
-            Diwali Celebration
+            Diwali Fest 2026
           </p>
           <h2
             id="diwali-heading"
@@ -64,14 +70,14 @@ export function DiwaliBanner() {
             A Season of Light. A New Journey of Learning.
           </h2>
           <p className="mt-3 text-sm text-[#2C4A3F]/85">
-            <b className="text-[#A9701F]">Flat ₹{saving.toLocaleString("en-IN")} off</b>{" "}
-            on all five upcoming programs.
+            <b className="text-[#A9701F]">{discountLabel}</b> on all five
+            upcoming programs.
           </p>
         </div>
 
         <div className="flex flex-col gap-3 border-t border-[#A9701F]/25 pt-4 sm:border-t-0 sm:border-l sm:pt-0 sm:pl-6">
           <div>
-            <p className="text-[0.62rem] font-semibold tracking-[0.2em] uppercase text-[#A9701F]">
+            <p className="text-[0.62rem] font-semibold tracking-[0.2em] text-[#A9701F] uppercase">
               Extra ₹500 off
             </p>
             <div className="mt-1 flex flex-wrap items-center gap-2">
@@ -86,7 +92,7 @@ export function DiwaliBanner() {
           </div>
 
           {endsOn ? (
-            <p className="text-[0.68rem] font-semibold tracking-[0.14em] uppercase text-[#2C4A3F]/80">
+            <p className="text-[0.68rem] font-semibold tracking-[0.14em] text-[#2C4A3F]/80 uppercase">
               Offer ends {endsOn}
             </p>
           ) : null}

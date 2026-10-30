@@ -43,7 +43,7 @@ export type OfferOccasion =
 
 export const OCCASION_LABEL: Record<OfferOccasion, string> = {
   "early-bird": "Early Bird",
-  diwali: "Diwali Offer",
+  diwali: "Diwali Fest 2026",
   christmas: "Christmas Offer",
   "new-year": "New Year Offer",
   general: "Special Price",
@@ -213,7 +213,9 @@ export function formatOfferAdjustment(
     return `${showRupees(savings)} off`;
   }
 
-  return `${Math.round(discountValue)}% off`;
+  // "Flat" keeps a percentage campaign distinct from a coupon-style percentage,
+  // and matches how the Diwali Fest offer is described.
+  return `Flat ${Math.round(discountValue)}% off`;
 }
 
 export function calculateOfferTimeLeft(endDate?: string | null): {
