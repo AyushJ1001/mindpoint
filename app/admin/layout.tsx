@@ -3,6 +3,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { AdminConvexGate } from "@/components/admin/AdminConvexGate";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { AdminRetryButton } from "@/components/admin/AdminRetryButton";
 import { hasAdminAccess } from "@/lib/admin-access";
 import { isAdminDevBypassEnabled } from "@/lib/admin-dev-bypass";
@@ -18,9 +19,11 @@ export default async function AdminLayout({
 
   if (adminDevBypassEnabled) {
     return (
-      <AdminSidebar>
-        <AdminConvexGate bypassAdminAuth>{children}</AdminConvexGate>
-      </AdminSidebar>
+      <ErrorBoundary label="Admin panel">
+        <AdminSidebar>
+          <AdminConvexGate bypassAdminAuth>{children}</AdminConvexGate>
+        </AdminSidebar>
+      </ErrorBoundary>
     );
   }
 
@@ -92,8 +95,13 @@ export default async function AdminLayout({
   }
 
   return (
-    <AdminSidebar>
-      <AdminConvexGate>{children}</AdminConvexGate>
-    </AdminSidebar>
+    // The sidebar and gate live in this layout, so an error in either escapes
+    // app/admin/error.tsx (a boundary only catches its own children) and would
+    // otherwise render the opaque global error page.
+    <ErrorBoundary label="Admin panel">
+      <AdminSidebar>
+        <AdminConvexGate>{children}</AdminConvexGate>
+      </AdminSidebar>
+    </ErrorBoundary>
   );
 }

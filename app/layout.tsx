@@ -9,6 +9,7 @@ import { Analytics } from "@vercel/analytics/next";
 import AnalyticsScripts from "@/components/AnalyticsScripts";
 import ConsentBanner from "@/components/ConsentBanner";
 import { DiwaliMarquee } from "@/components/landing/DiwaliMarquee";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 // Self-hosted variable fonts. These used to be fetched through
 // `next/font/google` at build time, which made every CI and Vercel build depend
@@ -118,8 +119,14 @@ export default function RootLayout({
           Skip to main content
         </a>
 
-        <ClientProviders>
-          <DiwaliMarquee />
+        <ClientProviders
+          topStrip={
+            /* A promo strip must never be able to blank the site. */
+            <ErrorBoundary label="Promotion strip">
+              <DiwaliMarquee />
+            </ErrorBoundary>
+          }
+        >
           {children}
         </ClientProviders>
 

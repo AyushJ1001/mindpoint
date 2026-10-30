@@ -38,6 +38,8 @@ import {
 import {
   convertPlainDateTimeBetweenTimeZones,
   formatDateWindow,
+  toDateInputValue,
+  withPreservedTime,
 } from "@/lib/admin-timezone";
 import {
   formatOfferAdjustment,
@@ -2594,19 +2596,30 @@ export function CourseEditor({
           <div className="grid grid-cols-2 gap-2">
             <Input
               type="date"
-              value={state.offerStartDate}
+              value={toDateInputValue(state.offerStartDate)}
               onChange={(e) =>
                 setState((prev) => ({
                   ...prev,
-                  offerStartDate: e.target.value,
+                  offerStartDate: withPreservedTime(
+                    e.target.value,
+                    prev.offerStartDate,
+                    "start",
+                  ),
                 }))
               }
             />
             <Input
               type="date"
-              value={state.offerEndDate}
+              value={toDateInputValue(state.offerEndDate)}
               onChange={(e) =>
-                setState((prev) => ({ ...prev, offerEndDate: e.target.value }))
+                setState((prev) => ({
+                  ...prev,
+                  offerEndDate: withPreservedTime(
+                    e.target.value,
+                    prev.offerEndDate,
+                    "end",
+                  ),
+                }))
               }
             />
           </div>
@@ -2639,16 +2652,30 @@ export function CourseEditor({
           <div className="grid grid-cols-2 gap-2">
             <Input
               type="date"
-              value={state.bogoStartDate}
+              value={toDateInputValue(state.bogoStartDate)}
               onChange={(e) =>
-                setState((prev) => ({ ...prev, bogoStartDate: e.target.value }))
+                setState((prev) => ({
+                  ...prev,
+                  bogoStartDate: withPreservedTime(
+                    e.target.value,
+                    prev.bogoStartDate,
+                    "start",
+                  ),
+                }))
               }
             />
             <Input
               type="date"
-              value={state.bogoEndDate}
+              value={toDateInputValue(state.bogoEndDate)}
               onChange={(e) =>
-                setState((prev) => ({ ...prev, bogoEndDate: e.target.value }))
+                setState((prev) => ({
+                  ...prev,
+                  bogoEndDate: withPreservedTime(
+                    e.target.value,
+                    prev.bogoEndDate,
+                    "end",
+                  ),
+                }))
               }
             />
           </div>

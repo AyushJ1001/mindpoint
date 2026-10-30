@@ -11,13 +11,22 @@ import AnnouncementBanner from "@/components/AnnouncementBanner";
 import RouteBodyClass from "@/components/RouteBodyClass";
 import StructuredData from "@/components/structured-data";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { WaterMain } from "@/components/water/water-main";
 
 interface ClientProvidersProps {
   children: ReactNode;
+  /**
+   * Rendered above the navigation, outside the page content. The layout passes
+   * the promotional strip here so it sits above the navbar rather than under it.
+   */
+  topStrip?: ReactNode;
 }
 
-export default function ClientProviders({ children }: ClientProvidersProps) {
+export default function ClientProviders({
+  children,
+  topStrip,
+}: ClientProvidersProps) {
   const appShell = (
     <ThemeProvider
       attribute="class"
@@ -28,6 +37,7 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
     >
       <RouteBodyClass />
       <StructuredData />
+      {topStrip}
       <AnnouncementBanner />
       <ClientNavbar />
       <WaterMain>{children}</WaterMain>
@@ -39,12 +49,15 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
     return (
       <ClerkProvider>
         <ConvexClientProvider>
-          <MindPointsProvider>
-            <CartProvider>
-              <ReferralTracker />
-              {appShell}
-            </CartProvider>
-          </MindPointsProvider>
+          {/* A rewards lookup must never take the whole page down with it. */}
+          <ErrorBoundary label="Mind Points">
+            <MindPointsProvider>
+              <CartProvider>
+                <ReferralTracker />
+                {appShell}
+              </CartProvider>
+            </MindPointsProvider>
+          </ErrorBoundary>
         </ConvexClientProvider>
       </ClerkProvider>
     );
@@ -54,10 +67,12 @@ export default function ClientProviders({ children }: ClientProvidersProps) {
   // ConvexClientProvider will handle the fallback internally
   return (
     <ConvexClientProvider>
-      <CartProvider>
-        <ReferralTracker />
-        {appShell}
-      </CartProvider>
+      <ErrorBoundary label="Site shell">
+        <CartProvider>
+          <ReferralTracker />
+          {appShell}
+        </CartProvider>
+      </ErrorBoundary>
     </ConvexClientProvider>
   );
 }
