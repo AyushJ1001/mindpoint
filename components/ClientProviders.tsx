@@ -11,7 +11,6 @@ import AnnouncementBanner from "@/components/AnnouncementBanner";
 import RouteBodyClass from "@/components/RouteBodyClass";
 import StructuredData from "@/components/structured-data";
 import { ThemeProvider } from "@/components/theme-provider";
-import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { WaterMain } from "@/components/water/water-main";
 
 interface ClientProvidersProps {
@@ -49,15 +48,12 @@ export default function ClientProviders({
     return (
       <ClerkProvider>
         <ConvexClientProvider>
-          {/* A rewards lookup must never take the whole page down with it. */}
-          <ErrorBoundary label="Mind Points">
-            <MindPointsProvider>
-              <CartProvider>
-                <ReferralTracker />
-                {appShell}
-              </CartProvider>
-            </MindPointsProvider>
-          </ErrorBoundary>
+          <MindPointsProvider>
+            <CartProvider>
+              <ReferralTracker />
+              {appShell}
+            </CartProvider>
+          </MindPointsProvider>
         </ConvexClientProvider>
       </ClerkProvider>
     );
@@ -67,12 +63,10 @@ export default function ClientProviders({
   // ConvexClientProvider will handle the fallback internally
   return (
     <ConvexClientProvider>
-      <ErrorBoundary label="Site shell">
-        <CartProvider>
-          <ReferralTracker />
-          {appShell}
-        </CartProvider>
-      </ErrorBoundary>
+      <CartProvider>
+        <ReferralTracker />
+        {appShell}
+      </CartProvider>
     </ConvexClientProvider>
   );
 }

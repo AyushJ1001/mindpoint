@@ -4,6 +4,7 @@ import { createContext, useContext, ReactNode } from "react";
 import { useUser } from "@clerk/nextjs";
 import { useConvexAuth, useQuery } from "convex/react";
 import { api } from "@/lib/backend/api";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 interface MindPointsData {
   balance: number;
@@ -18,7 +19,18 @@ interface MindPointsContextValue {
 
 const MindPointsContext = createContext<MindPointsContextValue | null>(null);
 
-export function MindPointsProvider({ children }: { children: ReactNode }) {
+const NO_POINTS: MindPointsContextValue = {
+  pointsData: undefined,
+  isLoading: false,
+};
+
+/**
+ * The provider that actually queries. Kept separate so the boundary above can
+ * replace *only this* when the query throws, leaving the page, navbar and cart
+ * untouched — wrapping the whole app shell here would blank the entire site for
+ * a failed rewards lookup.
+ */
+function MindPointsQueryProvider({ children }: { children: ReactNode }) {
   const { user } = useUser();
   const { isAuthenticated, isLoading: isConvexAuthLoading } = useConvexAuth();
   const pointsData = useQuery(
@@ -38,6 +50,21 @@ export function MindPointsProvider({ children }: { children: ReactNode }) {
     <MindPointsContext.Provider value={value}>
       {children}
     </MindPointsContext.Provider>
+  );
+}
+
+export function MindPointsProvider({ children }: { children: ReactNode }) {
+  return (
+    <ErrorBoundary
+      label="Mind Points"
+      fallback={() => (
+        <MindPointsContext.Provider value={NO_POINTS}>
+          {children}
+        </MindPointsContext.Provider>
+      )}
+    >
+      <MindPointsQueryProvider>{children}</MindPointsQueryProvider>
+    </ErrorBoundary>
   );
 }
 
