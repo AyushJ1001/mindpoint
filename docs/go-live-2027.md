@@ -78,20 +78,29 @@ still missing.
       and, after confirming the `TODO confirm` price/format in
       `convex/bootstrapCbtRebtCbmt.ts`,
       `npx convex run bootstrapCbtRebtCbmt:createStandaloneCourse --prod`.
-- [ ] Note: the January early-bird (₹1,999) only activates **15 Nov – 15 Dec**;
-      before that the cohort charges ₹2,999.
+- [ ] Note: the January early-bird (₹1,999 until 15 December, then ₹2,999) is
+      the **decided** price, but production does not hold it — the courses carry
+      ₹3,499 with a live blanket "Flat 50% OFF" campaign. Settle that first:
+      [Reconcile the January cohort price and
+      offer](https://github.com/AyushJ1001/mindpoint/issues/227).
 
 ## 6. LMS content
 
-The January bootstrap (`bootstrapJanuaryCohort`) already seeds a **published LMS
-curriculum** (one module + reading activity per course module) for each of the
-three courses. See `docs/launch-courses.md`.
+**No January curriculum exists.** `bootstrapJanuaryCohort` seeds courses and
+batches only. Until a Curriculum is published for a Course, every approval is a
+silent no-op and the learner sees an empty workspace rather than an error. See
+`docs/launch-courses.md`.
 
-- [ ] `/admin/lms` (Release desk) — enrich the curricula (media/quiz/assignment/
-      feedback activities, rights approval, accessible alternatives), then
-      publish the new version.
-- [ ] **Live Sessions** — set the meeting link per batch (shown to enrolled
-      learners on `/learn`).
+- [ ] `/admin/lms` (Release desk) — **create and publish a Draft Curriculum per
+      course** before any enrollment is approved. Author modules and
+      media/quiz/assignment/feedback activities in their final order (authoring
+      is create-only and append-only), with rights approval and accessible
+      alternatives.
+- [ ] **Live class link** — the batch fields exist (`meetingUrl`,
+      `meetingNote`) but the setter `adminCourses.setBatchMeetingLink` has **no
+      admin UI** and the learner workspace returns `batchLabel` only, so today
+      there is no way to show students a class link. Wire one before the cohort
+      starts.
 - [ ] Optional: **Quiz** — add questions + pass mark (required for the
       certificate when published).
 - [ ] **Progress** — confirm the per-learner table loads.
