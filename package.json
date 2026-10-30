@@ -32,6 +32,7 @@
     "test:analytics-removal": "node test-analytics-removal.js",
     "test:analytics-events": "tsx --test test-analytics-events.ts",
     "test:admin-route-protection": "node scripts/test-admin-route-protection.js",
+    "test:admin-offer-dates": "tsx --test test-admin-offer-dates.ts",
     "test:root-web-doctor": "node test-root-web-doctor.js",
     "test:promo-campaigns": "tsx --test test-promo-campaigns.ts",
     "test:lms-course-content": "tsx --test test-lms-course-content.ts"

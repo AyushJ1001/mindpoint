@@ -258,6 +258,31 @@ test("a cancelled enrollment cannot open course resources", async () => {
   assert.equal(result, null);
 });
 
+test("a payment awaiting verification opens no resources", async () => {
+  const tables = baseTables();
+  tables.enrollments[0].paymentVerification = "pending";
+  const ctx = makeCtx(tables, { subject: "user_a" });
+  const result = await (getCourseResources as any)._handler(ctx, { courseId: COURSE });
+  assert.equal(result, null);
+});
+
+test("a payment awaiting verification cannot download a material", async () => {
+  const tables = baseTables();
+  tables.enrollments[0].paymentVerification = "pending";
+  const ctx = makeCtx(tables, { subject: "user_a" });
+  const url = await (getMaterialUrl as any)._handler(ctx, { materialId: "mat_pub" });
+  assert.equal(url, null);
+});
+
+test("an approved payment opens resources", async () => {
+  const tables = baseTables();
+  tables.enrollments[0].paymentVerification = "approved";
+  const ctx = makeCtx(tables, { subject: "user_a" });
+  const result = await (getCourseResources as any)._handler(ctx, { courseId: COURSE });
+  assert.ok(result);
+  assert.deepEqual(result.materials.map((m: any) => m._id), ["mat_pub"]);
+});
+
 test("an active enrollment still opens resources after a grandfathered past cohort", async () => {
   const tables = baseTables();
   tables.enrollments[0]._creationTime = Date.parse("2026-02-10");

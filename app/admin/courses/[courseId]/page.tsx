@@ -8,6 +8,7 @@ import { api } from "@/lib/backend/api";
 import type { Id } from "@/lib/backend/data-model";
 import { AdminPageHeader } from "@/components/admin/AdminPageHeader";
 import { CourseEditor } from "@/components/admin/CourseEditor";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -187,11 +188,13 @@ export default function AdminEditCoursePage() {
         </Card>
       </div>
 
-      <CourseEditor
-        key={editorKey}
-        course={course}
-        onDirtyChange={setHasUnsavedChanges}
-      />
+      <ErrorBoundary label="Course editor">
+        <CourseEditor
+          key={editorKey}
+          course={course}
+          onDirtyChange={setHasUnsavedChanges}
+        />
+      </ErrorBoundary>
 
       <Card>
         <CardHeader>

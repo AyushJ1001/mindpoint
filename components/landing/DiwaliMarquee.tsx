@@ -17,11 +17,19 @@ const LINE =
  */
 export function DiwaliMarquee() {
   const pathname = usePathname();
-  const courses = useQuery(api.courses.listCourses, {});
 
+  // Mount the querying strip only on public pages. It used to subscribe on
+  // every route, including /admin, which put a campaign query underneath the
+  // admin editor for no reason.
   if (pathname?.startsWith("/lms") || pathname?.startsWith("/admin")) {
     return null;
   }
+
+  return <ActiveMarquee />;
+}
+
+function ActiveMarquee() {
+  const courses = useQuery(api.courses.listCourses, {});
 
   const active = (courses ?? []).some(
     (course) =>

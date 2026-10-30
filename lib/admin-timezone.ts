@@ -252,3 +252,33 @@ export function convertPlainDateTimeBetweenTimeZones(
 
   return formatWallTimeParts(utcTimestamp, toTimeZone);
 }
+
+/**
+ * The campaign stores a full timestamp, but `<input type="date">` only accepts
+ * `yyyy-MM-dd`; handed a timestamp the browser shows an empty field.
+ */
+export function toDateInputValue(value?: string): string {
+  return /^(\d{4}-\d{2}-\d{2})/.exec(value?.trim() ?? "")?.[1] ?? "";
+}
+
+/**
+ * Changing only the day must not silently move the campaign window, so keep the
+ * time-of-day already stored. A date stored without a time means the whole day:
+ * the start of it for a start date, the end of it (IST) for an end date.
+ */
+export function withPreservedTime(
+  nextDate: string,
+  previous: string | undefined,
+  edge: "start" | "end",
+): string {
+  if (!nextDate) return "";
+  const time = /T(\d{2}:\d{2}:\d{2}(?:\.\d+)?)(Z|[+-]\d{2}:\d{2})?$/.exec(
+    previous?.trim() ?? "",
+  );
+  if (time) {
+    return `${nextDate}T${time[1]}${time[2] ?? ""}`;
+  }
+  return edge === "end"
+    ? `${nextDate}T23:59:59+05:30`
+    : `${nextDate}T00:00:00+05:30`;
+}

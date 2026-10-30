@@ -63,6 +63,12 @@ async function requireOwnedEnrollment(
   if (enrollment.status && enrollment.status !== "active") {
     throw new Error("Enrollment is not active");
   }
+  // A screenshot is evidence, not payment. Nothing enrolled on an unverified
+  // payment — progress, quizzes, certificates — may open until an admin
+  // verifies it, so the gate lives here as well as in the listing query.
+  if (enrollment.paymentVerification === "pending") {
+    throw new Error("Payment is awaiting verification");
+  }
   return { enrollment, identity };
 }
 
